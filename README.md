@@ -33,4 +33,4 @@ npm run tauri build
 
 AGPL-3.0-or-later. See [LICENSE](LICENSE) for details.
 
-Commercial licenses available for businesses. See [pdfluent.dev](https://pdfluent.dev) for pricing.
+Commercial licenses available for businesses. See [pdfluent.com](https://pdfluent.com) for pricing.
