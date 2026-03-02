@@ -23,3 +23,13 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Pdfium native library (downloaded separately)
+src-tauri/lib/lib/
+src-tauri/lib/include/
+src-tauri/lib/licenses/
+src-tauri/lib/*.cmake
+src-tauri/lib/args.gn
+
+# Tauri generated
+src-tauri/gen/
