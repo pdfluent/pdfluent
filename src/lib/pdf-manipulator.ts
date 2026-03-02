@@ -13,8 +13,7 @@ export async function loadPdf(bytes: Uint8Array): Promise<PDF> {
 }
 
 export async function mergePdfs(pdfBuffers: Uint8Array[]): Promise<Uint8Array> {
-  const pdfs = await Promise.all(pdfBuffers.map((buf) => PDF.load(buf)));
-  const merged = await PDF.merge(pdfs);
+  const merged = await PDF.merge(pdfBuffers);
   return merged.save();
 }
 
@@ -29,7 +28,6 @@ export async function splitPdf(
     const pages = source.getPages();
     const totalPages = pages.length;
 
-    // Remove pages outside the range (iterate in reverse to preserve indices)
     for (let i = totalPages - 1; i >= 0; i--) {
       if (i < range.start || i > range.end) {
         source.removePage(i);
@@ -48,15 +46,14 @@ export async function rotatePage(
   degrees: 0 | 90 | 180 | 270,
 ): Promise<Uint8Array> {
   const pdf = await PDF.load(bytes);
-  const pages = pdf.getPages();
+  const page = pdf.getPage(pageIndex);
 
-  if (pageIndex < 0 || pageIndex >= pages.length) {
-    throw new Error(`Page index ${pageIndex} out of range (0-${pages.length - 1})`);
+  if (!page) {
+    throw new Error(`Page index ${pageIndex} out of range`);
   }
 
-  const page = pages[pageIndex];
-  const currentRotation = page.getRotation();
-  page.setRotation((currentRotation + degrees) % 360);
+  const current = page.rotation;
+  page.setRotation(((current + degrees) % 360) as 0 | 90 | 180 | 270);
 
   return pdf.save();
 }
@@ -66,41 +63,13 @@ export async function rotateAllPages(
   degrees: 0 | 90 | 180 | 270,
 ): Promise<Uint8Array> {
   const pdf = await PDF.load(bytes);
-  const pages = pdf.getPages();
 
-  for (const page of pages) {
-    const currentRotation = page.getRotation();
-    page.setRotation((currentRotation + degrees) % 360);
+  for (const page of pdf.getPages()) {
+    const current = page.rotation;
+    page.setRotation(((current + degrees) % 360) as 0 | 90 | 180 | 270);
   }
 
   return pdf.save();
-}
-
-export async function reorderPages(
-  bytes: Uint8Array,
-  newOrder: number[],
-): Promise<Uint8Array> {
-  const source = await PDF.load(bytes);
-  const pages = source.getPages();
-
-  if (newOrder.length !== pages.length) {
-    throw new Error(
-      `New order length (${newOrder.length}) must match page count (${pages.length})`,
-    );
-  }
-
-  // Create a new PDF with pages in the specified order
-  const result = await PDF.create();
-
-  for (const idx of newOrder) {
-    if (idx < 0 || idx >= pages.length) {
-      throw new Error(`Invalid page index: ${idx}`);
-    }
-    const [copiedPage] = await result.copyPages(source, [idx]);
-    result.addPage(copiedPage);
-  }
-
-  return result.save();
 }
 
 export async function removePage(
