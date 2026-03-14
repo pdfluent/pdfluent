@@ -5,30 +5,81 @@
 // Commercial use requires a valid license.
 // See https://pdfluent.com/license for terms.
 
-// TODO(pdfluent-viewer): implement full command palette with searchable actions, navigation, and mode switching
-// Status: design integrated, functionality not implemented yet
-
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState, useMemo } from 'react';
 import { SearchIcon, XIcon } from 'lucide-react';
+
+export interface Command {
+  id: string;
+  label: string;
+  keywords?: string[];
+  action: () => void;
+}
 
 interface CommandPaletteProps {
   isOpen: boolean;
   onClose: () => void;
+  commands: Command[];
 }
 
-export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
+export function CommandPalette({ isOpen, onClose, commands }: CommandPaletteProps) {
   const inputRef = useRef<HTMLInputElement>(null);
+  const [query, setQuery] = useState('');
+  const [selectedIndex, setSelectedIndex] = useState(0);
 
+  // Refs so the keyboard handler always sees the latest values without re-registering
+  const filteredRef = useRef<Command[]>([]);
+  const selectedIndexRef = useRef(0);
+
+  const filtered = useMemo(() => {
+    if (!query.trim()) return commands;
+    const q = query.toLowerCase();
+    return commands.filter(cmd =>
+      cmd.label.toLowerCase().includes(q) ||
+      cmd.keywords?.some(k => k.toLowerCase().includes(q))
+    );
+  }, [commands, query]);
+
+  filteredRef.current = filtered;
+  selectedIndexRef.current = selectedIndex;
+
+  // Reset state when palette opens
   useEffect(() => {
     if (isOpen) {
-      // Focus the input when palette opens
+      setQuery('');
+      setSelectedIndex(0);
       setTimeout(() => { inputRef.current?.focus(); }, 10);
     }
   }, [isOpen]);
 
+  // Clamp selection when filtered list shrinks
+  useEffect(() => {
+    if (selectedIndex >= filtered.length) {
+      setSelectedIndex(Math.max(0, filtered.length - 1));
+    }
+  }, [filtered.length, selectedIndex]);
+
+  // Keyboard navigation — registered once per open/close cycle
   useEffect(() => {
     function handleKey(e: KeyboardEvent) {
-      if (e.key === 'Escape') onClose();
+      if (e.key === 'Escape') {
+        onClose();
+        return;
+      }
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        setSelectedIndex(i => Math.min(i + 1, filteredRef.current.length - 1));
+        return;
+      }
+      if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        setSelectedIndex(i => Math.max(i - 1, 0));
+        return;
+      }
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        const cmd = filteredRef.current[selectedIndexRef.current];
+        if (cmd) { cmd.action(); onClose(); }
+      }
     }
     if (isOpen) {
       window.addEventListener('keydown', handleKey);
@@ -61,9 +112,9 @@ export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
             ref={inputRef}
             type="text"
             placeholder="Zoek opdrachten…"
-            disabled
-            className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground/60 outline-none cursor-default"
-            title="Command palette — coming soon"
+            value={query}
+            onChange={e => { setQuery(e.target.value); }}
+            className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground/60 outline-none"
           />
           <button
             onClick={onClose}
@@ -74,12 +125,31 @@ export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
           </button>
         </div>
 
-        {/* Placeholder content */}
-        {/* TODO(pdfluent-viewer): render grouped command list with keyboard navigation
-            Status: design integrated, functionality not implemented yet */}
-        <div className="px-4 py-8 flex flex-col items-center gap-2 text-center">
-          <p className="text-sm text-muted-foreground">Opdrachtenpalette beschikbaar binnenkort.</p>
-          <p className="text-xs text-muted-foreground/60">Druk op Esc om te sluiten.</p>
+        {/* Command list */}
+        <div className="max-h-72 overflow-y-auto">
+          {filtered.length === 0 ? (
+            <div className="px-4 py-8 text-center">
+              <p className="text-sm text-muted-foreground">Geen opdrachten gevonden.</p>
+            </div>
+          ) : (
+            <ul>
+              {filtered.map((cmd, i) => (
+                <li key={cmd.id}>
+                  <button
+                    className={`w-full text-left px-4 py-2.5 text-sm transition-colors ${
+                      i === selectedIndex
+                        ? 'bg-primary/10 text-foreground'
+                        : 'text-foreground hover:bg-muted/50'
+                    }`}
+                    onMouseEnter={() => { setSelectedIndex(i); }}
+                    onClick={() => { cmd.action(); onClose(); }}
+                  >
+                    {cmd.label}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
 
         {/* Footer */}

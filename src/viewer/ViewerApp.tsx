@@ -19,7 +19,7 @@ import { LeftNavRail } from './components/LeftNavRail';
 import { PageCanvas } from './components/PageCanvas';
 import { RightContextPanel } from './components/RightContextPanel';
 import { BottomTaskBar } from './components/BottomTaskBar';
-import { CommandPalette } from './components/CommandPalette';
+import { CommandPalette, type Command } from './components/CommandPalette';
 
 // Dev-only test hook — never present in production builds
 declare global {
@@ -43,6 +43,7 @@ export function ViewerApp() {
     pageCount,
     loading: docLoading,
     error: docError,
+    isDirty,
     loadDocument,
   } = useDocument(engine);
   const { thumbnails } = useThumbnails(engine, pdfDoc);
@@ -100,6 +101,39 @@ export function ViewerApp() {
   // Suppress unused-variable warning for allToolsOpen until AllToolsPanel is wired
   void allToolsOpen;
 
+  // Command palette actions — viewer-only, no engine calls
+  const commands: Command[] = [
+    // ── Page navigation ───────────────────────────────────────────────────
+    { id: 'prev-page', label: 'Vorige pagina', keywords: ['pagina', 'vorige', 'terug'],
+      action: () => { setPageIndex(i => Math.max(0, i - 1)); } },
+    { id: 'next-page', label: 'Volgende pagina', keywords: ['pagina', 'volgende'],
+      action: () => { setPageIndex(i => Math.min(pageCount - 1, i + 1)); } },
+    // ── Zoom ──────────────────────────────────────────────────────────────
+    { id: 'zoom-in', label: 'Inzoomen', keywords: ['zoom', 'groter', 'in'],
+      action: () => { setZoom(z => Math.min(4, parseFloat((z + 0.25).toFixed(2)))); } },
+    { id: 'zoom-out', label: 'Uitzoomen', keywords: ['zoom', 'kleiner', 'uit'],
+      action: () => { setZoom(z => Math.max(0.25, parseFloat((z - 0.25).toFixed(2)))); } },
+    { id: 'zoom-100', label: 'Zoom 100%', keywords: ['zoom', 'origineel', 'normaal', '100'],
+      action: () => { setZoom(1.0); } },
+    { id: 'zoom-200', label: 'Zoom 200%', keywords: ['zoom', '200'],
+      action: () => { setZoom(2.0); } },
+    // ── Viewer modes ──────────────────────────────────────────────────────
+    { id: 'mode-read', label: 'Modus: Lezen', keywords: ['lezen', 'modus', 'read'],
+      action: () => { setMode('read'); } },
+    { id: 'mode-review', label: 'Modus: Beoordelen', keywords: ['beoordelen', 'annotaties', 'review'],
+      action: () => { setMode('review'); } },
+    { id: 'mode-edit', label: 'Modus: Bewerken', keywords: ['bewerken', 'edit'],
+      action: () => { setMode('edit'); } },
+    { id: 'mode-organize', label: 'Modus: Indelen', keywords: ['indelen', 'organiseren', 'organize'],
+      action: () => { setMode('organize'); } },
+    { id: 'mode-forms', label: 'Modus: Formulieren', keywords: ['formulieren', 'forms', 'invullen'],
+      action: () => { setMode('forms'); } },
+    { id: 'mode-protect', label: 'Modus: Beveiligen', keywords: ['beveiligen', 'protect', 'versleutelen'],
+      action: () => { setMode('protect'); } },
+    { id: 'mode-convert', label: 'Modus: Converteren', keywords: ['converteren', 'omzetten', 'convert'],
+      action: () => { setMode('convert'); } },
+  ];
+
   // ── Loading / error states ────────────────────────────────────────────────
 
   if (engineLoading) {
@@ -129,6 +163,7 @@ export function ViewerApp() {
         fileName={fileName}
         pageIndex={pageIndex}
         pageCount={pageCount}
+        isDirty={isDirty}
         onOpenFile={loadDocument}
         onPrevPage={() => { setPageIndex(i => Math.max(0, i - 1)); }}
         onNextPage={() => { setPageIndex(i => Math.min(pageCount - 1, i + 1)); }}
@@ -258,6 +293,7 @@ export function ViewerApp() {
       <CommandPalette
         isOpen={commandPaletteOpen}
         onClose={() => { setCommandPaletteOpen(false); }}
+        commands={commands}
       />
     </div>
   );
