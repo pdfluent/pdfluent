@@ -163,7 +163,7 @@ export function TopBar({
               onClick={onPrevPage}
               disabled={pageIndex === 0}
               className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors disabled:opacity-30 disabled:cursor-not-allowed text-sm font-medium leading-none shrink-0"
-              aria-label="Previous page"
+              title="Previous page"
             >
               ‹
             </button>
@@ -184,7 +184,7 @@ export function TopBar({
               onClick={onNextPage}
               disabled={pageIndex === pageCount - 1}
               className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors disabled:opacity-30 disabled:cursor-not-allowed text-sm font-medium leading-none shrink-0"
-              aria-label="Next page"
+              title="Next page"
             >
               ›
             </button>

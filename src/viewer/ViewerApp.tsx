@@ -227,7 +227,6 @@ export function ViewerApp() {
                 disabled={zoom <= 0.25}
                 className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted rounded transition-colors disabled:opacity-30 disabled:cursor-not-allowed text-sm font-medium leading-none"
                 title="Zoom out"
-                aria-label="Zoom out"
               >
                 −
               </button>
@@ -239,7 +238,6 @@ export function ViewerApp() {
                 disabled={zoom >= 4}
                 className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted rounded transition-colors disabled:opacity-30 disabled:cursor-not-allowed text-sm font-medium leading-none"
                 title="Zoom in"
-                aria-label="Zoom in"
               >
                 +
               </button>
