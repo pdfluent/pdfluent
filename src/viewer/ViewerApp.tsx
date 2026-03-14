@@ -20,6 +20,7 @@ import { PageCanvas } from './components/PageCanvas';
 import { RightContextPanel } from './components/RightContextPanel';
 import { BottomTaskBar } from './components/BottomTaskBar';
 import { CommandPalette, type Command } from './components/CommandPalette';
+import { AllToolsPanel } from './components/AllToolsPanel';
 
 // Dev-only test hook — never present in production builds
 declare global {
@@ -53,8 +54,6 @@ export function ViewerApp() {
   const [mode, setMode] = useState<ViewerMode>('read');
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
 
-  // TODO(pdfluent-viewer): wire allToolsOpen to an AllToolsPanel overlay component
-  // Status: design integrated, functionality not implemented yet
   const [allToolsOpen, setAllToolsOpen] = useState(false);
 
   // Reset to page 0 when a new document is loaded
@@ -91,15 +90,10 @@ export function ViewerApp() {
   }, [engine]);
 
   const handleOpenAllTools = useCallback(() => {
-    // TODO(pdfluent-viewer): open AllToolsPanel overlay
-    // Status: design integrated, functionality not implemented yet
     setAllToolsOpen(o => !o);
   }, []);
 
   const showRightPanel = MODES_WITH_RIGHT_PANEL.has(mode);
-
-  // Suppress unused-variable warning for allToolsOpen until AllToolsPanel is wired
-  void allToolsOpen;
 
   // Command palette actions — viewer-only, no engine calls
   const commands: Command[] = [
@@ -174,7 +168,7 @@ export function ViewerApp() {
       {/* ── ModeSwitcher ───────────────────────────────────────────────────── */}
       <ModeSwitcher
         mode={mode}
-        onChange={setMode}
+        onChange={(m) => { setMode(m); setAllToolsOpen(false); }}
         onOpenAllTools={handleOpenAllTools}
       />
 
@@ -288,6 +282,13 @@ export function ViewerApp() {
 
       {/* ── Bottom task bar ────────────────────────────────────────────────── */}
       <BottomTaskBar />
+
+      {/* ── All tools overlay ──────────────────────────────────────────────── */}
+      <AllToolsPanel
+        isOpen={allToolsOpen}
+        onClose={() => { setAllToolsOpen(false); }}
+        onModeSelect={setMode}
+      />
 
       {/* ── Command palette overlay ────────────────────────────────────────── */}
       <CommandPalette
