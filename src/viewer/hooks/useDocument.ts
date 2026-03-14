@@ -16,6 +16,8 @@ interface UseDocumentResult {
   pageCount: number;
   loading: boolean;
   error: string | null;
+  isDirty: boolean;
+  markDirty: () => void;
   loadDocument: (source: string | ArrayBuffer) => Promise<void>;
   closeDocument: () => void;
 }
@@ -26,6 +28,9 @@ export function useDocument(engine: PdfEngine | null): UseDocumentResult {
   const [pageCount, setPageCount] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isDirty, setIsDirty] = useState(false);
+
+  const markDirty = useCallback(() => { setIsDirty(true); }, []);
 
   const loadDocument = useCallback(async (source: string | ArrayBuffer): Promise<void> => {
     if (!engine) return;
@@ -53,6 +58,7 @@ export function useDocument(engine: PdfEngine | null): UseDocumentResult {
     setDoc(loaded);
     setMetadata(metaResult.success ? metaResult.value : null);
     setPageCount(countResult.success ? countResult.value : loaded.pages.length);
+    setIsDirty(false);
     setLoading(false);
   }, [engine]);
 
@@ -63,7 +69,8 @@ export function useDocument(engine: PdfEngine | null): UseDocumentResult {
     setMetadata(null);
     setPageCount(0);
     setError(null);
+    setIsDirty(false);
   }, [engine, doc]);
 
-  return { document: doc, metadata, pageCount, loading, error, loadDocument, closeDocument };
+  return { document: doc, metadata, pageCount, loading, error, isDirty, markDirty, loadDocument, closeDocument };
 }

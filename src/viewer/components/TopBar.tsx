@@ -20,6 +20,7 @@ interface TopBarProps {
   fileName: string | null;
   pageIndex: number;
   pageCount: number;
+  isDirty: boolean;
   onOpenFile: (source: string | ArrayBuffer) => Promise<void>;
   onPrevPage: () => void;
   onNextPage: () => void;
@@ -33,6 +34,7 @@ export function TopBar({
   fileName,
   pageIndex,
   pageCount,
+  isDirty,
   onOpenFile,
   onPrevPage,
   onNextPage,
@@ -131,12 +133,10 @@ export function TopBar({
         {fileName ? (
           <div className="flex items-center gap-2 px-4 py-1.5 border-b-2 border-primary bg-primary/5 rounded-t-lg min-w-[150px] max-w-[300px]">
             <span className="text-sm font-medium text-foreground truncate">{fileName}</span>
-            {/* TODO(pdfluent-viewer): replace static saved indicator with real dirty/clean state
-                Status: design integrated, functionality not implemented yet */}
             <span
-              className="w-1.5 h-1.5 rounded-full bg-green-500 shrink-0"
-              title="Saved"
-              aria-label="Saved"
+              className={`w-1.5 h-1.5 rounded-full shrink-0 ${isDirty ? 'bg-orange-400' : 'bg-green-500'}`}
+              title={isDirty ? 'Unsaved changes' : 'Saved'}
+              aria-label={isDirty ? 'Unsaved changes' : 'Saved'}
             />
           </div>
         ) : (
