@@ -8,52 +8,14 @@
 // TODO(pdfluent-viewer): wire all ModeToolbar tool buttons to their respective viewer actions
 // Status: design integrated, functionality not implemented yet
 
-import type { ReactNode } from 'react';
-import {
-  MousePointerIcon,
-  HandIcon,
-  ZoomInIcon,
-  ZoomOutIcon,
-  MaximizeIcon,
-  SearchIcon,
-  HighlighterIcon,
-  UnderlineIcon,
-  StrikethroughIcon,
-  MessageSquareIcon,
-  StickyNoteIcon,
-  PenIcon,
-  TypeIcon,
-  ImageIcon,
-  LinkIcon,
-  LayoutGridIcon,
-  Trash2Icon,
-  RotateCwIcon,
-  ScissorsIcon,
-  LayersIcon,
-  CheckSquareIcon,
-  CircleIcon,
-  LockIcon,
-  KeyIcon,
-  EyeOffIcon,
-  RefreshCwIcon,
-  PackageIcon,
-  FileSignatureIcon,
-  CalendarIcon,
-  SlidersHorizontalIcon,
-  BookOpenIcon,
-} from 'lucide-react';
 import type { ViewerMode } from '../types';
+import { TOOLS_BY_MODE, type ToolDefinition } from '../tools/toolDefinitions';
 
 interface ModeToolbarProps {
   mode: ViewerMode;
 }
 
-interface ToolBtn {
-  icon: ReactNode;
-  label: string;
-}
-
-function ToolGroup({ tools }: { tools: ToolBtn[] }) {
+function ToolGroup({ tools }: { tools: ToolDefinition[] }) {
   return (
     <div className="flex items-center gap-0.5">
       {tools.map((t) => (
@@ -66,7 +28,7 @@ function ToolGroup({ tools }: { tools: ToolBtn[] }) {
           aria-label={t.label}
           className="flex items-center gap-1 px-2 py-1 rounded text-xs text-muted-foreground/50 cursor-default hover:bg-transparent"
         >
-          <span className="w-3.5 h-3.5">{t.icon}</span>
+          <t.icon className="w-3.5 h-3.5" />
           <span className="hidden lg:inline">{t.label}</span>
         </button>
       ))}
@@ -77,103 +39,6 @@ function ToolGroup({ tools }: { tools: ToolBtn[] }) {
 function Divider() {
   return <div className="w-px h-4 bg-border mx-1 shrink-0" />;
 }
-
-const TOOLS_BY_MODE: Record<ViewerMode, Array<ToolBtn[]>> = {
-  read: [
-    [
-      { icon: <MousePointerIcon />, label: 'Selecteren' },
-      { icon: <HandIcon />, label: 'Pannen' },
-    ],
-    [
-      { icon: <ZoomInIcon />, label: 'Inzoomen' },
-      { icon: <ZoomOutIcon />, label: 'Uitzoomen' },
-      { icon: <MaximizeIcon />, label: 'Volledig scherm' },
-    ],
-    [
-      { icon: <SearchIcon />, label: 'Zoek tekst' },
-      { icon: <BookOpenIcon />, label: 'Hardop lezen' },
-    ],
-  ],
-  review: [
-    [
-      { icon: <HighlighterIcon />, label: 'Markeren' },
-      { icon: <UnderlineIcon />, label: 'Onderstrepen' },
-      { icon: <StrikethroughIcon />, label: 'Doorstrepen' },
-    ],
-    [
-      { icon: <StickyNoteIcon />, label: 'Notitie' },
-      { icon: <MessageSquareIcon />, label: 'Opmerking' },
-    ],
-    [
-      { icon: <PenIcon />, label: 'Vrij tekenen' },
-      { icon: <LayersIcon />, label: 'Stempel' },
-    ],
-  ],
-  edit: [
-    [
-      { icon: <TypeIcon />, label: 'Tekst bewerken' },
-      { icon: <TypeIcon />, label: 'Tekst toevoegen' },
-    ],
-    [
-      { icon: <ImageIcon />, label: 'Afbeelding' },
-      { icon: <LinkIcon />, label: 'Koppeling' },
-    ],
-    [
-      { icon: <SlidersHorizontalIcon />, label: 'Koptekst/voettekst' },
-      { icon: <LayersIcon />, label: 'Watermerk' },
-    ],
-  ],
-  organize: [
-    [
-      { icon: <LayoutGridIcon />, label: 'Pagina invoegen' },
-      { icon: <Trash2Icon />, label: 'Pagina verwijderen' },
-      { icon: <RotateCwIcon />, label: 'Pagina roteren' },
-    ],
-    [
-      { icon: <ScissorsIcon />, label: 'Splitsen' },
-      { icon: <LayersIcon />, label: 'Samenvoegen' },
-    ],
-  ],
-  forms: [
-    [
-      { icon: <SlidersHorizontalIcon />, label: 'Automatisch detecteren' },
-    ],
-    [
-      { icon: <TypeIcon />, label: 'Tekstveld' },
-      { icon: <CheckSquareIcon />, label: 'Selectievakje' },
-      { icon: <CircleIcon />, label: 'Keuzerondje' },
-    ],
-    [
-      { icon: <FileSignatureIcon />, label: 'Handtekening' },
-      { icon: <PenIcon />, label: 'Initialen' },
-      { icon: <CalendarIcon />, label: 'Datum' },
-    ],
-  ],
-  protect: [
-    [
-      { icon: <LockIcon />, label: 'Wachtwoord' },
-      { icon: <KeyIcon />, label: 'Machtigingen' },
-    ],
-    [
-      { icon: <EyeOffIcon />, label: 'Redigeren' },
-      { icon: <Trash2Icon />, label: 'Verbergen' },
-    ],
-    [
-      { icon: <SearchIcon />, label: 'Vergelijken' },
-      { icon: <SlidersHorizontalIcon />, label: 'Toegankelijkheid' },
-    ],
-  ],
-  convert: [
-    [
-      { icon: <RefreshCwIcon />, label: 'Naar PDF' },
-      { icon: <LayersIcon />, label: 'PDF exporteren' },
-    ],
-    [
-      { icon: <PackageIcon />, label: 'Comprimeren' },
-      { icon: <SearchIcon />, label: 'OCR scannen' },
-    ],
-  ],
-};
 
 export function ModeToolbar({ mode }: ModeToolbarProps) {
   const groups = TOOLS_BY_MODE[mode];

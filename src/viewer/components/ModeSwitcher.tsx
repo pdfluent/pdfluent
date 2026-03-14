@@ -20,8 +20,6 @@ import type { ViewerMode } from '../types';
 interface ModeSwitcherProps {
   mode: ViewerMode;
   onChange: (m: ViewerMode) => void;
-  // TODO(pdfluent-viewer): wire onOpenAllTools to the AllToolsPanel overlay
-  // Status: design integrated, functionality not implemented yet
   onOpenAllTools: () => void;
 }
 
