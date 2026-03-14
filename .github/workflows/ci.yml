@@ -1,0 +1,277 @@
+# Copyright (c) 2026 PDFluent B.V. All rights reserved.
+# See https://pdfluent.com/license for terms.
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # Lint Rust (fmt + clippy)
+  # ---------------------------------------------------------------------------
+  lint-rust:
+    name: Lint Rust
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Checkout PDFluent
+        uses: actions/checkout@v4
+        with:
+          path: PDFluent/pdfluent
+
+      - name: Checkout XFA SDK
+        uses: actions/checkout@v4
+        with:
+          repository: pdfluent/xfa
+          token: ${{ secrets.XFA_REPO_TOKEN }}
+          path: XFA
+
+      - name: Setup Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Cache cargo registry & build
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            PDFluent/pdfluent/src-tauri/target
+          key: lint-rust-${{ runner.os }}-cargo-${{ hashFiles('PDFluent/pdfluent/src-tauri/Cargo.lock') }}
+          restore-keys: |
+            lint-rust-${{ runner.os }}-cargo-
+
+      - name: Install Linux system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev \
+            libappindicator3-dev \
+            librsvg2-dev \
+            patchelf
+
+      - name: Check formatting
+        working-directory: PDFluent/pdfluent/src-tauri
+        run: cargo fmt --check
+
+      - name: Run Clippy
+        working-directory: PDFluent/pdfluent/src-tauri
+        run: cargo clippy --all-targets -- -D warnings
+
+  # ---------------------------------------------------------------------------
+  # Lint Frontend (TypeScript + ESLint)
+  # ---------------------------------------------------------------------------
+  lint-frontend:
+    name: Lint Frontend
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Checkout PDFluent
+        uses: actions/checkout@v4
+        with:
+          path: PDFluent/pdfluent
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: PDFluent/pdfluent/package-lock.json
+
+      - name: Install dependencies
+        working-directory: PDFluent/pdfluent
+        run: npm ci
+
+      - name: Type check
+        working-directory: PDFluent/pdfluent
+        run: npm run typecheck
+
+      - name: Lint
+        working-directory: PDFluent/pdfluent
+        run: npm run lint
+
+      - name: Run frontend tests
+        working-directory: PDFluent/pdfluent
+        run: npm run test
+
+      - name: Generate OCR model manifest
+        working-directory: PDFluent/pdfluent
+        run: npm run ocr:manifest
+
+      - name: Generate compliance inventory
+        working-directory: PDFluent/pdfluent
+        run: npm run compliance:generate
+
+      - name: Enforce license policy gate
+        working-directory: PDFluent/pdfluent
+        run: npm run compliance:check
+
+  # ---------------------------------------------------------------------------
+  # Test Rust
+  # ---------------------------------------------------------------------------
+  test-rust:
+    name: Test Rust
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Checkout PDFluent
+        uses: actions/checkout@v4
+        with:
+          path: PDFluent/pdfluent
+
+      - name: Checkout XFA SDK
+        uses: actions/checkout@v4
+        with:
+          repository: pdfluent/xfa
+          token: ${{ secrets.XFA_REPO_TOKEN }}
+          path: XFA
+
+      - name: Setup Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo registry & build
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            PDFluent/pdfluent/src-tauri/target
+          key: test-rust-${{ runner.os }}-cargo-${{ hashFiles('PDFluent/pdfluent/src-tauri/Cargo.lock') }}
+          restore-keys: |
+            test-rust-${{ runner.os }}-cargo-
+
+      - name: Install Linux system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev \
+            libappindicator3-dev \
+            librsvg2-dev \
+            patchelf
+
+      - name: Run tests
+        working-directory: PDFluent/pdfluent/src-tauri
+        run: cargo test
+
+  # ---------------------------------------------------------------------------
+  # E2E — v2 viewer (browser-only, no Tauri binary needed)
+  # ---------------------------------------------------------------------------
+  e2e:
+    name: E2E Viewer Tests
+    runs-on: ubuntu-22.04
+    needs: [lint-frontend]
+
+    steps:
+      - name: Checkout PDFluent
+        uses: actions/checkout@v4
+        with:
+          path: PDFluent/pdfluent
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: PDFluent/pdfluent/package-lock.json
+
+      - name: Install dependencies
+        working-directory: PDFluent/pdfluent
+        run: npm ci
+
+      - name: Install Playwright browsers
+        working-directory: PDFluent/pdfluent
+        run: npx playwright install chromium --with-deps
+
+      - name: Run E2E tests
+        working-directory: PDFluent/pdfluent
+        run: npm run test:e2e
+
+      - name: Upload failure screenshots
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-screenshots
+          path: PDFluent/pdfluent/test-results/
+          retention-days: 7
+
+  # ---------------------------------------------------------------------------
+  # Build (cross-platform Tauri build)
+  # ---------------------------------------------------------------------------
+  build:
+    name: Build (${{ matrix.platform }})
+    needs: [lint-rust, lint-frontend, test-rust, e2e]
+    runs-on: ${{ matrix.platform }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: macos-latest
+            args: ""
+          - platform: ubuntu-22.04
+            args: ""
+          - platform: windows-latest
+            args: ""
+
+    steps:
+      - name: Checkout PDFluent
+        uses: actions/checkout@v4
+        with:
+          path: PDFluent/pdfluent
+
+      - name: Checkout XFA SDK
+        uses: actions/checkout@v4
+        with:
+          repository: pdfluent/xfa
+          token: ${{ secrets.XFA_REPO_TOKEN }}
+          path: XFA
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: PDFluent/pdfluent/package-lock.json
+
+      - name: Setup Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo registry & build
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            PDFluent/pdfluent/src-tauri/target
+          key: build-${{ matrix.platform }}-cargo-${{ hashFiles('PDFluent/pdfluent/src-tauri/Cargo.lock') }}
+          restore-keys: |
+            build-${{ matrix.platform }}-cargo-
+
+      - name: Install Linux system dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev \
+            libappindicator3-dev \
+            librsvg2-dev \
+            patchelf
+
+      - name: Install frontend dependencies
+        working-directory: PDFluent/pdfluent
+        run: npm ci
+
+      - name: Build with Tauri
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          projectPath: PDFluent/pdfluent
+          args: ${{ matrix.args }}
