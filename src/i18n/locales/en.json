@@ -228,7 +228,13 @@
     "permCanAnnotate": "Annotate",
     "permCanFillForms": "Fill forms",
     "permCanExtractContent": "Extract content",
-    "permCanAssemble": "Assemble"
+    "permCanAssemble": "Assemble",
+    "searchRedact": "Search and redact",
+    "searchRedactPlaceholder": "Text to find and redact…",
+    "searchRedactBtn": "Find and redact",
+    "redactMetadataTitle": "Metadata",
+    "redactMetadataDesc": "Strip author, title, and other identifying metadata.",
+    "redactMetadataBtn": "Strip metadata"
   },
   "organize": {
     "thumbnails": "Thumbnails",
@@ -396,7 +402,20 @@
     "exportExcelRunning": "Converting to Excel…",
     "exportExcelDone": "Excel spreadsheet exported",
     "exportPowerpointRunning": "Converting to PowerPoint…",
-    "exportPowerpointDone": "PowerPoint presentation exported"
+    "exportPowerpointDone": "PowerPoint presentation exported",
+    "applyRedactRunning": "Applying redactions…",
+    "applyRedactDone": "Redactions applied",
+    "applyRedactFailed": "Failed to apply redactions",
+    "searchRedactRunning": "Searching and redacting…",
+    "searchRedactDone": "Redacted {{count}} match",
+    "searchRedactDone_plural": "Redacted {{count}} matches",
+    "searchRedactFailed": "Search-and-redact failed",
+    "redactMetadataRunning": "Stripping metadata…",
+    "redactMetadataDone": "Metadata stripped",
+    "redactMetadataFailed": "Failed to strip metadata",
+    "signRunning": "Signing document…",
+    "signDone": "Document signed",
+    "signFailed": "Signing failed"
   },
   "panels": {
     "search": "Search",
@@ -580,7 +599,8 @@
     "modeForms": "Mode: Forms",
     "modeProtect": "Mode: Protect",
     "modeConvert": "Mode: Convert",
-    "openRecent": "Open: {{name}}"
+    "openRecent": "Open: {{name}}",
+    "checkForUpdates": "Check for updates"
   },
   "ocr": {
     "language": "Language",
@@ -616,7 +636,9 @@
     "dutch": "Dutch (nl)",
     "german": "German (de)",
     "french": "French (fr)",
-    "spanish": "Spanish (es)"
+    "spanish": "Spanish (es)",
+    "confidenceThreshold": "Confidence: {{value}}%",
+    "toggleOverlay": "Toggle overlay"
   },
   "docInfo": {
     "title": "Title",
@@ -651,7 +673,27 @@
     "redactionCount": "{{count}} redaction pending",
     "redactionCount_plural": "{{count}} redactions pending",
     "applyRedactions": "Apply redactions permanently",
-    "deleteRedaction": "Delete redaction"
+    "deleteRedaction": "Delete redaction",
+    "signatures": "Digital Signatures"
+  },
+  "signature": {
+    "signSection": "Sign",
+    "verifySection": "Verify",
+    "certFile": "Certificate (.p12/.pfx)",
+    "browseCert": "Browse…",
+    "noCert": "No certificate selected",
+    "password": "Password",
+    "reason": "Reason (optional)",
+    "signBtn": "Sign & Save",
+    "signing": "Signing…",
+    "noSignatures": "No signatures found.",
+    "statusValid": "Valid",
+    "statusInvalid": "Invalid",
+    "statusUnknown": "Unknown",
+    "field": "Field",
+    "signer": "Signer",
+    "date": "Date",
+    "reasonLabel": "Reason"
   },
   "update": {
     "available": "Update available",

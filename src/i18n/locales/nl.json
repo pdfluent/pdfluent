@@ -228,7 +228,13 @@
     "permCanAnnotate": "Annoteren",
     "permCanFillForms": "Formulieren invullen",
     "permCanExtractContent": "Inhoud extraheren",
-    "permCanAssemble": "Samenstellen"
+    "permCanAssemble": "Samenstellen",
+    "searchRedact": "Zoeken en redigeren",
+    "searchRedactPlaceholder": "Tekst om te zoeken en redigeren…",
+    "searchRedactBtn": "Zoeken en redigeren",
+    "redactMetadataTitle": "Metadata",
+    "redactMetadataDesc": "Verwijder auteur, titel en andere identificerende metadata.",
+    "redactMetadataBtn": "Metadata verwijderen"
   },
   "organize": {
     "thumbnails": "Miniaturen",
@@ -396,7 +402,20 @@
     "exportExcelRunning": "Converteren naar Excel…",
     "exportExcelDone": "Excel-spreadsheet geëxporteerd",
     "exportPowerpointRunning": "Converteren naar PowerPoint…",
-    "exportPowerpointDone": "PowerPoint-presentatie geëxporteerd"
+    "exportPowerpointDone": "PowerPoint-presentatie geëxporteerd",
+    "applyRedactRunning": "Redigeringen toepassen…",
+    "applyRedactDone": "Redigeringen toegepast",
+    "applyRedactFailed": "Redigeringen toepassen mislukt",
+    "searchRedactRunning": "Zoeken en redigeren…",
+    "searchRedactDone": "{{count}} overeenkomst geredigeerd",
+    "searchRedactDone_plural": "{{count}} overeenkomsten geredigeerd",
+    "searchRedactFailed": "Zoeken en redigeren mislukt",
+    "redactMetadataRunning": "Metadata verwijderen…",
+    "redactMetadataDone": "Metadata verwijderd",
+    "redactMetadataFailed": "Metadata verwijderen mislukt",
+    "signRunning": "Document ondertekenen…",
+    "signDone": "Document ondertekend",
+    "signFailed": "Ondertekenen mislukt"
   },
   "panels": {
     "search": "Zoeken",
@@ -580,7 +599,8 @@
     "modeForms": "Modus: Formulieren",
     "modeProtect": "Modus: Beveiligen",
     "modeConvert": "Modus: Converteren",
-    "openRecent": "Open: {{name}}"
+    "openRecent": "Open: {{name}}",
+    "checkForUpdates": "Controleer op updates"
   },
   "ocr": {
     "language": "Taal",
@@ -616,7 +636,9 @@
     "dutch": "Nederlands (nl)",
     "german": "Duits (de)",
     "french": "Frans (fr)",
-    "spanish": "Spaans (es)"
+    "spanish": "Spaans (es)",
+    "confidenceThreshold": "Betrouwbaarheid: {{value}}%",
+    "toggleOverlay": "Overlay aan/uit"
   },
   "docInfo": {
     "title": "Titel",
@@ -651,7 +673,27 @@
     "redactionCount": "{{count}} redigering in behandeling",
     "redactionCount_plural": "{{count}} redigeringen in behandeling",
     "applyRedactions": "Redigeringen definitief toepassen",
-    "deleteRedaction": "Redigering verwijderen"
+    "deleteRedaction": "Redigering verwijderen",
+    "signatures": "Digitale handtekeningen"
+  },
+  "signature": {
+    "signSection": "Ondertekenen",
+    "verifySection": "Verifiëren",
+    "certFile": "Certificaat (.p12/.pfx)",
+    "browseCert": "Bladeren…",
+    "noCert": "Geen certificaat geselecteerd",
+    "password": "Wachtwoord",
+    "reason": "Reden (optioneel)",
+    "signBtn": "Ondertekenen en opslaan",
+    "signing": "Ondertekenen…",
+    "noSignatures": "Geen handtekeningen gevonden.",
+    "statusValid": "Geldig",
+    "statusInvalid": "Ongeldig",
+    "statusUnknown": "Onbekend",
+    "field": "Veld",
+    "signer": "Ondertekenaar",
+    "date": "Datum",
+    "reasonLabel": "Reden"
   },
   "update": {
     "available": "Update beschikbaar",

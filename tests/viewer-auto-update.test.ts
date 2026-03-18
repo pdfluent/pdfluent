@@ -165,3 +165,39 @@ describe('ViewerApp — auto-update wiring', () => {
     expect(viewerAppSource).toContain('setUpdateAvailable(false)');
   });
 });
+
+// ---------------------------------------------------------------------------
+// useCommands — check-for-updates command
+// ---------------------------------------------------------------------------
+
+const commandsSource = readFileSync(
+  new URL('../src/viewer/hooks/useCommands.ts', import.meta.url),
+  'utf8'
+);
+
+describe('useCommands — check-for-updates', () => {
+  it('accepts onCheckForUpdates prop', () => {
+    expect(commandsSource).toContain('onCheckForUpdates: () => void');
+  });
+
+  it('includes check-for-updates command', () => {
+    expect(commandsSource).toContain("id: 'check-for-updates'");
+  });
+
+  it('uses commands.checkForUpdates i18n key', () => {
+    expect(commandsSource).toContain("t('commands.checkForUpdates')");
+  });
+
+  it('calls onCheckForUpdates in action', () => {
+    expect(commandsSource).toContain('onCheckForUpdates()');
+  });
+
+  it('ViewerApp passes onCheckForUpdates to useCommands', () => {
+    expect(viewerAppSource).toContain('onCheckForUpdates: handleCheckForUpdates');
+  });
+
+  it('ViewerApp defines handleCheckForUpdates', () => {
+    expect(viewerAppSource).toContain('handleCheckForUpdates');
+    expect(viewerAppSource).toContain('checkAndInstallUpdate(');
+  });
+});

@@ -26,6 +26,7 @@ interface UseCommandsProps {
   pendingActionRef: React.MutableRefObject<(() => void) | null>;
   recentFiles: string[];
   handleLoadDocument: (source: string | ArrayBuffer) => Promise<void>;
+  onCheckForUpdates: () => void;
 }
 
 export function useCommands({
@@ -44,6 +45,7 @@ export function useCommands({
   pendingActionRef,
   recentFiles,
   handleLoadDocument,
+  onCheckForUpdates,
 }: UseCommandsProps): Command[] {
   const { t } = useTranslation();
   return useMemo(() => {
@@ -108,6 +110,9 @@ export function useCommands({
         action: () => { setMode('protect'); } },
       { id: 'mode-convert', label: t('commands.modeConvert'), keywords: ['convert'],
         action: () => { setMode('convert'); } },
+      // ── App ───────────────────────────────────────────────────────────────
+      { id: 'check-for-updates', label: t('commands.checkForUpdates'), keywords: ['update', 'check', 'version', 'upgrade'],
+        action: () => { onCheckForUpdates(); } },
       // ── Recent files ──────────────────────────────────────────────────────
       ...recentFiles.map((path, i) => {
         const name = path.split(/[/\\]/).pop() ?? path;
@@ -120,5 +125,5 @@ export function useCommands({
       }),
     ];
     return commands;
-  }, [t, pageCount, isDirty, setPageIndex, setZoom, handleSaveAs, setExportOpen, setLeftRailOpen, setShortcutSheetOpen, setMode, closeDocument, setCurrentFilePath, setUnsavedDialogOpen, pendingActionRef, recentFiles, handleLoadDocument]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [t, pageCount, isDirty, setPageIndex, setZoom, handleSaveAs, setExportOpen, setLeftRailOpen, setShortcutSheetOpen, setMode, closeDocument, setCurrentFilePath, setUnsavedDialogOpen, pendingActionRef, recentFiles, handleLoadDocument, onCheckForUpdates]); // eslint-disable-line react-hooks/exhaustive-deps
 }
