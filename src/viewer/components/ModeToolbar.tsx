@@ -197,8 +197,6 @@ export function ModeToolbar({
     }
   }
 
-  void handleRotatePageRight; // alias kept for future WIRED_TOOLS wiring
-
   function handleToolAction(label: string): void {
     switch (label) {
       case 'Inzoomen':           onZoomIn();                      break;
