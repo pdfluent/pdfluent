@@ -7,6 +7,7 @@
 
 import { useEffect, useRef } from 'react';
 import { XIcon } from 'lucide-react';
+import { LanguageSwitcher } from './LanguageSwitcher';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -155,6 +156,12 @@ export function ShortcutSheet({ isOpen, onClose }: ShortcutSheetProps) {
               </div>
             </div>
           ))}
+        </div>
+
+        {/* Footer — language switcher */}
+        <div className="flex items-center justify-between px-4 py-2 border-t border-border">
+          <span className="text-[10px] text-muted-foreground">Language / Taal</span>
+          <LanguageSwitcher />
         </div>
       </div>
     </>

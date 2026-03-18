@@ -11,6 +11,8 @@ import { ErrorBoundary } from "./components/ErrorBoundary";
 import { ViewerApp } from "./viewer/ViewerApp";
 import "./styles/global.css";
 import "./styles/magic-patterns.css";
+// i18n must be imported before any component that uses useTranslation
+import "./i18n";
 
 const useViewer = new URLSearchParams(window.location.search).has('v2');
 
