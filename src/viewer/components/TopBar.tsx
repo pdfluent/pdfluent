@@ -35,6 +35,14 @@ interface TopBarProps {
   onOpenCommandPalette: () => void;
   onOpenExport: () => void;
   onSaveAs: () => Promise<void>;
+  /** Whether there is a command in the undo stack. */
+  canUndo?: boolean;
+  /** Whether there is a command in the redo stack. */
+  canRedo?: boolean;
+  /** Called when the user clicks the Undo button. */
+  onUndo?: () => void;
+  /** Called when the user clicks the Redo button. */
+  onRedo?: () => void;
 }
 
 const isTauri = typeof window !== 'undefined' && '__TAURI__' in window;
@@ -55,6 +63,10 @@ export function TopBar({
   onOpenCommandPalette,
   onOpenExport,
   onSaveAs,
+  canUndo = false,
+  canRedo = false,
+  onUndo,
+  onRedo,
 }: TopBarProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { push, update } = useTaskQueueContext();
@@ -182,23 +194,23 @@ export function TopBar({
 
         <div className="w-px h-4 bg-border mx-1 shrink-0" />
 
-        {/* TODO(pdfluent-viewer): wire undo to document edit history
-            Status: design integrated, functionality not implemented yet */}
         <button
-          disabled
-          className="p-1.5 text-muted-foreground/40 rounded-md cursor-default"
-          title="Undo (not yet available)"
+          data-testid="undo-btn"
+          disabled={!canUndo}
+          onClick={onUndo}
+          className={`p-1.5 rounded-md ${canUndo ? 'text-foreground hover:bg-accent cursor-pointer' : 'text-muted-foreground/40 cursor-default'}`}
+          title={canUndo ? 'Ongedaan maken (⌘Z)' : 'Niets om ongedaan te maken'}
           aria-label="Undo"
         >
           <Undo2Icon className="w-3.5 h-3.5" />
         </button>
 
-        {/* TODO(pdfluent-viewer): wire redo to document edit history
-            Status: design integrated, functionality not implemented yet */}
         <button
-          disabled
-          className="p-1.5 text-muted-foreground/40 rounded-md cursor-default"
-          title="Redo (not yet available)"
+          data-testid="redo-btn"
+          disabled={!canRedo}
+          onClick={onRedo}
+          className={`p-1.5 rounded-md ${canRedo ? 'text-foreground hover:bg-accent cursor-pointer' : 'text-muted-foreground/40 cursor-default'}`}
+          title={canRedo ? 'Opnieuw uitvoeren (⌘⇧Z)' : 'Niets om opnieuw uit te voeren'}
           aria-label="Redo"
         >
           <Redo2Icon className="w-3.5 h-3.5" />
