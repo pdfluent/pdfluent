@@ -141,10 +141,24 @@ describe('PageCanvas — TextInteractionOverlay integration', () => {
 // ---------------------------------------------------------------------------
 
 describe('ViewerApp — text interaction wiring', () => {
-  const viewerAppSource = readFileSync(
-    join(import.meta.dirname, '../src/viewer/ViewerApp.tsx'),
-    'utf8',
-  );
+  const viewerAppSource = [
+    '../src/viewer/hooks/usePageNavigation.ts',
+    '../src/viewer/hooks/useZoomControls.ts',
+    '../src/viewer/hooks/useSidebarState.ts',
+    '../src/viewer/hooks/useUndoRedo.ts',
+    '../src/viewer/hooks/useSearch.ts',
+    '../src/viewer/hooks/useFormFields.ts',
+    '../src/viewer/hooks/useModeManager.ts',
+  '../src/viewer/hooks/useDocumentLifecycle.ts',
+  '../src/viewer/hooks/useCommands.ts',
+  '../src/viewer/hooks/useDragDrop.ts',
+  '../src/viewer/ViewerSidePanels.tsx',
+  '../src/viewer/hooks/useAnnotations.ts',
+  '../src/viewer/hooks/useTextInteraction.ts',
+  '../src/viewer/hooks/useKeyboardShortcuts.ts',
+    '../src/viewer/ViewerApp.tsx',
+  '../src/viewer/WelcomeSection.tsx',
+  ].map(p => readFileSync(join(import.meta.dirname, p), 'utf8')).join('\n\n');
 
   it('imports groupDigitalTextSpans', () => {
     expect(viewerAppSource).toContain('groupDigitalTextSpans');

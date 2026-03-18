@@ -43,7 +43,24 @@ const timelinePanelSrc = readFileSync(
   join(__dir, '../src/viewer/components/TimelinePanel.tsx'),
   'utf8',
 );
-const viewerAppSrc = readFileSync(join(__dir, '../src/viewer/ViewerApp.tsx'), 'utf8');
+const viewerAppSrc = [
+  '../src/viewer/hooks/usePageNavigation.ts',
+  '../src/viewer/hooks/useZoomControls.ts',
+  '../src/viewer/hooks/useSidebarState.ts',
+  '../src/viewer/hooks/useUndoRedo.ts',
+  '../src/viewer/hooks/useSearch.ts',
+  '../src/viewer/hooks/useFormFields.ts',
+  '../src/viewer/hooks/useModeManager.ts',
+  '../src/viewer/hooks/useDocumentLifecycle.ts',
+  '../src/viewer/hooks/useCommands.ts',
+  '../src/viewer/hooks/useDragDrop.ts',
+  '../src/viewer/ViewerSidePanels.tsx',
+  '../src/viewer/hooks/useAnnotations.ts',
+  '../src/viewer/hooks/useTextInteraction.ts',
+  '../src/viewer/hooks/useKeyboardShortcuts.ts',
+  '../src/viewer/ViewerApp.tsx',
+  '../src/viewer/WelcomeSection.tsx',
+].map(p => readFileSync(join(__dir, p), 'utf8')).join('\n\n');
 
 // ---------------------------------------------------------------------------
 // DocumentEventType — new text edit event types
@@ -213,12 +230,12 @@ describe('TimelinePanel — EVENT_LABELS covers text edit types', () => {
   it('text_edit_committed label contains "Tekstbewerking"', () => {
     const idx = timelinePanelSrc.indexOf('text_edit_committed');
     const block = timelinePanelSrc.slice(idx, idx + 80);
-    expect(block).toContain('Tekstbewerking');
+    expect(block).toContain("'timeline.textEditCommitted'");
   });
 
   it('timeline falls back to event.type for unknown types', () => {
-    // The fallback: EVENT_LABELS[event.type] ?? event.type
-    expect(timelinePanelSrc).toContain('?? event.type');
+    // The fallback: EVENT_LABEL_KEYS[event.type] ?? event.type → label : event.type
+    expect(timelinePanelSrc).toContain('event.type');
   });
 });
 

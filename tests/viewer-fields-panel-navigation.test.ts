@@ -106,7 +106,7 @@ describe('FieldsPanel — no regressions to rendering', () => {
   });
 
   it('still renders type badge via FIELD_TYPE_LABELS', () => {
-    expect(fieldsPanelBody).toContain('FIELD_TYPE_LABELS[field.type]');
+    expect(fieldsPanelBody).toContain('FIELD_TYPE_LABEL_KEYS[field.type]');
   });
 
   it('still renders 1-based page number', () => {
@@ -118,7 +118,7 @@ describe('FieldsPanel — no regressions to rendering', () => {
   });
 
   it('still renders the empty state', () => {
-    expect(fieldsPanelBody).toContain('Geen formuliervelden gevonden.');
+    expect(fieldsPanelBody).toContain("t('leftNav.noFormFields'");
   });
 
   it('still has hover background on field rows', () => {

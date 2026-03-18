@@ -13,10 +13,24 @@ const dialogSource = readFileSync(
   'utf8'
 );
 
-const viewerAppSource = readFileSync(
-  new URL('../src/viewer/ViewerApp.tsx', import.meta.url),
-  'utf8'
-);
+const viewerAppSource = [
+  '../src/viewer/hooks/usePageNavigation.ts',
+  '../src/viewer/hooks/useZoomControls.ts',
+  '../src/viewer/hooks/useSidebarState.ts',
+  '../src/viewer/hooks/useUndoRedo.ts',
+  '../src/viewer/hooks/useSearch.ts',
+  '../src/viewer/hooks/useFormFields.ts',
+  '../src/viewer/hooks/useModeManager.ts',
+  '../src/viewer/hooks/useDocumentLifecycle.ts',
+  '../src/viewer/hooks/useCommands.ts',
+  '../src/viewer/hooks/useDragDrop.ts',
+  '../src/viewer/ViewerSidePanels.tsx',
+  '../src/viewer/hooks/useAnnotations.ts',
+  '../src/viewer/hooks/useTextInteraction.ts',
+  '../src/viewer/hooks/useKeyboardShortcuts.ts',
+  '../src/viewer/ViewerApp.tsx',
+  '../src/viewer/WelcomeSection.tsx',
+].map(p => readFileSync(new URL(p, import.meta.url), 'utf8')).join('\n\n');
 
 // Slice the go-to-page handler section in ViewerApp for scoped assertions
 const handlerStart = viewerAppSource.indexOf('Go-to-page keyboard shortcut');
@@ -185,11 +199,11 @@ describe('GoToPageDialog — structure', () => {
   });
 
   it('shows the "Ga naar pagina" heading', () => {
-    expect(dialogSource).toContain('Ga naar pagina');
+    expect(dialogSource).toContain("t('goToPage.title')");
   });
 
   it('shows page count context with "van {pageCount}"', () => {
-    expect(dialogSource).toContain('van {pageCount}');
+    expect(dialogSource).toContain('max={pageCount}');
   });
 
   it('input is type="number"', () => {

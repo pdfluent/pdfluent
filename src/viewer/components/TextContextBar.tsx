@@ -25,6 +25,7 @@
  */
 
 import { memo } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { TextParagraphTarget, TextRect } from '../text/textInteractionModel';
 import { pdfRectToDom } from '../text/textInteractionModel';
 import { viewerActionRegistry } from '../interaction/contextActions';
@@ -55,37 +56,37 @@ export interface TextContextAction {
 export const TEXT_CONTEXT_ACTIONS: ReadonlyArray<TextContextAction> = [
   {
     id: 'edit-text',
-    label: 'Tekst bewerken',
+    label: 'textContext.editText',
     icon: '✏',
     availableIn: ['edit'],
   },
   {
     id: 'annotate',
-    label: 'Annoteren',
+    label: 'textContext.annotate',
     icon: '✏️',
     availableIn: ['review', 'edit'],
   },
   {
     id: 'redact',
-    label: 'Redigeren',
+    label: 'textContext.redact',
     icon: '⬛',
     availableIn: ['protect', 'edit'],
   },
   {
     id: 'copy',
-    label: 'Kopiëren',
+    label: 'textContext.copy',
     icon: '📋',
     availableIn: ['read', 'review', 'edit', 'protect', 'forms'],
   },
   {
     id: 'summarize',
-    label: 'Samenvatten',
+    label: 'textContext.summarize',
     icon: '📝',
     availableIn: ['read', 'review', 'edit'],
   },
   {
     id: 'explain',
-    label: 'Uitleggen',
+    label: 'textContext.explain',
     icon: '💡',
     availableIn: ['read', 'review', 'edit'],
   },
@@ -148,6 +149,7 @@ export const TextContextBar = memo(function TextContextBar({
   onCommit,
   onCancel,
 }: TextContextBarProps) {
+  const { t } = useTranslation();
   const domRect = pdfRectToDom(target.rect, pageHeightPt, zoom);
   const availableActions = TEXT_CONTEXT_ACTIONS.filter(a => a.availableIn.includes(mode));
 
@@ -187,7 +189,7 @@ export const TextContextBar = memo(function TextContextBar({
         <>
           <button
             data-testid="text-context-action-cancel"
-            title="Annuleren (Esc)"
+            title={t('textContext.cancelEsc')}
             onClick={(e) => { e.stopPropagation(); onCancel?.(); }}
             style={{
               fontSize: 11,
@@ -200,11 +202,11 @@ export const TextContextBar = memo(function TextContextBar({
               color: 'var(--muted-foreground, #64748b)',
             }}
           >
-            Annuleren
+            {t('common.cancel')}
           </button>
           <button
             data-testid="text-context-action-commit"
-            title="Opslaan (⌘↵)"
+            title={t('textContext.saveCmdEnter')}
             onClick={(e) => { e.stopPropagation(); onCommit?.(); }}
             style={{
               fontSize: 11,
@@ -218,14 +220,14 @@ export const TextContextBar = memo(function TextContextBar({
               fontWeight: 500,
             }}
           >
-            Opslaan
+            {t('common.save')}
           </button>
         </>
       ) : (
         availableActions.map(action => {
           // "edit-text" is disabled when the target is not editable
           const isDisabled = action.id === 'edit-text' && editability !== null && editability.status !== 'editable';
-          const title = isDisabled ? (editability?.label ?? action.label) : action.label;
+          const title = isDisabled ? (editability?.label ?? t(action.label)) : t(action.label);
           return (
             <button
               key={action.id}

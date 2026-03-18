@@ -54,11 +54,11 @@ describe('review filter — state', () => {
   });
 
   it('filterText input uses placeholder "Filter opmerkingen…"', () => {
-    expect(reviewSource).toContain('Filter opmerkingen…');
+    expect(reviewSource).toContain("t('review.filterPlaceholder')");
   });
 
   it('filterAuthor select has "Alle reviewers" default option', () => {
-    expect(reviewSource).toContain('Alle reviewers');
+    expect(reviewSource).toContain("t('review.allReviewers')");
   });
 });
 
@@ -81,7 +81,7 @@ describe('review filter — filteredComments', () => {
   });
 
   it('shows filter count with "van" label when filter active', () => {
-    expect(reviewSource).toContain('van {comments.length} opmerkingen');
+    expect(reviewSource).toContain("t('review.filteredCount'");
   });
 });
 
@@ -166,7 +166,7 @@ describe('review filter — no regressions', () => {
   });
 
   it('comment.author || Onbekend fallback still present', () => {
-    expect(reviewSource).toContain("comment.author || 'Onbekend'");
+    expect(reviewSource).toContain('comment.author || unknown');
   });
 
   it('comment.contents still shown', () => {
@@ -307,7 +307,7 @@ describe('review filter — comment-filter-page dropdown', () => {
     const selStart = reviewSource.indexOf('data-testid="comment-filter-page"');
     const selEnd   = reviewSource.indexOf('</select>', selStart) + 9;
     const selEl    = reviewSource.slice(selStart, selEnd);
-    expect(selEl).toContain("<option value=\"\">Alle pagina's</option>");
+    expect(selEl).toContain("t('review.allPages')");
   });
 
   it('page option value is String(p) and label is 1-based', () => {
@@ -315,7 +315,7 @@ describe('review filter — comment-filter-page dropdown', () => {
     const selEnd   = reviewSource.indexOf('</select>', selStart) + 9;
     const selEl    = reviewSource.slice(selStart, selEnd);
     expect(selEl).toContain('value={String(p)}');
-    expect(selEl).toContain('Pagina {p + 1}');
+    expect(selEl).toContain("t('review.commentPage'");
   });
 
   it('comment-filter-page appears after comment-filter-author', () => {

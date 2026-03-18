@@ -24,14 +24,14 @@ const actionBody = toolbarSource.slice(actionStart, actionEnd);
 
 describe('ModeToolbar — full screen: WIRED_TOOLS entry', () => {
   it("adds 'Volledig scherm' to WIRED_TOOLS", () => {
-    expect(toolbarSource).toContain("'Volledig scherm'");
+    expect(toolbarSource).toContain("'toolbar.fullscreen'");
   });
 
   it("'Volledig scherm' is inside the WIRED_TOOLS Set literal", () => {
     const wiredStart = toolbarSource.indexOf('WIRED_TOOLS');
     const wiredEnd = toolbarSource.indexOf(']);', wiredStart);
     const wiredBlock = toolbarSource.slice(wiredStart, wiredEnd);
-    expect(wiredBlock).toContain("'Volledig scherm'");
+    expect(wiredBlock).toContain("'toolbar.fullscreen'");
   });
 });
 
@@ -41,7 +41,7 @@ describe('ModeToolbar — full screen: WIRED_TOOLS entry', () => {
 
 describe('ModeToolbar — full screen: handleToolAction case', () => {
   it("handles the 'Volledig scherm' case", () => {
-    expect(actionBody).toContain("case 'Volledig scherm'");
+    expect(actionBody).toContain("case 'toolbar.fullscreen'");
   });
 
   it('checks document.fullscreenElement to decide enter vs exit', () => {
@@ -57,7 +57,7 @@ describe('ModeToolbar — full screen: handleToolAction case', () => {
   });
 
   it('uses the correct toggle logic: exit if fullscreenElement, enter otherwise', () => {
-    const caseStart = actionBody.indexOf("case 'Volledig scherm'");
+    const caseStart = actionBody.indexOf("case 'toolbar.fullscreen'");
     const caseEnd = actionBody.indexOf('break', caseStart);
     const caseBlock = actionBody.slice(caseStart, caseEnd);
     expect(caseBlock).toContain('if (document.fullscreenElement)');
@@ -74,29 +74,29 @@ describe('ModeToolbar — full screen: no regressions', () => {
   it("'Inzoomen' is still in WIRED_TOOLS", () => {
     const wiredStart = toolbarSource.indexOf('WIRED_TOOLS');
     const wiredEnd = toolbarSource.indexOf(']);', wiredStart);
-    expect(toolbarSource.slice(wiredStart, wiredEnd)).toContain("'Inzoomen'");
+    expect(toolbarSource.slice(wiredStart, wiredEnd)).toContain("'toolbar.zoomIn'");
   });
 
   it("'Uitzoomen' is still in WIRED_TOOLS", () => {
     const wiredStart = toolbarSource.indexOf('WIRED_TOOLS');
     const wiredEnd = toolbarSource.indexOf(']);', wiredStart);
-    expect(toolbarSource.slice(wiredStart, wiredEnd)).toContain("'Uitzoomen'");
+    expect(toolbarSource.slice(wiredStart, wiredEnd)).toContain("'toolbar.zoomOut'");
   });
 
   it("'Zoek tekst' is still in WIRED_TOOLS", () => {
     const wiredStart = toolbarSource.indexOf('WIRED_TOOLS');
     const wiredEnd = toolbarSource.indexOf(']);', wiredStart);
-    expect(toolbarSource.slice(wiredStart, wiredEnd)).toContain("'Zoek tekst'");
+    expect(toolbarSource.slice(wiredStart, wiredEnd)).toContain("'toolbar.searchText'");
   });
 
   it('zoom in/out cases still dispatch', () => {
-    expect(actionBody).toContain("case 'Inzoomen'");
-    expect(actionBody).toContain("case 'Uitzoomen'");
+    expect(actionBody).toContain("case 'toolbar.zoomIn'");
+    expect(actionBody).toContain("case 'toolbar.zoomOut'");
   });
 
   it('page mutation cases still dispatch', () => {
-    expect(actionBody).toContain("case 'Pagina verwijderen'");
-    expect(actionBody).toContain("case 'Rechts roteren'");
+    expect(actionBody).toContain("case 'toolbar.deletePage'");
+    expect(actionBody).toContain("case 'toolbar.rotateRight'");
   });
 
   it('zoom display still present in read mode', () => {

@@ -7,6 +7,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { XIcon } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useTaskQueueContext } from '../context/TaskQueueContext';
 
 // ---------------------------------------------------------------------------
@@ -16,12 +17,12 @@ import { useTaskQueueContext } from '../context/TaskQueueContext';
 export type ExportFormat = 'pdf' | 'compressed_pdf' | 'png' | 'jpeg' | 'docx';
 type ImagePageRange = 'current' | 'all';
 
-export const FORMAT_LABELS: Record<ExportFormat, string> = {
-  pdf: 'PDF',
-  compressed_pdf: 'Gecomprimeerde PDF',
-  png: 'PNG (afbeelding)',
-  jpeg: 'JPEG (afbeelding)',
-  docx: 'Word-document (.docx)',
+export const FORMAT_LABEL_KEYS: Record<ExportFormat, string> = {
+  pdf: 'exportDialog.formatPdf',
+  compressed_pdf: 'exportDialog.formatCompressedPdf',
+  png: 'exportDialog.formatPng',
+  jpeg: 'exportDialog.formatJpeg',
+  docx: 'exportDialog.formatDocx',
 };
 
 export const IMAGE_FORMATS: ReadonlySet<ExportFormat> = new Set(['png', 'jpeg']);
@@ -44,6 +45,7 @@ interface ExportDialogProps {
 const isTauri = typeof window !== 'undefined' && '__TAURI__' in window;
 
 export function ExportDialog({ isOpen, onClose, pageIndex, pageCount }: ExportDialogProps) {
+  const { t } = useTranslation();
   const { push, update } = useTaskQueueContext();
   const [format, setFormat] = useState<ExportFormat>('pdf');
   const [pageRange, setPageRange] = useState<ImagePageRange>('current');
@@ -85,24 +87,24 @@ export function ExportDialog({ isOpen, onClose, pageIndex, pageCount }: ExportDi
         const path = await save({ filters: [{ name: 'PDF', extensions: ['pdf'] }] });
         if (!path) { setExporting(false); return; }
 
-        push({ id: taskId, label: 'Exporteren als PDF…', progress: null, status: 'running' });
+        push({ id: taskId, label: t('tasks.exportRunning'), progress: null, status: 'running' });
         onClose();
 
         const { invoke } = await import('@tauri-apps/api/core');
         await invoke('save_pdf', { path });
-        update(taskId, { status: 'done', label: 'PDF geëxporteerd' });
+        update(taskId, { status: 'done', label: t('tasks.exportDone') });
 
       } else if (format === 'compressed_pdf') {
         const { save } = await import('@tauri-apps/plugin-dialog');
         const path = await save({ filters: [{ name: 'PDF', extensions: ['pdf'] }] });
         if (!path) { setExporting(false); return; }
 
-        push({ id: taskId, label: 'Comprimeren en exporteren…', progress: null, status: 'running' });
+        push({ id: taskId, label: t('tasks.compressRunning'), progress: null, status: 'running' });
         onClose();
 
         const { invoke } = await import('@tauri-apps/api/core');
         await invoke('compress_pdf', { outputPath: path });
-        update(taskId, { status: 'done', label: 'Gecomprimeerde PDF geëxporteerd' });
+        update(taskId, { status: 'done', label: t('tasks.compressDone') });
 
       } else if (format === 'png' || format === 'jpeg') {
         const ext = format;
@@ -114,22 +116,22 @@ export function ExportDialog({ isOpen, onClose, pageIndex, pageCount }: ExportDi
           });
           if (!path) { setExporting(false); return; }
 
-          push({ id: taskId, label: `Exporteren als ${ext.toUpperCase()}…`, progress: null, status: 'running' });
+          push({ id: taskId, label: t('tasks.exportImageRunning', { ext: ext.toUpperCase() }), progress: null, status: 'running' });
           onClose();
 
           const { invoke } = await import('@tauri-apps/api/core');
           await invoke('export_page_as_image', { pageIndex, format: ext, outputPath: path });
-          update(taskId, { status: 'done', label: `Pagina ${pageIndex + 1} geëxporteerd als ${ext.toUpperCase()}` });
+          update(taskId, { status: 'done', label: t('tasks.exportImageDone', { page: pageIndex + 1, ext: ext.toUpperCase() }) });
 
         } else {
           // All pages — pick output directory
           const { open } = await import('@tauri-apps/plugin-dialog');
-          const dir = await open({ directory: true, title: 'Kies uitvoermap' });
+          const dir = await open({ directory: true, title: t('exportDialog.chooseOutputDir') });
           if (!dir || typeof dir !== 'string') { setExporting(false); return; }
 
           push({
             id: taskId,
-            label: `Exporteren als ${ext.toUpperCase()} (${pageCount} pagina's)…`,
+            label: t('tasks.exportAllImagesRunning', { ext: ext.toUpperCase(), count: pageCount }),
             progress: 0,
             status: 'running',
           });
@@ -138,7 +140,7 @@ export function ExportDialog({ isOpen, onClose, pageIndex, pageCount }: ExportDi
           const { invoke } = await import('@tauri-apps/api/core');
           for (let i = 0; i < pageCount; i++) {
             const padded = String(i + 1).padStart(4, '0');
-            const fileName = `pagina-${padded}.${ext === 'jpeg' ? 'jpg' : ext}`;
+            const fileName = `page-${padded}.${ext === 'jpeg' ? 'jpg' : ext}`;
             await invoke('export_page_as_image', {
               pageIndex: i,
               format: ext,
@@ -146,7 +148,7 @@ export function ExportDialog({ isOpen, onClose, pageIndex, pageCount }: ExportDi
             });
             update(taskId, { progress: Math.round((i + 1) / pageCount * 100) });
           }
-          update(taskId, { status: 'done', label: `${pageCount} pagina's geëxporteerd als ${ext.toUpperCase()}` });
+          update(taskId, { status: 'done', label: t('tasks.exportAllImagesDone', { count: pageCount, ext: ext.toUpperCase() }) });
         }
 
       } else if (format === 'docx') {
@@ -154,15 +156,15 @@ export function ExportDialog({ isOpen, onClose, pageIndex, pageCount }: ExportDi
         const path = await save({ filters: [{ name: 'Word', extensions: ['docx'] }] });
         if (!path) { setExporting(false); return; }
 
-        push({ id: taskId, label: 'Converteren naar Word…', progress: null, status: 'running' });
+        push({ id: taskId, label: t('tasks.exportWordRunning'), progress: null, status: 'running' });
         onClose();
 
         const { invoke } = await import('@tauri-apps/api/core');
         await invoke('convert_to_docx', { outputPath: path });
-        update(taskId, { status: 'done', label: 'Word-document geëxporteerd' });
+        update(taskId, { status: 'done', label: t('tasks.exportWordDone') });
       }
     } catch {
-      update(taskId, { status: 'error', label: `Exportfout: ${FORMAT_LABELS[format]}` });
+      update(taskId, { status: 'error', label: t('tasks.exportFailed', { format: t(FORMAT_LABEL_KEYS[format]) }) });
     }
 
     setExporting(false);
@@ -188,11 +190,11 @@ export function ExportDialog({ isOpen, onClose, pageIndex, pageCount }: ExportDi
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-border">
           <h2 id="export-dialog-title" className="text-sm font-semibold text-foreground">
-            Exporteren
+            {t('exportDialog.title')}
           </h2>
           <button
             onClick={onClose}
-            aria-label="Exportdialoog sluiten"
+            aria-label={t('exportDialog.closeAriaLabel')}
             className="p-0.5 text-muted-foreground hover:text-foreground rounded transition-colors"
           >
             <XIcon className="w-4 h-4" />
@@ -207,7 +209,7 @@ export function ExportDialog({ isOpen, onClose, pageIndex, pageCount }: ExportDi
               className="text-xs font-medium text-muted-foreground"
               htmlFor="export-format-select"
             >
-              Formaat
+              {t('exportDialog.formatLabel')}
             </label>
             <select
               id="export-format-select"
@@ -215,8 +217,8 @@ export function ExportDialog({ isOpen, onClose, pageIndex, pageCount }: ExportDi
               onChange={e => { setFormat(e.target.value as ExportFormat); }}
               className="w-full text-sm bg-card border border-border rounded-md px-2 py-1.5 text-foreground outline-none focus:ring-1 focus:ring-primary"
             >
-              {(Object.keys(FORMAT_LABELS) as ExportFormat[]).map(f => (
-                <option key={f} value={f}>{FORMAT_LABELS[f]}</option>
+              {(Object.keys(FORMAT_LABEL_KEYS) as ExportFormat[]).map(f => (
+                <option key={f} value={f}>{t(FORMAT_LABEL_KEYS[f])}</option>
               ))}
             </select>
           </div>
@@ -224,7 +226,7 @@ export function ExportDialog({ isOpen, onClose, pageIndex, pageCount }: ExportDi
           {/* Page range — image formats only */}
           {isImageFormat && (
             <div className="flex flex-col gap-1.5">
-              <span className="text-xs font-medium text-muted-foreground">Paginabereik</span>
+              <span className="text-xs font-medium text-muted-foreground">{t('exportDialog.pageRangeLabel')}</span>
               <div className="flex flex-col gap-1">
                 <label className="flex items-center gap-2 text-sm text-foreground cursor-pointer">
                   <input
@@ -235,7 +237,7 @@ export function ExportDialog({ isOpen, onClose, pageIndex, pageCount }: ExportDi
                     onChange={() => { setPageRange('current'); }}
                     className="accent-primary"
                   />
-                  Huidige pagina (pagina {pageIndex + 1})
+                  {t('exportDialog.currentPage', { page: pageIndex + 1 })}
                 </label>
                 <label className="flex items-center gap-2 text-sm text-foreground cursor-pointer">
                   <input
@@ -246,7 +248,7 @@ export function ExportDialog({ isOpen, onClose, pageIndex, pageCount }: ExportDi
                     onChange={() => { setPageRange('all'); }}
                     className="accent-primary"
                   />
-                  Alle pagina's ({pageCount})
+                  {t('exportDialog.allPages', { count: pageCount })}
                 </label>
               </div>
             </div>
@@ -259,14 +261,14 @@ export function ExportDialog({ isOpen, onClose, pageIndex, pageCount }: ExportDi
             onClick={onClose}
             className="px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground rounded-md hover:bg-muted transition-colors"
           >
-            Annuleren
+            {t('common.cancel')}
           </button>
           <button
             onClick={() => { void handleExport(); }}
             disabled={exporting || !isTauri}
             className="px-3 py-1.5 bg-primary text-primary-foreground text-xs font-semibold rounded-md hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {exporting ? 'Bezig…' : 'Exporteren'}
+            {exporting ? t('exportDialog.exporting') : t('common.export')}
           </button>
         </div>
       </div>

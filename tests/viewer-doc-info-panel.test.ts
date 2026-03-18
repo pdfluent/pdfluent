@@ -132,13 +132,13 @@ describe('RightContextPanel — doc info: form type', () => {
   });
 
   it('maps XFA form types via XFA_TYPE_LABELS', () => {
-    expect(xfaMapBody).toContain("static:  'XFA statisch'");
-    expect(xfaMapBody).toContain("dynamic: 'XFA dynamisch'");
-    expect(xfaMapBody).toContain("hybrid:  'XFA hybride'");
+    expect(panelSource).toContain("static:  'docInfo.xfaStatic'");
+    expect(panelSource).toContain("dynamic: 'docInfo.xfaDynamic'");
+    expect(panelSource).toContain("hybrid:  'docInfo.xfaHybrid'");
   });
 
   it('falls back to "XFA" when xfaFormType is not in the map', () => {
-    expect(metaBody).toContain("?? 'XFA'");
+    expect(metaBody).toContain(": 'XFA'");
   });
 
   it('shows "AcroForm" when not XFA but formFields are present', () => {
@@ -147,7 +147,7 @@ describe('RightContextPanel — doc info: form type', () => {
   });
 
   it('shows "Geen formulieren" when no XFA and no AcroForm fields', () => {
-    expect(metaBody).toContain("'Geen formulieren'");
+    expect(metaBody).toContain("t('docInfo.noForms'");
   });
 });
 
@@ -158,7 +158,7 @@ describe('RightContextPanel — doc info: form type', () => {
 describe('RightContextPanel — doc info: no-document fallback', () => {
   it('returns a placeholder when pdfDoc is null', () => {
     expect(metaBody).toContain('if (!pdfDoc)');
-    expect(metaBody).toContain('Geen document geopend');
+    expect(metaBody).toContain("t('docInfo.noDocument'");
   });
 });
 
@@ -202,7 +202,7 @@ describe('RightContextPanel — doc info: no regressions', () => {
   });
 
   it('Documentinfo CollapsibleSection still wraps MetadataInfo', () => {
-    expect(panelSource).toContain('<CollapsibleSection title="Documentinfo">');
+    expect(panelSource).toContain("CollapsibleSection title={t('rightPanel.documentInfo')}");
     expect(panelSource).toContain('<MetadataInfo');
   });
 });

@@ -13,10 +13,24 @@ const panelSource = readFileSync(
   'utf8'
 );
 
-const viewerAppSource = readFileSync(
-  new URL('../src/viewer/ViewerApp.tsx', import.meta.url),
-  'utf8'
-);
+const viewerAppSource = [
+  '../src/viewer/hooks/usePageNavigation.ts',
+  '../src/viewer/hooks/useZoomControls.ts',
+  '../src/viewer/hooks/useSidebarState.ts',
+  '../src/viewer/hooks/useUndoRedo.ts',
+  '../src/viewer/hooks/useSearch.ts',
+  '../src/viewer/hooks/useFormFields.ts',
+  '../src/viewer/hooks/useModeManager.ts',
+  '../src/viewer/hooks/useDocumentLifecycle.ts',
+  '../src/viewer/hooks/useCommands.ts',
+  '../src/viewer/hooks/useDragDrop.ts',
+  '../src/viewer/ViewerSidePanels.tsx',
+  '../src/viewer/hooks/useAnnotations.ts',
+  '../src/viewer/hooks/useTextInteraction.ts',
+  '../src/viewer/hooks/useKeyboardShortcuts.ts',
+  '../src/viewer/ViewerApp.tsx',
+  '../src/viewer/WelcomeSection.tsx',
+].map(p => readFileSync(new URL(p, import.meta.url), 'utf8')).join('\n\n');
 
 // ---------------------------------------------------------------------------
 // RightContextPanel — redaction props
@@ -101,7 +115,7 @@ describe('RightContextPanel — RedactionPanel component', () => {
   });
 
   it('shows empty state when redactions list is empty', () => {
-    expect(redactionPanelBody()).toContain('Geen redigeringen aanwezig.');
+    expect(redactionPanelBody()).toContain("t('rightPanel.noRedactions')");
   });
 });
 
@@ -114,7 +128,7 @@ describe('RightContextPanel — Redigeringen section in review mode', () => {
     const reviewStart = panelSource.indexOf("mode === 'review'");
     const reviewEnd = panelSource.indexOf("mode === 'forms'", reviewStart);
     const reviewBlock = panelSource.slice(reviewStart, reviewEnd);
-    expect(reviewBlock).toContain('Redigeringen');
+    expect(reviewBlock).toContain("t('rightPanel.redactions')");
   });
 
   it('passes redactions prop to RedactionPanel', () => {

@@ -8,6 +8,7 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
 import type { ReactNode } from 'react';
 import { ChevronRightIcon, CheckIcon, XIcon, TrashIcon, PencilIcon } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import type { ViewerMode } from '../types';
 import type { PdfDocument, DocumentPermissions, FormField, FormFieldType, FormFieldValue, Annotation } from '../../core/document';
 import { useTaskQueueContext } from '../context/TaskQueueContext';
@@ -117,10 +118,10 @@ function PlaceholderText({ text }: { text: string }) {
 // Read mode — Documentinfo
 // ---------------------------------------------------------------------------
 
-const XFA_TYPE_LABELS: Record<string, string> = {
-  static:  'XFA statisch',
-  dynamic: 'XFA dynamisch',
-  hybrid:  'XFA hybride',
+const XFA_TYPE_LABEL_KEYS: Record<string, string> = {
+  static:  'docInfo.xfaStatic',
+  dynamic: 'docInfo.xfaDynamic',
+  hybrid:  'docInfo.xfaHybrid',
 };
 
 function MetadataInfo({
@@ -134,8 +135,10 @@ function MetadataInfo({
   formFields: FormField[];
   onMetadataChange: (key: 'title' | 'author' | 'subject' | 'keywords', value: string) => void;
 }) {
+  const { t } = useTranslation();
+
   if (!pdfDoc) {
-    return <PlaceholderText text="Geen document geopend." />;
+    return <PlaceholderText text={t('docInfo.noDocument')} />;
   }
 
   const title  = pdfDoc.metadata.title?.trim()  || pdfDoc.fileName || '';
@@ -148,11 +151,12 @@ function MetadataInfo({
     : '—';
 
   // Form type — prefer XFA metadata, fall back to AcroForm field count
+  const xfaKey = XFA_TYPE_LABEL_KEYS[pdfDoc.metadata.xfaFormType ?? ''];
   const formType = pdfDoc.metadata.hasXfa
-    ? (XFA_TYPE_LABELS[pdfDoc.metadata.xfaFormType ?? ''] ?? 'XFA')
+    ? (xfaKey !== undefined ? t(xfaKey) : 'XFA')
     : formFields.length > 0
       ? 'AcroForm'
-      : 'Geen formulieren';
+      : t('docInfo.noForms');
 
   // PDF version — e.g. "1.7" or "2.0"
   const pdfVersion = pdfDoc.metadata.pdfVersion?.trim() || '—';
@@ -160,13 +164,13 @@ function MetadataInfo({
   // Creation date — format as short local date; fall back to '—' for invalid dates
   const creationDate = pdfDoc.metadata.creationDate;
   const creationDateStr = creationDate instanceof Date && !isNaN(creationDate.getTime())
-    ? creationDate.toLocaleDateString('nl-NL')
+    ? creationDate.toLocaleDateString()
     : '—';
 
   return (
     <div className="flex flex-col gap-2" data-testid="doc-info-panel">
       <div>
-        <p className="text-[10px] text-muted-foreground">Titel</p>
+        <p className="text-[10px] text-muted-foreground">{t('docInfo.title')}</p>
         <input
           data-testid="metadata-title-input"
           className="w-full text-[10px] text-foreground bg-transparent border-b border-transparent focus:border-border outline-none truncate"
@@ -175,7 +179,7 @@ function MetadataInfo({
         />
       </div>
       <div>
-        <p className="text-[10px] text-muted-foreground">Auteur</p>
+        <p className="text-[10px] text-muted-foreground">{t('docInfo.author')}</p>
         <input
           data-testid="metadata-author-input"
           className="w-full text-[10px] text-foreground bg-transparent border-b border-transparent focus:border-border outline-none"
@@ -184,23 +188,23 @@ function MetadataInfo({
         />
       </div>
       <div>
-        <p className="text-[10px] text-muted-foreground">Pagina's</p>
+        <p className="text-[10px] text-muted-foreground">{t('docInfo.pages')}</p>
         <p className="text-[10px] text-foreground" data-testid="doc-info-page-count">{pageCount}</p>
       </div>
       <div>
-        <p className="text-[10px] text-muted-foreground">Afmetingen</p>
+        <p className="text-[10px] text-muted-foreground">{t('docInfo.dimensions')}</p>
         <p className="text-[10px] text-foreground" data-testid="doc-info-dimensions">{dimensions}</p>
       </div>
       <div>
-        <p className="text-[10px] text-muted-foreground">Formuliertype</p>
+        <p className="text-[10px] text-muted-foreground">{t('docInfo.formType')}</p>
         <p className="text-[10px] text-foreground" data-testid="doc-info-form-type">{formType}</p>
       </div>
       <div>
-        <p className="text-[10px] text-muted-foreground">PDF-versie</p>
+        <p className="text-[10px] text-muted-foreground">{t('docInfo.pdfVersion')}</p>
         <p className="text-[10px] text-foreground" data-testid="doc-info-pdf-version">{pdfVersion}</p>
       </div>
       <div>
-        <p className="text-[10px] text-muted-foreground">Aangemaakt</p>
+        <p className="text-[10px] text-muted-foreground">{t('docInfo.created')}</p>
         <p className="text-[10px] text-foreground" data-testid="doc-info-creation-date">{creationDateStr}</p>
       </div>
     </div>
@@ -214,6 +218,7 @@ function MetadataInfo({
 const isTauri = typeof window !== 'undefined' && '__TAURI__' in window;
 
 function EncryptDecryptControls() {
+  const { t } = useTranslation();
   const { push, update } = useTaskQueueContext();
   const [userPassword, setUserPassword] = useState('');
   const [ownerPassword, setOwnerPassword] = useState('');
@@ -229,16 +234,16 @@ function EncryptDecryptControls() {
     if (!path) { setBusy(false); return; }
 
     const taskId = `encrypt-${Date.now()}`;
-    push({ id: taskId, label: 'Versleutelen…', progress: null, status: 'running' });
+    push({ id: taskId, label: t('tasks.encryptRunning'), progress: null, status: 'running' });
 
     try {
       const { invoke } = await import('@tauri-apps/api/core');
       await invoke('encrypt_pdf', { userPassword, ownerPassword, outputPath: path });
-      update(taskId, { status: 'done', label: 'PDF versleuteld' });
+      update(taskId, { status: 'done', label: t('tasks.encryptDone') });
       setUserPassword('');
       setOwnerPassword('');
     } catch {
-      update(taskId, { status: 'error', label: 'Versleuteling mislukt' });
+      update(taskId, { status: 'error', label: t('tasks.encryptFailed') });
     }
 
     setBusy(false);
@@ -249,15 +254,15 @@ function EncryptDecryptControls() {
     setBusy(true);
 
     const taskId = `decrypt-${Date.now()}`;
-    push({ id: taskId, label: 'Ontsleutelen…', progress: null, status: 'running' });
+    push({ id: taskId, label: t('tasks.decryptRunning'), progress: null, status: 'running' });
 
     try {
       const { invoke } = await import('@tauri-apps/api/core');
       await invoke('decrypt_pdf', { password: decryptPassword });
-      update(taskId, { status: 'done', label: 'PDF ontsleuteld' });
+      update(taskId, { status: 'done', label: t('tasks.decryptDone') });
       setDecryptPassword('');
     } catch {
-      update(taskId, { status: 'error', label: 'Ontsleuteling mislukt' });
+      update(taskId, { status: 'error', label: t('tasks.decryptFailed') });
     }
 
     setBusy(false);
@@ -272,49 +277,49 @@ function EncryptDecryptControls() {
     <div className="flex flex-col gap-4">
       {/* Encrypt */}
       <div className="flex flex-col gap-1.5">
-        <span className="text-[10px] font-medium text-muted-foreground">Versleutelen</span>
+        <span className="text-[10px] font-medium text-muted-foreground">{t('protect.encrypt')}</span>
         <input
           type="password"
-          placeholder="Gebruikerswachtwoord"
+          placeholder={t('protect.userPasswordPlaceholder')}
           value={userPassword}
           onChange={e => { setUserPassword(e.target.value); }}
           className={inputClass}
-          aria-label="Gebruikerswachtwoord"
+          aria-label={t('protect.userPasswordPlaceholder')}
         />
         <input
           type="password"
-          placeholder="Eigenaarswachtwoord"
+          placeholder={t('protect.ownerPasswordPlaceholder')}
           value={ownerPassword}
           onChange={e => { setOwnerPassword(e.target.value); }}
           className={inputClass}
-          aria-label="Eigenaarswachtwoord"
+          aria-label={t('protect.ownerPasswordPlaceholder')}
         />
         <button
           onClick={() => { void handleEncrypt(); }}
           disabled={busy || !userPassword || !isTauri}
           className={buttonClass}
         >
-          Versleutelen…
+          {t('protect.encryptBtn')}
         </button>
       </div>
 
       {/* Decrypt */}
       <div className="flex flex-col gap-1.5">
-        <span className="text-[10px] font-medium text-muted-foreground">Ontsleutelen</span>
+        <span className="text-[10px] font-medium text-muted-foreground">{t('protect.decrypt')}</span>
         <input
           type="password"
-          placeholder="Huidig wachtwoord"
+          placeholder={t('protect.currentPasswordPlaceholder')}
           value={decryptPassword}
           onChange={e => { setDecryptPassword(e.target.value); }}
           className={inputClass}
-          aria-label="Huidig wachtwoord"
+          aria-label={t('protect.currentPasswordPlaceholder')}
         />
         <button
           onClick={() => { void handleDecrypt(); }}
           disabled={busy || !decryptPassword || !isTauri}
           className={buttonClass}
         >
-          Ontsleutelen
+          {t('protect.decryptBtn')}
         </button>
       </div>
     </div>
@@ -325,32 +330,34 @@ function EncryptDecryptControls() {
 // Protect mode — Machtigingen (Permissions)
 // ---------------------------------------------------------------------------
 
-const PERMISSION_LABELS: ReadonlyArray<[keyof DocumentPermissions, string]> = [
-  ['canPrint',           'Afdrukken'],
-  ['canPrintHighQuality','Hoge kwaliteit afdrukken'],
-  ['canModify',          'Bewerken'],
-  ['canCopy',            'Kopiëren'],
-  ['canAnnotate',        'Annoteren'],
-  ['canFillForms',       'Formulieren invullen'],
-  ['canExtractContent',  'Inhoud extraheren'],
-  ['canAssemble',        'Samenstellen'],
+const PERMISSION_LABEL_KEYS: ReadonlyArray<[keyof DocumentPermissions, string]> = [
+  ['canPrint',           'protect.permCanPrint'],
+  ['canPrintHighQuality','protect.permCanPrintHighQuality'],
+  ['canModify',          'protect.permCanModify'],
+  ['canCopy',            'protect.permCanCopy'],
+  ['canAnnotate',        'protect.permCanAnnotate'],
+  ['canFillForms',       'protect.permCanFillForms'],
+  ['canExtractContent',  'protect.permCanExtractContent'],
+  ['canAssemble',        'protect.permCanAssemble'],
 ];
 
 function PermissionsDisplay({ permissions }: { permissions: DocumentPermissions | null }) {
+  const { t } = useTranslation();
+
   if (!permissions) {
-    return <PlaceholderText text="Geen document geopend." />;
+    return <PlaceholderText text={t('protect.noDocument')} />;
   }
 
   return (
     <div className="flex flex-col gap-1">
-      {PERMISSION_LABELS.map(([key, label]) => (
+      {PERMISSION_LABEL_KEYS.map(([key, labelKey]) => (
         <div key={key} className="flex items-center gap-1.5">
           {permissions[key] ? (
             <CheckIcon className="w-3 h-3 text-green-500 shrink-0" />
           ) : (
             <XIcon className="w-3 h-3 text-destructive shrink-0" />
           )}
-          <span className="text-[10px] text-foreground">{label}</span>
+          <span className="text-[10px] text-foreground">{t(labelKey)}</span>
         </div>
       ))}
     </div>
@@ -361,21 +368,21 @@ function PermissionsDisplay({ permissions }: { permissions: DocumentPermissions 
 // Forms mode — Formuliervelden
 // ---------------------------------------------------------------------------
 
-const FIELD_TYPE_LABELS: Record<FormFieldType, string> = {
-  text: 'Tekst',
-  checkbox: 'Selectievakje',
-  radio: 'Keuzerondje',
-  list: 'Lijst',
-  combo: 'Vervolgkeuzelijst',
-  signature: 'Handtekening',
-  button: 'Knop',
-  date: 'Datum',
-  time: 'Tijd',
-  number: 'Getal',
-  password: 'Wachtwoord',
-  file: 'Bestand',
-  barcode: 'Barcode',
-  'rich-text': 'Opgemaakte tekst',
+const FIELD_TYPE_LABEL_KEYS: Record<FormFieldType, string> = {
+  text: 'leftNav.fieldTypeText',
+  checkbox: 'leftNav.fieldTypeCheckbox',
+  radio: 'leftNav.fieldTypeRadio',
+  list: 'leftNav.fieldTypeList',
+  combo: 'leftNav.fieldTypeCombo',
+  signature: 'leftNav.fieldTypeSignature',
+  button: 'leftNav.fieldTypeButton',
+  date: 'leftNav.fieldTypeDate',
+  time: 'leftNav.fieldTypeTime',
+  number: 'leftNav.fieldTypeNumber',
+  password: 'leftNav.fieldTypePassword',
+  file: 'leftNav.fieldTypeFile',
+  barcode: 'leftNav.fieldTypeBarcode',
+  'rich-text': 'leftNav.fieldTypeRichText',
 };
 
 /** Field types that support the inline text input in this release. */
@@ -399,6 +406,7 @@ function FormsModeContent({
   formValidationErrors: Array<{ fieldId: string; errors: string[] }>;
   onFormSubmit: () => void;
 }) {
+  const { t } = useTranslation();
   const activeItemRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
     activeItemRef.current?.scrollIntoView({ block: 'nearest' });
@@ -435,11 +443,11 @@ function FormsModeContent({
       {/* Completion summary — always visible */}
       <p data-testid="forms-completion-summary" className="text-[10px] text-muted-foreground mb-1">
         {formFields.some(f => f.required)
-          ? `${filledRequired.length} van ${requiredCount} verplichte velden ingevuld`
-          : `${formFields.length} veld${formFields.length !== 1 ? 'en' : ''}`}
+          ? t('forms.completionRequired', { filled: filledRequired.length, total: requiredCount })
+          : t('forms.completionCount', { count: formFields.length })}
       </p>
       {formFields.length === 0 && (
-        <PlaceholderText text="Geen formuliervelden gevonden." />
+        <PlaceholderText text={t('leftNav.noFormFields')} />
       )}
       {formFields.map((field, idx) => {
         const isActive = idx === activeFieldIdx;
@@ -485,7 +493,7 @@ function FormsModeContent({
             </div>
             <div className="flex items-center gap-1.5">
               <span className="text-[9px] font-medium px-1 py-0.5 rounded bg-muted text-muted-foreground uppercase tracking-wide">
-                {FIELD_TYPE_LABELS[field.type] ?? field.type}
+                {t(FIELD_TYPE_LABEL_KEYS[field.type] ?? field.type)}
               </span>
               <span className="text-[9px] text-muted-foreground/60">p.{field.pageIndex + 1}</span>
             </div>
@@ -501,7 +509,7 @@ function FormsModeContent({
                   {field.value && field.type === 'checkbox' && <CheckIcon className="w-2 h-2 text-primary-foreground" />}
                 </span>
                 <span className="text-[10px] text-foreground/60">
-                  {field.value ? 'Ingeschakeld' : 'Uitgeschakeld'}
+                  {field.value ? t('forms.enabled') : t('forms.disabled')}
                 </span>
               </div>
             )}
@@ -530,8 +538,8 @@ function FormsModeContent({
                     setEditValue(Array.isArray(field.value) ? field.value.join(', ') : String(field.value ?? ''));
                   }
                 }}
-                placeholder="Waarde invoeren…"
-                aria-label={`Waarde van ${field.label || field.name}`}
+                placeholder={t('forms.valuePrompt')}
+                aria-label={t('forms.valueAriaLabel', { name: field.label || field.name })}
                 className="mt-0.5 w-full text-[10px] bg-card border border-primary/50 rounded px-2 py-0.5 text-foreground outline-none focus:ring-1 focus:ring-primary focus:border-primary"
               />
             )}
@@ -545,7 +553,7 @@ function FormsModeContent({
         onClick={() => { void onFormSubmit(); }}
         className="mt-2 w-full py-1.5 text-[10px] font-semibold rounded bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
       >
-        Formulier opslaan
+        {t('forms.saveForm')}
       </button>
     </div>
   );
@@ -564,6 +572,7 @@ function ReplyInput({
   authorName: string;
   onAddReply?: (annotationId: string, contents: string, author: string) => void;
 }) {
+  const { t } = useTranslation();
   const [replyText, setReplyText] = useState('');
   const [open, setOpen] = useState(false);
 
@@ -582,7 +591,7 @@ function ReplyInput({
         onClick={e => { e.stopPropagation(); setOpen(true); }}
         className="mt-0.5 text-[9px] text-muted-foreground/50 hover:text-primary transition-colors"
       >
-        Beantwoorden
+        {t('review.reply')}
       </button>
     );
   }
@@ -594,7 +603,7 @@ function ReplyInput({
         value={replyText}
         onChange={e => { setReplyText(e.target.value); }}
         rows={2}
-        placeholder="Schrijf een antwoord…"
+        placeholder={t('review.replyPlaceholder')}
         // eslint-disable-next-line jsx-a11y/no-autofocus
         autoFocus
         className="w-full text-[9px] bg-card border border-border rounded px-2 py-1 text-foreground resize-none outline-none focus:ring-1 focus:ring-primary"
@@ -606,14 +615,14 @@ function ReplyInput({
           disabled={!replyText.trim()}
           className="flex-1 py-0.5 text-[9px] font-medium rounded bg-primary text-primary-foreground hover:opacity-90 transition-opacity disabled:opacity-40"
         >
-          Versturen
+          {t('review.send')}
         </button>
         <button
           data-testid="reply-cancel-btn"
           onClick={e => { e.stopPropagation(); setOpen(false); setReplyText(''); }}
           className="flex-1 py-0.5 text-[9px] rounded border border-border text-muted-foreground hover:bg-muted transition-colors"
         >
-          Annuleren
+          {t('common.cancel')}
         </button>
       </div>
     </div>
@@ -633,6 +642,7 @@ function OcrPanel({
   onRunOcr?: (options: { language: string; scope: 'scanned' | 'all'; preprocessMode: 'off' | 'auto' | 'manual' }) => void;
   ocrRunning?: boolean;
 }) {
+  const { t } = useTranslation();
   const [ocrLanguage, setOcrLanguage] = useState('en');
   const [ocrScope, setOcrScope] = useState<'scanned' | 'all'>('scanned');
   const [ocrPreprocessMode, setOcrPreprocessMode] = useState<'off' | 'auto' | 'manual'>('auto');
@@ -644,53 +654,53 @@ function OcrPanel({
       {/* Scanned page summary */}
       <p className="text-[10px] text-muted-foreground">
         {scannedCount > 0
-          ? `${scannedCount} gescande pagina${scannedCount !== 1 ? "'s" : ''} gedetecteerd`
-          : 'Geen gescande paginas gedetecteerd'}
+          ? t('ocr.scannedDetected', { count: scannedCount })
+          : t('ocr.noScannedDetected')}
       </p>
 
       {/* Language selector */}
       <div className="flex flex-col gap-0.5">
-        <label className="text-[9px] text-muted-foreground/70 uppercase tracking-wide">Taal</label>
+        <label className="text-[9px] text-muted-foreground/70 uppercase tracking-wide">{t('ocr.language')}</label>
         <select
           data-testid="ocr-language-select"
           value={ocrLanguage}
           onChange={e => { setOcrLanguage(e.target.value); }}
           className="text-[10px] bg-card border border-border rounded px-2 py-1 text-foreground outline-none"
         >
-          <option value="en">Engels (en)</option>
-          <option value="nl">Nederlands (nl)</option>
-          <option value="de">Duits (de)</option>
-          <option value="fr">Frans (fr)</option>
-          <option value="es">Spaans (es)</option>
+          <option value="en">{t('ocr.langEn')}</option>
+          <option value="nl">{t('ocr.langNl')}</option>
+          <option value="de">{t('ocr.langDe')}</option>
+          <option value="fr">{t('ocr.langFr')}</option>
+          <option value="es">{t('ocr.langEs')}</option>
         </select>
       </div>
 
       {/* Scope selector */}
       <div className="flex flex-col gap-0.5">
-        <label className="text-[9px] text-muted-foreground/70 uppercase tracking-wide">Bereik</label>
+        <label className="text-[9px] text-muted-foreground/70 uppercase tracking-wide">{t('ocr.scope')}</label>
         <select
           data-testid="ocr-scope-select"
           value={ocrScope}
           onChange={e => { setOcrScope(e.target.value as 'scanned' | 'all'); }}
           className="text-[10px] bg-card border border-border rounded px-2 py-1 text-foreground outline-none"
         >
-          <option value="scanned">Alleen gescande paginas</option>
-          <option value="all">Alle paginas</option>
+          <option value="scanned">{t('ocr.scopeScanned')}</option>
+          <option value="all">{t('ocr.scopeAll')}</option>
         </select>
       </div>
 
       {/* Preprocessing mode */}
       <div className="flex flex-col gap-0.5">
-        <label className="text-[9px] text-muted-foreground/70 uppercase tracking-wide">Voorbewerking</label>
+        <label className="text-[9px] text-muted-foreground/70 uppercase tracking-wide">{t('ocr.preprocess')}</label>
         <select
           data-testid="ocr-preprocess-select"
           value={ocrPreprocessMode}
           onChange={e => { setOcrPreprocessMode(e.target.value as 'off' | 'auto' | 'manual'); }}
           className="text-[10px] bg-card border border-border rounded px-2 py-1 text-foreground outline-none"
         >
-          <option value="auto">Automatisch</option>
-          <option value="off">Uit</option>
-          <option value="manual">Handmatig</option>
+          <option value="auto">{t('ocr.preprocessAuto')}</option>
+          <option value="off">{t('ocr.preprocessOff')}</option>
+          <option value="manual">{t('ocr.preprocessManual')}</option>
         </select>
       </div>
 
@@ -701,10 +711,10 @@ function OcrPanel({
           onRunOcr?.({ language: ocrLanguage, scope: ocrScope, preprocessMode: ocrPreprocessMode });
         }}
         disabled={ocrRunning}
-        aria-label="Start OCR"
+        aria-label={t('ocr.runAriaLabel')}
         className="w-full py-1 text-[10px] font-medium rounded bg-primary text-primary-foreground hover:opacity-90 transition-opacity disabled:opacity-40"
       >
-        {ocrRunning ? 'OCR bezig…' : 'Start OCR'}
+        {ocrRunning ? t('ocr.running') : t('ocr.run')}
       </button>
     </div>
   );
@@ -745,6 +755,7 @@ function ReviewModeContent({
   authorName: string;
   onAuthorChange: (name: string) => void;
 }) {
+  const { t } = useTranslation();
   const activeItemRef = useRef<HTMLButtonElement | null>(null);
   useEffect(() => {
     activeItemRef.current?.scrollIntoView({ block: 'nearest' });
@@ -768,15 +779,17 @@ function ReviewModeContent({
     [comments]
   );
 
+  const unknown = t('review.unknown');
+
   // Unique authors for the author filter dropdown
   const uniqueAuthors = useMemo(() => {
     const seen = new Set<string>();
     return comments.reduce<string[]>((acc, c) => {
-      const a = c.author || 'Onbekend';
+      const a = c.author || unknown;
       if (!seen.has(a)) { seen.add(a); acc.push(a); }
       return acc;
     }, []);
-  }, [comments]);
+  }, [comments, unknown]);
 
   // Unique pages (sorted ascending) for the page filter dropdown
   const uniquePages = useMemo(() => {
@@ -819,18 +832,18 @@ function ReviewModeContent({
 
   // Export review summary as JSON or Markdown
   function buildExportMarkdown(): string {
-    const lines: string[] = ['# Review samenvatting', ''];
+    const lines: string[] = ['# Review summary', ''];
     for (const c of comments) {
       const status = c.status ?? 'open';
-      const author = c.author || 'Onbekend';
+      const author = c.author || unknown;
       const page = c.pageIndex + 1;
       const text = c.contents ?? '';
-      lines.push(`## Opmerking — pagina ${page}`);
-      lines.push(`- **Auteur:** ${author}`);
+      lines.push(`## Comment — page ${page}`);
+      lines.push(`- **Author:** ${author}`);
       lines.push(`- **Status:** ${status}`);
-      lines.push(`- **Inhoud:** ${text}`);
+      lines.push(`- **Content:** ${text}`);
       if (c.replies && c.replies.length > 0) {
-        lines.push('- **Reacties:**');
+        lines.push('- **Replies:**');
         for (const r of c.replies) {
           lines.push(`  - ${r.author}: ${r.contents}`);
         }
@@ -844,7 +857,7 @@ function ReviewModeContent({
     const data = comments.map(c => ({
       id: c.id,
       page: c.pageIndex + 1,
-      author: c.author || 'Onbekend',
+      author: c.author || unknown,
       status: c.status ?? 'open',
       contents: c.contents ?? '',
       replies: (c.replies ?? []).map(r => ({ id: r.id, author: r.author, contents: r.contents })),
@@ -860,7 +873,7 @@ function ReviewModeContent({
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `review-samenvatting.${ext}`;
+    a.download = `review-summary.${ext}`;
     a.dataset.testid = 'review-export-anchor';
     a.click();
     URL.revokeObjectURL(url);
@@ -884,11 +897,11 @@ function ReviewModeContent({
         <input
           data-testid="reviewer-name-input"
           type="text"
-          placeholder="Uw naam…"
+          placeholder={t('review.reviewerNamePlaceholder')}
           value={authorName}
           onChange={e => { onAuthorChange(e.target.value); }}
           className={inputClass}
-          aria-label="Naam van de beoordelaar"
+          aria-label={t('review.reviewerNameAriaLabel')}
         />
       </div>
 
@@ -897,7 +910,7 @@ function ReviewModeContent({
         <input
           data-testid="comment-filter-input"
           type="text"
-          placeholder="Filter opmerkingen…"
+          placeholder={t('review.filterPlaceholder')}
           value={filterText}
           onChange={e => { setFilterText(e.target.value); }}
           className={inputClass}
@@ -909,7 +922,7 @@ function ReviewModeContent({
             onChange={e => { setFilterAuthor(e.target.value); onCommentSelect(-1); }}
             className="flex-1 text-[10px] bg-card border border-border rounded px-2 py-1 text-foreground outline-none"
           >
-            <option value="">Alle reviewers</option>
+            <option value="">{t('review.allReviewers')}</option>
             {uniqueAuthors.map(a => <option key={a} value={a}>{a}</option>)}
           </select>
           <button
@@ -919,11 +932,11 @@ function ReviewModeContent({
               setFilterAuthor(isMyFilter ? '' : authorName);
               onCommentSelect(-1);
             }}
-            aria-label="Mijn opmerkingen"
-            title="Mijn opmerkingen"
+            aria-label={t('review.myComments')}
+            title={t('review.myComments')}
             className={`shrink-0 px-1.5 py-1 text-[9px] rounded border transition-colors ${filterAuthor === authorName ? 'bg-primary text-primary-foreground border-primary' : 'border-border text-muted-foreground hover:bg-muted'}`}
           >
-            Mijn
+            {t('review.myCommentsShort')}
           </button>
         </div>
         <select
@@ -932,8 +945,8 @@ function ReviewModeContent({
           onChange={e => { setFilterPage(e.target.value); onCommentSelect(-1); }}
           className="w-full text-[10px] bg-card border border-border rounded px-2 py-1 text-foreground outline-none"
         >
-          <option value="">Alle pagina's</option>
-          {uniquePages.map(p => <option key={p} value={String(p)}>Pagina {p + 1}</option>)}
+          <option value="">{t('review.allPages')}</option>
+          {uniquePages.map(p => <option key={p} value={String(p)}>{t('review.commentPage', { page: p + 1 })}</option>)}
         </select>
         <select
           data-testid="comment-filter-status"
@@ -941,9 +954,9 @@ function ReviewModeContent({
           onChange={e => { setFilterStatus(e.target.value as '' | 'open' | 'resolved'); onCommentSelect(-1); }}
           className="w-full text-[10px] bg-card border border-border rounded px-2 py-1 text-foreground outline-none"
         >
-          <option value="">Alle statussen</option>
-          <option value="open">Open</option>
-          <option value="resolved">Opgelost</option>
+          <option value="">{t('review.allStatuses')}</option>
+          <option value="open">{t('review.statusOpen')}</option>
+          <option value="resolved">{t('review.statusResolved')}</option>
         </select>
         {anyFilterActive && (
           <button
@@ -951,7 +964,7 @@ function ReviewModeContent({
             onClick={clearAllFilters}
             className="w-full text-[9px] py-0.5 rounded border border-border text-muted-foreground hover:bg-muted transition-colors"
           >
-            Filters wissen
+            {t('review.clearFilters')}
           </button>
         )}
       </div>
@@ -959,8 +972,10 @@ function ReviewModeContent({
       {/* Count label */}
       <p data-testid="comment-filter-count" className="text-[10px] text-muted-foreground mb-1">
         {anyFilterActive
-          ? <>{filteredComments.length} van {comments.length} opmerkingen</>
-          : `${comments.length} opmerking${comments.length !== 1 ? 'en' : ''}`}
+          ? t('review.filteredCount', { filtered: filteredComments.length, total: comments.length })
+          : comments.length === 1
+            ? t('review.commentCount', { count: comments.length })
+            : t('review.commentCount_plural', { count: comments.length })}
       </p>
 
       {/* Export review summary buttons */}
@@ -968,20 +983,20 @@ function ReviewModeContent({
         <button
           data-testid="export-review-md-btn"
           onClick={() => { handleExportReview('markdown'); }}
-          aria-label="Exporteer samenvatting als Markdown"
-          title="Exporteer als Markdown"
+          aria-label={t('review.exportMdAriaLabel')}
+          title={t('review.exportMd')}
           className="flex-1 py-0.5 text-[9px] rounded border border-border text-muted-foreground hover:bg-muted transition-colors"
         >
-          Exporteer MD
+          {t('review.exportMd')}
         </button>
         <button
           data-testid="export-review-json-btn"
           onClick={() => { handleExportReview('json'); }}
-          aria-label="Exporteer samenvatting als JSON"
-          title="Exporteer als JSON"
+          aria-label={t('review.exportJsonAriaLabel')}
+          title={t('review.exportJson')}
           className="flex-1 py-0.5 text-[9px] rounded border border-border text-muted-foreground hover:bg-muted transition-colors"
         >
-          Exporteer JSON
+          {t('review.exportJson')}
         </button>
       </div>
 
@@ -992,21 +1007,21 @@ function ReviewModeContent({
             data-testid="resolve-all-btn"
             onClick={() => { onResolveAll?.(); }}
             disabled={comments.length === 0}
-            aria-label="Alles oplossen"
-            title="Markeer alle opmerkingen als opgelost"
+            aria-label={t('review.resolveAllAriaLabel')}
+            title={t('review.resolveAllAriaLabel')}
             className="flex-1 py-0.5 text-[9px] rounded border border-border text-muted-foreground hover:bg-muted transition-colors disabled:opacity-40"
           >
-            Alles oplossen
+            {t('review.markAsResolved')}
           </button>
           <button
             data-testid="delete-resolved-btn"
             onClick={() => { onDeleteAllResolved?.(); }}
             disabled={!comments.some(c => (c.status ?? 'open') === 'resolved')}
-            aria-label="Verwijder opgeloste opmerkingen"
-            title="Verwijder alle opgeloste opmerkingen"
+            aria-label={t('review.deleteResolvedAriaLabel')}
+            title={t('review.deleteResolvedAriaLabel')}
             className="flex-1 py-0.5 text-[9px] rounded border border-border text-muted-foreground hover:bg-muted transition-colors disabled:opacity-40"
           >
-            Wis opgelost
+            {t('review.deleteResolved')}
           </button>
         </div>
       )}
@@ -1018,19 +1033,19 @@ function ReviewModeContent({
             data-testid="prev-comment-btn"
             onClick={() => { onPrevComment?.(); }}
             disabled={comments.length === 0}
-            aria-label="Vorige opmerking"
+            aria-label={t('review.prevCommentAriaLabel')}
             className="flex-1 py-0.5 text-[9px] rounded border border-border text-muted-foreground hover:bg-muted transition-colors disabled:opacity-40"
           >
-            ← Vorige
+            ← {t('review.prev')}
           </button>
           <button
             data-testid="next-comment-btn"
             onClick={() => { onNextComment?.(); }}
             disabled={comments.length === 0}
-            aria-label="Volgende opmerking"
+            aria-label={t('review.nextCommentAriaLabel')}
             className="flex-1 py-0.5 text-[9px] rounded border border-border text-muted-foreground hover:bg-muted transition-colors disabled:opacity-40"
           >
-            Volgende →
+            {t('review.next')} →
           </button>
         </div>
       )}
@@ -1038,13 +1053,13 @@ function ReviewModeContent({
       {/* Zero-results state — shown when filters are active but no comments match */}
       {anyFilterActive && filteredComments.length === 0 && (
         <p data-testid="comment-filter-empty" className="text-[10px] text-muted-foreground/60 leading-relaxed">
-          Geen opmerkingen gevonden voor dit filter.
+          {t('review.noCommentForFilter')}
         </p>
       )}
 
       {/* Empty state — shown when there are no comments at all */}
       {comments.length === 0 && (
-        <PlaceholderText text="Geen opmerkingen gevonden." />
+        <PlaceholderText text={t('leftNav.noCommentsSide')} />
       )}
 
       {/* Comment list grouped by page.
@@ -1058,7 +1073,7 @@ function ReviewModeContent({
               data-testid="review-comment-group-heading"
               className="text-[9px] font-semibold uppercase tracking-wide text-muted-foreground/60 py-0.5 mt-1 first:mt-0"
             >
-              Pagina {pageIndex + 1}
+              {t('review.commentPage', { page: pageIndex + 1 })}
             </p>
             {groups.get(pageIndex)!.map(comment => {
               // Use the original full-array index for active state and navigation —
@@ -1087,7 +1102,7 @@ function ReviewModeContent({
                         style={{ backgroundColor: comment.color || '#FFD700' }}
                       />
                       <span className="text-[10px] font-medium text-foreground/80 truncate">
-                        {comment.author || 'Onbekend'}
+                        {comment.author || unknown}
                       </span>
                     </div>
                     <div className="flex items-center gap-0.5 shrink-0">
@@ -1097,8 +1112,8 @@ function ReviewModeContent({
                           e.stopPropagation();
                           onToggleResolved?.(comment.id);
                         }}
-                        aria-label={isResolved ? 'Markeer als open' : 'Markeer als opgelost'}
-                        title={isResolved ? 'Markeer als open' : 'Markeer als opgelost'}
+                        aria-label={isResolved ? t('review.markAsOpen') : t('review.markAsResolved')}
+                        title={isResolved ? t('review.markAsOpen') : t('review.markAsResolved')}
                         className={`p-0.5 rounded transition-colors ${isResolved ? 'text-green-500 hover:text-muted-foreground' : 'text-muted-foreground/40 hover:text-green-500'}`}
                       >
                         <CheckIcon className="w-2.5 h-2.5" />
@@ -1110,7 +1125,7 @@ function ReviewModeContent({
                           setEditingId(comment.id);
                           setEditText(comment.contents ?? '');
                         }}
-                        aria-label="Opmerking bewerken"
+                        aria-label={t('review.editCommentAriaLabel')}
                         className="p-0.5 text-muted-foreground/40 hover:text-foreground rounded transition-colors"
                       >
                         <PencilIcon className="w-2.5 h-2.5" />
@@ -1121,7 +1136,7 @@ function ReviewModeContent({
                           e.stopPropagation();
                           onDeleteComment(comment.id);
                         }}
-                        aria-label="Opmerking verwijderen"
+                        aria-label={t('review.deleteComment')}
                         className="p-0.5 text-muted-foreground/40 hover:text-destructive rounded transition-colors"
                       >
                         <TrashIcon className="w-2.5 h-2.5" />
@@ -1150,14 +1165,14 @@ function ReviewModeContent({
                           }}
                           className="flex-1 py-0.5 text-[9px] font-medium rounded bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
                         >
-                          Opslaan
+                          {t('common.save')}
                         </button>
                         <button
                           data-testid="comment-edit-cancel-btn"
                           onClick={() => { setEditingId(null); }}
                           className="flex-1 py-0.5 text-[9px] rounded border border-border text-muted-foreground hover:bg-muted transition-colors"
                         >
-                          Annuleren
+                          {t('common.cancel')}
                         </button>
                       </div>
                     </div>
@@ -1175,11 +1190,11 @@ function ReviewModeContent({
                       {comment.replies!.map(reply => (
                         <div key={reply.id} data-testid="reply-item" className="flex flex-col gap-0.5">
                           <div className="flex items-center justify-between">
-                            <span className="text-[9px] font-medium text-foreground/70">{reply.author || 'Onbekend'}</span>
+                            <span className="text-[9px] font-medium text-foreground/70">{reply.author || unknown}</span>
                             <button
                               data-testid="delete-reply-btn"
                               onClick={e => { e.stopPropagation(); onDeleteReply?.(comment.id, reply.id); }}
-                              aria-label="Antwoord verwijderen"
+                              aria-label={t('review.deleteReplyAriaLabel')}
                               className="p-0.5 text-muted-foreground/30 hover:text-destructive rounded transition-colors"
                             >
                               <XIcon className="w-2 h-2" />
@@ -1222,13 +1237,12 @@ function RedactionPanel({
   onDeleteRedaction?: (annotationId: string) => void;
   onJumpToRedaction?: (pageIndex: number) => void;
 }) {
+  const { t } = useTranslation();
   const [busy, setBusy] = useState(false);
 
   async function handleApply(): Promise<void> {
     if (busy) return;
-    const confirmed = window.confirm(
-      `Weet u zeker dat u ${redactions.length} redigering${redactions.length !== 1 ? 'en' : ''} permanent wilt toepassen? Deze actie kan niet ongedaan worden gemaakt.`
-    );
+    const confirmed = window.confirm(t('rightPanel.redactionConfirm', { count: redactions.length }));
     if (!confirmed) return;
     setBusy(true);
     try {
@@ -1242,8 +1256,8 @@ function RedactionPanel({
     <div data-testid="redaction-panel" className="flex flex-col gap-1.5">
       <p className="text-[10px] text-muted-foreground">
         {redactions.length === 0
-          ? 'Geen redigeringen aanwezig.'
-          : `${redactions.length} redigering${redactions.length !== 1 ? 'en' : ''} in behandeling`}
+          ? t('rightPanel.noRedactions')
+          : t('rightPanel.redactionCount', { count: redactions.length })}
       </p>
       <button
         data-testid="apply-redactions-btn"
@@ -1251,7 +1265,7 @@ function RedactionPanel({
         disabled={busy || redactions.length === 0}
         className="w-full py-1 text-[10px] font-semibold rounded bg-destructive text-destructive-foreground hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
       >
-        {busy ? 'Bezig…' : 'Redigeringen toepassen'}
+        {busy ? t('common.busy') : t('rightPanel.applyRedactions')}
       </button>
       <div className="flex flex-col gap-0.5 mt-1">
         {redactions.map((r) => (
@@ -1270,7 +1284,7 @@ function RedactionPanel({
                 e.stopPropagation();
                 onDeleteRedaction?.(r.id);
               }}
-              aria-label="Redigering verwijderen"
+              aria-label={t('rightPanel.deleteRedaction')}
               className="p-0.5 text-muted-foreground/40 hover:text-destructive rounded transition-colors shrink-0"
             >
               <TrashIcon className="w-2.5 h-2.5" />
@@ -1286,27 +1300,27 @@ function RedactionPanel({
 // Placeholder sections for modes not yet wired
 // ---------------------------------------------------------------------------
 
-const PLACEHOLDER_SECTIONS: Partial<Record<ViewerMode, Array<{ title: string; content: string }>>> = {
+const PLACEHOLDER_SECTION_KEYS: Partial<Record<ViewerMode, Array<{ titleKey: string; contentKey: string }>>> = {
   read: [
-    { title: 'Paginaweergave', content: 'Pas de paginaweergave en lay-out aan.' },
-    { title: 'Toegankelijkheid', content: 'Opties voor toegankelijkheid en leesondersteuning.' },
+    { titleKey: 'rightPanel.pageView', contentKey: 'rightPanel.pageViewContent' },
+    { titleKey: 'rightPanel.accessibility', contentKey: 'rightPanel.accessibilityContent' },
   ],
   edit: [
-    { title: 'Blokeigenschappen', content: 'Uitlijning, opvulling en marges van het geselecteerde blok.' },
-    { title: 'Typografie', content: 'Lettertype, grootte, gewicht en stijl.' },
-    { title: 'Weergave', content: 'Kleuren, randen en schaduwen.' },
-    { title: 'Geavanceerd', content: 'Transformaties, dekking en geavanceerde opties.' },
+    { titleKey: 'rightPanel.blockProps', contentKey: 'rightPanel.blockPropsContent' },
+    { titleKey: 'rightPanel.typography', contentKey: 'rightPanel.typographyContent' },
+    { titleKey: 'rightPanel.appearance', contentKey: 'rightPanel.appearanceContent' },
+    { titleKey: 'rightPanel.advanced', contentKey: 'rightPanel.advancedContent' },
   ],
   organize: [
-    { title: 'Paginabereik', content: 'Selecteer een bereik van pagina\'s voor bewerkingen.' },
-    { title: 'Uitvoer', content: 'Instellingen voor het splitsen of samenvoegen van bestanden.' },
+    { titleKey: 'rightPanel.pageRange', contentKey: 'rightPanel.pageRangeContent' },
+    { titleKey: 'rightPanel.output', contentKey: 'rightPanel.outputContent' },
   ],
   protect: [
-    { title: 'Redigeren', content: 'Controleer welke inhoud wordt verborgen of verwijderd.' },
+    { titleKey: 'rightPanel.redact', contentKey: 'rightPanel.redactContent' },
   ],
   convert: [
-    { title: 'Uitvoerindeling', content: 'Doelbestandsindeling en versie-opties.' },
-    { title: 'Kwaliteitsinstellingen', content: 'Resolutie, compressie en kleurruimte.' },
+    { titleKey: 'rightPanel.outputFormat', contentKey: 'rightPanel.outputFormatContent' },
+    { titleKey: 'rightPanel.qualitySettings', contentKey: 'rightPanel.qualitySettingsContent' },
   ],
 };
 
@@ -1329,11 +1343,12 @@ function colorToHex(cssColor: string): string {
 // ---------------------------------------------------------------------------
 
 export function RightContextPanel({ mode, pdfDoc, pageCount, formFields, comments, activeCommentIdx, onCommentSelect, onDeleteComment, onUpdateComment, onToggleResolved, onAddReply, onDeleteReply, onNextComment, onPrevComment, onResolveAll, onDeleteAllResolved, scannedPageIndices = new Set(), onRunOcr, ocrRunning, activeFieldIdx, onFieldSelect, onSetFieldValue, formValidationErrors, onFormSubmit, authorName, onAuthorChange, onMetadataChange, selectedAnnotation, onDeleteSelectedAnnotation, onUpdateAnnotationColor, redactions = [], onApplyRedactions, onDeleteRedaction, onJumpToRedaction }: RightContextPanelProps) {
+  const { t } = useTranslation();
   return (
     <div className="w-48 flex flex-col bg-background border-l border-border shrink-0 overflow-hidden">
       {/* Panel header */}
       <div className="h-9 flex items-center px-3 border-b border-border shrink-0">
-        <span className="text-xs font-medium text-foreground">Eigenschappen</span>
+        <span className="text-xs font-medium text-foreground">{t('rightPanel.properties')}</span>
       </div>
 
       {/* Sections */}
@@ -1342,12 +1357,12 @@ export function RightContextPanel({ mode, pdfDoc, pageCount, formFields, comment
         {/* ── Read mode ──────────────────────────────────────────────────── */}
         {mode === 'read' && (
           <>
-            <CollapsibleSection title="Documentinfo">
+            <CollapsibleSection title={t('rightPanel.documentInfo')}>
               <MetadataInfo pdfDoc={pdfDoc} pageCount={pageCount} formFields={formFields} onMetadataChange={onMetadataChange} />
             </CollapsibleSection>
-            {(PLACEHOLDER_SECTIONS.read ?? []).map(s => (
-              <CollapsibleSection key={s.title} title={s.title}>
-                <PlaceholderText text={s.content} />
+            {(PLACEHOLDER_SECTION_KEYS.read ?? []).map(s => (
+              <CollapsibleSection key={s.titleKey} title={t(s.titleKey)}>
+                <PlaceholderText text={t(s.contentKey)} />
               </CollapsibleSection>
             ))}
           </>
@@ -1358,7 +1373,7 @@ export function RightContextPanel({ mode, pdfDoc, pageCount, formFields, comment
           <>
             {/* Selected markup annotation properties */}
             {selectedAnnotation && (
-              <CollapsibleSection title="Markering">
+              <CollapsibleSection title={t('rightPanel.markup')}>
                 <div className="flex flex-col gap-2" data-testid="selected-annotation-panel">
                   <div className="flex items-center gap-2">
                     <input
@@ -1373,7 +1388,7 @@ export function RightContextPanel({ mode, pdfDoc, pageCount, formFields, comment
                         onUpdateAnnotationColor?.(selectedAnnotation.id, [r, g, b]);
                       }}
                       className="w-5 h-5 rounded shrink-0 border border-border cursor-pointer p-0"
-                      aria-label="Kleur wijzigen"
+                      aria-label={t('rightPanel.changeColor')}
                     />
                     <span className="text-[10px] text-muted-foreground truncate capitalize">
                       {selectedAnnotation.type} · p.{selectedAnnotation.pageIndex + 1}
@@ -1383,21 +1398,21 @@ export function RightContextPanel({ mode, pdfDoc, pageCount, formFields, comment
                     data-testid="delete-selected-annotation-btn"
                     onClick={() => { onDeleteSelectedAnnotation?.(selectedAnnotation.id); }}
                     className="flex items-center gap-1 px-2 py-1 rounded text-[10px] text-destructive hover:bg-destructive/10 transition-colors"
-                    aria-label="Markering verwijderen"
+                    aria-label={t('rightPanel.deleteMarkup')}
                   >
                     <TrashIcon className="w-3 h-3" />
-                    Verwijderen
+                    {t('common.delete')}
                   </button>
                 </div>
               </CollapsibleSection>
             )}
-            <CollapsibleSection title="Opmerkingen">
+            <CollapsibleSection title={t('rightPanel.comments')}>
               <ReviewModeContent comments={comments} activeCommentIdx={activeCommentIdx} onCommentSelect={onCommentSelect} onDeleteComment={onDeleteComment} onUpdateComment={onUpdateComment} onToggleResolved={onToggleResolved} onAddReply={onAddReply} onDeleteReply={onDeleteReply} authorName={authorName} onAuthorChange={onAuthorChange} onNextComment={onNextComment} onPrevComment={onPrevComment} onResolveAll={onResolveAll} onDeleteAllResolved={onDeleteAllResolved} />
             </CollapsibleSection>
-            <CollapsibleSection title="Redigeringen">
+            <CollapsibleSection title={t('rightPanel.redactions')}>
               <RedactionPanel redactions={redactions} onApplyRedactions={onApplyRedactions} onDeleteRedaction={onDeleteRedaction} onJumpToRedaction={onJumpToRedaction} />
             </CollapsibleSection>
-            <CollapsibleSection title="OCR">
+            <CollapsibleSection title={t('rightPanel.ocr')}>
               <OcrPanel scannedPageIndices={scannedPageIndices} onRunOcr={onRunOcr} ocrRunning={ocrRunning} />
             </CollapsibleSection>
           </>
@@ -1405,7 +1420,7 @@ export function RightContextPanel({ mode, pdfDoc, pageCount, formFields, comment
 
         {/* ── Forms mode ─────────────────────────────────────────────────── */}
         {mode === 'forms' && (
-          <CollapsibleSection title="Formuliervelden">
+          <CollapsibleSection title={t('rightPanel.formFields')}>
             <FormsModeContent formFields={formFields} activeFieldIdx={activeFieldIdx} onFieldSelect={onFieldSelect} onSetFieldValue={onSetFieldValue} formValidationErrors={formValidationErrors} onFormSubmit={onFormSubmit} />
           </CollapsibleSection>
         )}
@@ -1413,13 +1428,13 @@ export function RightContextPanel({ mode, pdfDoc, pageCount, formFields, comment
         {/* ── Protect mode ───────────────────────────────────────────────── */}
         {mode === 'protect' && (
           <>
-            <CollapsibleSection title="Redigeringen">
+            <CollapsibleSection title={t('rightPanel.redactions')}>
               <RedactionPanel redactions={redactions} onApplyRedactions={onApplyRedactions} onDeleteRedaction={onDeleteRedaction} onJumpToRedaction={onJumpToRedaction} />
             </CollapsibleSection>
-            <CollapsibleSection title="Beveiligingsinstellingen">
+            <CollapsibleSection title={t('rightPanel.securitySettings')}>
               <EncryptDecryptControls />
             </CollapsibleSection>
-            <CollapsibleSection title="Machtigingen">
+            <CollapsibleSection title={t('rightPanel.permissions')}>
               <PermissionsDisplay permissions={pdfDoc?.state.permissions ?? null} />
             </CollapsibleSection>
           </>
@@ -1428,12 +1443,12 @@ export function RightContextPanel({ mode, pdfDoc, pageCount, formFields, comment
         {/* ── Edit mode — placeholder sections + OCR ─────────────────────── */}
         {mode === 'edit' && (
           <>
-            {(PLACEHOLDER_SECTIONS.edit ?? []).map(s => (
-              <CollapsibleSection key={s.title} title={s.title}>
-                <PlaceholderText text={s.content} />
+            {(PLACEHOLDER_SECTION_KEYS.edit ?? []).map(s => (
+              <CollapsibleSection key={s.titleKey} title={t(s.titleKey)}>
+                <PlaceholderText text={t(s.contentKey)} />
               </CollapsibleSection>
             ))}
-            <CollapsibleSection title="OCR">
+            <CollapsibleSection title={t('rightPanel.ocr')}>
               <OcrPanel scannedPageIndices={scannedPageIndices} onRunOcr={onRunOcr} ocrRunning={ocrRunning} />
             </CollapsibleSection>
           </>
@@ -1441,9 +1456,9 @@ export function RightContextPanel({ mode, pdfDoc, pageCount, formFields, comment
 
         {/* ── All other modes — placeholder ──────────────────────────────── */}
         {mode !== 'read' && mode !== 'review' && mode !== 'forms' && mode !== 'protect' && mode !== 'edit' && (
-          (PLACEHOLDER_SECTIONS[mode] ?? []).map(s => (
-            <CollapsibleSection key={s.title} title={s.title}>
-              <PlaceholderText text={s.content} />
+          (PLACEHOLDER_SECTION_KEYS[mode] ?? []).map(s => (
+            <CollapsibleSection key={s.titleKey} title={t(s.titleKey)}>
+              <PlaceholderText text={t(s.contentKey)} />
             </CollapsibleSection>
           ))
         )}

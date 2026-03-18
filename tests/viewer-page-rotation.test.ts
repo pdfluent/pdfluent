@@ -107,11 +107,11 @@ describe('lib.rs — rotate_page_right Tauri command', () => {
 
 describe('toolDefinitions.ts — organize mode rotation tools', () => {
   it('includes Links roteren tool', () => {
-    expect(toolDefsSource).toContain("'Links roteren'");
+    expect(toolDefsSource).toContain("'toolbar.rotateLeft'");
   });
 
   it('includes Rechts roteren tool', () => {
-    expect(toolDefsSource).toContain("'Rechts roteren'");
+    expect(toolDefsSource).toContain("'toolbar.rotateRight'");
   });
 
   it('imports RotateCcwIcon for left rotation', () => {
@@ -136,7 +136,7 @@ describe('ModeToolbar — handleRotatePageLeft', () => {
   });
 
   it('Links roteren action routes to handleRotatePageLeft', () => {
-    expect(toolbarSource).toContain("case 'Links roteren'");
+    expect(toolbarSource).toContain("case 'toolbar.rotateLeft'");
     expect(toolbarSource).toContain('handleRotatePageLeft()');
   });
 });
@@ -154,7 +154,7 @@ describe('ModeToolbar — handleRotatePageRight', () => {
   });
 
   it('Rechts roteren action routes to handleRotatePageRight', () => {
-    expect(toolbarSource).toContain("case 'Rechts roteren'");
+    expect(toolbarSource).toContain("case 'toolbar.rotateRight'");
     expect(toolbarSource).toContain('handleRotatePageRight()');
   });
 });
@@ -164,13 +164,13 @@ describe('ModeToolbar — WIRED_TOOLS includes rotation', () => {
     const wiredStart = toolbarSource.indexOf('export const WIRED_TOOLS');
     const wiredEnd = toolbarSource.indexOf(']);', wiredStart) + 3;
     const wiredBlock = toolbarSource.slice(wiredStart, wiredEnd);
-    expect(wiredBlock).toContain("'Links roteren'");
+    expect(wiredBlock).toContain("'toolbar.rotateLeft'");
   });
 
   it('Rechts roteren is in WIRED_TOOLS', () => {
     const wiredStart = toolbarSource.indexOf('export const WIRED_TOOLS');
     const wiredEnd = toolbarSource.indexOf(']);', wiredStart) + 3;
     const wiredBlock = toolbarSource.slice(wiredStart, wiredEnd);
-    expect(wiredBlock).toContain("'Rechts roteren'");
+    expect(wiredBlock).toContain("'toolbar.rotateRight'");
   });
 });

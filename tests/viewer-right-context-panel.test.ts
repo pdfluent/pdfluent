@@ -13,10 +13,24 @@ const panelSource = readFileSync(
   'utf8'
 );
 
-const viewerAppSource = readFileSync(
-  new URL('../src/viewer/ViewerApp.tsx', import.meta.url),
-  'utf8'
-);
+const viewerAppSource = [
+  '../src/viewer/hooks/usePageNavigation.ts',
+  '../src/viewer/hooks/useZoomControls.ts',
+  '../src/viewer/hooks/useSidebarState.ts',
+  '../src/viewer/hooks/useUndoRedo.ts',
+  '../src/viewer/hooks/useSearch.ts',
+  '../src/viewer/hooks/useFormFields.ts',
+  '../src/viewer/hooks/useModeManager.ts',
+  '../src/viewer/hooks/useDocumentLifecycle.ts',
+  '../src/viewer/hooks/useCommands.ts',
+  '../src/viewer/hooks/useDragDrop.ts',
+  '../src/viewer/ViewerSidePanels.tsx',
+  '../src/viewer/hooks/useAnnotations.ts',
+  '../src/viewer/hooks/useTextInteraction.ts',
+  '../src/viewer/hooks/useKeyboardShortcuts.ts',
+  '../src/viewer/ViewerApp.tsx',
+  '../src/viewer/WelcomeSection.tsx',
+].map(p => readFileSync(new URL(p, import.meta.url), 'utf8')).join('\n\n');
 
 // ---------------------------------------------------------------------------
 // Read mode — Documentinfo
@@ -37,7 +51,7 @@ describe('RightContextPanel — read mode: Documentinfo', () => {
 
   it('shows pageCount', () => {
     expect(panelSource).toContain('pageCount');
-    expect(panelSource).toContain("Pagina's");
+    expect(panelSource).toContain("t('docInfo.pages'");
   });
 
   it('falls back to fileName when title is empty', () => {
@@ -45,12 +59,12 @@ describe('RightContextPanel — read mode: Documentinfo', () => {
   });
 
   it('shows "Geen document geopend" when pdfDoc is null', () => {
-    expect(panelSource).toContain('Geen document geopend.');
+    expect(panelSource).toContain("t('docInfo.noDocument'");
   });
 
   it('renders Documentinfo section for read mode', () => {
     expect(panelSource).toContain("mode === 'read'");
-    expect(panelSource).toContain('Documentinfo');
+    expect(panelSource).toContain("t('rightPanel.documentInfo'");
   });
 });
 
@@ -65,27 +79,27 @@ describe('RightContextPanel — protect mode: Beveiligingsinstellingen', () => {
   });
 
   it('has a user password input', () => {
-    expect(panelSource).toContain('Gebruikerswachtwoord');
+    expect(panelSource).toContain("t('protect.userPasswordPlaceholder'");
     expect(panelSource).toContain('userPassword');
   });
 
   it('has an owner password input', () => {
-    expect(panelSource).toContain('Eigenaarswachtwoord');
+    expect(panelSource).toContain("t('protect.ownerPasswordPlaceholder'");
     expect(panelSource).toContain('ownerPassword');
   });
 
   it('has a Versleutelen button', () => {
-    expect(panelSource).toContain('Versleutelen…');
+    expect(panelSource).toContain("t('protect.encryptBtn'");
     expect(panelSource).toContain('handleEncrypt');
   });
 
   it('has a decrypt password input', () => {
-    expect(panelSource).toContain('Huidig wachtwoord');
+    expect(panelSource).toContain("t('protect.currentPasswordPlaceholder'");
     expect(panelSource).toContain('decryptPassword');
   });
 
   it('has an Ontsleutelen button', () => {
-    expect(panelSource).toContain('Ontsleutelen');
+    expect(panelSource).toContain("t('protect.decryptBtn'");
     expect(panelSource).toContain('handleDecrypt');
   });
 
@@ -127,7 +141,7 @@ describe('RightContextPanel — protect mode: Machtigingen', () => {
   });
 
   it('defines PERMISSION_LABELS mapping', () => {
-    expect(panelSource).toContain('PERMISSION_LABELS');
+    expect(panelSource).toContain('protect.permCanPrint');
   });
 
   it('maps all eight DocumentPermissions flags to Dutch labels', () => {
@@ -142,13 +156,13 @@ describe('RightContextPanel — protect mode: Machtigingen', () => {
   });
 
   it('includes Dutch labels for key permissions', () => {
-    expect(panelSource).toContain('Afdrukken');
-    expect(panelSource).toContain('Bewerken');
-    expect(panelSource).toContain("Kopiëren");
-    expect(panelSource).toContain('Annoteren');
-    expect(panelSource).toContain('Formulieren invullen');
-    expect(panelSource).toContain('Inhoud extraheren');
-    expect(panelSource).toContain('Samenstellen');
+    expect(panelSource).toContain("'protect.permCanPrint'");
+    expect(panelSource).toContain("'protect.permCanModify'");
+    expect(panelSource).toContain("'protect.permCanCopy'");
+    expect(panelSource).toContain("'protect.permCanAnnotate'");
+    expect(panelSource).toContain("'protect.permCanFillForms'");
+    expect(panelSource).toContain("'protect.permCanExtractContent'");
+    expect(panelSource).toContain("'protect.permCanAssemble'");
   });
 
   it('shows check and cross icons for permission state', () => {
@@ -175,28 +189,28 @@ describe('RightContextPanel — task queue integration', () => {
 
   it('pushes a running task when encrypt starts', () => {
     expect(panelSource).toContain('encrypt-${Date.now()}');
-    expect(panelSource).toContain("label: 'Versleutelen…'");
+    expect(panelSource).toContain("label: t('tasks.encryptRunning')");
     expect(panelSource).toContain("status: 'running'");
   });
 
   it('pushes a running task when decrypt starts', () => {
     expect(panelSource).toContain('decrypt-${Date.now()}');
-    expect(panelSource).toContain("label: 'Ontsleutelen…'");
+    expect(panelSource).toContain("label: t('tasks.decryptRunning')");
   });
 
   it('updates task to done on encrypt success', () => {
-    expect(panelSource).toContain("label: 'PDF versleuteld'");
+    expect(panelSource).toContain("label: t('tasks.encryptDone')");
     expect(panelSource).toContain("status: 'done'");
   });
 
   it('updates task to done on decrypt success', () => {
-    expect(panelSource).toContain("label: 'PDF ontsleuteld'");
+    expect(panelSource).toContain("label: t('tasks.decryptDone')");
   });
 
   it('updates task to error on failure', () => {
     expect(panelSource).toContain("status: 'error'");
-    expect(panelSource).toContain("label: 'Versleuteling mislukt'");
-    expect(panelSource).toContain("label: 'Ontsleuteling mislukt'");
+    expect(panelSource).toContain("label: t('tasks.encryptFailed')");
+    expect(panelSource).toContain("label: t('tasks.decryptFailed')");
   });
 });
 
@@ -215,8 +229,9 @@ describe('RightContextPanel — other modes remain placeholder', () => {
   });
 
   it('non-read/protect/forms/review modes still render from PLACEHOLDER_SECTIONS', () => {
-    expect(panelSource).toContain("mode !== 'read' && mode !== 'review' && mode !== 'forms' && mode !== 'protect'");
-    expect(panelSource).toContain('PLACEHOLDER_SECTIONS[mode]');
+    expect(panelSource).toContain("mode !== 'forms'");
+    expect(panelSource).toContain("mode !== 'review'");
+    expect(panelSource).toContain('PLACEHOLDER_SECTION_KEYS[mode]');
   });
 
   it('no longer has the global TODO(pdfluent-viewer) marker for RightContextPanel', () => {

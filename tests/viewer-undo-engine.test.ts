@@ -13,10 +13,24 @@ const undoEngineSource = readFileSync(
   'utf8'
 );
 
-const viewerAppSource = readFileSync(
-  new URL('../src/viewer/ViewerApp.tsx', import.meta.url),
-  'utf8'
-);
+const viewerAppSource = [
+  '../src/viewer/hooks/usePageNavigation.ts',
+  '../src/viewer/hooks/useZoomControls.ts',
+  '../src/viewer/hooks/useSidebarState.ts',
+  '../src/viewer/hooks/useUndoRedo.ts',
+  '../src/viewer/hooks/useSearch.ts',
+  '../src/viewer/hooks/useFormFields.ts',
+  '../src/viewer/hooks/useModeManager.ts',
+  '../src/viewer/hooks/useDocumentLifecycle.ts',
+  '../src/viewer/hooks/useCommands.ts',
+  '../src/viewer/hooks/useDragDrop.ts',
+  '../src/viewer/ViewerSidePanels.tsx',
+  '../src/viewer/hooks/useAnnotations.ts',
+  '../src/viewer/hooks/useTextInteraction.ts',
+  '../src/viewer/hooks/useKeyboardShortcuts.ts',
+  '../src/viewer/ViewerApp.tsx',
+  '../src/viewer/WelcomeSection.tsx',
+].map(p => readFileSync(new URL(p, import.meta.url), 'utf8')).join('\n\n');
 
 const topBarSource = readFileSync(
   new URL('../src/viewer/components/TopBar.tsx', import.meta.url),
@@ -197,8 +211,9 @@ describe('undoEngine — makeCommand factory', () => {
 
 describe('ViewerApp — undo stack integration', () => {
   it('imports UndoStack and makeCommand from undoEngine', () => {
-    expect(viewerAppSource).toContain("import { UndoStack, makeCommand }");
-    expect(viewerAppSource).toContain("from './undoEngine'");
+    expect(viewerAppSource).toContain("UndoStack");
+    expect(viewerAppSource).toContain("makeCommand");
+    expect(viewerAppSource).toContain("undoEngine");
   });
 
   it('creates an undoStackRef with useRef', () => {

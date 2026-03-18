@@ -6,6 +6,7 @@
 // See https://pdfluent.com/license for terms.
 
 import { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 
 // ---------------------------------------------------------------------------
 // Props
@@ -23,6 +24,7 @@ interface GoToPageDialogProps {
 // ---------------------------------------------------------------------------
 
 export function GoToPageDialog({ isOpen, pageCount, onNavigate, onClose }: GoToPageDialogProps) {
+  const { t } = useTranslation();
   const [inputValue, setInputValue] = useState('');
   const inputRef = useRef<HTMLInputElement | null>(null);
 
@@ -77,7 +79,7 @@ export function GoToPageDialog({ isOpen, pageCount, onNavigate, onClose }: GoToP
           id="goto-page-title"
           className="text-sm font-semibold text-foreground mb-3"
         >
-          Ga naar pagina
+          {t('goToPage.title')}
         </h2>
 
         <div className="flex items-center gap-2">
@@ -89,11 +91,11 @@ export function GoToPageDialog({ isOpen, pageCount, onNavigate, onClose }: GoToP
             value={inputValue}
             onChange={(e) => { setInputValue(e.target.value); }}
             onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); submit(); } }}
-            placeholder="Paginanummer"
+            placeholder={t('goToPage.placeholder')}
             data-testid="goto-page-input"
             className="flex-1 text-sm bg-card border border-border rounded-md px-3 py-1.5 text-foreground focus:ring-1 focus:ring-primary outline-none"
           />
-          <span className="text-sm text-muted-foreground shrink-0">van {pageCount}</span>
+          <span className="text-sm text-muted-foreground shrink-0">{t('goToPage.of', { count: pageCount })}</span>
         </div>
 
         <div className="flex justify-end gap-2 mt-3">
@@ -101,14 +103,14 @@ export function GoToPageDialog({ isOpen, pageCount, onNavigate, onClose }: GoToP
             onClick={onClose}
             className="px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors"
           >
-            Annuleren
+            {t('common.cancel')}
           </button>
           <button
             onClick={submit}
             data-testid="goto-page-submit"
             className="px-3 py-1.5 text-xs bg-primary text-primary-foreground rounded-md hover:opacity-90 transition-opacity"
           >
-            Ga naar
+            {t('goToPage.goTo')}
           </button>
         </div>
       </div>

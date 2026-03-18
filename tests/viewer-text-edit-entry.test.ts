@@ -24,10 +24,24 @@ import { fileURLToPath } from 'node:url';
 
 const __dir = dirname(fileURLToPath(import.meta.url));
 
-const viewerAppSrc = readFileSync(
-  join(__dir, '../src/viewer/ViewerApp.tsx'),
-  'utf8',
-);
+const viewerAppSrc = [
+  '../src/viewer/hooks/usePageNavigation.ts',
+  '../src/viewer/hooks/useZoomControls.ts',
+  '../src/viewer/hooks/useSidebarState.ts',
+  '../src/viewer/hooks/useUndoRedo.ts',
+  '../src/viewer/hooks/useSearch.ts',
+  '../src/viewer/hooks/useFormFields.ts',
+  '../src/viewer/hooks/useModeManager.ts',
+  '../src/viewer/hooks/useDocumentLifecycle.ts',
+  '../src/viewer/hooks/useCommands.ts',
+  '../src/viewer/hooks/useDragDrop.ts',
+  '../src/viewer/ViewerSidePanels.tsx',
+  '../src/viewer/hooks/useAnnotations.ts',
+  '../src/viewer/hooks/useTextInteraction.ts',
+  '../src/viewer/hooks/useKeyboardShortcuts.ts',
+  '../src/viewer/ViewerApp.tsx',
+  '../src/viewer/WelcomeSection.tsx',
+].map(p => readFileSync(join(__dir, p), 'utf8')).join('\n\n');
 const pageCanvasSrc = readFileSync(
   join(__dir, '../src/viewer/components/PageCanvas.tsx'),
   'utf8',
@@ -60,7 +74,7 @@ describe('TextContextBar — edit-text action', () => {
   it('edit-text action has a Dutch label', () => {
     const editTextIdx = contextBarSrc.indexOf("id: 'edit-text'");
     const editTextBlock = contextBarSrc.slice(editTextIdx, editTextIdx + 200);
-    expect(editTextBlock).toContain('bewerken');
+    expect(editTextBlock).toContain("'textContext.editText'");
   });
 
   it('imports TextEditabilityResult', () => {

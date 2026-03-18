@@ -84,7 +84,7 @@ describe('ReviewModeContent — status filter UI', () => {
   });
 
   it('has Alle statussen default option', () => {
-    expect(rightPanelSource).toContain('Alle statussen');
+    expect(rightPanelSource).toContain("t('review.allStatuses')");
   });
 
   it('has Open option', () => {
@@ -102,7 +102,7 @@ describe('ReviewModeContent — status filter UI', () => {
       rightPanelSource.indexOf('</select>', rightPanelSource.indexOf('comment-filter-status')) + 9
     );
     expect(statusSelect).toContain('"resolved"');
-    expect(statusSelect).toContain('Opgelost');
+    expect(statusSelect).toContain("t('review.statusResolved')");
   });
 });
 

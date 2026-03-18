@@ -44,7 +44,7 @@ import { validateImageReplace, computeImageDisplayRect, isSupportedMimeType } fr
 import { buildAllGuides, computeActiveGuides, SNAP_THRESHOLD } from '../src/viewer/layout/layoutAlignmentGuides';
 import { buildLayerModel, isObjectLocked, isObjectVisible } from '../src/viewer/layout/layoutLayerModel';
 import { validateCollisions } from '../src/viewer/layout/layoutCollisionValidator';
-import { pdfRectToDom, OBJECT_TYPE_LABELS } from '../src/viewer/components/ObjectSelectionOverlay';
+import { pdfRectToDom, OBJECT_TYPE_LABEL_KEYS } from '../src/viewer/components/ObjectSelectionOverlay';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -342,8 +342,8 @@ describe('layout stability — OBJECT_TYPE_LABELS completeness', () => {
 
   it('OBJECT_TYPE_LABELS covers all LayoutObjectType values', () => {
     for (const type of allTypes) {
-      expect(OBJECT_TYPE_LABELS[type]).toBeDefined();
-      expect(OBJECT_TYPE_LABELS[type].length).toBeGreaterThan(0);
+      expect(OBJECT_TYPE_LABEL_KEYS[type]).toBeDefined();
+      expect(OBJECT_TYPE_LABEL_KEYS[type].length).toBeGreaterThan(0);
     }
   });
 });

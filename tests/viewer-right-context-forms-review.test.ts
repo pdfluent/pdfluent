@@ -13,10 +13,24 @@ const panelSource = readFileSync(
   'utf8'
 );
 
-const viewerAppSource = readFileSync(
-  new URL('../src/viewer/ViewerApp.tsx', import.meta.url),
-  'utf8'
-);
+const viewerAppSource = [
+  '../src/viewer/hooks/usePageNavigation.ts',
+  '../src/viewer/hooks/useZoomControls.ts',
+  '../src/viewer/hooks/useSidebarState.ts',
+  '../src/viewer/hooks/useUndoRedo.ts',
+  '../src/viewer/hooks/useSearch.ts',
+  '../src/viewer/hooks/useFormFields.ts',
+  '../src/viewer/hooks/useModeManager.ts',
+  '../src/viewer/hooks/useDocumentLifecycle.ts',
+  '../src/viewer/hooks/useCommands.ts',
+  '../src/viewer/hooks/useDragDrop.ts',
+  '../src/viewer/ViewerSidePanels.tsx',
+  '../src/viewer/hooks/useAnnotations.ts',
+  '../src/viewer/hooks/useTextInteraction.ts',
+  '../src/viewer/hooks/useKeyboardShortcuts.ts',
+  '../src/viewer/ViewerApp.tsx',
+  '../src/viewer/WelcomeSection.tsx',
+].map(p => readFileSync(new URL(p, import.meta.url), 'utf8')).join('\n\n');
 
 // ---------------------------------------------------------------------------
 // Props wiring — ViewerApp → RightContextPanel
@@ -69,7 +83,7 @@ describe('RightContextPanel — forms mode content', () => {
   });
 
   it('renders forms mode section with title Formuliervelden', () => {
-    expect(panelSource).toContain('Formuliervelden');
+    expect(panelSource).toContain("t('rightPanel.formFields'");
   });
 
   it('activates FormsModeContent when mode is forms', () => {
@@ -84,11 +98,11 @@ describe('RightContextPanel — forms mode content', () => {
   });
 
   it('shows field count label', () => {
-    expect(panelSource).toContain('veld');
+    expect(panelSource).toContain("t('forms.completionCount'");
   });
 
   it('shows type label from FIELD_TYPE_LABELS', () => {
-    expect(panelSource).toContain('FIELD_TYPE_LABELS');
+    expect(panelSource).toContain('FIELD_TYPE_LABEL_KEYS');
   });
 
   it('shows page number for each field', () => {
@@ -110,14 +124,14 @@ describe('RightContextPanel — forms mode content', () => {
 describe('RightContextPanel — forms mode empty state', () => {
   it('renders empty state when formFields is empty', () => {
     const formsContent = panelSource.indexOf('function FormsModeContent');
-    const emptyText = panelSource.indexOf('Geen formuliervelden gevonden', formsContent);
+    const emptyText = panelSource.indexOf("t('leftNav.noFormFields'", formsContent);
     expect(emptyText).toBeGreaterThan(formsContent);
   });
 
   it('empty state is inside FormsModeContent (not a generic placeholder)', () => {
     const formsContent = panelSource.indexOf('function FormsModeContent');
     const nextFunction = panelSource.indexOf('\nfunction ', formsContent + 1);
-    const emptyText = panelSource.indexOf('Geen formuliervelden gevonden', formsContent);
+    const emptyText = panelSource.indexOf("t('leftNav.noFormFields'", formsContent);
     expect(emptyText).toBeLessThan(nextFunction);
   });
 });
@@ -132,7 +146,7 @@ describe('RightContextPanel — review mode content', () => {
   });
 
   it('renders review mode section with title Opmerkingen', () => {
-    expect(panelSource).toContain('Opmerkingen');
+    expect(panelSource).toContain("t('rightPanel.comments'");
   });
 
   it('activates ReviewModeContent when mode is review', () => {
@@ -147,7 +161,7 @@ describe('RightContextPanel — review mode content', () => {
   });
 
   it('shows comment count label', () => {
-    expect(panelSource).toContain('opmerking');
+    expect(panelSource).toContain("t('review.commentCount");
   });
 
   it('shows author for each comment', () => {
@@ -170,7 +184,7 @@ describe('RightContextPanel — review mode content', () => {
   });
 
   it('falls back to Onbekend when author is missing', () => {
-    expect(panelSource).toContain('comment.author || \'Onbekend\'');
+    expect(panelSource).toContain("t('review.unknown'");
   });
 });
 
@@ -181,7 +195,7 @@ describe('RightContextPanel — review mode content', () => {
 describe('RightContextPanel — review mode empty state', () => {
   it('renders empty state when comments is empty', () => {
     const reviewContent = panelSource.indexOf('function ReviewModeContent');
-    const emptyText = panelSource.indexOf('Geen opmerkingen gevonden', reviewContent);
+    const emptyText = panelSource.indexOf("t('leftNav.noCommentsSide'", reviewContent);
     expect(emptyText).toBeGreaterThan(reviewContent);
   });
 
@@ -190,7 +204,7 @@ describe('RightContextPanel — review mode empty state', () => {
     // ReviewModeContent may be the last plain function; fall back to source length as upper bound
     const nextFunction = panelSource.indexOf('\nfunction ', reviewContent + 1);
     const bound = nextFunction === -1 ? panelSource.length : nextFunction;
-    const emptyText = panelSource.indexOf('Geen opmerkingen gevonden', reviewContent);
+    const emptyText = panelSource.indexOf("t('leftNav.noCommentsSide'", reviewContent);
     expect(emptyText).toBeGreaterThan(reviewContent);
     expect(emptyText).toBeLessThan(bound);
   });

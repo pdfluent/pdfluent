@@ -15,6 +15,7 @@ import {
   FileInputIcon,
   LayoutIcon,
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import type { ViewerMode } from '../types';
 
 interface ModeSwitcherProps {
@@ -25,27 +26,29 @@ interface ModeSwitcherProps {
 
 interface ModeTab {
   id: ViewerMode | 'all';
-  label: string;
+  labelKey: string;
   icon: React.ReactNode;
 }
 
 const TABS: ModeTab[] = [
-  { id: 'all', label: 'Alle tools', icon: <LayoutGridIcon className="w-3.5 h-3.5" /> },
-  { id: 'read', label: 'Lezen', icon: <BookOpenIcon className="w-3.5 h-3.5" /> },
-  { id: 'review', label: 'Beoordelen', icon: <MessageSquareIcon className="w-3.5 h-3.5" /> },
-  { id: 'edit', label: 'Bewerken', icon: <PencilIcon className="w-3.5 h-3.5" /> },
-  { id: 'organize', label: 'Indelen', icon: <LayoutIcon className="w-3.5 h-3.5" /> },
-  { id: 'forms', label: 'Formulieren', icon: <FileInputIcon className="w-3.5 h-3.5" /> },
-  { id: 'protect', label: 'Beveiligen', icon: <ShieldIcon className="w-3.5 h-3.5" /> },
-  { id: 'convert', label: 'Converteren', icon: <RefreshCwIcon className="w-3.5 h-3.5" /> },
+  { id: 'all', labelKey: 'modes.allTools', icon: <LayoutGridIcon className="w-3.5 h-3.5" /> },
+  { id: 'read', labelKey: 'modes.read', icon: <BookOpenIcon className="w-3.5 h-3.5" /> },
+  { id: 'review', labelKey: 'modes.review', icon: <MessageSquareIcon className="w-3.5 h-3.5" /> },
+  { id: 'edit', labelKey: 'modes.edit', icon: <PencilIcon className="w-3.5 h-3.5" /> },
+  { id: 'organize', labelKey: 'modes.organize', icon: <LayoutIcon className="w-3.5 h-3.5" /> },
+  { id: 'forms', labelKey: 'modes.forms', icon: <FileInputIcon className="w-3.5 h-3.5" /> },
+  { id: 'protect', labelKey: 'modes.protect', icon: <ShieldIcon className="w-3.5 h-3.5" /> },
+  { id: 'convert', labelKey: 'modes.convert', icon: <RefreshCwIcon className="w-3.5 h-3.5" /> },
 ];
 
 export function ModeSwitcher({ mode, onChange, onOpenAllTools }: ModeSwitcherProps) {
+  const { t } = useTranslation();
   return (
     <div className="flex items-center border-b border-border bg-background shrink-0 px-2 overflow-x-auto">
       {TABS.map((tab) => {
         const isAll = tab.id === 'all';
         const isActive = !isAll && tab.id === mode;
+        const label = t(tab.labelKey);
 
         return (
           <button
@@ -63,10 +66,10 @@ export function ModeSwitcher({ mode, onChange, onOpenAllTools }: ModeSwitcherPro
                 ? 'border-primary text-primary bg-primary/5'
                 : 'border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/50',
             ].join(' ')}
-            title={tab.label}
+            title={label}
           >
             {tab.icon}
-            <span>{tab.label}</span>
+            <span>{label}</span>
           </button>
         );
       })}

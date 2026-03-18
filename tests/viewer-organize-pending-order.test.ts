@@ -184,14 +184,14 @@ describe('organize pending order — order bar UI', () => {
     const btnPos = gridSource.indexOf('organize-apply-order-btn');
     const btnEnd = gridSource.indexOf('</button>', btnPos) + 9;
     const btnBlock = gridSource.slice(btnPos, btnEnd);
-    expect(btnBlock).toContain('Toepassen');
+    expect(btnBlock).toContain("t('common.apply')");
   });
 
   it('cancel button label is "Annuleren"', () => {
     const btnPos = gridSource.indexOf('organize-cancel-order-btn');
     const btnEnd = gridSource.indexOf('</button>', btnPos) + 9;
     const btnBlock = gridSource.slice(btnPos, btnEnd);
-    expect(btnBlock).toContain('Annuleren');
+    expect(btnBlock).toContain("t('common.cancel')");
   });
 });
 

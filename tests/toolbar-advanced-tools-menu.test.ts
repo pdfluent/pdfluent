@@ -12,7 +12,7 @@ const toolbarSource = readFileSync(
 describe("toolbar advanced tools menu", () => {
   it("renders an explicit more-tools menu shell", () => {
     expect(toolbarSource).toContain("aria-label=\"More tools\"");
-    expect(toolbarSource).toContain("<details className=\"relative\">");
+    expect(toolbarSource).toContain("<details className=\"relative\"");
     expect(toolbarSource).toContain("EllipsisIcon");
   });
 

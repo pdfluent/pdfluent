@@ -6,6 +6,7 @@
 // See https://pdfluent.com/license for terms.
 
 import { useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { SearchResult } from '../ViewerApp';
 
 // ---------------------------------------------------------------------------
@@ -39,6 +40,7 @@ export function SearchPanel({
   onResultClick,
   autoFocus = false,
 }: SearchPanelProps) {
+  const { t } = useTranslation();
   const inputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
@@ -57,8 +59,8 @@ export function SearchPanel({
           type="text"
           value={query}
           onChange={(e) => { onQueryChange(e.target.value); }}
-          placeholder="Zoeken in document…"
-          aria-label="Zoeken in document"
+          placeholder={t('search.placeholder')}
+          aria-label={t('search.placeholder')}
           className="w-full px-3 py-1.5 text-sm rounded border border-input bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
         />
       </div>
@@ -69,10 +71,12 @@ export function SearchPanel({
         className="px-3 py-1.5 text-xs text-muted-foreground border-b border-border shrink-0 select-none"
       >
         {query.trim() === ''
-          ? 'Voer een zoekterm in'
+          ? t('search.enterTerm')
           : results.length === 0
-            ? 'Geen resultaten'
-            : `${results.length} resultaat${results.length !== 1 ? 'en' : ''}`}
+            ? t('search.noResults')
+            : results.length === 1
+              ? t('search.resultCountSingle')
+              : t('search.resultCountPlural', { count: results.length })}
       </div>
 
       {/* Result list */}
@@ -88,10 +92,10 @@ export function SearchPanel({
                 ? 'bg-accent text-accent-foreground'
                 : 'hover:bg-muted text-foreground'
             }`}
-            aria-label={`Resultaat pagina ${result.pageIndex + 1}: ${result.text}`}
+            aria-label={t('search.resultAriaLabel', { page: result.pageIndex + 1, text: result.text })}
           >
             <span className="block text-muted-foreground text-[10px] mb-0.5">
-              Pagina {result.pageIndex + 1}
+              {t('search.resultPage', { page: result.pageIndex + 1 })}
             </span>
             <span className="block truncate">{result.text}</span>
           </button>

@@ -38,7 +38,7 @@ describe('RightContextPanel — author filter', () => {
   });
 
   it('has Alle reviewers option (default empty value)', () => {
-    expect(rightPanelSource).toContain('Alle reviewers');
+    expect(rightPanelSource).toContain("t('review.allReviewers')");
   });
 
   it('renders per-author options from uniqueAuthors', () => {
@@ -75,7 +75,7 @@ describe('RightContextPanel — my comments quick filter', () => {
   });
 
   it('my-comments button has Mijn opmerkingen aria-label', () => {
-    expect(rightPanelSource).toContain('Mijn opmerkingen');
+    expect(rightPanelSource).toContain("t('review.myComments')");
   });
 
   it('my-comments button shows active styling when own filter is on', () => {
@@ -96,7 +96,7 @@ describe('RightContextPanel — author shown in comment card', () => {
   });
 
   it('falls back to Onbekend when author is empty', () => {
-    expect(rightPanelSource).toContain("'Onbekend'");
+    expect(rightPanelSource).toContain("t('review.unknown')");
   });
 });
 

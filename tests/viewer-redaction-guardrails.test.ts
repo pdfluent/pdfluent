@@ -39,7 +39,7 @@ describe('Guardrails — apply button disabled when no redactions', () => {
   });
 
   it('RedactionPanel renders empty state when redactions list is empty', () => {
-    expect(redactionPanelBody()).toContain('Geen redigeringen aanwezig.');
+    expect(redactionPanelBody()).toContain("t('rightPanel.noRedactions')");
   });
 });
 
@@ -59,8 +59,8 @@ describe('Guardrails — confirmation dialog before destructive apply', () => {
   it('confirmation message mentions permanent/cannot be undone', () => {
     const confirmIdx = redactionPanelBody().indexOf('window.confirm(');
     const msg = redactionPanelBody().slice(confirmIdx, confirmIdx + 300);
-    // Dutch message must warn about permanent nature
-    expect(msg).toContain('permanent');
+    // Confirm uses i18n key for the message
+    expect(msg).toContain("t('rightPanel.redactionConfirm'");
   });
 });
 
@@ -85,7 +85,7 @@ describe('Guardrails — prevent double-apply via busy state', () => {
   });
 
   it('apply button shows busy label when in progress', () => {
-    expect(redactionPanelBody()).toContain('Bezig…');
+    expect(redactionPanelBody()).toContain("t('common.busy')");
   });
 });
 

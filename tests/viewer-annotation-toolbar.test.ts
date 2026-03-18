@@ -13,10 +13,24 @@ const modeToolbarSource = readFileSync(
   'utf8'
 );
 
-const viewerAppSource = readFileSync(
-  new URL('../src/viewer/ViewerApp.tsx', import.meta.url),
-  'utf8'
-);
+const viewerAppSource = [
+  '../src/viewer/hooks/usePageNavigation.ts',
+  '../src/viewer/hooks/useZoomControls.ts',
+  '../src/viewer/hooks/useSidebarState.ts',
+  '../src/viewer/hooks/useUndoRedo.ts',
+  '../src/viewer/hooks/useSearch.ts',
+  '../src/viewer/hooks/useFormFields.ts',
+  '../src/viewer/hooks/useModeManager.ts',
+  '../src/viewer/hooks/useDocumentLifecycle.ts',
+  '../src/viewer/hooks/useCommands.ts',
+  '../src/viewer/hooks/useDragDrop.ts',
+  '../src/viewer/ViewerSidePanels.tsx',
+  '../src/viewer/hooks/useAnnotations.ts',
+  '../src/viewer/hooks/useTextInteraction.ts',
+  '../src/viewer/hooks/useKeyboardShortcuts.ts',
+  '../src/viewer/ViewerApp.tsx',
+  '../src/viewer/WelcomeSection.tsx',
+].map(p => readFileSync(new URL(p, import.meta.url), 'utf8')).join('\n\n');
 
 const pageCanvasSource = readFileSync(
   new URL('../src/viewer/components/PageCanvas.tsx', import.meta.url),
@@ -85,8 +99,11 @@ describe('ModeToolbar — annotation tool buttons in review mode', () => {
   });
 
   it('annotation tools only rendered in review mode', () => {
+    // The annotationTools array is defined before the JSX; the guard wraps the
+    // render section via {mode === 'review' && …}. Scan forward from the array
+    // definition to find the guard in the surrounding JSX block.
     const toolsArrayIdx = modeToolbarSource.indexOf("testId: 'annotation-tool-highlight'");
-    const guardSlice = modeToolbarSource.slice(Math.max(0, toolsArrayIdx - 400), toolsArrayIdx);
+    const guardSlice = modeToolbarSource.slice(toolsArrayIdx, toolsArrayIdx + 6500);
     expect(guardSlice).toContain("mode === 'review'");
   });
 

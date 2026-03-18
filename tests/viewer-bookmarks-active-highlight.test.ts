@@ -145,7 +145,7 @@ describe('BookmarksPanel — no regressions', () => {
   });
 
   it('empty state still renders when outline is empty', () => {
-    expect(bookmarksPanelBody).toContain('Geen bladwijzers beschikbaar.');
+    expect(bookmarksPanelBody).toContain("t('leftNav.noBookmarks'");
   });
 
   it('indent is computed from depth (paddingLeft)', () => {

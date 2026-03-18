@@ -12,6 +12,8 @@
 // Lets the user restore the recovered document or discard it.
 // ---------------------------------------------------------------------------
 
+import { useTranslation } from 'react-i18next';
+
 interface RecoveryDialogProps {
   /** Whether the dialog is visible. */
   isOpen: boolean;
@@ -39,6 +41,7 @@ export function RecoveryDialog({
   onDiscard,
   onClose,
 }: RecoveryDialogProps) {
+  const { t } = useTranslation();
   if (!isOpen) return null;
 
   return (
@@ -51,16 +54,16 @@ export function RecoveryDialog({
         {/* Header */}
         <div className="flex items-start justify-between mb-4">
           <div>
-            <h2 className="text-sm font-semibold text-foreground">Herstelbestand gevonden</h2>
+            <h2 className="text-sm font-semibold text-foreground">{t('recover.title')}</h2>
             <p className="text-xs text-muted-foreground mt-0.5">
-              Er is een automatisch opgeslagen versie beschikbaar.
+              {t('recover.message')}
             </p>
           </div>
           <button
             data-testid="recovery-close-btn"
             onClick={onClose}
             className="text-muted-foreground hover:text-foreground transition-colors ml-4"
-            aria-label="Dialoog sluiten"
+            aria-label={t('recover.closeAriaLabel')}
           >
             ✕
           </button>
@@ -69,19 +72,19 @@ export function RecoveryDialog({
         {/* Document info */}
         <div className="bg-muted/40 rounded-lg p-3 mb-5 space-y-1">
           <div className="flex items-center gap-2">
-            <span className="text-xs text-muted-foreground w-20 shrink-0">Document:</span>
+            <span className="text-xs text-muted-foreground w-20 shrink-0">{t('recover.documentLabel')}</span>
             <span data-testid="recovery-document-name" className="text-xs font-medium text-foreground truncate">
               {originalFileName}
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-xs text-muted-foreground w-20 shrink-0">Opgeslagen:</span>
+            <span className="text-xs text-muted-foreground w-20 shrink-0">{t('recover.savedLabel')}</span>
             <span data-testid="recovery-timestamp" className="text-xs text-foreground">
               {timestamp}
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-xs text-muted-foreground w-20 shrink-0">Herstelpad:</span>
+            <span className="text-xs text-muted-foreground w-20 shrink-0">{t('recover.recoveryPath')}</span>
             <span className="text-xs text-muted-foreground truncate" title={recoveryPath}>
               {recoveryPath}
             </span>
@@ -95,14 +98,14 @@ export function RecoveryDialog({
             onClick={onDiscard}
             className="text-xs px-3 py-1.5 rounded border border-border text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-colors"
           >
-            Verwijderen
+            {t('common.discard')}
           </button>
           <button
             data-testid="recovery-recover-btn"
             onClick={onRecover}
             className="text-xs px-3 py-1.5 rounded bg-primary text-primary-foreground hover:bg-primary/90 transition-colors font-medium"
           >
-            Herstellen
+            {t('recover.restore')}
           </button>
         </div>
       </div>

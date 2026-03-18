@@ -5,6 +5,7 @@
 // Commercial use requires a valid license.
 // See https://pdfluent.com/license for terms.
 
+import { useTranslation } from 'react-i18next';
 import type { ViewerMode } from '../types';
 import type { Annotation, FormField } from '../../core/document';
 import { TOOLS_BY_MODE, type ToolDefinition } from '../tools/toolDefinitions';
@@ -18,23 +19,23 @@ import { ChevronLeftIcon, ChevronRightIcon, PlusIcon, PrinterIcon, HighlighterIc
 export type AnnotationTool = 'highlight' | 'underline' | 'strikeout' | 'rectangle' | 'redaction' | null;
 
 // ---------------------------------------------------------------------------
-// Wired tools
+// Wired tools (i18n keys)
 // ---------------------------------------------------------------------------
 
 /**
- * Tool labels that are fully wired in this release.
+ * Tool label i18n keys that are fully wired in this release.
  * All other tools render as disabled placeholders.
  */
 export const WIRED_TOOLS: ReadonlySet<string> = new Set([
   // Read mode
-  'Inzoomen',
-  'Uitzoomen',
-  'Volledig scherm',
-  'Zoek tekst',
+  'toolbar.zoomIn',
+  'toolbar.zoomOut',
+  'toolbar.fullscreen',
+  'toolbar.searchText',
   // Organize mode
-  'Pagina verwijderen',
-  'Links roteren',
-  'Rechts roteren',
+  'toolbar.deletePage',
+  'toolbar.rotateLeft',
+  'toolbar.rotateRight',
 ]);
 
 // ---------------------------------------------------------------------------
@@ -90,13 +91,14 @@ function ToolButton({
   wired: boolean;
   onClick: () => void;
 }) {
+  const { t } = useTranslation();
   return (
     <button
       key={tool.label}
       disabled={!wired}
       onClick={wired ? onClick : undefined}
-      title={wired ? tool.label : `${tool.label} (not yet available)`}
-      aria-label={tool.label}
+      title={wired ? t(tool.label) : `${t(tool.label)} (not yet available)`}
+      aria-label={t(tool.label)}
       className={`flex items-center gap-1 px-2 py-1 rounded text-xs transition-colors ${
         wired
           ? 'text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer'
@@ -104,7 +106,7 @@ function ToolButton({
       }`}
     >
       <tool.icon className="w-3.5 h-3.5" />
-      <span className="hidden lg:inline">{tool.label}</span>
+      <span className="hidden lg:inline">{t(tool.label)}</span>
     </button>
   );
 }
@@ -153,69 +155,79 @@ export function ModeToolbar({
   activeFieldIdx,
   onFieldNav,
 }: ModeToolbarProps) {
+  const { t } = useTranslation();
   const { push, update } = useTaskQueueContext();
 
   async function handleDeletePage(): Promise<void> {
     if (!isTauri || pageCount <= 1) return;
     const taskId = `delete-page-${Date.now()}`;
-    push({ id: taskId, label: `Pagina ${pageIndex + 1} verwijderen…`, progress: null, status: 'running' });
+    push({ id: taskId, label: t('tasks.deletePageRunning', { page: pageIndex + 1 }), progress: null, status: 'running' });
     try {
       const { invoke } = await import('@tauri-apps/api/core');
       const result = await invoke<{ page_count: number }>('delete_pages', { pageIndices: [pageIndex] });
-      update(taskId, { status: 'done', label: `Pagina ${pageIndex + 1} verwijderd` });
+      update(taskId, { status: 'done', label: t('tasks.deletePageDone', { page: pageIndex + 1 }) });
       onPageMutation(result.page_count);
     } catch {
-      update(taskId, { status: 'error', label: 'Verwijderen mislukt' });
+      update(taskId, { status: 'error', label: t('tasks.deleteFailed') });
     }
   }
 
   async function handleRotatePageRight(): Promise<void> {
     if (!isTauri) return;
     const taskId = `rotate-page-right-${Date.now()}`;
-    push({ id: taskId, label: `Pagina ${pageIndex + 1} rechtsom roteren…`, progress: null, status: 'running' });
+    push({ id: taskId, label: t('tasks.rotateRightRunning', { page: pageIndex + 1 }), progress: null, status: 'running' });
     try {
       const { invoke } = await import('@tauri-apps/api/core');
       const result = await invoke<{ page_count: number }>('rotate_page_right', { pageIndex });
-      update(taskId, { status: 'done', label: `Pagina ${pageIndex + 1} rechtsom geroteerd` });
+      update(taskId, { status: 'done', label: t('tasks.rotateRightDone', { page: pageIndex + 1 }) });
       onPageMutation(result.page_count);
     } catch {
-      update(taskId, { status: 'error', label: 'Roteren mislukt' });
+      update(taskId, { status: 'error', label: t('tasks.rotateFailed') });
     }
   }
 
   async function handleRotatePageLeft(): Promise<void> {
     if (!isTauri) return;
     const taskId = `rotate-page-left-${Date.now()}`;
-    push({ id: taskId, label: `Pagina ${pageIndex + 1} linksom roteren…`, progress: null, status: 'running' });
+    push({ id: taskId, label: t('tasks.rotateLeftRunning', { page: pageIndex + 1 }), progress: null, status: 'running' });
     try {
       const { invoke } = await import('@tauri-apps/api/core');
       const result = await invoke<{ page_count: number }>('rotate_page_left', { pageIndex });
-      update(taskId, { status: 'done', label: `Pagina ${pageIndex + 1} linksom geroteerd` });
+      update(taskId, { status: 'done', label: t('tasks.rotateLeftDone', { page: pageIndex + 1 }) });
       onPageMutation(result.page_count);
     } catch {
-      update(taskId, { status: 'error', label: 'Roteren mislukt' });
+      update(taskId, { status: 'error', label: t('tasks.rotateFailed') });
     }
   }
 
   function handleToolAction(label: string): void {
     switch (label) {
-      case 'Inzoomen':           onZoomIn();                      break;
-      case 'Uitzoomen':          onZoomOut();                     break;
-      case 'Volledig scherm':
+      case 'toolbar.zoomIn':           onZoomIn();                      break;
+      case 'toolbar.zoomOut':          onZoomOut();                     break;
+      case 'toolbar.fullscreen':
         if (document.fullscreenElement) {
           void document.exitFullscreen();
         } else {
           void document.documentElement.requestFullscreen();
         }
         break;
-      case 'Zoek tekst':         onOpenSearch();                  break;
-      case 'Pagina verwijderen': void handleDeletePage();         break;
-      case 'Rechts roteren':     void handleRotatePageRight();    break;
-      case 'Links roteren':      void handleRotatePageLeft();     break;
+      case 'toolbar.searchText':       onOpenSearch();                  break;
+      case 'toolbar.deletePage':       void handleDeletePage();         break;
+      case 'toolbar.rotateRight':      void handleRotatePageRight();    break;
+      case 'toolbar.rotateLeft':       void handleRotatePageLeft();     break;
     }
   }
 
   const groups = TOOLS_BY_MODE[mode];
+
+  // Annotation tools for review mode — labels are i18n keys
+  const annotationTools: Array<{ tool: AnnotationTool & string; label: string; Icon: typeof HighlighterIcon; testId: string }> = [
+    { tool: 'highlight',  label: 'toolbar.highlight',     Icon: HighlighterIcon,    testId: 'annotation-tool-highlight' },
+    { tool: 'underline',  label: 'toolbar.underline',     Icon: UnderlineIcon,      testId: 'annotation-tool-underline' },
+    { tool: 'strikeout',  label: 'toolbar.strikethrough', Icon: StrikethroughIcon,  testId: 'annotation-tool-strikeout' },
+    { tool: 'rectangle',  label: 'toolbar.rectangle',     Icon: SquareIcon,         testId: 'annotation-tool-rectangle' },
+    { tool: 'redaction',  label: 'toolbar.redact',        Icon: EraserIcon,         testId: 'annotation-tool-redaction' },
+  ];
 
   return (
     <div className="h-10 flex items-center px-3 border-b border-border bg-background shrink-0 overflow-x-auto gap-0">
@@ -243,31 +255,31 @@ export function ModeToolbar({
                 data-testid="print-current-btn"
                 onClick={() => { window.print(); }}
                 className="flex items-center gap-1 px-2 py-1 rounded text-xs text-muted-foreground hover:bg-muted hover:text-foreground transition-colors cursor-pointer"
-                title="Huidige pagina afdrukken"
-                aria-label="Huidige pagina afdrukken"
+                title={t('toolbar.printCurrentTitle')}
+                aria-label={t('toolbar.printCurrentTitle')}
               >
                 <PrinterIcon className="w-3.5 h-3.5" />
-                <span className="hidden lg:inline">Pagina</span>
+                <span className="hidden lg:inline">{t('toolbar.printPage')}</span>
               </button>
               <button
                 data-testid="print-range-btn"
                 onClick={() => { window.print(); }}
                 className="flex items-center gap-1 px-2 py-1 rounded text-xs text-muted-foreground hover:bg-muted hover:text-foreground transition-colors cursor-pointer"
-                title="Bereik afdrukken"
-                aria-label="Bereik afdrukken"
+                title={t('toolbar.printRangeTitle')}
+                aria-label={t('toolbar.printRangeTitle')}
               >
                 <PrinterIcon className="w-3.5 h-3.5" />
-                <span className="hidden lg:inline">Bereik</span>
+                <span className="hidden lg:inline">{t('toolbar.printRange')}</span>
               </button>
               <button
                 data-testid="print-all-btn"
                 onClick={() => { window.print(); }}
                 className="flex items-center gap-1 px-2 py-1 rounded text-xs text-muted-foreground hover:bg-muted hover:text-foreground transition-colors cursor-pointer"
-                title="Alles afdrukken"
-                aria-label="Alles afdrukken"
+                title={t('toolbar.printAllTitle')}
+                aria-label={t('toolbar.printAllTitle')}
               >
                 <PrinterIcon className="w-3.5 h-3.5" />
-                <span className="hidden lg:inline">Alles</span>
+                <span className="hidden lg:inline">{t('toolbar.printAll')}</span>
               </button>
             </>
           )}
@@ -283,7 +295,7 @@ export function ModeToolbar({
               onClick={() => { onFieldNav(Math.max(0, activeFieldIdx - 1)); }}
               disabled={activeFieldIdx <= 0}
               data-testid="field-prev-btn"
-              aria-label="Vorig veld"
+              aria-label={t('toolbar.prevField')}
               className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-muted transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
             >
               <ChevronLeftIcon className="w-3.5 h-3.5" />
@@ -303,7 +315,7 @@ export function ModeToolbar({
               onClick={() => { onFieldNav(activeFieldIdx < 0 ? 0 : Math.min(formFields.length - 1, activeFieldIdx + 1)); }}
               disabled={formFields.length === 0 || activeFieldIdx >= formFields.length - 1}
               data-testid="field-next-btn"
-              aria-label="Volgend veld"
+              aria-label={t('toolbar.nextField')}
               className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-muted transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
             >
               <ChevronRightIcon className="w-3.5 h-3.5" />
@@ -320,10 +332,10 @@ export function ModeToolbar({
             data-testid="add-comment-btn"
             onClick={onAddComment}
             className="flex items-center gap-1 px-2 py-1 rounded text-xs text-muted-foreground hover:bg-muted hover:text-foreground transition-colors cursor-pointer"
-            aria-label="Opmerking toevoegen"
+            aria-label={t('review.addComment')}
           >
             <PlusIcon className="w-3.5 h-3.5" />
-            <span className="hidden lg:inline">Opmerking</span>
+            <span className="hidden lg:inline">{t('toolbar.comment')}</span>
           </button>
         </>
       )}
@@ -332,23 +344,15 @@ export function ModeToolbar({
       {mode === 'review' && pageCount > 0 && (
         <>
           <Divider />
-          {(
-            [
-              { tool: 'highlight' as const, label: 'Markeren', Icon: HighlighterIcon, testId: 'annotation-tool-highlight' },
-              { tool: 'underline' as const, label: 'Onderstrepen', Icon: UnderlineIcon, testId: 'annotation-tool-underline' },
-              { tool: 'strikeout' as const, label: 'Doorstrepen', Icon: StrikethroughIcon, testId: 'annotation-tool-strikeout' },
-              { tool: 'rectangle' as const, label: 'Rechthoek', Icon: SquareIcon, testId: 'annotation-tool-rectangle' },
-              { tool: 'redaction' as const, label: 'Redigeren', Icon: EraserIcon, testId: 'annotation-tool-redaction' },
-            ] as const
-          ).map(({ tool, label, Icon, testId }) => {
+          {annotationTools.map(({ tool, label, Icon, testId }) => {
             const isActive = activeAnnotationTool === tool;
             return (
               <button
                 key={tool}
                 data-testid={testId}
                 onClick={() => { onAnnotationToolChange?.(isActive ? null : tool); }}
-                title={label}
-                aria-label={label}
+                title={t(label)}
+                aria-label={t(label)}
                 aria-pressed={isActive}
                 className={`flex items-center gap-1 px-2 py-1 rounded text-xs transition-colors cursor-pointer ${
                   isActive
@@ -357,7 +361,7 @@ export function ModeToolbar({
                 }`}
               >
                 <Icon className="w-3.5 h-3.5" />
-                <span className="hidden lg:inline">{label}</span>
+                <span className="hidden lg:inline">{t(label)}</span>
               </button>
             );
           })}
@@ -373,7 +377,7 @@ export function ModeToolbar({
               onClick={() => { onCommentNav(Math.max(0, activeCommentIdx - 1)); }}
               disabled={activeCommentIdx <= 0}
               data-testid="comment-prev-btn"
-              aria-label="Vorige opmerking"
+              aria-label={t('review.prevCommentAriaLabel')}
               className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-muted transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
             >
               <ChevronLeftIcon className="w-3.5 h-3.5" />
@@ -393,7 +397,7 @@ export function ModeToolbar({
               onClick={() => { onCommentNav(activeCommentIdx < 0 ? 0 : Math.min(comments.length - 1, activeCommentIdx + 1)); }}
               disabled={comments.length === 0 || activeCommentIdx >= comments.length - 1}
               data-testid="comment-next-btn"
-              aria-label="Volgende opmerking"
+              aria-label={t('review.nextCommentAriaLabel')}
               className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-muted transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
             >
               <ChevronRightIcon className="w-3.5 h-3.5" />
