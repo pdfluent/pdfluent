@@ -5,6 +5,8 @@
 // Commercial use requires a valid license.
 // See https://pdfluent.com/license for terms.
 
+import i18n from '../../i18n';
+
 /**
  * Document Integrity Validator — ACROBAT_CLASS_RELIABILITY_AND_UX_HARDENING_BLOCK Batch 2
  *
@@ -188,14 +190,14 @@ export function checkFileSize(fileSizeBytes: number): IntegrityIssue | null {
     return {
       severity: 'critical',
       code: 'file-size-zero',
-      message: 'Bestandsgrootte is nul of negatief. Bestand is onleesbaar.',
+      message: i18n.t('integrity.fileSizeZero'),
     };
   }
   if (fileSizeBytes > MAX_FILE_SIZE_BYTES) {
     return {
       severity: 'warning',
       code: 'file-size-overflow',
-      message: 'Bestandsgrootte overschrijdt 2 GB. Prestatieproblemen mogelijk.',
+      message: i18n.t('integrity.fileSizeOverflow'),
     };
   }
   return null;

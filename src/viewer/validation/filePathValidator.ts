@@ -13,6 +13,8 @@
 // length, and unsupported extensions.
 // ---------------------------------------------------------------------------
 
+import i18n from '../../i18n';
+
 /** Maximum accepted file path length (characters). */
 export const MAX_PATH_LENGTH = 4096;
 
@@ -44,12 +46,12 @@ export function normalizeFilePath(path: string): string {
 export function validateFilePath(path: string): FilePathValidationResult {
   const normalizedPath = normalizeFilePath(path);
   if (normalizedPath === '') {
-    return { valid: false, error: 'Bestandspad mag niet leeg zijn', normalizedPath };
+    return { valid: false, error: i18n.t('annotationValidation.filePathEmpty'), normalizedPath };
   }
   if (normalizedPath.length > MAX_PATH_LENGTH) {
     return {
       valid: false,
-      error: `Bestandspad te lang (max ${MAX_PATH_LENGTH} tekens)`,
+      error: i18n.t('annotationValidation.filePathTooLong', { max: MAX_PATH_LENGTH }),
       normalizedPath,
     };
   }
@@ -80,7 +82,7 @@ export function validatePdfPath(path: string): FilePathValidationResult {
   if (!isPdfPath(base.normalizedPath)) {
     return {
       valid: false,
-      error: 'Bestand moet een .pdf extensie hebben',
+      error: i18n.t('annotationValidation.fileMustBePdf'),
       normalizedPath: base.normalizedPath,
     };
   }

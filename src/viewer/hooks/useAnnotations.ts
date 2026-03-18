@@ -24,6 +24,7 @@ import { buildAuditReportData, buildAuditReportMarkdown } from '../export/auditR
 import { captureRevisionSnapshot } from '../revisionSnapshot';
 import type { RevisionSnapshot } from '../revisionSnapshot';
 import { compareSnapshots, formatSnapshotDiffMarkdown } from '../revisionCompare';
+import i18n from '../../i18n';
 
 const isTauri = typeof window !== 'undefined' && '__TAURI__' in window;
 
@@ -229,7 +230,7 @@ export function useAnnotations(
     }
     markDirty();
     setDocumentEventLog(prev => appendEvent(prev, makeDocumentEvent(
-      'metadata_changed', authorName, -1, key, `Metadata gewijzigd: ${key}`
+      'metadata_changed', authorName, -1, key, i18n.t('events.metadataChanged', { key })
     )));
   }, [pdfDoc, authorName, markDirty]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -251,7 +252,7 @@ export function useAnnotations(
           setAllAnnotations(annotResult.value);
         }
         setDocumentEventLog(prev => appendEvent(prev, makeDocumentEvent(
-          'annotation_created', authorName || 'User', pageIndex, result.value?.id ?? '', 'Annotatie aangemaakt'
+          'annotation_created', authorName || 'User', pageIndex, result.value?.id ?? '', i18n.t('events.annotationCreated')
         )));
       }
     });
@@ -272,7 +273,7 @@ export function useAnnotations(
           return prev;
         });
         setDocumentEventLog(prev => appendEvent(prev, makeDocumentEvent(
-          'annotation_deleted', authorName, deletedPage, annotationId, 'Annotatie verwijderd'
+          'annotation_deleted', authorName, deletedPage, annotationId, i18n.t('events.annotationDeleted')
         )));
       }
     });
@@ -287,7 +288,7 @@ export function useAnnotations(
         if (result.success) {
           await refetchComments();
           setDocumentEventLog(prev => appendEvent(prev, makeDocumentEvent(
-            'annotation_updated', authorName, annotPage, annotationId, 'Annotatie bijgewerkt'
+            'annotation_updated', authorName, annotPage, annotationId, i18n.t('events.annotationUpdated')
           )));
         }
       });

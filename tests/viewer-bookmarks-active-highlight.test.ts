@@ -153,6 +153,6 @@ describe('BookmarksPanel — no regressions', () => {
   });
 
   it('title tooltip still present', () => {
-    expect(outlineItemBody).toContain('Pagina ${node.pageIndex + 1}');
+    expect(outlineItemBody).toContain("t('organize.pageAlt', { page: node.pageIndex + 1 })");
   });
 });

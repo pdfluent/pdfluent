@@ -13,6 +13,8 @@
 // whether an automatic retry is safe.
 // ---------------------------------------------------------------------------
 
+import i18n from '../../i18n';
+
 export type RecoveryStrategy = 'retry' | 'fallback' | 'reset' | 'ignore';
 
 export interface RecoveryAction {
@@ -40,7 +42,7 @@ export function getDocumentLoadRecovery(error: string): RecoveryAction {
   if (lower.includes('not found') || lower.includes('no such file')) {
     return {
       strategy: 'fallback',
-      description: 'Bestand niet gevonden — open een ander bestand',
+      description: i18n.t('errors.fileNotFound'),
       canAutoRecover: false,
     };
   }
@@ -60,7 +62,7 @@ export function getDocumentLoadRecovery(error: string): RecoveryAction {
   }
   return {
     strategy: 'reset',
-    description: 'Document laden mislukt — probeer het bestand opnieuw te openen',
+    description: i18n.t('errors.loadFailedRetry'),
     canAutoRecover: false,
   };
 }
@@ -72,7 +74,7 @@ export function getDocumentLoadRecovery(error: string): RecoveryAction {
 export function getAnnotationLoadRecovery(_error: string): RecoveryAction {
   return {
     strategy: 'fallback',
-    description: 'Annotaties konden niet geladen worden — wordt leeg gestart',
+    description: i18n.t('events.annotationLoadFailed'),
     canAutoRecover: true,
   };
 }
@@ -90,7 +92,7 @@ export function getTauriInvokeRecovery(command: string, error: string): Recovery
   }
   return {
     strategy: 'reset',
-    description: `Opdracht '${command}' mislukt — herlaad de pagina`,
+    description: i18n.t('errors.commandFailed', { command }),
     canAutoRecover: false,
   };
 }
@@ -102,7 +104,7 @@ export function getTauriInvokeRecovery(command: string, error: string): Recovery
 export function getAiRequestRecovery(_error: string): RecoveryAction {
   return {
     strategy: 'ignore',
-    description: 'AI verzoek mislukt — probeer het later opnieuw',
+    description: i18n.t('errors.aiFailed'),
     canAutoRecover: false,
   };
 }

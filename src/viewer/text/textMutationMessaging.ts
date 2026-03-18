@@ -28,6 +28,7 @@ import type {
   TextMutationSupportResult,
 } from './textMutationSupport';
 import type { FontEncodingClass } from './fontMutationSupport';
+import i18n from '../../i18n';
 
 // ---------------------------------------------------------------------------
 // Messaging result
@@ -74,7 +75,7 @@ const SUPPORT_CLASS_MESSAGES: Record<TextMutationSupportClass, MutationMessage> 
     tooltip: 'Beveiligd document — bewerking geblokkeerd',
     explanation:
       'Dit document of deze inhoud is beveiligd of vergrendeld. ' +
-      'Verwijder de beveiliging om tekst te bewerken.',
+      i18n.t('textMutation.removeProtection'),
     actionable: true,
   },
   unknown_structure: {
@@ -109,7 +110,7 @@ const REASON_CODE_MESSAGES: Partial<Record<MutationSupportReason, MutationMessag
     tooltip: 'OCR-tekst — alleen lezen',
     explanation:
       'Deze tekst is afkomstig van OCR-herkenning en is niet ingebed in de PDF-inhoudsstream. ' +
-      'Bewerken en opslaan is niet mogelijk voor OCR-tekst.',
+      i18n.t('textMutation.ocrCannotSave'),
     actionable: false,
   },
   'empty-content': {
@@ -121,7 +122,7 @@ const REASON_CODE_MESSAGES: Partial<Record<MutationSupportReason, MutationMessag
     tooltip: 'Beveiligde inhoud — bewerking geblokkeerd',
     explanation:
       'Deze tekst is beveiligd of behoort tot een vergrendeld formulierveld. ' +
-      'Verwijder de documentbeveiliging om tekstbewerking mogelijk te maken.',
+      i18n.t('textMutation.removeDocProtection'),
     actionable: true,
   },
   'unknown-source': {
@@ -176,7 +177,7 @@ const BACKEND_REJECTION_MESSAGES: Record<BackendRejectionCode, MutationMessage> 
     actionable: false,
   },
   'page-not-found': {
-    tooltip: 'Pagina niet gevonden',
+    tooltip: i18n.t('textMutation.pageNotFound'),
     explanation: 'De opgegeven pagina bestaat niet in het document.',
     actionable: false,
   },
@@ -243,7 +244,7 @@ const FONT_ENCODING_MESSAGES: Record<FontEncodingClass, MutationMessage> = {
     tooltip: 'CID-lettertype — niet bewerkbaar',
     explanation:
       'Dit lettertype gebruikt een CID-gebaseerde CMap. ' +
-      'Tekstbewerking vereist Rust-zijdige lettertypeinspectie (gepland voor fase 6).',
+      i18n.t('textMutation.requiresFontInspection'),
     actionable: false,
   },
   custom_encoding: {

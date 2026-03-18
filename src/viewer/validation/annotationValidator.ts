@@ -14,6 +14,7 @@
 // ---------------------------------------------------------------------------
 
 import { sanitizeText, TEXT_MAX_LENGTH } from './inputSanitizer';
+import i18n from '../../i18n';
 
 export interface AnnotationValidationResult {
   /** True when all checks passed. */
@@ -31,23 +32,23 @@ export function validateAnnotation(annotation: unknown): AnnotationValidationRes
   const errors: string[] = [];
 
   if (!annotation || typeof annotation !== 'object') {
-    return { valid: false, errors: ['Annotatie is geen object'] };
+    return { valid: false, errors: [i18n.t('annotationValidation.notObject')] };
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const a = annotation as any;
 
   if (typeof a.id !== 'string' || a.id.trim() === '') {
-    errors.push('Annotatie mist een geldig id');
+    errors.push(i18n.t('annotationValidation.missingId'));
   }
   if (typeof a.type !== 'string' || a.type.trim() === '') {
-    errors.push('Annotatie mist een geldig type');
+    errors.push(i18n.t('annotationValidation.missingType'));
   }
   if (!Number.isInteger(a.page) || a.page < 1) {
-    errors.push('Annotatie heeft een ongeldig paginanummer');
+    errors.push(i18n.t('annotationValidation.invalidPage'));
   }
   if (!isValidRect(a.rect)) {
-    errors.push('Annotatie heeft een ongeldig rect');
+    errors.push(i18n.t('annotationValidation.invalidRect'));
   }
 
   return { valid: errors.length === 0, errors };
@@ -59,7 +60,7 @@ export function validateAnnotation(annotation: unknown): AnnotationValidationRes
  */
 export function validateAnnotationBatch(annotations: unknown[]): AnnotationValidationResult {
   if (!Array.isArray(annotations)) {
-    return { valid: false, errors: ['Annotaties is geen array'] };
+    return { valid: false, errors: [i18n.t('annotationValidation.notArray')] };
   }
   const allErrors: string[] = [];
   for (let i = 0; i < annotations.length; i++) {

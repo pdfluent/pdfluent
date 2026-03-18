@@ -29,6 +29,8 @@
  *   'form-fill'  — form field being filled
  */
 
+import i18n from '../../i18n';
+
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
@@ -125,7 +127,7 @@ export function validateSessionPresence(
   if (editModes.includes(mode) && session === null) {
     return {
       code: 'edit-session-missing',
-      message: `Modus '${mode}' vereist een actieve bewerkingssessie.`,
+      message: i18n.t('validation.modeRequiresSession', { mode }),
       blocking: true,
     };
   }
@@ -192,7 +194,7 @@ export function validateDocumentOpenPrerequisite(
   if (mode !== 'idle' && !documentOpen) {
     return {
       code: 'mode-prerequisite-missing',
-      message: `Modus '${mode}' vereist een geopend document.`,
+      message: i18n.t('validation.modeRequiresDocument', { mode }),
       blocking: true,
     };
   }

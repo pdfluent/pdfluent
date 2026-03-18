@@ -101,7 +101,7 @@ describe('OrganizeGrid — assembly: append PDF', () => {
 
   it('updates task to error on failure', () => {
     expect(appendBody).toContain("status: 'error'");
-    expect(appendBody).toContain("'PDF toevoegen mislukt'");
+    expect(appendBody).toContain("t('organize.addFailed')");
   });
 });
 
@@ -149,7 +149,7 @@ describe('OrganizeGrid — assembly: insert PDF', () => {
 
   it('updates task to error on failure', () => {
     expect(insertBody).toContain("status: 'error'");
-    expect(insertBody).toContain("'PDF invoegen mislukt'");
+    expect(insertBody).toContain("t('organize.insertFailed')");
   });
 });
 
@@ -201,7 +201,7 @@ describe('OrganizeGrid — assembly: export selection', () => {
 
   it('updates task to error on failure', () => {
     expect(exportBody).toContain("status: 'error'");
-    expect(exportBody).toContain("'Exporteren mislukt'");
+    expect(exportBody).toContain("t('organize.exportFailed')");
   });
 });
 
@@ -252,7 +252,7 @@ describe('OrganizeGrid — assembly: split into pages', () => {
 
   it('updates task to error on failure', () => {
     expect(splitBody).toContain("status: 'error'");
-    expect(splitBody).toContain("'Splitsen mislukt'");
+    expect(splitBody).toContain("t('organize.splitFailed')");
   });
 });
 

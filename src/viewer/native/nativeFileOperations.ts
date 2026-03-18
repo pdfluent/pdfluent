@@ -26,6 +26,7 @@ import {
   isPdfPath,
   MAX_PATH_LENGTH,
 } from '../validation/filePathValidator';
+import i18n from '../../i18n';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -56,7 +57,7 @@ export interface FileOpResult<T = void> {
  */
 export function guardOpenPath(path: string): FileOpResult<{ normalizedPath: string }> {
   if (!path || path.trim().length === 0) {
-    return { ok: false, error: 'empty-path', errorMessage: 'Bestandspad is leeg.' };
+    return { ok: false, error: 'empty-path', errorMessage: i18n.t('errors.emptyPath') };
   }
   const result = validatePdfPath(path);
   if (!result.valid) {

@@ -45,6 +45,7 @@
 
 import type { TextParagraphTarget } from './textInteractionModel';
 import { ESTIMATED_CHAR_WIDTH_RATIO } from './textMutationFidelity';
+import i18n from '../../i18n';
 
 // ---------------------------------------------------------------------------
 // Support class
@@ -176,7 +177,7 @@ const SUPPORT_LABELS: Record<TextMutationSupportClass, string> = {
   'ocr_read_only':
     'OCR-tekst kan niet worden teruggeschreven naar de PDF',
   'protected_or_locked':
-    'Beveiligde of vergrendelde inhoud — bewerking niet toegestaan',
+    i18n.t('textMutation.protectedLocked'),
   'unknown_structure':
     'Tekststructuur kon niet worden geclassificeerd — bewerking niet beschikbaar',
 };

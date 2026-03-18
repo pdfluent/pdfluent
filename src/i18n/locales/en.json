@@ -241,7 +241,17 @@
     "addPdf": "Add PDF",
     "splitPages": "Split into individual pages",
     "selectedCount": "{{count}} selected",
-    "rotate": "Rotate"
+    "rotate": "Rotate",
+    "applyingOrder": "Applying page order…",
+    "orderApplied": "Order applied",
+    "orderFailed": "Reorder failed",
+    "pageAlt": "Page {{page}}",
+    "rotatePage": "Rotate page {{page}}",
+    "deletePage": "Delete page {{page}}",
+    "addFailed": "Add PDF failed",
+    "insertFailed": "Insert PDF failed",
+    "exportFailed": "Export failed",
+    "splitFailed": "Split failed"
   },
   "unsavedChanges": {
     "title": "Unsaved changes",
@@ -269,10 +279,83 @@
     "system": "System"
   },
   "errors": {
-    "loadFailed": "Failed to load document",
+    "loadFailed": "Document load failed",
     "saveFailed": "Failed to save document",
     "engineError": "PDF engine error",
-    "unknownError": "An unexpected error occurred"
+    "unknownError": "An unexpected error occurred",
+    "ocrFailed": "OCR failed",
+    "exportFailed": "Export failed",
+    "redactionFailed": "Redaction failed",
+    "textEditFailed": "Text edit failed",
+    "layoutEditFailed": "Layout edit failed",
+    "annotationFailed": "Annotation failed",
+    "commandFailed": "Command '{{command}}' failed — reload the page",
+    "aiFailed": "AI request failed — try again later",
+    "fileNotFound": "File not found — open another file",
+    "loadFailedRetry": "Document load failed — try reopening the file",
+    "emptyPath": "File path is empty.",
+    "cannotDeleteLastPage": "Cannot delete last page",
+    "reorderFailed": "Reorder failed",
+    "addPageFailed": "Add PDF failed",
+    "insertFailed": "Insert PDF failed",
+    "splitFailed": "Split failed"
+  },
+  "events": {
+    "formFieldUpdated": "Form field updated",
+    "formFieldChange": "Change form field",
+    "metadataChanged": "Metadata changed: {{key}}",
+    "annotationUpdated": "Annotation updated",
+    "annotationCreated": "Annotation created",
+    "annotationDeleted": "Annotation deleted",
+    "annotationLoadFailed": "Annotations could not be loaded — starting empty",
+    "pageMutated": "Page modified"
+  },
+  "integrity": {
+    "fileSizeZero": "File size is zero or negative. File is unreadable.",
+    "fileSizeOverflow": "File size exceeds 2 GB. Performance issues possible."
+  },
+  "annotationValidation": {
+    "notObject": "Annotation is not an object",
+    "missingId": "Annotation is missing a valid id",
+    "missingType": "Annotation is missing a valid type",
+    "invalidPage": "Annotation has an invalid page number",
+    "invalidRect": "Annotation has an invalid rect",
+    "notArray": "Annotations is not an array",
+    "filePathEmpty": "File path cannot be empty",
+    "filePathTooLong": "File path too long (max {{max}} characters)",
+    "fileMustBePdf": "File must have a .pdf extension"
+  },
+  "auditReport": {
+    "activityOverview": "## Activity overview",
+    "annotationOverview": "## Annotation overview",
+    "issues": "## Issues",
+    "issuesHeading": "Issues"
+  },
+  "viewer": {
+    "fitWidth": "Fit page width"
+  },
+  "textMutation": {
+    "protectedLocked": "Protected or locked content — editing not allowed",
+    "editText": "Edit text",
+    "removeProtection": "Remove the protection to edit text.",
+    "ocrCannotSave": "Editing and saving is not possible for OCR text.",
+    "removeDocProtection": "Remove the document protection to enable text editing.",
+    "pageNotFound": "Page not found",
+    "requiresFontInspection": "Text editing requires font inspection (planned for phase 6)."
+  },
+  "validation": {
+    "modeRequiresSession": "Mode '{{mode}}' requires an active editing session.",
+    "modeRequiresDocument": "Mode '{{mode}}' requires an open document.",
+    "fieldOutsideBounds": "Form field falls outside annotation bounds. Change blocked.",
+    "objectInLockedLayer": "Object is in a locked layer and cannot be modified.",
+    "formsWithoutFields": "Form filling mode is active on a document without form fields.",
+    "annotationToolbarWrongMode": "Annotation bar is visible in mode '{{mode}}', but requires 'annotating'.",
+    "redactionToolbarWrongMode": "Redaction bar is visible in mode '{{mode}}', but requires 'redacting'."
+  },
+  "revisions": {
+    "deletedAnnotations": "## Deleted annotations",
+    "metadataChanged": "## Metadata changed",
+    "metadataChangedDescription": "The document metadata has changed between the two snapshots."
   },
   "tasks": {
     "deletePageRunning": "Deleting page {{page}}…",

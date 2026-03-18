@@ -11,6 +11,7 @@ import type { OutlineNode, TextSpan } from '../core/document';
 import { makeDocumentEvent, appendEvent } from './state/documentEvents';
 import type { DocumentEvent } from './state/documentEvents';
 import type { AppError } from './state/errorCenter';
+import i18n from '../i18n';
 import { ViewerSidePanels } from './ViewerSidePanels';
 import { WelcomeSection } from './WelcomeSection';
 
@@ -401,7 +402,7 @@ export function ViewerApp() {
     setDocumentVersion(v => v + 1);
     markDirty();
     setDocumentEventLog(prev => appendEvent(prev, makeDocumentEvent(
-      'page_mutated', authorName, navigateTo ?? -1, '', 'Pagina gewijzigd'
+      'page_mutated', authorName, navigateTo ?? -1, '', i18n.t('events.pageMutated')
     )));
   }, [updatePageCount, authorName, markDirty]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -721,8 +722,8 @@ export function ViewerApp() {
                 data-testid="zoom-fit-width-btn"
                 onClick={() => { setZoom(1.0); }}
                 className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted rounded transition-colors"
-                title="Paginabreedte aanpassen"
-                aria-label="Paginabreedte aanpassen"
+                title={i18n.t('viewer.fitWidth')}
+                aria-label={i18n.t('viewer.fitWidth')}
               >
                 <MaximizeIcon className="w-3.5 h-3.5" />
               </button>

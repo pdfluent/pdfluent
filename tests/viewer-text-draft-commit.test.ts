@@ -313,12 +313,12 @@ describe('errorCenter — makeTextMutationError', () => {
     expect(block).toContain("'error'");
   });
 
-  it('makeTextMutationError title contains Tekstbewerking', () => {
+  it('makeTextMutationError title uses i18n key for text edit error', () => {
     const block = errorCenterSrc.slice(
       errorCenterSrc.indexOf('makeTextMutationError'),
       errorCenterSrc.indexOf('makeTextMutationError') + 120,
     );
-    expect(block).toContain('Tekstbewerking');
+    expect(block).toContain("errors.textEditFailed");
   });
 });
 
