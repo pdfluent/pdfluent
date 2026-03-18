@@ -652,5 +652,13 @@
     "redactionCount_plural": "{{count}} redigeringen in behandeling",
     "applyRedactions": "Redigeringen definitief toepassen",
     "deleteRedaction": "Redigering verwijderen"
+  },
+  "update": {
+    "available": "Update beschikbaar",
+    "version": "Versie {{version}} is klaar om te installeren.",
+    "install": "Installeren en herstarten",
+    "dismiss": "Sluiten",
+    "installing": "Installeren…",
+    "checkFailed": "Update-controle mislukt"
   }
 }

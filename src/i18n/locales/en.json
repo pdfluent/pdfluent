@@ -652,5 +652,13 @@
     "redactionCount_plural": "{{count}} redactions pending",
     "applyRedactions": "Apply redactions permanently",
     "deleteRedaction": "Delete redaction"
+  },
+  "update": {
+    "available": "Update available",
+    "version": "Version {{version}} is ready to install.",
+    "install": "Install and restart",
+    "dismiss": "Dismiss",
+    "installing": "Installing…",
+    "checkFailed": "Update check failed"
   }
 }
