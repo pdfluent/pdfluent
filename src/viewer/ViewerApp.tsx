@@ -59,6 +59,7 @@ import { TextContextBar, shouldShowContextBar } from './components/TextContextBa
 import type { TextContextActionId } from './components/TextContextBar';
 import { TextInlineEditor } from './components/TextInlineEditor';
 import { FormFieldOverlay } from './components/FormFieldOverlay';
+import { UndoStack, makeCommand } from './undoEngine';
 import { makeTextMutationError, appendError } from './state/errorCenter';
 import type { AppError } from './state/errorCenter';
 import { getTauriTextMutationEngine } from '../platform/engine/tauri/TauriTextMutationEngine';
@@ -122,6 +123,25 @@ export function ViewerApp() {
   const { recentFiles, addRecentFile, removeRecentFile, clearRecentFiles } = useRecentFiles();
 
   const [pageIndex, setPageIndex] = useState(0);
+
+  // Undo/redo stack — lives as a ref to avoid re-renders on push; canUndo/canRedo
+  // are mirrored in state so the TopBar buttons update correctly.
+  const undoStackRef = useRef<UndoStack>(new UndoStack());
+  const [canUndo, setCanUndo] = useState(false);
+  const [canRedo, setCanRedo] = useState(false);
+
+  /** Synchronise canUndo/canRedo state after each stack mutation. */
+  const syncUndoState = useCallback(() => {
+    setCanUndo(undoStackRef.current.canUndo);
+    setCanRedo(undoStackRef.current.canRedo);
+  }, []);
+
+  /** Push a command and update undo/redo button state. */
+  const pushUndo = useCallback((cmd: Parameters<UndoStack['push']>[0]) => {
+    undoStackRef.current.push(cmd);
+    syncUndoState();
+  }, [syncUndoState]);
+
   const [zoom, setZoom] = useState(() => {
     try {
       const stored = parseFloat(localStorage.getItem('pdfluent.viewer.zoom') ?? '');
@@ -592,7 +612,9 @@ export function ViewerApp() {
   // Marks the document dirty so the save button activates.
   const handleSetFieldValue = useCallback((fieldId: string, value: FormFieldValue) => {
     if (!pdfDoc || !engine) return;
-    const fieldPage = formFields.find(f => f.id === fieldId)?.pageIndex ?? -1;
+    const field = formFields.find(f => f.id === fieldId);
+    const fieldPage = field?.pageIndex ?? -1;
+    const previousValue = field?.value ?? '';
     void engine.form.setFormFieldValue(pdfDoc, fieldId, value).then(result => {
       if (result.success) {
         setFormFields(prev => prev.map(f => f.id === result.value.id ? result.value : f));
@@ -602,9 +624,15 @@ export function ViewerApp() {
         setDocumentEventLog(prev => appendEvent(prev, makeDocumentEvent(
           'form_field_updated', authorName, fieldPage, fieldId, 'Formulierveld bijgewerkt'
         )));
+        // Push undo command: restoring the previous field value reverses this edit
+        pushUndo(makeCommand(
+          `Formulierveld wijzigen`,
+          async () => { if (pdfDoc && engine) await engine.form.setFormFieldValue(pdfDoc, fieldId, value).then(r => { if (r.success) setFormFields(p => p.map(f => f.id === r.value.id ? r.value : f)); }); },
+          async () => { if (pdfDoc && engine) await engine.form.setFormFieldValue(pdfDoc, fieldId, previousValue).then(r => { if (r.success) setFormFields(p => p.map(f => f.id === r.value.id ? r.value : f)); }); },
+        ));
       }
     });
-  }, [pdfDoc, engine, formFields, authorName, markDirty]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [pdfDoc, engine, formFields, authorName, markDirty, pushUndo]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Validate all form fields, surface per-field errors, then save on success.
   // Uses validateAllFormFields (sync) — no Rust bridge needed for validation itself.
@@ -1403,6 +1431,21 @@ export function ViewerApp() {
     return () => { window.removeEventListener('keydown', handleZoomKey); };
   }, [pageCount]);
 
+  // Undo/Redo keyboard shortcuts — ⌘Z / Ctrl+Z (undo), ⌘⇧Z / Ctrl+Shift+Z (redo)
+  useEffect(() => {
+    function handleUndoKey(e: KeyboardEvent): void {
+      if (!(e.metaKey || e.ctrlKey) || e.key !== 'z') return;
+      e.preventDefault();
+      if (e.shiftKey) {
+        void undoStackRef.current.redo().then(syncUndoState);
+      } else {
+        void undoStackRef.current.undo().then(syncUndoState);
+      }
+    }
+    window.addEventListener('keydown', handleUndoKey);
+    return () => { window.removeEventListener('keydown', handleUndoKey); };
+  }, [syncUndoState]);
+
   // Save As keyboard shortcut — ⌘⇧S / Ctrl+Shift+S
   useEffect(() => {
     function handleSaveAsKey(e: KeyboardEvent): void {
@@ -1810,6 +1853,10 @@ export function ViewerApp() {
         onOpenCommandPalette={() => { setCommandPaletteOpen(true); }}
         onOpenExport={() => { setExportOpen(true); }}
         onSaveAs={handleSaveAs}
+        canUndo={canUndo}
+        canRedo={canRedo}
+        onUndo={() => { void undoStackRef.current.undo().then(syncUndoState); }}
+        onRedo={() => { void undoStackRef.current.redo().then(syncUndoState); }}
       />
 
       {/* ── ModeSwitcher ───────────────────────────────────────────────────── */}
