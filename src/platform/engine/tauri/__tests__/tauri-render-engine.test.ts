@@ -1,4 +1,4 @@
-// Copyright (c) 2026 PDFluent B.V. All rights reserved.
+// Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
 // This software is proprietary and confidential.
 // Free for personal, non-commercial use.
@@ -142,15 +142,32 @@ describe('TauriRenderEngine — getThumbnail mapping', () => {
   });
 
   describe('error path', () => {
-    it('returns page-not-found for out-of-range pageIndex without calling invoke', async () => {
+    it('returns page-not-found for negative pageIndex without calling invoke', async () => {
+      // getThumbnail does NOT guard against pageIndex >= document.pages.length because
+      // after append/insert mutations the doc model is stale while the backend is up-to-date.
+      // Only negative indices are rejected locally.
+      const doc = makeDoc(1);
+
+      const result = await engine.getThumbnail(doc, -1, 120, 170);
+
+      expect(result.success).toBe(false);
+      if (result.success) return;
+      expect(result.error.code).toBe('page-not-found');
+      expect(mockedInvoke).not.toHaveBeenCalled();
+    });
+
+    it('delegates out-of-model-range pageIndex to the backend (backend is authoritative)', async () => {
+      // After append/insert, pages beyond document.pages.length are valid on the backend.
+      // getThumbnail must call invoke rather than short-circuit with a local error.
+      mockedInvoke.mockRejectedValue(new Error('backend out of range'));
       const doc = makeDoc(1);
 
       const result = await engine.getThumbnail(doc, 9, 120, 170);
 
       expect(result.success).toBe(false);
       if (result.success) return;
-      expect(result.error.code).toBe('page-not-found');
-      expect(mockedInvoke).not.toHaveBeenCalled();
+      expect(result.error.code).toBe('internal-error');
+      expect(mockedInvoke).toHaveBeenCalledWith('render_thumbnail', { pageIndex: 9 });
     });
 
     it('returns internal-error when invoke rejects', async () => {

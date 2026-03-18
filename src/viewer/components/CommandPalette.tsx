@@ -1,4 +1,4 @@
-// Copyright (c) 2026 PDFluent B.V. All rights reserved.
+// Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
 // This software is proprietary and confidential.
 // Free for personal, non-commercial use.
@@ -19,9 +19,11 @@ interface CommandPaletteProps {
   isOpen: boolean;
   onClose: () => void;
   commands: Command[];
+  recentIds?: string[];
+  onRun?: (id: string) => void;
 }
 
-export function CommandPalette({ isOpen, onClose, commands }: CommandPaletteProps) {
+export function CommandPalette({ isOpen, onClose, commands, recentIds = [], onRun }: CommandPaletteProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [query, setQuery] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -29,6 +31,14 @@ export function CommandPalette({ isOpen, onClose, commands }: CommandPaletteProp
   // Refs so the keyboard handler always sees the latest values without re-registering
   const filteredRef = useRef<Command[]>([]);
   const selectedIndexRef = useRef(0);
+
+  // Up to 3 recent commands shown when the query is empty (in usage order, deduped)
+  const recentCommands = useMemo(() => {
+    return recentIds
+      .map(id => commands.find(c => c.id === id))
+      .filter((c): c is Command => c !== undefined)
+      .slice(0, 3);
+  }, [recentIds, commands]);
 
   const filtered = useMemo(() => {
     if (!query.trim()) return commands;
@@ -38,6 +48,9 @@ export function CommandPalette({ isOpen, onClose, commands }: CommandPaletteProp
       cmd.keywords?.some(k => k.toLowerCase().includes(q))
     );
   }, [commands, query]);
+
+  // Whether to show the recent section (only when query is empty and there are recents)
+  const showRecent = !query.trim() && recentCommands.length > 0;
 
   filteredRef.current = filtered;
   selectedIndexRef.current = selectedIndex;
@@ -78,7 +91,7 @@ export function CommandPalette({ isOpen, onClose, commands }: CommandPaletteProp
       if (e.key === 'Enter') {
         e.preventDefault();
         const cmd = filteredRef.current[selectedIndexRef.current];
-        if (cmd) { cmd.action(); onClose(); }
+        if (cmd) { onRun?.(cmd.id); cmd.action(); onClose(); }
       }
     }
     if (isOpen) {
@@ -127,6 +140,29 @@ export function CommandPalette({ isOpen, onClose, commands }: CommandPaletteProp
 
         {/* Command list */}
         <div className="max-h-72 overflow-y-auto">
+          {/* Recent commands section — shown only when query is empty */}
+          {showRecent && (
+            <div data-testid="recent-commands-section">
+              <p className="px-4 pt-2 pb-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground/60">
+                Recente opdrachten
+              </p>
+              <ul>
+                {recentCommands.map(cmd => (
+                  <li key={cmd.id}>
+                    <button
+                      data-testid="recent-command-item"
+                      className="w-full text-left px-4 py-2 text-sm text-foreground hover:bg-muted/50 transition-colors"
+                      onClick={() => { onRun?.(cmd.id); cmd.action(); onClose(); }}
+                    >
+                      {cmd.label}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+              <div className="mx-4 my-1 border-t border-border" aria-hidden="true" />
+            </div>
+          )}
+
           {filtered.length === 0 ? (
             <div className="px-4 py-8 text-center">
               <p className="text-sm text-muted-foreground">Geen opdrachten gevonden.</p>
@@ -142,7 +178,7 @@ export function CommandPalette({ isOpen, onClose, commands }: CommandPaletteProp
                         : 'text-foreground hover:bg-muted/50'
                     }`}
                     onMouseEnter={() => { setSelectedIndex(i); }}
-                    onClick={() => { cmd.action(); onClose(); }}
+                    onClick={() => { onRun?.(cmd.id); cmd.action(); onClose(); }}
                   >
                     {cmd.label}
                   </button>

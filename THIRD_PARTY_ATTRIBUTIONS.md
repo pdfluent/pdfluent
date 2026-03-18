@@ -1,0 +1,458 @@
+# THIRD_PARTY_ATTRIBUTIONS
+
+Contains attribution scaffolding. Replace placeholders with exact NOTICE/LICENSE texts where required.
+
+## Project LICENSE (as provided)
+
+```text
+Copyright 2014-2025 Benoit Blanchon
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the “Software”), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+This package also includes third-party software. See the licenses/ directory for their respective licenses.
+```
+
+## Embedded: PDFium third-party license files (copy verbatim into distribution)
+
+- pdfium/licenses/abseil.txt
+- pdfium/licenses/agg23.txt
+- pdfium/licenses/fast_float.txt
+- pdfium/licenses/freetype.txt
+- pdfium/licenses/icu.txt
+- pdfium/licenses/lcms.txt
+- pdfium/licenses/libjpeg_turbo.ijg
+- pdfium/licenses/libjpeg_turbo.md
+- pdfium/licenses/libopenjpeg.txt
+- pdfium/licenses/libpng.txt
+- pdfium/licenses/libtiff.txt
+- pdfium/licenses/llvm-libc.txt
+- pdfium/licenses/pdfium.txt
+- pdfium/licenses/simdutf.txt
+- pdfium/licenses/zlib.txt
+
+## npm packages (summary)
+
+- @alloc/quick-lru 5.2.0 — MIT
+- @babel/code-frame 7.29.0 — MIT
+- @babel/compat-data 7.29.0 — MIT
+- @babel/core 7.29.0 — MIT
+- @babel/generator 7.29.1 — MIT
+- @babel/helper-compilation-targets 7.28.6 — MIT
+- @babel/helper-globals 7.28.0 — MIT
+- @babel/helper-module-imports 7.28.6 — MIT
+- @babel/helper-module-transforms 7.28.6 — MIT
+- @babel/helper-plugin-utils 7.28.6 — MIT
+- @babel/helper-string-parser 7.27.1 — MIT
+- @babel/helper-validator-identifier 7.28.5 — MIT
+- @babel/helper-validator-option 7.27.1 — MIT
+- @babel/helpers 7.28.6 — MIT
+- @babel/parser 7.29.0 — MIT
+- @babel/plugin-transform-react-jsx-self 7.27.1 — MIT
+- @babel/plugin-transform-react-jsx-source 7.27.1 — MIT
+- @babel/template 7.28.6 — MIT
+- @babel/traverse 7.29.0 — MIT
+- @babel/types 7.29.0 — MIT
+- @esbuild/aix-ppc64 0.25.12 — MIT
+- @esbuild/android-arm 0.25.12 — MIT
+- @esbuild/android-arm64 0.25.12 — MIT
+- @esbuild/android-x64 0.25.12 — MIT
+- @esbuild/darwin-arm64 0.25.12 — MIT
+- @esbuild/darwin-x64 0.25.12 — MIT
+- @esbuild/freebsd-arm64 0.25.12 — MIT
+- @esbuild/freebsd-x64 0.25.12 — MIT
+- @esbuild/linux-arm 0.25.12 — MIT
+- @esbuild/linux-arm64 0.25.12 — MIT
+- @esbuild/linux-ia32 0.25.12 — MIT
+- @esbuild/linux-loong64 0.25.12 — MIT
+- @esbuild/linux-mips64el 0.25.12 — MIT
+- @esbuild/linux-ppc64 0.25.12 — MIT
+- @esbuild/linux-riscv64 0.25.12 — MIT
+- @esbuild/linux-s390x 0.25.12 — MIT
+- @esbuild/linux-x64 0.25.12 — MIT
+- @esbuild/netbsd-arm64 0.25.12 — MIT
+- @esbuild/netbsd-x64 0.25.12 — MIT
+- @esbuild/openbsd-arm64 0.25.12 — MIT
+- @esbuild/openbsd-x64 0.25.12 — MIT
+- @esbuild/openharmony-arm64 0.25.12 — MIT
+- @esbuild/sunos-x64 0.25.12 — MIT
+- @esbuild/win32-arm64 0.25.12 — MIT
+- @esbuild/win32-ia32 0.25.12 — MIT
+- @esbuild/win32-x64 0.25.12 — MIT
+- @eslint-community/eslint-utils 4.9.1 — MIT
+- @eslint-community/eslint-utils/node_modules/eslint-visitor-keys 3.4.3 — Apache-2.0
+- @eslint-community/regexpp 4.12.2 — MIT
+- @eslint/config-array 0.21.1 — Apache-2.0
+- @eslint/config-helpers 0.4.2 — Apache-2.0
+- @eslint/core 0.17.0 — Apache-2.0
+- @eslint/eslintrc 3.3.4 — MIT
+- @eslint/js 9.39.3 — MIT
+- @eslint/object-schema 2.1.7 — Apache-2.0
+- @eslint/plugin-kit 0.4.1 — Apache-2.0
+- @humanfs/core 0.19.1 — Apache-2.0
+- @humanfs/node 0.16.7 — Apache-2.0
+- @humanwhocodes/module-importer 1.0.1 — Apache-2.0
+- @humanwhocodes/retry 0.4.3 — Apache-2.0
+- @jridgewell/gen-mapping 0.3.13 — MIT
+- @jridgewell/remapping 2.3.5 — MIT
+- @jridgewell/resolve-uri 3.1.2 — MIT
+- @jridgewell/sourcemap-codec 1.5.5 — MIT
+- @jridgewell/trace-mapping 0.3.31 — MIT
+- @libpdf/core 0.2.10 — MIT
+- @libpdf/core/node_modules/lru-cache 11.2.6 — BlueOak-1.0.0
+- @noble/ciphers 2.1.1 — MIT
+- @noble/hashes 2.0.1 — MIT
+- @nodelib/fs.scandir 2.1.5 — MIT
+- @nodelib/fs.stat 2.0.5 — MIT
+- @nodelib/fs.walk 1.2.8 — MIT
+- @rolldown/pluginutils 1.0.0-beta.27 — MIT
+- @rollup/rollup-android-arm-eabi 4.59.0 — MIT
+- @rollup/rollup-android-arm64 4.59.0 — MIT
+- @rollup/rollup-darwin-arm64 4.59.0 — MIT
+- @rollup/rollup-darwin-x64 4.59.0 — MIT
+- @rollup/rollup-freebsd-arm64 4.59.0 — MIT
+- @rollup/rollup-freebsd-x64 4.59.0 — MIT
+- @rollup/rollup-linux-arm-gnueabihf 4.59.0 — MIT
+- @rollup/rollup-linux-arm-musleabihf 4.59.0 — MIT
+- @rollup/rollup-linux-arm64-gnu 4.59.0 — MIT
+- @rollup/rollup-linux-arm64-musl 4.59.0 — MIT
+- @rollup/rollup-linux-loong64-gnu 4.59.0 — MIT
+- @rollup/rollup-linux-loong64-musl 4.59.0 — MIT
+- @rollup/rollup-linux-ppc64-gnu 4.59.0 — MIT
+- @rollup/rollup-linux-ppc64-musl 4.59.0 — MIT
+- @rollup/rollup-linux-riscv64-gnu 4.59.0 — MIT
+- @rollup/rollup-linux-riscv64-musl 4.59.0 — MIT
+- @rollup/rollup-linux-s390x-gnu 4.59.0 — MIT
+- @rollup/rollup-linux-x64-gnu 4.59.0 — MIT
+- @rollup/rollup-linux-x64-musl 4.59.0 — MIT
+- @rollup/rollup-openbsd-x64 4.59.0 — MIT
+- @rollup/rollup-openharmony-arm64 4.59.0 — MIT
+- @rollup/rollup-win32-arm64-msvc 4.59.0 — MIT
+- @rollup/rollup-win32-ia32-msvc 4.59.0 — MIT
+- @rollup/rollup-win32-x64-gnu 4.59.0 — MIT
+- @rollup/rollup-win32-x64-msvc 4.59.0 — MIT
+- @scure/base 2.0.0 — MIT
+- @tauri-apps/api 2.10.1 — Apache-2.0 OR MIT
+- @tauri-apps/cli 2.10.0 — Apache-2.0 OR MIT
+- @tauri-apps/cli-darwin-arm64 2.10.0 — Apache-2.0 OR MIT
+- @tauri-apps/cli-darwin-x64 2.10.0 — Apache-2.0 OR MIT
+- @tauri-apps/cli-linux-arm-gnueabihf 2.10.0 — Apache-2.0 OR MIT
+- @tauri-apps/cli-linux-arm64-gnu 2.10.0 — Apache-2.0 OR MIT
+- @tauri-apps/cli-linux-arm64-musl 2.10.0 — Apache-2.0 OR MIT
+- @tauri-apps/cli-linux-riscv64-gnu 2.10.0 — Apache-2.0 OR MIT
+- @tauri-apps/cli-linux-x64-gnu 2.10.0 — Apache-2.0 OR MIT
+- @tauri-apps/cli-linux-x64-musl 2.10.0 — Apache-2.0 OR MIT
+- @tauri-apps/cli-win32-arm64-msvc 2.10.0 — Apache-2.0 OR MIT
+- @tauri-apps/cli-win32-ia32-msvc 2.10.0 — Apache-2.0 OR MIT
+- @tauri-apps/cli-win32-x64-msvc 2.10.0 — Apache-2.0 OR MIT
+- @tauri-apps/plugin-dialog 2.6.0 — MIT OR Apache-2.0
+- @tauri-apps/plugin-fs 2.4.5 — MIT OR Apache-2.0
+- @tauri-apps/plugin-updater 2.10.0 — MIT OR Apache-2.0
+- @types/babel__core 7.20.5 — MIT
+- @types/babel__generator 7.27.0 — MIT
+- @types/babel__template 7.4.4 — MIT
+- @types/babel__traverse 7.28.0 — MIT
+- @types/estree 1.0.8 — MIT
+- @types/json-schema 7.0.15 — MIT
+- @types/react 19.2.14 — MIT
+- @types/react-dom 19.2.3 — MIT
+- @typescript-eslint/eslint-plugin 8.56.1 — MIT
+- @typescript-eslint/eslint-plugin/node_modules/ignore 7.0.5 — MIT
+- @typescript-eslint/parser 8.56.1 — MIT
+- @typescript-eslint/project-service 8.56.1 — MIT
+- @typescript-eslint/scope-manager 8.56.1 — MIT
+- @typescript-eslint/tsconfig-utils 8.56.1 — MIT
+- @typescript-eslint/type-utils 8.56.1 — MIT
+- @typescript-eslint/types 8.56.1 — MIT
+- @typescript-eslint/typescript-estree 8.56.1 — MIT
+- @typescript-eslint/typescript-estree/node_modules/balanced-match 4.0.4 — MIT
+- @typescript-eslint/typescript-estree/node_modules/brace-expansion 5.0.4 — MIT
+- @typescript-eslint/typescript-estree/node_modules/minimatch 10.2.4 — BlueOak-1.0.0
+- @typescript-eslint/typescript-estree/node_modules/semver 7.7.4 — ISC
+- @typescript-eslint/utils 8.56.1 — MIT
+- @typescript-eslint/visitor-keys 8.56.1 — MIT
+- @typescript-eslint/visitor-keys/node_modules/eslint-visitor-keys 5.0.1 — Apache-2.0
+- @vitejs/plugin-react 4.7.0 — MIT
+- @vitest/expect 2.1.9 — MIT
+- @vitest/pretty-format 2.1.9 — MIT
+- @vitest/runner 2.1.9 — MIT
+- @vitest/snapshot 2.1.9 — MIT
+- @vitest/spy 2.1.9 — MIT
+- @vitest/utils 2.1.9 — MIT
+- acorn 8.16.0 — MIT
+- acorn-jsx 5.3.2 — MIT
+- ajv 6.14.0 — MIT
+- ansi-styles 4.3.0 — MIT
+- any-promise 1.3.0 — MIT
+- anymatch 3.1.3 — ISC
+- anymatch/node_modules/picomatch 2.3.1 — MIT
+- arg 5.0.2 — MIT
+- argparse 2.0.1 — Python-2.0
+- asn1js 3.0.7 — BSD-3-Clause
+- assertion-error 2.0.1 — MIT
+- autoprefixer 10.4.27 — MIT
+- balanced-match 1.0.2 — MIT
+- baseline-browser-mapping 2.10.0 — Apache-2.0
+- binary-extensions 2.3.0 — MIT
+- brace-expansion 1.1.12 — MIT
+- braces 3.0.3 — MIT
+- browserslist 4.28.1 — MIT
+- bytestreamjs 2.0.1 — BSD-3-Clause
+- cac 6.7.14 — MIT
+- callsites 3.1.0 — MIT
+- camelcase-css 2.0.1 — MIT
+- caniuse-lite 1.0.30001775 — CC-BY-4.0
+- chai 5.3.3 — MIT
+- chalk 4.1.2 — MIT
+- check-error 2.1.3 — MIT
+- chokidar 3.6.0 — MIT
+- chokidar/node_modules/glob-parent 5.1.2 — ISC
+- color-convert 2.0.1 — MIT
+- color-name 1.1.4 — MIT
+- commander 4.1.1 — MIT
+- concat-map 0.0.1 — MIT
+- convert-source-map 2.0.0 — MIT
+- core-util-is 1.0.3 — MIT
+- cross-spawn 7.0.6 — MIT
+- cssesc 3.0.0 — MIT
+- csstype 3.2.3 — MIT
+- debug 4.4.3 — MIT
+- deep-eql 5.0.2 — MIT
+- deep-is 0.1.4 — MIT
+- didyoumean 1.2.2 — Apache-2.0
+- dlv 1.1.3 — MIT
+- electron-to-chromium 1.5.302 — ISC
+- es-module-lexer 1.7.0 — MIT
+- esbuild 0.25.12 — MIT
+- escalade 3.2.0 — MIT
+- escape-string-regexp 4.0.0 — MIT
+- eslint 9.39.3 — MIT
+- eslint-plugin-react-hooks 5.2.0 — MIT
+- eslint-scope 8.4.0 — BSD-2-Clause
+- eslint-visitor-keys 4.2.1 — Apache-2.0
+- espree 10.4.0 — BSD-2-Clause
+- esquery 1.7.0 — BSD-3-Clause
+- esrecurse 4.3.0 — BSD-2-Clause
+- estraverse 5.3.0 — BSD-2-Clause
+- estree-walker 3.0.3 — MIT
+- esutils 2.0.3 — BSD-2-Clause
+- expect-type 1.3.0 — Apache-2.0
+- fast-deep-equal 3.1.3 — MIT
+- fast-glob 3.3.3 — MIT
+- fast-glob/node_modules/glob-parent 5.1.2 — ISC
+- fast-json-stable-stringify 2.1.0 — MIT
+- fast-levenshtein 2.0.6 — MIT
+- fastq 1.20.1 — ISC
+- fdir 6.5.0 — MIT
+- file-entry-cache 8.0.0 — MIT
+- fill-range 7.1.1 — MIT
+- find-up 5.0.0 — MIT
+- flat-cache 4.0.1 — MIT
+- flatted 3.3.4 — ISC
+- fraction.js 5.3.4 — MIT
+- fsevents 2.3.3 — MIT
+- function-bind 1.1.2 — MIT
+- gensync 1.0.0-beta.2 — MIT
+- glob-parent 6.0.2 — ISC
+- globals 14.0.0 — MIT
+- has-flag 4.0.0 — MIT
+- hasown 2.0.2 — MIT
+- ignore 5.3.2 — MIT
+- immediate 3.0.6 — MIT
+- import-fresh 3.3.1 — MIT
+- imurmurhash 0.1.4 — MIT
+- inherits 2.0.4 — ISC
+- is-binary-path 2.1.0 — MIT
+- is-core-module 2.16.1 — MIT
+- is-extglob 2.1.1 — MIT
+- is-glob 4.0.3 — MIT
+- is-number 7.0.0 — MIT
+- isarray 1.0.0 — MIT
+- isexe 2.0.0 — ISC
+- jiti 1.21.7 — MIT
+- js-tokens 4.0.0 — MIT
+- js-yaml 4.1.1 — MIT
+- jsesc 3.1.0 — MIT
+- json-buffer 3.0.1 — MIT
+- json-schema-traverse 0.4.1 — MIT
+- json-stable-stringify-without-jsonify 1.0.1 — MIT
+- json5 2.2.3 — MIT
+- jszip 3.10.1 — (MIT OR GPL-3.0-or-later)
+- jszip/node_modules/pako 1.0.11 — (MIT AND Zlib)
+- keyv 4.5.4 — MIT
+- levn 0.4.1 — MIT
+- lie 3.3.0 — MIT
+- lilconfig 3.1.3 — MIT
+- lines-and-columns 1.2.4 — MIT
+- locate-path 6.0.0 — MIT
+- lodash.merge 4.6.2 — MIT
+- loupe 3.2.1 — MIT
+- lru-cache 5.1.1 — ISC
+- lucide-react 0.522.0 — ISC
+- magic-string 0.30.21 — MIT
+- merge2 1.4.1 — MIT
+- micromatch 4.0.8 — MIT
+- micromatch/node_modules/picomatch 2.3.1 — MIT
+- minimatch 3.1.5 — ISC
+- ms 2.1.3 — MIT
+- mz 2.7.0 — MIT
+- nanoid 3.3.11 — MIT
+- natural-compare 1.4.0 — MIT
+- node-releases 2.0.27 — MIT
+- normalize-path 3.0.0 — MIT
+- object-assign 4.1.1 — MIT
+- object-hash 3.0.0 — MIT
+- optionator 0.9.4 — MIT
+- p-limit 3.1.0 — MIT
+- p-locate 5.0.0 — MIT
+- pako 2.1.0 — (MIT AND Zlib)
+- parent-module 1.0.1 — MIT
+- path-exists 4.0.0 — MIT
+- path-key 3.1.1 — MIT
+- path-parse 1.0.7 — MIT
+- pathe 1.1.2 — MIT
+- pathval 2.0.1 — MIT
+- picocolors 1.1.1 — ISC
+- picomatch 4.0.3 — MIT
+- pify 2.3.0 — MIT
+- pirates 4.0.7 — MIT
+- pkijs 3.3.3 — BSD-3-Clause
+- pkijs/node_modules/@noble/hashes 1.4.0 — MIT
+- postcss 8.5.8 — MIT
+- postcss-import 15.1.0 — MIT
+- postcss-js 4.1.0 — MIT
+- postcss-load-config 4.0.2 — MIT
+- postcss-nested 6.2.0 — MIT
+- postcss-selector-parser 6.1.2 — MIT
+- postcss-value-parser 4.2.0 — MIT
+- prelude-ls 1.2.1 — MIT
+- process-nextick-args 2.0.1 — MIT
+- punycode 2.3.1 — MIT
+- pvtsutils 1.3.6 — MIT
+- pvutils 1.1.5 — MIT
+- queue-microtask 1.2.3 — MIT
+- react 19.2.4 — MIT
+- react-dom 19.2.4 — MIT
+- react-refresh 0.17.0 — MIT
+- read-cache 1.0.0 — MIT
+- readable-stream 2.3.8 — MIT
+- readdirp 3.6.0 — MIT
+- readdirp/node_modules/picomatch 2.3.1 — MIT
+- resolve 1.22.11 — MIT
+- resolve-from 4.0.0 — MIT
+- reusify 1.1.0 — MIT
+- rollup 4.59.0 — MIT
+- run-parallel 1.2.0 — MIT
+- safe-buffer 5.1.2 — MIT
+- scheduler 0.27.0 — MIT
+- semver 6.3.1 — ISC
+- setimmediate 1.0.5 — MIT
+- shebang-command 2.0.0 — MIT
+- shebang-regex 3.0.0 — MIT
+- siginfo 2.0.0 — ISC
+- source-map-js 1.2.1 — BSD-3-Clause
+- stackback 0.0.2 — MIT
+- std-env 3.10.0 — MIT
+- string_decoder 1.1.1 — MIT
+- strip-json-comments 3.1.1 — MIT
+- sucrase 3.35.1 — MIT
+- supports-color 7.2.0 — MIT
+- supports-preserve-symlinks-flag 1.0.0 — MIT
+- tailwindcss 3.4.17 — MIT
+- thenify 3.3.1 — MIT
+- thenify-all 1.6.0 — MIT
+- tinybench 2.9.0 — MIT
+- tinyexec 0.3.2 — MIT
+- tinyglobby 0.2.15 — MIT
+- tinypool 1.1.1 — MIT
+- tinyrainbow 1.2.0 — MIT
+- tinyspy 3.0.2 — MIT
+- to-regex-range 5.0.1 — MIT
+- ts-api-utils 2.4.0 — MIT
+- ts-interface-checker 0.1.13 — Apache-2.0
+- tslib 2.8.1 — 0BSD
+- type-check 0.4.0 — MIT
+- typescript 5.9.3 — Apache-2.0
+- typescript-eslint 8.56.1 — MIT
+- update-browserslist-db 1.2.3 — MIT
+- uri-js 4.4.1 — BSD-2-Clause
+- util-deprecate 1.0.2 — MIT
+- vite 6.4.1 — MIT
+- vite-node 2.1.9 — MIT
+- vite-node/node_modules/@esbuild/aix-ppc64 0.21.5 — MIT
+- vite-node/node_modules/@esbuild/android-arm 0.21.5 — MIT
+- vite-node/node_modules/@esbuild/android-arm64 0.21.5 — MIT
+- vite-node/node_modules/@esbuild/android-x64 0.21.5 — MIT
+- vite-node/node_modules/@esbuild/darwin-arm64 0.21.5 — MIT
+- vite-node/node_modules/@esbuild/darwin-x64 0.21.5 — MIT
+- vite-node/node_modules/@esbuild/freebsd-arm64 0.21.5 — MIT
+- vite-node/node_modules/@esbuild/freebsd-x64 0.21.5 — MIT
+- vite-node/node_modules/@esbuild/linux-arm 0.21.5 — MIT
+- vite-node/node_modules/@esbuild/linux-arm64 0.21.5 — MIT
+- vite-node/node_modules/@esbuild/linux-ia32 0.21.5 — MIT
+- vite-node/node_modules/@esbuild/linux-loong64 0.21.5 — MIT
+- vite-node/node_modules/@esbuild/linux-mips64el 0.21.5 — MIT
+- vite-node/node_modules/@esbuild/linux-ppc64 0.21.5 — MIT
+- vite-node/node_modules/@esbuild/linux-riscv64 0.21.5 — MIT
+- vite-node/node_modules/@esbuild/linux-s390x 0.21.5 — MIT
+- vite-node/node_modules/@esbuild/linux-x64 0.21.5 — MIT
+- vite-node/node_modules/@esbuild/netbsd-x64 0.21.5 — MIT
+- vite-node/node_modules/@esbuild/openbsd-x64 0.21.5 — MIT
+- vite-node/node_modules/@esbuild/sunos-x64 0.21.5 — MIT
+- vite-node/node_modules/@esbuild/win32-arm64 0.21.5 — MIT
+- vite-node/node_modules/@esbuild/win32-ia32 0.21.5 — MIT
+- vite-node/node_modules/@esbuild/win32-x64 0.21.5 — MIT
+- vite-node/node_modules/esbuild 0.21.5 — MIT
+- vite-node/node_modules/vite 5.4.21 — MIT
+- vitest 2.1.9 — MIT
+- vitest/node_modules/@esbuild/aix-ppc64 0.21.5 — MIT
+- vitest/node_modules/@esbuild/android-arm 0.21.5 — MIT
+- vitest/node_modules/@esbuild/android-arm64 0.21.5 — MIT
+- vitest/node_modules/@esbuild/android-x64 0.21.5 — MIT
+- vitest/node_modules/@esbuild/darwin-arm64 0.21.5 — MIT
+- vitest/node_modules/@esbuild/darwin-x64 0.21.5 — MIT
+- vitest/node_modules/@esbuild/freebsd-arm64 0.21.5 — MIT
+- vitest/node_modules/@esbuild/freebsd-x64 0.21.5 — MIT
+- vitest/node_modules/@esbuild/linux-arm 0.21.5 — MIT
+- vitest/node_modules/@esbuild/linux-arm64 0.21.5 — MIT
+- vitest/node_modules/@esbuild/linux-ia32 0.21.5 — MIT
+- vitest/node_modules/@esbuild/linux-loong64 0.21.5 — MIT
+- vitest/node_modules/@esbuild/linux-mips64el 0.21.5 — MIT
+- vitest/node_modules/@esbuild/linux-ppc64 0.21.5 — MIT
+- vitest/node_modules/@esbuild/linux-riscv64 0.21.5 — MIT
+- vitest/node_modules/@esbuild/linux-s390x 0.21.5 — MIT
+- vitest/node_modules/@esbuild/linux-x64 0.21.5 — MIT
+- vitest/node_modules/@esbuild/netbsd-x64 0.21.5 — MIT
+- vitest/node_modules/@esbuild/openbsd-x64 0.21.5 — MIT
+- vitest/node_modules/@esbuild/sunos-x64 0.21.5 — MIT
+- vitest/node_modules/@esbuild/win32-arm64 0.21.5 — MIT
+- vitest/node_modules/@esbuild/win32-ia32 0.21.5 — MIT
+- vitest/node_modules/@esbuild/win32-x64 0.21.5 — MIT
+- vitest/node_modules/@vitest/mocker 2.1.9 — MIT
+- vitest/node_modules/esbuild 0.21.5 — MIT
+- vitest/node_modules/vite 5.4.21 — MIT
+- which 2.0.2 — ISC
+- why-is-node-running 2.3.0 — MIT
+- word-wrap 1.2.5 — MIT
+- yallist 3.1.1 — ISC
+- yaml 2.8.2 — ISC
+- yocto-queue 0.1.0 — MIT
+
+## Rust crates
+
+Run one of:
+- `cargo deny check licenses`
+- `cargo license --json`
+
+Then paste required NOTICE/LICENSE texts for crates that ship NOTICE requirements.
+
+Crates detected in Cargo.lock: 577 (see compliance-report.json)
+
+## Python OCR dependencies
+
+Resolve full dependency graph and generate attributions via `pip-licenses --format=markdown`.
+
+- paddleocr>=2.8.1

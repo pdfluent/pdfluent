@@ -1,0 +1,42 @@
+name: Feature request
+description: Propose a new capability or workflow improvement
+title: "[Feature] "
+labels:
+  - enhancement
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before opening a feature request, check existing issues and discussions to avoid duplicates.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem statement
+      description: What user problem does this solve?
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: Describe the expected behavior and UI/UX flow.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Share any workarounds or alternative ideas.
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: contribution
+    attributes:
+      label: Contribution intent
+      options:
+        - label: I can work on this issue and submit a pull request.
+          required: false

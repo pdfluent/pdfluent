@@ -1,0 +1,32 @@
+title: "Feature idea: "
+labels:
+  - enhancement
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for sharing a feature idea for PDFluent.
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: What should PDFluent do?
+    validations:
+      required: true
+
+  - type: textarea
+    id: use_case
+    attributes:
+      label: Use case
+      description: Which workflow becomes easier with this feature?
+    validations:
+      required: true
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: Additional notes
+      description: Links, mockups, or edge cases.
+    validations:
+      required: false

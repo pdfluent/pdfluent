@@ -1,0 +1,101 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+/* Copyright (c) 2026 PDFluent Contributors */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: hsl(0 0% 96%);
+    --foreground: hsl(0 0% 11%);
+    --muted: hsl(0 0% 93%);
+    --muted-foreground: hsl(0 0% 53%);
+    --popover: hsl(0 0% 100%);
+    --popover-foreground: hsl(0 0% 11%);
+    --border: hsl(0 0% 85%);
+    --input: hsl(0 0% 85%);
+    --card: hsl(0 0% 100%);
+    --card-foreground: hsl(0 0% 11%);
+    --primary: hsl(211 100% 50%);
+    --primary-foreground: hsl(0 0% 100%);
+    --secondary: hsl(0 0% 93%);
+    --secondary-foreground: hsl(0 0% 11%);
+    --accent: hsl(0 0% 93%);
+    --accent-foreground: hsl(0 0% 11%);
+    --destructive: hsl(0 72% 51%);
+    --destructive-foreground: hsl(0 0% 100%);
+    --ring: hsl(211 100% 50%);
+    --radius: 0.375rem;
+    --pf-surface-0: hsl(36 2% 76%);
+    --pf-surface-1: hsl(0 0% 96%);
+    --pf-surface-2: hsl(0 0% 93%);
+    --pf-surface-3: hsl(0 0% 89%);
+    --pf-surface-4: hsl(0 0% 84%);
+    --pf-accent: hsl(211 100% 50%);
+    --pf-accent-hover: hsl(211 100% 45%);
+    --pf-accent-muted: hsl(211 60% 95%);
+    --pf-accent-glow: transparent;
+    --pf-success: hsl(142 71% 40%);
+    --pf-success-muted: hsl(142 40% 94%);
+    --pf-warning: hsl(38 92% 45%);
+    --pf-warning-muted: hsl(38 50% 94%);
+    --pf-danger: hsl(0 72% 51%);
+    --pf-danger-muted: hsl(0 50% 95%);
+    --pf-info: hsl(211 100% 50%);
+    --pf-info-muted: hsl(211 50% 94%);
+    --pf-text-primary: hsl(0 0% 11%);
+    --pf-text-secondary: hsl(0 0% 42%);
+    --pf-text-muted: hsl(0 0% 53%);
+    --pf-border-subtle: hsl(0 0% 88%);
+    --pf-border-medium: hsl(0 0% 82%);
+    --pf-border-strong: hsl(0 0% 75%);
+    --pf-toolbar-height: 52px;
+    --pf-sidebar-width: 170px;
+    --pf-panel-width: 300px;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto,
+      Helvetica, Arial, sans-serif;
+    font-feature-settings: "rlig" 1, "calt" 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+@layer utilities {
+  .pf-scrollbar::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  .pf-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .pf-scrollbar::-webkit-scrollbar-thumb {
+    background: hsl(0 0% 70%);
+    border-radius: 4px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+  }
+
+  .pf-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: hsl(0 0% 55%);
+    background-clip: content-box;
+  }
+
+  .pf-glow {
+    box-shadow: none;
+  }
+
+  .pf-glow-sm {
+    box-shadow: none;
+  }
+}

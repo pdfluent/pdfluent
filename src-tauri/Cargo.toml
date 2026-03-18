@@ -1,9 +1,9 @@
 [package]
 name = "pdfluent"
 version = "0.1.0"
-description = "The open-source PDF editor"
-authors = ["PDFluent Contributors"]
-license = "AGPL-3.0-or-later"
+description = "Privacy-first desktop PDF editor powered by the XFA Rust SDK"
+authors = ["Innovation Trigger B.V."]
+license = "Proprietary"
 repository = "https://github.com/pdfluent/pdfluent"
 edition = "2021"
 
@@ -15,11 +15,36 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 tauri-build = { version = "2", features = [] }
 
 [dependencies]
-tauri = { version = "2", features = [] }
+tauri = { version = "2", features = ["protocol-asset"] }
 tauri-plugin-dialog = "2"
 tauri-plugin-fs = "2"
+tauri-plugin-shell = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-pdfium-render = "0.8"
 base64 = "0.22"
-image = { version = "0.25", default-features = false, features = ["png"] }
+image = { version = "0.25", default-features = false, features = ["png", "jpeg"] }
+tokio = { version = "1", features = ["rt-multi-thread"] }
+dirs = "5"
+open = "5"
+
+# XFA Rust SDK crates
+pdf-engine = { path = "../../../XFA/crates/pdf-engine" }
+pdf-forms = { path = "../../../XFA/crates/pdf-forms" }
+pdf-annot = { path = "../../../XFA/crates/pdf-annot", features = ["write"] }
+pdf-sign = { path = "../../../XFA/crates/pdf-sign" }
+pdf-manip = { path = "../../../XFA/crates/pdf-manip", features = ["image-insert", "font-subset", "pdfa-convert"] }
+pdf-compliance = { path = "../../../XFA/crates/pdf-compliance" }
+pdf-extract = { path = "../../../XFA/crates/pdf-extract" }
+pdf-redact = { path = "../../../XFA/crates/pdf-redact" }
+pdf-docx = { path = "../../../XFA/crates/pdf-docx" }
+pdf-invoice = { path = "../../../XFA/crates/pdf-invoice" }
+xfa-license = { path = "../../../XFA/crates/xfa-license" }
+lopdf = { path = "../../../XFA/crates/lopdf" }
+pdf-syntax = { path = "../../../XFA/crates/pdf-syntax" }
+
+[target."cfg(not(any(target_os = \"android\", target_os = \"ios\")))".dependencies]
+tauri-plugin-updater = "2"
+
+[features]
+default = ["custom-protocol"]
+custom-protocol = ["tauri/custom-protocol"]

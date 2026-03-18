@@ -1,4 +1,4 @@
-// Copyright (c) 2026 PDFluent B.V. All rights reserved.
+// Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
 // This software is proprietary and confidential.
 // Free for personal, non-commercial use.
@@ -150,5 +150,88 @@ describe('TauriDocumentEngine — loadDocument mapping', () => {
       expect(result.error.code).toBe('not-implemented');
       expect(mockedInvoke).not.toHaveBeenCalled();
     });
+  });
+});
+
+describe('TauriDocumentEngine — getOutline mapping', () => {
+  let engine: TauriDocumentEngine;
+
+  beforeEach(() => {
+    engine = new TauriDocumentEngine();
+    vi.clearAllMocks();
+  });
+
+  it('returns empty array when backend returns []', async () => {
+    mockedInvoke.mockResolvedValue([]);
+    const doc = { id: 'doc_test' } as Parameters<typeof engine.getOutline>[0];
+
+    const result = await engine.getOutline(doc);
+
+    expect(result.success).toBe(true);
+    if (!result.success) return;
+    expect(result.value).toEqual([]);
+  });
+
+  it('maps flat outline items from snake_case to OutlineNode', async () => {
+    mockedInvoke.mockResolvedValue([
+      { title: 'Chapter 1', page_index: 0, children: [] },
+      { title: 'Chapter 2', page_index: 5, children: [] },
+    ]);
+    const doc = { id: 'doc_test' } as Parameters<typeof engine.getOutline>[0];
+
+    const result = await engine.getOutline(doc);
+
+    expect(result.success).toBe(true);
+    if (!result.success) return;
+    expect(result.value).toEqual([
+      { title: 'Chapter 1', pageIndex: 0, children: [] },
+      { title: 'Chapter 2', pageIndex: 5, children: [] },
+    ]);
+  });
+
+  it('maps nested children recursively', async () => {
+    mockedInvoke.mockResolvedValue([
+      {
+        title: 'Part I', page_index: 0, children: [
+          { title: 'Section 1.1', page_index: 1, children: [] },
+          {
+            title: 'Section 1.2', page_index: 3, children: [
+              { title: 'Subsection 1.2.1', page_index: 4, children: [] },
+            ],
+          },
+        ],
+      },
+    ]);
+    const doc = { id: 'doc_test' } as Parameters<typeof engine.getOutline>[0];
+
+    const result = await engine.getOutline(doc);
+
+    expect(result.success).toBe(true);
+    if (!result.success) return;
+    expect(result.value[0]?.title).toBe('Part I');
+    expect(result.value[0]?.children).toHaveLength(2);
+    expect(result.value[0]?.children[1]?.children[0]?.title).toBe('Subsection 1.2.1');
+    expect(result.value[0]?.children[1]?.children[0]?.pageIndex).toBe(4);
+  });
+
+  it('calls invoke with get_outline command and documentId', async () => {
+    mockedInvoke.mockResolvedValue([]);
+    const doc = { id: 'doc_abc123' } as Parameters<typeof engine.getOutline>[0];
+
+    await engine.getOutline(doc);
+
+    expect(mockedInvoke).toHaveBeenCalledWith('get_outline', { documentId: 'doc_abc123' });
+  });
+
+  it('returns internal-error when invoke rejects', async () => {
+    mockedInvoke.mockRejectedValue(new Error('outline parse failed'));
+    const doc = { id: 'doc_test' } as Parameters<typeof engine.getOutline>[0];
+
+    const result = await engine.getOutline(doc);
+
+    expect(result.success).toBe(false);
+    if (result.success) return;
+    expect(result.error.code).toBe('internal-error');
+    expect(result.error.message).toContain('outline parse failed');
   });
 });

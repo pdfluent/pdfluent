@@ -1,0 +1,53 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+name: Compliance
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  third-party:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate OCR model manifest
+        run: npm run ocr:manifest
+
+      - name: Generate compliance inventory
+        run: npm run compliance:generate
+
+      - name: Enforce license policy gate
+        run: npm run compliance:check
+
+      - name: Upload compliance artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: compliance
+          path: |
+            THIRD_PARTY.md
+            THIRD_PARTY_ATTRIBUTIONS.md
+            compliance-report.json
+            src-tauri/scripts/ocr-models.manifest.json
+            compliance/

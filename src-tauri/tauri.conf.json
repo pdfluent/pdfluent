@@ -5,7 +5,7 @@
   "identifier": "com.pdfluent.app",
   "build": {
     "beforeDevCommand": "npm run dev",
-    "devUrl": "http://localhost:1420",
+    "devUrl": "http://localhost:1420/?v2",
     "beforeBuildCommand": "npm run build",
     "frontendDist": "../dist"
   },
@@ -23,12 +23,21 @@
       }
     ],
     "security": {
-      "csp": null
+      "csp": null,
+      "assetProtocol": {
+        "enable": true,
+        "scope": ["$HOME/**", "$DOCUMENT/**", "$DESKTOP/**", "$DOWNLOAD/**", "$TEMP/**"]
+      }
     }
   },
   "bundle": {
     "active": true,
+    "createUpdaterArtifacts": true,
     "targets": "all",
+    "resources": [
+      "scripts/paddle_ocr_bridge.py",
+      "scripts/requirements-ocr.txt"
+    ],
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
@@ -37,7 +46,40 @@
       "icons/icon.ico"
     ],
     "macOS": {
-      "minimumSystemVersion": "10.15"
+      "minimumSystemVersion": "10.15",
+      "entitlements": "Entitlements.plist",
+      "signingIdentity": "-",
+      "frameworks": []
+    },
+    "linux": {
+      "deb": {
+        "depends": ["libwebkit2gtk-4.1-0", "libgtk-3-0"],
+        "section": "office",
+        "priority": "optional"
+      },
+      "appimage": {
+        "bundleMediaFramework": false
+      }
+    },
+    "category": "public.app-category.productivity",
+    "shortDescription": "Fast, private PDF editor",
+    "longDescription": "PDFluent is a privacy-first desktop PDF editor. View, annotate, fill forms, merge, split, sign, and convert PDFs — all processed locally on your device.",
+    "windows": {
+      "digestAlgorithm": "sha256",
+      "timestampUrl": "http://timestamp.digicert.com",
+      "tsp": true,
+      "signCommand": {
+        "cmd": "powershell",
+        "args": [
+          "-NoProfile",
+          "-NonInteractive",
+          "-ExecutionPolicy",
+          "Bypass",
+          "-File",
+          ".\\scripts\\sign-windows.ps1",
+          "%1"
+        ]
+      }
     },
     "fileAssociations": [
       {
@@ -47,12 +89,13 @@
     ]
   },
   "plugins": {
-    "dialog": {},
-    "fs": {
-      "scope": {
-        "allow": ["**"],
-        "deny": []
-      }
+    "dialog": null,
+    "fs": null,
+    "updater": {
+      "endpoints": [
+        "https://github.com/pdfluent/pdfluent/releases/latest/download/latest.json"
+      ],
+      "pubkey": "REPLACE_WITH_TAURI_SIGNING_PUBLIC_KEY"
     }
   }
 }
