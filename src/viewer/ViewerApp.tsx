@@ -58,6 +58,7 @@ import { getMutationSupport, validateReplacement } from './text/textMutationSupp
 import { TextContextBar, shouldShowContextBar } from './components/TextContextBar';
 import type { TextContextActionId } from './components/TextContextBar';
 import { TextInlineEditor } from './components/TextInlineEditor';
+import { FormFieldOverlay } from './components/FormFieldOverlay';
 import { makeTextMutationError, appendError } from './state/errorCenter';
 import type { AppError } from './state/errorCenter';
 import { getTauriTextMutationEngine } from '../platform/engine/tauri/TauriTextMutationEngine';
@@ -2075,6 +2076,17 @@ export function ViewerApp() {
                     onCancel={handleDraftCancel}
                     pageHeightPt={pdfDoc.pages[pageIndex]?.size.height ?? 842}
                     zoom={zoom}
+                  />
+                )}
+                {/* Form field overlay — interactive inputs over PDF page in forms mode */}
+                {mode === 'forms' && formFields.length > 0 && (
+                  <FormFieldOverlay
+                    fields={formFields.filter(f => f.pageIndex === pageIndex)}
+                    pageHeightPt={pdfDoc.pages[pageIndex]?.size.height ?? 842}
+                    zoom={zoom}
+                    onSetFieldValue={handleSetFieldValue}
+                    activeFieldIdx={activeFieldIdx}
+                    onFieldSelect={handleFieldNav}
                   />
                 )}
               </div>
