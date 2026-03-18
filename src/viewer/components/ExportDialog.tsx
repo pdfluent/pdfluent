@@ -14,7 +14,7 @@ import { useTaskQueueContext } from '../context/TaskQueueContext';
 // Types
 // ---------------------------------------------------------------------------
 
-export type ExportFormat = 'pdf' | 'compressed_pdf' | 'png' | 'jpeg' | 'docx';
+export type ExportFormat = 'pdf' | 'compressed_pdf' | 'png' | 'jpeg' | 'docx' | 'xlsx' | 'pptx';
 type ImagePageRange = 'current' | 'all';
 
 export const FORMAT_LABEL_KEYS: Record<ExportFormat, string> = {
@@ -23,6 +23,8 @@ export const FORMAT_LABEL_KEYS: Record<ExportFormat, string> = {
   png: 'exportDialog.formatPng',
   jpeg: 'exportDialog.formatJpeg',
   docx: 'exportDialog.formatDocx',
+  xlsx: 'exportDialog.formatXlsx',
+  pptx: 'exportDialog.formatPptx',
 };
 
 export const IMAGE_FORMATS: ReadonlySet<ExportFormat> = new Set(['png', 'jpeg']);
@@ -162,6 +164,30 @@ export function ExportDialog({ isOpen, onClose, pageIndex, pageCount }: ExportDi
         const { invoke } = await import('@tauri-apps/api/core');
         await invoke('convert_to_docx', { outputPath: path });
         update(taskId, { status: 'done', label: t('tasks.exportWordDone') });
+
+      } else if (format === 'xlsx') {
+        const { save } = await import('@tauri-apps/plugin-dialog');
+        const path = await save({ filters: [{ name: 'Excel', extensions: ['xlsx'] }] });
+        if (!path) { setExporting(false); return; }
+
+        push({ id: taskId, label: t('tasks.exportExcelRunning'), progress: null, status: 'running' });
+        onClose();
+
+        const { invoke } = await import('@tauri-apps/api/core');
+        await invoke('convert_to_xlsx', { outputPath: path });
+        update(taskId, { status: 'done', label: t('tasks.exportExcelDone') });
+
+      } else if (format === 'pptx') {
+        const { save } = await import('@tauri-apps/plugin-dialog');
+        const path = await save({ filters: [{ name: 'PowerPoint', extensions: ['pptx'] }] });
+        if (!path) { setExporting(false); return; }
+
+        push({ id: taskId, label: t('tasks.exportPowerpointRunning'), progress: null, status: 'running' });
+        onClose();
+
+        const { invoke } = await import('@tauri-apps/api/core');
+        await invoke('convert_to_pptx', { outputPath: path });
+        update(taskId, { status: 'done', label: t('tasks.exportPowerpointDone') });
       }
     } catch {
       update(taskId, { status: 'error', label: t('tasks.exportFailed', { format: t(FORMAT_LABEL_KEYS[format]) }) });

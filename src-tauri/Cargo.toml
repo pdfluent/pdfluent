@@ -37,6 +37,8 @@ pdf-compliance = { path = "../../../XFA/crates/pdf-compliance" }
 pdf-extract = { path = "../../../XFA/crates/pdf-extract" }
 pdf-redact = { path = "../../../XFA/crates/pdf-redact" }
 pdf-docx = { path = "../../../XFA/crates/pdf-docx" }
+pdf-xlsx = { path = "../../../XFA/crates/pdf-xlsx" }
+pdf-pptx = { path = "../../../XFA/crates/pdf-pptx" }
 pdf-invoice = { path = "../../../XFA/crates/pdf-invoice" }
 xfa-license = { path = "../../../XFA/crates/xfa-license" }
 lopdf = { path = "../../../XFA/crates/lopdf" }

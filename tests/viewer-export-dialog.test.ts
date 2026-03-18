@@ -46,12 +46,14 @@ describe('ExportDialog — format options', () => {
     expect(exportDialogSource).toContain('export-format-select');
   });
 
-  it('includes all five export format keys', () => {
+  it('includes all seven export format keys', () => {
     expect(exportDialogSource).toContain("'pdf'");
     expect(exportDialogSource).toContain("'compressed_pdf'");
     expect(exportDialogSource).toContain("'png'");
     expect(exportDialogSource).toContain("'jpeg'");
     expect(exportDialogSource).toContain("'docx'");
+    expect(exportDialogSource).toContain("'xlsx'");
+    expect(exportDialogSource).toContain("'pptx'");
   });
 
   it('uses FORMAT_LABELS for format display names', () => {
@@ -75,6 +77,22 @@ describe('ExportDialog — format options', () => {
 
   it('invokes convert_to_docx for DOCX export', () => {
     expect(exportDialogSource).toContain("invoke('convert_to_docx'");
+  });
+
+  it('invokes convert_to_xlsx for XLSX export', () => {
+    expect(exportDialogSource).toContain("invoke('convert_to_xlsx'");
+  });
+
+  it('invokes convert_to_pptx for PPTX export', () => {
+    expect(exportDialogSource).toContain("invoke('convert_to_pptx'");
+  });
+
+  it('uses exportDialog.formatXlsx i18n key', () => {
+    expect(exportDialogSource).toContain("'exportDialog.formatXlsx'");
+  });
+
+  it('uses exportDialog.formatPptx i18n key', () => {
+    expect(exportDialogSource).toContain("'exportDialog.formatPptx'");
   });
 });
 

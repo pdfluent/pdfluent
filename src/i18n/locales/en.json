@@ -392,7 +392,11 @@
     "exportAllImagesDone": "{{count}} pages exported as {{ext}}",
     "exportWordRunning": "Converting to Word…",
     "exportWordDone": "Word document exported",
-    "exportFailed": "Export error: {{format}}"
+    "exportFailed": "Export error: {{format}}",
+    "exportExcelRunning": "Converting to Excel…",
+    "exportExcelDone": "Excel spreadsheet exported",
+    "exportPowerpointRunning": "Converting to PowerPoint…",
+    "exportPowerpointDone": "PowerPoint presentation exported"
   },
   "panels": {
     "search": "Search",
@@ -508,7 +512,9 @@
     "formatCompressedPdf": "Compressed PDF",
     "formatPng": "PNG (image)",
     "formatJpeg": "JPEG (image)",
-    "formatDocx": "Word document (.docx)"
+    "formatDocx": "Word document (.docx)",
+    "formatXlsx": "Excel spreadsheet (.xlsx)",
+    "formatPptx": "PowerPoint presentation (.pptx)"
   },
   "goToPage": {
     "title": "Go to page",

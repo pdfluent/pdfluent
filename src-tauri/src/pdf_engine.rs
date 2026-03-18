@@ -1890,6 +1890,26 @@ impl OpenDocument {
         Ok(())
     }
 
+    pub fn convert_to_xlsx(&self, output_path: &str) -> Result<(), String> {
+        let xlsx_bytes = pdf_xlsx::pdf_to_xlsx(&self.lopdf_doc)
+            .map_err(|e| format!("Failed to convert to XLSX: {e}"))?;
+
+        std::fs::write(output_path, &xlsx_bytes)
+            .map_err(|e| format!("Failed to save XLSX file: {e}"))?;
+
+        Ok(())
+    }
+
+    pub fn convert_to_pptx(&self, output_path: &str) -> Result<(), String> {
+        let pptx_bytes = pdf_pptx::pdf_to_pptx(&self.lopdf_doc)
+            .map_err(|e| format!("Failed to convert to PPTX: {e}"))?;
+
+        std::fs::write(output_path, &pptx_bytes)
+            .map_err(|e| format!("Failed to save PPTX file: {e}"))?;
+
+        Ok(())
+    }
+
     // ── E-invoicing operations ────────────────────────────────────────
 
     /// Extract ZUGFeRD/Factur-X invoice data from the document, if present.

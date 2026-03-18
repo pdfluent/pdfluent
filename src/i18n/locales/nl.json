@@ -392,7 +392,11 @@
     "exportAllImagesDone": "{{count}} pagina's geëxporteerd als {{ext}}",
     "exportWordRunning": "Converteren naar Word…",
     "exportWordDone": "Word-document geëxporteerd",
-    "exportFailed": "Exportfout: {{format}}"
+    "exportFailed": "Exportfout: {{format}}",
+    "exportExcelRunning": "Converteren naar Excel…",
+    "exportExcelDone": "Excel-spreadsheet geëxporteerd",
+    "exportPowerpointRunning": "Converteren naar PowerPoint…",
+    "exportPowerpointDone": "PowerPoint-presentatie geëxporteerd"
   },
   "panels": {
     "search": "Zoeken",
@@ -508,7 +512,9 @@
     "formatCompressedPdf": "Gecomprimeerde PDF",
     "formatPng": "PNG (afbeelding)",
     "formatJpeg": "JPEG (afbeelding)",
-    "formatDocx": "Word-document (.docx)"
+    "formatDocx": "Word-document (.docx)",
+    "formatXlsx": "Excel-spreadsheet (.xlsx)",
+    "formatPptx": "PowerPoint-presentatie (.pptx)"
   },
   "goToPage": {
     "title": "Ga naar pagina",

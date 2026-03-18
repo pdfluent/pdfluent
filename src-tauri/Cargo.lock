@@ -3405,6 +3405,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "pdf-pptx"
+version = "0.1.0"
+dependencies = [
+ "lopdf",
+ "pdf-extract",
+ "quick-xml 0.37.5",
+ "thiserror 2.0.18",
+ "zip 2.4.2",
+]
+
+[[package]]
 name = "pdf-redact"
 version = "0.1.0"
 dependencies = [
@@ -3482,6 +3493,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "pdf-xlsx"
+version = "0.1.0"
+dependencies = [
+ "lopdf",
+ "pdf-extract",
+ "rust_xlsxwriter",
+ "thiserror 2.0.18",
+]
+
+[[package]]
 name = "pdfluent"
 version = "1.0.0-beta.1"
 dependencies = [
@@ -3498,9 +3519,11 @@ dependencies = [
  "pdf-forms",
  "pdf-invoice",
  "pdf-manip",
+ "pdf-pptx",
  "pdf-redact",
  "pdf-sign",
  "pdf-syntax",
+ "pdf-xlsx",
  "serde",
  "serde_json",
  "tauri",
@@ -4427,6 +4450,15 @@ dependencies = [
  "spki",
  "subtle",
  "zeroize",
+]
+
+[[package]]
+name = "rust_xlsxwriter"
+version = "0.94.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "efc4a0f1f7b425669996977016152b2939be9be44d40df252a5051c9c6b3b859"
+dependencies = [
+ "zip 7.2.0",
 ]
 
 [[package]]
@@ -5939,6 +5971,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d2df906b07856748fa3f6e0ad0cbaa047052d4a7dd609e231c4f72cee8c36f31"
 
 [[package]]
+name = "typed-path"
+version = "0.12.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8e28f89b80c87b8fb0cf04ab448d5dd0dd0ade2f8891bae878de66a75a28600e"
+
+[[package]]
 name = "typeid"
 version = "1.0.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -7312,6 +7350,20 @@ dependencies = [
  "crc32fast",
  "indexmap 2.13.0",
  "memchr",
+]
+
+[[package]]
+name = "zip"
+version = "7.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c42e33efc22a0650c311c2ef19115ce232583abbe80850bc8b66509ebef02de0"
+dependencies = [
+ "crc32fast",
+ "flate2",
+ "indexmap 2.13.0",
+ "memchr",
+ "typed-path",
+ "zopfli",
 ]
 
 [[package]]

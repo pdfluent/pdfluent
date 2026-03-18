@@ -589,6 +589,22 @@ fn convert_to_docx(
     state.with_document(|doc| doc.convert_to_docx(&output_path))
 }
 
+#[tauri::command]
+fn convert_to_xlsx(
+    state: State<AppState>,
+    output_path: String,
+) -> Result<(), String> {
+    state.with_document(|doc| doc.convert_to_xlsx(&output_path))
+}
+
+#[tauri::command]
+fn convert_to_pptx(
+    state: State<AppState>,
+    output_path: String,
+) -> Result<(), String> {
+    state.with_document(|doc| doc.convert_to_pptx(&output_path))
+}
+
 // ── E-invoicing commands ──────────────────────────────────────────────
 
 #[tauri::command]
@@ -833,6 +849,8 @@ pub fn run() {
             extract_images,
             export_page_as_image,
             convert_to_docx,
+            convert_to_xlsx,
+            convert_to_pptx,
             // E-invoicing
             extract_invoice_data,
             validate_invoice,
