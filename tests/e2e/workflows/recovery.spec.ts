@@ -5,6 +5,9 @@
 // Commercial use requires a valid license.
 // See https://pdfluent.com/license for terms.
 
+import { readFileSync } from 'node:fs';
+import { join, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { test, expect } from '@playwright/test';
 import { gotoViewer, gotoViewerWithDoc } from '../helpers/app';
 import { tid } from '../helpers/selectors';
@@ -108,9 +111,6 @@ test.describe('recovery dialog availability', () => {
   });
 
   test('recovery dialog testids exist in source', () => {
-    const { readFileSync } = require('node:fs');
-    const { join, dirname } = require('node:path');
-    const { fileURLToPath } = require('node:url');
     const src: string = readFileSync(
       join(dirname(fileURLToPath(import.meta.url)), '../../../src/viewer/components/RecoveryDialog.tsx'),
       'utf8',

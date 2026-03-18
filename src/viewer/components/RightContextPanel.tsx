@@ -417,10 +417,6 @@ function FormsModeContent({
     [formValidationErrors]
   );
 
-  if (formFields.length === 0) {
-    return <PlaceholderText text="Geen formuliervelden gevonden." />;
-  }
-
   // Check if any field has a truthy value (non-empty string, non-false boolean, etc.)
   function isFieldFilled(field: FormField): boolean {
     const v = field.value;
@@ -431,17 +427,20 @@ function FormsModeContent({
     return false;
   }
 
+  const filledRequired = formFields.filter(f => f.required && isFieldFilled(f));
+  const requiredCount = formFields.filter(f => f.required).length;
+
   return (
     <div className="flex flex-col gap-0.5">
-      {/* Completion summary — only shown when there are required fields */}
-      {formFields.some(f => f.required) && (
-        <p data-testid="forms-completion-summary" className="text-[10px] text-muted-foreground mb-1">
-          {formFields.filter(f => f.required && isFieldFilled(f)).length} van {formFields.filter(f => f.required).length} verplichte velden ingevuld
-        </p>
-      )}
-      <p className="text-[10px] text-muted-foreground mb-1">
-        {formFields.length} veld{formFields.length !== 1 ? 'en' : ''}
+      {/* Completion summary — always visible */}
+      <p data-testid="forms-completion-summary" className="text-[10px] text-muted-foreground mb-1">
+        {formFields.some(f => f.required)
+          ? `${filledRequired.length} van ${requiredCount} verplichte velden ingevuld`
+          : `${formFields.length} veld${formFields.length !== 1 ? 'en' : ''}`}
       </p>
+      {formFields.length === 0 && (
+        <PlaceholderText text="Geen formuliervelden gevonden." />
+      )}
       {formFields.map((field, idx) => {
         const isActive = idx === activeFieldIdx;
         const filled = isFieldFilled(field);
@@ -867,10 +866,6 @@ function ReviewModeContent({
     URL.revokeObjectURL(url);
   }
 
-  if (comments.length === 0) {
-    return <PlaceholderText text="Geen opmerkingen gevonden." />;
-  }
-
   // Group filteredComments by page index
   const groups = new Map<number, Annotation[]>();
   for (const comment of filteredComments) {
@@ -962,15 +957,11 @@ function ReviewModeContent({
       </div>
 
       {/* Count label */}
-      {anyFilterActive ? (
-        <p data-testid="comment-filter-count" className="text-[10px] text-muted-foreground mb-1">
-          {filteredComments.length} van {comments.length} opmerkingen
-        </p>
-      ) : (
-        <p className="text-[10px] text-muted-foreground mb-1">
-          {comments.length} opmerking{comments.length !== 1 ? 'en' : ''}
-        </p>
-      )}
+      <p data-testid="comment-filter-count" className="text-[10px] text-muted-foreground mb-1">
+        {anyFilterActive
+          ? <>{filteredComments.length} van {comments.length} opmerkingen</>
+          : `${comments.length} opmerking${comments.length !== 1 ? 'en' : ''}`}
+      </p>
 
       {/* Export review summary buttons */}
       <div className="flex items-center gap-1 mb-1">
@@ -994,7 +985,7 @@ function ReviewModeContent({
         </button>
       </div>
 
-      {/* Bulk action buttons */}
+      {/* Bulk action buttons — only rendered when there are comments */}
       {comments.length > 0 && (
         <div className="flex items-center gap-1 mb-1">
           <button
@@ -1020,7 +1011,7 @@ function ReviewModeContent({
         </div>
       )}
 
-      {/* Comment navigation buttons — prev / next */}
+      {/* Comment navigation buttons — only rendered when there are comments */}
       {comments.length > 0 && (
         <div className="flex items-center gap-1 mb-1">
           <button
@@ -1049,6 +1040,11 @@ function ReviewModeContent({
         <p data-testid="comment-filter-empty" className="text-[10px] text-muted-foreground/60 leading-relaxed">
           Geen opmerkingen gevonden voor dit filter.
         </p>
+      )}
+
+      {/* Empty state — shown when there are no comments at all */}
+      {comments.length === 0 && (
+        <PlaceholderText text="Geen opmerkingen gevonden." />
       )}
 
       {/* Comment list grouped by page.
@@ -1228,10 +1224,6 @@ function RedactionPanel({
 }) {
   const [busy, setBusy] = useState(false);
 
-  if (redactions.length === 0) {
-    return <PlaceholderText text="Geen redigeringen aanwezig." />;
-  }
-
   async function handleApply(): Promise<void> {
     if (busy) return;
     const confirmed = window.confirm(
@@ -1249,7 +1241,9 @@ function RedactionPanel({
   return (
     <div data-testid="redaction-panel" className="flex flex-col gap-1.5">
       <p className="text-[10px] text-muted-foreground">
-        {redactions.length} redigering{redactions.length !== 1 ? 'en' : ''} in behandeling
+        {redactions.length === 0
+          ? 'Geen redigeringen aanwezig.'
+          : `${redactions.length} redigering${redactions.length !== 1 ? 'en' : ''} in behandeling`}
       </p>
       <button
         data-testid="apply-redactions-btn"
@@ -1419,22 +1413,34 @@ export function RightContextPanel({ mode, pdfDoc, pageCount, formFields, comment
         {/* ── Protect mode ───────────────────────────────────────────────── */}
         {mode === 'protect' && (
           <>
+            <CollapsibleSection title="Redigeringen">
+              <RedactionPanel redactions={redactions} onApplyRedactions={onApplyRedactions} onDeleteRedaction={onDeleteRedaction} onJumpToRedaction={onJumpToRedaction} />
+            </CollapsibleSection>
             <CollapsibleSection title="Beveiligingsinstellingen">
               <EncryptDecryptControls />
             </CollapsibleSection>
             <CollapsibleSection title="Machtigingen">
               <PermissionsDisplay permissions={pdfDoc?.state.permissions ?? null} />
             </CollapsibleSection>
-            {(PLACEHOLDER_SECTIONS.protect ?? []).map(s => (
+          </>
+        )}
+
+        {/* ── Edit mode — placeholder sections + OCR ─────────────────────── */}
+        {mode === 'edit' && (
+          <>
+            {(PLACEHOLDER_SECTIONS.edit ?? []).map(s => (
               <CollapsibleSection key={s.title} title={s.title}>
                 <PlaceholderText text={s.content} />
               </CollapsibleSection>
             ))}
+            <CollapsibleSection title="OCR">
+              <OcrPanel scannedPageIndices={scannedPageIndices} onRunOcr={onRunOcr} ocrRunning={ocrRunning} />
+            </CollapsibleSection>
           </>
         )}
 
         {/* ── All other modes — placeholder ──────────────────────────────── */}
-        {mode !== 'read' && mode !== 'review' && mode !== 'forms' && mode !== 'protect' && (
+        {mode !== 'read' && mode !== 'review' && mode !== 'forms' && mode !== 'protect' && mode !== 'edit' && (
           (PLACEHOLDER_SECTIONS[mode] ?? []).map(s => (
             <CollapsibleSection key={s.title} title={s.title}>
               <PlaceholderText text={s.content} />

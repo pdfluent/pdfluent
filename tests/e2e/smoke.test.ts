@@ -56,8 +56,8 @@ test.describe('v2 viewer smoke test', () => {
     expect(src1).toMatch(/^blob:/);
 
     // Page counter reflects the loaded document
-    await expect(page.locator('input[type=number]')).toHaveValue('1');
-    await expect(page.getByText('/ 3')).toBeVisible();
+    await expect(page.locator('input[type=number]').first()).toHaveValue('1');
+    await expect(page.getByText('/ 3', { exact: true })).toBeVisible();
 
     // ── Page navigation ─────────────────────────────────────────────────────
 
@@ -85,17 +85,17 @@ test.describe('v2 viewer smoke test', () => {
 
     // ── Zoom ────────────────────────────────────────────────────────────────
 
-    await expect(page.getByText('100%')).toBeVisible();
+    await expect(page.getByText('100%').first()).toBeVisible();
 
     await page.getByRole('button', { name: '+' }).click();
-    await expect(page.getByText('125%')).toBeVisible();
+    await expect(page.getByText('125%').first()).toBeVisible();
 
     await page.getByRole('button', { name: '+' }).click();
-    await expect(page.getByText('150%')).toBeVisible();
+    await expect(page.getByText('150%').first()).toBeVisible();
 
     await page.getByRole('button', { name: '−' }).click();
     await page.getByRole('button', { name: '−' }).click();
-    await expect(page.getByText('100%')).toBeVisible();
+    await expect(page.getByText('100%').first()).toBeVisible();
 
     // ── No console errors ───────────────────────────────────────────────────
 

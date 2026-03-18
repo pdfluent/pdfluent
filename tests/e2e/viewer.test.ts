@@ -30,7 +30,7 @@ test.describe('v2 viewer', () => {
 
   test('page nav controls are hidden before a document is open', async ({ page }) => {
     await expect(page.getByTestId('viewer-empty-state')).toBeVisible();
-    await expect(page.locator('input[type=number]')).not.toBeVisible();
+    await expect(page.locator('input[type=number]').first()).not.toBeVisible();
   });
 
   // ---------------------------------------------------------------------------
@@ -38,15 +38,15 @@ test.describe('v2 viewer', () => {
   // ---------------------------------------------------------------------------
 
   test('opens a PDF via file input and renders page 1', async ({ page }) => {
-    await page.locator('input[type=file]').setInputFiles(DUMMY_PDF);
+    await page.locator('input[type=file]').first().setInputFiles(DUMMY_PDF);
 
     // Page 1 image must appear (blob URL rendered → img in DOM)
     await expect(page.getByTestId('rendered-page')).toBeAttached({ timeout: 5_000 });
     await expect(page.getByTestId('rendered-page')).toHaveAttribute('alt', 'Page 1');
 
     // Counter: 1 / 3  (MockDocumentEngine always creates 3 pages)
-    await expect(page.locator('input[type=number]')).toHaveValue('1');
-    await expect(page.getByText('/ 3')).toBeVisible();
+    await expect(page.locator('input[type=number]').first()).toHaveValue('1');
+    await expect(page.getByText('/ 3', { exact: true })).toBeVisible();
   });
 
   // ---------------------------------------------------------------------------
@@ -54,18 +54,18 @@ test.describe('v2 viewer', () => {
   // ---------------------------------------------------------------------------
 
   test('next button advances to page 2', async ({ page }) => {
-    await page.locator('input[type=file]').setInputFiles(DUMMY_PDF);
+    await page.locator('input[type=file]').first().setInputFiles(DUMMY_PDF);
     await expect(page.getByTestId('rendered-page')).toBeAttached({ timeout: 5_000 });
 
     await page.getByRole('button', { name: '›' }).click();
 
-    await expect(page.locator('input[type=number]')).toHaveValue('2');
+    await expect(page.locator('input[type=number]').first()).toHaveValue('2');
     await expect(page.getByTestId('rendered-page')).toHaveAttribute('alt', 'Page 2');
   });
 
   test('back button is disabled on first page, next disabled on last page', async ({ page }) => {
-    await page.locator('input[type=file]').setInputFiles(DUMMY_PDF);
-    await expect(page.getByText('/ 3')).toBeVisible({ timeout: 5_000 });
+    await page.locator('input[type=file]').first().setInputFiles(DUMMY_PDF);
+    await expect(page.getByText('/ 3', { exact: true })).toBeVisible({ timeout: 5_000 });
 
     await expect(page.getByRole('button', { name: '‹' })).toBeDisabled();
 
@@ -77,13 +77,13 @@ test.describe('v2 viewer', () => {
   });
 
   test('page number input jumps to typed page', async ({ page }) => {
-    await page.locator('input[type=file]').setInputFiles(DUMMY_PDF);
-    await expect(page.locator('input[type=number]')).toBeVisible({ timeout: 5_000 });
+    await page.locator('input[type=file]').first().setInputFiles(DUMMY_PDF);
+    await expect(page.locator('input[type=number]').first()).toBeVisible({ timeout: 5_000 });
 
-    await page.locator('input[type=number]').fill('3');
-    await page.locator('input[type=number]').press('Tab');
+    await page.locator('input[type=number]').first().fill('3');
+    await page.locator('input[type=number]').first().press('Tab');
 
-    await expect(page.locator('input[type=number]')).toHaveValue('3');
+    await expect(page.locator('input[type=number]').first()).toHaveValue('3');
     await expect(page.getByTestId('rendered-page')).toHaveAttribute('alt', 'Page 3');
   });
 
@@ -92,30 +92,30 @@ test.describe('v2 viewer', () => {
   // ---------------------------------------------------------------------------
 
   test('zoom starts at 100% and steps ±25% per click', async ({ page }) => {
-    await page.locator('input[type=file]').setInputFiles(DUMMY_PDF);
-    await expect(page.getByText('/ 3')).toBeVisible({ timeout: 5_000 });
+    await page.locator('input[type=file]').first().setInputFiles(DUMMY_PDF);
+    await expect(page.getByText('/ 3', { exact: true })).toBeVisible({ timeout: 5_000 });
 
-    await expect(page.getByText('100%')).toBeVisible();
+    await expect(page.getByText('100%').first()).toBeVisible();
 
     await page.getByRole('button', { name: '+' }).click();
-    await expect(page.getByText('125%')).toBeVisible();
+    await expect(page.getByText('125%').first()).toBeVisible();
 
     await page.getByRole('button', { name: '−' }).click();
-    await expect(page.getByText('100%')).toBeVisible();
+    await expect(page.getByText('100%').first()).toBeVisible();
 
     await page.getByRole('button', { name: '−' }).click();
-    await expect(page.getByText('75%')).toBeVisible();
+    await expect(page.getByText('75%').first()).toBeVisible();
   });
 
   test('zoom − button is disabled at 25%', async ({ page }) => {
-    await page.locator('input[type=file]').setInputFiles(DUMMY_PDF);
-    await expect(page.getByText('/ 3')).toBeVisible({ timeout: 5_000 });
+    await page.locator('input[type=file]').first().setInputFiles(DUMMY_PDF);
+    await expect(page.getByText('/ 3', { exact: true })).toBeVisible({ timeout: 5_000 });
 
     // Click down to 25%
     for (let i = 0; i < 3; i++) {
       await page.getByRole('button', { name: '−' }).click();
     }
-    await expect(page.getByText('25%')).toBeVisible();
+    await expect(page.getByText('25%').first()).toBeVisible();
     await expect(page.getByRole('button', { name: '−' })).toBeDisabled();
   });
 
@@ -124,8 +124,8 @@ test.describe('v2 viewer', () => {
   // ---------------------------------------------------------------------------
 
   test('thumbnail strip shows buttons for all 3 pages', async ({ page }) => {
-    await page.locator('input[type=file]').setInputFiles(DUMMY_PDF);
-    await expect(page.getByText('/ 3')).toBeVisible({ timeout: 5_000 });
+    await page.locator('input[type=file]').first().setInputFiles(DUMMY_PDF);
+    await expect(page.getByText('/ 3', { exact: true })).toBeVisible({ timeout: 5_000 });
 
     for (let i = 0; i < 3; i++) {
       await expect(page.getByTestId(`thumbnail-${i}`)).toBeVisible();
@@ -133,18 +133,18 @@ test.describe('v2 viewer', () => {
   });
 
   test('clicking a thumbnail navigates to that page', async ({ page }) => {
-    await page.locator('input[type=file]').setInputFiles(DUMMY_PDF);
-    await expect(page.getByText('/ 3')).toBeVisible({ timeout: 5_000 });
+    await page.locator('input[type=file]').first().setInputFiles(DUMMY_PDF);
+    await expect(page.getByText('/ 3', { exact: true })).toBeVisible({ timeout: 5_000 });
 
     await page.getByTestId('thumbnail-2').click();
 
-    await expect(page.locator('input[type=number]')).toHaveValue('3');
+    await expect(page.locator('input[type=number]').first()).toHaveValue('3');
     await expect(page.getByTestId('rendered-page')).toHaveAttribute('alt', 'Page 3');
   });
 
   test('active thumbnail is highlighted', async ({ page }) => {
-    await page.locator('input[type=file]').setInputFiles(DUMMY_PDF);
-    await expect(page.getByText('/ 3')).toBeVisible({ timeout: 5_000 });
+    await page.locator('input[type=file]').first().setInputFiles(DUMMY_PDF);
+    await expect(page.getByText('/ 3', { exact: true })).toBeVisible({ timeout: 5_000 });
 
     // Page 0 is active by default — its button has the blue border colour
     const thumb0 = page.getByTestId('thumbnail-0');

@@ -15,6 +15,7 @@ export default defineConfig({
   use: {
     baseURL: 'http://localhost:1420',
     headless: true,
+    viewport: { width: 1440, height: 900 },
     // Keep screenshots only on failure
     screenshot: 'only-on-failure',
     // No video — keeps context lean

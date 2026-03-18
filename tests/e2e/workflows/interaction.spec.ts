@@ -190,7 +190,8 @@ test.describe('interaction infrastructure — runtime', () => {
       const hook = (window as unknown as Record<string, unknown>)['__pdfluent_test__'] as
         | { interactionDebug?: { hoveredTarget: string | null } }
         | undefined;
-      return hook?.interactionDebug?.hoveredTarget ?? 'NOT_PRESENT';
+      if (!hook?.interactionDebug) return 'NOT_PRESENT';
+      return hook.interactionDebug.hoveredTarget;
     });
     expect(hoveredTarget).toBeNull();
   });
