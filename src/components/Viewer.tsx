@@ -397,13 +397,19 @@ export function Viewer({
       return null;
     }
 
-    // Both modes use the page fragment; continuous mode navigates further
-    // via nativeIframeRef when currentPage changes from sidebar clicks.
+    // Continuous viewer: load the base URL without a page fragment; page
+    // navigation happens via nativeIframeRef to avoid full iframe reloads.
+    if (isNativeContinuousViewer) {
+      return nativePdfBaseUrl;
+    }
+
+    // Single-page viewer: include the page/scale fragment for initial position.
     const fragment = getNativePdfViewFragment(currentPage, scale);
     return `${nativePdfBaseUrl}${fragment}`;
   }, [
     nativePdfBaseUrl,
     isNativeViewer,
+    isNativeContinuousViewer,
     currentPage,
     scale,
   ]);
@@ -1556,8 +1562,9 @@ export function Viewer({
     );
   }
 
-  if (isNativeContinuousViewer && nativePdfSrc) {
-    return (
+  if (isNativeContinuousViewer) {
+    if (isNativeContinuousViewer && nativePdfSrc) {
+      return (
       <main
         className="viewer-native"
         ref={containerRef}
@@ -1596,6 +1603,9 @@ export function Viewer({
         )}
       </main>
     );
+    }
+    // nativePdfSrc not yet loaded — return null while URL is being prepared
+    return null;
   }
 
   if (viewMode === "continuous" && docInfo) {
