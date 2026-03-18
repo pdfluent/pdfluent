@@ -178,15 +178,15 @@ export function OrganizeGrid({ thumbnails, pageCount, onPageMutation, onMarkDirt
   async function handleApplyOrder(): Promise<void> {
     if (!pendingOrder || !isTauri) return;
     const taskId = `reorder-pages-${Date.now()}`;
-    push({ id: taskId, label: 'Paginavolgorde toepassen…', progress: null, status: 'running' });
+    push({ id: taskId, label: t('organize.applyingOrder'), progress: null, status: 'running' });
     try {
       const { invoke } = await import('@tauri-apps/api/core');
       const result = await invoke<{ page_count: number }>('reorder_pages', { newOrder: pendingOrder });
-      update(taskId, { status: 'done', label: 'Volgorde bijgewerkt' });
+      update(taskId, { status: 'done', label: t('organize.orderApplied') });
       setPendingOrder(null);
       onPageMutation(result.page_count);
     } catch {
-      update(taskId, { status: 'error', label: 'Volgorde wijzigen mislukt' });
+      update(taskId, { status: 'error', label: t('organize.orderFailed') });
     }
   }
 
@@ -215,7 +215,7 @@ export function OrganizeGrid({ thumbnails, pageCount, onPageMutation, onMarkDirt
       onMarkDirty();
       onPageMutation(result.page_count, firstNewPageIndex);
     } catch {
-      update(taskId, { status: 'error', label: 'PDF toevoegen mislukt' });
+      update(taskId, { status: 'error', label: t('organize.addFailed') });
     } finally {
       setIsAssemblyBusy(false);
     }
@@ -242,7 +242,7 @@ export function OrganizeGrid({ thumbnails, pageCount, onPageMutation, onMarkDirt
       onMarkDirty();
       onPageMutation(result.page_count, atIndex);
     } catch {
-      update(taskId, { status: 'error', label: 'PDF invoegen mislukt' });
+      update(taskId, { status: 'error', label: t('organize.insertFailed') });
     } finally {
       setIsAssemblyBusy(false);
     }
@@ -264,7 +264,7 @@ export function OrganizeGrid({ thumbnails, pageCount, onPageMutation, onMarkDirt
       update(taskId, { status: 'done', label: `Selectie geëxporteerd naar ${outputPath.split('/').pop() ?? outputPath}` });
       // Current document is unchanged — no dirty or page mutation
     } catch {
-      update(taskId, { status: 'error', label: 'Exporteren mislukt' });
+      update(taskId, { status: 'error', label: t('organize.exportFailed') });
     } finally {
       setIsAssemblyBusy(false);
     }
@@ -285,7 +285,7 @@ export function OrganizeGrid({ thumbnails, pageCount, onPageMutation, onMarkDirt
       update(taskId, { status: 'done', label: `${paths.length} pagina's opgeslagen` });
       // Current document is unchanged — no dirty or page mutation
     } catch {
-      update(taskId, { status: 'error', label: 'Splitsen mislukt' });
+      update(taskId, { status: 'error', label: t('organize.splitFailed') });
     } finally {
       setIsAssemblyBusy(false);
     }
@@ -519,7 +519,7 @@ export function OrganizeGrid({ thumbnails, pageCount, onPageMutation, onMarkDirt
                 {thumbUrl ? (
                   <img
                     src={thumbUrl}
-                    alt={`Pagina ${i + 1}`}
+                    alt={t('organize.pageAlt', { page: i + 1 })}
                     className="max-w-full max-h-full object-contain"
                     data-testid={`organize-thumb-${i}`}
                   />
@@ -560,8 +560,8 @@ export function OrganizeGrid({ thumbnails, pageCount, onPageMutation, onMarkDirt
                   onClick={() => { void handleRotatePage(i); }}
                   disabled={!isTauri}
                   className="p-1 text-muted-foreground hover:text-foreground hover:bg-muted rounded transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                  title={`Pagina ${i + 1} roteren`}
-                  aria-label={`Pagina ${i + 1} roteren`}
+                  title={t('organize.rotatePage', { page: i + 1 })}
+                  aria-label={t('organize.rotatePage', { page: i + 1 })}
                   data-testid={`organize-rotate-${i}`}
                 >
                   <RotateCwIcon className="w-3.5 h-3.5" />
@@ -570,8 +570,8 @@ export function OrganizeGrid({ thumbnails, pageCount, onPageMutation, onMarkDirt
                   onClick={() => { void handleDeletePage(i); }}
                   disabled={!isTauri || !canDelete}
                   className="p-1 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                  title={canDelete ? `Pagina ${i + 1} verwijderen` : 'Kan laatste pagina niet verwijderen'}
-                  aria-label={`Pagina ${i + 1} verwijderen`}
+                  title={canDelete ? t('organize.deletePage', { page: i + 1 }) : t('errors.cannotDeleteLastPage')}
+                  aria-label={t('organize.deletePage', { page: i + 1 })}
                   data-testid={`organize-delete-${i}`}
                 >
                   <Trash2Icon className="w-3.5 h-3.5" />

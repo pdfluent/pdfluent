@@ -141,7 +141,7 @@ describe('formatSnapshotDiffMarkdown', () => {
   });
 
   it('renders deleted annotations section', () => {
-    expect(compareSource).toContain('## Verwijderde annotaties');
+    expect(compareSource).toContain("i18n.t('revisions.deletedAnnotations')");
   });
 
   it('renders resolved issues section', () => {

@@ -134,7 +134,7 @@ describe('buildReviewSummaryMarkdown', () => {
   });
 
   it('includes issues section', () => {
-    expect(summarySource).toContain('## Problemen');
+    expect(summarySource).toContain("i18n.t('auditReport.issues')");
   });
 
   it('includes metadata changes section', () => {

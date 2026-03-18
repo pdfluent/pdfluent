@@ -241,7 +241,17 @@
     "addPdf": "PDF toevoegen",
     "splitPages": "Splits in losse pagina's",
     "selectedCount": "{{count}} geselecteerd",
-    "rotate": "Roteer"
+    "rotate": "Roteer",
+    "applyingOrder": "Paginavolgorde toepassen…",
+    "orderApplied": "Volgorde bijgewerkt",
+    "orderFailed": "Volgorde wijzigen mislukt",
+    "pageAlt": "Pagina {{page}}",
+    "rotatePage": "Pagina {{page}} roteren",
+    "deletePage": "Pagina {{page}} verwijderen",
+    "addFailed": "PDF toevoegen mislukt",
+    "insertFailed": "PDF invoegen mislukt",
+    "exportFailed": "Exporteren mislukt",
+    "splitFailed": "Splitsen mislukt"
   },
   "unsavedChanges": {
     "title": "Niet-opgeslagen wijzigingen",
@@ -272,7 +282,80 @@
     "loadFailed": "Document laden mislukt",
     "saveFailed": "Document opslaan mislukt",
     "engineError": "PDF-engine fout",
-    "unknownError": "Er is een onverwachte fout opgetreden"
+    "unknownError": "Er is een onverwachte fout opgetreden",
+    "ocrFailed": "OCR mislukt",
+    "exportFailed": "Exporteren mislukt",
+    "redactionFailed": "Redigeren mislukt",
+    "textEditFailed": "Tekstbewerking mislukt",
+    "layoutEditFailed": "Layoutbewerking mislukt",
+    "annotationFailed": "Annotatie mislukt",
+    "commandFailed": "Opdracht '{{command}}' mislukt — herlaad de pagina",
+    "aiFailed": "AI verzoek mislukt — probeer het later opnieuw",
+    "fileNotFound": "Bestand niet gevonden — open een ander bestand",
+    "loadFailedRetry": "Document laden mislukt — probeer het bestand opnieuw te openen",
+    "emptyPath": "Bestandspad is leeg.",
+    "cannotDeleteLastPage": "Kan laatste pagina niet verwijderen",
+    "reorderFailed": "Volgorde wijzigen mislukt",
+    "addPageFailed": "PDF toevoegen mislukt",
+    "insertFailed": "PDF invoegen mislukt",
+    "splitFailed": "Splitsen mislukt"
+  },
+  "events": {
+    "formFieldUpdated": "Formulierveld bijgewerkt",
+    "formFieldChange": "Formulierveld wijzigen",
+    "metadataChanged": "Metadata gewijzigd: {{key}}",
+    "annotationUpdated": "Annotatie bijgewerkt",
+    "annotationCreated": "Annotatie aangemaakt",
+    "annotationDeleted": "Annotatie verwijderd",
+    "annotationLoadFailed": "Annotaties konden niet geladen worden — wordt leeg gestart",
+    "pageMutated": "Pagina gewijzigd"
+  },
+  "integrity": {
+    "fileSizeZero": "Bestandsgrootte is nul of negatief. Bestand is onleesbaar.",
+    "fileSizeOverflow": "Bestandsgrootte overschrijdt 2 GB. Prestatieproblemen mogelijk."
+  },
+  "annotationValidation": {
+    "notObject": "Annotatie is geen object",
+    "missingId": "Annotatie mist een geldig id",
+    "missingType": "Annotatie mist een geldig type",
+    "invalidPage": "Annotatie heeft een ongeldig paginanummer",
+    "invalidRect": "Annotatie heeft een ongeldig rect",
+    "notArray": "Annotaties is geen array",
+    "filePathEmpty": "Bestandspad mag niet leeg zijn",
+    "filePathTooLong": "Bestandspad te lang (max {{max}} tekens)",
+    "fileMustBePdf": "Bestand moet een .pdf extensie hebben"
+  },
+  "auditReport": {
+    "activityOverview": "## Activiteitenoverzicht",
+    "annotationOverview": "## Annotatieoverzicht",
+    "issues": "## Problemen",
+    "issuesHeading": "Problemen"
+  },
+  "viewer": {
+    "fitWidth": "Paginabreedte aanpassen"
+  },
+  "textMutation": {
+    "protectedLocked": "Beveiligde of vergrendelde inhoud — bewerking niet toegestaan",
+    "editText": "Tekst bewerken",
+    "removeProtection": "Verwijder de beveiliging om tekst te bewerken.",
+    "ocrCannotSave": "Bewerken en opslaan is niet mogelijk voor OCR-tekst.",
+    "removeDocProtection": "Verwijder de documentbeveiliging om tekstbewerking mogelijk te maken.",
+    "pageNotFound": "Pagina niet gevonden",
+    "requiresFontInspection": "Tekstbewerking vereist Rust-zijdige lettertypeinspectie (gepland voor fase 6)."
+  },
+  "validation": {
+    "modeRequiresSession": "Modus '{{mode}}' vereist een actieve bewerkingssessie.",
+    "modeRequiresDocument": "Modus '{{mode}}' vereist een geopend document.",
+    "fieldOutsideBounds": "Formulierveld valt buiten de annotatiebegrenzing. Wijziging geblokkeerd.",
+    "objectInLockedLayer": "Object bevindt zich in een vergrendelde laag en kan niet worden gewijzigd.",
+    "formsWithoutFields": "Formuliervulmodus is actief op een document zonder formuliervelden.",
+    "annotationToolbarWrongMode": "Annotatiebalk is zichtbaar in modus '{{mode}}', maar vereist 'annotating'.",
+    "redactionToolbarWrongMode": "Redigeerbalk is zichtbaar in modus '{{mode}}', maar vereist 'redacting'."
+  },
+  "revisions": {
+    "deletedAnnotations": "## Verwijderde annotaties",
+    "metadataChanged": "## Metadata gewijzigd",
+    "metadataChangedDescription": "De documentmetadata is gewijzigd tussen de twee snapshots."
   },
   "tasks": {
     "deletePageRunning": "Pagina {{page}} verwijderen…",

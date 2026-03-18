@@ -124,7 +124,7 @@ describe('buildAuditReportMarkdown', () => {
   });
 
   it('includes activity timeline section', () => {
-    expect(auditSource).toContain('## Activiteitenoverzicht');
+    expect(auditSource).toContain("i18n.t('auditReport.activityOverview')");
   });
 
   it('includes reviewer actions section', () => {
@@ -136,7 +136,7 @@ describe('buildAuditReportMarkdown', () => {
   });
 
   it('includes annotation summary section', () => {
-    expect(auditSource).toContain('## Annotatieoverzicht');
+    expect(auditSource).toContain("i18n.t('auditReport.annotationOverview')");
   });
 
   it('includes metadata changes section', () => {

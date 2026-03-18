@@ -15,6 +15,8 @@
 // The registry is capped at ERROR_CENTER_MAX entries (oldest are evicted).
 // ---------------------------------------------------------------------------
 
+import i18n from '../../i18n';
+
 export type ErrorSeverity = 'error' | 'warning' | 'info';
 
 export interface AppError {
@@ -90,28 +92,28 @@ export function clearAllErrors(_errors: readonly AppError[]): AppError[] {
 // ---------------------------------------------------------------------------
 
 export const makeOcrError = (message: string): AppError =>
-  makeAppError('error', 'OCR mislukt', message, 'ocr');
+  makeAppError('error', i18n.t('errors.ocrFailed'), message, 'ocr');
 
 export const makeExportError = (message: string): AppError =>
-  makeAppError('error', 'Exporteren mislukt', message, 'export');
+  makeAppError('error', i18n.t('errors.exportFailed'), message, 'export');
 
 export const makeRedactionError = (message: string): AppError =>
-  makeAppError('error', 'Redigeren mislukt', message, 'redaction');
+  makeAppError('error', i18n.t('errors.redactionFailed'), message, 'redaction');
 
 export const makeDocumentLoadError = (message: string): AppError =>
-  makeAppError('error', 'Document laden mislukt', message, 'document_load');
+  makeAppError('error', i18n.t('errors.loadFailed'), message, 'document_load');
 
 export const makeTextMutationError = (message: string): AppError =>
-  makeAppError('error', 'Tekstbewerking mislukt', message, 'text_edit');
+  makeAppError('error', i18n.t('errors.textEditFailed'), message, 'text_edit');
 
 export const makeLayoutEditError = (message: string): AppError =>
-  makeAppError('error', 'Layoutbewerking mislukt', message, 'layout_edit');
+  makeAppError('error', i18n.t('errors.layoutEditFailed'), message, 'layout_edit');
 
 export const makeSaveError = (message: string): AppError =>
-  makeAppError('error', 'Opslaan mislukt', message, 'save');
+  makeAppError('error', i18n.t('errors.saveFailed'), message, 'save');
 
 export const makeAnnotationError = (message: string): AppError =>
-  makeAppError('error', 'Annotatie mislukt', message, 'annotation');
+  makeAppError('error', i18n.t('errors.annotationFailed'), message, 'annotation');
 
 // ---------------------------------------------------------------------------
 // Query helpers — ACROBAT_CLASS_RELIABILITY_AND_UX_HARDENING_BLOCK Batch 4

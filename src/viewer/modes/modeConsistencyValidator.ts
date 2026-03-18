@@ -23,6 +23,7 @@
  */
 
 import type { EditorMode } from '../state/editStateValidator';
+import i18n from '../../i18n';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -98,7 +99,7 @@ export function checkAnnotationToolbarConsistency(
   if (annotationToolbarVisible && mode !== 'annotating') {
     return {
       code: 'annotation-toolbar-in-non-annotation-mode',
-      message: `Annotatiebalk is zichtbaar in modus '${mode}', maar vereist 'annotating'.`,
+      message: i18n.t('validation.annotationToolbarWrongMode', { mode }),
       blocking: false,
     };
   }
@@ -132,7 +133,7 @@ export function checkRedactionToolbarConsistency(
   if (redactionToolbarVisible && mode !== 'redacting') {
     return {
       code: 'redaction-toolbar-in-non-redaction-mode',
-      message: `Redigeerbalk is zichtbaar in modus '${mode}', maar vereist 'redacting'.`,
+      message: i18n.t('validation.redactionToolbarWrongMode', { mode }),
       blocking: false,
     };
   }
@@ -149,7 +150,7 @@ export function checkFormFillPrerequisite(
   if (mode === 'form-fill' && !documentHasForms) {
     return {
       code: 'form-fill-on-non-form',
-      message: 'Formuliervulmodus is actief op een document zonder formuliervelden.',
+      message: i18n.t('validation.formsWithoutFields'),
       blocking: true,
     };
   }

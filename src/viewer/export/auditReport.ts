@@ -16,6 +16,7 @@
 import type { DocumentEvent } from '../state/documentEvents';
 import type { DocumentIssue } from '../documentIssues';
 import type { Annotation } from '../../core/document';
+import i18n from '../../i18n';
 
 export interface AuditReportData {
   /** Document title. */
@@ -116,7 +117,7 @@ export function buildAuditReportMarkdown(data: AuditReportData): string {
   lines.push(`Gegenereerd op: ${data.generatedAt}`);
   lines.push('');
 
-  lines.push('## Activiteitenoverzicht');
+  lines.push(i18n.t('auditReport.activityOverview'));
   if (data.activityTimeline.length === 0) {
     lines.push('_Geen activiteiten._');
   } else {
@@ -147,7 +148,7 @@ export function buildAuditReportMarkdown(data: AuditReportData): string {
   }
   lines.push('');
 
-  lines.push('## Annotatieoverzicht');
+  lines.push(i18n.t('auditReport.annotationOverview'));
   if (data.annotationSummary.length === 0) {
     lines.push('_Geen annotaties._');
   } else {

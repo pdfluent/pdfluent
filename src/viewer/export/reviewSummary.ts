@@ -15,6 +15,7 @@
 import type { Annotation, Reply } from '../../core/document';
 import type { DocumentIssue } from '../documentIssues';
 import type { DocumentEvent } from '../state/documentEvents';
+import i18n from '../../i18n';
 
 export interface ReviewSummaryData {
   /** Document title or file name. */
@@ -136,7 +137,7 @@ export function buildReviewSummaryMarkdown(data: ReviewSummaryData): string {
   }
   lines.push('');
 
-  lines.push('## Problemen');
+  lines.push(i18n.t('auditReport.issues'));
   if (data.issues.length === 0) {
     lines.push('_Geen problemen._');
   } else {
@@ -193,7 +194,7 @@ export function buildReviewSummaryHtml(data: ReviewSummaryData): string {
     lines.push('</ul>');
   }
 
-  lines.push('<h2>Problemen</h2>');
+  lines.push(`<h2>${i18n.t('auditReport.issuesHeading')}</h2>`);
   if (data.issues.length === 0) {
     lines.push('<p><em>Geen problemen.</em></p>');
   } else {

@@ -184,6 +184,7 @@ function OutlineItem({
   currentPage: number;
   onPageSelect: (index: number) => void;
 }) {
+  const { t } = useTranslation();
   const [expanded, setExpanded] = useState(true);
   const hasChildren = node.children.length > 0;
   const isActive = node.pageIndex === currentPage;
@@ -203,7 +204,7 @@ function OutlineItem({
             : 'text-foreground/80 hover:bg-muted/60 hover:text-foreground',
         ].join(' ')}
         style={{ paddingLeft: `${4 + depth * 10}px` }}
-        title={`Pagina ${node.pageIndex + 1}: ${node.title}`}
+        title={`${t('organize.pageAlt', { page: node.pageIndex + 1 })}: ${node.title}`}
       >
         {hasChildren ? (
           <ChevronRightIcon

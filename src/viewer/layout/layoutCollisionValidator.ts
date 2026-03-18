@@ -31,6 +31,7 @@
 import type { LayoutObject, LayoutRect } from './objectDetection';
 import { rectsOverlap, rectContains } from './objectDetection';
 import { MIN_OBJECT_SIZE } from './objectResizeEngine';
+import i18n from '../../i18n';
 
 // ---------------------------------------------------------------------------
 // Collision issue
@@ -152,7 +153,7 @@ export function checkAnnotationAlignment(
     return {
       severity: 'error',
       code: 'annotation-misalignment',
-      message: 'Formulierveld valt buiten de annotatiebegrenzing. Wijziging geblokkeerd.',
+      message: i18n.t('validation.fieldOutsideBounds'),
       involvedIds: [obj.id],
     };
   }
@@ -219,7 +220,7 @@ export function validateCollisions(input: CollisionValidationInput): CollisionRe
     issues.push({
       severity: 'error',
       code: 'locked-layer',
-      message: 'Object bevindt zich in een vergrendelde laag en kan niet worden gewijzigd.',
+      message: i18n.t('validation.objectInLockedLayer'),
       involvedIds: [input.subject.id],
     });
     return makeReport(issues); // no need to check further

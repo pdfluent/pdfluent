@@ -12,6 +12,7 @@ import { makeDocumentEvent, appendEvent } from '../state/documentEvents';
 import type { DocumentEvent } from '../state/documentEvents';
 import { makeCommand } from '../undoEngine';
 import type { UndoCommand } from '../undoEngine';
+import i18n from '../../i18n';
 
 const isTauri = typeof window !== 'undefined' && '__TAURI__' in window;
 
@@ -46,11 +47,11 @@ export function useFormFields(
         // Clear any outstanding validation error for this field as the user corrects it
         setFormValidationErrors(prev => prev.filter(e => e.fieldId !== fieldId));
         setDocumentEventLog(prev => appendEvent(prev, makeDocumentEvent(
-          'form_field_updated', authorName, fieldPage, fieldId, 'Formulierveld bijgewerkt'
+          'form_field_updated', authorName, fieldPage, fieldId, i18n.t('events.formFieldUpdated')
         )));
         // Push undo command: restoring the previous field value reverses this edit
         pushUndo(makeCommand(
-          `Formulierveld wijzigen`,
+          i18n.t('events.formFieldChange'),
           async () => { if (pdfDoc && engine) await engine.form.setFormFieldValue(pdfDoc, fieldId, value).then(r => { if (r.success) setFormFields(p => p.map(f => f.id === r.value.id ? r.value : f)); }); },
           async () => { if (pdfDoc && engine) await engine.form.setFormFieldValue(pdfDoc, fieldId, previousValue).then(r => { if (r.success) setFormFields(p => p.map(f => f.id === r.value.id ? r.value : f)); }); },
         ));

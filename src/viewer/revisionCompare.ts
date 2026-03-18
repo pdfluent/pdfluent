@@ -13,6 +13,7 @@
 // ---------------------------------------------------------------------------
 
 import type { RevisionSnapshot } from './revisionSnapshot';
+import i18n from '../i18n';
 
 export interface SnapshotDiff {
   /** Annotations present in `after` but not in `before` (new comments). */
@@ -120,7 +121,7 @@ export function formatSnapshotDiffMarkdown(
   }
 
   if (diff.deletedAnnotations.length > 0) {
-    lines.push('## Verwijderde annotaties');
+    lines.push(i18n.t('revisions.deletedAnnotations'));
     for (const a of diff.deletedAnnotations) {
       lines.push(`- [${a.type}] p.${a.pageIndex + 1} — ${a.author || '—'}`);
     }
@@ -144,8 +145,8 @@ export function formatSnapshotDiffMarkdown(
   }
 
   if (diff.metadataChanged) {
-    lines.push('## Metadata gewijzigd');
-    lines.push('De documentmetadata is gewijzigd tussen de twee snapshots.');
+    lines.push(i18n.t('revisions.metadataChanged'));
+    lines.push(i18n.t('revisions.metadataChangedDescription'));
     lines.push('');
   }
 
