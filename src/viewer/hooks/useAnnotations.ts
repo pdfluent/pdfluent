@@ -600,6 +600,29 @@ export function useAnnotations(
     } catch { /* silent */ }
   }, [pdfDoc, authorName, refetchComments, markDirty]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Search for text and mark all matches as redaction annotations.
+  const handleRedactSearch = useCallback(async (query: string): Promise<{ matchesFound: number; areasRedacted: number } | null> => {
+    if (!pdfDoc || !isTauri || !query.trim()) return null;
+    try {
+      const { invoke } = await import('@tauri-apps/api/core');
+      const result = await invoke<{ matches_found: number; areas_redacted: number }>('redact_search', { query });
+      await refetchComments();
+      markDirty();
+      return { matchesFound: result.matches_found, areasRedacted: result.areas_redacted };
+    } catch { return null; }
+  }, [pdfDoc, refetchComments, markDirty]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Strip document metadata (author, title, etc.) permanently.
+  const handleRedactMetadata = useCallback(async (): Promise<boolean> => {
+    if (!pdfDoc || !isTauri) return false;
+    try {
+      const { invoke } = await import('@tauri-apps/api/core');
+      await invoke('redact_metadata');
+      markDirty();
+      return true;
+    } catch { return false; }
+  }, [pdfDoc, markDirty]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // Click an annotation marker on the canvas → select it.
   const handleAnnotationClick = useCallback((annotationId: string) => {
     const ann = allAnnotations.find(a => a.id === annotationId);
@@ -663,6 +686,8 @@ export function useAnnotations(
     handleDeleteSelectedAnnotation,
     handleUpdateAnnotationColor,
     handleApplyRedactions,
+    handleRedactSearch,
+    handleRedactMetadata,
     handleAnnotationClick,
     handleReorderPages,
   };

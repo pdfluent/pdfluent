@@ -36,6 +36,10 @@ export const WIRED_TOOLS: ReadonlySet<string> = new Set([
   'toolbar.deletePage',
   'toolbar.rotateLeft',
   'toolbar.rotateRight',
+  // Convert mode
+  'toolbar.ocrScan',
+  // Protect mode
+  'toolbar.redact',
 ]);
 
 // ---------------------------------------------------------------------------
@@ -64,6 +68,8 @@ interface ModeToolbarProps {
   activeAnnotationTool?: AnnotationTool;
   /** Called when the user selects or deselects an annotation tool. */
   onAnnotationToolChange?: (tool: AnnotationTool) => void;
+  /** Called when the user triggers OCR scan from the toolbar. */
+  onOcrScan?: () => void;
   /** Form fields for forms-mode navigation (sorted by pageIndex ascending). */
   formFields: FormField[];
   /** Index of the currently active form field (−1 = none selected). */
@@ -154,6 +160,7 @@ export function ModeToolbar({
   formFields,
   activeFieldIdx,
   onFieldNav,
+  onOcrScan,
 }: ModeToolbarProps) {
   const { t } = useTranslation();
   const { push, update } = useTaskQueueContext();
@@ -215,6 +222,10 @@ export function ModeToolbar({
       case 'toolbar.deletePage':       void handleDeletePage();         break;
       case 'toolbar.rotateRight':      void handleRotatePageRight();    break;
       case 'toolbar.rotateLeft':       void handleRotatePageLeft();     break;
+      case 'toolbar.ocrScan':          onOcrScan?.();                   break;
+      case 'toolbar.redact':
+        onAnnotationToolChange?.(activeAnnotationTool === 'redaction' ? null : 'redaction');
+        break;
     }
   }
 
@@ -365,6 +376,28 @@ export function ModeToolbar({
               </button>
             );
           })}
+        </>
+      )}
+
+      {/* ── Protect mode: draw-redaction toggle ──────────────────────────── */}
+      {mode === 'protect' && pageCount > 0 && (
+        <>
+          <Divider />
+          <button
+            data-testid="annotation-tool-redaction-protect"
+            onClick={() => { onAnnotationToolChange?.(activeAnnotationTool === 'redaction' ? null : 'redaction'); }}
+            title={t('toolbar.redact')}
+            aria-label={t('toolbar.redact')}
+            aria-pressed={activeAnnotationTool === 'redaction'}
+            className={`flex items-center gap-1 px-2 py-1 rounded text-xs transition-colors cursor-pointer ${
+              activeAnnotationTool === 'redaction'
+                ? 'bg-primary/15 text-primary'
+                : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+            }`}
+          >
+            <EraserIcon className="w-3.5 h-3.5" />
+            <span className="hidden lg:inline">{t('toolbar.redact')}</span>
+          </button>
         </>
       )}
 

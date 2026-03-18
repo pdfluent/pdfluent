@@ -12,6 +12,7 @@ import { useRenderedPage } from '../hooks/useRenderedPage';
 import { TextLayer } from './TextLayer';
 import { AnnotationOverlay } from './AnnotationOverlay';
 import { TextInteractionOverlay } from './TextInteractionOverlay';
+import { OcrOverlay } from './OcrOverlay';
 import { hitTestText } from '../text/textHoverHitTest';
 import type { PageTextStructure, TextParagraphTarget } from '../text/textInteractionModel';
 import type { TextHoverTarget } from '../text/textHoverHitTest';
@@ -56,6 +57,12 @@ interface PageCanvasProps {
   onTextTargetSelect?: (target: TextParagraphTarget | null) => void;
   /** Called when the user double-clicks a text paragraph — triggers edit entry. */
   onTextTargetDoubleClick?: (target: TextParagraphTarget) => void;
+  /** OCR word boxes for the current page — rendered as bounding box overlays. */
+  ocrWords?: Array<{ text: string; confidence: number; x0: number; y0: number; x1: number; y1: number; renderedWidth: number; renderedHeight: number }>;
+  /** Whether the OCR overlay is visible. */
+  ocrVisible?: boolean;
+  /** Confidence threshold below which words are highlighted in orange. */
+  ocrConfidenceThreshold?: number;
 }
 
 export function PageCanvas({
@@ -81,6 +88,9 @@ export function PageCanvas({
   selectedTextTarget = null,
   onTextTargetSelect,
   onTextTargetDoubleClick,
+  ocrWords,
+  ocrVisible = true,
+  ocrConfidenceThreshold = 0.6,
 }: PageCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerWidth, setContainerWidth] = useState(0);
@@ -262,7 +272,7 @@ export function PageCanvas({
               boxShadow: '0 2px 16px rgba(0,0,0,0.25)',
             }}
           />
-          {/* Stacking order: canvas → AnnotationOverlay (z=10) → TextInteractionOverlay (z=15) → TextLayer (z=20) */}
+          {/* Stacking order: canvas → AnnotationOverlay (z=10) → OcrOverlay (z=12) → TextInteractionOverlay (z=15) → TextLayer (z=20) */}
           <div style={{ position: 'absolute', inset: 0, zIndex: 10 }}>
             <AnnotationOverlay
               highlights={highlights}
@@ -277,6 +287,20 @@ export function PageCanvas({
               draftRect={draftRect}
             />
           </div>
+          {ocrWords && ocrWords.length > 0 && (
+            <div style={{ position: 'absolute', inset: 0, zIndex: 12 }}>
+              <OcrOverlay
+                words={ocrWords}
+                renderedWidth={ocrWords[0]?.renderedWidth ?? 1}
+                renderedHeight={ocrWords[0]?.renderedHeight ?? 1}
+                pageWidthPt={pageWidthPt}
+                pageHeightPt={pageHeightPt}
+                zoom={zoom}
+                lowConfidenceThreshold={ocrConfidenceThreshold}
+                visible={ocrVisible}
+              />
+            </div>
+          )}
           <div style={{ position: 'absolute', inset: 0, zIndex: 15 }}>
             <TextInteractionOverlay
               active={textInteractionActive}
