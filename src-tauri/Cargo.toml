@@ -1,6 +1,6 @@
 [package]
 name = "pdfluent"
-version = "0.1.0"
+version = "1.0.0-beta.1"
 description = "Privacy-first desktop PDF editor powered by the XFA Rust SDK"
 authors = ["Innovation Trigger B.V."]
 license = "Proprietary"
