@@ -65,11 +65,8 @@ test.describe('command palette', () => {
   test('opens with Ctrl+K', async ({ page }) => {
     await gotoViewer(page);
     await page.keyboard.press('Control+k');
-    // The CommandPalette is a modal/overlay — check for its input
-    const paletteInput = page.getByRole('textbox', { name: /zoek/i }).or(
-      page.getByPlaceholder(/commando/i),
-    );
-    await expect(paletteInput.or(page.locator('[role="dialog"]'))).toBeVisible({ timeout: 3_000 });
+    // The CommandPalette is a modal/overlay — check for its dialog element
+    await expect(page.getByRole('dialog', { name: 'Command palette' })).toBeVisible({ timeout: 3_000 });
   });
 });
 

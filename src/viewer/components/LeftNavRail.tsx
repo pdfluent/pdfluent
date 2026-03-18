@@ -459,7 +459,7 @@ export function LeftNavRail(props: LeftNavRailProps) {
 
   function togglePanel(id: NavigationPanel) {
     if (!hasDoc) return;
-    setActivePanel(prev => (prev === id ? null : id));
+    setActivePanel(id);
   }
 
   const panelOpen = hasDoc && activePanel !== null;

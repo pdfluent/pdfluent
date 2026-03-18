@@ -1613,7 +1613,7 @@ export function ViewerApp() {
   }, [engine]);
 
   // Dev-only: keep interactionDebug snapshot on __pdfluent_test__ current.
-  // Written as a separate effect so it tracks live interaction state independently of engine init.
+  // engine is included in deps so this effect re-runs after the test hook is created.
   useEffect(() => {
     if (!import.meta.env.DEV || !window.__pdfluent_test__) return;
     window.__pdfluent_test__.interactionDebug = {
@@ -1623,7 +1623,7 @@ export function ViewerApp() {
       selectedTextTargetId,
       editingTextTargetId,
     };
-  }, [hoveredTarget, annotationInteractionState, canvasCursorCss, selectedTextTargetId, editingTextTargetId]);
+  }, [engine, hoveredTarget, annotationInteractionState, canvasCursorCss, selectedTextTargetId, editingTextTargetId]);
 
   // File input ref used by WelcomeScreen in browser mode to trigger file open dialog
   const welcomeFileInputRef = useRef<HTMLInputElement | null>(null);

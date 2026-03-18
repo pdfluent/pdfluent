@@ -301,6 +301,7 @@ impl OpenDocument {
         })
     }
 
+    #[allow(dead_code)] // Reserved for future in-memory load path (no file path available)
     pub fn open_bytes(bytes: Vec<u8>) -> Result<Self, String> {
         let pdf_doc = PdfDocument::open(bytes.clone())
             .map_err(|e| format!("Failed to parse PDF: {e}"))?;
@@ -548,16 +549,16 @@ impl OpenDocument {
 
         if let Some((obj_num, gen_num)) = node.object_id {
             let obj_id = (obj_num as u32, gen_num as u16);
-            if let Ok(obj) = self.lopdf_doc.get_object_mut(obj_id) {
-                if let lopdf::Object::Dictionary(ref mut dict) = obj {
-                    dict.set(
-                        b"V",
-                        lopdf::Object::String(
-                            value.as_bytes().to_vec(),
-                            lopdf::StringFormat::Literal,
-                        ),
-                    );
-                }
+            if let Ok(lopdf::Object::Dictionary(ref mut dict)) =
+                self.lopdf_doc.get_object_mut(obj_id)
+            {
+                dict.set(
+                    b"V",
+                    lopdf::Object::String(
+                        value.as_bytes().to_vec(),
+                        lopdf::StringFormat::Literal,
+                    ),
+                );
             }
             self.sync_after_mutation()?;
         }
@@ -591,7 +592,7 @@ impl OpenDocument {
     /// number tree (e.g. "i", "ii", "1", "A-1"). Falls back to "1", "2", … when the
     /// document has no /PageLabels entry.
     pub fn get_page_labels(&self) -> Vec<String> {
-        let page_count = self.pdf_doc.page_count() as usize;
+        let page_count = self.pdf_doc.page_count();
 
         // Locate the /PageLabels entry in the catalog.
         let catalog_id = match self.lopdf_doc.trailer.get(b"Root").ok().cloned() {
@@ -968,29 +969,27 @@ impl OpenDocument {
         match annots_value {
             lopdf::Object::Reference(arr_id) => {
                 // /Annots is an indirect reference to an array object
-                if let Ok(arr_obj) = self.lopdf_doc.get_object_mut(arr_id) {
-                    if let lopdf::Object::Array(ref mut arr) = arr_obj {
-                        if annot_idx < arr.len() {
-                            arr.remove(annot_idx);
-                        } else {
-                            return Err(format!(
-                                "Annotation index {annot_idx} out of bounds (len {})",
-                                arr.len()
-                            ));
-                        }
+                if let Ok(lopdf::Object::Array(ref mut arr)) =
+                    self.lopdf_doc.get_object_mut(arr_id)
+                {
+                    if annot_idx < arr.len() {
+                        arr.remove(annot_idx);
+                    } else {
+                        return Err(format!(
+                            "Annotation index {annot_idx} out of bounds (len {})",
+                            arr.len()
+                        ));
                     }
                 }
             }
             lopdf::Object::Array(_) => {
                 // /Annots is an inline array in the page dictionary
-                if let Ok(page_obj) = self.lopdf_doc.get_object_mut(page_id) {
-                    if let lopdf::Object::Dictionary(ref mut dict) = page_obj {
-                        if let Ok(lopdf::Object::Array(ref mut arr)) =
-                            dict.get_mut(b"Annots")
-                        {
-                            if annot_idx < arr.len() {
-                                arr.remove(annot_idx);
-                            }
+                if let Ok(lopdf::Object::Dictionary(ref mut dict)) =
+                    self.lopdf_doc.get_object_mut(page_id)
+                {
+                    if let Ok(lopdf::Object::Array(ref mut arr)) = dict.get_mut(b"Annots") {
+                        if annot_idx < arr.len() {
+                            arr.remove(annot_idx);
                         }
                     }
                 }
@@ -1061,16 +1060,16 @@ impl OpenDocument {
         };
 
         // Modify the /Contents field in the annotation dictionary
-        if let Ok(obj) = self.lopdf_doc.get_object_mut(annot_obj_id) {
-            if let lopdf::Object::Dictionary(ref mut dict) = obj {
-                dict.set(
-                    b"Contents",
-                    lopdf::Object::String(
-                        contents.as_bytes().to_vec(),
-                        lopdf::StringFormat::Literal,
-                    ),
-                );
-            }
+        if let Ok(lopdf::Object::Dictionary(ref mut dict)) =
+            self.lopdf_doc.get_object_mut(annot_obj_id)
+        {
+            dict.set(
+                b"Contents",
+                lopdf::Object::String(
+                    contents.as_bytes().to_vec(),
+                    lopdf::StringFormat::Literal,
+                ),
+            );
         }
 
         self.sync_after_mutation()
@@ -1084,17 +1083,17 @@ impl OpenDocument {
         color: [f32; 3],
     ) -> Result<(), String> {
         let annot_obj_id = self.resolve_annotation_obj_id(annotation_id)?;
-        if let Ok(obj) = self.lopdf_doc.get_object_mut(annot_obj_id) {
-            if let lopdf::Object::Dictionary(ref mut dict) = obj {
-                dict.set(
-                    b"C",
-                    lopdf::Object::Array(vec![
-                        lopdf::Object::Real(color[0]),
-                        lopdf::Object::Real(color[1]),
-                        lopdf::Object::Real(color[2]),
-                    ]),
-                );
-            }
+        if let Ok(lopdf::Object::Dictionary(ref mut dict)) =
+            self.lopdf_doc.get_object_mut(annot_obj_id)
+        {
+            dict.set(
+                b"C",
+                lopdf::Object::Array(vec![
+                    lopdf::Object::Real(color[0]),
+                    lopdf::Object::Real(color[1]),
+                    lopdf::Object::Real(color[2]),
+                ]),
+            );
         }
         self.sync_after_mutation()
     }
@@ -1107,18 +1106,18 @@ impl OpenDocument {
         rect: [f32; 4],
     ) -> Result<(), String> {
         let annot_obj_id = self.resolve_annotation_obj_id(annotation_id)?;
-        if let Ok(obj) = self.lopdf_doc.get_object_mut(annot_obj_id) {
-            if let lopdf::Object::Dictionary(ref mut dict) = obj {
-                dict.set(
-                    b"Rect",
-                    lopdf::Object::Array(vec![
-                        lopdf::Object::Real(rect[0]),
-                        lopdf::Object::Real(rect[1]),
-                        lopdf::Object::Real(rect[2]),
-                        lopdf::Object::Real(rect[3]),
-                    ]),
-                );
-            }
+        if let Ok(lopdf::Object::Dictionary(ref mut dict)) =
+            self.lopdf_doc.get_object_mut(annot_obj_id)
+        {
+            dict.set(
+                b"Rect",
+                lopdf::Object::Array(vec![
+                    lopdf::Object::Real(rect[0]),
+                    lopdf::Object::Real(rect[1]),
+                    lopdf::Object::Real(rect[2]),
+                    lopdf::Object::Real(rect[3]),
+                ]),
+            );
         }
         self.sync_after_mutation()
     }
@@ -2079,20 +2078,20 @@ impl OpenDocument {
             }
         };
 
-        if let Ok(obj) = self.lopdf_doc.get_object_mut(info_id) {
-            if let lopdf::Object::Dictionary(ref mut dict) = obj {
-                if let Some(t) = title {
-                    dict.set(
-                        b"Title",
-                        lopdf::Object::String(t.into_bytes(), lopdf::StringFormat::Literal),
-                    );
-                }
-                if let Some(a) = author {
-                    dict.set(
-                        b"Author",
-                        lopdf::Object::String(a.into_bytes(), lopdf::StringFormat::Literal),
-                    );
-                }
+        if let Ok(lopdf::Object::Dictionary(ref mut dict)) =
+            self.lopdf_doc.get_object_mut(info_id)
+        {
+            if let Some(t) = title {
+                dict.set(
+                    b"Title",
+                    lopdf::Object::String(t.into_bytes(), lopdf::StringFormat::Literal),
+                );
+            }
+            if let Some(a) = author {
+                dict.set(
+                    b"Author",
+                    lopdf::Object::String(a.into_bytes(), lopdf::StringFormat::Literal),
+                );
             }
         }
 
@@ -2116,7 +2115,7 @@ impl OpenDocument {
                 self.lopdf_doc.get_object_mut(info_id)
             {
                 for field in FIELDS {
-                    dict.remove(*field);
+                    dict.remove(field);
                 }
             }
         }
