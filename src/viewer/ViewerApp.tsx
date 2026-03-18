@@ -12,6 +12,7 @@ import { makeDocumentEvent, appendEvent } from './state/documentEvents';
 import type { DocumentEvent } from './state/documentEvents';
 import type { AppError } from './state/errorCenter';
 import i18n from '../i18n';
+import { scheduleStartupUpdateCheck, checkAndInstallUpdate } from '../lib/updater';
 import { ViewerSidePanels } from './ViewerSidePanels';
 import { WelcomeSection } from './WelcomeSection';
 
@@ -43,6 +44,7 @@ import { BottomTaskBar } from './components/BottomTaskBar';
 import { CommandPalette } from './components/CommandPalette';
 import { AllToolsPanel } from './components/AllToolsPanel';
 import { ExportDialog } from './components/ExportDialog';
+import { UpdateBanner } from './components/UpdateBanner';
 import { OrganizeGrid } from './components/OrganizeGrid';
 import { ShortcutSheet } from './components/ShortcutSheet';
 import { GoToPageDialog } from './components/GoToPageDialog';
@@ -139,6 +141,34 @@ export function ViewerApp() {
   const [documentEventLog, setDocumentEventLog] = useState<DocumentEvent[]>([]);
   // App-level error registry — surfaced by Phase 4+ notification UI
   const [_appErrors, setAppErrors] = useState<AppError[]>([]);
+
+  // Auto-update state
+  const [updateAvailable, setUpdateAvailable] = useState(false);
+  const [updateVersion, setUpdateVersion] = useState<string | null>(null);
+  const [updateInstalling, setUpdateInstalling] = useState(false);
+
+  // Schedule a silent startup update check (5 s delay, non-blocking)
+  useEffect(() => {
+    if (!isTauri) return;
+    return scheduleStartupUpdateCheck({
+      onUpdateAvailable: async (version) => {
+        setUpdateVersion(version);
+        setUpdateAvailable(true);
+        return false; // let the user choose to install via the banner
+      },
+      onUpdateInstalled: () => { /* no-op: handled by handleInstallUpdate */ },
+      onError: () => { /* silent on startup */ },
+    });
+  }, []);
+
+  const handleInstallUpdate = useCallback(() => {
+    setUpdateInstalling(true);
+    void checkAndInstallUpdate({
+      onUpdateAvailable: async () => true,
+      onUpdateInstalled: () => { setUpdateInstalling(false); },
+      onError: () => { setUpdateInstalling(false); },
+    });
+  }, []);
 
   // Centralised hover tracking across all interactive surfaces.
   const {
@@ -512,6 +542,15 @@ export function ViewerApp() {
         canRedo={canRedo}
         onUndo={() => { void undoStackRef.current.undo().then(syncUndoState); }}
         onRedo={() => { void undoStackRef.current.redo().then(syncUndoState); }}
+      />
+
+      {/* ── Update banner ──────────────────────────────────────────────────── */}
+      <UpdateBanner
+        isVisible={updateAvailable}
+        version={updateVersion}
+        installing={updateInstalling}
+        onInstall={handleInstallUpdate}
+        onDismiss={() => { setUpdateAvailable(false); }}
       />
 
       {/* ── ModeSwitcher ───────────────────────────────────────────────────── */}
