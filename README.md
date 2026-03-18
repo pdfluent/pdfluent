@@ -50,6 +50,7 @@ pdfluent/
 | `render_page` | `page_index: u16, scale?: f32` | `RenderedPage { index, width, height, data_base64 }` |
 | `get_document_info` | — | `DocumentInfo` |
 | `close_pdf` | — | `()` |
+| `run_paddle_ocr` | `payload { image_base64, language, include_structure }` | `PaddleOcrResponse { words, text, structure_blocks }` |
 
 ## Development
 
@@ -68,7 +69,10 @@ npm install
 # 2. Download Pdfium native library (REQUIRED before first run)
 ./scripts/setup-pdfium.sh
 
-# 3. Start dev server
+# 3. (Optional) Install PaddleOCR Python bridge dependencies for OCR + PP-Structure
+./scripts/setup-ocr.sh
+
+# 4. Start dev server
 npm run tauri dev
 ```
 
@@ -86,6 +90,21 @@ npm run tauri build
 npm run typecheck    # TypeScript
 cd src-tauri && cargo check  # Rust
 ```
+
+### Compliance and third-party inventory
+
+```bash
+# Generate OCR model checksum manifest
+npm run ocr:manifest
+
+# Generate THIRD_PARTY.md + THIRD_PARTY_ATTRIBUTIONS.md + compliance-report.json
+npm run compliance:generate
+
+# Fail on blocked/unknown licenses in compliance-report.json
+npm run compliance:check
+```
+
+CI also runs a dedicated compliance workflow at `.github/workflows/compliance.yml` and uploads generated artifacts.
 
 ## What's built
 

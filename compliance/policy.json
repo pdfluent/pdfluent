@@ -1,0 +1,33 @@
+{
+  "allowed_licenses": [
+    "MIT",
+    "Apache-2.0",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "ISC",
+    "Zlib",
+    "CC0-1.0",
+    "Unlicense",
+    "BlueOak-1.0.0"
+  ],
+  "blocked_licenses": [
+    "GPL-2.0-only",
+    "GPL-2.0-or-later",
+    "GPL-3.0-only",
+    "GPL-3.0-or-later",
+    "LGPL-2.1-only",
+    "LGPL-2.1-or-later",
+    "LGPL-3.0-only",
+    "LGPL-3.0-or-later",
+    "AGPL-3.0-only",
+    "AGPL-3.0-or-later",
+    "SSPL-1.0",
+    "BUSL-1.1",
+    "Commons-Clause",
+    "CC-BY-NC-4.0",
+    "CC-BY-ND-4.0"
+  ],
+  "unknown_license_policy": "fail",
+  "manual_review_allowed": true,
+  "notes": "Project license is AGPL-3.0-or-later. Blocked list applies to third-party dependencies only."
+}

@@ -1,4 +1,4 @@
-// Copyright (c) 2026 PDFluent B.V. All rights reserved.
+// Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
 // This software is proprietary and confidential.
 // Free for personal, non-commercial use.
@@ -29,6 +29,7 @@ import {
   LayoutGridIcon,
   Trash2Icon,
   RotateCwIcon,
+  RotateCcwIcon,
   ScissorsIcon,
   LayersIcon,
   CheckSquareIcon,
@@ -115,7 +116,8 @@ export const TOOLS_BY_MODE: Record<ViewerMode, ToolDefinition[][]> = {
     [
       { icon: LayoutGridIcon, label: 'Pagina invoegen' },
       { icon: Trash2Icon,     label: 'Pagina verwijderen' },
-      { icon: RotateCwIcon,   label: 'Pagina roteren' },
+      { icon: RotateCcwIcon,  label: 'Links roteren' },
+      { icon: RotateCwIcon,   label: 'Rechts roteren' },
     ],
     [
       { icon: ScissorsIcon, label: 'Splitsen' },

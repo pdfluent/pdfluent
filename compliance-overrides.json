@@ -1,0 +1,172 @@
+{
+  "overrides": [
+    {
+      "source": "python",
+      "name": "python-bidi",
+      "policyStatus": "needs-review",
+      "licenseStatus": "known",
+      "license": "LGPL (manual legal review required)",
+      "reason": "Pulled transitively by OCR stack; flagged for legal replacement/approval decision."
+    },
+    {
+      "source": "python",
+      "name": "annotated-doc",
+      "policyStatus": "needs-review",
+      "licenseStatus": "known",
+      "license": "manual-review-required",
+      "reason": "Metadata does not expose a machine-readable SPDX expression."
+    },
+    {
+      "source": "python",
+      "name": "anyio",
+      "policyStatus": "needs-review",
+      "licenseStatus": "known",
+      "license": "manual-review-required",
+      "reason": "Metadata does not expose a machine-readable SPDX expression."
+    },
+    {
+      "source": "python",
+      "name": "click",
+      "policyStatus": "needs-review",
+      "licenseStatus": "known",
+      "license": "manual-review-required",
+      "reason": "Metadata does not expose a machine-readable SPDX expression."
+    },
+    {
+      "source": "python",
+      "name": "fsspec",
+      "policyStatus": "needs-review",
+      "licenseStatus": "known",
+      "license": "manual-review-required",
+      "reason": "Metadata does not expose a machine-readable SPDX expression."
+    },
+    {
+      "source": "python",
+      "name": "idna",
+      "policyStatus": "needs-review",
+      "licenseStatus": "known",
+      "license": "manual-review-required",
+      "reason": "Metadata does not expose a machine-readable SPDX expression."
+    },
+    {
+      "source": "python",
+      "name": "modelscope",
+      "policyStatus": "needs-review",
+      "licenseStatus": "known",
+      "license": "manual-review-required",
+      "reason": "Metadata does not expose a machine-readable SPDX expression."
+    },
+    {
+      "source": "python",
+      "name": "numpy",
+      "policyStatus": "needs-review",
+      "licenseStatus": "known",
+      "license": "manual-review-required",
+      "reason": "Metadata does not expose a machine-readable SPDX expression."
+    },
+    {
+      "source": "python",
+      "name": "packaging",
+      "policyStatus": "needs-review",
+      "licenseStatus": "known",
+      "license": "manual-review-required",
+      "reason": "Metadata does not expose a machine-readable SPDX expression."
+    },
+    {
+      "source": "python",
+      "name": "pillow",
+      "policyStatus": "needs-review",
+      "licenseStatus": "known",
+      "license": "manual-review-required",
+      "reason": "Metadata does not expose a machine-readable SPDX expression."
+    },
+    {
+      "source": "python",
+      "name": "pip",
+      "policyStatus": "needs-review",
+      "licenseStatus": "known",
+      "license": "manual-review-required",
+      "reason": "Tooling dependency in OCR virtual environment."
+    },
+    {
+      "source": "python",
+      "name": "prettytable",
+      "policyStatus": "needs-review",
+      "licenseStatus": "known",
+      "license": "manual-review-required",
+      "reason": "Metadata does not expose a machine-readable SPDX expression."
+    },
+    {
+      "source": "python",
+      "name": "pydantic",
+      "policyStatus": "needs-review",
+      "licenseStatus": "known",
+      "license": "manual-review-required",
+      "reason": "Metadata does not expose a machine-readable SPDX expression."
+    },
+    {
+      "source": "python",
+      "name": "pydantic_core",
+      "policyStatus": "needs-review",
+      "licenseStatus": "known",
+      "license": "manual-review-required",
+      "reason": "Metadata does not expose a machine-readable SPDX expression."
+    },
+    {
+      "source": "python",
+      "name": "setuptools",
+      "policyStatus": "needs-review",
+      "licenseStatus": "known",
+      "license": "manual-review-required",
+      "reason": "Build dependency in OCR virtual environment."
+    },
+    {
+      "source": "python",
+      "name": "typer",
+      "policyStatus": "needs-review",
+      "licenseStatus": "known",
+      "license": "manual-review-required",
+      "reason": "Metadata does not expose a machine-readable SPDX expression."
+    },
+    {
+      "source": "python",
+      "name": "typing_extensions",
+      "policyStatus": "needs-review",
+      "licenseStatus": "known",
+      "license": "manual-review-required",
+      "reason": "Metadata does not expose a machine-readable SPDX expression."
+    },
+    {
+      "source": "python",
+      "name": "typing-inspection",
+      "policyStatus": "needs-review",
+      "licenseStatus": "known",
+      "license": "manual-review-required",
+      "reason": "Metadata does not expose a machine-readable SPDX expression."
+    },
+    {
+      "source": "python",
+      "name": "ujson",
+      "policyStatus": "needs-review",
+      "licenseStatus": "known",
+      "license": "manual-review-required",
+      "reason": "Metadata does not expose a machine-readable SPDX expression."
+    },
+    {
+      "source": "python",
+      "name": "urllib3",
+      "policyStatus": "needs-review",
+      "licenseStatus": "known",
+      "license": "manual-review-required",
+      "reason": "Metadata does not expose a machine-readable SPDX expression."
+    },
+    {
+      "source": "python",
+      "name": "wcwidth",
+      "policyStatus": "needs-review",
+      "licenseStatus": "known",
+      "license": "manual-review-required",
+      "reason": "Metadata does not expose a machine-readable SPDX expression."
+    }
+  ]
+}

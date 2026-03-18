@@ -1,0 +1,138 @@
+# Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
+# See https://pdfluent.com/license for terms.
+
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+
+jobs:
+  release:
+    name: Release (${{ matrix.platform }})
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: macos-latest
+            args: "--target universal-apple-darwin --bundles app,dmg"
+            rust-targets: "aarch64-apple-darwin,x86_64-apple-darwin"
+          - platform: ubuntu-22.04
+            args: "--bundles appimage,deb"
+            rust-targets: ""
+          - platform: windows-latest
+            args: "--bundles msi,nsis"
+            rust-targets: ""
+
+    runs-on: ${{ matrix.platform }}
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # Tauri updater signing key — used to sign update artifacts
+      TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+      TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+
+    steps:
+      - name: Checkout PDFluent
+        uses: actions/checkout@v4
+        with:
+          path: PDFluent/pdfluent
+
+      - name: Checkout XFA SDK
+        uses: actions/checkout@v4
+        with:
+          repository: pdfluent/xfa
+          token: ${{ secrets.XFA_REPO_TOKEN }}
+          path: XFA
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: PDFluent/pdfluent/package-lock.json
+
+      - name: Setup Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.rust-targets }}
+
+      - name: Cache cargo registry & build
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            PDFluent/pdfluent/src-tauri/target
+          key: release-${{ matrix.platform }}-cargo-${{ hashFiles('PDFluent/pdfluent/src-tauri/Cargo.lock') }}
+          restore-keys: |
+            release-${{ matrix.platform }}-cargo-
+
+      # ── Linux dependencies ──────────────────────────────────────────────
+      - name: Install Linux system dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev \
+            libappindicator3-dev \
+            librsvg2-dev \
+            patchelf
+
+      # ── macOS code signing & notarization ───────────────────────────────
+      - name: Import Apple signing certificate
+        if: runner.os == 'macOS'
+        uses: apple-actions/import-codesign-certs@v3
+        with:
+          p12-file-base64: ${{ secrets.APPLE_CERTIFICATE }}
+          p12-password: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+
+      # ── Windows Authenticode signing ────────────────────────────────────
+      - name: Prepare Windows signing certificate
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $certPath = "$env:RUNNER_TEMP\pdfluent-signing-cert.pfx"
+          [IO.File]::WriteAllBytes($certPath, [Convert]::FromBase64String("${{ secrets.WINDOWS_CERTIFICATE }}"))
+          "WINDOWS_CERTIFICATE_PATH=$certPath" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+      # ── Build ───────────────────────────────────────────────────────────
+      - name: Install frontend dependencies
+        working-directory: PDFluent/pdfluent
+        run: npm ci
+
+      - name: Build and publish release
+        uses: tauri-apps/tauri-action@v0
+        env:
+          # macOS notarization
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          # Windows Authenticode
+          WINDOWS_CERTIFICATE_PATH: ${{ env.WINDOWS_CERTIFICATE_PATH }}
+          WINDOWS_CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
+        with:
+          projectPath: PDFluent/pdfluent
+          tagName: ${{ github.ref_name }}
+          releaseName: "PDFluent ${{ github.ref_name }}"
+          releaseBody: "See the [changelog](https://github.com/pdfluent/pdfluent/blob/main/CHANGELOG.md) for details."
+          releaseDraft: false
+          prerelease: false
+          args: ${{ matrix.args }}
+
+      # ── Cleanup ─────────────────────────────────────────────────────────
+      - name: Cleanup Windows signing certificate
+        if: always() && runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          if ($env:WINDOWS_CERTIFICATE_PATH -and (Test-Path $env:WINDOWS_CERTIFICATE_PATH)) {
+            Remove-Item $env:WINDOWS_CERTIFICATE_PATH -Force
+          }

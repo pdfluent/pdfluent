@@ -1,25 +1,32 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: AGPL-3.0-or-later
 # Downloads pre-built Pdfium binary for the current platform.
-# Source: https://github.com/nicbarker/pdfium-binaries (nicbarker fork, Apache-2.0)
+# Source: https://github.com/bblanchon/pdfium-binaries (Apache-2.0)
 
 set -euo pipefail
 
-PDFIUM_VERSION="6938"
-BASE_URL="https://github.com/nicbarker/pdfium-binaries/releases/download/chromium%2F${PDFIUM_VERSION}"
+PDFIUM_VERSION="${PDFIUM_VERSION:-7699}"
+BASE_URL="https://github.com/bblanchon/pdfium-binaries/releases/download/chromium/${PDFIUM_VERSION}"
 OUT_DIR="src-tauri/lib"
 
 detect_platform() {
-  local os arch
+  local os arch rust_host
   os="$(uname -s)"
   arch="$(uname -m)"
+  rust_host="$(rustc -vV | awk '/^host:/ { print $2 }')"
 
   case "$os" in
     Darwin)
-      case "$arch" in
-        arm64) echo "pdfium-mac-arm64" ;;
-        x86_64) echo "pdfium-mac-x64" ;;
-        *) echo "unsupported" ;;
+      case "$rust_host" in
+        x86_64-apple-darwin) echo "pdfium-mac-x64" ;;
+        aarch64-apple-darwin) echo "pdfium-mac-arm64" ;;
+        *)
+          case "$arch" in
+            arm64) echo "pdfium-mac-arm64" ;;
+            x86_64) echo "pdfium-mac-x64" ;;
+            *) echo "unsupported" ;;
+          esac
+          ;;
       esac
       ;;
     Linux)

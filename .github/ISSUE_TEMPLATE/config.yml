@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Community Discord
+    url: https://discord.gg/pdfluent
+    about: Ask product questions, report non-critical issues, and join discussions.
+  - name: GitHub Discussions
+    url: https://github.com/pdfluent/pdfluent/discussions
+    about: Use Discussions for ideas, support questions, and roadmap feedback.

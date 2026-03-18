@@ -1,4 +1,4 @@
-// Copyright (c) 2026 PDFluent B.V. All rights reserved.
+// Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
 // This software is proprietary and confidential.
 // Free for personal, non-commercial use.

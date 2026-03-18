@@ -1,11 +1,11 @@
-// Copyright (c) 2026 PDFluent B.V. All rights reserved.
+// Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
 // This software is proprietary and confidential.
 // Free for personal, non-commercial use.
 // Commercial use requires a valid license.
 // See https://pdfluent.com/license for terms.
 
-import { useRef, type ChangeEvent } from 'react';
+import { useRef, useEffect, type RefObject, type ChangeEvent } from 'react';
 import {
   LayersIcon,
   Undo2Icon,
@@ -13,19 +13,28 @@ import {
   SearchIcon,
   Share2Icon,
   DownloadIcon,
+  SaveIcon,
   MenuIcon,
+  XIcon,
 } from 'lucide-react';
+import { useTaskQueueContext } from '../context/TaskQueueContext';
 
 interface TopBarProps {
   fileName: string | null;
   pageIndex: number;
   pageCount: number;
   isDirty: boolean;
+  currentFilePath: string | null;
   onOpenFile: (source: string | ArrayBuffer) => Promise<void>;
+  onSaveComplete: () => void;
+  onCloseDocument: () => void;
+  pageInputRef?: RefObject<HTMLInputElement | null>;
   onPrevPage: () => void;
   onNextPage: () => void;
   onPageInput: (page: number) => void;
   onOpenCommandPalette: () => void;
+  onOpenExport: () => void;
+  onSaveAs: () => Promise<void>;
 }
 
 const isTauri = typeof window !== 'undefined' && '__TAURI__' in window;
@@ -35,13 +44,79 @@ export function TopBar({
   pageIndex,
   pageCount,
   isDirty,
+  currentFilePath,
   onOpenFile,
+  onSaveComplete,
+  onCloseDocument,
+  pageInputRef,
   onPrevPage,
   onNextPage,
   onPageInput,
   onOpenCommandPalette,
+  onOpenExport,
+  onSaveAs,
 }: TopBarProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { push, update } = useTaskQueueContext();
+
+  // ---------------------------------------------------------------------------
+  // Save
+  // ---------------------------------------------------------------------------
+
+  async function handleSave(): Promise<void> {
+    if (!isTauri || !isDirty || pageCount === 0) return;
+
+    const taskId = `save-${Date.now()}`;
+
+    if (currentFilePath) {
+      // Save in place — known file path
+      push({ id: taskId, label: 'Opslaan…', progress: null, status: 'running' });
+      try {
+        const { invoke } = await import('@tauri-apps/api/core');
+        await invoke('save_pdf', { path: currentFilePath });
+        update(taskId, { status: 'done', label: 'Opgeslagen' });
+        onSaveComplete();
+      } catch {
+        update(taskId, { status: 'error', label: 'Opslaan mislukt' });
+      }
+    } else {
+      // Save as — no known path (browser source or first save)
+      const { save } = await import('@tauri-apps/plugin-dialog');
+      const path = await save({ filters: [{ name: 'PDF', extensions: ['pdf'] }] });
+      if (!path) return;
+
+      push({ id: taskId, label: 'Opslaan als…', progress: null, status: 'running' });
+      try {
+        const { invoke } = await import('@tauri-apps/api/core');
+        await invoke('save_pdf', { path });
+        update(taskId, { status: 'done', label: 'Opgeslagen' });
+        onSaveComplete();
+      } catch {
+        update(taskId, { status: 'error', label: 'Opslaan mislukt' });
+      }
+    }
+  }
+
+  // Keep a ref so the ⌘S listener always calls the latest handleSave without
+  // re-registering on every render.
+  const handleSaveRef = useRef(handleSave);
+  useEffect(() => { handleSaveRef.current = handleSave; });
+
+  // ⌘S / Ctrl+S — registered once on mount
+  useEffect(() => {
+    function handleKey(e: KeyboardEvent) {
+      if ((e.metaKey || e.ctrlKey) && e.key === 's') {
+        e.preventDefault();
+        void handleSaveRef.current();
+      }
+    }
+    window.addEventListener('keydown', handleKey);
+    return () => { window.removeEventListener('keydown', handleKey); };
+  }, []);
+
+  // ---------------------------------------------------------------------------
+  // Open
+  // ---------------------------------------------------------------------------
 
   async function handleOpen(): Promise<void> {
     if (isTauri) {
@@ -71,6 +146,8 @@ export function TopBar({
       onPageInput(value - 1);
     }
   }
+
+  const canSave = isDirty && pageCount > 0;
 
   return (
     <div className="h-12 flex items-center justify-between px-3 border-b border-border bg-background shrink-0">
@@ -138,6 +215,15 @@ export function TopBar({
               title={isDirty ? 'Unsaved changes' : 'Saved'}
               aria-label={isDirty ? 'Unsaved changes' : 'Saved'}
             />
+            <button
+              onClick={onCloseDocument}
+              className="p-0.5 text-muted-foreground hover:text-foreground hover:bg-muted rounded transition-colors shrink-0"
+              title="Sluiten"
+              aria-label="Document sluiten"
+              data-testid="close-document-btn"
+            >
+              <XIcon className="w-3 h-3" />
+            </button>
           </div>
         ) : (
           <div className="flex items-center gap-2 px-4 py-1.5 border-b-2 border-transparent">
@@ -169,11 +255,13 @@ export function TopBar({
             </button>
 
             <input
+              ref={pageInputRef}
               type="number"
               min={1}
               max={pageCount}
               value={pageIndex + 1}
               onChange={handlePageInputChange}
+              onKeyDown={(e) => { if (e.key === 'Enter') e.currentTarget.blur(); }}
               className="w-10 text-center text-xs bg-card border border-border rounded-md py-1 text-foreground focus:ring-1 focus:ring-primary outline-none shrink-0"
               aria-label="Page number"
             />
@@ -193,8 +281,6 @@ export function TopBar({
 
         <div className="w-px h-4 bg-border mx-0.5 shrink-0" />
 
-        {/* TODO(pdfluent-viewer): wire to command palette (⌘K)
-            Status: design integrated, functionality not implemented yet */}
         <button
           onClick={onOpenCommandPalette}
           className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors shrink-0"
@@ -202,6 +288,29 @@ export function TopBar({
           aria-label="Search"
         >
           <SearchIcon className="w-4 h-4" />
+        </button>
+
+        <button
+          onClick={() => { void handleSave(); }}
+          disabled={!canSave}
+          className="flex items-center gap-1 px-2 py-1.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
+          title={canSave ? 'Opslaan (⌘S)' : 'Opslaan (geen wijzigingen)'}
+          aria-label="Opslaan"
+        >
+          <SaveIcon className="w-3.5 h-3.5" />
+          <span className="hidden md:inline">Opslaan</span>
+        </button>
+
+        <button
+          onClick={() => { void onSaveAs(); }}
+          disabled={!isTauri || pageCount === 0}
+          data-testid="save-as-btn"
+          className="flex items-center gap-1 px-2 py-1.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
+          title="Opslaan als… (⌘⇧S)"
+          aria-label="Opslaan als"
+        >
+          <SaveIcon className="w-3.5 h-3.5" />
+          <span className="hidden md:inline">Opslaan als…</span>
         </button>
 
         {/* TODO(pdfluent-viewer): implement share / collaboration
@@ -215,12 +324,11 @@ export function TopBar({
           <span className="hidden md:inline">Delen</span>
         </button>
 
-        {/* TODO(pdfluent-viewer): implement export to Word/Excel/Image/etc.
-            Status: design integrated, functionality not implemented yet */}
         <button
-          disabled
-          className="flex items-center gap-1 px-2 py-1.5 text-xs text-muted-foreground/40 rounded-md cursor-default shrink-0"
-          title="Export (not yet available)"
+          onClick={onOpenExport}
+          disabled={pageCount === 0}
+          className="flex items-center gap-1 px-2 py-1.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
+          title="Exporteren"
         >
           <DownloadIcon className="w-3.5 h-3.5" />
           <span className="hidden md:inline">Exporteren</span>

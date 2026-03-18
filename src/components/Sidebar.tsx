@@ -1,15 +1,27 @@
-// SPDX-License-Identifier: AGPL-3.0-or-later
-// Copyright (c) 2026 PDFluent Contributors
-
+// Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
+//
+// This software is proprietary and confidential.
+// Free for personal, non-commercial use.
+// Commercial use requires a valid license.
+// See https://pdfluent.com/license for terms.
 import { useEffect, useRef, useState } from "react";
-import { renderPage } from "../lib/tauri-api";
+import { MinusIcon, PlusIcon } from "lucide-react";
+import { renderThumbnail } from "../lib/tauri-api";
 import type { DocumentInfo } from "../lib/tauri-api";
 
 interface SidebarProps {
   docInfo: DocumentInfo | null;
+  fileName: string | null;
   currentPage: number;
   scale: number;
+  width: number;
+  disabled?: boolean;
+  canIncreaseWidth: boolean;
+  canDecreaseWidth: boolean;
+  onIncreaseWidth: () => void;
+  onDecreaseWidth: () => void;
   onSelectPage: (page: number) => void;
+  onReorderPages: (newOrder: number[]) => Promise<void>;
 }
 
 interface ThumbnailData {
@@ -19,107 +31,371 @@ interface ThumbnailData {
   height: number;
 }
 
-export function Sidebar({ docInfo, currentPage, scale, onSelectPage }: SidebarProps) {
+const THUMBNAIL_PAGE_BUFFER = 4;
+const THUMBNAIL_CACHE_LIMIT = 42;
+
+export function getThumbnailTargetPages(
+  currentPage: number,
+  pageCount: number,
+): number[] {
+  const start = Math.max(0, currentPage - THUMBNAIL_PAGE_BUFFER);
+  const end = Math.min(pageCount - 1, currentPage + THUMBNAIL_PAGE_BUFFER);
+  return Array.from({ length: end - start + 1 }, (_, offset) => start + offset);
+}
+
+export function getThumbnailLoadTargets(
+  currentPage: number,
+  pageCount: number,
+  visiblePages: Set<number>,
+): number[] {
+  const targets = new Set(getThumbnailTargetPages(currentPage, pageCount));
+
+  for (const page of visiblePages) {
+    for (const target of getThumbnailTargetPages(page, pageCount)) {
+      targets.add(target);
+    }
+  }
+
+  if (visiblePages.size === 0) {
+    for (let page = 0; page < Math.min(pageCount, THUMBNAIL_PAGE_BUFFER + 1); page++) {
+      targets.add(page);
+    }
+  }
+
+  return Array.from(targets).sort((left, right) => left - right);
+}
+
+function trimThumbnailCache(
+  cache: Map<number, ThumbnailData>,
+  currentPage: number,
+): Map<number, ThumbnailData> {
+  if (cache.size <= THUMBNAIL_CACHE_LIMIT) {
+    return cache;
+  }
+
+  const nearestEntries = [...cache.entries()]
+    .sort(
+      ([pageA], [pageB]) =>
+        Math.abs(pageA - currentPage) - Math.abs(pageB - currentPage),
+    )
+    .slice(0, THUMBNAIL_CACHE_LIMIT);
+
+  return new Map(nearestEntries);
+}
+
+export function Sidebar({
+  docInfo,
+  fileName,
+  currentPage,
+  scale,
+  width,
+  disabled = false,
+  canIncreaseWidth,
+  canDecreaseWidth,
+  onIncreaseWidth,
+  onDecreaseWidth,
+  onSelectPage,
+  onReorderPages,
+}: SidebarProps) {
   const [thumbnails, setThumbnails] = useState<Map<number, ThumbnailData>>(new Map());
   const [loadingPages, setLoadingPages] = useState<Set<number>>(new Set());
-  const activeRef = useRef<HTMLButtonElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
+  const [visiblePages, setVisiblePages] = useState<Set<number>>(new Set());
+  const [draggedPage, setDraggedPage] = useState<number | null>(null);
+  const viewportRef = useRef<HTMLDivElement>(null);
+  const thumbRefs = useRef<Map<number, HTMLButtonElement>>(new Map());
+  const loadingRef = useRef<Set<number>>(new Set());
+  const currentPageRef = useRef(currentPage);
 
-  // Load thumbnails progressively
-  useEffect(() => {
-    if (!docInfo) {
-      setThumbnails(new Map());
+  function setThumbRef(index: number, node: HTMLButtonElement | null): void {
+    if (node) {
+      thumbRefs.current.set(index, node);
       return;
     }
 
-    let cancelled = false;
+    thumbRefs.current.delete(index);
+  }
 
-    async function loadThumbnails() {
-      for (let i = 0; i < docInfo!.page_count; i++) {
-        if (cancelled) break;
+  useEffect(() => {
+    currentPageRef.current = currentPage;
+  }, [currentPage]);
 
-        setLoadingPages((prev) => new Set(prev).add(i));
+  useEffect(() => {
+    if (!docInfo) {
+      setThumbnails(new Map());
+      setLoadingPages(new Set());
+      loadingRef.current.clear();
+      return;
+    }
 
+    loadingRef.current.clear();
+    setThumbnails(new Map());
+    setLoadingPages(new Set());
+    setVisiblePages(new Set());
+  }, [docInfo, scale]);
+
+  useEffect(() => {
+    if (!docInfo) {
+      setVisiblePages(new Set());
+      return;
+    }
+
+    const root = viewportRef.current;
+    if (!root) {
+      return;
+    }
+
+    const visible = new Set<number>();
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        let changed = false;
+
+        for (const entry of entries) {
+          const pageIndexAttr = (entry.target as HTMLElement).dataset.pageIndex;
+          const pageIndex = Number.parseInt(pageIndexAttr ?? "", 10);
+          if (Number.isNaN(pageIndex)) continue;
+
+          if (entry.isIntersecting) {
+            if (!visible.has(pageIndex)) {
+              visible.add(pageIndex);
+              changed = true;
+            }
+          } else if (visible.delete(pageIndex)) {
+            changed = true;
+          }
+        }
+
+        if (!changed) return;
+        setVisiblePages(new Set(visible));
+      },
+      {
+        root,
+        rootMargin: "120px 0px 120px 0px",
+        threshold: [0, 0.01, 0.1],
+      },
+    );
+
+    for (const button of thumbRefs.current.values()) {
+      observer.observe(button);
+    }
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [docInfo]);
+
+  useEffect(() => {
+    if (!docInfo) return;
+
+    const targetPages = getThumbnailLoadTargets(
+      currentPage,
+      docInfo.page_count,
+      visiblePages,
+    );
+    const missingPages = targetPages.filter(
+      (pageIndex) =>
+        !thumbnails.has(pageIndex) && !loadingRef.current.has(pageIndex),
+    );
+
+    if (missingPages.length === 0) {
+      return;
+    }
+
+    for (const pageIndex of missingPages) {
+      loadingRef.current.add(pageIndex);
+    }
+    setLoadingPages((prev) => {
+      const next = new Set(prev);
+      for (const pageIndex of missingPages) {
+        next.add(pageIndex);
+      }
+      return next;
+    });
+
+    void (async () => {
+      for (const pageIndex of missingPages) {
         try {
-          const page = await renderPage(i, scale);
-          if (cancelled) break;
-
+          const page = await renderThumbnail(pageIndex);
           setThumbnails((prev) => {
+            if (prev.has(pageIndex)) {
+              return prev;
+            }
+
             const next = new Map(prev);
-            next.set(i, {
-              index: i,
+            next.set(pageIndex, {
+              index: pageIndex,
               dataUrl: `data:image/png;base64,${page.data_base64}`,
               width: page.width,
               height: page.height,
             });
-            return next;
+            return trimThumbnailCache(next, currentPageRef.current);
           });
         } catch {
           // Skip failed thumbnails silently
+        } finally {
+          loadingRef.current.delete(pageIndex);
+          setLoadingPages((prev) => {
+            const next = new Set(prev);
+            next.delete(pageIndex);
+            return next;
+          });
         }
-
-        setLoadingPages((prev) => {
-          const next = new Set(prev);
-          next.delete(i);
-          return next;
-        });
       }
+    })();
+  }, [docInfo, currentPage, scale, thumbnails, visiblePages]);
+
+  useEffect(() => {
+    if (!docInfo) {
+      setDraggedPage(null);
+    }
+  }, [docInfo]);
+
+  async function handleDrop(targetPage: number) {
+    if (!docInfo || draggedPage === null || draggedPage === targetPage) {
+      setDraggedPage(null);
+      return;
     }
 
-    loadThumbnails();
-    return () => {
-      cancelled = true;
-    };
-  }, [docInfo, scale]);
+    const newOrder = Array.from(
+      { length: docInfo.page_count },
+      (_, index) => index,
+    );
+    const movedPages = newOrder.splice(draggedPage, 1);
+    const movedPage = movedPages[0];
+    if (movedPage === undefined) {
+      setDraggedPage(null);
+      return;
+    }
 
-  // Scroll active thumbnail into view
-  useEffect(() => {
-    activeRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" });
-  }, [currentPage]);
+    newOrder.splice(targetPage, 0, movedPage);
 
-  if (!docInfo) {
-    return <aside className="sidebar" />;
+    try {
+      await onReorderPages(newOrder);
+    } finally {
+      setDraggedPage(null);
+    }
   }
 
-  return (
-    <aside className="sidebar">
-      <div className="sidebar-header">
-        Pages ({docInfo.page_count})
-      </div>
-      <div className="sidebar-content" ref={containerRef}>
-        {Array.from({ length: docInfo.page_count }, (_, i) => {
-          const thumb = thumbnails.get(i);
-          const isActive = i === currentPage;
-          const isLoading = loadingPages.has(i);
+  const hasDocument = Boolean(docInfo);
+  const pageCount = docInfo?.page_count ?? 0;
 
-          return (
-            <button
-              key={i}
-              ref={isActive ? activeRef : undefined}
-              className={`sidebar-thumb${isActive ? " sidebar-thumb-active" : ""}`}
-              onClick={() => onSelectPage(i)}
-              title={`Page ${i + 1}`}
-            >
-              <div className="sidebar-thumb-img-wrap">
-                {thumb ? (
-                  <img
-                    src={thumb.dataUrl}
-                    alt={`Page ${i + 1}`}
-                    className="sidebar-thumb-img"
-                    draggable={false}
-                  />
-                ) : isLoading ? (
-                  <div className="sidebar-thumb-placeholder">
-                    <div className="viewer-spinner viewer-spinner-small" />
+  return (
+    <aside
+      className="sidebar"
+      style={{ width: `${width}px` }}
+    >
+      <div className="sidebar-document-row">
+        <span className="sidebar-document-name">
+          {hasDocument ? fileName ?? "Document" : "No document"}
+        </span>
+      </div>
+
+      <div className="sidebar-header">
+        <span className="sidebar-header-title">
+          PAGES ({pageCount})
+        </span>
+        <div className="sidebar-size-controls">
+          <button
+            type="button"
+            aria-label="Decrease thumbnail sidebar width"
+            title="Smaller thumbnails"
+            onClick={onDecreaseWidth}
+            disabled={!canDecreaseWidth}
+            className="sidebar-size-btn"
+          >
+            <MinusIcon style={{ width: 14, height: 14 }} />
+          </button>
+          <button
+            type="button"
+            aria-label="Increase thumbnail sidebar width"
+            title="Larger thumbnails"
+            onClick={onIncreaseWidth}
+            disabled={!canIncreaseWidth}
+            className="sidebar-size-btn"
+          >
+            <PlusIcon style={{ width: 14, height: 14 }} />
+          </button>
+        </div>
+      </div>
+
+      <div
+        ref={viewportRef}
+        className="sidebar-content"
+        style={disabled ? { opacity: 0.5 } : undefined}
+      >
+        {hasDocument ? (
+          <>
+            {Array.from({ length: pageCount }, (_, i) => i + 1).map((page) => {
+              const pageIndex = page - 1;
+              const thumb = thumbnails.get(pageIndex);
+              const isActive = pageIndex === currentPage;
+              const isLoading = loadingPages.has(pageIndex);
+              const pageInfo = docInfo?.pages[pageIndex];
+              const aspectRatio =
+                pageInfo && pageInfo.height_pt > 0
+                  ? `${pageInfo.width_pt} / ${pageInfo.height_pt}`
+                  : "8.5 / 11";
+
+              return (
+                <button
+                  key={page}
+                  type="button"
+                  onClick={() => onSelectPage(pageIndex)}
+                  disabled={disabled}
+                  data-page-index={pageIndex}
+                  ref={(node) => setThumbRef(pageIndex, node)}
+                  className={`sidebar-thumb${isActive ? " sidebar-thumb-active" : ""}${draggedPage === pageIndex ? " sidebar-thumb-dragging" : ""}`}
+                  draggable={!disabled}
+                  onDragStart={() => {
+                    if (!disabled) {
+                      setDraggedPage(pageIndex);
+                    }
+                  }}
+                  onDragOver={(event) => {
+                    if (!disabled) {
+                      event.preventDefault();
+                    }
+                  }}
+                  onDrop={(event) => {
+                    event.preventDefault();
+                    if (!disabled) {
+                      void handleDrop(pageIndex);
+                    }
+                  }}
+                  onDragEnd={() => {
+                    setDraggedPage(null);
+                  }}
+                >
+                  <div
+                    className="sidebar-thumb-img-wrap"
+                    style={{ aspectRatio }}
+                  >
+                    {thumb ? (
+                      <img
+                        src={thumb.dataUrl}
+                        alt={`Page ${page}`}
+                        className="sidebar-thumb-img"
+                        draggable={false}
+                      />
+                    ) : isLoading || visiblePages.has(pageIndex) ? (
+                      <div className="sidebar-thumb-placeholder">
+                        <div className="viewer-spinner viewer-spinner-small" />
+                      </div>
+                    ) : (
+                      <div className="sidebar-thumb-placeholder" />
+                    )}
                   </div>
-                ) : (
-                  <div className="sidebar-thumb-placeholder" />
-                )}
-              </div>
-              <span className="sidebar-thumb-label">{i + 1}</span>
-            </button>
-          );
-        })}
+
+                  <span className="sidebar-thumb-label">{page}</span>
+                </button>
+              );
+            })}
+          </>
+        ) : (
+          <div className="sidebar-empty-state">
+            <p>No pages</p>
+          </div>
+        )}
       </div>
     </aside>
   );

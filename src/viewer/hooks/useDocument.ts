@@ -1,4 +1,4 @@
-// Copyright (c) 2026 PDFluent B.V. All rights reserved.
+// Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
 // This software is proprietary and confidential.
 // Free for personal, non-commercial use.
@@ -18,6 +18,8 @@ interface UseDocumentResult {
   error: string | null;
   isDirty: boolean;
   markDirty: () => void;
+  clearDirty: () => void;
+  updatePageCount: (n: number) => void;
   loadDocument: (source: string | ArrayBuffer) => Promise<void>;
   closeDocument: () => void;
 }
@@ -31,6 +33,12 @@ export function useDocument(engine: PdfEngine | null): UseDocumentResult {
   const [isDirty, setIsDirty] = useState(false);
 
   const markDirty = useCallback(() => { setIsDirty(true); }, []);
+  const clearDirty = useCallback(() => { setIsDirty(false); }, []);
+
+  const updatePageCount = useCallback((n: number): void => {
+    setPageCount(n);
+    setIsDirty(true);
+  }, []);
 
   const loadDocument = useCallback(async (source: string | ArrayBuffer): Promise<void> => {
     if (!engine) return;
@@ -72,5 +80,5 @@ export function useDocument(engine: PdfEngine | null): UseDocumentResult {
     setIsDirty(false);
   }, [engine, doc]);
 
-  return { document: doc, metadata, pageCount, loading, error, isDirty, markDirty, loadDocument, closeDocument };
+  return { document: doc, metadata, pageCount, loading, error, isDirty, markDirty, clearDirty, updatePageCount, loadDocument, closeDocument };
 }
