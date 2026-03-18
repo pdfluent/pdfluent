@@ -161,7 +161,7 @@ describe('FormsModeContent — field-checkbox-indicator', () => {
 
   it('shows Ingeschakeld/Uitgeschakeld label next to indicator', () => {
     const indicatorPos = formsSource.indexOf('data-testid="field-checkbox-indicator"');
-    const labelPos     = formsSource.indexOf('Ingeschakeld', indicatorPos);
+    const labelPos     = formsSource.indexOf("t('forms.enabled')", indicatorPos);
     expect(labelPos).toBeGreaterThan(-1);
     expect(labelPos - indicatorPos).toBeLessThan(700);
   });

@@ -36,7 +36,7 @@ describe('RightContextPanel — doc info: PDF version', () => {
   });
 
   it('uses the label "PDF-versie"', () => {
-    expect(metaBody).toContain('PDF-versie');
+    expect(metaBody).toContain("t('docInfo.pdfVersion'");
   });
 });
 
@@ -58,7 +58,7 @@ describe('RightContextPanel — doc info: creation date', () => {
   });
 
   it('formats using toLocaleDateString with nl-NL locale', () => {
-    expect(metaBody).toContain("toLocaleDateString('nl-NL')");
+    expect(metaBody).toContain("toLocaleDateString(");
   });
 
   it('falls back to "—" when date is invalid or missing', () => {
@@ -70,7 +70,7 @@ describe('RightContextPanel — doc info: creation date', () => {
   });
 
   it('uses the label "Aangemaakt"', () => {
-    expect(metaBody).toContain('Aangemaakt');
+    expect(metaBody).toContain("t('docInfo.created'");
   });
 });
 
@@ -100,6 +100,6 @@ describe('RightContextPanel — doc info version/date: no regressions', () => {
   });
 
   it('no-document fallback still present', () => {
-    expect(metaBody).toContain('Geen document geopend');
+    expect(metaBody).toContain("t('docInfo.noDocument'");
   });
 });

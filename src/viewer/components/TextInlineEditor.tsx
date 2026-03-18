@@ -24,6 +24,7 @@
  */
 
 import { useEffect, useRef, memo } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { TextParagraphTarget } from '../text/textInteractionModel';
 import { pdfRectToDom } from '../text/textInteractionModel';
 
@@ -59,6 +60,7 @@ export const TextInlineEditor = memo(function TextInlineEditor({
   pageHeightPt,
   zoom,
 }: TextInlineEditorProps) {
+  const { t } = useTranslation();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const domRect = pdfRectToDom(target.rect, pageHeightPt, zoom);
 
@@ -147,7 +149,7 @@ export const TextInlineEditor = memo(function TextInlineEditor({
             color: 'var(--muted-foreground, #64748b)',
           }}
         >
-          Annuleren
+          {t('common.cancel')}
         </button>
         <button
           data-testid="text-inline-editor-commit"
@@ -163,7 +165,7 @@ export const TextInlineEditor = memo(function TextInlineEditor({
             fontWeight: 500,
           }}
         >
-          Opslaan
+          {t('common.save')}
         </button>
       </div>
     </div>

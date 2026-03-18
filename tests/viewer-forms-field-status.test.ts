@@ -57,7 +57,7 @@ describe('forms field status — completion summary', () => {
   });
 
   it('completion summary shows count of required fields filled', () => {
-    expect(formsSource).toContain('verplichte velden ingevuld');
+    expect(formsSource).toContain("t('forms.completionRequired'");
   });
 
   it('filters for required AND filled', () => {
@@ -101,7 +101,7 @@ describe('forms field status — per-field indicators', () => {
 
 describe('forms field status — no regressions', () => {
   it('FIELD_TYPE_LABELS still present', () => {
-    expect(panelSource).toContain('FIELD_TYPE_LABELS');
+    expect(panelSource).toContain('FIELD_TYPE_LABEL_KEYS');
   });
 
   it('forms-field-item testid still present', () => {
@@ -113,11 +113,11 @@ describe('forms field status — no regressions', () => {
   });
 
   it('Formuliervelden section title still present', () => {
-    expect(panelSource).toContain('Formuliervelden');
+    expect(panelSource).toContain('rightPanel.formFields');
   });
 
   it('field type label still shown', () => {
-    expect(formsSource).toContain('FIELD_TYPE_LABELS[field.type]');
+    expect(formsSource).toContain('FIELD_TYPE_LABEL_KEYS[field.type]');
   });
 
   it('page index still shown as p.{field.pageIndex + 1}', () => {

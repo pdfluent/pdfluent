@@ -75,7 +75,7 @@ describe('CommentsPanel — grouping by page', () => {
   });
 
   it('shows "Pagina {pageIndex + 1}" in group headings', () => {
-    expect(commentsPanelBody).toContain('Pagina {pageIndex + 1}');
+    expect(commentsPanelBody).toContain("t('review.commentPage', { page: pageIndex + 1 })");
   });
 
   it('groups comments into a Map keyed by pageIndex', () => {
@@ -104,7 +104,7 @@ describe('CommentsPanel — grouping by page', () => {
   });
 
   it('still shows empty state when no comments', () => {
-    expect(commentsPanelBody).toContain('Geen opmerkingen gevonden.');
+    expect(commentsPanelBody).toContain("t('leftNav.noCommentsSide'");
   });
 
   it('uses comment.id as key within a group', () => {
@@ -126,7 +126,7 @@ describe('ReviewModeContent — grouping by page', () => {
   });
 
   it('shows "Pagina {pageIndex + 1}" in group headings', () => {
-    expect(reviewBody).toContain('Pagina {pageIndex + 1}');
+    expect(reviewBody).toContain("t('review.commentPage', { page: pageIndex + 1 })");
   });
 
   it('groups comments into a Map keyed by pageIndex', () => {
@@ -144,7 +144,7 @@ describe('ReviewModeContent — grouping by page', () => {
 
   it('still renders total comment count summary', () => {
     expect(reviewBody).toContain('comments.length');
-    expect(reviewBody).toContain('opmerking');
+    expect(reviewBody).toContain("t('review.commentCount");
   });
 
   it('still renders author per comment', () => {
@@ -156,7 +156,7 @@ describe('ReviewModeContent — grouping by page', () => {
   });
 
   it('still shows empty state when no comments', () => {
-    expect(reviewBody).toContain('Geen opmerkingen gevonden.');
+    expect(reviewBody).toContain("t('leftNav.noCommentsSide'");
   });
 });
 

@@ -8,6 +8,7 @@
 // Shared tool definitions consumed by ModeToolbar and AllToolsPanel.
 // Icons are stored as component references (not rendered JSX) so this
 // module stays plain TypeScript with no JSX dependency.
+// Labels are i18n keys — translate at render time with t(tool.label).
 
 import type { ComponentType } from 'react';
 import {
@@ -51,116 +52,117 @@ export interface ToolDefinition {
   label: string;
 }
 
-/** Human-readable label for each viewer mode — used in AllToolsPanel section headings. */
+/** i18n key for each viewer mode — used in AllToolsPanel section headings. */
 export const MODE_LABELS: Record<ViewerMode, string> = {
-  read:     'Lezen',
-  review:   'Beoordelen',
-  edit:     'Bewerken',
-  organize: 'Indelen',
-  forms:    'Formulieren',
-  protect:  'Beveiligen',
-  convert:  'Converteren',
+  read:     'modes.read',
+  review:   'modes.review',
+  edit:     'modes.edit',
+  organize: 'modes.organize',
+  forms:    'modes.forms',
+  protect:  'modes.protect',
+  convert:  'modes.convert',
 };
 
 /**
  * Tool groups per viewer mode.
  * Each entry is an array of groups; tools within a group are visually separated
  * from the next group by a divider in ModeToolbar.
+ * Labels are i18n keys — translate at render time with t(tool.label).
  */
 export const TOOLS_BY_MODE: Record<ViewerMode, ToolDefinition[][]> = {
   read: [
     [
-      { icon: MousePointerIcon, label: 'Selecteren' },
-      { icon: HandIcon,         label: 'Pannen' },
+      { icon: MousePointerIcon, label: 'toolbar.select' },
+      { icon: HandIcon,         label: 'toolbar.pan' },
     ],
     [
-      { icon: ZoomInIcon,   label: 'Inzoomen' },
-      { icon: ZoomOutIcon,  label: 'Uitzoomen' },
-      { icon: MaximizeIcon, label: 'Volledig scherm' },
+      { icon: ZoomInIcon,   label: 'toolbar.zoomIn' },
+      { icon: ZoomOutIcon,  label: 'toolbar.zoomOut' },
+      { icon: MaximizeIcon, label: 'toolbar.fullscreen' },
     ],
     [
-      { icon: SearchIcon,   label: 'Zoek tekst' },
-      { icon: BookOpenIcon, label: 'Hardop lezen' },
+      { icon: SearchIcon,   label: 'toolbar.searchText' },
+      { icon: BookOpenIcon, label: 'toolbar.readAloud' },
     ],
   ],
   review: [
     [
-      { icon: HighlighterIcon,    label: 'Markeren' },
-      { icon: UnderlineIcon,      label: 'Onderstrepen' },
-      { icon: StrikethroughIcon,  label: 'Doorstrepen' },
+      { icon: HighlighterIcon,    label: 'toolbar.highlight' },
+      { icon: UnderlineIcon,      label: 'toolbar.underline' },
+      { icon: StrikethroughIcon,  label: 'toolbar.strikethrough' },
     ],
     [
-      { icon: StickyNoteIcon,   label: 'Notitie' },
-      { icon: MessageSquareIcon, label: 'Opmerking' },
+      { icon: StickyNoteIcon,    label: 'toolbar.note' },
+      { icon: MessageSquareIcon, label: 'toolbar.comment' },
     ],
     [
-      { icon: PenIcon,    label: 'Vrij tekenen' },
-      { icon: LayersIcon, label: 'Stempel' },
+      { icon: PenIcon,    label: 'toolbar.freeDraw' },
+      { icon: LayersIcon, label: 'toolbar.stamp' },
     ],
   ],
   edit: [
     [
-      { icon: TypeIcon, label: 'Tekst bewerken' },
-      { icon: TypeIcon, label: 'Tekst toevoegen' },
+      { icon: TypeIcon, label: 'toolbar.editText' },
+      { icon: TypeIcon, label: 'toolbar.addText' },
     ],
     [
-      { icon: ImageIcon, label: 'Afbeelding' },
-      { icon: LinkIcon,  label: 'Koppeling' },
+      { icon: ImageIcon, label: 'toolbar.image' },
+      { icon: LinkIcon,  label: 'toolbar.link' },
     ],
     [
-      { icon: SlidersHorizontalIcon, label: 'Koptekst/voettekst' },
-      { icon: LayersIcon,            label: 'Watermerk' },
+      { icon: SlidersHorizontalIcon, label: 'toolbar.headerFooter' },
+      { icon: LayersIcon,            label: 'toolbar.watermark' },
     ],
   ],
   organize: [
     [
-      { icon: LayoutGridIcon, label: 'Pagina invoegen' },
-      { icon: Trash2Icon,     label: 'Pagina verwijderen' },
-      { icon: RotateCcwIcon,  label: 'Links roteren' },
-      { icon: RotateCwIcon,   label: 'Rechts roteren' },
+      { icon: LayoutGridIcon, label: 'toolbar.insertPage' },
+      { icon: Trash2Icon,     label: 'toolbar.deletePage' },
+      { icon: RotateCcwIcon,  label: 'toolbar.rotateLeft' },
+      { icon: RotateCwIcon,   label: 'toolbar.rotateRight' },
     ],
     [
-      { icon: ScissorsIcon, label: 'Splitsen' },
-      { icon: LayersIcon,   label: 'Samenvoegen' },
+      { icon: ScissorsIcon, label: 'toolbar.split' },
+      { icon: LayersIcon,   label: 'toolbar.merge' },
     ],
   ],
   forms: [
     [
-      { icon: SlidersHorizontalIcon, label: 'Automatisch detecteren' },
+      { icon: SlidersHorizontalIcon, label: 'toolbar.autoDetect' },
     ],
     [
-      { icon: TypeIcon,        label: 'Tekstveld' },
-      { icon: CheckSquareIcon, label: 'Selectievakje' },
-      { icon: CircleIcon,      label: 'Keuzerondje' },
+      { icon: TypeIcon,        label: 'toolbar.textField' },
+      { icon: CheckSquareIcon, label: 'toolbar.checkbox' },
+      { icon: CircleIcon,      label: 'toolbar.radioButton' },
     ],
     [
-      { icon: FileSignatureIcon, label: 'Handtekening' },
-      { icon: PenIcon,           label: 'Initialen' },
-      { icon: CalendarIcon,      label: 'Datum' },
+      { icon: FileSignatureIcon, label: 'toolbar.signature' },
+      { icon: PenIcon,           label: 'toolbar.initials' },
+      { icon: CalendarIcon,      label: 'toolbar.date' },
     ],
   ],
   protect: [
     [
-      { icon: LockIcon, label: 'Wachtwoord' },
-      { icon: KeyIcon,  label: 'Machtigingen' },
+      { icon: LockIcon, label: 'toolbar.password' },
+      { icon: KeyIcon,  label: 'toolbar.permissions' },
     ],
     [
-      { icon: EyeOffIcon, label: 'Redigeren' },
-      { icon: Trash2Icon, label: 'Verbergen' },
+      { icon: EyeOffIcon, label: 'toolbar.redact' },
+      { icon: Trash2Icon, label: 'toolbar.hide' },
     ],
     [
-      { icon: SearchIcon,            label: 'Vergelijken' },
-      { icon: SlidersHorizontalIcon, label: 'Toegankelijkheid' },
+      { icon: SearchIcon,            label: 'toolbar.compare' },
+      { icon: SlidersHorizontalIcon, label: 'toolbar.accessibility' },
     ],
   ],
   convert: [
     [
-      { icon: RefreshCwIcon, label: 'Naar PDF' },
-      { icon: LayersIcon,    label: 'PDF exporteren' },
+      { icon: RefreshCwIcon, label: 'toolbar.toPdf' },
+      { icon: LayersIcon,    label: 'toolbar.exportPdf' },
     ],
     [
-      { icon: PackageIcon, label: 'Comprimeren' },
-      { icon: SearchIcon,  label: 'OCR scannen' },
+      { icon: PackageIcon, label: 'toolbar.compress' },
+      { icon: SearchIcon,  label: 'toolbar.ocrScan' },
     ],
   ],
 };

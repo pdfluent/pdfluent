@@ -8,10 +8,24 @@
 import { readFileSync } from 'node:fs';
 import { describe, it, expect } from 'vitest';
 
-const viewerAppSource = readFileSync(
-  new URL('../src/viewer/ViewerApp.tsx', import.meta.url),
-  'utf8'
-);
+const viewerAppSource = [
+  '../src/viewer/hooks/usePageNavigation.ts',
+  '../src/viewer/hooks/useZoomControls.ts',
+  '../src/viewer/hooks/useSidebarState.ts',
+  '../src/viewer/hooks/useUndoRedo.ts',
+  '../src/viewer/hooks/useSearch.ts',
+  '../src/viewer/hooks/useFormFields.ts',
+  '../src/viewer/hooks/useModeManager.ts',
+  '../src/viewer/hooks/useDocumentLifecycle.ts',
+  '../src/viewer/hooks/useCommands.ts',
+  '../src/viewer/hooks/useDragDrop.ts',
+  '../src/viewer/ViewerSidePanels.tsx',
+  '../src/viewer/hooks/useAnnotations.ts',
+  '../src/viewer/hooks/useTextInteraction.ts',
+  '../src/viewer/hooks/useKeyboardShortcuts.ts',
+  '../src/viewer/ViewerApp.tsx',
+  '../src/viewer/WelcomeSection.tsx',
+].map(p => readFileSync(new URL(p, import.meta.url), 'utf8')).join('\n\n');
 
 // Slice just the commands array body for scoped assertions
 const commandsStart = viewerAppSource.indexOf('const commands: Command[] = [');
@@ -25,17 +39,17 @@ const commandsBody  = viewerAppSource.slice(commandsStart, commandsEnd);
 describe('CommandPalette — navigation commands', () => {
   it('includes prev-page command', () => {
     expect(commandsBody).toContain("id: 'prev-page'");
-    expect(commandsBody).toContain("label: 'Vorige pagina'");
+    expect(commandsBody).toContain("label: t('commands.prevPage')");
   });
 
   it('includes next-page command', () => {
     expect(commandsBody).toContain("id: 'next-page'");
-    expect(commandsBody).toContain("label: 'Volgende pagina'");
+    expect(commandsBody).toContain("label: t('commands.nextPage')");
   });
 
   it('includes first-page command', () => {
     expect(commandsBody).toContain("id: 'first-page'");
-    expect(commandsBody).toContain("label: 'Eerste pagina'");
+    expect(commandsBody).toContain("label: t('commands.firstPage')");
   });
 
   it('first-page sets pageIndex to 0', () => {
@@ -44,7 +58,7 @@ describe('CommandPalette — navigation commands', () => {
 
   it('includes last-page command', () => {
     expect(commandsBody).toContain("id: 'last-page'");
-    expect(commandsBody).toContain("label: 'Laatste pagina'");
+    expect(commandsBody).toContain("label: t('commands.lastPage')");
   });
 
   it('last-page sets pageIndex to pageCount - 1', () => {
@@ -67,7 +81,7 @@ describe('CommandPalette — navigation commands', () => {
 describe('CommandPalette — document action commands', () => {
   it('includes export command', () => {
     expect(commandsBody).toContain("id: 'export'");
-    expect(commandsBody).toContain("label: 'Exporteren'");
+    expect(commandsBody).toContain("label: t('commands.export')");
   });
 
   it('export action opens the export dialog', () => {
@@ -76,7 +90,7 @@ describe('CommandPalette — document action commands', () => {
 
   it('includes fullscreen command', () => {
     expect(commandsBody).toContain("id: 'fullscreen'");
-    expect(commandsBody).toContain("label: 'Volledig scherm aan/uit'");
+    expect(commandsBody).toContain("label: t('commands.fullscreen')");
   });
 
   it('fullscreen command has pageCount === 0 guard', () => {
@@ -91,7 +105,7 @@ describe('CommandPalette — document action commands', () => {
 
   it('includes shortcut-sheet command', () => {
     expect(commandsBody).toContain("id: 'shortcut-sheet'");
-    expect(commandsBody).toContain("label: 'Sneltoetsen'");
+    expect(commandsBody).toContain("label: t('commands.shortcuts')");
   });
 
   it('shortcut-sheet action opens the shortcut sheet', () => {
@@ -100,7 +114,7 @@ describe('CommandPalette — document action commands', () => {
 
   it('includes close-document command', () => {
     expect(commandsBody).toContain("id: 'close-document'");
-    expect(commandsBody).toContain("label: 'Document sluiten'");
+    expect(commandsBody).toContain("label: t('commands.closeDocument')");
   });
 
   it('close-document has isDirty dialog guard', () => {
@@ -125,7 +139,7 @@ describe('CommandPalette — recent files commands', () => {
   });
 
   it('recent file label is Open: <filename>', () => {
-    expect(commandsBody).toContain('`Open: ${name}`');
+    expect(commandsBody).toContain("t('commands.openRecent', { name })");
   });
 
   it('recent file extracts filename from path', () => {
@@ -149,22 +163,22 @@ describe('CommandPalette — recent files commands', () => {
 describe('CommandPalette — zoom commands (no regressions)', () => {
   it('zoom-in still present', () => {
     expect(commandsBody).toContain("id: 'zoom-in'");
-    expect(commandsBody).toContain("label: 'Inzoomen'");
+    expect(commandsBody).toContain("label: t('commands.zoomIn')");
   });
 
   it('zoom-out still present', () => {
     expect(commandsBody).toContain("id: 'zoom-out'");
-    expect(commandsBody).toContain("label: 'Uitzoomen'");
+    expect(commandsBody).toContain("label: t('commands.zoomOut')");
   });
 
   it('zoom-100 still present', () => {
     expect(commandsBody).toContain("id: 'zoom-100'");
-    expect(commandsBody).toContain("label: 'Zoom 100%'");
+    expect(commandsBody).toContain("label: t('commands.zoom100')");
   });
 
   it('zoom-200 still present', () => {
     expect(commandsBody).toContain("id: 'zoom-200'");
-    expect(commandsBody).toContain("label: 'Zoom 200%'");
+    expect(commandsBody).toContain("label: t('commands.zoom200')");
   });
 });
 
@@ -175,7 +189,7 @@ describe('CommandPalette — zoom commands (no regressions)', () => {
 describe('CommandPalette — mode commands (no regressions)', () => {
   it('mode-read still present', () => {
     expect(commandsBody).toContain("id: 'mode-read'");
-    expect(commandsBody).toContain("label: 'Modus: Lezen'");
+    expect(commandsBody).toContain("label: t('commands.modeRead')");
   });
 
   it('mode-review still present', () => {

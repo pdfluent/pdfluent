@@ -13,10 +13,24 @@ const topBarSource = readFileSync(
   'utf8'
 );
 
-const viewerAppSource = readFileSync(
-  new URL('../src/viewer/ViewerApp.tsx', import.meta.url),
-  'utf8'
-);
+const viewerAppSource = [
+  '../src/viewer/hooks/usePageNavigation.ts',
+  '../src/viewer/hooks/useZoomControls.ts',
+  '../src/viewer/hooks/useSidebarState.ts',
+  '../src/viewer/hooks/useUndoRedo.ts',
+  '../src/viewer/hooks/useSearch.ts',
+  '../src/viewer/hooks/useFormFields.ts',
+  '../src/viewer/hooks/useModeManager.ts',
+  '../src/viewer/hooks/useDocumentLifecycle.ts',
+  '../src/viewer/hooks/useCommands.ts',
+  '../src/viewer/hooks/useDragDrop.ts',
+  '../src/viewer/ViewerSidePanels.tsx',
+  '../src/viewer/hooks/useAnnotations.ts',
+  '../src/viewer/hooks/useTextInteraction.ts',
+  '../src/viewer/hooks/useKeyboardShortcuts.ts',
+  '../src/viewer/ViewerApp.tsx',
+  '../src/viewer/WelcomeSection.tsx',
+].map(p => readFileSync(new URL(p, import.meta.url), 'utf8')).join('\n\n');
 
 const useDocumentSource = readFileSync(
   new URL('../src/viewer/hooks/useDocument.ts', import.meta.url),
@@ -93,21 +107,21 @@ describe('TopBar — task queue integration', () => {
   });
 
   it('pushes a running task for in-place save', () => {
-    expect(topBarSource).toContain('Opslaan…');
+    expect(topBarSource).toContain("t('tasks.savingLabel')");
     expect(topBarSource).toContain("status: 'running'");
   });
 
   it('pushes a running task for save-as', () => {
-    expect(topBarSource).toContain('Opslaan als…');
+    expect(topBarSource).toContain("t('tasks.savingAsLabel')");
   });
 
   it('updates task to done on success', () => {
-    expect(topBarSource).toContain('Opgeslagen');
+    expect(topBarSource).toContain("t('tasks.savedLabel')");
     expect(topBarSource).toContain("status: 'done'");
   });
 
   it('updates task to error on failure', () => {
-    expect(topBarSource).toContain('Opslaan mislukt');
+    expect(topBarSource).toContain("t('tasks.saveFailed')");
     expect(topBarSource).toContain("status: 'error'");
   });
 
@@ -162,7 +176,7 @@ describe('TopBar — save button', () => {
   });
 
   it('shows Opslaan (⌘S) title when saveable', () => {
-    expect(topBarSource).toContain('Opslaan (⌘S)');
+    expect(topBarSource).toContain("t('topbar.saveTooltip'");
   });
 });
 

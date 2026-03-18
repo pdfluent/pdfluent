@@ -6,6 +6,7 @@
 // See https://pdfluent.com/license for terms.
 
 import { useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { XIcon } from 'lucide-react';
 import { LanguageSwitcher } from './LanguageSwitcher';
 
@@ -24,51 +25,67 @@ interface ShortcutGroup {
 }
 
 // ---------------------------------------------------------------------------
-// Shortcut data — only genuinely implemented shortcuts are listed here
+// Shortcut data keys — only genuinely implemented shortcuts are listed here
 // ---------------------------------------------------------------------------
 
-export const SHORTCUT_GROUPS: ShortcutGroup[] = [
+interface ShortcutRowKeys {
+  keys: string;
+  descriptionKey: string;
+}
+
+interface ShortcutGroupKeys {
+  titleKey: string;
+  shortcuts: ShortcutRowKeys[];
+}
+
+const SHORTCUT_GROUP_KEYS: ShortcutGroupKeys[] = [
   {
-    title: 'Navigatie',
+    titleKey: 'shortcuts.navigation',
     shortcuts: [
-      { keys: '← / →',             description: 'Vorige / volgende pagina' },
-      { keys: 'PageUp / PageDown',  description: 'Vorige / volgende pagina' },
-      { keys: 'Home / End',         description: 'Eerste / laatste pagina' },
-      { keys: '⌘G / Ctrl+G',       description: 'Ga naar pagina' },
+      { keys: '← / →',             descriptionKey: 'shortcuts.prevNextPage' },
+      { keys: 'PageUp / PageDown',  descriptionKey: 'shortcuts.prevNextPage' },
+      { keys: 'Home / End',         descriptionKey: 'shortcuts.firstLastPage' },
+      { keys: '⌘G / Ctrl+G',       descriptionKey: 'shortcuts.goToPage' },
     ],
   },
   {
-    title: 'Zoom',
+    titleKey: 'shortcuts.zoom',
     shortcuts: [
-      { keys: '⌘= / Ctrl+=',       description: 'Inzoomen' },
-      { keys: '⌘− / Ctrl+−',       description: 'Uitzoomen' },
-      { keys: '⌘0 / Ctrl+0',       description: 'Zoom 100%' },
-      { keys: '⌘/Ctrl + Scroll',   description: 'Zoom aanpassen' },
+      { keys: '⌘= / Ctrl+=',       descriptionKey: 'shortcuts.zoomIn' },
+      { keys: '⌘− / Ctrl+−',       descriptionKey: 'shortcuts.zoomOut' },
+      { keys: '⌘0 / Ctrl+0',       descriptionKey: 'shortcuts.zoom100' },
+      { keys: '⌘/Ctrl + Scroll',   descriptionKey: 'shortcuts.fitZoom' },
     ],
   },
   {
-    title: 'Document',
+    titleKey: 'shortcuts.document',
     shortcuts: [
-      { keys: '⌘S / Ctrl+S',       description: 'Opslaan' },
-      { keys: '⌘E / Ctrl+E',       description: 'Exporteren' },
-      { keys: '⌘K / Ctrl+K',       description: 'Opdrachtenpalette' },
+      { keys: '⌘S / Ctrl+S',       descriptionKey: 'shortcuts.save' },
+      { keys: '⌘E / Ctrl+E',       descriptionKey: 'shortcuts.export' },
+      { keys: '⌘K / Ctrl+K',       descriptionKey: 'shortcuts.commandPalette' },
     ],
   },
   {
-    title: 'Weergave',
+    titleKey: 'shortcuts.view',
     shortcuts: [
-      { keys: 'F11 / ⌘⇧F',         description: 'Volledig scherm aan/uit' },
-      { keys: '1 – 7',             description: 'Modus wisselen' },
+      { keys: 'F11 / ⌘⇧F',         descriptionKey: 'shortcuts.toggleFullscreen' },
+      { keys: '1 – 7',             descriptionKey: 'shortcuts.switchMode' },
     ],
   },
   {
-    title: 'Dialogen',
+    titleKey: 'shortcuts.dialogs',
     shortcuts: [
-      { keys: 'Escape',            description: 'Dialoog sluiten' },
-      { keys: '⌘? / Ctrl+?',      description: 'Dit overzicht' },
+      { keys: 'Escape',            descriptionKey: 'shortcuts.closeDialog' },
+      { keys: '⌘? / Ctrl+?',      descriptionKey: 'shortcuts.thisOverview' },
     ],
   },
 ];
+
+// Keep legacy export for any tests that import SHORTCUT_GROUPS
+export const SHORTCUT_GROUPS: ShortcutGroup[] = SHORTCUT_GROUP_KEYS.map(g => ({
+  title: g.titleKey,
+  shortcuts: g.shortcuts.map(s => ({ keys: s.keys, description: s.descriptionKey })),
+}));
 
 // ---------------------------------------------------------------------------
 // Props
@@ -84,6 +101,7 @@ interface ShortcutSheetProps {
 // ---------------------------------------------------------------------------
 
 export function ShortcutSheet({ isOpen, onClose }: ShortcutSheetProps) {
+  const { t } = useTranslation();
   // Stable ref so the Escape listener always calls the latest onClose
   const onCloseRef = useRef(onClose);
   useEffect(() => { onCloseRef.current = onClose; });
@@ -119,11 +137,11 @@ export function ShortcutSheet({ isOpen, onClose }: ShortcutSheetProps) {
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-border">
           <h2 id="shortcut-sheet-title" className="text-sm font-semibold text-foreground">
-            Sneltoetsen
+            {t('shortcuts.title')}
           </h2>
           <button
             onClick={onClose}
-            aria-label="Sneltoetsenoverzicht sluiten"
+            aria-label={t('shortcuts.closeAriaLabel')}
             data-testid="shortcut-sheet-close"
             className="p-0.5 text-muted-foreground hover:text-foreground rounded transition-colors"
           >
@@ -133,10 +151,10 @@ export function ShortcutSheet({ isOpen, onClose }: ShortcutSheetProps) {
 
         {/* Body */}
         <div className="overflow-y-auto max-h-[75vh] px-4 py-3 flex flex-col gap-4">
-          {SHORTCUT_GROUPS.map(group => (
-            <div key={group.title}>
+          {SHORTCUT_GROUP_KEYS.map(group => (
+            <div key={group.titleKey}>
               <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground mb-1.5">
-                {group.title}
+                {t(group.titleKey)}
               </p>
               <div className="flex flex-col gap-0.5">
                 {group.shortcuts.map(row => (
@@ -149,7 +167,7 @@ export function ShortcutSheet({ isOpen, onClose }: ShortcutSheetProps) {
                       {row.keys}
                     </kbd>
                     <span className="text-[11px] text-muted-foreground text-right">
-                      {row.description}
+                      {t(row.descriptionKey)}
                     </span>
                   </div>
                 ))}

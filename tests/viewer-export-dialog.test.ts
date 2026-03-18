@@ -18,10 +18,24 @@ const topBarSource = readFileSync(
   'utf8'
 );
 
-const viewerAppSource = readFileSync(
-  new URL('../src/viewer/ViewerApp.tsx', import.meta.url),
-  'utf8'
-);
+const viewerAppSource = [
+  '../src/viewer/hooks/usePageNavigation.ts',
+  '../src/viewer/hooks/useZoomControls.ts',
+  '../src/viewer/hooks/useSidebarState.ts',
+  '../src/viewer/hooks/useUndoRedo.ts',
+  '../src/viewer/hooks/useSearch.ts',
+  '../src/viewer/hooks/useFormFields.ts',
+  '../src/viewer/hooks/useModeManager.ts',
+  '../src/viewer/hooks/useDocumentLifecycle.ts',
+  '../src/viewer/hooks/useCommands.ts',
+  '../src/viewer/hooks/useDragDrop.ts',
+  '../src/viewer/ViewerSidePanels.tsx',
+  '../src/viewer/hooks/useAnnotations.ts',
+  '../src/viewer/hooks/useTextInteraction.ts',
+  '../src/viewer/hooks/useKeyboardShortcuts.ts',
+  '../src/viewer/ViewerApp.tsx',
+  '../src/viewer/WelcomeSection.tsx',
+].map(p => readFileSync(new URL(p, import.meta.url), 'utf8')).join('\n\n');
 
 // ---------------------------------------------------------------------------
 // ExportDialog — format options
@@ -41,10 +55,10 @@ describe('ExportDialog — format options', () => {
   });
 
   it('uses FORMAT_LABELS for format display names', () => {
-    expect(exportDialogSource).toContain('FORMAT_LABELS');
-    expect(exportDialogSource).toContain('PDF');
-    expect(exportDialogSource).toContain('Gecomprimeerde PDF');
-    expect(exportDialogSource).toContain('Word-document (.docx)');
+    expect(exportDialogSource).toContain('FORMAT_LABEL_KEYS');
+    expect(exportDialogSource).toContain("'pdf'");
+    expect(exportDialogSource).toContain("'compressed_pdf'");
+    expect(exportDialogSource).toContain("'docx'");
   });
 
   it('invokes save_pdf for PDF export', () => {
@@ -87,8 +101,8 @@ describe('ExportDialog — page range controls', () => {
   it('offers current page and all pages options', () => {
     expect(exportDialogSource).toContain("value=\"current\"");
     expect(exportDialogSource).toContain("value=\"all\"");
-    expect(exportDialogSource).toContain('Huidige pagina');
-    expect(exportDialogSource).toContain("Alle pagina's");
+    expect(exportDialogSource).toContain("t('exportDialog.currentPage'");
+    expect(exportDialogSource).toContain("t('exportDialog.allPages'");
   });
 
   it('exports all pages sequentially with progress update', () => {
@@ -156,11 +170,11 @@ describe('ExportDialog — dialog structure', () => {
   });
 
   it('renders a cancel button', () => {
-    expect(exportDialogSource).toContain('Annuleren');
+    expect(exportDialogSource).toContain("t('common.cancel'");
   });
 
   it('renders an export button', () => {
-    expect(exportDialogSource).toContain('Exporteren');
+    expect(exportDialogSource).toContain("t('common.export'");
   });
 
   it('export button is disabled in non-Tauri environments', () => {

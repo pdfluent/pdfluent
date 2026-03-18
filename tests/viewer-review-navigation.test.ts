@@ -13,10 +13,24 @@ const rightPanelSource = readFileSync(
   'utf8'
 );
 
-const viewerAppSource = readFileSync(
-  new URL('../src/viewer/ViewerApp.tsx', import.meta.url),
-  'utf8'
-);
+const viewerAppSource = [
+  '../src/viewer/hooks/usePageNavigation.ts',
+  '../src/viewer/hooks/useZoomControls.ts',
+  '../src/viewer/hooks/useSidebarState.ts',
+  '../src/viewer/hooks/useUndoRedo.ts',
+  '../src/viewer/hooks/useSearch.ts',
+  '../src/viewer/hooks/useFormFields.ts',
+  '../src/viewer/hooks/useModeManager.ts',
+  '../src/viewer/hooks/useDocumentLifecycle.ts',
+  '../src/viewer/hooks/useCommands.ts',
+  '../src/viewer/hooks/useDragDrop.ts',
+  '../src/viewer/ViewerSidePanels.tsx',
+  '../src/viewer/hooks/useAnnotations.ts',
+  '../src/viewer/hooks/useTextInteraction.ts',
+  '../src/viewer/hooks/useKeyboardShortcuts.ts',
+  '../src/viewer/ViewerApp.tsx',
+  '../src/viewer/WelcomeSection.tsx',
+].map(p => readFileSync(new URL(p, import.meta.url), 'utf8')).join('\n\n');
 
 // ---------------------------------------------------------------------------
 // RightContextPanel — navigation button props
@@ -76,14 +90,14 @@ describe('RightContextPanel — navigation buttons rendered', () => {
     const btnStart = rightPanelSource.indexOf('prev-comment-btn');
     const btnEnd = rightPanelSource.indexOf('</button>', btnStart) + 9;
     const btnBody = rightPanelSource.slice(btnStart, btnEnd);
-    expect(btnBody).toContain('Vorige');
+    expect(btnBody).toContain("t('review.prev')");
   });
 
   it('next button label contains Volgende', () => {
     const btnStart = rightPanelSource.indexOf('next-comment-btn');
     const btnEnd = rightPanelSource.indexOf('</button>', btnStart) + 9;
     const btnBody = rightPanelSource.slice(btnStart, btnEnd);
-    expect(btnBody).toContain('Volgende');
+    expect(btnBody).toContain("t('review.next')");
   });
 });
 

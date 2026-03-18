@@ -153,7 +153,7 @@ describe('OcrPanel — run OCR button', () => {
     const btnEnd = rightPanelSource.indexOf('</button>', btnStart) + 9;
     const btnBody = rightPanelSource.slice(btnStart, btnEnd);
     expect(btnBody).toContain('ocrRunning');
-    expect(btnBody).toContain('OCR bezig');
+    expect(btnBody).toContain("t('ocr.running')");
   });
 });
 
@@ -177,7 +177,7 @@ describe('OcrPanel — scanned page count', () => {
 
 describe('RightContextPanel — OCR CollapsibleSection in review mode', () => {
   it('renders OcrPanel inside a CollapsibleSection with title "OCR"', () => {
-    expect(rightPanelSource).toContain('<CollapsibleSection title="OCR">');
+    expect(rightPanelSource).toContain("CollapsibleSection title={t('rightPanel.ocr')}");
     expect(rightPanelSource).toContain('<OcrPanel');
   });
 

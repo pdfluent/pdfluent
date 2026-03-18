@@ -26,7 +26,7 @@ describe('ReviewModeContent — buildExportMarkdown', () => {
     const fnStart = rightPanelSource.indexOf('function buildExportMarkdown()');
     const fnEnd = rightPanelSource.indexOf('\n  }', fnStart) + 4;
     const fnBody = rightPanelSource.slice(fnStart, fnEnd);
-    expect(fnBody).toContain('Review samenvatting');
+    expect(fnBody).toContain('Review summary');
   });
 
   it('includes page number (pageIndex + 1) in output', () => {

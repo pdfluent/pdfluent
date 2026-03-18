@@ -6,6 +6,7 @@
 // See https://pdfluent.com/license for terms.
 
 import { useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 
 interface UnsavedChangesDialogProps {
   isOpen: boolean;
@@ -16,6 +17,7 @@ interface UnsavedChangesDialogProps {
 }
 
 export function UnsavedChangesDialog({ isOpen, canSave, onSave, onDiscard, onCancel }: UnsavedChangesDialogProps) {
+  const { t } = useTranslation();
   // Stable ref so the Escape listener always calls the latest onCancel
   const onCancelRef = useRef(onCancel);
   useEffect(() => { onCancelRef.current = onCancel; });
@@ -54,10 +56,10 @@ export function UnsavedChangesDialog({ isOpen, canSave, onSave, onDiscard, onCan
             id="unsaved-dialog-title"
             className="text-sm font-semibold text-foreground"
           >
-            Niet-opgeslagen wijzigingen
+            {t('unsavedChanges.title')}
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            Wil je de wijzigingen in dit document opslaan voordat je verdergaat?
+            {t('unsavedChanges.message')}
           </p>
         </div>
 
@@ -67,14 +69,14 @@ export function UnsavedChangesDialog({ isOpen, canSave, onSave, onDiscard, onCan
             data-testid="unsaved-cancel-btn"
             className="px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors"
           >
-            Annuleren
+            {t('unsavedChanges.cancel')}
           </button>
           <button
             onClick={onDiscard}
             data-testid="unsaved-discard-btn"
             className="px-3 py-1.5 text-sm font-medium text-foreground border border-border rounded-md hover:bg-muted transition-colors"
           >
-            Niet opslaan
+            {t('unsavedChanges.discard')}
           </button>
           <button
             onClick={onSave}
@@ -82,7 +84,7 @@ export function UnsavedChangesDialog({ isOpen, canSave, onSave, onDiscard, onCan
             data-testid="unsaved-save-btn"
             className="px-3 py-1.5 text-sm font-medium rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           >
-            Opslaan
+            {t('unsavedChanges.save')}
           </button>
         </div>
       </div>

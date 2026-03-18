@@ -13,10 +13,24 @@ const panelSource = readFileSync(
   'utf8'
 );
 
-const viewerAppSource = readFileSync(
-  new URL('../src/viewer/ViewerApp.tsx', import.meta.url),
-  'utf8'
-);
+const viewerAppSource = [
+  '../src/viewer/hooks/usePageNavigation.ts',
+  '../src/viewer/hooks/useZoomControls.ts',
+  '../src/viewer/hooks/useSidebarState.ts',
+  '../src/viewer/hooks/useUndoRedo.ts',
+  '../src/viewer/hooks/useSearch.ts',
+  '../src/viewer/hooks/useFormFields.ts',
+  '../src/viewer/hooks/useModeManager.ts',
+  '../src/viewer/hooks/useDocumentLifecycle.ts',
+  '../src/viewer/hooks/useCommands.ts',
+  '../src/viewer/hooks/useDragDrop.ts',
+  '../src/viewer/ViewerSidePanels.tsx',
+  '../src/viewer/hooks/useAnnotations.ts',
+  '../src/viewer/hooks/useTextInteraction.ts',
+  '../src/viewer/hooks/useKeyboardShortcuts.ts',
+  '../src/viewer/ViewerApp.tsx',
+  '../src/viewer/WelcomeSection.tsx',
+].map(p => readFileSync(new URL(p, import.meta.url), 'utf8')).join('\n\n');
 
 // ---------------------------------------------------------------------------
 // RightContextPanelProps — 4 new props
@@ -215,7 +229,7 @@ describe('RightContextPanel — panel sync: no regressions', () => {
   });
 
   it('FIELD_TYPE_LABELS still used in FormsModeContent', () => {
-    expect(panelSource).toContain('FIELD_TYPE_LABELS');
+    expect(panelSource).toContain('FIELD_TYPE_LABEL_KEYS');
   });
 
   it('EncryptDecryptControls still present in protect mode', () => {

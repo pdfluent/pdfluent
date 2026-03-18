@@ -6,6 +6,7 @@
 // See https://pdfluent.com/license for terms.
 
 import { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { RotateCwIcon, Trash2Icon, CheckSquareIcon, SquareIcon, XIcon, FilePlusIcon, ScissorsIcon, DownloadIcon, LogInIcon } from 'lucide-react';
 import { useTaskQueueContext } from '../context/TaskQueueContext';
 
@@ -34,6 +35,7 @@ const isTauri = typeof window !== 'undefined' && '__TAURI__' in window;
 // ---------------------------------------------------------------------------
 
 export function OrganizeGrid({ thumbnails, pageCount, onPageMutation, onMarkDirty }: OrganizeGridProps) {
+  const { t } = useTranslation();
   const { push, update } = useTaskQueueContext();
 
   // Multi-page selection state
@@ -101,28 +103,28 @@ export function OrganizeGrid({ thumbnails, pageCount, onPageMutation, onMarkDirt
   async function handleDeletePage(pageIndex: number): Promise<void> {
     if (!isTauri || pageCount <= 1) return;
     const taskId = `delete-page-${Date.now()}`;
-    push({ id: taskId, label: `Pagina ${pageIndex + 1} verwijderen…`, progress: null, status: 'running' });
+    push({ id: taskId, label: t('tasks.deletePageRunning', { page: pageIndex + 1 }), progress: null, status: 'running' });
     try {
       const { invoke } = await import('@tauri-apps/api/core');
       const result = await invoke<{ page_count: number }>('delete_pages', { pageIndices: [pageIndex] });
-      update(taskId, { status: 'done', label: `Pagina ${pageIndex + 1} verwijderd` });
+      update(taskId, { status: 'done', label: t('tasks.deletePageDone', { page: pageIndex + 1 }) });
       onPageMutation(result.page_count);
     } catch {
-      update(taskId, { status: 'error', label: 'Verwijderen mislukt' });
+      update(taskId, { status: 'error', label: t('tasks.deleteFailed') });
     }
   }
 
   async function handleRotatePage(pageIndex: number): Promise<void> {
     if (!isTauri) return;
     const taskId = `rotate-page-${Date.now()}`;
-    push({ id: taskId, label: `Pagina ${pageIndex + 1} roteren…`, progress: null, status: 'running' });
+    push({ id: taskId, label: t('tasks.rotatePageRunning', { page: pageIndex + 1 }), progress: null, status: 'running' });
     try {
       const { invoke } = await import('@tauri-apps/api/core');
       const result = await invoke<{ page_count: number }>('rotate_pages', { pageIndices: [pageIndex], rotation: 90 });
-      update(taskId, { status: 'done', label: `Pagina ${pageIndex + 1} geroteerd` });
+      update(taskId, { status: 'done', label: t('tasks.rotatePageDone', { page: pageIndex + 1 }) });
       onPageMutation(result.page_count);
     } catch {
-      update(taskId, { status: 'error', label: 'Roteren mislukt' });
+      update(taskId, { status: 'error', label: t('tasks.rotateFailed') });
     }
   }
 
@@ -132,15 +134,15 @@ export function OrganizeGrid({ thumbnails, pageCount, onPageMutation, onMarkDirt
     if (selectedPages.size >= pageCount) return;
     const indices = Array.from(selectedPages).sort((a, b) => a - b);
     const taskId = `batch-delete-${Date.now()}`;
-    push({ id: taskId, label: `${indices.length} pagina's verwijderen…`, progress: null, status: 'running' });
+    push({ id: taskId, label: t('tasks.deleteManyRunning', { count: indices.length }), progress: null, status: 'running' });
     try {
       const { invoke } = await import('@tauri-apps/api/core');
       const result = await invoke<{ page_count: number }>('delete_pages', { pageIndices: indices });
-      update(taskId, { status: 'done', label: `${indices.length} pagina's verwijderd` });
+      update(taskId, { status: 'done', label: t('tasks.deleteManyDone', { count: indices.length }) });
       clearSelection();
       onPageMutation(result.page_count);
     } catch {
-      update(taskId, { status: 'error', label: 'Verwijderen mislukt' });
+      update(taskId, { status: 'error', label: t('tasks.deleteFailed') });
     }
   }
 
@@ -148,15 +150,15 @@ export function OrganizeGrid({ thumbnails, pageCount, onPageMutation, onMarkDirt
     if (!isTauri || selectedPages.size === 0) return;
     const indices = Array.from(selectedPages).sort((a, b) => a - b);
     const taskId = `batch-rotate-${Date.now()}`;
-    push({ id: taskId, label: `${indices.length} pagina's roteren…`, progress: null, status: 'running' });
+    push({ id: taskId, label: t('tasks.batchRotateRunning', { count: indices.length }), progress: null, status: 'running' });
     try {
       const { invoke } = await import('@tauri-apps/api/core');
       const result = await invoke<{ page_count: number }>('rotate_pages', { pageIndices: indices, rotation: 90 });
-      update(taskId, { status: 'done', label: `${indices.length} pagina's geroteerd` });
+      update(taskId, { status: 'done', label: t('tasks.batchRotateDone', { count: indices.length }) });
       clearSelection();
       onPageMutation(result.page_count);
     } catch {
-      update(taskId, { status: 'error', label: 'Roteren mislukt' });
+      update(taskId, { status: 'error', label: t('tasks.rotateFailed') });
     }
   }
 
@@ -334,7 +336,7 @@ export function OrganizeGrid({ thumbnails, pageCount, onPageMutation, onMarkDirt
             data-testid="selection-count"
             className="text-xs font-medium text-primary tabular-nums shrink-0"
           >
-            {selectedPages.size} geselecteerd
+            {t('organize.selectedCount', { count: selectedPages.size })}
           </span>
           <div className="flex items-center gap-2 ml-auto flex-wrap">
             <button
@@ -344,7 +346,7 @@ export function OrganizeGrid({ thumbnails, pageCount, onPageMutation, onMarkDirt
               className="flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-md bg-background border border-border text-foreground hover:bg-muted transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
               <RotateCwIcon className="w-3.5 h-3.5" />
-              Roteer
+              {t('organize.rotate')}
             </button>
             <button
               onClick={() => { void handleInsertPdf(); }}
@@ -354,7 +356,7 @@ export function OrganizeGrid({ thumbnails, pageCount, onPageMutation, onMarkDirt
               className="flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-md bg-background border border-border text-foreground hover:bg-muted transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
               <LogInIcon className="w-3.5 h-3.5" />
-              Invoegen vóór
+              {t('organize.insertBefore')}
             </button>
             <button
               onClick={() => { void handleExportSelection(); }}
@@ -364,7 +366,7 @@ export function OrganizeGrid({ thumbnails, pageCount, onPageMutation, onMarkDirt
               className="flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-md bg-background border border-border text-foreground hover:bg-muted transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
               <DownloadIcon className="w-3.5 h-3.5" />
-              Exporteer selectie
+              {t('organize.exportSelection')}
             </button>
             <button
               onClick={() => { void handleBatchDelete(); }}
@@ -373,7 +375,7 @@ export function OrganizeGrid({ thumbnails, pageCount, onPageMutation, onMarkDirt
               className="flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-md bg-destructive/10 border border-destructive/30 text-destructive hover:bg-destructive/20 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
               <Trash2Icon className="w-3.5 h-3.5" />
-              Verwijder
+              {t('common.delete')}
             </button>
             <button
               onClick={clearSelection}
@@ -397,7 +399,7 @@ export function OrganizeGrid({ thumbnails, pageCount, onPageMutation, onMarkDirt
             className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
           >
             <SquareIcon className="w-3.5 h-3.5" />
-            Alles selecteren
+            {t('organize.selectAll')}
           </button>
           <div className="flex items-center gap-2 ml-auto flex-wrap">
             <button
@@ -408,7 +410,7 @@ export function OrganizeGrid({ thumbnails, pageCount, onPageMutation, onMarkDirt
               className="flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-md bg-background border border-border text-foreground hover:bg-muted transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
               <FilePlusIcon className="w-3.5 h-3.5" />
-              PDF toevoegen
+              {t('organize.addPdf')}
             </button>
             {pageCount > 1 && (
               <button
@@ -419,7 +421,7 @@ export function OrganizeGrid({ thumbnails, pageCount, onPageMutation, onMarkDirt
                 className="flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-md bg-background border border-border text-foreground hover:bg-muted transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 <ScissorsIcon className="w-3.5 h-3.5" />
-                Splits in losse pagina's
+                {t('organize.splitPages')}
               </button>
             )}
           </div>
@@ -433,14 +435,14 @@ export function OrganizeGrid({ thumbnails, pageCount, onPageMutation, onMarkDirt
           className="flex items-center gap-3 px-6 py-2 bg-amber-500/10 border-b border-amber-500/30 shrink-0"
         >
           <span className="text-xs text-amber-700 dark:text-amber-400 flex-1">
-            Volgorde gewijzigd — klik Toepassen om op te slaan
+            {t('organize.orderChanged')}
           </span>
           <button
             data-testid="organize-cancel-order-btn"
             onClick={handleCancelOrder}
             className="px-3 py-1 text-xs font-medium rounded-md bg-background border border-border text-foreground hover:bg-muted transition-colors"
           >
-            Annuleren
+            {t('common.cancel')}
           </button>
           <button
             data-testid="organize-apply-order-btn"
@@ -448,7 +450,7 @@ export function OrganizeGrid({ thumbnails, pageCount, onPageMutation, onMarkDirt
             disabled={!isTauri}
             className="px-3 py-1 text-xs font-medium rounded-md bg-primary text-primary-foreground hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
           >
-            Toepassen
+            {t('common.apply')}
           </button>
         </div>
       )}

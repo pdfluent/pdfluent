@@ -126,10 +126,16 @@ test.describe('interaction infrastructure — source readiness', () => {
   });
 
   test('ViewerApp imports the interaction modules', () => {
-    const viewerAppSrc = readFileSync(
-      join(__dir, '../../../src/viewer/ViewerApp.tsx'),
-      'utf8',
-    );
+    const viewerAppSrc = [
+      '../../../src/viewer/hooks/usePageNavigation.ts',
+      '../../../src/viewer/hooks/useZoomControls.ts',
+      '../../../src/viewer/hooks/useSidebarState.ts',
+      '../../../src/viewer/hooks/useUndoRedo.ts',
+      '../../../src/viewer/hooks/useSearch.ts',
+      '../../../src/viewer/hooks/useFormFields.ts',
+      '../../../src/viewer/hooks/useModeManager.ts',
+      '../../../src/viewer/ViewerApp.tsx',
+    ].map(p => readFileSync(join(__dir, p), 'utf8')).join('\n\n');
     expect(viewerAppSrc).toContain("from './interaction/hoverController'");
     expect(viewerAppSrc).toContain("from './interaction/interactionState'");
     expect(viewerAppSrc).toContain("from './interaction/cursorController'");

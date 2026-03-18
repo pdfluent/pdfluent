@@ -13,6 +13,7 @@
 // timestamp. Clicking a page-level event navigates to that page.
 // ---------------------------------------------------------------------------
 
+import { useTranslation } from 'react-i18next';
 import type { DocumentEvent } from '../state/documentEvents';
 
 interface TimelinePanelProps {
@@ -22,18 +23,18 @@ interface TimelinePanelProps {
   onNavigate?: (pageIndex: number) => void;
 }
 
-const EVENT_LABELS: Record<string, string> = {
-  annotation_created:   'Annotatie aangemaakt',
-  annotation_updated:   'Annotatie bijgewerkt',
-  annotation_deleted:   'Annotatie verwijderd',
-  redaction_created:    'Redactie aangemaakt',
-  redaction_applied:    'Redacties toegepast',
-  metadata_changed:     'Metadata gewijzigd',
-  form_field_updated:   'Formulierveld bijgewerkt',
-  page_mutated:         'Pagina gewijzigd',
-  text_edit_committed:  'Tekstbewerking opgeslagen',
-  text_edit_rejected:   'Tekstbewerking geweigerd',
-  text_edit_cancelled:  'Tekstbewerking geannuleerd',
+const EVENT_LABEL_KEYS: Record<string, string> = {
+  annotation_created:   'timeline.annotationCreated',
+  annotation_updated:   'timeline.annotationUpdated',
+  annotation_deleted:   'timeline.annotationDeleted',
+  redaction_created:    'timeline.redactionCreated',
+  redaction_applied:    'timeline.redactionApplied',
+  metadata_changed:     'timeline.metadataChanged',
+  form_field_updated:   'timeline.formFieldUpdated',
+  page_mutated:         'timeline.pageMutated',
+  text_edit_committed:  'timeline.textEditCommitted',
+  text_edit_rejected:   'timeline.textEditRejected',
+  text_edit_cancelled:  'timeline.textEditCancelled',
 };
 
 function formatTime(date: Date): string {
@@ -41,10 +42,12 @@ function formatTime(date: Date): string {
 }
 
 export function TimelinePanel({ events, onNavigate }: TimelinePanelProps) {
+  const { t } = useTranslation();
+
   if (events.length === 0) {
     return (
       <div data-testid="timeline-panel" className="p-3">
-        <p className="text-[10px] text-muted-foreground/60">Geen activiteit.</p>
+        <p className="text-[10px] text-muted-foreground/60">{t('timeline.noActivity')}</p>
       </div>
     );
   }
@@ -55,7 +58,8 @@ export function TimelinePanel({ events, onNavigate }: TimelinePanelProps) {
   return (
     <div data-testid="timeline-panel" className="flex flex-col gap-0.5 p-1 overflow-y-auto max-h-full">
       {reversed.map(event => {
-        const label = EVENT_LABELS[event.type] ?? event.type;
+        const labelKey = EVENT_LABEL_KEYS[event.type];
+        const label = labelKey !== undefined ? t(labelKey) : event.type;
         const hasPage = event.page >= 0;
 
         return (

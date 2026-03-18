@@ -13,17 +13,31 @@ const sheetSource = readFileSync(
   'utf8'
 );
 
-const viewerAppSource = readFileSync(
-  new URL('../src/viewer/ViewerApp.tsx', import.meta.url),
-  'utf8'
-);
+const viewerAppSource = [
+  '../src/viewer/hooks/usePageNavigation.ts',
+  '../src/viewer/hooks/useZoomControls.ts',
+  '../src/viewer/hooks/useSidebarState.ts',
+  '../src/viewer/hooks/useUndoRedo.ts',
+  '../src/viewer/hooks/useSearch.ts',
+  '../src/viewer/hooks/useFormFields.ts',
+  '../src/viewer/hooks/useModeManager.ts',
+  '../src/viewer/hooks/useDocumentLifecycle.ts',
+  '../src/viewer/hooks/useCommands.ts',
+  '../src/viewer/hooks/useDragDrop.ts',
+  '../src/viewer/ViewerSidePanels.tsx',
+  '../src/viewer/hooks/useAnnotations.ts',
+  '../src/viewer/hooks/useTextInteraction.ts',
+  '../src/viewer/hooks/useKeyboardShortcuts.ts',
+  '../src/viewer/ViewerApp.tsx',
+  '../src/viewer/WelcomeSection.tsx',
+].map(p => readFileSync(new URL(p, import.meta.url), 'utf8')).join('\n\n');
 
 // ---------------------------------------------------------------------------
 // Helpers — collect all key labels and descriptions from SHORTCUT_GROUPS
 // ---------------------------------------------------------------------------
 
-// Pull out the SHORTCUT_GROUPS constant body for assertion
-const groupsStart = sheetSource.indexOf('export const SHORTCUT_GROUPS');
+// Pull out the SHORTCUT_GROUP_KEYS constant body for assertion
+const groupsStart = sheetSource.indexOf('const SHORTCUT_GROUP_KEYS');
 const groupsEnd   = sheetSource.indexOf('];', groupsStart) + 2;
 const groupsBody  = sheetSource.slice(groupsStart, groupsEnd);
 
@@ -117,42 +131,42 @@ describe('ShortcutSheet — close behavior', () => {
 describe('ShortcutSheet — implemented shortcuts present', () => {
   it('lists ⌘K / Ctrl+K → command palette', () => {
     expect(groupsBody).toContain('⌘K / Ctrl+K');
-    expect(groupsBody).toContain('Opdrachtenpalette');
+    expect(groupsBody).toContain("'shortcuts.commandPalette'");
   });
 
   it('lists ⌘S / Ctrl+S → save', () => {
     expect(groupsBody).toContain('⌘S / Ctrl+S');
-    expect(groupsBody).toContain('Opslaan');
+    expect(groupsBody).toContain("'shortcuts.save'");
   });
 
   it('lists ⌘E / Ctrl+E → export', () => {
     expect(groupsBody).toContain('⌘E / Ctrl+E');
-    expect(groupsBody).toContain('Exporteren');
+    expect(groupsBody).toContain("'shortcuts.export'");
   });
 
   it('lists ⌘G / Ctrl+G → go to page', () => {
     expect(groupsBody).toContain('⌘G / Ctrl+G');
-    expect(groupsBody).toContain('Ga naar pagina');
+    expect(groupsBody).toContain("'shortcuts.goToPage'");
   });
 
   it('lists ⌘= / Ctrl+= → zoom in', () => {
     expect(groupsBody).toContain('⌘= / Ctrl+=');
-    expect(groupsBody).toContain('Inzoomen');
+    expect(groupsBody).toContain("'shortcuts.zoomIn'");
   });
 
   it('lists ⌘- / Ctrl+- → zoom out', () => {
     expect(groupsBody).toContain('⌘− / Ctrl+−');
-    expect(groupsBody).toContain('Uitzoomen');
+    expect(groupsBody).toContain("'shortcuts.zoomOut'");
   });
 
   it('lists ⌘0 / Ctrl+0 → zoom reset', () => {
     expect(groupsBody).toContain('⌘0 / Ctrl+0');
-    expect(groupsBody).toContain('Zoom 100%');
+    expect(groupsBody).toContain("'shortcuts.zoom100'");
   });
 
   it('lists scroll-to-zoom', () => {
     expect(groupsBody).toContain('⌘/Ctrl + Scroll');
-    expect(groupsBody).toContain('Zoom aanpassen');
+    expect(groupsBody).toContain("'shortcuts.fitZoom'");
   });
 
   it('lists arrow / page keys for navigation', () => {
@@ -163,22 +177,22 @@ describe('ShortcutSheet — implemented shortcuts present', () => {
 
   it('lists F11 / ⌘⇧F → fullscreen', () => {
     expect(groupsBody).toContain('F11 / ⌘⇧F');
-    expect(groupsBody).toContain('Volledig scherm aan/uit');
+    expect(groupsBody).toContain("'shortcuts.toggleFullscreen'");
   });
 
   it('lists 1–7 → mode switching', () => {
     expect(groupsBody).toContain('1 – 7');
-    expect(groupsBody).toContain('Modus wisselen');
+    expect(groupsBody).toContain("'shortcuts.switchMode'");
   });
 
   it('lists Escape → close dialog', () => {
     expect(groupsBody).toContain('Escape');
-    expect(groupsBody).toContain('Dialoog sluiten');
+    expect(groupsBody).toContain("'shortcuts.closeDialog'");
   });
 
   it('lists ⌘? / Ctrl+? → this sheet', () => {
     expect(groupsBody).toContain('⌘? / Ctrl+?');
-    expect(groupsBody).toContain('Dit overzicht');
+    expect(groupsBody).toContain("'shortcuts.thisOverview'");
   });
 });
 

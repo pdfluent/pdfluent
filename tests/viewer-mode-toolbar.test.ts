@@ -13,10 +13,24 @@ const toolbarSource = readFileSync(
   'utf8'
 );
 
-const viewerAppSource = readFileSync(
-  new URL('../src/viewer/ViewerApp.tsx', import.meta.url),
-  'utf8'
-);
+const viewerAppSource = [
+  '../src/viewer/hooks/usePageNavigation.ts',
+  '../src/viewer/hooks/useZoomControls.ts',
+  '../src/viewer/hooks/useSidebarState.ts',
+  '../src/viewer/hooks/useUndoRedo.ts',
+  '../src/viewer/hooks/useSearch.ts',
+  '../src/viewer/hooks/useFormFields.ts',
+  '../src/viewer/hooks/useModeManager.ts',
+  '../src/viewer/hooks/useDocumentLifecycle.ts',
+  '../src/viewer/hooks/useCommands.ts',
+  '../src/viewer/hooks/useDragDrop.ts',
+  '../src/viewer/ViewerSidePanels.tsx',
+  '../src/viewer/hooks/useAnnotations.ts',
+  '../src/viewer/hooks/useTextInteraction.ts',
+  '../src/viewer/hooks/useKeyboardShortcuts.ts',
+  '../src/viewer/ViewerApp.tsx',
+  '../src/viewer/WelcomeSection.tsx',
+].map(p => readFileSync(new URL(p, import.meta.url), 'utf8')).join('\n\n');
 
 const useDocumentSource = readFileSync(
   new URL('../src/viewer/hooks/useDocument.ts', import.meta.url),
@@ -34,15 +48,15 @@ describe('ModeToolbar — WIRED_TOOLS', () => {
   });
 
   it('includes all three read mode tools', () => {
-    expect(toolbarSource).toContain("'Inzoomen'");
-    expect(toolbarSource).toContain("'Uitzoomen'");
-    expect(toolbarSource).toContain("'Zoek tekst'");
+    expect(toolbarSource).toContain("'toolbar.zoomIn'");
+    expect(toolbarSource).toContain("'toolbar.zoomOut'");
+    expect(toolbarSource).toContain("'toolbar.searchText'");
   });
 
   it('includes both wired organize mode tools', () => {
-    expect(toolbarSource).toContain("'Pagina verwijderen'");
-    expect(toolbarSource).toContain("'Links roteren'");
-    expect(toolbarSource).toContain("'Rechts roteren'");
+    expect(toolbarSource).toContain("'toolbar.deletePage'");
+    expect(toolbarSource).toContain("'toolbar.rotateLeft'");
+    expect(toolbarSource).toContain("'toolbar.rotateRight'");
   });
 
   it('does not include annotation tool labels in WIRED_TOOLS set', () => {
@@ -78,17 +92,17 @@ describe('ModeToolbar — read mode actions', () => {
   });
 
   it('routes Inzoomen to onZoomIn in the action switch', () => {
-    expect(toolbarSource).toContain("case 'Inzoomen'");
+    expect(toolbarSource).toContain("case 'toolbar.zoomIn'");
     expect(toolbarSource).toContain('onZoomIn()');
   });
 
   it('routes Uitzoomen to onZoomOut in the action switch', () => {
-    expect(toolbarSource).toContain("case 'Uitzoomen'");
+    expect(toolbarSource).toContain("case 'toolbar.zoomOut'");
     expect(toolbarSource).toContain('onZoomOut()');
   });
 
   it('routes Zoek tekst to onOpenSearch in the action switch', () => {
-    expect(toolbarSource).toContain("case 'Zoek tekst'");
+    expect(toolbarSource).toContain("case 'toolbar.searchText'");
     expect(toolbarSource).toContain('onOpenSearch()');
   });
 });
@@ -142,31 +156,31 @@ describe('ModeToolbar — task queue integration', () => {
 
   it('pushes a running task when delete starts', () => {
     expect(toolbarSource).toContain('delete-page-${Date.now()}');
-    expect(toolbarSource).toContain('verwijderen…');
+    expect(toolbarSource).toContain("t('tasks.deletePageRunning'");
     expect(toolbarSource).toContain("status: 'running'");
   });
 
   it('pushes a running task when rotate starts', () => {
     expect(toolbarSource).toContain('rotate-page-right-${Date.now()}');
-    expect(toolbarSource).toContain('roteren…');
+    expect(toolbarSource).toContain("t('tasks.rotateRightRunning'");
   });
 
   it('updates task to done on delete success', () => {
-    expect(toolbarSource).toContain('verwijderd');
+    expect(toolbarSource).toContain("t('tasks.deletePageDone'");
     expect(toolbarSource).toContain("status: 'done'");
   });
 
   it('updates task to done on rotate success', () => {
-    expect(toolbarSource).toContain('geroteerd');
+    expect(toolbarSource).toContain("t('tasks.rotateRightDone'");
   });
 
   it('updates task to error on delete failure', () => {
-    expect(toolbarSource).toContain('Verwijderen mislukt');
+    expect(toolbarSource).toContain("t('tasks.deleteFailed')");
     expect(toolbarSource).toContain("status: 'error'");
   });
 
   it('updates task to error on rotate failure', () => {
-    expect(toolbarSource).toContain('Roteren mislukt');
+    expect(toolbarSource).toContain("t('tasks.rotateFailed')");
   });
 });
 

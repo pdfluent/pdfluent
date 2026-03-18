@@ -6,6 +6,7 @@
 // See https://pdfluent.com/license for terms.
 
 import { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   LayoutIcon,
   BookmarkIcon,
@@ -43,13 +44,13 @@ interface PanelTab {
 }
 
 const PANELS: PanelTab[] = [
-  { id: 'thumbnails', icon: <LayoutIcon className="w-5 h-5" />, label: 'Miniaturen' },
-  { id: 'bookmarks', icon: <BookmarkIcon className="w-5 h-5" />, label: 'Bladwijzers' },
-  { id: 'search', icon: <SearchIcon className="w-5 h-5" />, label: 'Zoeken' },
-  { id: 'comments', icon: <MessageSquareIcon className="w-5 h-5" />, label: 'Opmerkingen' },
-  { id: 'attachments', icon: <PaperclipIcon className="w-5 h-5" />, label: 'Bijlagen' },
-  { id: 'layers', icon: <LayersIcon className="w-5 h-5" />, label: 'Lagen' },
-  { id: 'fields', icon: <FileInputIcon className="w-5 h-5" />, label: 'Formuliervelden' },
+  { id: 'thumbnails', icon: <LayoutIcon className="w-5 h-5" />, label: 'leftNav.thumbnails' },
+  { id: 'bookmarks', icon: <BookmarkIcon className="w-5 h-5" />, label: 'leftNav.bookmarks' },
+  { id: 'search', icon: <SearchIcon className="w-5 h-5" />, label: 'leftNav.search' },
+  { id: 'comments', icon: <MessageSquareIcon className="w-5 h-5" />, label: 'leftNav.comments' },
+  { id: 'attachments', icon: <PaperclipIcon className="w-5 h-5" />, label: 'leftNav.attachments' },
+  { id: 'layers', icon: <LayersIcon className="w-5 h-5" />, label: 'leftNav.layers' },
+  { id: 'fields', icon: <FileInputIcon className="w-5 h-5" />, label: 'leftNav.formFields' },
 ];
 
 // ── Individual panel content ────────────────────────────────────────────────
@@ -233,11 +234,12 @@ function BookmarksPanel({
   currentPage: number;
   onPageSelect: (index: number) => void;
 }) {
+  const { t } = useTranslation();
   if (outline.length === 0) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center p-4 text-center gap-2">
         <BookmarkIcon className="w-8 h-8 text-muted-foreground/40" />
-        <p className="text-xs text-muted-foreground">Geen bladwijzers beschikbaar.</p>
+        <p className="text-xs text-muted-foreground">{t('leftNav.noBookmarks')}</p>
       </div>
     );
   }
@@ -253,25 +255,27 @@ function BookmarksPanel({
 // TODO(pdfluent-viewer): implement full-text search panel with result highlighting
 // Status: design integrated, functionality not implemented yet
 function SearchPanel() {
+  const { t } = useTranslation();
   return (
     <div className="flex-1 flex flex-col gap-2 p-2">
       <input
         disabled
-        placeholder="Zoeken in document…"
+        placeholder={t('search.placeholder')}
         className="w-full text-xs bg-muted border border-border rounded-md px-2 py-1.5 text-muted-foreground/50 cursor-default"
         title="Search not yet available"
       />
-      <p className="text-[10px] text-muted-foreground/60 text-center mt-4">Zoekfunctie wordt binnenkort beschikbaar.</p>
+      <p className="text-[10px] text-muted-foreground/60 text-center mt-4">{t('leftNav.searchComingSoon')}</p>
     </div>
   );
 }
 
 function CommentsPanel({ comments }: { comments: Annotation[] }) {
+  const { t } = useTranslation();
   if (comments.length === 0) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center p-4 text-center gap-2">
         <MessageSquareIcon className="w-8 h-8 text-muted-foreground/40" />
-        <p className="text-xs text-muted-foreground">Geen opmerkingen gevonden.</p>
+        <p className="text-xs text-muted-foreground">{t('leftNav.noCommentsSide')}</p>
       </div>
     );
   }
@@ -292,7 +296,7 @@ function CommentsPanel({ comments }: { comments: Annotation[] }) {
             data-testid="comment-group-heading"
             className="text-[9px] font-semibold uppercase tracking-wide text-muted-foreground/60 px-2 py-1 mt-1 first:mt-0"
           >
-            Pagina {pageIndex + 1}
+            {t('review.commentPage', { page: pageIndex + 1 })}
           </p>
           {groups.get(pageIndex)!.map(comment => (
             <div
@@ -318,10 +322,11 @@ function CommentsPanel({ comments }: { comments: Annotation[] }) {
 // TODO(pdfluent-viewer): implement attachments panel showing embedded files
 // Status: design integrated, functionality not implemented yet
 function AttachmentsPanel() {
+  const { t } = useTranslation();
   return (
     <div className="flex-1 flex flex-col items-center justify-center p-4 text-center gap-2">
       <PaperclipIcon className="w-8 h-8 text-muted-foreground/40" />
-      <p className="text-xs text-muted-foreground">Geen bijlagen</p>
+      <p className="text-xs text-muted-foreground">{t('leftNav.noAttachments')}</p>
     </div>
   );
 }
@@ -329,34 +334,36 @@ function AttachmentsPanel() {
 // TODO(pdfluent-viewer): implement layers panel with PDF optional content groups
 // Status: design integrated, functionality not implemented yet
 function LayersPanel() {
+  const { t } = useTranslation();
+  const layerKeys: string[] = ['leftNav.layerText', 'leftNav.layerImages', 'leftNav.layerAnnotations', 'leftNav.layerFormFields'];
   return (
     <div className="flex-1 flex flex-col gap-1 p-2">
-      {(['Tekst', 'Afbeeldingen', 'Annotaties', 'Formuliervelden'] as const).map((layer) => (
-        <label key={layer} className="flex items-center gap-2 px-1 py-1 rounded text-xs text-muted-foreground/50 cursor-default">
+      {layerKeys.map((key) => (
+        <label key={key} className="flex items-center gap-2 px-1 py-1 rounded text-xs text-muted-foreground/50 cursor-default">
           <input type="checkbox" disabled defaultChecked className="accent-primary" />
-          {layer}
+          {t(key)}
         </label>
       ))}
-      <p className="text-[10px] text-muted-foreground/60 mt-2 text-center">Lagenbeheer wordt binnenkort beschikbaar.</p>
+      <p className="text-[10px] text-muted-foreground/60 mt-2 text-center">{t('leftNav.layersComingSoon')}</p>
     </div>
   );
 }
 
-const FIELD_TYPE_LABELS: Record<FormFieldType, string> = {
-  text: 'Tekst',
-  checkbox: 'Selectievakje',
-  radio: 'Keuzerondje',
-  list: 'Lijst',
-  combo: 'Vervolgkeuzelijst',
-  signature: 'Handtekening',
-  button: 'Knop',
-  date: 'Datum',
-  time: 'Tijd',
-  number: 'Getal',
-  password: 'Wachtwoord',
-  file: 'Bestand',
-  barcode: 'Barcode',
-  'rich-text': 'Opgemaakte tekst',
+const FIELD_TYPE_LABEL_KEYS: Record<FormFieldType, string> = {
+  text: 'leftNav.fieldTypeText',
+  checkbox: 'leftNav.fieldTypeCheckbox',
+  radio: 'leftNav.fieldTypeRadio',
+  list: 'leftNav.fieldTypeList',
+  combo: 'leftNav.fieldTypeCombo',
+  signature: 'leftNav.fieldTypeSignature',
+  button: 'leftNav.fieldTypeButton',
+  date: 'leftNav.fieldTypeDate',
+  time: 'leftNav.fieldTypeTime',
+  number: 'leftNav.fieldTypeNumber',
+  password: 'leftNav.fieldTypePassword',
+  file: 'leftNav.fieldTypeFile',
+  barcode: 'leftNav.fieldTypeBarcode',
+  'rich-text': 'leftNav.fieldTypeRichText',
 };
 
 function FieldsPanel({
@@ -366,11 +373,12 @@ function FieldsPanel({
   formFields: FormField[];
   onPageSelect: (index: number) => void;
 }) {
+  const { t } = useTranslation();
   if (formFields.length === 0) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center p-4 text-center gap-2">
         <FileInputIcon className="w-8 h-8 text-muted-foreground/40" />
-        <p className="text-xs text-muted-foreground">Geen formuliervelden gevonden.</p>
+        <p className="text-xs text-muted-foreground">{t('leftNav.noFormFields')}</p>
       </div>
     );
   }
@@ -388,7 +396,7 @@ function FieldsPanel({
           </span>
           <div className="flex items-center gap-1.5">
             <span className="text-[9px] font-medium px-1 py-0.5 rounded bg-muted text-muted-foreground uppercase tracking-wide">
-              {FIELD_TYPE_LABELS[field.type] ?? field.type}
+              {t(FIELD_TYPE_LABEL_KEYS[field.type] ?? field.type)}
             </span>
             <span className="text-[10px] text-muted-foreground/60">
               p.{field.pageIndex + 1}
@@ -435,6 +443,7 @@ function PanelContent({
 // ── Root component ──────────────────────────────────────────────────────────
 
 export function LeftNavRail(props: LeftNavRailProps) {
+  const { t } = useTranslation();
   const { pageCount, comments } = props;
   const { currentPage, onPageSelect, onNextPage, onPrevPage } = props;
   const hasDoc = pageCount > 0;
@@ -463,7 +472,8 @@ export function LeftNavRail(props: LeftNavRailProps) {
   }
 
   const panelOpen = hasDoc && activePanel !== null;
-  const panelLabel = panelOpen && activePanel ? (PANELS.find(p => p.id === activePanel)?.label ?? '') : '';
+  const panelLabelKey = panelOpen && activePanel ? (PANELS.find(p => p.id === activePanel)?.label ?? '') : '';
+  const panelLabel = panelLabelKey ? t(panelLabelKey) : '';
 
   return (
     <div className="flex h-full border-r border-border bg-background shrink-0 z-10">
@@ -476,8 +486,8 @@ export function LeftNavRail(props: LeftNavRailProps) {
             <button
               key={panel.id}
               onClick={() => { togglePanel(panel.id); }}
-              title={panel.label}
-              aria-label={panel.label}
+              title={t(panel.label)}
+              aria-label={t(panel.label)}
               className={[
                 'p-2 rounded-md transition-colors duration-100',
                 isActive
@@ -508,8 +518,8 @@ export function LeftNavRail(props: LeftNavRailProps) {
               onClick={onPrevPage}
               disabled={currentPage === 0}
               data-testid="nav-prev-page-btn"
-              aria-label="Vorige pagina"
-              title="Vorige pagina"
+              aria-label={t('leftNav.prevPageAriaLabel')}
+              title={t('leftNav.prevPageAriaLabel')}
               className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
             >
               <ChevronUpIcon className="w-3.5 h-3.5" />
@@ -525,14 +535,14 @@ export function LeftNavRail(props: LeftNavRailProps) {
                 if (!isNaN(v) && v >= 1 && v <= pageCount) onPageSelect(v - 1);
               }}
               className="w-8 text-center text-[10px] bg-background border border-border rounded py-0.5 text-foreground focus:ring-1 focus:ring-primary outline-none"
-              aria-label="Ga naar pagina"
+              aria-label={t('leftNav.goToPageAriaLabel')}
             />
             <button
               onClick={onNextPage}
               disabled={currentPage === pageCount - 1}
               data-testid="nav-next-page-btn"
-              aria-label="Volgende pagina"
-              title="Volgende pagina"
+              aria-label={t('leftNav.nextPageAriaLabel')}
+              title={t('leftNav.nextPageAriaLabel')}
               className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
             >
               <ChevronDownIcon className="w-3.5 h-3.5" />

@@ -43,7 +43,24 @@ import { validateSafetyMatrix } from '../src/viewer/text/textMutationMatrix';
 import type { TextParagraphTarget } from '../src/viewer/text/textInteractionModel';
 
 const __dir = dirname(fileURLToPath(import.meta.url));
-const viewerAppSrc = readFileSync(join(__dir, '../src/viewer/ViewerApp.tsx'), 'utf8');
+const viewerAppSrc = [
+  '../src/viewer/hooks/usePageNavigation.ts',
+  '../src/viewer/hooks/useZoomControls.ts',
+  '../src/viewer/hooks/useSidebarState.ts',
+  '../src/viewer/hooks/useUndoRedo.ts',
+  '../src/viewer/hooks/useSearch.ts',
+  '../src/viewer/hooks/useFormFields.ts',
+  '../src/viewer/hooks/useModeManager.ts',
+  '../src/viewer/hooks/useDocumentLifecycle.ts',
+  '../src/viewer/hooks/useCommands.ts',
+  '../src/viewer/hooks/useDragDrop.ts',
+  '../src/viewer/ViewerSidePanels.tsx',
+  '../src/viewer/hooks/useAnnotations.ts',
+  '../src/viewer/hooks/useTextInteraction.ts',
+  '../src/viewer/hooks/useKeyboardShortcuts.ts',
+  '../src/viewer/ViewerApp.tsx',
+  '../src/viewer/WelcomeSection.tsx',
+].map(p => readFileSync(join(__dir, p), 'utf8')).join('\n\n');
 
 // ---------------------------------------------------------------------------
 // Helpers

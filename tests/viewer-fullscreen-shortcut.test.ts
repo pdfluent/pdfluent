@@ -8,10 +8,24 @@
 import { readFileSync } from 'node:fs';
 import { describe, it, expect } from 'vitest';
 
-const viewerAppSource = readFileSync(
-  new URL('../src/viewer/ViewerApp.tsx', import.meta.url),
-  'utf8'
-);
+const viewerAppSource = [
+  '../src/viewer/hooks/usePageNavigation.ts',
+  '../src/viewer/hooks/useZoomControls.ts',
+  '../src/viewer/hooks/useSidebarState.ts',
+  '../src/viewer/hooks/useUndoRedo.ts',
+  '../src/viewer/hooks/useSearch.ts',
+  '../src/viewer/hooks/useFormFields.ts',
+  '../src/viewer/hooks/useModeManager.ts',
+  '../src/viewer/hooks/useDocumentLifecycle.ts',
+  '../src/viewer/hooks/useCommands.ts',
+  '../src/viewer/hooks/useDragDrop.ts',
+  '../src/viewer/ViewerSidePanels.tsx',
+  '../src/viewer/hooks/useAnnotations.ts',
+  '../src/viewer/hooks/useTextInteraction.ts',
+  '../src/viewer/hooks/useKeyboardShortcuts.ts',
+  '../src/viewer/ViewerApp.tsx',
+  '../src/viewer/WelcomeSection.tsx',
+].map(p => readFileSync(new URL(p, import.meta.url), 'utf8')).join('\n\n');
 
 // Locate the fullscreen shortcut effect for scoped assertions
 const effectStart = viewerAppSource.indexOf('Fullscreen keyboard shortcut');
@@ -111,7 +125,7 @@ describe('ViewerApp — fullscreen shortcut: no regressions', () => {
       new URL('../src/viewer/components/ModeToolbar.tsx', import.meta.url),
       'utf8'
     );
-    expect(toolbarSource).toContain("case 'Volledig scherm'");
+    expect(toolbarSource).toContain("case 'toolbar.fullscreen'");
     expect(toolbarSource).toContain('document.documentElement.requestFullscreen()');
   });
 

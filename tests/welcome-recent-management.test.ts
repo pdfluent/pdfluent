@@ -18,10 +18,24 @@ const welcomeSource = readFileSync(
   'utf8'
 );
 
-const viewerAppSource = readFileSync(
-  new URL('../src/viewer/ViewerApp.tsx', import.meta.url),
-  'utf8'
-);
+const viewerAppSource = [
+  '../src/viewer/hooks/usePageNavigation.ts',
+  '../src/viewer/hooks/useZoomControls.ts',
+  '../src/viewer/hooks/useSidebarState.ts',
+  '../src/viewer/hooks/useUndoRedo.ts',
+  '../src/viewer/hooks/useSearch.ts',
+  '../src/viewer/hooks/useFormFields.ts',
+  '../src/viewer/hooks/useModeManager.ts',
+  '../src/viewer/hooks/useDocumentLifecycle.ts',
+  '../src/viewer/hooks/useCommands.ts',
+  '../src/viewer/hooks/useDragDrop.ts',
+  '../src/viewer/ViewerSidePanels.tsx',
+  '../src/viewer/hooks/useAnnotations.ts',
+  '../src/viewer/hooks/useTextInteraction.ts',
+  '../src/viewer/hooks/useKeyboardShortcuts.ts',
+  '../src/viewer/ViewerApp.tsx',
+  '../src/viewer/WelcomeSection.tsx',
+].map(p => readFileSync(new URL(p, import.meta.url), 'utf8')).join('\n\n');
 
 // ---------------------------------------------------------------------------
 // useRecentFiles — removeRecentFile
@@ -143,7 +157,7 @@ describe('WelcomeScreen — welcome-clear-recent-btn', () => {
     const btnPos = welcomeSource.indexOf('data-testid="welcome-clear-recent-btn"');
     const btnEnd = welcomeSource.indexOf('</button>', btnPos) + 9;
     const btnBlock = welcomeSource.slice(btnPos, btnEnd);
-    expect(btnBlock).toContain('Wis alles');
+    expect(btnBlock).toContain("t('welcome.clearAll'");
   });
 
   it('clear button only appears when recentFiles is non-empty', () => {

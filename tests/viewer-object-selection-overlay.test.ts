@@ -28,7 +28,7 @@ import {
   objectCursor,
   HANDLE_CURSORS,
   RESIZE_HANDLES,
-  OBJECT_TYPE_LABELS,
+  OBJECT_TYPE_LABEL_KEYS,
   HANDLE_SIZE,
 } from '../src/viewer/components/ObjectSelectionOverlay';
 import type { ResizeHandle } from '../src/viewer/components/ObjectSelectionOverlay';
@@ -228,15 +228,15 @@ describe('ObjectSelectionOverlay — OBJECT_TYPE_LABELS', () => {
 
   it('has a non-empty label for every type', () => {
     for (const type of types) {
-      expect(OBJECT_TYPE_LABELS[type].length).toBeGreaterThan(0);
+      expect(OBJECT_TYPE_LABEL_KEYS[type].length).toBeGreaterThan(0);
     }
   });
 
   it('image label is Afbeelding', () => {
-    expect(OBJECT_TYPE_LABELS['image']).toBe('Afbeelding');
+    expect(OBJECT_TYPE_LABEL_KEYS['image']).toBe('objects.image');
   });
 
   it('form_widget label contains formulier (Dutch)', () => {
-    expect(OBJECT_TYPE_LABELS['form_widget'].toLowerCase()).toContain('formulier');
+    expect(OBJECT_TYPE_LABEL_KEYS['form_widget']).toContain('formWidget');
   });
 });

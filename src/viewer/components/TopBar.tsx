@@ -6,6 +6,7 @@
 // See https://pdfluent.com/license for terms.
 
 import { useRef, useEffect, type RefObject, type ChangeEvent } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   LayersIcon,
   Undo2Icon,
@@ -68,6 +69,7 @@ export function TopBar({
   onUndo,
   onRedo,
 }: TopBarProps) {
+  const { t } = useTranslation();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { push, update } = useTaskQueueContext();
 
@@ -82,14 +84,14 @@ export function TopBar({
 
     if (currentFilePath) {
       // Save in place — known file path
-      push({ id: taskId, label: 'Opslaan…', progress: null, status: 'running' });
+      push({ id: taskId, label: t('tasks.savingLabel'), progress: null, status: 'running' });
       try {
         const { invoke } = await import('@tauri-apps/api/core');
         await invoke('save_pdf', { path: currentFilePath });
-        update(taskId, { status: 'done', label: 'Opgeslagen' });
+        update(taskId, { status: 'done', label: t('tasks.savedLabel') });
         onSaveComplete();
       } catch {
-        update(taskId, { status: 'error', label: 'Opslaan mislukt' });
+        update(taskId, { status: 'error', label: t('tasks.saveFailed') });
       }
     } else {
       // Save as — no known path (browser source or first save)
@@ -97,14 +99,14 @@ export function TopBar({
       const path = await save({ filters: [{ name: 'PDF', extensions: ['pdf'] }] });
       if (!path) return;
 
-      push({ id: taskId, label: 'Opslaan als…', progress: null, status: 'running' });
+      push({ id: taskId, label: t('tasks.savingAsLabel'), progress: null, status: 'running' });
       try {
         const { invoke } = await import('@tauri-apps/api/core');
         await invoke('save_pdf', { path });
-        update(taskId, { status: 'done', label: 'Opgeslagen' });
+        update(taskId, { status: 'done', label: t('tasks.savedLabel') });
         onSaveComplete();
       } catch {
-        update(taskId, { status: 'error', label: 'Opslaan mislukt' });
+        update(taskId, { status: 'error', label: t('tasks.saveFailed') });
       }
     }
   }
@@ -199,7 +201,7 @@ export function TopBar({
           disabled={!canUndo}
           onClick={onUndo}
           className={`p-1.5 rounded-md ${canUndo ? 'text-foreground hover:bg-accent cursor-pointer' : 'text-muted-foreground/40 cursor-default'}`}
-          title={canUndo ? 'Ongedaan maken (⌘Z)' : 'Niets om ongedaan te maken'}
+          title={canUndo ? t('topbar.undoTooltip') : t('topbar.nothingToUndo')}
           aria-label="Undo"
         >
           <Undo2Icon className="w-3.5 h-3.5" />
@@ -210,7 +212,7 @@ export function TopBar({
           disabled={!canRedo}
           onClick={onRedo}
           className={`p-1.5 rounded-md ${canRedo ? 'text-foreground hover:bg-accent cursor-pointer' : 'text-muted-foreground/40 cursor-default'}`}
-          title={canRedo ? 'Opnieuw uitvoeren (⌘⇧Z)' : 'Niets om opnieuw uit te voeren'}
+          title={canRedo ? t('topbar.redoTooltip') : t('topbar.nothingToRedo')}
           aria-label="Redo"
         >
           <Redo2Icon className="w-3.5 h-3.5" />
@@ -230,8 +232,8 @@ export function TopBar({
             <button
               onClick={onCloseDocument}
               className="p-0.5 text-muted-foreground hover:text-foreground hover:bg-muted rounded transition-colors shrink-0"
-              title="Sluiten"
-              aria-label="Document sluiten"
+              title={t('common.close')}
+              aria-label={t('topbar.closeDocument')}
               data-testid="close-document-btn"
             >
               <XIcon className="w-3 h-3" />
@@ -306,11 +308,11 @@ export function TopBar({
           onClick={() => { void handleSave(); }}
           disabled={!canSave}
           className="flex items-center gap-1 px-2 py-1.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
-          title={canSave ? 'Opslaan (⌘S)' : 'Opslaan (geen wijzigingen)'}
-          aria-label="Opslaan"
+          title={canSave ? t('topbar.saveTooltip') : t('topbar.saveNoChanges')}
+          aria-label={t('common.save')}
         >
           <SaveIcon className="w-3.5 h-3.5" />
-          <span className="hidden md:inline">Opslaan</span>
+          <span className="hidden md:inline">{t('common.save')}</span>
         </button>
 
         <button
@@ -318,11 +320,11 @@ export function TopBar({
           disabled={!isTauri || pageCount === 0}
           data-testid="save-as-btn"
           className="flex items-center gap-1 px-2 py-1.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
-          title="Opslaan als… (⌘⇧S)"
-          aria-label="Opslaan als"
+          title={t('topbar.saveAsTooltip')}
+          aria-label={t('common.saveAs')}
         >
           <SaveIcon className="w-3.5 h-3.5" />
-          <span className="hidden md:inline">Opslaan als…</span>
+          <span className="hidden md:inline">{t('common.saveAs')}</span>
         </button>
 
         {/* TODO(pdfluent-viewer): implement share / collaboration
@@ -333,17 +335,17 @@ export function TopBar({
           title="Share (not yet available)"
         >
           <Share2Icon className="w-3.5 h-3.5" />
-          <span className="hidden md:inline">Delen</span>
+          <span className="hidden md:inline">{t('topbar.share')}</span>
         </button>
 
         <button
           onClick={onOpenExport}
           disabled={pageCount === 0}
           className="flex items-center gap-1 px-2 py-1.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
-          title="Exporteren"
+          title={t('common.export')}
         >
           <DownloadIcon className="w-3.5 h-3.5" />
-          <span className="hidden md:inline">Exporteren</span>
+          <span className="hidden md:inline">{t('common.export')}</span>
         </button>
       </div>
     </div>

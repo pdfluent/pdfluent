@@ -13,14 +13,28 @@ const leftNavSource = readFileSync(
   'utf8'
 );
 
-const viewerAppSource = readFileSync(
-  new URL('../src/viewer/ViewerApp.tsx', import.meta.url),
-  'utf8'
-);
+const viewerAppSource = [
+  '../src/viewer/hooks/usePageNavigation.ts',
+  '../src/viewer/hooks/useZoomControls.ts',
+  '../src/viewer/hooks/useSidebarState.ts',
+  '../src/viewer/hooks/useUndoRedo.ts',
+  '../src/viewer/hooks/useSearch.ts',
+  '../src/viewer/hooks/useFormFields.ts',
+  '../src/viewer/hooks/useModeManager.ts',
+  '../src/viewer/hooks/useDocumentLifecycle.ts',
+  '../src/viewer/hooks/useCommands.ts',
+  '../src/viewer/hooks/useDragDrop.ts',
+  '../src/viewer/ViewerSidePanels.tsx',
+  '../src/viewer/hooks/useAnnotations.ts',
+  '../src/viewer/hooks/useTextInteraction.ts',
+  '../src/viewer/hooks/useKeyboardShortcuts.ts',
+  '../src/viewer/ViewerApp.tsx',
+  '../src/viewer/WelcomeSection.tsx',
+].map(p => readFileSync(new URL(p, import.meta.url), 'utf8')).join('\n\n');
 
 describe('viewer FieldsPanel — v2 left rail', () => {
   it('renders empty state when no form fields are present', () => {
-    expect(leftNavSource).toContain('Geen formuliervelden gevonden.');
+    expect(leftNavSource).toContain("t('leftNav.noFormFields'");
     expect(leftNavSource).toContain('FileInputIcon');
   });
 
@@ -28,20 +42,22 @@ describe('viewer FieldsPanel — v2 left rail', () => {
     // Label or name displayed in truncated span
     expect(leftNavSource).toContain('field.label || field.name');
     // Type badge using FIELD_TYPE_LABELS lookup
-    expect(leftNavSource).toContain('FIELD_TYPE_LABELS[field.type]');
+    expect(leftNavSource).toContain('FIELD_TYPE_LABEL_KEYS[field.type]');
     // Page number (1-based)
     expect(leftNavSource).toContain('field.pageIndex + 1');
   });
 
   it('exposes all FormFieldType labels in FIELD_TYPE_LABELS', () => {
-    // All 14 FormFieldType values must have a Dutch label in the map
-    const expectedLabels = [
-      'Tekst', 'Selectievakje', 'Keuzerondje', 'Lijst', 'Vervolgkeuzelijst',
-      'Handtekening', 'Knop', 'Datum', 'Tijd', 'Getal',
-      'Wachtwoord', 'Bestand', 'Barcode', 'Opgemaakte tekst',
+    // All 14 FormFieldType values must have an i18n key in the map
+    const expectedKeys = [
+      'leftNav.fieldTypeText', 'leftNav.fieldTypeCheckbox', 'leftNav.fieldTypeRadio',
+      'leftNav.fieldTypeList', 'leftNav.fieldTypeCombo', 'leftNav.fieldTypeSignature',
+      'leftNav.fieldTypeButton', 'leftNav.fieldTypeDate', 'leftNav.fieldTypeTime',
+      'leftNav.fieldTypeNumber', 'leftNav.fieldTypePassword', 'leftNav.fieldTypeFile',
+      'leftNav.fieldTypeBarcode', 'leftNav.fieldTypeRichText',
     ];
-    for (const label of expectedLabels) {
-      expect(leftNavSource).toContain(label);
+    for (const key of expectedKeys) {
+      expect(leftNavSource).toContain(key);
     }
   });
 

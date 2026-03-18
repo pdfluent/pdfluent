@@ -25,6 +25,7 @@
  */
 
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import type { LayoutObject, LayoutRect } from '../layout/objectDetection';
 
 // ---------------------------------------------------------------------------
@@ -100,12 +101,12 @@ export function handlePosition(
 // Object type badge labels
 // ---------------------------------------------------------------------------
 
-export const OBJECT_TYPE_LABELS: Record<LayoutObject['type'], string> = {
-  text_block:      'Tekst',
-  image:           'Afbeelding',
-  vector_graphics: 'Vectorafbeelding',
-  shape:           'Vorm',
-  form_widget:     'Formulierveld',
+export const OBJECT_TYPE_LABEL_KEYS: Record<LayoutObject['type'], string> = {
+  text_block:      'objects.textBlock',
+  image:           'objects.image',
+  vector_graphics: 'objects.vectorGraphics',
+  shape:           'objects.shape',
+  form_widget:     'objects.formWidget',
 };
 
 /** CSS cursor for a layout object based on its capabilities. */
@@ -154,6 +155,7 @@ export function ObjectSelectionOverlay({
   onSelect,
   onResizeStart,
 }: ObjectSelectionOverlayProps): React.ReactElement {
+  const { t } = useTranslation();
   return (
     <div
       data-testid="object-selection-overlay"
@@ -235,7 +237,7 @@ export function ObjectSelectionOverlay({
                   pointerEvents: 'none',
                 }}
               >
-                {OBJECT_TYPE_LABELS[obj.type]}
+                {t(OBJECT_TYPE_LABEL_KEYS[obj.type])}
               </div>
             )}
           </div>

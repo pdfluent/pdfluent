@@ -13,10 +13,24 @@ const toolbarSource = readFileSync(
   'utf8'
 );
 
-const viewerAppSource = readFileSync(
-  new URL('../src/viewer/ViewerApp.tsx', import.meta.url),
-  'utf8'
-);
+const viewerAppSource = [
+  '../src/viewer/hooks/usePageNavigation.ts',
+  '../src/viewer/hooks/useZoomControls.ts',
+  '../src/viewer/hooks/useSidebarState.ts',
+  '../src/viewer/hooks/useUndoRedo.ts',
+  '../src/viewer/hooks/useSearch.ts',
+  '../src/viewer/hooks/useFormFields.ts',
+  '../src/viewer/hooks/useModeManager.ts',
+  '../src/viewer/hooks/useDocumentLifecycle.ts',
+  '../src/viewer/hooks/useCommands.ts',
+  '../src/viewer/hooks/useDragDrop.ts',
+  '../src/viewer/ViewerSidePanels.tsx',
+  '../src/viewer/hooks/useAnnotations.ts',
+  '../src/viewer/hooks/useTextInteraction.ts',
+  '../src/viewer/hooks/useKeyboardShortcuts.ts',
+  '../src/viewer/ViewerApp.tsx',
+  '../src/viewer/WelcomeSection.tsx',
+].map(p => readFileSync(new URL(p, import.meta.url), 'utf8')).join('\n\n');
 
 // ---------------------------------------------------------------------------
 // ModeToolbarProps — zoom prop
@@ -114,13 +128,13 @@ describe('ModeToolbar — no regressions after zoom display', () => {
   });
 
   it('WIRED_TOOLS still contains Inzoomen and Uitzoomen', () => {
-    expect(toolbarSource).toContain("'Inzoomen'");
-    expect(toolbarSource).toContain("'Uitzoomen'");
+    expect(toolbarSource).toContain("'toolbar.zoomIn'");
+    expect(toolbarSource).toContain("'toolbar.zoomOut'");
   });
 
   it('handleToolAction still dispatches zoom actions', () => {
-    expect(toolbarSource).toContain("case 'Inzoomen'");
-    expect(toolbarSource).toContain("case 'Uitzoomen'");
+    expect(toolbarSource).toContain("case 'toolbar.zoomIn'");
+    expect(toolbarSource).toContain("case 'toolbar.zoomOut'");
   });
 
   it('onPageMutation prop still present', () => {

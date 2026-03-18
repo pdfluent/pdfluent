@@ -6,6 +6,7 @@
 // See https://pdfluent.com/license for terms.
 
 import { LayersIcon, XIcon } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 // ---------------------------------------------------------------------------
 // Props
@@ -24,6 +25,7 @@ interface WelcomeScreenProps {
 // ---------------------------------------------------------------------------
 
 export function WelcomeScreen({ onOpen, onOpenRecent, onRemoveRecent, onClearRecent, recentFiles }: WelcomeScreenProps) {
+  const { t } = useTranslation();
   return (
     <div
       data-testid="welcome-screen"
@@ -41,7 +43,7 @@ export function WelcomeScreen({ onOpen, onOpenRecent, onRemoveRecent, onClearRec
         onClick={onOpen}
         className="px-6 py-2.5 bg-primary text-primary-foreground text-sm font-semibold rounded-lg hover:opacity-90 transition-opacity"
       >
-        PDF openen…
+        {t('welcome.openFile')}
       </button>
 
       {/* Recent files */}
@@ -49,14 +51,14 @@ export function WelcomeScreen({ onOpen, onOpenRecent, onRemoveRecent, onClearRec
         <div className="w-full max-w-sm flex flex-col gap-1 overflow-y-auto max-h-64">
           <div className="flex items-center justify-between mb-1">
             <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-              Recent geopend
+              {t('welcome.recentFiles')}
             </p>
             <button
               data-testid="welcome-clear-recent-btn"
               onClick={onClearRecent}
               className="text-xs text-muted-foreground hover:text-foreground transition-colors"
             >
-              Wis alles
+              {t('welcome.clearAll')}
             </button>
           </div>
           {recentFiles.map(path => {
@@ -79,9 +81,9 @@ export function WelcomeScreen({ onOpen, onOpenRecent, onRemoveRecent, onClearRec
                 <button
                   data-testid="recent-file-remove-btn"
                   onClick={(e) => { e.stopPropagation(); onRemoveRecent(path); }}
-                  title="Verwijderen uit lijst"
+                  title={t('welcome.removeFromList')}
                   className="shrink-0 p-1.5 mr-1 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-foreground transition-opacity"
-                  aria-label="Verwijder uit recente bestanden"
+                  aria-label={t('welcome.removeAriaLabel')}
                 >
                   <XIcon className="w-3 h-3" />
                 </button>
@@ -94,7 +96,7 @@ export function WelcomeScreen({ onOpen, onOpenRecent, onRemoveRecent, onClearRec
           data-testid="welcome-empty-state"
           className="text-sm text-muted-foreground"
         >
-          Nog geen bestanden geopend.
+          {t('welcome.noRecentFiles')}
         </p>
       )}
     </div>

@@ -13,10 +13,24 @@ const gridSource = readFileSync(
   'utf8'
 );
 
-const viewerAppSource = readFileSync(
-  new URL('../src/viewer/ViewerApp.tsx', import.meta.url),
-  'utf8'
-);
+const viewerAppSource = [
+  '../src/viewer/hooks/usePageNavigation.ts',
+  '../src/viewer/hooks/useZoomControls.ts',
+  '../src/viewer/hooks/useSidebarState.ts',
+  '../src/viewer/hooks/useUndoRedo.ts',
+  '../src/viewer/hooks/useSearch.ts',
+  '../src/viewer/hooks/useFormFields.ts',
+  '../src/viewer/hooks/useModeManager.ts',
+  '../src/viewer/hooks/useDocumentLifecycle.ts',
+  '../src/viewer/hooks/useCommands.ts',
+  '../src/viewer/hooks/useDragDrop.ts',
+  '../src/viewer/ViewerSidePanels.tsx',
+  '../src/viewer/hooks/useAnnotations.ts',
+  '../src/viewer/hooks/useTextInteraction.ts',
+  '../src/viewer/hooks/useKeyboardShortcuts.ts',
+  '../src/viewer/ViewerApp.tsx',
+  '../src/viewer/WelcomeSection.tsx',
+].map(p => readFileSync(new URL(p, import.meta.url), 'utf8')).join('\n\n');
 
 // ---------------------------------------------------------------------------
 // Locate key sections in OrganizeGrid for scoped assertions
@@ -169,7 +183,7 @@ describe('OrganizeGrid — task queue', () => {
 
   it('updates task to error on failed delete', () => {
     expect(deleteBody).toContain("status: 'error'");
-    expect(deleteBody).toContain("'Verwijderen mislukt'");
+    expect(deleteBody).toContain("t('tasks.deleteFailed')");
   });
 
   it('pushes a running task on rotate', () => {
@@ -184,7 +198,7 @@ describe('OrganizeGrid — task queue', () => {
 
   it('updates task to error on failed rotate', () => {
     expect(rotateBody).toContain("status: 'error'");
-    expect(rotateBody).toContain("'Roteren mislukt'");
+    expect(rotateBody).toContain("t('tasks.rotateFailed')");
   });
 });
 

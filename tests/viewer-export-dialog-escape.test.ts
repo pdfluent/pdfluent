@@ -83,11 +83,11 @@ describe('ExportDialog — Escape handler: existing close affordances unchanged'
   });
 
   it('× button still calls onClose', () => {
-    expect(dialogSource).toContain('aria-label="Exportdialoog sluiten"');
+    expect(dialogSource).toContain("aria-label={t('exportDialog.closeAriaLabel'");
   });
 
   it('Annuleren button still calls onClose', () => {
-    expect(dialogSource).toContain('Annuleren');
+    expect(dialogSource).toContain("t('common.cancel'");
   });
 });
 
@@ -102,7 +102,7 @@ describe('ExportDialog — Escape handler: no regressions', () => {
   });
 
   it('FORMAT_LABELS still exported', () => {
-    expect(dialogSource).toContain('export const FORMAT_LABELS');
+    expect(dialogSource).toContain('export const FORMAT_LABEL_KEYS');
   });
 
   it('handleExport function still present', () => {

@@ -29,7 +29,7 @@ describe('EmptyStateNoDocument', () => {
   it('renders a descriptive paragraph about no document', () => {
     const blockStart = source.indexOf('data-testid="empty-state-no-document"');
     const block = source.slice(blockStart, blockStart + 400);
-    expect(block).toContain('Geen document geopend');
+    expect(block).toContain("t('emptyStates.noDocument'");
   });
 
   it('renders an action button when actionLabel is provided', () => {
@@ -59,7 +59,7 @@ describe('EmptyStateNoAnnotations', () => {
   it('renders a descriptive paragraph about no annotations', () => {
     const blockStart = source.indexOf('data-testid="empty-state-no-annotations"');
     const block = source.slice(blockStart, blockStart + 400);
-    expect(block).toContain('Geen annotaties');
+    expect(block).toContain("t('emptyStates.noAnnotations'");
   });
 
   it('renders an action button when actionLabel is provided', () => {
@@ -83,7 +83,7 @@ describe('EmptyStateNoIssues', () => {
   it('renders a descriptive paragraph about no open issues', () => {
     const blockStart = source.indexOf('data-testid="empty-state-no-issues"');
     const block = source.slice(blockStart, blockStart + 400);
-    expect(block).toContain('Geen openstaande problemen');
+    expect(block).toContain("t('emptyStates.noIssues'");
   });
 
   it('renders an action button when actionLabel is provided', () => {
@@ -107,7 +107,7 @@ describe('EmptyStateNoResults', () => {
   it('renders a descriptive paragraph about no search results', () => {
     const blockStart = source.indexOf('data-testid="empty-state-no-results"');
     const block = source.slice(blockStart, blockStart + 400);
-    expect(block).toContain('Geen resultaten');
+    expect(block).toContain("t('emptyStates.noResults'");
   });
 
   it('renders an action button when actionLabel is provided', () => {

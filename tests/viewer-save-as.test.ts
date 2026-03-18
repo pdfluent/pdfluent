@@ -8,10 +8,24 @@
 import { readFileSync } from 'node:fs';
 import { describe, it, expect } from 'vitest';
 
-const viewerAppSource = readFileSync(
-  new URL('../src/viewer/ViewerApp.tsx', import.meta.url),
-  'utf8'
-);
+const viewerAppSource = [
+  '../src/viewer/hooks/usePageNavigation.ts',
+  '../src/viewer/hooks/useZoomControls.ts',
+  '../src/viewer/hooks/useSidebarState.ts',
+  '../src/viewer/hooks/useUndoRedo.ts',
+  '../src/viewer/hooks/useSearch.ts',
+  '../src/viewer/hooks/useFormFields.ts',
+  '../src/viewer/hooks/useModeManager.ts',
+  '../src/viewer/hooks/useDocumentLifecycle.ts',
+  '../src/viewer/hooks/useCommands.ts',
+  '../src/viewer/hooks/useDragDrop.ts',
+  '../src/viewer/ViewerSidePanels.tsx',
+  '../src/viewer/hooks/useAnnotations.ts',
+  '../src/viewer/hooks/useTextInteraction.ts',
+  '../src/viewer/hooks/useKeyboardShortcuts.ts',
+  '../src/viewer/ViewerApp.tsx',
+  '../src/viewer/WelcomeSection.tsx',
+].map(p => readFileSync(new URL(p, import.meta.url), 'utf8')).join('\n\n');
 
 const topBarSource = readFileSync(
   new URL('../src/viewer/components/TopBar.tsx', import.meta.url),
@@ -123,7 +137,7 @@ describe('ViewerApp — save-as: keyboard shortcut', () => {
 describe('ViewerApp — save-as: command palette', () => {
   it('includes save-as command', () => {
     expect(commandsBody).toContain("id: 'save-as'");
-    expect(commandsBody).toContain("label: 'Opslaan als…'");
+    expect(commandsBody).toContain("label: t('commands.saveAs')");
   });
 
   it('save-as command action calls handleSaveAs', () => {
@@ -133,8 +147,8 @@ describe('ViewerApp — save-as: command palette', () => {
   it('save-as command has relevant keywords', () => {
     const saveAsIdx = commandsBody.indexOf("id: 'save-as'");
     const saveAsEntry = commandsBody.slice(saveAsIdx, commandsBody.indexOf('},', saveAsIdx) + 2);
-    expect(saveAsEntry).toContain("'opslaan'");
-    expect(saveAsEntry).toContain("'als'");
+    expect(saveAsEntry).toContain("'save'");
+    expect(saveAsEntry).toContain("'as'");
   });
 });
 
@@ -190,7 +204,7 @@ describe('TopBar — save-as: button', () => {
   });
 
   it('button shows "Opslaan als…" label', () => {
-    expect(topBarSource).toContain('Opslaan als…');
+    expect(topBarSource).toContain("t('common.saveAs'");
   });
 
   it('button title mentions ⌘⇧S shortcut', () => {
@@ -198,7 +212,7 @@ describe('TopBar — save-as: button', () => {
     const btnStart = topBarSource.lastIndexOf('<button', btnIdx);
     const btnEnd   = topBarSource.indexOf('</button>', btnIdx) + 9;
     const btn      = topBarSource.slice(btnStart, btnEnd);
-    expect(btn).toContain('⌘⇧S');
+    expect(btn).toContain("t('topbar.saveAsTooltip'");
   });
 });
 
@@ -213,7 +227,7 @@ describe('ViewerApp — save-as: no regressions', () => {
   });
 
   it('Opslaan button still present in TopBar', () => {
-    expect(topBarSource).toContain('Opslaan');
+    expect(topBarSource).toContain("t('common.save'");
     expect(topBarSource).toContain('canSave');
   });
 
