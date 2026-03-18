@@ -7,11 +7,12 @@
 
 import { useState, useRef, useEffect, useMemo } from 'react';
 import type { ReactNode } from 'react';
-import { ChevronRightIcon, CheckIcon, XIcon, TrashIcon, PencilIcon } from 'lucide-react';
+import { ChevronRightIcon, CheckIcon, XIcon, TrashIcon, PencilIcon, EyeIcon, EyeOffIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { ViewerMode } from '../types';
 import type { PdfDocument, DocumentPermissions, FormField, FormFieldType, FormFieldValue, Annotation } from '../../core/document';
 import { useTaskQueueContext } from '../context/TaskQueueContext';
+import { SignaturePanel } from './SignaturePanel';
 
 // ---------------------------------------------------------------------------
 // Shared shell
@@ -81,6 +82,18 @@ interface RightContextPanelProps {
   onRunOcr?: (options: { language: string; scope: 'scanned' | 'all'; preprocessMode: 'off' | 'auto' | 'manual' }) => void;
   /** Whether an OCR run is currently in progress. */
   ocrRunning?: boolean;
+  /** Whether the OCR overlay is visible. */
+  ocrVisible?: boolean;
+  /** Callback to toggle OCR overlay visibility. */
+  onOcrVisibleChange?: (v: boolean) => void;
+  /** Confidence threshold for OCR overlay (0–1). */
+  ocrConfidenceThreshold?: number;
+  /** Callback to change OCR confidence threshold. */
+  onOcrConfidenceChange?: (v: number) => void;
+  /** Search-and-redact: finds all occurrences of a query and marks as redactions. */
+  onRedactSearch?: (query: string) => Promise<{ matchesFound: number; areasRedacted: number } | null>;
+  /** Permanently strip document metadata. */
+  onRedactMetadata?: () => Promise<boolean>;
 }
 
 function CollapsibleSection({ title, children }: { title: string; children: ReactNode }) {
@@ -637,10 +650,18 @@ function OcrPanel({
   scannedPageIndices,
   onRunOcr,
   ocrRunning,
+  ocrVisible = true,
+  onOcrVisibleChange,
+  ocrConfidenceThreshold = 0.6,
+  onOcrConfidenceChange,
 }: {
   scannedPageIndices: Set<number>;
   onRunOcr?: (options: { language: string; scope: 'scanned' | 'all'; preprocessMode: 'off' | 'auto' | 'manual' }) => void;
   ocrRunning?: boolean;
+  ocrVisible?: boolean;
+  onOcrVisibleChange?: (v: boolean) => void;
+  ocrConfidenceThreshold?: number;
+  onOcrConfidenceChange?: (v: number) => void;
 }) {
   const { t } = useTranslation();
   const [ocrLanguage, setOcrLanguage] = useState('en');
@@ -704,18 +725,45 @@ function OcrPanel({
         </select>
       </div>
 
-      {/* Run OCR button */}
-      <button
-        data-testid="run-ocr-btn"
-        onClick={() => {
-          onRunOcr?.({ language: ocrLanguage, scope: ocrScope, preprocessMode: ocrPreprocessMode });
-        }}
-        disabled={ocrRunning}
-        aria-label={t('ocr.runAriaLabel')}
-        className="w-full py-1 text-[10px] font-medium rounded bg-primary text-primary-foreground hover:opacity-90 transition-opacity disabled:opacity-40"
-      >
-        {ocrRunning ? t('ocr.running') : t('ocr.run')}
-      </button>
+      {/* Confidence threshold */}
+      <div className="flex flex-col gap-0.5">
+        <label className="text-[9px] text-muted-foreground/70 uppercase tracking-wide">
+          {t('ocr.confidenceThreshold', { value: Math.round(ocrConfidenceThreshold * 100) })}
+        </label>
+        <input
+          data-testid="ocr-confidence-slider"
+          type="range"
+          min={0}
+          max={100}
+          value={Math.round(ocrConfidenceThreshold * 100)}
+          onChange={e => { onOcrConfidenceChange?.(parseInt(e.target.value) / 100); }}
+          className="w-full accent-primary"
+        />
+      </div>
+
+      {/* Run OCR button + overlay toggle */}
+      <div className="flex gap-1">
+        <button
+          data-testid="run-ocr-btn"
+          onClick={() => {
+            onRunOcr?.({ language: ocrLanguage, scope: ocrScope, preprocessMode: ocrPreprocessMode });
+          }}
+          disabled={ocrRunning}
+          aria-label={t('ocr.runAriaLabel')}
+          className="flex-1 py-1 text-[10px] font-medium rounded bg-primary text-primary-foreground hover:opacity-90 transition-opacity disabled:opacity-40"
+        >
+          {ocrRunning ? t('ocr.running') : t('ocr.run')}
+        </button>
+        <button
+          data-testid="ocr-visibility-toggle"
+          onClick={() => { onOcrVisibleChange?.(!ocrVisible); }}
+          title={t('ocr.toggleOverlay')}
+          aria-label={t('ocr.toggleOverlay')}
+          className="p-1.5 border border-border rounded text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+        >
+          {ocrVisible ? <EyeIcon className="w-3 h-3" /> : <EyeOffIcon className="w-3 h-3" />}
+        </button>
+      </div>
     </div>
   );
 }
@@ -1231,34 +1279,111 @@ function RedactionPanel({
   onApplyRedactions,
   onDeleteRedaction,
   onJumpToRedaction,
+  onSearchRedact,
+  onRedactMetadata,
 }: {
   redactions: Annotation[];
   onApplyRedactions?: () => void;
   onDeleteRedaction?: (annotationId: string) => void;
   onJumpToRedaction?: (pageIndex: number) => void;
+  onSearchRedact?: (query: string) => Promise<{ matchesFound: number; areasRedacted: number } | null>;
+  onRedactMetadata?: () => Promise<boolean>;
 }) {
   const { t } = useTranslation();
+  const { push, update } = useTaskQueueContext();
   const [busy, setBusy] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searching, setSearching] = useState(false);
+  const [strippingMeta, setStrippingMeta] = useState(false);
 
   async function handleApply(): Promise<void> {
     if (busy) return;
     const confirmed = window.confirm(t('rightPanel.redactionConfirm', { count: redactions.length }));
     if (!confirmed) return;
+    const taskId = `apply-redactions-${Date.now()}`;
+    push({ id: taskId, label: t('tasks.applyRedactRunning'), progress: null, status: 'running' });
     setBusy(true);
     try {
-      onApplyRedactions?.();
+      await onApplyRedactions?.();
+      update(taskId, { status: 'done', label: t('tasks.applyRedactDone') });
+    } catch {
+      update(taskId, { status: 'error', label: t('tasks.applyRedactFailed') });
     } finally {
       setBusy(false);
     }
   }
 
+  async function handleSearchRedact(): Promise<void> {
+    if (!searchQuery.trim() || searching) return;
+    const taskId = `search-redact-${Date.now()}`;
+    push({ id: taskId, label: t('tasks.searchRedactRunning'), progress: null, status: 'running' });
+    setSearching(true);
+    try {
+      const result = await onSearchRedact?.(searchQuery);
+      if (result) {
+        update(taskId, { status: 'done', label: t('tasks.searchRedactDone', { count: result.areasRedacted }) });
+        setSearchQuery('');
+      } else {
+        update(taskId, { status: 'error', label: t('tasks.searchRedactFailed') });
+      }
+    } catch {
+      update(taskId, { status: 'error', label: t('tasks.searchRedactFailed') });
+    } finally {
+      setSearching(false);
+    }
+  }
+
+  async function handleRedactMetadata(): Promise<void> {
+    if (strippingMeta) return;
+    const taskId = `redact-metadata-${Date.now()}`;
+    push({ id: taskId, label: t('tasks.redactMetadataRunning'), progress: null, status: 'running' });
+    setStrippingMeta(true);
+    try {
+      const ok = await onRedactMetadata?.();
+      update(taskId, ok ? { status: 'done', label: t('tasks.redactMetadataDone') } : { status: 'error', label: t('tasks.redactMetadataFailed') });
+    } catch {
+      update(taskId, { status: 'error', label: t('tasks.redactMetadataFailed') });
+    } finally {
+      setStrippingMeta(false);
+    }
+  }
+
   return (
-    <div data-testid="redaction-panel" className="flex flex-col gap-1.5">
+    <div data-testid="redaction-panel" className="flex flex-col gap-2">
+
+      {/* Search and redact */}
+      {onSearchRedact && (
+        <div className="flex flex-col gap-0.5">
+          <span className="text-[9px] text-muted-foreground/70 uppercase tracking-wide">{t('protect.searchRedact')}</span>
+          <div className="flex gap-1">
+            <input
+              data-testid="search-redact-input"
+              type="text"
+              value={searchQuery}
+              onChange={e => { setSearchQuery(e.target.value); }}
+              onKeyDown={e => { if (e.key === 'Enter') void handleSearchRedact(); }}
+              placeholder={t('protect.searchRedactPlaceholder')}
+              className="flex-1 text-[10px] bg-card border border-border rounded px-2 py-1 text-foreground outline-none focus:ring-1 focus:ring-primary"
+            />
+            <button
+              data-testid="search-redact-btn"
+              onClick={() => { void handleSearchRedact(); }}
+              disabled={!searchQuery.trim() || searching}
+              className="text-[10px] px-2 py-1 bg-destructive text-destructive-foreground rounded hover:opacity-90 transition-opacity disabled:opacity-40 shrink-0"
+            >
+              {searching ? t('common.busy') : t('protect.searchRedactBtn')}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Pending list + count */}
       <p className="text-[10px] text-muted-foreground">
         {redactions.length === 0
           ? t('rightPanel.noRedactions')
           : t('rightPanel.redactionCount', { count: redactions.length })}
       </p>
+
       <button
         data-testid="apply-redactions-btn"
         onClick={() => { void handleApply(); }}
@@ -1267,7 +1392,8 @@ function RedactionPanel({
       >
         {busy ? t('common.busy') : t('rightPanel.applyRedactions')}
       </button>
-      <div className="flex flex-col gap-0.5 mt-1">
+
+      <div className="flex flex-col gap-0.5">
         {redactions.map((r) => (
           <div
             key={r.id}
@@ -1292,6 +1418,22 @@ function RedactionPanel({
           </div>
         ))}
       </div>
+
+      {/* Redact metadata */}
+      {onRedactMetadata && (
+        <div className="flex flex-col gap-0.5 pt-1 border-t border-border">
+          <span className="text-[9px] text-muted-foreground/70 uppercase tracking-wide">{t('protect.redactMetadataTitle')}</span>
+          <p className="text-[10px] text-muted-foreground">{t('protect.redactMetadataDesc')}</p>
+          <button
+            data-testid="redact-metadata-btn"
+            onClick={() => { void handleRedactMetadata(); }}
+            disabled={strippingMeta}
+            className="w-full py-1 text-[10px] font-medium rounded bg-muted text-foreground hover:bg-muted/80 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            {strippingMeta ? t('common.busy') : t('protect.redactMetadataBtn')}
+          </button>
+        </div>
+      )}
     </div>
   );
 }
@@ -1314,9 +1456,6 @@ const PLACEHOLDER_SECTION_KEYS: Partial<Record<ViewerMode, Array<{ titleKey: str
   organize: [
     { titleKey: 'rightPanel.pageRange', contentKey: 'rightPanel.pageRangeContent' },
     { titleKey: 'rightPanel.output', contentKey: 'rightPanel.outputContent' },
-  ],
-  protect: [
-    { titleKey: 'rightPanel.redact', contentKey: 'rightPanel.redactContent' },
   ],
   convert: [
     { titleKey: 'rightPanel.outputFormat', contentKey: 'rightPanel.outputFormatContent' },
@@ -1342,7 +1481,7 @@ function colorToHex(cssColor: string): string {
 // Main component
 // ---------------------------------------------------------------------------
 
-export function RightContextPanel({ mode, pdfDoc, pageCount, formFields, comments, activeCommentIdx, onCommentSelect, onDeleteComment, onUpdateComment, onToggleResolved, onAddReply, onDeleteReply, onNextComment, onPrevComment, onResolveAll, onDeleteAllResolved, scannedPageIndices = new Set(), onRunOcr, ocrRunning, activeFieldIdx, onFieldSelect, onSetFieldValue, formValidationErrors, onFormSubmit, authorName, onAuthorChange, onMetadataChange, selectedAnnotation, onDeleteSelectedAnnotation, onUpdateAnnotationColor, redactions = [], onApplyRedactions, onDeleteRedaction, onJumpToRedaction }: RightContextPanelProps) {
+export function RightContextPanel({ mode, pdfDoc, pageCount, formFields, comments, activeCommentIdx, onCommentSelect, onDeleteComment, onUpdateComment, onToggleResolved, onAddReply, onDeleteReply, onNextComment, onPrevComment, onResolveAll, onDeleteAllResolved, scannedPageIndices = new Set(), onRunOcr, ocrRunning, ocrVisible = true, onOcrVisibleChange, ocrConfidenceThreshold = 0.6, onOcrConfidenceChange, activeFieldIdx, onFieldSelect, onSetFieldValue, formValidationErrors, onFormSubmit, authorName, onAuthorChange, onMetadataChange, selectedAnnotation, onDeleteSelectedAnnotation, onUpdateAnnotationColor, redactions = [], onApplyRedactions, onDeleteRedaction, onJumpToRedaction, onRedactSearch, onRedactMetadata }: RightContextPanelProps) {
   const { t } = useTranslation();
   return (
     <div className="w-48 flex flex-col bg-background border-l border-border shrink-0 overflow-hidden">
@@ -1413,7 +1552,7 @@ export function RightContextPanel({ mode, pdfDoc, pageCount, formFields, comment
               <RedactionPanel redactions={redactions} onApplyRedactions={onApplyRedactions} onDeleteRedaction={onDeleteRedaction} onJumpToRedaction={onJumpToRedaction} />
             </CollapsibleSection>
             <CollapsibleSection title={t('rightPanel.ocr')}>
-              <OcrPanel scannedPageIndices={scannedPageIndices} onRunOcr={onRunOcr} ocrRunning={ocrRunning} />
+              <OcrPanel scannedPageIndices={scannedPageIndices} onRunOcr={onRunOcr} ocrRunning={ocrRunning} ocrVisible={ocrVisible} onOcrVisibleChange={onOcrVisibleChange} ocrConfidenceThreshold={ocrConfidenceThreshold} onOcrConfidenceChange={onOcrConfidenceChange} />
             </CollapsibleSection>
           </>
         )}
@@ -1429,7 +1568,10 @@ export function RightContextPanel({ mode, pdfDoc, pageCount, formFields, comment
         {mode === 'protect' && (
           <>
             <CollapsibleSection title={t('rightPanel.redactions')}>
-              <RedactionPanel redactions={redactions} onApplyRedactions={onApplyRedactions} onDeleteRedaction={onDeleteRedaction} onJumpToRedaction={onJumpToRedaction} />
+              <RedactionPanel redactions={redactions} onApplyRedactions={onApplyRedactions} onDeleteRedaction={onDeleteRedaction} onJumpToRedaction={onJumpToRedaction} onSearchRedact={onRedactSearch} onRedactMetadata={onRedactMetadata} />
+            </CollapsibleSection>
+            <CollapsibleSection title={t('rightPanel.signatures')}>
+              <SignaturePanel pdfDoc={pdfDoc} />
             </CollapsibleSection>
             <CollapsibleSection title={t('rightPanel.securitySettings')}>
               <EncryptDecryptControls />
@@ -1449,13 +1591,27 @@ export function RightContextPanel({ mode, pdfDoc, pageCount, formFields, comment
               </CollapsibleSection>
             ))}
             <CollapsibleSection title={t('rightPanel.ocr')}>
-              <OcrPanel scannedPageIndices={scannedPageIndices} onRunOcr={onRunOcr} ocrRunning={ocrRunning} />
+              <OcrPanel scannedPageIndices={scannedPageIndices} onRunOcr={onRunOcr} ocrRunning={ocrRunning} ocrVisible={ocrVisible} onOcrVisibleChange={onOcrVisibleChange} ocrConfidenceThreshold={ocrConfidenceThreshold} onOcrConfidenceChange={onOcrConfidenceChange} />
             </CollapsibleSection>
           </>
         )}
 
+        {/* ── Convert mode — OCR + placeholders ──────────────────────────── */}
+        {mode === 'convert' && (
+          <>
+            <CollapsibleSection title={t('rightPanel.ocr')}>
+              <OcrPanel scannedPageIndices={scannedPageIndices} onRunOcr={onRunOcr} ocrRunning={ocrRunning} ocrVisible={ocrVisible} onOcrVisibleChange={onOcrVisibleChange} ocrConfidenceThreshold={ocrConfidenceThreshold} onOcrConfidenceChange={onOcrConfidenceChange} />
+            </CollapsibleSection>
+            {(PLACEHOLDER_SECTION_KEYS.convert ?? []).map(s => (
+              <CollapsibleSection key={s.titleKey} title={t(s.titleKey)}>
+                <PlaceholderText text={t(s.contentKey)} />
+              </CollapsibleSection>
+            ))}
+          </>
+        )}
+
         {/* ── All other modes — placeholder ──────────────────────────────── */}
-        {mode !== 'read' && mode !== 'review' && mode !== 'forms' && mode !== 'protect' && mode !== 'edit' && (
+        {mode !== 'read' && mode !== 'review' && mode !== 'forms' && mode !== 'protect' && mode !== 'edit' && mode !== 'convert' && (
           (PLACEHOLDER_SECTION_KEYS[mode] ?? []).map(s => (
             <CollapsibleSection key={s.titleKey} title={t(s.titleKey)}>
               <PlaceholderText text={t(s.contentKey)} />

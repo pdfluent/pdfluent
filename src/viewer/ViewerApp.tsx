@@ -170,6 +170,22 @@ export function ViewerApp() {
     });
   }, []);
 
+  const handleCheckForUpdates = useCallback(() => {
+    void checkAndInstallUpdate({
+      onUpdateAvailable: async (version) => {
+        setUpdateVersion(version);
+        setUpdateAvailable(true);
+        return false;
+      },
+      onUpdateInstalled: () => { /* handled via banner */ },
+      onError: () => { /* silent */ },
+    });
+  }, []);
+
+  // OCR overlay state — lifted so PageCanvas and OcrPanel share the same values
+  const [ocrVisible, setOcrVisible] = useState(true);
+  const [ocrConfidenceThreshold, setOcrConfidenceThreshold] = useState(0.6);
+
   // Centralised hover tracking across all interactive surfaces.
   const {
     hoveredTarget,
@@ -231,6 +247,7 @@ export function ViewerApp() {
     activeCommentIdx,
     scannedPageIndices,
     ocrRunning,
+    ocrPageWords,
     activeAnnotationTool,
     setActiveAnnotationTool,
     selectedAnnotationId,
@@ -258,6 +275,8 @@ export function ViewerApp() {
     handleDeleteSelectedAnnotation,
     handleUpdateAnnotationColor,
     handleApplyRedactions,
+    handleRedactSearch,
+    handleRedactMetadata,
     handleAnnotationClick,
     handleReorderPages,
   } = useAnnotations(
@@ -415,6 +434,7 @@ export function ViewerApp() {
     pendingActionRef,
     recentFiles,
     handleLoadDocument,
+    onCheckForUpdates: handleCheckForUpdates,
   });
 
   const handleOpenAllTools = useCallback(() => {
@@ -579,6 +599,7 @@ export function ViewerApp() {
         formFields={formFields}
         activeFieldIdx={activeFieldIdx}
         onFieldNav={handleFieldNav}
+        onOcrScan={() => { void handleRunOcr({ language: 'en', scope: 'scanned', preprocessMode: 'auto' }); }}
       />
 
       {/* ── Main content area ──────────────────────────────────────────────── */}
@@ -690,6 +711,9 @@ export function ViewerApp() {
                   selectedTextTarget={selectedTextTarget}
                   onTextTargetSelect={handleTextTargetSelect}
                   onTextTargetDoubleClick={handleEditEntry}
+                  ocrWords={ocrPageWords.get(pageIndex)}
+                  ocrVisible={ocrVisible}
+                  ocrConfidenceThreshold={ocrConfidenceThreshold}
                 />
                 {/* Text context bar — floats above selected paragraph */}
                 {shouldShowContextBar(mode, selectedTextTarget) && selectedTextTarget && !editingTextTargetId && (
@@ -782,7 +806,7 @@ export function ViewerApp() {
 
         {/* ── Right context panel ─────────────────────────────────────────── */}
         {showRightPanel && (
-          <RightContextPanel mode={mode} pdfDoc={pdfDoc ?? null} pageCount={pageCount} formFields={formFields} comments={comments} activeCommentIdx={activeCommentIdx} onCommentSelect={handleCommentNav} onDeleteComment={handleDeleteComment} onUpdateComment={handleUpdateComment} onToggleResolved={handleToggleResolvedStatus} onAddReply={handleAddReply} onDeleteReply={handleDeleteReply} onNextComment={handleNextComment} onPrevComment={handlePrevComment} onResolveAll={handleResolveAll} onDeleteAllResolved={handleDeleteAllResolved} scannedPageIndices={scannedPageIndices} onRunOcr={(opts) => { void handleRunOcr(opts); }} ocrRunning={ocrRunning} activeFieldIdx={activeFieldIdx} onFieldSelect={handleFieldNav} onSetFieldValue={handleSetFieldValue} formValidationErrors={formValidationErrors} onFormSubmit={handleFormSubmit} authorName={authorName} onAuthorChange={handleAuthorChange} onMetadataChange={handleMetadataChange} selectedAnnotation={selectedAnnotation} onDeleteSelectedAnnotation={handleDeleteSelectedAnnotation} onUpdateAnnotationColor={handleUpdateAnnotationColor} redactions={redactions} onApplyRedactions={handleApplyRedactions} onDeleteRedaction={handleDeleteSelectedAnnotation} onJumpToRedaction={setPageIndex} />
+          <RightContextPanel mode={mode} pdfDoc={pdfDoc ?? null} pageCount={pageCount} formFields={formFields} comments={comments} activeCommentIdx={activeCommentIdx} onCommentSelect={handleCommentNav} onDeleteComment={handleDeleteComment} onUpdateComment={handleUpdateComment} onToggleResolved={handleToggleResolvedStatus} onAddReply={handleAddReply} onDeleteReply={handleDeleteReply} onNextComment={handleNextComment} onPrevComment={handlePrevComment} onResolveAll={handleResolveAll} onDeleteAllResolved={handleDeleteAllResolved} scannedPageIndices={scannedPageIndices} onRunOcr={(opts) => { void handleRunOcr(opts); }} ocrRunning={ocrRunning} ocrVisible={ocrVisible} onOcrVisibleChange={setOcrVisible} ocrConfidenceThreshold={ocrConfidenceThreshold} onOcrConfidenceChange={setOcrConfidenceThreshold} activeFieldIdx={activeFieldIdx} onFieldSelect={handleFieldNav} onSetFieldValue={handleSetFieldValue} formValidationErrors={formValidationErrors} onFormSubmit={handleFormSubmit} authorName={authorName} onAuthorChange={handleAuthorChange} onMetadataChange={handleMetadataChange} selectedAnnotation={selectedAnnotation} onDeleteSelectedAnnotation={handleDeleteSelectedAnnotation} onUpdateAnnotationColor={handleUpdateAnnotationColor} redactions={redactions} onApplyRedactions={handleApplyRedactions} onDeleteRedaction={handleDeleteSelectedAnnotation} onJumpToRedaction={setPageIndex} onRedactSearch={handleRedactSearch} onRedactMetadata={handleRedactMetadata} />
         )}
       </div>
 
