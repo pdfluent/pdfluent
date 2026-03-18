@@ -95,7 +95,7 @@
       "endpoints": [
         "https://github.com/pdfluent/pdfluent/releases/latest/download/latest.json"
       ],
-      "pubkey": "REPLACE_WITH_TAURI_SIGNING_PUBLIC_KEY"
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEY3QzlGMjE0NTNCMjE0MDEKUldRQkZMSlRGUExKOTlFcE5BSW91eGUrM2NRY2Z2Z1Z0OTlXQWd6NUlMSmhjVVY0TCtQYmFQYW4K"
     }
   }
 }
