@@ -1,6 +1,6 @@
 # PDFluent Architecture
 
-_Last updated: 2026-03-17_
+_Last updated: 2026-03-19_
 
 ## Core Principles
 
@@ -300,9 +300,11 @@ Every blocking criterion must pass before a release. Areas covered:
 
 ## Testing Architecture
 
-### Counts (2026-03-17)
-- **Test files:** 317 (312 passing, 5 pre-existing failures unrelated to viewer work)
-- **Tests:** 6350 (6345 passing)
+### Counts (2026-03-19)
+- **Unit test files:** 317 (312 passing, 5 pre-existing failures unrelated to viewer work)
+- **Unit tests:** 6350 (6345 passing)
+- **E2E spec files:** 25 (23 passing, 2 pre-existing failures: ai.spec.ts, collaboration.spec.ts — missing source files)
+- **E2E tests:** 198 passing
 - **Coverage blocks completed:** 3 blocks × 10 batches = 30 batches
 
 ### Test Layers
@@ -315,15 +317,68 @@ Every blocking criterion must pass before a release. Areas covered:
 | Performance / stress | Vitest | `tests/performance/` |
 | Workflow corpus | Vitest | `tests/workflows/` |
 | Release acceptance | Vitest | `tests/release/` |
-| E2E / source readiness | Playwright | `tests/e2e/` |
+| E2E interaction tests | Playwright | `tests/e2e/workflows/` |
+| E2E visual verification | Python Playwright | `tests/e2e/python/` |
 | Native file ops | Vitest | `tests/native/` |
 
-### Pre-existing Failures (5, unrelated to viewer work)
+### E2E Test Coverage (Playwright)
+
+Tests use Dutch locale (`pdfluent-lang=nl` seeded via `addInitScript`). MockPdfEngine provides a 3-page A4 document.
+
+| Spec file | Tests | Coverage area |
+|---|---|---|
+| `shell.spec.ts` | 11 | Welcome screen, recent files, app shell |
+| `review.spec.ts` | 14 | Review panel, comments, doc info |
+| `annotation-create.spec.ts` | 12 | Annotation tools, overlay, comment panel |
+| `text-edit-flow.spec.ts` | 8 | Edit mode overlay, mode transitions |
+| `text-edit-entry.spec.ts` | — | Text edit entry point |
+| `text-interaction.spec.ts` | — | Text interaction overlay |
+| `text-real-edit.spec.ts` | — | Real text edit flow |
+| `page-organize.spec.ts` | 15 | Organize grid, tiles, batch actions, merge/split |
+| `right-panel-tabs.spec.ts` | 18 | Doc info, comments, forms, redaction, OCR panels |
+| `search.spec.ts` | 10 | Command palette, search input, filtering |
+| `export.spec.ts` | 13 | Export dialog, format selection, page range |
+| `keyboard-shortcuts.spec.ts` | 11 | Meta+K, Meta+?, Escape, undo/redo |
+| `close-document.spec.ts` | 7 | Close button, unsaved changes guard |
+| `drag-drop.spec.ts` | 6 | File loading, welcome→viewer transition |
+| `viewport-responsive.spec.ts` | 24 | 4 viewports × 6 control checks |
+| `accessibility.spec.ts` | 12 | ARIA labels, dialog roles, keyboard nav |
+| `error-states.spec.ts` | 12 | Stress tests, console error checks |
+| `forms.spec.ts` | — | Forms mode |
+| `interaction.spec.ts` | — | Mouse/keyboard interaction |
+| `layout-edit.spec.ts` | — | Layout editing |
+| `recovery.spec.ts` | — | Error recovery |
+| `release-matrix.spec.ts` | — | Release acceptance |
+| `settings.spec.ts` | — | App settings |
+
+### E2E Visual Verification (Python Playwright)
+
+Scripts in `tests/e2e/python/`, run via `npm run test:e2e:visual`.
+
+| Script | Purpose |
+|---|---|
+| `visual_baseline.py` | Screenshots all states/modes/panels/zoom/pages/dialogs → `/tmp/pdfluent-screenshots/` |
+| `console_monitor.py` | Console error sweep across all modes, JSON report output |
+| `dom_recon.py` | DOM reconnaissance: testid coverage, interactive elements, ARIA roles, gap analysis |
+| `workflow_replay.py` | 6 release-gating workflows with screenshots at each step |
+
+### E2E Test Infrastructure
+
+| File | Role |
+|---|---|
+| `tests/e2e/helpers/app.ts` | `gotoViewer`, `gotoViewerWithDoc`, `switchMode`, `openExportDialog`, `openSearchPanel`, `openCommandPalette` |
+| `tests/e2e/helpers/selectors.ts` | `tid()` helper, `CRITICAL_TESTIDS` array |
+| `tests/e2e/helpers/bootstrap.ts` | `seedRecentFiles` |
+| `tests/e2e/mocks/documentState.ts` | `MOCK_RECENT_FILES`, `MOCK_RECENT_FILE_NAME` |
+
+### Pre-existing Failures (5 Vitest, 2 Playwright — unrelated to viewer work)
 1. `tests/ocr-paddle-bridge.test.ts` — OCR bridge source not yet implemented
 2. `tests/toolbar-advanced-tools-menu.test.ts` — tests toolbar component diverged from source
 3. `tests/toolbar-recent-files.test.ts` — tests separate toolbar component
 4. `tests/viewer-continuous-windowing.test.ts` — tests windowed rendering not yet implemented
 5. `tests/xfa-warning-parity.test.ts` — tests Rust source strings; Rust side changed independently
+6. `tests/e2e/workflows/ai.spec.ts` — `aiProvider.ts` source file not yet created
+7. `tests/e2e/workflows/collaboration.spec.ts` — `ReviewHandoffPanel.tsx` source file not yet created
 
 ---
 
@@ -421,7 +476,14 @@ src/
 tests/
 ├── *.test.ts                   # Unit / integration tests
 ├── e2e/                        # Playwright E2E tests
-│   └── workflows/
+│   ├── helpers/                # Shared helpers (app, selectors, bootstrap)
+│   ├── mocks/                  # Mock data (documentState)
+│   ├── python/                 # Python Playwright visual scripts
+│   │   ├── visual_baseline.py
+│   │   ├── console_monitor.py
+│   │   ├── dom_recon.py
+│   │   └── workflow_replay.py
+│   └── workflows/              # TypeScript Playwright specs (25 files)
 ├── native/                     # Native operation tests
 ├── performance/                # Stress tests
 ├── release/                    # Release acceptance matrix
@@ -494,6 +556,19 @@ tests/
 - Performance telemetry (p50/p95/p99, budget monitor, timer helpers)
 - Release acceptance matrix (25 criteria, 13 feature areas, version-controlled gate)
 - Test totals: **317 test files, 6350 tests, 6345 passing**
+
+### 2026-03-19: E2E Test Suite Expansion
+- 12 new Playwright spec files covering all critical user journeys (148 new tests)
+- 4 Python Playwright visual verification scripts (baseline screenshots, console monitoring, DOM recon, workflow replay)
+- Dutch locale seeding via `addInitScript` in test helpers (fixes systemic locale mismatch)
+- Testids added to `ExportDialog`, `CommandPalette`, `TopBar` components
+- Test helpers extended: `openExportDialog`, `openSearchPanel`, `openCommandPalette`
+- Fixed 3 pre-existing E2E test failures (shell.spec.ts Dutch translations, review.spec.ts conditional button checks)
+- E2E totals: **25 spec files, 198 tests passing**
+
+### 2026-03-19: E2E Locale Convention
+**Decision**: All E2E tests seed `pdfluent-lang=nl` via `localStorage` in `gotoViewer()`
+**Rationale**: App defaults to English but all UI mode labels in tests use Dutch translations. Without explicit locale seeding, mode switching fails silently. Dutch locale matches the primary target audience.
 
 ---
 

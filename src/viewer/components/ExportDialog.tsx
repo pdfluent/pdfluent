@@ -211,6 +211,7 @@ export function ExportDialog({ isOpen, onClose, pageIndex, pageCount }: ExportDi
       <div
         role="dialog"
         aria-labelledby="export-dialog-title"
+        data-testid="export-dialog"
         className="fixed left-1/2 top-[20vh] -translate-x-1/2 w-full max-w-sm bg-background border border-border rounded-xl shadow-2xl z-50"
       >
         {/* Header */}
@@ -221,6 +222,7 @@ export function ExportDialog({ isOpen, onClose, pageIndex, pageCount }: ExportDi
           <button
             onClick={onClose}
             aria-label={t('exportDialog.closeAriaLabel')}
+            data-testid="export-close-btn"
             className="p-0.5 text-muted-foreground hover:text-foreground rounded transition-colors"
           >
             <XIcon className="w-4 h-4" />
@@ -239,6 +241,7 @@ export function ExportDialog({ isOpen, onClose, pageIndex, pageCount }: ExportDi
             </label>
             <select
               id="export-format-select"
+              data-testid="export-format-select"
               value={format}
               onChange={e => { setFormat(e.target.value as ExportFormat); }}
               className="w-full text-sm bg-card border border-border rounded-md px-2 py-1.5 text-foreground outline-none focus:ring-1 focus:ring-primary"
@@ -285,6 +288,7 @@ export function ExportDialog({ isOpen, onClose, pageIndex, pageCount }: ExportDi
         <div className="px-4 py-3 border-t border-border flex items-center justify-end gap-2">
           <button
             onClick={onClose}
+            data-testid="export-cancel-btn"
             className="px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground rounded-md hover:bg-muted transition-colors"
           >
             {t('common.cancel')}
@@ -292,6 +296,7 @@ export function ExportDialog({ isOpen, onClose, pageIndex, pageCount }: ExportDi
           <button
             onClick={() => { void handleExport(); }}
             disabled={exporting || !isTauri}
+            data-testid="export-submit-btn"
             className="px-3 py-1.5 bg-primary text-primary-foreground text-xs font-semibold rounded-md hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {exporting ? t('exportDialog.exporting') : t('common.export')}

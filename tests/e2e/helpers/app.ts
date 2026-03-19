@@ -14,8 +14,10 @@ export const VIEWER_URL = '/?v2';
 /**
  * Navigate to the viewer and wait for the welcome screen to be visible.
  * Playwright's webServer block ensures Vite is already running.
+ * Seeds Dutch locale so mode labels and UI text match test expectations.
  */
 export async function gotoViewer(page: Page): Promise<void> {
+  await page.addInitScript(() => { localStorage.setItem('pdfluent-lang', 'nl'); });
   await page.goto(VIEWER_URL);
   // Wait for React to hydrate and the empty-state wrapper to appear.
   await page.locator(tid('viewer-empty-state')).waitFor({ state: 'visible', timeout: 15_000 });
@@ -62,4 +64,22 @@ export async function gotoViewerWithDoc(page: Page, path = 'mock-test.pdf'): Pro
 /** Switch viewer mode by clicking the mode tab (ModeSwitcher has no testids, uses text). */
 export async function switchMode(page: Page, label: string): Promise<void> {
   await page.getByRole('button', { name: label, exact: true }).click();
+}
+
+/** Open the export dialog via the TopBar export button. */
+export async function openExportDialog(page: Page): Promise<void> {
+  await page.locator(tid('export-btn')).click();
+  await page.locator(tid('export-dialog')).waitFor({ state: 'visible', timeout: 3_000 });
+}
+
+/** Open the command palette / search panel via the TopBar search button. */
+export async function openSearchPanel(page: Page): Promise<void> {
+  await page.locator(tid('search-btn')).click();
+  await page.locator(tid('command-palette')).waitFor({ state: 'visible', timeout: 3_000 });
+}
+
+/** Open the command palette via keyboard shortcut. */
+export async function openCommandPalette(page: Page): Promise<void> {
+  await page.keyboard.press('Meta+k');
+  await page.locator(tid('command-palette')).waitFor({ state: 'visible', timeout: 3_000 });
 }

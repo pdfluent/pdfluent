@@ -297,6 +297,7 @@ export function TopBar({
 
         <button
           onClick={onOpenCommandPalette}
+          data-testid="search-btn"
           className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors shrink-0"
           title="Search / Command Palette (⌘K)"
           aria-label="Search"
@@ -341,6 +342,7 @@ export function TopBar({
         <button
           onClick={onOpenExport}
           disabled={pageCount === 0}
+          data-testid="export-btn"
           className="flex items-center gap-1 px-2 py-1.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
           title={t('common.export')}
         >

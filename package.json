@@ -12,6 +12,7 @@
     "test": "vitest run",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
+    "test:e2e:visual": "python tests/e2e/python/visual_baseline.py && python tests/e2e/python/console_monitor.py && python tests/e2e/python/dom_recon.py",
     "typecheck": "tsc --noEmit",
     "ocr:manifest": "node scripts/generate-ocr-model-manifest.mjs",
     "compliance:generate": "node scripts/generate-third-party.mjs",

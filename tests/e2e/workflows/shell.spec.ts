@@ -20,13 +20,13 @@ test.describe('welcome screen — empty state', () => {
     await gotoViewer(page);
     await expect(page.locator(tid('welcome-empty-state'))).toBeVisible();
     await expect(page.locator(tid('welcome-empty-state'))).toContainText(
-      'Nog geen bestanden geopend',
+      'Geen recente bestanden',
     );
   });
 
   test('open button has correct label', async ({ page }) => {
     await gotoViewer(page);
-    await expect(page.locator(tid('welcome-open-btn'))).toContainText('PDF openen');
+    await expect(page.locator(tid('welcome-open-btn'))).toContainText('Open PDF');
   });
 
   test('recent-file-item is absent when no files seeded', async ({ page }) => {

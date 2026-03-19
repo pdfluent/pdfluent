@@ -46,4 +46,35 @@ export const CRITICAL_TESTIDS = [
   'recovery-dialog',
   'recovery-recover-btn',
   'recovery-discard-btn',
+  // Export dialog
+  'export-btn',
+  'export-dialog',
+  'export-format-select',
+  'export-close-btn',
+  'export-cancel-btn',
+  'export-submit-btn',
+  // Search / Command palette
+  'search-btn',
+  'command-palette',
+  'command-palette-input',
+  'command-item',
+  // Search panel (left nav)
+  'search-panel',
+  'search-input',
+  'search-result-count',
+  'search-result-item',
+  // Unsaved changes dialog
+  'unsaved-changes-dialog',
+  'unsaved-save-btn',
+  'unsaved-discard-btn',
+  'unsaved-cancel-btn',
+  // Organize mode
+  'organize-grid',
+  'organize-header',
+  'select-all-btn',
+  'batch-action-bar',
+  'batch-rotate-btn',
+  'batch-delete-btn',
+  'clear-selection-btn',
+  'selection-count',
 ] as const;

@@ -118,6 +118,7 @@ export function CommandPalette({ isOpen, onClose, commands, recentIds = [], onRu
       <div
         role="dialog"
         aria-label="Command palette"
+        data-testid="command-palette"
         className="fixed left-1/2 top-[15vh] -translate-x-1/2 w-full max-w-lg bg-background border border-border rounded-xl shadow-2xl z-50 overflow-hidden"
       >
         {/* Search input */}
@@ -126,6 +127,7 @@ export function CommandPalette({ isOpen, onClose, commands, recentIds = [], onRu
           <input
             ref={inputRef}
             type="text"
+            data-testid="command-palette-input"
             placeholder={t('commandPalette.placeholder')}
             aria-label={t('commandPalette.placeholder')}
             value={query}
@@ -175,6 +177,7 @@ export function CommandPalette({ isOpen, onClose, commands, recentIds = [], onRu
               {filtered.map((cmd, i) => (
                 <li key={cmd.id}>
                   <button
+                    data-testid="command-item"
                     className={`w-full text-left px-4 py-2.5 text-sm transition-colors ${
                       i === selectedIndex
                         ? 'bg-primary/10 text-foreground'
