@@ -219,19 +219,14 @@ describe('RightContextPanel — task queue integration', () => {
 // ---------------------------------------------------------------------------
 
 describe('RightContextPanel — other modes remain placeholder', () => {
-  it('PLACEHOLDER_SECTIONS still covers edit, organize, convert (forms/review now real)', () => {
-    // forms and review have been replaced by real components — they are no longer in PLACEHOLDER_SECTIONS
-    expect(panelSource).toContain('edit:');
-    expect(panelSource).toContain('organize:');
-    expect(panelSource).toContain('convert:');
-    expect(panelSource).not.toContain('review:');
-    expect(panelSource).not.toContain('forms:');
+  it('PLACEHOLDER_SECTION_KEYS has been fully removed', () => {
+    // Placeholder sections have been cleaned up — each mode is now explicit or empty
+    expect(panelSource).not.toContain('PLACEHOLDER_SECTION_KEYS');
   });
 
-  it('non-read/protect/forms/review modes still render from PLACEHOLDER_SECTIONS', () => {
-    expect(panelSource).toContain("mode !== 'forms'");
-    expect(panelSource).toContain("mode !== 'review'");
-    expect(panelSource).toContain('PLACEHOLDER_SECTION_KEYS[mode]');
+  it('edit and convert modes each render only an OCR panel', () => {
+    expect(panelSource).toContain("mode === 'edit'");
+    expect(panelSource).toContain("mode === 'convert'");
   });
 
   it('no longer has the global TODO(pdfluent-viewer) marker for RightContextPanel', () => {

@@ -10,7 +10,6 @@ import { useTranslation } from 'react-i18next';
 import {
   LayoutIcon,
   BookmarkIcon,
-  SearchIcon,
   MessageSquareIcon,
   PaperclipIcon,
   LayersIcon,
@@ -78,8 +77,7 @@ interface PanelTab {
 const PANELS: PanelTab[] = [
   { id: 'thumbnails', icon: <LayoutIcon className="w-5 h-5" />, label: 'leftNav.thumbnails' },
   { id: 'bookmarks', icon: <BookmarkIcon className="w-5 h-5" />, label: 'leftNav.bookmarks' },
-  { id: 'search', icon: <SearchIcon className="w-5 h-5" />, label: 'leftNav.search' },
-  { id: 'comments', icon: <MessageSquareIcon className="w-5 h-5" />, label: 'leftNav.comments' },
+{ id: 'comments', icon: <MessageSquareIcon className="w-5 h-5" />, label: 'leftNav.comments' },
   { id: 'attachments', icon: <PaperclipIcon className="w-5 h-5" />, label: 'leftNav.attachments' },
   { id: 'layers', icon: <LayersIcon className="w-5 h-5" />, label: 'leftNav.layers' },
   { id: 'fields', icon: <FileInputIcon className="w-5 h-5" />, label: 'leftNav.formFields' },
@@ -371,7 +369,7 @@ function AttachmentsPanel({
     <div className="flex-1 flex flex-col overflow-hidden">
       {/* Toolbar */}
       <div className="flex items-center justify-between px-2 py-1.5 border-b border-border shrink-0">
-        <span className="text-[10px] text-muted-foreground uppercase tracking-wide">{t('leftNav.attachments')}</span>
+        <span className="text-[10px] text-muted-foreground">{t('leftNav.attachments')}</span>
         <button
           data-testid="add-attachment-btn"
           onClick={onAddAttachment}

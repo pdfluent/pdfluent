@@ -125,8 +125,8 @@ describe('command palette recent — section rendering', () => {
     expect(paletteSource).toContain('data-testid="recent-command-item"');
   });
 
-  it('section heading is "Recente opdrachten"', () => {
-    expect(paletteSource).toContain('Recente opdrachten');
+  it('section heading uses i18n key commandPalette.recent', () => {
+    expect(paletteSource).toContain("'commandPalette.recent'");
   });
 
   it('each recent item calls onRun on click', () => {

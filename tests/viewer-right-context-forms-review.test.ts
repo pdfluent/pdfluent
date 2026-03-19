@@ -226,12 +226,13 @@ describe('RightContextPanel — placeholder sections cleanup', () => {
     expect(panelSource).not.toContain('Opmerkingen filteren');
   });
 
-  it('PLACEHOLDER_SECTIONS uses Partial<Record> type', () => {
-    expect(panelSource).toContain('Partial<Record<ViewerMode');
+  it('PLACEHOLDER_SECTION_KEYS has been fully removed', () => {
+    // Placeholder sections are no longer needed — each mode renders real content or nothing
+    expect(panelSource).not.toContain('PLACEHOLDER_SECTION_KEYS');
   });
 
-  it('fallback block excludes forms and review modes', () => {
-    expect(panelSource).toContain("mode !== 'forms'");
-    expect(panelSource).toContain("mode !== 'review'");
+  it('forms and review modes are explicitly handled with real components', () => {
+    expect(panelSource).toContain("mode === 'forms'");
+    expect(panelSource).toContain("mode === 'review'");
   });
 });

@@ -517,6 +517,14 @@
     "closeDialog": "Close dialog",
     "thisOverview": "This overview"
   },
+  "commandPalette": {
+    "placeholder": "Search commands…",
+    "recent": "Recent commands",
+    "empty": "No commands found.",
+    "navigate": "↑↓ navigate",
+    "select": "↵ select",
+    "dismiss": "Esc close"
+  },
   "exportDialog": {
     "title": "Export",
     "closeAriaLabel": "Close export dialog",

@@ -891,7 +891,7 @@ export function ViewerApp() {
         </div>
 
         {/* ── Right context panel ─────────────────────────────────────────── */}
-        {showRightPanel && (
+        {showRightPanel && pdfDoc && (
           <RightContextPanel mode={mode} pdfDoc={pdfDoc ?? null} pageCount={pageCount} formFields={formFields} comments={comments} activeCommentIdx={activeCommentIdx} onCommentSelect={handleCommentNav} onDeleteComment={handleDeleteComment} onUpdateComment={handleUpdateComment} onToggleResolved={handleToggleResolvedStatus} onAddReply={handleAddReply} onDeleteReply={handleDeleteReply} onNextComment={handleNextComment} onPrevComment={handlePrevComment} onResolveAll={handleResolveAll} onDeleteAllResolved={handleDeleteAllResolved} scannedPageIndices={scannedPageIndices} onRunOcr={(opts) => { void handleRunOcr(opts); }} ocrRunning={ocrRunning} ocrVisible={ocrVisible} onOcrVisibleChange={setOcrVisible} ocrConfidenceThreshold={ocrConfidenceThreshold} onOcrConfidenceChange={setOcrConfidenceThreshold} activeFieldIdx={activeFieldIdx} onFieldSelect={handleFieldNav} onSetFieldValue={handleSetFieldValue} formValidationErrors={formValidationErrors} onFormSubmit={handleFormSubmit} authorName={authorName} onAuthorChange={handleAuthorChange} onMetadataChange={handleMetadataChange} selectedAnnotation={selectedAnnotation} onDeleteSelectedAnnotation={handleDeleteSelectedAnnotation} onUpdateAnnotationColor={handleUpdateAnnotationColor} redactions={redactions} onApplyRedactions={handleApplyRedactions} onDeleteRedaction={handleDeleteSelectedAnnotation} onJumpToRedaction={setPageIndex} onRedactSearch={handleRedactSearch} onRedactMetadata={handleRedactMetadata} />
         )}
       </div>
