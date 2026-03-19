@@ -92,6 +92,7 @@ export function GoToPageDialog({ isOpen, pageCount, onNavigate, onClose }: GoToP
             onChange={(e) => { setInputValue(e.target.value); }}
             onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); submit(); } }}
             placeholder={t('goToPage.placeholder')}
+            aria-label={t('goToPage.title')}
             data-testid="goto-page-input"
             className="flex-1 text-sm bg-card border border-border rounded-md px-3 py-1.5 text-foreground focus:ring-1 focus:ring-primary outline-none"
           />

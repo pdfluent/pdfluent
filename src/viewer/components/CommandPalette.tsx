@@ -6,6 +6,7 @@
 // See https://pdfluent.com/license for terms.
 
 import { useEffect, useRef, useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { SearchIcon, XIcon } from 'lucide-react';
 
 export interface Command {
@@ -24,6 +25,7 @@ interface CommandPaletteProps {
 }
 
 export function CommandPalette({ isOpen, onClose, commands, recentIds = [], onRun }: CommandPaletteProps) {
+  const { t } = useTranslation();
   const inputRef = useRef<HTMLInputElement>(null);
   const [query, setQuery] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -124,7 +126,8 @@ export function CommandPalette({ isOpen, onClose, commands, recentIds = [], onRu
           <input
             ref={inputRef}
             type="text"
-            placeholder="Zoek opdrachten…"
+            placeholder={t('commandPalette.placeholder')}
+            aria-label={t('commandPalette.placeholder')}
             value={query}
             onChange={e => { setQuery(e.target.value); }}
             className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground/60 outline-none"
@@ -144,7 +147,7 @@ export function CommandPalette({ isOpen, onClose, commands, recentIds = [], onRu
           {showRecent && (
             <div data-testid="recent-commands-section">
               <p className="px-4 pt-2 pb-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground/60">
-                Recente opdrachten
+                {t('commandPalette.recent')}
               </p>
               <ul>
                 {recentCommands.map(cmd => (
@@ -165,7 +168,7 @@ export function CommandPalette({ isOpen, onClose, commands, recentIds = [], onRu
 
           {filtered.length === 0 ? (
             <div className="px-4 py-8 text-center">
-              <p className="text-sm text-muted-foreground">Geen opdrachten gevonden.</p>
+              <p className="text-sm text-muted-foreground">{t('commandPalette.empty')}</p>
             </div>
           ) : (
             <ul>
@@ -190,9 +193,9 @@ export function CommandPalette({ isOpen, onClose, commands, recentIds = [], onRu
 
         {/* Footer */}
         <div className="px-4 py-2 border-t border-border flex items-center gap-4">
-          <span className="text-[10px] text-muted-foreground/50">↑↓ navigeren</span>
-          <span className="text-[10px] text-muted-foreground/50">↵ selecteren</span>
-          <span className="text-[10px] text-muted-foreground/50">Esc sluiten</span>
+          <span className="text-[10px] text-muted-foreground/50">{t('commandPalette.navigate')}</span>
+          <span className="text-[10px] text-muted-foreground/50">{t('commandPalette.select')}</span>
+          <span className="text-[10px] text-muted-foreground/50">{t('commandPalette.dismiss')}</span>
         </div>
       </div>
     </>

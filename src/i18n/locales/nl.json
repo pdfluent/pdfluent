@@ -517,6 +517,14 @@
     "closeDialog": "Dialoog sluiten",
     "thisOverview": "Dit overzicht"
   },
+  "commandPalette": {
+    "placeholder": "Zoek opdrachten…",
+    "recent": "Recente opdrachten",
+    "empty": "Geen opdrachten gevonden.",
+    "navigate": "↑↓ navigeren",
+    "select": "↵ selecteren",
+    "dismiss": "Esc sluiten"
+  },
   "exportDialog": {
     "title": "Exporteren",
     "closeAriaLabel": "Exportdialoog sluiten",

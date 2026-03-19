@@ -1439,31 +1439,6 @@ function RedactionPanel({
 }
 
 // ---------------------------------------------------------------------------
-// Placeholder sections for modes not yet wired
-// ---------------------------------------------------------------------------
-
-const PLACEHOLDER_SECTION_KEYS: Partial<Record<ViewerMode, Array<{ titleKey: string; contentKey: string }>>> = {
-  read: [
-    { titleKey: 'rightPanel.pageView', contentKey: 'rightPanel.pageViewContent' },
-    { titleKey: 'rightPanel.accessibility', contentKey: 'rightPanel.accessibilityContent' },
-  ],
-  edit: [
-    { titleKey: 'rightPanel.blockProps', contentKey: 'rightPanel.blockPropsContent' },
-    { titleKey: 'rightPanel.typography', contentKey: 'rightPanel.typographyContent' },
-    { titleKey: 'rightPanel.appearance', contentKey: 'rightPanel.appearanceContent' },
-    { titleKey: 'rightPanel.advanced', contentKey: 'rightPanel.advancedContent' },
-  ],
-  organize: [
-    { titleKey: 'rightPanel.pageRange', contentKey: 'rightPanel.pageRangeContent' },
-    { titleKey: 'rightPanel.output', contentKey: 'rightPanel.outputContent' },
-  ],
-  convert: [
-    { titleKey: 'rightPanel.outputFormat', contentKey: 'rightPanel.outputFormatContent' },
-    { titleKey: 'rightPanel.qualitySettings', contentKey: 'rightPanel.qualitySettingsContent' },
-  ],
-};
-
-// ---------------------------------------------------------------------------
 // Color helpers
 // ---------------------------------------------------------------------------
 
@@ -1499,11 +1474,6 @@ export function RightContextPanel({ mode, pdfDoc, pageCount, formFields, comment
             <CollapsibleSection title={t('rightPanel.documentInfo')}>
               <MetadataInfo pdfDoc={pdfDoc} pageCount={pageCount} formFields={formFields} onMetadataChange={onMetadataChange} />
             </CollapsibleSection>
-            {(PLACEHOLDER_SECTION_KEYS.read ?? []).map(s => (
-              <CollapsibleSection key={s.titleKey} title={t(s.titleKey)}>
-                <PlaceholderText text={t(s.contentKey)} />
-              </CollapsibleSection>
-            ))}
           </>
         )}
 
@@ -1582,41 +1552,20 @@ export function RightContextPanel({ mode, pdfDoc, pageCount, formFields, comment
           </>
         )}
 
-        {/* ── Edit mode — placeholder sections + OCR ─────────────────────── */}
+        {/* ── Edit mode — OCR ─────────────────────────────────────────────── */}
         {mode === 'edit' && (
           <>
-            {(PLACEHOLDER_SECTION_KEYS.edit ?? []).map(s => (
-              <CollapsibleSection key={s.titleKey} title={t(s.titleKey)}>
-                <PlaceholderText text={t(s.contentKey)} />
-              </CollapsibleSection>
-            ))}
             <CollapsibleSection title={t('rightPanel.ocr')}>
               <OcrPanel scannedPageIndices={scannedPageIndices} onRunOcr={onRunOcr} ocrRunning={ocrRunning} ocrVisible={ocrVisible} onOcrVisibleChange={onOcrVisibleChange} ocrConfidenceThreshold={ocrConfidenceThreshold} onOcrConfidenceChange={onOcrConfidenceChange} />
             </CollapsibleSection>
           </>
         )}
 
-        {/* ── Convert mode — OCR + placeholders ──────────────────────────── */}
+        {/* ── Convert mode — OCR ──────────────────────────────────────────── */}
         {mode === 'convert' && (
-          <>
-            <CollapsibleSection title={t('rightPanel.ocr')}>
-              <OcrPanel scannedPageIndices={scannedPageIndices} onRunOcr={onRunOcr} ocrRunning={ocrRunning} ocrVisible={ocrVisible} onOcrVisibleChange={onOcrVisibleChange} ocrConfidenceThreshold={ocrConfidenceThreshold} onOcrConfidenceChange={onOcrConfidenceChange} />
-            </CollapsibleSection>
-            {(PLACEHOLDER_SECTION_KEYS.convert ?? []).map(s => (
-              <CollapsibleSection key={s.titleKey} title={t(s.titleKey)}>
-                <PlaceholderText text={t(s.contentKey)} />
-              </CollapsibleSection>
-            ))}
-          </>
-        )}
-
-        {/* ── All other modes — placeholder ──────────────────────────────── */}
-        {mode !== 'read' && mode !== 'review' && mode !== 'forms' && mode !== 'protect' && mode !== 'edit' && mode !== 'convert' && (
-          (PLACEHOLDER_SECTION_KEYS[mode] ?? []).map(s => (
-            <CollapsibleSection key={s.titleKey} title={t(s.titleKey)}>
-              <PlaceholderText text={t(s.contentKey)} />
-            </CollapsibleSection>
-          ))
+          <CollapsibleSection title={t('rightPanel.ocr')}>
+            <OcrPanel scannedPageIndices={scannedPageIndices} onRunOcr={onRunOcr} ocrRunning={ocrRunning} ocrVisible={ocrVisible} onOcrVisibleChange={onOcrVisibleChange} ocrConfidenceThreshold={ocrConfidenceThreshold} onOcrConfidenceChange={onOcrConfidenceChange} />
+          </CollapsibleSection>
         )}
 
       </div>
