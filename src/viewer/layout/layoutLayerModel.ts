@@ -25,6 +25,7 @@
  * The default layer is always visible and never locked.
  */
 
+import i18n from '../../i18n';
 import type { LayoutObject } from './objectDetection';
 
 // ---------------------------------------------------------------------------
@@ -133,7 +134,7 @@ export function buildLayerModel(
     if (gid === 'default') {
       groups.push({
         id: 'default',
-        name: 'Standaard laag',
+        name: i18n.t('leftNav.defaultLayer'),
         visible: true,
         locked: false,
         objects: gObjects,
