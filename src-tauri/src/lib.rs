@@ -12,10 +12,10 @@ mod pdf_engine;
 use licensing::LicenseManager;
 use ocr::{run_paddle_ocr_command, PaddleOcrRequest, PaddleOcrResponse};
 use pdf_engine::{
-    AnnotationInfo, CompressResult, DocumentInfo, ExtractedImageInfo, FormFieldInfo, InvoiceData,
-    InvoiceValidationResult, OpenDocument, PdfAValidationResult, RedactReport, RenderedPage,
-    SearchRedactReport, SetFieldValueRequest, SignatureVerifyResult, TextReplaceResult,
-    TextSpanInfo,
+    AnnotationInfo, AttachmentInfo, CompressResult, DocumentInfo, ExtractedImageInfo,
+    FormFieldInfo, InvoiceData, InvoiceValidationResult, LayerInfo, OpenDocument,
+    PdfAValidationResult, RedactReport, RenderedPage, SearchRedactReport, SetFieldValueRequest,
+    SignatureVerifyResult, TextReplaceResult, TextSpanInfo,
 };
 use std::sync::Mutex;
 use tauri::{Emitter, Manager, State};
@@ -220,13 +220,8 @@ fn extract_pages_to_file(
 /// Split the current document into individual single-page PDFs in `output_dir`.
 /// Returns the list of created file paths.
 #[tauri::command]
-fn split_into_pages(
-    state: State<AppState>,
-    output_dir: String,
-) -> Result<Vec<String>, String> {
-    state.with_document(|doc| {
-        pdf_engine::split_into_pages(&doc.lopdf_doc, &output_dir)
-    })
+fn split_into_pages(state: State<AppState>, output_dir: String) -> Result<Vec<String>, String> {
+    state.with_document(|doc| pdf_engine::split_into_pages(&doc.lopdf_doc, &output_dir))
 }
 
 #[tauri::command]
@@ -235,9 +230,7 @@ fn split_pdf(
     ranges: Vec<String>,
     output_dir: String,
 ) -> Result<Vec<String>, String> {
-    state.with_document(|doc| {
-        pdf_engine::split_pdf(&doc.lopdf_doc, &ranges, &output_dir)
-    })
+    state.with_document(|doc| pdf_engine::split_pdf(&doc.lopdf_doc, &ranges, &output_dir))
 }
 
 #[tauri::command]
@@ -274,10 +267,7 @@ fn get_page_labels(state: State<AppState>) -> Result<Vec<String>, String> {
 }
 
 #[tauri::command]
-fn delete_pages(
-    state: State<AppState>,
-    page_indices: Vec<u32>,
-) -> Result<DocumentInfo, String> {
+fn delete_pages(state: State<AppState>, page_indices: Vec<u32>) -> Result<DocumentInfo, String> {
     state.with_document_mut(|doc| {
         doc.delete_pages(&page_indices)?;
         Ok(doc.document_info())
@@ -285,10 +275,7 @@ fn delete_pages(
 }
 
 #[tauri::command]
-fn reorder_pages(
-    state: State<AppState>,
-    new_order: Vec<u32>,
-) -> Result<DocumentInfo, String> {
+fn reorder_pages(state: State<AppState>, new_order: Vec<u32>) -> Result<DocumentInfo, String> {
     state.with_document_mut(|doc| {
         doc.reorder_pages(&new_order)?;
         Ok(doc.document_info())
@@ -296,10 +283,7 @@ fn reorder_pages(
 }
 
 #[tauri::command]
-fn compress_pdf(
-    state: State<AppState>,
-    output_path: String,
-) -> Result<CompressResult, String> {
+fn compress_pdf(state: State<AppState>, output_path: String) -> Result<CompressResult, String> {
     state.with_document_mut(|doc| doc.compress(&output_path))
 }
 
@@ -426,10 +410,7 @@ fn add_ink_annotation(
 #[tauri::command]
 fn print_document(state: State<AppState>, app: tauri::AppHandle) -> Result<(), String> {
     let current_path = state.current_path.lock().map_err(|e| e.to_string())?;
-    let path = current_path
-        .as_ref()
-        .ok_or("No PDF file open")?
-        .clone();
+    let path = current_path.as_ref().ok_or("No PDF file open")?.clone();
 
     // Open the PDF in the system default viewer (Preview on macOS, default
     // PDF viewer on Windows/Linux) which provides print functionality.
@@ -454,9 +435,7 @@ fn sign_pdf(
 }
 
 #[tauri::command]
-fn verify_signatures(
-    state: State<AppState>,
-) -> Result<Vec<SignatureVerifyResult>, String> {
+fn verify_signatures(state: State<AppState>) -> Result<Vec<SignatureVerifyResult>, String> {
     state.with_document(|doc| Ok(doc.verify_signatures()))
 }
 
@@ -489,10 +468,7 @@ fn encrypt_pdf(
 }
 
 #[tauri::command]
-fn decrypt_pdf(
-    state: State<AppState>,
-    password: String,
-) -> Result<(), String> {
+fn decrypt_pdf(state: State<AppState>, password: String) -> Result<(), String> {
     state.with_document_mut(|doc| doc.decrypt(&password))
 }
 
@@ -508,10 +484,7 @@ fn redact_text(
 }
 
 #[tauri::command]
-fn redact_search(
-    state: State<AppState>,
-    query: String,
-) -> Result<SearchRedactReport, String> {
+fn redact_search(state: State<AppState>, query: String) -> Result<SearchRedactReport, String> {
     state.with_document_mut(|doc| doc.redact_search(&query))
 }
 
@@ -561,6 +534,40 @@ fn run_paddle_ocr(payload: PaddleOcrRequest) -> Result<PaddleOcrResponse, String
     run_paddle_ocr_command(request_id, payload)
 }
 
+// ── Attachments commands ───────────────────────────────────────────────
+
+#[tauri::command]
+fn list_attachments(state: State<AppState>) -> Result<Vec<AttachmentInfo>, String> {
+    state.with_document(|doc| Ok(doc.list_attachments()))
+}
+
+#[tauri::command]
+fn extract_attachment(state: State<AppState>, name: String) -> Result<Vec<u8>, String> {
+    state.with_document(|doc| doc.extract_attachment(&name))
+}
+
+#[tauri::command]
+fn add_attachment(
+    state: State<AppState>,
+    name: String,
+    data: Vec<u8>,
+    mime_type: String,
+) -> Result<(), String> {
+    state.with_document_mut(|doc| doc.add_attachment(&name, &data, &mime_type))
+}
+
+#[tauri::command]
+fn remove_attachment(state: State<AppState>, name: String) -> Result<(), String> {
+    state.with_document_mut(|doc| doc.remove_attachment(&name))
+}
+
+// ── Layers commands ────────────────────────────────────────────────────
+
+#[tauri::command]
+fn list_layers(state: State<AppState>) -> Result<Vec<LayerInfo>, String> {
+    state.with_document(|doc| Ok(doc.list_layers()))
+}
+
 // ── Extraction & conversion commands ──────────────────────────────────
 
 #[tauri::command]
@@ -582,42 +589,29 @@ fn export_page_as_image(
 }
 
 #[tauri::command]
-fn convert_to_docx(
-    state: State<AppState>,
-    output_path: String,
-) -> Result<(), String> {
+fn convert_to_docx(state: State<AppState>, output_path: String) -> Result<(), String> {
     state.with_document(|doc| doc.convert_to_docx(&output_path))
 }
 
 #[tauri::command]
-fn convert_to_xlsx(
-    state: State<AppState>,
-    output_path: String,
-) -> Result<(), String> {
+fn convert_to_xlsx(state: State<AppState>, output_path: String) -> Result<(), String> {
     state.with_document(|doc| doc.convert_to_xlsx(&output_path))
 }
 
 #[tauri::command]
-fn convert_to_pptx(
-    state: State<AppState>,
-    output_path: String,
-) -> Result<(), String> {
+fn convert_to_pptx(state: State<AppState>, output_path: String) -> Result<(), String> {
     state.with_document(|doc| doc.convert_to_pptx(&output_path))
 }
 
 // ── E-invoicing commands ──────────────────────────────────────────────
 
 #[tauri::command]
-fn extract_invoice_data(
-    state: State<AppState>,
-) -> Result<Option<InvoiceData>, String> {
+fn extract_invoice_data(state: State<AppState>) -> Result<Option<InvoiceData>, String> {
     state.with_document(|doc| doc.extract_invoice_data())
 }
 
 #[tauri::command]
-fn validate_invoice(
-    state: State<AppState>,
-) -> Result<Option<InvoiceValidationResult>, String> {
+fn validate_invoice(state: State<AppState>) -> Result<Option<InvoiceValidationResult>, String> {
     state.with_document(|doc| doc.validate_invoice_data())
 }
 
@@ -650,8 +644,7 @@ fn build_menu(handle: &tauri::AppHandle) -> Result<Menu<tauri::Wry>, String> {
                 .build(handle)
                 .map_err(|e| e.to_string())?,
             &PredefinedMenuItem::separator(handle).map_err(|e| e.to_string())?,
-            &PredefinedMenuItem::quit(handle, Some("Quit PDFluent"))
-                .map_err(|e| e.to_string())?,
+            &PredefinedMenuItem::quit(handle, Some("Quit PDFluent")).map_err(|e| e.to_string())?,
         ])
         .build()
         .map_err(|e| e.to_string())?;
@@ -845,6 +838,13 @@ pub fn run() {
             replace_text_span,
             // OCR
             run_paddle_ocr,
+            // Attachments
+            list_attachments,
+            extract_attachment,
+            add_attachment,
+            remove_attachment,
+            // Layers
+            list_layers,
             // Extraction & conversion
             extract_images,
             export_page_as_image,

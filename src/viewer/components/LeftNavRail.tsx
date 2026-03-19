@@ -19,9 +19,34 @@ import {
   ChevronRightIcon,
   ChevronUpIcon,
   ChevronDownIcon,
+  DownloadIcon,
+  Trash2Icon,
+  PlusIcon,
+  EyeIcon,
+  EyeOffIcon,
+  LockIcon,
 } from 'lucide-react';
 import type { OutlineNode, FormField, FormFieldType, Annotation } from '../../core/document';
 import type { NavigationPanel } from '../types';
+
+// ── Attachment & Layer types (mirrors Rust structs) ─────────────────────────
+
+export interface AttachmentInfo {
+  name: string;
+  size_bytes: number;
+  description: string;
+  mime_type: string;
+  creation_date: string;
+}
+
+export interface LayerInfo {
+  id: string;
+  name: string;
+  visible: boolean;
+  locked: boolean;
+}
+
+// ── Props ────────────────────────────────────────────────────────────────────
 
 interface LeftNavRailProps {
   thumbnails: Map<number, string>;
@@ -35,6 +60,13 @@ interface LeftNavRailProps {
   comments: Annotation[];
   onReorderPages?: (newOrder: number[]) => void;
   pageLabels?: string[];
+  attachments?: AttachmentInfo[];
+  onExtractAttachment?: (name: string) => void;
+  onAddAttachment?: () => void;
+  onRemoveAttachment?: (name: string) => void;
+  layers?: LayerInfo[];
+  layerVisibility?: Map<string, boolean>;
+  onToggleLayer?: (id: string) => void;
 }
 
 interface PanelTab {
@@ -320,32 +352,134 @@ function CommentsPanel({ comments }: { comments: Annotation[] }) {
   );
 }
 
-// TODO(pdfluent-viewer): implement attachments panel showing embedded files
-// Status: design integrated, functionality not implemented yet
-function AttachmentsPanel() {
+function formatBytes(bytes: number): string {
+  if (bytes === 0) return '0 B';
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function AttachmentsPanel({
+  attachments = [],
+  onExtractAttachment,
+  onAddAttachment,
+  onRemoveAttachment,
+}: Pick<LeftNavRailProps, 'attachments' | 'onExtractAttachment' | 'onAddAttachment' | 'onRemoveAttachment'>) {
   const { t } = useTranslation();
+
   return (
-    <div className="flex-1 flex flex-col items-center justify-center p-4 text-center gap-2">
-      <PaperclipIcon className="w-8 h-8 text-muted-foreground/40" />
-      <p className="text-xs text-muted-foreground">{t('leftNav.noAttachments')}</p>
+    <div className="flex-1 flex flex-col overflow-hidden">
+      {/* Toolbar */}
+      <div className="flex items-center justify-between px-2 py-1.5 border-b border-border shrink-0">
+        <span className="text-[10px] text-muted-foreground uppercase tracking-wide">{t('leftNav.attachments')}</span>
+        <button
+          data-testid="add-attachment-btn"
+          onClick={onAddAttachment}
+          title={t('leftNav.addAttachment')}
+          className="p-1 rounded hover:bg-muted transition-colors"
+        >
+          <PlusIcon className="w-3.5 h-3.5 text-muted-foreground" />
+        </button>
+      </div>
+
+      {attachments.length === 0 ? (
+        <div className="flex-1 flex flex-col items-center justify-center p-4 text-center gap-2">
+          <PaperclipIcon className="w-8 h-8 text-muted-foreground/40" />
+          <p className="text-xs text-muted-foreground">{t('leftNav.noAttachments')}</p>
+        </div>
+      ) : (
+        <div className="flex-1 overflow-y-auto pf-scrollbar py-1 px-1">
+          {attachments.map((att) => (
+            <div
+              key={att.name}
+              data-testid="attachment-item"
+              className="flex items-start gap-1.5 px-2 py-1.5 rounded hover:bg-muted/50 transition-colors group"
+            >
+              <PaperclipIcon className="w-3.5 h-3.5 text-muted-foreground shrink-0 mt-0.5" />
+              <div className="flex-1 min-w-0">
+                <p className="text-[10px] font-medium text-foreground/90 truncate" title={att.name}>{att.name}</p>
+                <p className="text-[9px] text-muted-foreground/70">{formatBytes(att.size_bytes)}{att.mime_type ? ` · ${att.mime_type}` : ''}</p>
+              </div>
+              <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                <button
+                  data-testid="extract-attachment-btn"
+                  onClick={() => { onExtractAttachment?.(att.name); }}
+                  title={t('leftNav.extractAttachment')}
+                  className="p-1 rounded hover:bg-muted transition-colors"
+                >
+                  <DownloadIcon className="w-3 h-3 text-muted-foreground" />
+                </button>
+                <button
+                  data-testid="remove-attachment-btn"
+                  onClick={() => {
+                    if (window.confirm(t('leftNav.removeAttachmentConfirm', { name: att.name }))) {
+                      onRemoveAttachment?.(att.name);
+                    }
+                  }}
+                  title={t('leftNav.removeAttachment')}
+                  className="p-1 rounded hover:bg-destructive/10 transition-colors"
+                >
+                  <Trash2Icon className="w-3 h-3 text-destructive/70" />
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
 
-// TODO(pdfluent-viewer): implement layers panel with PDF optional content groups
-// Status: design integrated, functionality not implemented yet
-function LayersPanel() {
+function LayersPanel({
+  layers = [],
+  layerVisibility = new Map<string, boolean>(),
+  onToggleLayer,
+}: Pick<LeftNavRailProps, 'layers' | 'layerVisibility' | 'onToggleLayer'>) {
   const { t } = useTranslation();
-  const layerKeys: string[] = ['leftNav.layerText', 'leftNav.layerImages', 'leftNav.layerAnnotations', 'leftNav.layerFormFields'];
+
+  if (layers.length === 0) {
+    return (
+      <div className="flex-1 flex flex-col items-center justify-center p-4 text-center gap-2">
+        <LayersIcon className="w-8 h-8 text-muted-foreground/40" />
+        <p className="text-xs text-muted-foreground">{t('leftNav.noLayers')}</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="flex-1 flex flex-col gap-1 p-2">
-      {layerKeys.map((key) => (
-        <label key={key} className="flex items-center gap-2 px-1 py-1 rounded text-xs text-muted-foreground/50 cursor-default">
-          <input type="checkbox" disabled defaultChecked className="accent-primary" />
-          {t(key)}
-        </label>
-      ))}
-      <p className="text-[10px] text-muted-foreground/60 mt-2 text-center">{t('leftNav.layersComingSoon')}</p>
+    <div className="flex-1 overflow-y-auto pf-scrollbar py-1 px-1">
+      {/* TODO: OCG-aware rendering — render_page currently ignores OCG state;
+          toggling visibility here updates frontend state only. Full render
+          support will be added in a future release (#XXX). */}
+      {layers.map((layer) => {
+        const visible = layerVisibility.get(layer.id) ?? layer.visible;
+        return (
+          <div
+            key={layer.id}
+            data-testid="layer-item"
+            className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-muted/50 transition-colors"
+          >
+            <button
+              data-testid="layer-visibility-btn"
+              onClick={() => { if (!layer.locked) onToggleLayer?.(layer.id); }}
+              disabled={layer.locked}
+              title={visible ? t('leftNav.layerVisible') : t('leftNav.layerHidden')}
+              className="shrink-0 disabled:cursor-not-allowed"
+              aria-pressed={visible}
+            >
+              {visible
+                ? <EyeIcon className="w-3.5 h-3.5 text-foreground/60" />
+                : <EyeOffIcon className="w-3.5 h-3.5 text-muted-foreground/40" />}
+            </button>
+            <span className={`flex-1 text-[10px] truncate ${visible ? 'text-foreground/90' : 'text-muted-foreground/50'}`} title={layer.name}>
+              {layer.name}
+            </span>
+            {layer.locked && (
+              <span title={t('leftNav.layerLocked')}><LockIcon className="w-3 h-3 text-muted-foreground/40 shrink-0" /></span>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -422,6 +556,13 @@ function PanelContent({
   comments,
   onReorderPages,
   pageLabels,
+  attachments,
+  onExtractAttachment,
+  onAddAttachment,
+  onRemoveAttachment,
+  layers,
+  layerVisibility,
+  onToggleLayer,
 }: { panel: NavigationPanel } & LeftNavRailProps) {
   switch (panel) {
     case 'thumbnails':
@@ -433,9 +574,9 @@ function PanelContent({
     case 'comments':
       return <CommentsPanel comments={comments} />;
     case 'attachments':
-      return <AttachmentsPanel />;
+      return <AttachmentsPanel attachments={attachments} onExtractAttachment={onExtractAttachment} onAddAttachment={onAddAttachment} onRemoveAttachment={onRemoveAttachment} />;
     case 'layers':
-      return <LayersPanel />;
+      return <LayersPanel layers={layers} layerVisibility={layerVisibility} onToggleLayer={onToggleLayer} />;
     case 'fields':
       return <FieldsPanel formFields={formFields} onPageSelect={onPageSelect} />;
   }

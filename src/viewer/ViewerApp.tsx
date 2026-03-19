@@ -38,6 +38,7 @@ import { TopBar } from './components/TopBar';
 import { ModeSwitcher } from './components/ModeSwitcher';
 import { ModeToolbar } from './components/ModeToolbar';
 import { LeftNavRail } from './components/LeftNavRail';
+import type { AttachmentInfo, LayerInfo } from './components/LeftNavRail';
 import { PageCanvas } from './components/PageCanvas';
 import { RightContextPanel } from './components/RightContextPanel';
 import { BottomTaskBar } from './components/BottomTaskBar';
@@ -185,6 +186,62 @@ export function ViewerApp() {
   // OCR overlay state — lifted so PageCanvas and OcrPanel share the same values
   const [ocrVisible, setOcrVisible] = useState(true);
   const [ocrConfidenceThreshold, setOcrConfidenceThreshold] = useState(0.6);
+
+  // Attachments state
+  const [attachments, setAttachments] = useState<AttachmentInfo[]>([]);
+
+  // Layers state
+  const [layers, setLayers] = useState<LayerInfo[]>([]);
+  const [layerVisibility, setLayerVisibility] = useState<Map<string, boolean>>(new Map());
+
+  // Attachment handlers
+  const handleExtractAttachment = useCallback((name: string) => {
+    if (!isTauri) return;
+    void (async () => {
+      const { invoke } = await import('@tauri-apps/api/core');
+      const { save } = await import('@tauri-apps/plugin-dialog');
+      const bytes = await invoke<number[]>('extract_attachment', { name });
+      const outputPath = await save({ defaultPath: name });
+      if (!outputPath) return;
+      const { writeFile } = await import('@tauri-apps/plugin-fs');
+      await writeFile(outputPath, new Uint8Array(bytes));
+    })();
+  }, []);
+
+  const handleAddAttachment = useCallback(() => {
+    if (!isTauri) return;
+    void (async () => {
+      const { open } = await import('@tauri-apps/plugin-dialog');
+      const { readFile } = await import('@tauri-apps/plugin-fs');
+      const { invoke } = await import('@tauri-apps/api/core');
+      const picked = await open({ multiple: false });
+      if (typeof picked !== 'string') return;
+      const bytes = await readFile(picked);
+      const name = picked.split(/[/\\]/).pop() ?? picked;
+      await invoke('add_attachment', { name, data: Array.from(bytes), mimeType: 'application/octet-stream' });
+      const list = await invoke<AttachmentInfo[]>('list_attachments');
+      setAttachments(list);
+    })();
+  }, []);
+
+  const handleRemoveAttachment = useCallback((name: string) => {
+    if (!isTauri) return;
+    void (async () => {
+      const { invoke } = await import('@tauri-apps/api/core');
+      await invoke('remove_attachment', { name });
+      const list = await invoke<AttachmentInfo[]>('list_attachments');
+      setAttachments(list);
+    })();
+  }, []);
+
+  // Layer toggle handler (frontend-only visibility; render_page is not OCG-aware yet)
+  const handleToggleLayer = useCallback((id: string) => {
+    setLayerVisibility(prev => {
+      const next = new Map(prev);
+      next.set(id, !(next.get(id) ?? true));
+      return next;
+    });
+  }, []);
 
   // Centralised hover tracking across all interactive surfaces.
   const {
@@ -335,6 +392,28 @@ export function ViewerApp() {
     if (!pdfDoc || !isTauri) return;
     void import('@tauri-apps/api/core').then(({ invoke }) => {
       void invoke<string[]>('get_page_labels').then(labels => setPageLabels(labels)).catch(() => {});
+    });
+  }, [pdfDoc?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Load embedded file attachments when a new document is opened.
+  useEffect(() => {
+    setAttachments([]);
+    if (!pdfDoc || !isTauri) return;
+    void import('@tauri-apps/api/core').then(({ invoke }) => {
+      void invoke<AttachmentInfo[]>('list_attachments').then(list => setAttachments(list)).catch(() => {});
+    });
+  }, [pdfDoc?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Load layer (OCG) info when a new document is opened.
+  useEffect(() => {
+    setLayers([]);
+    setLayerVisibility(new Map());
+    if (!pdfDoc || !isTauri) return;
+    void import('@tauri-apps/api/core').then(({ invoke }) => {
+      void invoke<LayerInfo[]>('list_layers').then(list => {
+        setLayers(list);
+        setLayerVisibility(new Map(list.map(l => [l.id, l.visible])));
+      }).catch(() => {});
     });
   }, [pdfDoc?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -619,6 +698,13 @@ export function ViewerApp() {
             comments={comments}
             onReorderPages={handleReorderPages}
             pageLabels={pageLabels}
+            attachments={attachments}
+            onExtractAttachment={handleExtractAttachment}
+            onAddAttachment={handleAddAttachment}
+            onRemoveAttachment={handleRemoveAttachment}
+            layers={layers}
+            layerVisibility={layerVisibility}
+            onToggleLayer={handleToggleLayer}
           />
         )}
 

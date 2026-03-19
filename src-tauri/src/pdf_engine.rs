@@ -6,10 +6,15 @@
 // See https://pdfluent.com/license for terms.
 
 use base64::{engine::general_purpose, Engine as _};
+use flate2::write::ZlibEncoder;
+use flate2::Compression;
 use image::ImageFormat;
 use lopdf::dictionary;
-use pdf_annot::builder::{AnnotRect, AnnotationBuilder, add_annotation_to_page};
-use pdf_annot::{Annotation as PdfAnnotation, AnnotationType as PdfAnnotationType, Color as AnnotColor};
+use lopdf::{Dictionary, Object, ObjectId, Stream, StringFormat};
+use pdf_annot::builder::{add_annotation_to_page, AnnotRect, AnnotationBuilder};
+use pdf_annot::{
+    Annotation as PdfAnnotation, AnnotationType as PdfAnnotationType, Color as AnnotColor,
+};
 use pdf_compliance::{ComplianceReport, PdfALevel, Severity};
 use pdf_engine::{PdfDocument, RenderOptions, ThumbnailOptions};
 use pdf_extract::ImageFilter;
@@ -23,7 +28,7 @@ use pdf_sign::signer::Pkcs12Signer;
 use pdf_sign::ValidationStatus;
 use pdf_sign::{sign_pdf, validate_signatures, SignOptions};
 use serde::{Deserialize, Serialize};
-use std::io::Cursor;
+use std::io::{Cursor, Write};
 use std::path::Path;
 
 #[derive(Debug, Serialize, Clone)]
@@ -259,8 +264,7 @@ fn replace_first_occurrence(haystack: &[u8], needle: &[u8], replacement: &[u8]) 
         return haystack.to_vec();
     }
     if let Some(pos) = haystack.windows(needle.len()).position(|w| w == needle) {
-        let mut result =
-            Vec::with_capacity(haystack.len() - needle.len() + replacement.len());
+        let mut result = Vec::with_capacity(haystack.len() - needle.len() + replacement.len());
         result.extend_from_slice(&haystack[..pos]);
         result.extend_from_slice(replacement);
         result.extend_from_slice(&haystack[pos + needle.len()..]);
@@ -284,8 +288,7 @@ pub struct OpenDocument {
 
 impl OpenDocument {
     pub fn open(path: &str) -> Result<Self, String> {
-        let raw_bytes = std::fs::read(path)
-            .map_err(|e| format!("Failed to read file: {e}"))?;
+        let raw_bytes = std::fs::read(path).map_err(|e| format!("Failed to read file: {e}"))?;
 
         let pdf_doc = PdfDocument::open(raw_bytes.clone())
             .map_err(|e| format!("Failed to parse PDF: {e}"))?;
@@ -303,8 +306,8 @@ impl OpenDocument {
 
     #[allow(dead_code)] // Reserved for future in-memory load path (no file path available)
     pub fn open_bytes(bytes: Vec<u8>) -> Result<Self, String> {
-        let pdf_doc = PdfDocument::open(bytes.clone())
-            .map_err(|e| format!("Failed to parse PDF: {e}"))?;
+        let pdf_doc =
+            PdfDocument::open(bytes.clone()).map_err(|e| format!("Failed to parse PDF: {e}"))?;
 
         let lopdf_doc = lopdf::Document::load_mem(&bytes)
             .map_err(|e| format!("Failed to load PDF for editing: {e}"))?;
@@ -357,7 +360,8 @@ impl OpenDocument {
             ..Default::default()
         };
 
-        let rendered = self.pdf_doc
+        let rendered = self
+            .pdf_doc
             .render_page(page_index as usize, &options)
             .map_err(|e| format!("Failed to render page {page_index}: {e}"))?;
 
@@ -365,11 +369,10 @@ impl OpenDocument {
     }
 
     pub fn render_thumbnail(&self, page_index: u32) -> Result<RenderedPage, String> {
-        let options = ThumbnailOptions {
-            max_dimension: 280,
-        };
+        let options = ThumbnailOptions { max_dimension: 280 };
 
-        let rendered = self.pdf_doc
+        let rendered = self
+            .pdf_doc
             .thumbnail(page_index as usize, &options)
             .map_err(|e| format!("Failed to render thumbnail {page_index}: {e}"))?;
 
@@ -397,12 +400,20 @@ impl OpenDocument {
             .iter()
             .enumerate()
             .map(|(i, annot)| {
-                let rect = annot.rect().map(|r| AnnotationRectInfo {
-                    x: r.x0,
-                    y: r.y0,
-                    width: (r.x1 - r.x0).abs(),
-                    height: (r.y1 - r.y0).abs(),
-                }).unwrap_or(AnnotationRectInfo { x: 0.0, y: 0.0, width: 0.0, height: 0.0 });
+                let rect = annot
+                    .rect()
+                    .map(|r| AnnotationRectInfo {
+                        x: r.x0,
+                        y: r.y0,
+                        width: (r.x1 - r.x0).abs(),
+                        height: (r.y1 - r.y0).abs(),
+                    })
+                    .unwrap_or(AnnotationRectInfo {
+                        x: 0.0,
+                        y: 0.0,
+                        width: 0.0,
+                        height: 0.0,
+                    });
 
                 let annotation_type = match annot.annotation_type() {
                     PdfAnnotationType::Text => "text",
@@ -458,7 +469,8 @@ impl OpenDocument {
     /// Coordinates are PDF user space (origin bottom-left, y increases upward).
     /// Width is estimated as `font_size * 0.5 * char_count`; height = `font_size`.
     pub fn extract_page_text_spans(&self, page_index: u32) -> Result<Vec<TextSpanInfo>, String> {
-        let blocks = self.pdf_doc
+        let blocks = self
+            .pdf_doc
             .extract_text_blocks(page_index as usize)
             .map_err(|e| format!("Failed to extract text spans from page {page_index}: {e}"))?;
 
@@ -536,14 +548,14 @@ impl OpenDocument {
     }
 
     pub fn set_form_field_value(&mut self, name: &str, value: &str) -> Result<(), String> {
-        let mut tree = parse_acroform(self.pdf_doc.pdf())
-            .ok_or("Document has no form fields")?;
+        let mut tree = parse_acroform(self.pdf_doc.pdf()).ok_or("Document has no form fields")?;
 
         tree.set_value(name, value)
             .map_err(|e| format!("Failed to set field value: {e}"))?;
 
         // Write the value back to the lopdf document
-        let id = tree.find_by_name(name)
+        let id = tree
+            .find_by_name(name)
             .ok_or_else(|| format!("Field not found: {name}"))?;
         let node = tree.get(id);
 
@@ -554,10 +566,7 @@ impl OpenDocument {
             {
                 dict.set(
                     b"V",
-                    lopdf::Object::String(
-                        value.as_bytes().to_vec(),
-                        lopdf::StringFormat::Literal,
-                    ),
+                    lopdf::Object::String(value.as_bytes().to_vec(), lopdf::StringFormat::Literal),
                 );
             }
             self.sync_after_mutation()?;
@@ -610,34 +619,46 @@ impl OpenDocument {
                 Some(lopdf::Object::Array(a)) => a,
                 _ => return (1..=page_count).map(|i| i.to_string()).collect(),
             },
-            Some(lopdf::Object::Reference(id)) => {
-                match self.lopdf_doc.get_object(id).ok() {
-                    Some(lopdf::Object::Dictionary(d)) => match d.get(b"Nums").ok().cloned() {
-                        Some(lopdf::Object::Array(a)) => a,
-                        _ => return (1..=page_count).map(|i| i.to_string()).collect(),
-                    },
+            Some(lopdf::Object::Reference(id)) => match self.lopdf_doc.get_object(id).ok() {
+                Some(lopdf::Object::Dictionary(d)) => match d.get(b"Nums").ok().cloned() {
+                    Some(lopdf::Object::Array(a)) => a,
                     _ => return (1..=page_count).map(|i| i.to_string()).collect(),
-                }
-            }
+                },
+                _ => return (1..=page_count).map(|i| i.to_string()).collect(),
+            },
             _ => return (1..=page_count).map(|i| i.to_string()).collect(),
         };
 
         // Parse pairs: (start_page_index, label_dict).
-        struct Range { start: usize, style: u8, val: i64, prefix: String }
+        struct Range {
+            start: usize,
+            style: u8,
+            val: i64,
+            prefix: String,
+        }
         let mut ranges: Vec<Range> = Vec::new();
         let mut i = 0;
         while i + 1 < nums.len() {
             let start = match &nums[i] {
                 lopdf::Object::Integer(n) => *n as usize,
-                _ => { i += 2; continue; }
+                _ => {
+                    i += 2;
+                    continue;
+                }
             };
             let dict = match &nums[i + 1] {
                 lopdf::Object::Dictionary(d) => d.clone(),
                 lopdf::Object::Reference(id) => match self.lopdf_doc.get_object(*id).ok() {
                     Some(lopdf::Object::Dictionary(d)) => d.clone(),
-                    _ => { i += 2; continue; }
+                    _ => {
+                        i += 2;
+                        continue;
+                    }
                 },
-                _ => { i += 2; continue; }
+                _ => {
+                    i += 2;
+                    continue;
+                }
             };
             let style = match dict.get(b"S").ok() {
                 Some(lopdf::Object::Name(n)) => n.first().copied().unwrap_or(b'D'),
@@ -651,39 +672,57 @@ impl OpenDocument {
                 Some(lopdf::Object::String(s, _)) => String::from_utf8_lossy(s).into_owned(),
                 _ => String::new(),
             };
-            ranges.push(Range { start, style, val, prefix });
+            ranges.push(Range {
+                start,
+                style,
+                val,
+                prefix,
+            });
             i += 2;
         }
 
         // Build one label per page.
-        (0..page_count).map(|page| {
-            let range = ranges.iter().rev().find(|r| r.start <= page);
-            match range {
-                None => (page + 1).to_string(),
-                Some(r) => {
-                    let n = (r.val + (page as i64 - r.start as i64)) as u32;
-                    match r.style {
-                        b'D' => format!("{}{}", r.prefix, n),
-                        b'R' => format!("{}{}", r.prefix, Self::to_roman(n, true)),
-                        b'r' => format!("{}{}", r.prefix, Self::to_roman(n, false)),
-                        b'A' => format!("{}{}", r.prefix, Self::to_alpha(n, true)),
-                        b'a' => format!("{}{}", r.prefix, Self::to_alpha(n, false)),
-                        0   => r.prefix.clone(),
-                        _   => format!("{}{}", r.prefix, n),
+        (0..page_count)
+            .map(|page| {
+                let range = ranges.iter().rev().find(|r| r.start <= page);
+                match range {
+                    None => (page + 1).to_string(),
+                    Some(r) => {
+                        let n = (r.val + (page as i64 - r.start as i64)) as u32;
+                        match r.style {
+                            b'D' => format!("{}{}", r.prefix, n),
+                            b'R' => format!("{}{}", r.prefix, Self::to_roman(n, true)),
+                            b'r' => format!("{}{}", r.prefix, Self::to_roman(n, false)),
+                            b'A' => format!("{}{}", r.prefix, Self::to_alpha(n, true)),
+                            b'a' => format!("{}{}", r.prefix, Self::to_alpha(n, false)),
+                            0 => r.prefix.clone(),
+                            _ => format!("{}{}", r.prefix, n),
+                        }
                     }
                 }
-            }
-        }).collect()
+            })
+            .collect()
     }
 
     fn to_roman(mut n: u32, upper: bool) -> String {
         const VALS: &[(u32, &str, &str)] = &[
-            (1000, "M", "m"), (900, "CM", "cm"), (500, "D", "d"),
-            (400, "CD", "cd"), (100, "C", "c"), (90, "XC", "xc"),
-            (50, "L", "l"), (40, "XL", "xl"), (10, "X", "x"),
-            (9, "IX", "ix"), (5, "V", "v"), (4, "IV", "iv"), (1, "I", "i"),
+            (1000, "M", "m"),
+            (900, "CM", "cm"),
+            (500, "D", "d"),
+            (400, "CD", "cd"),
+            (100, "C", "c"),
+            (90, "XC", "xc"),
+            (50, "L", "l"),
+            (40, "XL", "xl"),
+            (10, "X", "x"),
+            (9, "IX", "ix"),
+            (5, "V", "v"),
+            (4, "IV", "iv"),
+            (1, "I", "i"),
         ];
-        if n == 0 { return String::new(); }
+        if n == 0 {
+            return String::new();
+        }
         let mut s = String::new();
         for &(v, up, lo) in VALS {
             while n >= v {
@@ -695,7 +734,9 @@ impl OpenDocument {
     }
 
     fn to_alpha(n: u32, upper: bool) -> String {
-        if n == 0 { return String::new(); }
+        if n == 0 {
+            return String::new();
+        }
         let idx = ((n - 1) % 26) as u8;
         let rep = ((n - 1) / 26 + 1) as usize;
         let ch = if upper { b'A' + idx } else { b'a' + idx } as char;
@@ -969,8 +1010,7 @@ impl OpenDocument {
         match annots_value {
             lopdf::Object::Reference(arr_id) => {
                 // /Annots is an indirect reference to an array object
-                if let Ok(lopdf::Object::Array(ref mut arr)) =
-                    self.lopdf_doc.get_object_mut(arr_id)
+                if let Ok(lopdf::Object::Array(ref mut arr)) = self.lopdf_doc.get_object_mut(arr_id)
                 {
                     if annot_idx < arr.len() {
                         arr.remove(annot_idx);
@@ -1043,19 +1083,24 @@ impl OpenDocument {
                     .map_err(|_| "/Annots reference is not an array".to_string())?;
                 arr.get(annot_idx)
                     .ok_or_else(|| {
-                        format!("Annotation index {annot_idx} out of bounds (len {})", arr.len())
+                        format!(
+                            "Annotation index {annot_idx} out of bounds (len {})",
+                            arr.len()
+                        )
                     })?
                     .as_reference()
                     .map_err(|_| "Annotation entry is not an indirect reference".to_string())?
             }
-            lopdf::Object::Array(arr) => {
-                arr.get(annot_idx)
-                    .ok_or_else(|| {
-                        format!("Annotation index {annot_idx} out of bounds (len {})", arr.len())
-                    })?
-                    .as_reference()
-                    .map_err(|_| "Annotation entry is not an indirect reference".to_string())?
-            }
+            lopdf::Object::Array(arr) => arr
+                .get(annot_idx)
+                .ok_or_else(|| {
+                    format!(
+                        "Annotation index {annot_idx} out of bounds (len {})",
+                        arr.len()
+                    )
+                })?
+                .as_reference()
+                .map_err(|_| "Annotation entry is not an indirect reference".to_string())?,
             _ => return Err("Unexpected /Annots value type".to_string()),
         };
 
@@ -1065,10 +1110,7 @@ impl OpenDocument {
         {
             dict.set(
                 b"Contents",
-                lopdf::Object::String(
-                    contents.as_bytes().to_vec(),
-                    lopdf::StringFormat::Literal,
-                ),
+                lopdf::Object::String(contents.as_bytes().to_vec(), lopdf::StringFormat::Literal),
             );
         }
 
@@ -1153,19 +1195,24 @@ impl OpenDocument {
                     .map_err(|_| "/Annots reference is not an array".to_string())?;
                 arr.get(annot_idx)
                     .ok_or_else(|| {
-                        format!("Annotation index {annot_idx} out of bounds (len {})", arr.len())
+                        format!(
+                            "Annotation index {annot_idx} out of bounds (len {})",
+                            arr.len()
+                        )
                     })?
                     .as_reference()
                     .map_err(|_| "Annotation entry is not an indirect reference".to_string())?
             }
-            lopdf::Object::Array(arr) => {
-                arr.get(annot_idx)
-                    .ok_or_else(|| {
-                        format!("Annotation index {annot_idx} out of bounds (len {})", arr.len())
-                    })?
-                    .as_reference()
-                    .map_err(|_| "Annotation entry is not an indirect reference".to_string())?
-            }
+            lopdf::Object::Array(arr) => arr
+                .get(annot_idx)
+                .ok_or_else(|| {
+                    format!(
+                        "Annotation index {annot_idx} out of bounds (len {})",
+                        arr.len()
+                    )
+                })?
+                .as_reference()
+                .map_err(|_| "Annotation entry is not an indirect reference".to_string())?,
             _ => return Err("Unexpected /Annots value type".to_string()),
         };
 
@@ -1187,8 +1234,10 @@ impl OpenDocument {
         let annot_id = match shape_type {
             "rect" => {
                 let ar = AnnotRect::new(
-                    rect[0] as f64, rect[1] as f64,
-                    rect[2] as f64, rect[3] as f64,
+                    rect[0] as f64,
+                    rect[1] as f64,
+                    rect[2] as f64,
+                    rect[3] as f64,
                 );
                 AnnotationBuilder::square(ar)
                     .color(r, g, b)
@@ -1198,8 +1247,10 @@ impl OpenDocument {
             }
             "circle" => {
                 let ar = AnnotRect::new(
-                    rect[0] as f64, rect[1] as f64,
-                    rect[2] as f64, rect[3] as f64,
+                    rect[0] as f64,
+                    rect[1] as f64,
+                    rect[2] as f64,
+                    rect[3] as f64,
                 );
                 AnnotationBuilder::circle(ar)
                     .color(r, g, b)
@@ -1210,8 +1261,10 @@ impl OpenDocument {
             "line" => {
                 // rect = [x1, y1, x2, y2] treated as line endpoints.
                 AnnotationBuilder::line(
-                    rect[0] as f64, rect[1] as f64,
-                    rect[2] as f64, rect[3] as f64,
+                    rect[0] as f64,
+                    rect[1] as f64,
+                    rect[2] as f64,
+                    rect[3] as f64,
                 )
                 .color(r, g, b)
                 .border_width(1.5)
@@ -1263,7 +1316,9 @@ impl OpenDocument {
             // Preview opacity — semi-transparent so the user can see what is marked
             "CA" => lopdf::Object::Real(0.7f32),
         };
-        let annot_id = self.lopdf_doc.add_object(lopdf::Object::Dictionary(annot_dict));
+        let annot_id = self
+            .lopdf_doc
+            .add_object(lopdf::Object::Dictionary(annot_dict));
         add_annotation_to_page(&mut self.lopdf_doc, page_index + 1, annot_id)
             .map_err(|e| format!("Failed to add redaction annotation to page: {e}"))?;
         self.sync_after_mutation()
@@ -1371,12 +1426,8 @@ impl OpenDocument {
             .map(|r| {
                 let (status_str, valid) = match &r.status {
                     ValidationStatus::Valid => ("valid".to_string(), true),
-                    ValidationStatus::Invalid(reason) => {
-                        (format!("invalid: {reason}"), false)
-                    }
-                    ValidationStatus::Unknown(reason) => {
-                        (format!("unknown: {reason}"), false)
-                    }
+                    ValidationStatus::Invalid(reason) => (format!("invalid: {reason}"), false),
+                    ValidationStatus::Unknown(reason) => (format!("unknown: {reason}"), false),
                 };
 
                 SignatureVerifyResult {
@@ -1398,14 +1449,13 @@ impl OpenDocument {
         let pdf = self.pdf_doc.pdf();
 
         // Try to detect the declared conformance level from XMP metadata.
-        let level = pdf_compliance::detect_pdfa_level(pdf)
-            .unwrap_or(PdfALevel::A2b);
+        let level = pdf_compliance::detect_pdfa_level(pdf).unwrap_or(PdfALevel::A2b);
 
         let report: ComplianceReport = pdf_compliance::validate_pdfa(pdf, level);
 
-        let conformance_level = report.pdfa_level.map(|l| {
-            format!("PDF/A-{}{}", l.part(), l.conformance())
-        });
+        let conformance_level = report
+            .pdfa_level
+            .map(|l| format!("PDF/A-{}{}", l.part(), l.conformance()));
 
         PdfAValidationResult {
             compliant: report.is_compliant(),
@@ -1448,9 +1498,8 @@ impl OpenDocument {
             .map_err(|e| format!("Font embedding failed: {e}"))?;
 
         // Normalize color spaces and add OutputIntent.
-        let _color_report =
-            pdf_manip::pdfa_colorspace::normalize_colorspaces(&mut self.lopdf_doc)
-                .map_err(|e| format!("Color space normalization failed: {e}"))?;
+        let _color_report = pdf_manip::pdfa_colorspace::normalize_colorspaces(&mut self.lopdf_doc)
+            .map_err(|e| format!("Color space normalization failed: {e}"))?;
 
         // Run supplementary fixups.
         let _fixup_report = pdf_manip::pdfa_fixups::run_fixups(&mut self.lopdf_doc);
@@ -1471,12 +1520,9 @@ impl OpenDocument {
         };
 
         // Repair/generate XMP metadata with PDF/A identification.
-        let _xmp_report = pdf_manip::pdfa_xmp::repair_xmp_metadata(
-            &mut self.lopdf_doc,
-            conformance,
-            None,
-        )
-        .map_err(|e| format!("XMP metadata repair failed: {e}"))?;
+        let _xmp_report =
+            pdf_manip::pdfa_xmp::repair_xmp_metadata(&mut self.lopdf_doc, conformance, None)
+                .map_err(|e| format!("XMP metadata repair failed: {e}"))?;
 
         // Save the converted document.
         self.lopdf_doc
@@ -1596,8 +1642,7 @@ impl OpenDocument {
     pub fn apply_redactions(&mut self) -> Result<RedactReport, String> {
         // Step 1 — collect (page_1based, rect, annot_obj_id) for every
         // /Subtype /Redact annotation across all pages.
-        let pages: std::collections::BTreeMap<u32, lopdf::ObjectId> =
-            self.lopdf_doc.get_pages();
+        let pages: std::collections::BTreeMap<u32, lopdf::ObjectId> = self.lopdf_doc.get_pages();
 
         struct Entry {
             page_num: u32,
@@ -1664,7 +1709,11 @@ impl OpenDocument {
                         _ => 0.0,
                     };
                 }
-                entries.push(Entry { page_num, rect: r, annot_obj_id: ann_id });
+                entries.push(Entry {
+                    page_num,
+                    rect: r,
+                    annot_obj_id: ann_id,
+                });
             }
         }
 
@@ -1785,32 +1834,24 @@ impl OpenDocument {
                     let expected_len = (img.width * img.height * channels) as usize;
                     if img.data.len() >= expected_len && img.width > 0 && img.height > 0 {
                         if channels == 3 {
-                            if let Some(rgb_img) = image::RgbImage::from_raw(
-                                img.width,
-                                img.height,
-                                img.data.clone(),
-                            ) {
+                            if let Some(rgb_img) =
+                                image::RgbImage::from_raw(img.width, img.height, img.data.clone())
+                            {
                                 rgb_img
                                     .save_with_format(&file_path, ImageFormat::Png)
-                                    .map_err(|e| {
-                                        format!("Failed to save image {filename}: {e}")
-                                    })?;
+                                    .map_err(|e| format!("Failed to save image {filename}: {e}"))?;
                             } else {
                                 std::fs::write(&file_path, &img.data).map_err(|e| {
                                     format!("Failed to write raw image {filename}: {e}")
                                 })?;
                             }
                         } else if channels == 1 {
-                            if let Some(gray_img) = image::GrayImage::from_raw(
-                                img.width,
-                                img.height,
-                                img.data.clone(),
-                            ) {
+                            if let Some(gray_img) =
+                                image::GrayImage::from_raw(img.width, img.height, img.data.clone())
+                            {
                                 gray_img
                                     .save_with_format(&file_path, ImageFormat::Png)
-                                    .map_err(|e| {
-                                        format!("Failed to save image {filename}: {e}")
-                                    })?;
+                                    .map_err(|e| format!("Failed to save image {filename}: {e}"))?;
                             } else {
                                 std::fs::write(&file_path, &img.data).map_err(|e| {
                                     format!("Failed to write raw image {filename}: {e}")
@@ -1868,7 +1909,11 @@ impl OpenDocument {
         let image_format = match format.to_lowercase().as_str() {
             "jpeg" | "jpg" => ImageFormat::Jpeg,
             "png" => ImageFormat::Png,
-            _ => return Err(format!("Unsupported image format: {format}. Use png or jpeg.")),
+            _ => {
+                return Err(format!(
+                    "Unsupported image format: {format}. Use png or jpeg."
+                ))
+            }
         };
 
         img.save_with_format(output_path, image_format)
@@ -1937,8 +1982,8 @@ impl OpenDocument {
             None => return Ok(None),
         };
 
-        let xml_str = String::from_utf8(data)
-            .map_err(|e| format!("Invoice XML is not valid UTF-8: {e}"))?;
+        let xml_str =
+            String::from_utf8(data).map_err(|e| format!("Invoice XML is not valid UTF-8: {e}"))?;
 
         let invoice = pdf_invoice::zugferd::ZugferdInvoice::from_xml(&xml_str)
             .map_err(|e| format!("Failed to parse invoice XML: {e}"))?;
@@ -2036,8 +2081,8 @@ impl OpenDocument {
             None => return Ok(None),
         };
 
-        let xml_str = String::from_utf8(data)
-            .map_err(|e| format!("Invoice XML is not valid UTF-8: {e}"))?;
+        let xml_str =
+            String::from_utf8(data).map_err(|e| format!("Invoice XML is not valid UTF-8: {e}"))?;
 
         let invoice = pdf_invoice::zugferd::ZugferdInvoice::from_xml(&xml_str)
             .map_err(|e| format!("Failed to parse invoice XML: {e}"))?;
@@ -2098,8 +2143,7 @@ impl OpenDocument {
             }
         };
 
-        if let Ok(lopdf::Object::Dictionary(ref mut dict)) =
-            self.lopdf_doc.get_object_mut(info_id)
+        if let Ok(lopdf::Object::Dictionary(ref mut dict)) = self.lopdf_doc.get_object_mut(info_id)
         {
             if let Some(t) = title {
                 dict.set(
@@ -2262,7 +2306,10 @@ impl OpenDocument {
             }
 
             self.sync_after_mutation()?;
-            return Ok(TextReplaceResult { replaced: true, reason: None });
+            return Ok(TextReplaceResult {
+                replaced: true,
+                reason: None,
+            });
         }
 
         Ok(TextReplaceResult {
@@ -2279,8 +2326,8 @@ impl OpenDocument {
             .map_err(|e| format!("Failed to save PDF: {e}"))?;
         self.modified = false;
         // Re-read saved bytes for consistency
-        self.raw_bytes = std::fs::read(path)
-            .map_err(|e| format!("Failed to re-read saved PDF: {e}"))?;
+        self.raw_bytes =
+            std::fs::read(path).map_err(|e| format!("Failed to re-read saved PDF: {e}"))?;
         Ok(())
     }
 
@@ -2326,7 +2373,11 @@ impl OpenDocument {
     /// Extract the given pages (0-based from UI) into a new PDF saved at `output_path`.
     /// Does not modify the current document.
     /// Fixes #ASSEMBLY-extract
-    pub fn extract_pages_to_file(&self, page_indices: &[u32], output_path: &str) -> Result<(), String> {
+    pub fn extract_pages_to_file(
+        &self,
+        page_indices: &[u32],
+        output_path: &str,
+    ) -> Result<(), String> {
         if page_indices.is_empty() {
             return Err("No pages selected for extraction".to_string());
         }
@@ -2344,8 +2395,7 @@ impl OpenDocument {
 /// Merge multiple PDF files into a single output file.
 pub fn merge_pdfs(paths: &[String], output_path: &str) -> Result<(), String> {
     let path_refs: Vec<&Path> = paths.iter().map(|p| Path::new(p.as_str())).collect();
-    let mut merged = pages::merge(&path_refs)
-        .map_err(|e| format!("Failed to merge PDFs: {e}"))?;
+    let mut merged = pages::merge(&path_refs).map_err(|e| format!("Failed to merge PDFs: {e}"))?;
     merged
         .save(output_path)
         .map_err(|e| format!("Failed to save merged PDF: {e}"))?;
@@ -2389,7 +2439,10 @@ pub fn split_pdf(
 /// Split the current document into individual single-page PDFs in `output_dir`.
 /// Returns the list of created file paths.
 /// Fixes #ASSEMBLY-split
-pub fn split_into_pages(source_doc: &lopdf::Document, output_dir: &str) -> Result<Vec<String>, String> {
+pub fn split_into_pages(
+    source_doc: &lopdf::Document,
+    output_dir: &str,
+) -> Result<Vec<String>, String> {
     let output_path = Path::new(output_dir);
     if !output_path.exists() {
         std::fs::create_dir_all(output_path)
@@ -2433,6 +2486,644 @@ fn parse_page_range(range: &str) -> Result<(u32, u32), String> {
             return Err(format!("Invalid page number: {range}"));
         }
         Ok((page, page))
+    }
+}
+
+// ── Attachment types ─────────────────────────────────────────────────────────
+
+/// Metadata for a single embedded file (PDF/A-3 §7.11.4).
+#[derive(Debug, Clone, Serialize)]
+pub struct AttachmentInfo {
+    /// Filename from /F or /UF in the filespec dictionary.
+    pub name: String,
+    /// Uncompressed byte size from /Params/Size (0 if not present).
+    pub size_bytes: u64,
+    /// Description from /Desc (empty string if not present).
+    pub description: String,
+    /// MIME type from /Subtype on the embedded file stream.
+    pub mime_type: String,
+    /// Creation date string from /Params/CreationDate (empty if not present).
+    pub creation_date: String,
+}
+
+// ── Layer types ───────────────────────────────────────────────────────────────
+
+/// Metadata for a single PDF Optional Content Group (OCG / layer).
+#[derive(Debug, Clone, Serialize)]
+pub struct LayerInfo {
+    /// Unique identifier derived from the lopdf object ID ("gen:num").
+    pub id: String,
+    /// Layer name from the /Name entry of the OCG dictionary.
+    pub name: String,
+    /// Default visibility computed from BaseState + /D/ON and /D/OFF arrays.
+    pub visible: bool,
+    /// Whether this layer appears in the /D/Locked array.
+    pub locked: bool,
+}
+
+// ── Attachment helpers ────────────────────────────────────────────────────────
+
+/// Compress `data` with zlib (FlateDecode).
+fn zlib_compress(data: &[u8]) -> Vec<u8> {
+    let mut encoder = ZlibEncoder::new(Vec::new(), Compression::default());
+    encoder.write_all(data).expect("zlib write");
+    encoder.finish().expect("zlib finish")
+}
+
+/// Resolve an Object::Reference to the underlying object (or return the object
+/// directly if it is already a non-reference).
+fn resolve_obj<'a>(doc: &'a lopdf::Document, obj: &'a Object) -> Option<&'a Object> {
+    match obj {
+        Object::Reference(id) => doc.get_object(*id).ok(),
+        other => Some(other),
+    }
+}
+
+/// Resolve an object to a &Dictionary, following one level of indirection.
+fn resolve_dict<'a>(doc: &'a lopdf::Document, obj: &'a Object) -> Option<&'a Dictionary> {
+    match resolve_obj(doc, obj)? {
+        Object::Dictionary(d) => Some(d),
+        _ => None,
+    }
+}
+
+/// Walk the /Names/EmbeddedFiles name tree and collect (name, filespec_id) pairs.
+/// Handles both flat /Names arrays and multi-level /Kids trees.
+fn collect_embedded_file_entries(
+    doc: &lopdf::Document,
+    node: &Dictionary,
+) -> Vec<(String, ObjectId)> {
+    let mut result = Vec::new();
+
+    // Flat name array: [name1, ref1, name2, ref2, …]
+    if let Ok(Object::Array(arr)) = node.get(b"Names") {
+        for pair in arr.chunks(2) {
+            if pair.len() < 2 {
+                break;
+            }
+            let name = match &pair[0] {
+                Object::String(s, _) => String::from_utf8_lossy(s).into_owned(),
+                _ => continue,
+            };
+            if let Ok(id) = pair[1].as_reference() {
+                result.push((name, id));
+            }
+        }
+        return result;
+    }
+
+    // Intermediate node with /Kids array.
+    if let Ok(Object::Array(kids)) = node.get(b"Kids") {
+        for kid in kids {
+            if let Some(kid_dict) = resolve_dict(doc, kid) {
+                result.extend(collect_embedded_file_entries(doc, kid_dict));
+            }
+        }
+    }
+
+    result
+}
+
+impl OpenDocument {
+    // ── Attachment methods ─────────────────────────────────────────────────
+
+    /// Return metadata for all embedded files in the /Names/EmbeddedFiles name tree.
+    pub fn list_attachments(&self) -> Vec<AttachmentInfo> {
+        let doc = &self.lopdf_doc;
+
+        // Get the catalog.
+        let catalog_id = match doc
+            .trailer
+            .get(b"Root")
+            .ok()
+            .and_then(|o| o.as_reference().ok())
+        {
+            Some(id) => id,
+            None => return Vec::new(),
+        };
+        let catalog = match doc
+            .get_object(catalog_id)
+            .ok()
+            .and_then(|o| o.as_dict().ok())
+        {
+            Some(d) => d,
+            None => return Vec::new(),
+        };
+
+        // Navigate /Names/EmbeddedFiles.
+        let names_dict = match catalog
+            .get(b"Names")
+            .ok()
+            .and_then(|o| resolve_dict(doc, o))
+        {
+            Some(d) => d,
+            None => return Vec::new(),
+        };
+        let ef_tree = match names_dict
+            .get(b"EmbeddedFiles")
+            .ok()
+            .and_then(|o| resolve_dict(doc, o))
+        {
+            Some(d) => d,
+            None => return Vec::new(),
+        };
+
+        let entries = collect_embedded_file_entries(doc, ef_tree);
+        let mut attachments = Vec::with_capacity(entries.len());
+
+        for (name, filespec_id) in entries {
+            let filespec = match doc
+                .get_object(filespec_id)
+                .ok()
+                .and_then(|o| o.as_dict().ok())
+            {
+                Some(d) => d,
+                None => continue,
+            };
+
+            // Description (/Desc).
+            let description = filespec
+                .get(b"Desc")
+                .ok()
+                .and_then(|o| match o {
+                    Object::String(s, _) => Some(String::from_utf8_lossy(s).into_owned()),
+                    _ => None,
+                })
+                .unwrap_or_default();
+
+            // Locate the embedded file stream via /EF/F.
+            let ef_dict = match filespec.get(b"EF").ok().and_then(|o| resolve_dict(doc, o)) {
+                Some(d) => d,
+                None => {
+                    attachments.push(AttachmentInfo {
+                        name,
+                        size_bytes: 0,
+                        description,
+                        mime_type: "application/octet-stream".to_owned(),
+                        creation_date: String::new(),
+                    });
+                    continue;
+                }
+            };
+
+            let stream_id = match ef_dict.get(b"F").ok().and_then(|o| o.as_reference().ok()) {
+                Some(id) => id,
+                None => {
+                    attachments.push(AttachmentInfo {
+                        name,
+                        size_bytes: 0,
+                        description,
+                        mime_type: "application/octet-stream".to_owned(),
+                        creation_date: String::new(),
+                    });
+                    continue;
+                }
+            };
+
+            let stream = match doc
+                .get_object(stream_id)
+                .ok()
+                .and_then(|o| o.as_stream().ok())
+            {
+                Some(s) => s,
+                None => {
+                    attachments.push(AttachmentInfo {
+                        name,
+                        size_bytes: 0,
+                        description,
+                        mime_type: "application/octet-stream".to_owned(),
+                        creation_date: String::new(),
+                    });
+                    continue;
+                }
+            };
+
+            // MIME type from /Subtype.
+            let mime_type = stream
+                .dict
+                .get(b"Subtype")
+                .ok()
+                .and_then(|o| match o {
+                    Object::Name(n) => Some(String::from_utf8_lossy(n).into_owned()),
+                    Object::String(s, _) => Some(String::from_utf8_lossy(s).into_owned()),
+                    _ => None,
+                })
+                .unwrap_or_else(|| "application/octet-stream".to_owned());
+
+            // Size and creation date from /Params.
+            let (size_bytes, creation_date) = stream
+                .dict
+                .get(b"Params")
+                .ok()
+                .and_then(|o| resolve_dict(doc, o))
+                .map(|params| {
+                    let size = params
+                        .get(b"Size")
+                        .ok()
+                        .and_then(|o| o.as_i64().ok())
+                        .unwrap_or(0) as u64;
+                    let date = params
+                        .get(b"CreationDate")
+                        .ok()
+                        .and_then(|o| match o {
+                            Object::String(s, _) => Some(String::from_utf8_lossy(s).into_owned()),
+                            _ => None,
+                        })
+                        .unwrap_or_default();
+                    (size, date)
+                })
+                .unwrap_or((0, String::new()));
+
+            attachments.push(AttachmentInfo {
+                name,
+                size_bytes,
+                description,
+                mime_type,
+                creation_date,
+            });
+        }
+
+        attachments
+    }
+
+    /// Extract the decompressed bytes of an embedded file by filename.
+    pub fn extract_attachment(&self, name: &str) -> Result<Vec<u8>, String> {
+        let doc = &self.lopdf_doc;
+
+        let catalog_id = doc
+            .trailer
+            .get(b"Root")
+            .ok()
+            .and_then(|o| o.as_reference().ok())
+            .ok_or("No /Root in trailer")?;
+        let catalog = doc
+            .get_object(catalog_id)
+            .map_err(|e| e.to_string())?
+            .as_dict()
+            .map_err(|_| "catalog not a dict")?;
+
+        let names_dict = catalog
+            .get(b"Names")
+            .ok()
+            .and_then(|o| resolve_dict(doc, o))
+            .ok_or("No /Names in catalog")?;
+        let ef_tree = names_dict
+            .get(b"EmbeddedFiles")
+            .ok()
+            .and_then(|o| resolve_dict(doc, o))
+            .ok_or("No /EmbeddedFiles name tree")?;
+
+        let entries = collect_embedded_file_entries(doc, ef_tree);
+        let filespec_id = entries
+            .into_iter()
+            .find(|(n, _)| n == name)
+            .map(|(_, id)| id)
+            .ok_or_else(|| format!("Attachment '{}' not found", name))?;
+
+        let filespec = doc
+            .get_object(filespec_id)
+            .map_err(|e| e.to_string())?
+            .as_dict()
+            .map_err(|_| "filespec not a dict")?;
+
+        let ef_dict = filespec
+            .get(b"EF")
+            .ok()
+            .and_then(|o| resolve_dict(doc, o))
+            .ok_or("No /EF in filespec")?;
+
+        let stream_id = ef_dict
+            .get(b"F")
+            .map_err(|_| "No /F in /EF")?
+            .as_reference()
+            .map_err(|_| "/EF/F is not a reference")?;
+
+        let stream = doc
+            .get_object(stream_id)
+            .map_err(|e| e.to_string())?
+            .as_stream()
+            .map_err(|_| "embedded file object is not a stream")?;
+
+        stream.decompressed_content().map_err(|e| e.to_string())
+    }
+
+    /// Add a new embedded file to the PDF's /Names/EmbeddedFiles name tree.
+    pub fn add_attachment(
+        &mut self,
+        name: &str,
+        data: &[u8],
+        mime_type: &str,
+    ) -> Result<(), String> {
+        let doc = &mut self.lopdf_doc;
+
+        // Create the embedded file stream with FlateDecode compression.
+        let compressed = zlib_compress(data);
+        let mut ef_stream_dict = Dictionary::new();
+        ef_stream_dict.set("Type", Object::Name(b"EmbeddedFile".to_vec()));
+        ef_stream_dict.set("Subtype", Object::Name(mime_type.as_bytes().to_vec()));
+        ef_stream_dict.set("Filter", Object::Name(b"FlateDecode".to_vec()));
+        ef_stream_dict.set(
+            "Params",
+            Object::Dictionary({
+                let mut p = Dictionary::new();
+                p.set("Size", Object::Integer(data.len() as i64));
+                p
+            }),
+        );
+        let ef_stream = Stream::new(ef_stream_dict, compressed);
+        let ef_stream_id = doc.add_object(ef_stream);
+
+        // Create the filespec dictionary.
+        let mut filespec = Dictionary::new();
+        filespec.set("Type", Object::Name(b"Filespec".to_vec()));
+        filespec.set(
+            "F",
+            Object::String(name.as_bytes().to_vec(), StringFormat::Literal),
+        );
+        filespec.set(
+            "UF",
+            Object::String(name.as_bytes().to_vec(), StringFormat::Hexadecimal),
+        );
+        let mut ef_ref_dict = Dictionary::new();
+        ef_ref_dict.set("F", Object::Reference(ef_stream_id));
+        ef_ref_dict.set("UF", Object::Reference(ef_stream_id));
+        filespec.set("EF", Object::Dictionary(ef_ref_dict));
+        let filespec_id = doc.add_object(filespec);
+
+        // Get the catalog object ID.
+        let catalog_id = doc
+            .trailer
+            .get(b"Root")
+            .ok()
+            .and_then(|o| o.as_reference().ok())
+            .ok_or("No /Root in trailer")?;
+
+        // Get or create the /Names indirect object.
+        let names_id: ObjectId = {
+            let catalog = doc
+                .get_object(catalog_id)
+                .map_err(|e| e.to_string())?
+                .as_dict()
+                .map_err(|_| "catalog not a dict")?;
+
+            match catalog.get(b"Names") {
+                Ok(Object::Reference(id)) => *id,
+                Ok(Object::Dictionary(_)) => {
+                    // Externalize the inline dict.
+                    let d = catalog.get(b"Names").unwrap().as_dict().unwrap().clone();
+                    let id = doc.add_object(d);
+                    let cat = doc
+                        .get_object_mut(catalog_id)
+                        .map_err(|e| e.to_string())?
+                        .as_dict_mut()
+                        .map_err(|_| "catalog not a dict")?;
+                    cat.set("Names", Object::Reference(id));
+                    id
+                }
+                _ => {
+                    let id = doc.add_object(Dictionary::new());
+                    let cat = doc
+                        .get_object_mut(catalog_id)
+                        .map_err(|e| e.to_string())?
+                        .as_dict_mut()
+                        .map_err(|_| "catalog not a dict")?;
+                    cat.set("Names", Object::Reference(id));
+                    id
+                }
+            }
+        };
+
+        // Get or create the /EmbeddedFiles name tree node under /Names.
+        let ef_node_id: Option<ObjectId> = {
+            let names_dict = doc
+                .get_object(names_id)
+                .map_err(|e| e.to_string())?
+                .as_dict()
+                .map_err(|_| "names not a dict")?;
+            match names_dict.get(b"EmbeddedFiles").ok() {
+                Some(Object::Reference(id)) => Some(*id),
+                _ => None,
+            }
+        };
+
+        if let Some(ef_id) = ef_node_id {
+            // Append to existing /Names array inside the EmbeddedFiles node.
+            let ef_dict = doc
+                .get_object_mut(ef_id)
+                .map_err(|e| e.to_string())?
+                .as_dict_mut()
+                .map_err(|_| "EmbeddedFiles node not a dict")?;
+            match ef_dict.get_mut(b"Names") {
+                Ok(Object::Array(ref mut arr)) => {
+                    arr.push(Object::String(
+                        name.as_bytes().to_vec(),
+                        StringFormat::Literal,
+                    ));
+                    arr.push(Object::Reference(filespec_id));
+                }
+                _ => {
+                    ef_dict.set(
+                        "Names",
+                        Object::Array(vec![
+                            Object::String(name.as_bytes().to_vec(), StringFormat::Literal),
+                            Object::Reference(filespec_id),
+                        ]),
+                    );
+                }
+            }
+        } else {
+            // Create new EmbeddedFiles node and add to /Names.
+            let new_ef_node = Dictionary::from_iter(vec![(
+                "Names",
+                Object::Array(vec![
+                    Object::String(name.as_bytes().to_vec(), StringFormat::Literal),
+                    Object::Reference(filespec_id),
+                ]),
+            )]);
+            let new_ef_id = doc.add_object(new_ef_node);
+            let names_dict = doc
+                .get_object_mut(names_id)
+                .map_err(|e| e.to_string())?
+                .as_dict_mut()
+                .map_err(|_| "names not a dict")?;
+            names_dict.set("EmbeddedFiles", Object::Reference(new_ef_id));
+        }
+
+        self.modified = true;
+        Ok(())
+    }
+
+    /// Remove an embedded file from the /Names/EmbeddedFiles name tree by filename.
+    pub fn remove_attachment(&mut self, name: &str) -> Result<(), String> {
+        let doc = &mut self.lopdf_doc;
+
+        let catalog_id = doc
+            .trailer
+            .get(b"Root")
+            .ok()
+            .and_then(|o| o.as_reference().ok())
+            .ok_or("No /Root in trailer")?;
+
+        let names_id: ObjectId = {
+            let catalog = doc
+                .get_object(catalog_id)
+                .map_err(|e| e.to_string())?
+                .as_dict()
+                .map_err(|_| "catalog not a dict")?;
+            match catalog.get(b"Names") {
+                Ok(Object::Reference(id)) => *id,
+                _ => return Err("No /Names in catalog".to_owned()),
+            }
+        };
+
+        let ef_id: ObjectId = {
+            let names_dict = doc
+                .get_object(names_id)
+                .map_err(|e| e.to_string())?
+                .as_dict()
+                .map_err(|_| "names not a dict")?;
+            match names_dict.get(b"EmbeddedFiles") {
+                Ok(Object::Reference(id)) => *id,
+                _ => return Err("No /EmbeddedFiles in names".to_owned()),
+            }
+        };
+
+        let ef_dict = doc
+            .get_object_mut(ef_id)
+            .map_err(|e| e.to_string())?
+            .as_dict_mut()
+            .map_err(|_| "EmbeddedFiles not a dict")?;
+
+        match ef_dict.get_mut(b"Names") {
+            Ok(Object::Array(ref mut arr)) => {
+                // Find and remove the pair [name_str, filespec_ref].
+                let pos = arr.chunks(2).enumerate().find_map(|(i, pair)| {
+                    if let Object::String(s, _) = &pair[0] {
+                        if String::from_utf8_lossy(s) == name {
+                            return Some(i * 2);
+                        }
+                    }
+                    None
+                });
+                match pos {
+                    Some(idx) if idx + 1 < arr.len() => {
+                        arr.remove(idx + 1);
+                        arr.remove(idx);
+                    }
+                    Some(idx) => {
+                        arr.remove(idx);
+                    }
+                    None => return Err(format!("Attachment '{}' not found", name)),
+                }
+            }
+            _ => return Err("EmbeddedFiles /Names is not an array".to_owned()),
+        }
+
+        self.modified = true;
+        Ok(())
+    }
+
+    // ── Layer methods ──────────────────────────────────────────────────────
+
+    /// Return all Optional Content Groups (OCGs) with their default visibility.
+    pub fn list_layers(&self) -> Vec<LayerInfo> {
+        let doc = &self.lopdf_doc;
+
+        // Navigate to /Root/OCProperties.
+        let catalog_id = match doc
+            .trailer
+            .get(b"Root")
+            .ok()
+            .and_then(|o| o.as_reference().ok())
+        {
+            Some(id) => id,
+            None => return Vec::new(),
+        };
+        let catalog = match doc
+            .get_object(catalog_id)
+            .ok()
+            .and_then(|o| o.as_dict().ok())
+        {
+            Some(d) => d,
+            None => return Vec::new(),
+        };
+        let oc_props = match catalog
+            .get(b"OCProperties")
+            .ok()
+            .and_then(|o| resolve_dict(doc, o))
+        {
+            Some(d) => d,
+            None => return Vec::new(), // No optional content groups.
+        };
+
+        // Collect OCG object IDs from /OCGs array.
+        let ocg_ids: Vec<ObjectId> = match oc_props.get(b"OCGs").ok() {
+            Some(Object::Array(arr)) => arr.iter().filter_map(|o| o.as_reference().ok()).collect(),
+            _ => return Vec::new(),
+        };
+
+        // Read default display dict /D.
+        let default_dict = oc_props.get(b"D").ok().and_then(|o| resolve_dict(doc, o));
+
+        // Determine BaseState (default ON).
+        let base_on = default_dict
+            .and_then(|d| d.get(b"BaseState").ok())
+            .and_then(|o| match o {
+                Object::Name(n) => Some(n.as_slice()),
+                _ => None,
+            })
+            .is_none_or(|n| n != b"OFF");
+
+        // Build sets of IDs in /ON, /OFF, /Locked arrays.
+        let on_ids: std::collections::HashSet<ObjectId> = default_dict
+            .and_then(|d| d.get(b"ON").ok())
+            .and_then(|o| o.as_array().ok())
+            .map(|arr| arr.iter().filter_map(|o| o.as_reference().ok()).collect())
+            .unwrap_or_default();
+
+        let off_ids: std::collections::HashSet<ObjectId> = default_dict
+            .and_then(|d| d.get(b"OFF").ok())
+            .and_then(|o| o.as_array().ok())
+            .map(|arr| arr.iter().filter_map(|o| o.as_reference().ok()).collect())
+            .unwrap_or_default();
+
+        let locked_ids: std::collections::HashSet<ObjectId> = default_dict
+            .and_then(|d| d.get(b"Locked").ok())
+            .and_then(|o| o.as_array().ok())
+            .map(|arr| arr.iter().filter_map(|o| o.as_reference().ok()).collect())
+            .unwrap_or_default();
+
+        ocg_ids
+            .into_iter()
+            .filter_map(|id| {
+                let ocg_dict = doc.get_object(id).ok()?.as_dict().ok()?;
+                let name = ocg_dict
+                    .get(b"Name")
+                    .ok()
+                    .and_then(|o| match o {
+                        Object::String(s, _) => Some(String::from_utf8_lossy(s).into_owned()),
+                        Object::Name(n) => Some(String::from_utf8_lossy(n).into_owned()),
+                        _ => None,
+                    })
+                    .unwrap_or_else(|| format!("Layer {}", id.0));
+
+                // Visibility: BaseState, then override with /ON / /OFF arrays.
+                let visible = if on_ids.contains(&id) {
+                    true
+                } else if off_ids.contains(&id) {
+                    false
+                } else {
+                    base_on
+                };
+
+                Some(LayerInfo {
+                    id: format!("{}:{}", id.0, id.1),
+                    name,
+                    visible,
+                    locked: locked_ids.contains(&id),
+                })
+            })
+            .collect()
     }
 }
 
