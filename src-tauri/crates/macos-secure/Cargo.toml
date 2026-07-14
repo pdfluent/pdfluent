@@ -1,0 +1,37 @@
+# Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
+#
+# This software is proprietary. The PDFluent application is free to use,
+# including for commercial purposes. Redistribution, or extraction or reuse
+# of its components (including the embedded PDF engine), requires a licence.
+# See https://pdfluent.com/license for terms.
+#
+# Isolated objc2 crate for macOS security-scoped bookmarks. Lives outside the
+# main `pdfluent-desktop` crate (which keeps `#![forbid(unsafe_code)]`) so the
+# small amount of required `unsafe` objc2 interop is contained here. Non-macOS
+# targets compile to no-op stubs.
+#
+# Bookmarks are minted from the path the user just picked via Tauri's open
+# dialog — that pick grants the process powerbox access, and under the
+# `files.user-selected.read-write` entitlement a security-scoped bookmark can be
+# created for any currently-accessible file. No custom NSOpenPanel / AppKit is
+# needed for this; if path-based minting ever fails on a target OS we fall back
+# to a native panel (kept out of scope unless proven necessary).
+[package]
+name = "pdfluent-macos-secure"
+version = "0.1.0"
+edition = "2021"
+license = "LicenseRef-PDFluent-Proprietary"
+publish = false
+
+[dependencies]
+base64 = "0.22"
+
+[target.'cfg(target_os = "macos")'.dependencies]
+objc2 = "0.5"
+objc2-foundation = { version = "0.2", features = [
+    "NSString",
+    "NSData",
+    "NSURL",
+    "NSError",
+    "NSArray",
+] }

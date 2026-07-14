@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 import { readFileSync } from 'node:fs';
@@ -29,6 +29,7 @@ const viewerAppSource = [
   '../src/viewer/hooks/useTextInteraction.ts',
   '../src/viewer/hooks/useKeyboardShortcuts.ts',
   '../src/viewer/ViewerApp.tsx',
+  '../src/viewer/v3/EditorV3Shell.tsx',
   '../src/viewer/WelcomeSection.tsx',
 ].map(p => readFileSync(new URL(p, import.meta.url), 'utf8')).join('\n\n');
 
@@ -71,7 +72,9 @@ describe('ModeToolbar — zoom display: rendering', () => {
   });
 
   it('uses tabular-nums for stable width', () => {
-    expect(toolbarSource).toContain('tabular-nums');
+    // v2: tabular-nums is applied via the .modetoolbar-meta CSS class
+    // (font-variant-numeric: tabular-nums), not as a Tailwind utility.
+    expect(toolbarSource).toMatch(/tabular-nums|modetoolbar-meta/);
   });
 });
 
@@ -104,14 +107,14 @@ describe('ModeToolbar — zoom display: read mode gate', () => {
 // ViewerApp wiring
 // ---------------------------------------------------------------------------
 
-describe('ViewerApp — passes zoom to ModeToolbar', () => {
-  it('passes zoom={zoom} to ModeToolbar', () => {
+describe('ViewerApp — passes zoom to EditorV3Shell', () => {
+  it('passes zoom={zoom} to EditorV3Shell', () => {
     expect(viewerAppSource).toContain('zoom={zoom}');
   });
 
-  it('zoom prop appears on the ModeToolbar element', () => {
-    const modeToolbarStart = viewerAppSource.indexOf('<ModeToolbar');
-    const modeToolbarEnd = viewerAppSource.indexOf('/>', modeToolbarStart);
+  it('zoom prop appears on the EditorV3Shell element', () => {
+    const modeToolbarStart = viewerAppSource.indexOf('<EditorV3Shell');
+    const modeToolbarEnd = viewerAppSource.indexOf('>\n          {docLoading', modeToolbarStart);
     const block = viewerAppSource.slice(modeToolbarStart, modeToolbarEnd);
     expect(block).toContain('zoom={zoom}');
   });
@@ -127,7 +130,7 @@ describe('ModeToolbar — no regressions after zoom display', () => {
     expect(toolbarSource).toContain('onZoomOut');
   });
 
-  it('WIRED_TOOLS still contains Inzoomen and Uitzoomen', () => {
+  it('getWiredTools still contains Inzoomen and Uitzoomen', () => {
     expect(toolbarSource).toContain("'toolbar.zoomIn'");
     expect(toolbarSource).toContain("'toolbar.zoomOut'");
   });

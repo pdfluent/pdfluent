@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 import { readFileSync } from 'node:fs';
@@ -108,19 +108,20 @@ describe('Release Readiness — keyboard shortcut completeness', () => {
 // ---------------------------------------------------------------------------
 
 describe('Release Readiness — mode switching completeness', () => {
-  it('keys 1-7 map to all 7 viewer modes', () => {
+  it('keys 1-8 map to all 8 viewer modes', () => {
     const modeKeysIdx = viewerAppSource.indexOf('MODE_KEYS');
     const block = viewerAppSource.slice(modeKeysIdx, modeKeysIdx + 400);
     expect(block).toContain("'1'");
-    expect(block).toContain("'7'");
+    expect(block).toContain("'8'");
   });
 
-  it('all 7 viewer modes are present in the MODE_KEYS map', () => {
+  it('all 8 viewer modes are present in the MODE_KEYS map', () => {
     const modeKeysIdx = viewerAppSource.indexOf('MODE_KEYS');
     const block = viewerAppSource.slice(modeKeysIdx, modeKeysIdx + 400);
     expect(block).toContain("'read'");
     expect(block).toContain("'review'");
     expect(block).toContain("'edit'");
+    expect(block).toContain("'sign'");
     expect(block).toContain("'organize'");
     expect(block).toContain("'forms'");
     expect(block).toContain("'protect'");
@@ -156,9 +157,11 @@ describe('Release Readiness — command palette groups', () => {
     expect(viewerAppSource).toContain("id: 'mode-read'");
     expect(viewerAppSource).toContain("id: 'mode-review'");
     expect(viewerAppSource).toContain("id: 'mode-edit'");
+    expect(viewerAppSource).toContain("id: 'mode-sign'");
     expect(viewerAppSource).toContain("id: 'mode-organize'");
     expect(viewerAppSource).toContain("id: 'mode-forms'");
     expect(viewerAppSource).toContain("id: 'mode-protect'");
+    expect(viewerAppSource).toContain("id: 'mode-convert'");
   });
 });
 

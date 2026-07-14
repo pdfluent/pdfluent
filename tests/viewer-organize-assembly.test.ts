@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 import { readFileSync } from 'node:fs';
@@ -96,7 +96,7 @@ describe('OrganizeGrid — assembly: append PDF', () => {
 
   it('updates task to done on success', () => {
     expect(appendBody).toContain("status: 'done'");
-    expect(appendBody).toContain("'PDF toegevoegd'");
+    expect(appendBody).toContain("t('organize.pdfAdded')");
   });
 
   it('updates task to error on failure', () => {
@@ -196,7 +196,7 @@ describe('OrganizeGrid — assembly: export selection', () => {
 
   it('updates task to done on success', () => {
     expect(exportBody).toContain("status: 'done'");
-    expect(exportBody).toContain('geëxporteerd');
+    expect(exportBody).toContain("t('organize.selectionExported'");
   });
 
   it('updates task to error on failure', () => {

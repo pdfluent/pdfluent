@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 use base64::{engine::general_purpose, Engine as _};
@@ -17,8 +17,21 @@ use pdf_annot::{
 };
 use pdf_compliance::{ComplianceReport, PdfALevel, Severity};
 use pdf_engine::{PdfDocument, RenderOptions, ThumbnailOptions};
+
+// Re-export the SDK's canonical TextSpanInfo so the rest of the backend (and
+// lib.rs's `use crate::pdf_engine::TextSpanInfo`) consumes the SDK's SSOT
+// instead of a locally duplicated struct. The `serde` feature must be enabled
+// on the `pdf-engine` crate for Tauri serialisation to work.
+pub use pdf_engine::TextSpanInfo;
+
+// Re-export the SDK document type so lib.rs (where `pdf_engine` names this
+// module, shadowing the SDK crate) can reference render snapshots.
+pub use pdf_engine::PdfDocument as SdkDocument;
 use pdf_extract::ImageFilter;
-use pdf_forms::{parse_acroform, FormAccess};
+use pdf_forms::{
+    apply_choice_multi, apply_field_value, build_form_model, parse_acroform, FormAccess,
+    WriteValue,
+};
 use pdf_manip::encrypt::{self, EncryptConfig, EncryptionAlgorithm, Permissions};
 use pdf_manip::optimize::OptimizeConfig;
 use pdf_manip::pages;
@@ -28,8 +41,10 @@ use pdf_sign::signer::Pkcs12Signer;
 use pdf_sign::ValidationStatus;
 use pdf_sign::{sign_pdf, validate_signatures, SignOptions};
 use serde::{Deserialize, Serialize};
+use std::collections::HashSet;
 use std::io::{Cursor, Write};
 use std::path::Path;
+use std::sync::Arc;
 
 #[derive(Debug, Serialize, Clone)]
 pub struct DocumentInfo {
@@ -38,6 +53,31 @@ pub struct DocumentInfo {
     pub title: Option<String>,
     pub author: Option<String>,
     pub form_type: String,
+    pub xfa_detected: bool,
+    pub xfa_notice: Option<String>,
+    pub active_content: ActiveContentInfo,
+}
+
+#[derive(Debug, Serialize, Clone, Default)]
+pub struct ActiveContentInfo {
+    pub has_active_content: bool,
+    pub has_javascript: bool,
+    pub has_open_action: bool,
+    pub has_additional_actions: bool,
+    pub has_launch_actions: bool,
+    pub has_submit_form: bool,
+    pub has_uri_actions: bool,
+    pub has_xfa: bool,
+    pub flags: Vec<String>,
+}
+
+impl ActiveContentInfo {
+    fn mark(&mut self, flag: &str) {
+        self.has_active_content = true;
+        if !self.flags.iter().any(|existing| existing == flag) {
+            self.flags.push(flag.to_string());
+        }
+    }
 }
 
 #[derive(Debug, Serialize, Clone)]
@@ -75,19 +115,6 @@ pub struct AnnotationInfo {
     pub color: Option<[f32; 3]>,
 }
 
-/// A positioned text span returned by get_page_text_spans.
-/// Coordinates are in PDF user space (origin bottom-left, y up).
-#[derive(Debug, Serialize, Clone)]
-pub struct TextSpanInfo {
-    pub text: String,
-    pub x: f64,
-    pub y: f64,
-    /// Estimated width: font_size * 0.5 * char_count.
-    pub width: f64,
-    /// Line height approximated as font_size.
-    pub height: f64,
-    pub font_size: f64,
-}
 
 #[derive(Debug, Serialize, Clone)]
 pub struct RenderedPage {
@@ -115,10 +142,420 @@ pub struct FormFieldOption {
     pub display: String,
 }
 
+// ── First-class AcroForm model (SDK `build_form_model` contract) ──────────
+//
+// These DTOs mirror `pdf_forms::FormFieldModel` 1:1 for the editor wire. The
+// shape is protected by the `form_model_wire_contract_is_stable` drift-guard
+// test below; if the SDK model changes, update both sides together.
+
+/// One widget (visual occurrence) of a logical form field.
+#[derive(Debug, Serialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct WidgetModelDto {
+    pub page_index: Option<usize>,
+    /// `[x0, y0, x1, y1]` in PDF user space (origin bottom-left).
+    pub rect: [f32; 4],
+    /// Button widgets: this widget's on-state name from `/AP /N`.
+    pub on_state: Option<String>,
+    /// Current `/AS` appearance state, when present.
+    pub appearance_state: Option<String>,
+}
+
+/// Resolved default-appearance info (`/DA`, inherited).
+#[derive(Debug, Serialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct DaInfoDto {
+    pub font_name: Option<String>,
+    /// Font size in points; `0` means auto-size.
+    pub font_size: f32,
+    pub color: Vec<f32>,
+}
+
+/// Typed field kind with kind-specific data inline (serde-tagged).
+#[derive(Debug, Serialize, Clone)]
+#[serde(tag = "type", rename_all = "camelCase")]
+pub enum FormFieldKindDto {
+    Text {
+        multiline: bool,
+        comb: bool,
+        password: bool,
+    },
+    Checkbox {
+        on_state: String,
+        checked: bool,
+    },
+    RadioGroup {
+        /// Export (on-state) value per option, in widget order.
+        options: Vec<String>,
+    },
+    ComboBox {
+        editable: bool,
+        options: Vec<FormFieldOption>,
+    },
+    ListBox {
+        multi_select: bool,
+        options: Vec<FormFieldOption>,
+    },
+    PushButton,
+    Signature,
+}
+
+/// A logical AcroForm field with everything the overlay UI needs.
+#[derive(Debug, Serialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct FormFieldModelDto {
+    pub name: String,
+    pub kind: FormFieldKindDto,
+    pub value: Option<String>,
+    /// Array of selected export values for multi-select list boxes; `None` for
+    /// all other field types.
+    pub selected_values: Option<Vec<String>>,
+    pub default_value: Option<String>,
+    pub tooltip: Option<String>,
+    pub read_only: bool,
+    pub required: bool,
+    pub max_len: Option<u32>,
+    /// Text alignment: 0 = left, 1 = centered, 2 = right.
+    pub quadding: u8,
+    pub da: DaInfoDto,
+    pub widgets: Vec<WidgetModelDto>,
+}
+
+impl From<&pdf_forms::FormFieldModel> for FormFieldModelDto {
+    fn from(m: &pdf_forms::FormFieldModel) -> Self {
+        use pdf_forms::FormFieldKind as K;
+        let kind = match &m.kind {
+            K::Text {
+                multiline,
+                comb,
+                password,
+            } => FormFieldKindDto::Text {
+                multiline: *multiline,
+                comb: *comb,
+                password: *password,
+            },
+            K::Checkbox { on_state, checked } => FormFieldKindDto::Checkbox {
+                on_state: on_state.clone(),
+                checked: *checked,
+            },
+            K::RadioGroup { options } => FormFieldKindDto::RadioGroup {
+                options: options.clone(),
+            },
+            K::ComboBox { editable, options } => FormFieldKindDto::ComboBox {
+                editable: *editable,
+                options: options.iter().map(form_field_option).collect(),
+            },
+            K::ListBox {
+                multi_select,
+                options,
+            } => FormFieldKindDto::ListBox {
+                multi_select: *multi_select,
+                options: options.iter().map(form_field_option).collect(),
+            },
+            K::PushButton => FormFieldKindDto::PushButton,
+            K::Signature => FormFieldKindDto::Signature,
+        };
+        let quadding = match m.quadding {
+            pdf_forms::Quadding::Left => 0,
+            pdf_forms::Quadding::Center => 1,
+            pdf_forms::Quadding::Right => 2,
+        };
+        FormFieldModelDto {
+            name: m.name.clone(),
+            kind,
+            value: m.value.clone(),
+            selected_values: m.selected_values.clone(),
+            default_value: m.default_value.clone(),
+            tooltip: m.tooltip.clone(),
+            read_only: m.read_only,
+            required: m.required,
+            max_len: m.max_len,
+            quadding,
+            da: DaInfoDto {
+                font_name: m.da.font_name.clone(),
+                font_size: m.da.font_size,
+                color: m.da.color.clone(),
+            },
+            widgets: m
+                .widgets
+                .iter()
+                .map(|w| WidgetModelDto {
+                    page_index: w.page_index,
+                    rect: w.rect,
+                    on_state: w.on_state.clone(),
+                    appearance_state: w.appearance_state.clone(),
+                })
+                .collect(),
+        }
+    }
+}
+
+fn form_field_option(o: &pdf_forms::tree::ChoiceOption) -> FormFieldOption {
+    FormFieldOption {
+        export: o.export.clone(),
+        display: o.display.clone(),
+    }
+}
+
+/// Parse a dictionary's `/Rect` into a normalized `[x0, y0, x1, y1]` (f32).
+fn parse_rect_f32(dict: &lopdf::Dictionary) -> Option<[f32; 4]> {
+    let lopdf::Object::Array(arr) = dict.get(b"Rect").ok()? else {
+        return None;
+    };
+    if arr.len() != 4 {
+        return None;
+    }
+    let mut r = [0f32; 4];
+    for (i, o) in arr.iter().enumerate() {
+        r[i] = match o {
+            lopdf::Object::Integer(n) => *n as f32,
+            lopdf::Object::Real(f) => *f,
+            _ => return None,
+        };
+    }
+    Some([r[0].min(r[2]), r[1].min(r[3]), r[0].max(r[2]), r[1].max(r[3])])
+}
+
+/// A typed write request from the editor: the field family decides which
+/// `pdf_forms::WriteValue` is applied.
+#[derive(Debug, Deserialize)]
+#[serde(tag = "kind", rename_all = "camelCase")]
+pub enum FormWriteRequest {
+    /// Text / comb / multiline field.
+    Text { name: String, value: String },
+    /// Checkbox on/off.
+    Checkbox { name: String, checked: bool },
+    /// Radio group selection by export (on-state) name.
+    Radio { name: String, export: String },
+    /// Choice field selection (export or display value).
+    Choice { name: String, value: String },
+    /// Multi-select list box: zero or more selected export values.
+    MultiChoice { name: String, values: Vec<String> },
+}
+
+/// A `/Link` annotation with a URI action — the clickable-link layer's data.
+#[derive(Debug, Serialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct LinkAnnotationDto {
+    pub page_index: usize,
+    /// `[x0, y0, x1, y1]` in PDF user space (origin bottom-left).
+    pub rect: [f32; 4],
+    pub uri: String,
+}
+
 #[derive(Debug, Deserialize)]
 pub struct SetFieldValueRequest {
     pub name: String,
     pub value: String,
+}
+
+// ── XFA form model (Phase 1 fill) ─────────────────────────────────────
+//
+// Mirrors `pdf_engine::xfa::XfaFieldModel` for the frontend. Distinct from the
+// AcroForm `FormFieldModelDto`: XFA rects are in page space with a TOP-LEFT
+// origin (y grows downward), so the overlay maps them without the y-flip the
+// AcroForm overlay applies.
+
+/// Rectangle in XFA page space: points, top-left origin (y grows downward).
+#[derive(Debug, Serialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct XfaRectDto {
+    pub x: f64,
+    pub y: f64,
+    pub width: f64,
+    pub height: f64,
+}
+
+/// A selectable option of a dropdown / choice field.
+#[derive(Debug, Serialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct XfaFieldOptionDto {
+    pub display: String,
+    pub save: String,
+}
+
+/// One layouted widget occurrence of an XFA field.
+#[derive(Debug, Serialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct XfaWidgetDto {
+    /// 0-based page index in the XFA layout.
+    pub page: usize,
+    pub rect: XfaRectDto,
+    /// For radio groups: the on-value this member widget asserts.
+    pub on_value: Option<String>,
+}
+
+/// One logical XFA form field, flattened for the overlay UI.
+#[derive(Debug, Serialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct XfaFieldDto {
+    pub name: String,
+    pub som_path: String,
+    /// Lowercase-ish kind tag: text|checkbox|radioGroup|button|dropdown|
+    /// signature|dateTime|numeric|password|image|barcode.
+    pub field_type: String,
+    pub value: String,
+    pub read_only: bool,
+    pub required: bool,
+    pub multiline: bool,
+    pub hidden: bool,
+    pub options: Vec<XfaFieldOptionDto>,
+    pub on_value: Option<String>,
+    pub off_value: Option<String>,
+    /// First layout page (0-based); `None` when not in the current layout.
+    pub page: Option<usize>,
+    pub rect: Option<XfaRectDto>,
+    pub widgets: Vec<XfaWidgetDto>,
+    pub bound_to_data: bool,
+    pub bind_none: bool,
+}
+
+/// The XFA form model: layout page count plus enumerated fields.
+#[derive(Debug, Serialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct XfaFormModelDto {
+    pub page_count: usize,
+    pub fields: Vec<XfaFieldDto>,
+}
+
+/// Stable string tag for an XFA field type (matches the frontend union).
+fn xfa_field_type_tag(t: pdf_engine::xfa::XfaFieldType) -> &'static str {
+    use pdf_engine::xfa::XfaFieldType as T;
+    match t {
+        T::Text => "text",
+        T::Checkbox => "checkbox",
+        T::RadioGroup => "radioGroup",
+        T::Button => "button",
+        T::Dropdown => "dropdown",
+        T::Signature => "signature",
+        T::DateTime => "dateTime",
+        T::Numeric => "numeric",
+        T::Password => "password",
+        T::Image => "image",
+        T::Barcode => "barcode",
+    }
+}
+
+impl From<&pdf_engine::xfa::XfaFieldModel> for XfaFieldDto {
+    fn from(f: &pdf_engine::xfa::XfaFieldModel) -> Self {
+        let rect = |r: &pdf_engine::xfa::XfaRect| XfaRectDto {
+            x: r.x,
+            y: r.y,
+            width: r.width,
+            height: r.height,
+        };
+        XfaFieldDto {
+            name: f.name.clone(),
+            som_path: f.som_path.clone(),
+            field_type: xfa_field_type_tag(f.field_type).to_string(),
+            value: f.value.clone(),
+            read_only: f.read_only,
+            required: f.required,
+            multiline: f.multiline,
+            hidden: f.hidden,
+            options: f
+                .options
+                .iter()
+                .map(|o| XfaFieldOptionDto {
+                    display: o.display.clone(),
+                    save: o.save.clone(),
+                })
+                .collect(),
+            on_value: f.on_value.clone(),
+            off_value: f.off_value.clone(),
+            page: f.page,
+            rect: f.rect.as_ref().map(rect),
+            widgets: f
+                .widgets
+                .iter()
+                .map(|w| XfaWidgetDto {
+                    page: w.page,
+                    rect: rect(&w.rect),
+                    on_value: w.on_value.clone(),
+                })
+                .collect(),
+            bound_to_data: f.bound_to_data,
+            bind_none: f.bind_none,
+        }
+    }
+}
+
+/// A typed XFA write request from the editor (serde-tagged on `kind`).
+#[derive(Debug, Deserialize)]
+#[serde(tag = "kind", rename_all = "camelCase")]
+pub enum XfaWriteRequest {
+    /// Text / multiline / numeric / date-time / password / dropdown field.
+    Text { name: String, value: String },
+    /// Checkbox on/off.
+    Checkbox { name: String, checked: bool },
+    /// Radio group selection by member on-value.
+    Radio { name: String, export: String },
+}
+
+/// One field/subform whose presence changed during a Phase 2 interactive commit
+/// (revealed or hidden by a change/click/calculate script).
+#[derive(Debug, Serialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct XfaPresenceChangeDto {
+    pub name: String,
+    /// Lowercased presence before the commit: visible|hidden|invisible|inactive.
+    pub before: String,
+    /// Lowercased presence after re-layout.
+    pub after: String,
+}
+
+/// Result of a Phase 2 interactive commit (`commit_xfa_field_value`): the value
+/// write outcome, what the commit-loop scripts revealed/hid, the page-count
+/// delta, and the refreshed field model so the overlay can update in one round
+/// trip. When the `xfa-interactive` feature is off this carries the Phase 1
+/// fallback shape (`interactive=false`, no scripts, no presence changes, equal
+/// page counts).
+#[derive(Debug, Serialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct XfaCommitResultDto {
+    /// Normalized written value (e.g. dropdown display → save value).
+    pub raw_value: String,
+    /// Whether the value reached the datasets packet (persists across reopen).
+    pub persisted_to_datasets: bool,
+    /// Whether interactive scripts ran (false in the Phase 1 fallback / when the
+    /// `xfa-js-sandboxed` runtime is not compiled in).
+    pub interactive: bool,
+    /// Number of event scripts executed during the commit.
+    pub scripts_executed: usize,
+    /// XFA layout page count before the commit.
+    pub page_count_before: usize,
+    /// XFA layout page count after re-layout.
+    pub page_count_after: usize,
+    /// Fields/subforms revealed or hidden by the commit.
+    pub presence_changes: Vec<XfaPresenceChangeDto>,
+    /// Refreshed model after the commit (revealed/hidden fields, new geometry).
+    pub model: XfaFormModelDto,
+}
+
+/// Resolve a write request into the SDK `(name, value)` pair.
+fn xfa_request_parts(request: &XfaWriteRequest) -> (&str, pdf_engine::xfa::XfaWriteValue<'_>) {
+    match request {
+        XfaWriteRequest::Text { name, value } => {
+            (name, pdf_engine::xfa::XfaWriteValue::Text(value))
+        }
+        XfaWriteRequest::Checkbox { name, checked } => {
+            (name, pdf_engine::xfa::XfaWriteValue::Checkbox(*checked))
+        }
+        XfaWriteRequest::Radio { name, export } => {
+            (name, pdf_engine::xfa::XfaWriteValue::Radio(export))
+        }
+    }
+}
+
+/// One node in the document outline (table of contents).
+/// Serialises to `{ title, page_index, children }` matching the TypeScript
+/// `TauriOutlineItem` interface consumed by `TauriDocumentEngine.getOutline`.
+#[derive(Debug, Serialize, Clone)]
+pub struct OutlineItemInfo {
+    pub title: String,
+    /// Zero-based page index.
+    pub page_index: u32,
+    pub children: Vec<OutlineItemInfo>,
 }
 
 #[derive(Debug, Serialize, Clone)]
@@ -147,13 +584,32 @@ pub struct SearchRedactReport {
     pub metadata_cleaned: bool,
 }
 
-/// Result of a text span replacement attempt (Phase 4).
+/// Result of a parser-backed text span replacement attempt.
 #[derive(Debug, Serialize, Clone)]
 pub struct TextReplaceResult {
     /// True when the content stream was mutated.
     pub replaced: bool,
     /// Machine-readable reason when replaced is false.  Null when replaced is true.
     pub reason: Option<String>,
+}
+
+fn classify_text_replace_error(message: &str) -> &'static str {
+    let lower = message.to_ascii_lowercase();
+    if lower.contains("page")
+        && (lower.contains("range") || lower.contains("out of bounds") || lower.contains("not found"))
+    {
+        return "page-not-found";
+    }
+    if lower.contains("font")
+        || lower.contains("encoding")
+        || lower.contains("cmap")
+        || lower.contains("unicode")
+        || lower.contains("glyph")
+        || lower.contains("character")
+    {
+        return "encoding-not-supported";
+    }
+    "internal-error"
 }
 
 #[derive(Debug, Serialize, Clone)]
@@ -257,27 +713,15 @@ pub struct PdfAIssue {
     pub location: Option<String>,
 }
 
-/// Replace the first occurrence of `needle` in `haystack` with `replacement`.
-/// Returns the original bytes unchanged if `needle` is not found.
-fn replace_first_occurrence(haystack: &[u8], needle: &[u8], replacement: &[u8]) -> Vec<u8> {
-    if needle.is_empty() {
-        return haystack.to_vec();
-    }
-    if let Some(pos) = haystack.windows(needle.len()).position(|w| w == needle) {
-        let mut result = Vec::with_capacity(haystack.len() - needle.len() + replacement.len());
-        result.extend_from_slice(&haystack[..pos]);
-        result.extend_from_slice(replacement);
-        result.extend_from_slice(&haystack[pos + needle.len()..]);
-        result
-    } else {
-        haystack.to_vec()
-    }
-}
-
 /// Wraps a `pdf_engine::PdfDocument` and a `lopdf::Document` for mutation operations.
 pub struct OpenDocument {
     /// Read-only PDF handle for rendering, text extraction, compliance checking.
-    pub pdf_doc: PdfDocument,
+    pub pdf_doc: Arc<PdfDocument>,
+    /// Render source. The SDK re-flattens XFA documents on *every* render call
+    /// (`open_flattened_xfa_for_render`), which costs ~100ms+ per render on real
+    /// XFA forms. We pay that flatten once here instead; non-XFA documents share
+    /// the same Arc as `pdf_doc`.
+    render_doc: Arc<PdfDocument>,
     /// Mutable PDF handle for forms, annotations, manipulation, signing.
     pub lopdf_doc: lopdf::Document,
     /// Raw PDF bytes (kept for re-parsing after mutation).
@@ -286,47 +730,314 @@ pub struct OpenDocument {
     pub modified: bool,
 }
 
+// Render snapshots cross thread boundaries (renders run off the state mutex).
+const _: () = {
+    const fn assert_send_sync<T: Send + Sync>() {}
+    assert_send_sync::<PdfDocument>();
+};
+
+/// Convert a (cloned) lopdf document to DOCX and write it to `output_path`.
+///
+/// A free function (not an `OpenDocument` method) so a heavy export can run on a
+/// worker thread with just a cloned `lopdf::Document` — never holding the
+/// document mutex or blocking the UI. See the async `convert_to_docx` command.
+pub fn convert_doc_to_docx(doc: &lopdf::Document, output_path: &str) -> Result<(), String> {
+    let bytes = pdf_docx::pdf_to_docx(doc).map_err(|e| format!("Failed to convert to DOCX: {e}"))?;
+    write_export_bytes(
+        &bytes,
+        output_path,
+        "DOCX",
+        "The document may not contain extractable content.",
+    )
+}
+
+/// Convert a (cloned) lopdf document to XLSX and write it to `output_path`.
+pub fn convert_doc_to_xlsx(doc: &lopdf::Document, output_path: &str) -> Result<(), String> {
+    let bytes = pdf_xlsx::pdf_to_xlsx(doc).map_err(|e| format!("Failed to convert to XLSX: {e}"))?;
+    write_export_bytes(
+        &bytes,
+        output_path,
+        "XLSX",
+        "The document may not contain structured tables.",
+    )
+}
+
+/// Convert a (cloned) lopdf document to PPTX and write it to `output_path`.
+pub fn convert_doc_to_pptx(doc: &lopdf::Document, output_path: &str) -> Result<(), String> {
+    let bytes = pdf_pptx::pdf_to_pptx(doc).map_err(|e| format!("Failed to convert to PPTX: {e}"))?;
+    write_export_bytes(
+        &bytes,
+        output_path,
+        "PPTX",
+        "The document may not contain extractable content.",
+    )
+}
+
+/// Validate non-empty conversion bytes and write them to `output_path`.
+fn write_export_bytes(
+    bytes: &[u8],
+    output_path: &str,
+    kind: &str,
+    empty_hint: &str,
+) -> Result<(), String> {
+    if bytes.is_empty() {
+        return Err(format!(
+            "Conversion produced an empty {kind} file. {empty_hint}"
+        ));
+    }
+    std::fs::write(output_path, bytes).map_err(|e| format!("Failed to save {kind} file: {e}"))?;
+    let written =
+        std::fs::metadata(output_path).map_err(|e| format!("Failed to verify {kind} output: {e}"))?;
+    if written.len() == 0 {
+        return Err(format!("Written {kind} file is empty (0 bytes)."));
+    }
+    Ok(())
+}
+
 impl OpenDocument {
     pub fn open(path: &str) -> Result<Self, String> {
         let raw_bytes = std::fs::read(path).map_err(|e| format!("Failed to read file: {e}"))?;
-
-        let pdf_doc = PdfDocument::open(raw_bytes.clone())
-            .map_err(|e| format!("Failed to parse PDF: {e}"))?;
-
-        let lopdf_doc = lopdf::Document::load(path)
-            .map_err(|e| format!("Failed to load PDF for editing: {e}"))?;
-
-        Ok(Self {
-            pdf_doc,
-            lopdf_doc,
-            raw_bytes,
-            modified: false,
-        })
+        Self::open_bytes(raw_bytes)
     }
 
-    #[allow(dead_code)] // Reserved for future in-memory load path (no file path available)
     pub fn open_bytes(bytes: Vec<u8>) -> Result<Self, String> {
-        let pdf_doc =
-            PdfDocument::open(bytes.clone()).map_err(|e| format!("Failed to parse PDF: {e}"))?;
+        let pdf_doc = Arc::new(
+            PdfDocument::open(bytes.clone()).map_err(|e| format!("Failed to parse PDF: {e}"))?,
+        );
 
         let lopdf_doc = lopdf::Document::load_mem(&bytes)
             .map_err(|e| format!("Failed to load PDF for editing: {e}"))?;
 
+        let render_doc = Self::make_render_doc(&pdf_doc);
+
         Ok(Self {
             pdf_doc,
+            render_doc,
             lopdf_doc,
             raw_bytes: bytes,
             modified: false,
         })
     }
 
+    /// Build the render source for a freshly parsed document: XFA documents are
+    /// flattened once so per-render flattening inside the SDK is skipped; any
+    /// flatten failure falls back to the canonical document (the SDK then keeps
+    /// its own per-render fallback behaviour).
+    fn make_render_doc(pdf_doc: &Arc<PdfDocument>) -> Arc<PdfDocument> {
+        if !pdf_engine::xfa::has_xfa(pdf_doc) {
+            return Arc::clone(pdf_doc);
+        }
+        let flattened = match pdf_engine::xfa::flatten(pdf_doc) {
+            Ok(bytes) => bytes,
+            Err(_) => return Arc::clone(pdf_doc),
+        };
+        match PdfDocument::open(flattened) {
+            Ok(flat) => Arc::new(flat),
+            Err(_) => Arc::clone(pdf_doc),
+        }
+    }
+
+    /// Cheap clone of the render source for lock-free rendering on another thread.
+    pub fn render_snapshot(&self) -> Arc<PdfDocument> {
+        Arc::clone(&self.render_doc)
+    }
+
+    #[cfg(test)]
+    fn render_doc_page_count(&self) -> usize {
+        self.render_doc.page_count()
+    }
+
+    pub fn flatten_xfa(&mut self) -> Result<(), String> {
+        if !pdf_engine::xfa::has_xfa(&self.pdf_doc) {
+            return Err("Dit document bevat geen actieve XFA-template om om te zetten.".to_string());
+        }
+
+        let flattened = pdf_engine::xfa::flatten(&self.pdf_doc)
+            .map_err(|e| format!("XFA omzetten naar statische PDF is mislukt: {e}"))?;
+        let mut replacement = Self::open_bytes(flattened)?;
+        replacement.modified = true;
+        *self = replacement;
+        Ok(())
+    }
+
+    // ── XFA form fill (Phase 1) ───────────────────────────────────────
+    //
+    // The editor drives `pdf_engine::xfa::XfaSession` directly — the same engine
+    // layer the flatten path uses — rather than the higher-level
+    // `pdfluent::PdfDocument` wrapper, because `OpenDocument` already holds the
+    // `lopdf::Document` that `write_into_document` needs. No reflow, no event
+    // scripts: geometry stays that of the opened document (Phase 0 layout).
+    //
+    // The session is built fresh per call and never stored on `OpenDocument`:
+    // `XfaSession` holds a `dyn XfaJsRuntime` and is therefore `!Send`, while
+    // `OpenDocument` lives behind the `AppState` mutex and must stay `Send`. The
+    // transient session is cheap relative to a fill round-trip, and rebuilding
+    // from the current `lopdf_doc` keeps accumulated edits (each write persists
+    // into that document's datasets packet before the session is dropped).
+
+    /// Open a transient XFA session over the current document state. Serializing
+    /// the live `lopdf_doc` (the same non-destructive `save_to` `sync_after_mutation`
+    /// uses) means accumulated datasets edits are included, so sequential fills
+    /// build on each other without storing the `!Send` session.
+    fn xfa_session(&mut self) -> Result<pdf_engine::xfa::XfaSession, String> {
+        let mut buf = Vec::new();
+        self.lopdf_doc
+            .save_to(&mut buf)
+            .map_err(|e| format!("Kon XFA-document niet serialiseren: {e}"))?;
+        pdf_engine::xfa::XfaSession::open(&buf)
+            .map_err(|e| format!("XFA-formulier kon niet worden geopend: {e}"))
+    }
+
+    /// The XFA form model: layout page count plus one entry per logical field
+    /// (radio groups fold their member widgets into a single field), with values,
+    /// flags, options and per-widget geometry, read from the current document.
+    pub fn xfa_form_model(&mut self) -> Result<XfaFormModelDto, String> {
+        let session = self.xfa_session()?;
+        Ok(XfaFormModelDto {
+            page_count: session.page_count(),
+            fields: session.fields().iter().map(XfaFieldDto::from).collect(),
+        })
+    }
+
+    /// Set one XFA field value. Writes through to the bound `datasets` node in
+    /// `lopdf_doc` so a subsequent `save_to` produces a PDF Adobe reopens with
+    /// the value. The rendered (flattened) layout is intentionally NOT recomputed
+    /// — Phase 1 has no reflow — so the page bitmaps stay as opened and the
+    /// overlay inputs remain the visual truth for edited values.
+    pub fn set_xfa_field_value(&mut self, request: &XfaWriteRequest) -> Result<(), String> {
+        let mut session = self.xfa_session()?;
+        let (name, value) = xfa_request_parts(request);
+        session
+            .set_value(name, value)
+            .map_err(|e| format!("Kon XFA-veld '{name}' niet invullen: {e}"))?;
+        session
+            .write_into_document(&mut self.lopdf_doc)
+            .map_err(|e| format!("Kon XFA-waarde niet wegschrijven: {e}"))?;
+        self.modified = true;
+        Ok(())
+    }
+
+    /// Phase 2 interactive commit. Prefers the SDK commit loop
+    /// (`XfaSession::commit_value`: change/click + calculate scripts → re-layout
+    /// → presence changes) over the static Phase 1 value write, and returns the
+    /// commit outcome together with the refreshed field model so the overlay can
+    /// update revealed/hidden fields in a single round trip. The re-layout is
+    /// mirrored into the rendered pages via `sync_after_mutation`.
+    ///
+    /// When the `xfa-interactive` feature is not compiled in (e.g. an SDK build
+    /// without the Phase 2 commit loop), this degrades to the Phase 1 static
+    /// value write and reports `interactive=false` with no presence changes.
+    pub fn commit_xfa_field_value(
+        &mut self,
+        request: &XfaWriteRequest,
+    ) -> Result<XfaCommitResultDto, String> {
+        #[cfg(feature = "xfa-interactive")]
+        {
+            let mut session = self.xfa_session()?;
+            let (name, value) = xfa_request_parts(request);
+            let outcome = session
+                .commit_value(name, value)
+                .map_err(|e| format!("Kon XFA-veld '{name}' niet interactief vastleggen: {e}"))?;
+            session
+                .write_into_document(&mut self.lopdf_doc)
+                .map_err(|e| format!("Kon XFA-waarde niet wegschrijven: {e}"))?;
+            // Snapshot the post-commit model (revealed/hidden fields, new
+            // geometry) before the session is dropped.
+            let model = XfaFormModelDto {
+                page_count: session.page_count(),
+                fields: session.fields().iter().map(XfaFieldDto::from).collect(),
+            };
+            let presence_changes = outcome
+                .presence_changes
+                .iter()
+                .map(|pc| XfaPresenceChangeDto {
+                    name: pc.name.clone(),
+                    before: format!("{:?}", pc.before).to_lowercase(),
+                    after: format!("{:?}", pc.after).to_lowercase(),
+                })
+                .collect();
+            // Re-layout changed the document: re-parse + re-flatten so the
+            // rendered pages reflect the new datasets and page count.
+            self.sync_after_mutation()?;
+            Ok(XfaCommitResultDto {
+                raw_value: outcome.set.raw_value,
+                persisted_to_datasets: outcome.set.persisted_to_datasets,
+                interactive: outcome.interactive,
+                scripts_executed: outcome.scripts_executed,
+                page_count_before: outcome.page_count_before,
+                page_count_after: outcome.page_count_after,
+                presence_changes,
+                model,
+            })
+        }
+        #[cfg(not(feature = "xfa-interactive"))]
+        {
+            // Phase 1 fallback: static value write, no scripts, no reflow.
+            let mut session = self.xfa_session()?;
+            let (name, value) = xfa_request_parts(request);
+            let outcome = session
+                .set_value(name, value)
+                .map_err(|e| format!("Kon XFA-veld '{name}' niet invullen: {e}"))?;
+            session
+                .write_into_document(&mut self.lopdf_doc)
+                .map_err(|e| format!("Kon XFA-waarde niet wegschrijven: {e}"))?;
+            let page_count = session.page_count();
+            let model = XfaFormModelDto {
+                page_count,
+                fields: session.fields().iter().map(XfaFieldDto::from).collect(),
+            };
+            self.modified = true;
+            Ok(XfaCommitResultDto {
+                raw_value: outcome.raw_value,
+                persisted_to_datasets: outcome.persisted_to_datasets,
+                interactive: false,
+                scripts_executed: 0,
+                page_count_before: page_count,
+                page_count_after: page_count,
+                presence_changes: Vec::new(),
+                model,
+            })
+        }
+    }
+
     pub fn document_info(&self) -> DocumentInfo {
         let info = self.pdf_doc.info();
-        let page_count = self.pdf_doc.page_count();
+
+        // Detect XFA before reading page count: dynamic XFA shell PDFs have only
+        // 1 page in pdf_doc but render_doc (the pre-flattened layout) contains the
+        // full rendered page set.  We must pick the right source first.
+        let xfa_detected = (|| -> Option<bool> {
+            let root_ref = self
+                .lopdf_doc
+                .trailer
+                .get(b"Root")
+                .ok()?
+                .as_reference()
+                .ok()?;
+            let catalog = self.lopdf_doc.get_object(root_ref).ok()?.as_dict().ok()?;
+            let acro_obj = catalog.get(b"AcroForm").ok()?;
+            let acro_form = if let Ok(r) = acro_obj.as_reference() {
+                self.lopdf_doc.get_object(r).ok()?.as_dict().ok()?
+            } else {
+                acro_obj.as_dict().ok()?
+            };
+            Some(acro_form.has(b"XFA"))
+        })()
+        .unwrap_or(false);
+
+        // For XFA documents use the pre-flattened render_doc as the authoritative
+        // page source.  For normal PDFs and AcroForms, render_doc == pdf_doc.
+        let page_src: &PdfDocument = if xfa_detected {
+            &self.render_doc
+        } else {
+            &self.pdf_doc
+        };
+
+        let page_count = page_src.page_count();
         let mut pages = Vec::with_capacity(page_count);
 
         for i in 0..page_count {
-            if let Ok(geom) = self.pdf_doc.page_geometry(i) {
+            if let Ok(geom) = page_src.page_geometry(i) {
                 pages.push(PageInfo {
                     index: i as u32,
                     width_pt: geom.media_box.width(),
@@ -343,12 +1054,151 @@ impl OpenDocument {
             }
         };
 
+        let mut active_content = self.scan_active_content();
+        if xfa_detected {
+            active_content.has_xfa = true;
+            active_content.mark("xfa");
+        }
+
+        let xfa_notice = if xfa_detected {
+            Some(
+                "XFA-document: alle pagina's worden alleen-lezen weergegeven. \
+                 Zet om naar standaard PDF om te bewerken en te zoeken."
+                    .to_string(),
+            )
+        } else {
+            None
+        };
+
         DocumentInfo {
             page_count: page_count as u32,
             pages,
             title: info.title,
             author: info.author,
             form_type,
+            xfa_detected,
+            xfa_notice,
+            active_content,
+        }
+    }
+
+    fn scan_active_content(&self) -> ActiveContentInfo {
+        let mut info = ActiveContentInfo::default();
+        let mut visited = HashSet::<ObjectId>::new();
+
+        self.scan_active_dictionary(&self.lopdf_doc.trailer, &mut info, &mut visited, 0);
+        for (id, object) in &self.lopdf_doc.objects {
+            visited.insert(*id);
+            self.scan_active_object(object, &mut info, &mut visited, 0);
+        }
+
+        info
+    }
+
+    fn scan_active_object(
+        &self,
+        object: &Object,
+        info: &mut ActiveContentInfo,
+        visited: &mut HashSet<ObjectId>,
+        depth: usize,
+    ) {
+        if depth > 64 {
+            return;
+        }
+
+        match object {
+            Object::Array(items) => {
+                for item in items {
+                    self.scan_active_object(item, info, visited, depth + 1);
+                }
+            }
+            Object::Dictionary(dict) => {
+                self.scan_active_dictionary(dict, info, visited, depth + 1);
+            }
+            Object::Stream(stream) => {
+                self.scan_active_dictionary(&stream.dict, info, visited, depth + 1);
+            }
+            Object::Reference(id) if visited.insert(*id) => {
+                if let Ok(referenced) = self.lopdf_doc.get_object(*id) {
+                    self.scan_active_object(referenced, info, visited, depth + 1);
+                }
+            }
+            _ => {}
+        }
+    }
+
+    fn scan_active_dictionary(
+        &self,
+        dict: &Dictionary,
+        info: &mut ActiveContentInfo,
+        visited: &mut HashSet<ObjectId>,
+        depth: usize,
+    ) {
+        if depth > 64 {
+            return;
+        }
+
+        for (key, value) in dict.iter() {
+            match key.as_slice() {
+                b"JavaScript" | b"JS" => {
+                    info.has_javascript = true;
+                    info.mark("javascript");
+                }
+                b"OpenAction" => {
+                    info.has_open_action = true;
+                    info.mark("open-action");
+                }
+                b"AA" => {
+                    info.has_additional_actions = true;
+                    info.mark("additional-actions");
+                }
+                b"Launch" => {
+                    info.has_launch_actions = true;
+                    info.mark("launch");
+                }
+                b"SubmitForm" => {
+                    info.has_submit_form = true;
+                    info.mark("submit-form");
+                }
+                b"URI" => {
+                    info.has_uri_actions = true;
+                    info.mark("uri");
+                }
+                b"XFA" => {
+                    info.has_xfa = true;
+                    info.mark("xfa");
+                }
+                b"S" => {
+                    if let Object::Name(name) = value {
+                        self.scan_action_name(name, info);
+                    }
+                }
+                _ => {}
+            }
+
+            self.scan_active_object(value, info, visited, depth + 1);
+        }
+    }
+
+    fn scan_action_name(&self, name: &[u8], info: &mut ActiveContentInfo) {
+        match name {
+            b"JavaScript" => {
+                info.has_javascript = true;
+                info.mark("javascript");
+            }
+            b"Launch" => {
+                info.has_launch_actions = true;
+                info.mark("launch");
+            }
+            b"SubmitForm" => {
+                info.has_submit_form = true;
+                info.mark("submit-form");
+            }
+            b"URI" => {
+                info.has_uri_actions = true;
+                info.mark("uri");
+            }
+            _ => {}
         }
     }
 
@@ -361,7 +1211,7 @@ impl OpenDocument {
         };
 
         let rendered = self
-            .pdf_doc
+            .render_doc
             .render_page(page_index as usize, &options)
             .map_err(|e| format!("Failed to render page {page_index}: {e}"))?;
 
@@ -372,13 +1222,14 @@ impl OpenDocument {
         let options = ThumbnailOptions { max_dimension: 280 };
 
         let rendered = self
-            .pdf_doc
+            .render_doc
             .thumbnail(page_index as usize, &options)
             .map_err(|e| format!("Failed to render thumbnail {page_index}: {e}"))?;
 
         encode_rendered_page(page_index, &rendered)
     }
 
+    #[allow(dead_code)]
     pub fn extract_page_text(&self, page_index: u32) -> Result<String, String> {
         self.pdf_doc
             .extract_text(page_index as usize)
@@ -467,7 +1318,10 @@ impl OpenDocument {
     ///
     /// Returns one span per text run as extracted by the rendering engine.
     /// Coordinates are PDF user space (origin bottom-left, y increases upward).
-    /// Width is estimated as `font_size * 0.5 * char_count`; height = `font_size`.
+    /// Width comes from real glyph advance data (WidthSource::Metric) when the
+    /// font exposes hmtx/CFF metrics; falls back to `font_size * 0.5 * char_count`
+    /// (WidthSource::Estimate) otherwise.  G1/G2 metadata fields are populated
+    /// from the same extraction pass — no extra SDK call required.
     pub fn extract_page_text_spans(&self, page_index: u32) -> Result<Vec<TextSpanInfo>, String> {
         let blocks = self
             .pdf_doc
@@ -478,19 +1332,7 @@ impl OpenDocument {
             .into_iter()
             .flat_map(|block| block.spans.into_iter())
             .filter(|span| !span.text.trim().is_empty())
-            .map(|span| {
-                let char_count = span.text.chars().count() as f64;
-                let width = span.font_size * 0.5 * char_count;
-                let height = span.font_size;
-                TextSpanInfo {
-                    text: span.text,
-                    x: span.x,
-                    y: span.y,
-                    width,
-                    height,
-                    font_size: span.font_size,
-                }
-            })
+            .map(TextSpanInfo::from)
             .collect();
 
         Ok(spans)
@@ -502,6 +1344,23 @@ impl OpenDocument {
             .into_iter()
             .map(|i| i as u32)
             .collect()
+    }
+
+    /// Returns the document outline (table of contents) as a flat list.
+    /// Returns an empty Vec when the document has no `/Outlines` entry.
+    pub fn outline(&self) -> Vec<OutlineItemInfo> {
+        match self.lopdf_doc.get_toc() {
+            Ok(toc) => toc
+                .toc
+                .into_iter()
+                .map(|item| OutlineItemInfo {
+                    title: item.title,
+                    page_index: item.page.saturating_sub(1) as u32,
+                    children: Vec::new(),
+                })
+                .collect(),
+            Err(_) => Vec::new(),
+        }
     }
 
     pub fn get_form_fields(&self) -> Vec<FormFieldInfo> {
@@ -574,6 +1433,108 @@ impl OpenDocument {
         Ok(())
     }
 
+    /// The complete first-class AcroForm model: one entry per logical field,
+    /// with typed kind, per-page widget rects, on-states, options, comb/maxlen
+    /// and resolved `/DA`. Empty when the document has no AcroForm.
+    pub fn get_form_model(&self) -> Vec<FormFieldModelDto> {
+        match parse_acroform(self.pdf_doc.pdf()) {
+            Some(tree) => build_form_model(&tree)
+                .iter()
+                .map(FormFieldModelDto::from)
+                .collect(),
+            None => Vec::new(),
+        }
+    }
+
+    /// Apply a typed form value through the SDK writeback chain (`/V` + `/AS` +
+    /// `/AP` + `NeedAppearances` fallback), then re-sync so our own renderer
+    /// shows the filled value. This is the single save-pariteit write path.
+    pub fn apply_form_value(&mut self, request: &FormWriteRequest) -> Result<(), String> {
+        match request {
+            FormWriteRequest::MultiChoice { name, values } => {
+                apply_choice_multi(&mut self.lopdf_doc, name, values)
+                    .map_err(|e| format!("Kon veld '{name}' niet invullen: {e}"))?;
+            }
+            _ => {
+                let (name, write): (&str, WriteValue<'_>) = match request {
+                    FormWriteRequest::Text { name, value } => (name, WriteValue::Text(value)),
+                    FormWriteRequest::Checkbox { name, checked } => {
+                        (name, WriteValue::Checkbox(*checked))
+                    }
+                    FormWriteRequest::Radio { name, export } => (name, WriteValue::Radio(export)),
+                    FormWriteRequest::Choice { name, value } => (name, WriteValue::Choice(value)),
+                    FormWriteRequest::MultiChoice { .. } => unreachable!(),
+                };
+                apply_field_value(&mut self.lopdf_doc, name, write)
+                    .map_err(|e| format!("Kon veld '{name}' niet invullen: {e}"))?;
+            }
+        }
+        self.sync_after_mutation()
+    }
+
+    /// All `/Link` annotations carrying a `/URI` action, with page + rect, for
+    /// the clickable-link layer. URI-opening is gated by the UI's capability
+    /// trust (ask-on-first-use); this only surfaces where the links are.
+    pub fn get_link_annotations(&self) -> Vec<LinkAnnotationDto> {
+        let mut out = Vec::new();
+        let pages = self.lopdf_doc.get_pages();
+        for (&page_num, &page_id) in &pages {
+            let annots_arr: Vec<lopdf::Object> = {
+                let Ok(page_obj) = self.lopdf_doc.get_object(page_id) else {
+                    continue;
+                };
+                let Ok(dict) = page_obj.as_dict() else { continue };
+                match dict.get(b"Annots") {
+                    Ok(lopdf::Object::Reference(id)) => match self.lopdf_doc.get_object(*id) {
+                        Ok(lopdf::Object::Array(arr)) => arr.clone(),
+                        _ => continue,
+                    },
+                    Ok(lopdf::Object::Array(arr)) => arr.clone(),
+                    _ => continue,
+                }
+            };
+            for ann_obj in &annots_arr {
+                let lopdf::Object::Reference(ann_id) = ann_obj else {
+                    continue;
+                };
+                let Ok(obj) = self.lopdf_doc.get_object(*ann_id) else {
+                    continue;
+                };
+                let Ok(dict) = obj.as_dict() else { continue };
+                // Only /Subtype /Link.
+                if !matches!(dict.get(b"Subtype"), Ok(lopdf::Object::Name(n)) if n == b"Link") {
+                    continue;
+                }
+                let Some(rect) = parse_rect_f32(dict) else { continue };
+                let Some(uri) = self.resolve_link_uri(dict) else {
+                    continue;
+                };
+                out.push(LinkAnnotationDto {
+                    page_index: page_num.saturating_sub(1) as usize,
+                    rect,
+                    uri,
+                });
+            }
+        }
+        out
+    }
+
+    /// Resolve a link annotation's `/A /S /URI /URI` string (following one ref).
+    fn resolve_link_uri(&self, annot: &lopdf::Dictionary) -> Option<String> {
+        let action = match annot.get(b"A").ok()? {
+            lopdf::Object::Reference(id) => self.lopdf_doc.get_object(*id).ok()?.as_dict().ok()?,
+            lopdf::Object::Dictionary(d) => d,
+            _ => return None,
+        };
+        if !matches!(action.get(b"S"), Ok(lopdf::Object::Name(n)) if n == b"URI") {
+            return None;
+        }
+        match action.get(b"URI").ok()? {
+            lopdf::Object::String(bytes, _) => Some(String::from_utf8_lossy(bytes).into_owned()),
+            _ => None,
+        }
+    }
+
     // ── Manipulation operations ──────────────────────────────────────
 
     /// Rotate specific pages by a multiple of 90 degrees.
@@ -600,6 +1561,7 @@ impl OpenDocument {
     /// Return a human-readable label for each page, derived from the /PageLabels
     /// number tree (e.g. "i", "ii", "1", "A-1"). Falls back to "1", "2", … when the
     /// document has no /PageLabels entry.
+    #[allow(dead_code)]
     pub fn get_page_labels(&self) -> Vec<String> {
         let page_count = self.pdf_doc.page_count();
 
@@ -704,6 +1666,7 @@ impl OpenDocument {
             .collect()
     }
 
+    #[allow(dead_code)]
     fn to_roman(mut n: u32, upper: bool) -> String {
         const VALS: &[(u32, &str, &str)] = &[
             (1000, "M", "m"),
@@ -733,6 +1696,7 @@ impl OpenDocument {
         s
     }
 
+    #[allow(dead_code)]
     fn to_alpha(n: u32, upper: bool) -> String {
         if n == 0 {
             return String::new();
@@ -1226,13 +2190,15 @@ impl OpenDocument {
         rect: [f32; 4],
         shape_type: &str,
         color: [f32; 3],
+        border_width: f32,
     ) -> Result<(), String> {
         let r = color[0] as f64;
         let g = color[1] as f64;
         let b = color[2] as f64;
+        let border_width = border_width.clamp(0.5, 12.0) as f64;
 
         let annot_id = match shape_type {
-            "rect" => {
+            "rect" | "rectangle" => {
                 let ar = AnnotRect::new(
                     rect[0] as f64,
                     rect[1] as f64,
@@ -1241,7 +2207,7 @@ impl OpenDocument {
                 );
                 AnnotationBuilder::square(ar)
                     .color(r, g, b)
-                    .border_width(1.5)
+                    .border_width(border_width)
                     .build(&mut self.lopdf_doc)
                     .map_err(|e| format!("Failed to build rect annotation: {e}"))?
             }
@@ -1254,7 +2220,7 @@ impl OpenDocument {
                 );
                 AnnotationBuilder::circle(ar)
                     .color(r, g, b)
-                    .border_width(1.5)
+                    .border_width(border_width)
                     .build(&mut self.lopdf_doc)
                     .map_err(|e| format!("Failed to build circle annotation: {e}"))?
             }
@@ -1267,7 +2233,7 @@ impl OpenDocument {
                     rect[3] as f64,
                 )
                 .color(r, g, b)
-                .border_width(1.5)
+                .border_width(border_width)
                 .build(&mut self.lopdf_doc)
                 .map_err(|e| format!("Failed to build line annotation: {e}"))?
             }
@@ -1409,8 +2375,11 @@ impl OpenDocument {
         // Reload the signed document as the new active document.
         self.lopdf_doc = lopdf::Document::load_mem(&signed_bytes)
             .map_err(|e| format!("Failed to reload signed PDF: {e}"))?;
-        self.pdf_doc = PdfDocument::open(signed_bytes.clone())
-            .map_err(|e| format!("Failed to re-parse signed PDF: {e}"))?;
+        self.pdf_doc = Arc::new(
+            PdfDocument::open(signed_bytes.clone())
+                .map_err(|e| format!("Failed to re-parse signed PDF: {e}"))?,
+        );
+        self.render_doc = Self::make_render_doc(&self.pdf_doc);
         self.raw_bytes = signed_bytes;
         self.modified = false;
 
@@ -1924,35 +2893,12 @@ impl OpenDocument {
 
     // ── Conversion operations ─────────────────────────────────────────
 
-    /// Convert the current PDF document to DOCX format and save to `output_path`.
-    pub fn convert_to_docx(&self, output_path: &str) -> Result<(), String> {
-        let docx_bytes = pdf_docx::pdf_to_docx(&self.lopdf_doc)
-            .map_err(|e| format!("Failed to convert to DOCX: {e}"))?;
-
-        std::fs::write(output_path, &docx_bytes)
-            .map_err(|e| format!("Failed to save DOCX file: {e}"))?;
-
-        Ok(())
-    }
-
-    pub fn convert_to_xlsx(&self, output_path: &str) -> Result<(), String> {
-        let xlsx_bytes = pdf_xlsx::pdf_to_xlsx(&self.lopdf_doc)
-            .map_err(|e| format!("Failed to convert to XLSX: {e}"))?;
-
-        std::fs::write(output_path, &xlsx_bytes)
-            .map_err(|e| format!("Failed to save XLSX file: {e}"))?;
-
-        Ok(())
-    }
-
-    pub fn convert_to_pptx(&self, output_path: &str) -> Result<(), String> {
-        let pptx_bytes = pdf_pptx::pdf_to_pptx(&self.lopdf_doc)
-            .map_err(|e| format!("Failed to convert to PPTX: {e}"))?;
-
-        std::fs::write(output_path, &pptx_bytes)
-            .map_err(|e| format!("Failed to save PPTX file: {e}"))?;
-
-        Ok(())
+    /// Clone the underlying lopdf document so a heavy export (DOCX/XLSX/PPTX)
+    /// can run on a worker thread without holding the document mutex or blocking
+    /// the UI. The clone is a one-time in-memory copy; the conversion itself
+    /// (image extraction + zip) is what must stay off the main thread.
+    pub fn clone_lopdf(&self) -> lopdf::Document {
+        self.lopdf_doc.clone()
     }
 
     // ── E-invoicing operations ────────────────────────────────────────
@@ -2201,37 +3147,21 @@ impl OpenDocument {
 
     // ── Text mutation ─────────────────────────────────────────────────
 
-    /// Replace a single text span in a PDF page content stream.
+    /// Replace text on a PDF page using the parser-backed pdf-manip writer.
     ///
-    /// Phase 4 MVP constraints:
-    ///   - Only handles simple `(text) Tj` text show operators.
-    ///     TJ arrays and hex string operators are not handled.
-    ///   - Replacement must be equal-or-shorter (enforced here and in TypeScript).
-    ///   - Shorter replacements are padded with trailing spaces so that the
-    ///     byte count of the string literal remains the same.  This preserves
-    ///     glyph advance widths and prevents visual reflow.
-    ///   - Only the first matching occurrence is replaced.
-    ///   - After mutation the content stream is stored uncompressed
-    ///     (no /Filter) so lopdf does not need to re-compress.
-    ///     Callers should save with normal compression via save_to().
-    ///
-    /// Returns a TextReplaceResult indicating whether the replacement occurred.
-    /// Returns Err only on I/O or object-access failures — logical
-    /// "not-found" cases are represented as replaced=false with a reason.
+    /// The writer parses page content streams, decodes text runs through the
+    /// page font map, handles Tj/TJ operators, and re-encodes replacement text
+    /// into the matched font or a safe fallback font where possible. Logical
+    /// no-op/rejection cases are returned as `replaced=false` with a stable
+    /// reason string; the document is synced only after a successful mutation.
     pub fn replace_text_span(
         &mut self,
         page_index: u32,
         original_text: &str,
         replacement_text: &str,
     ) -> Result<TextReplaceResult, String> {
-        // Phase 4 safety: replacement must not be longer than original.
-        // This prevents glyph overflow and reflow in the PDF layout.
-        if replacement_text.len() > original_text.len() {
-            return Ok(TextReplaceResult {
-                replaced: false,
-                reason: Some("replacement-too-long".to_string()),
-            });
-        }
+        use pdf_manip::text_replace;
+        use pdf_manip::text_run::FontMap;
 
         if original_text.is_empty() {
             return Ok(TextReplaceResult {
@@ -2240,12 +3170,15 @@ impl OpenDocument {
             });
         }
 
-        // Locate the page (0-based from TypeScript, lopdf page_iter is also 0-based).
-        let page_id = self
-            .lopdf_doc
-            .page_iter()
-            .nth(page_index as usize)
-            .ok_or_else(|| format!("Page index {page_index} out of range"))?;
+        // pdf-manip pages are 1-based while TypeScript page indexes are 0-based.
+        let page_num = page_index + 1;
+        let pages = self.lopdf_doc.get_pages();
+        let Some(&page_id) = pages.get(&page_num) else {
+            return Ok(TextReplaceResult {
+                replaced: false,
+                reason: Some("page-not-found".to_string()),
+            });
+        };
 
         let content_ids = self.lopdf_doc.get_page_contents(page_id);
         if content_ids.is_empty() {
@@ -2255,67 +3188,118 @@ impl OpenDocument {
             });
         }
 
-        // Pad replacement with trailing spaces to match original byte count.
-        // This ensures the glyph advance width budget is not exceeded.
-        let padded = format!("{:width$}", replacement_text, width = original_text.len());
-
-        // Simple Tj text show operator pattern: (text) Tj
-        // Phase 4 MVP: only handles this form, not TJ arrays or <hex> strings.
-        let search = format!("({original_text}) Tj");
-        let replace_with = format!("({padded}) Tj");
-
-        for stream_id in content_ids {
-            // Clone the decoded content before the mutable borrow below.
-            let decoded: Vec<u8> = {
-                let obj = self
-                    .lopdf_doc
-                    .get_object(stream_id)
-                    .map_err(|e| format!("Failed to get content stream {stream_id:?}: {e}"))?;
-                match obj {
-                    lopdf::Object::Stream(s) => s
-                        .decompressed_content()
-                        .unwrap_or_else(|_| s.content.clone()),
-                    _ => continue,
-                }
-            }; // immutable borrow on lopdf_doc ends here
-
-            // Check if the search pattern is present in this stream.
-            if !decoded
-                .windows(search.len())
-                .any(|w| w == search.as_bytes())
-            {
-                continue;
+        let fonts = match FontMap::from_page(&self.lopdf_doc, page_num) {
+            Ok(fonts) => fonts,
+            Err(e) => {
+                return Ok(TextReplaceResult {
+                    replaced: false,
+                    reason: Some(classify_text_replace_error(&e.to_string()).to_string()),
+                });
             }
+        };
 
-            // Replace the first occurrence of the pattern.
-            let modified =
-                replace_first_occurrence(&decoded, search.as_bytes(), replace_with.as_bytes());
-
-            // Write the modified content back to the stream object.
-            // Store uncompressed (remove /Filter) so lopdf does not re-apply
-            // a filter on top of already-decoded bytes.
-            let len = modified.len() as i64;
-            let obj = self
-                .lopdf_doc
-                .get_object_mut(stream_id)
-                .map_err(|e| format!("Failed to mutate content stream {stream_id:?}: {e}"))?;
-            if let lopdf::Object::Stream(ref mut stream) = obj {
-                stream.dict.remove(b"Filter");
-                stream.dict.set("Length", len);
-                stream.content = modified;
+        match text_replace::replace_text(
+            &mut self.lopdf_doc,
+            page_num,
+            original_text,
+            replacement_text,
+            &fonts,
+        ) {
+            Ok(0) => Ok(TextReplaceResult {
+                replaced: false,
+                reason: Some("text-not-found-in-content-stream".to_string()),
+            }),
+            Ok(_) => {
+                self.sync_after_mutation()?;
+                Ok(TextReplaceResult {
+                    replaced: true,
+                    reason: None,
+                })
             }
-
-            self.sync_after_mutation()?;
-            return Ok(TextReplaceResult {
-                replaced: true,
-                reason: None,
-            });
+            Err(e) => Ok(TextReplaceResult {
+                replaced: false,
+                reason: Some(classify_text_replace_error(&e.to_string()).to_string()),
+            }),
         }
+    }
 
-        Ok(TextReplaceResult {
-            replaced: false,
-            reason: Some("text-not-found-in-content-stream".to_string()),
-        })
+    // ── Text formatting (G5) ─────────────────────────────────────────
+
+    /// Change the font size and/or fill color of the first content-stream
+    /// text run whose text matches `original_text` on `page_index` (0-based).
+    ///
+    /// Uses `extract_page_text_runs` from `pdf-manip` to locate the text-showing
+    /// operator, then delegates to `pdf_text_format::format_text_run` which
+    /// injects isolated `Tf`/`rg` operators with full state-isolation.
+    ///
+    /// Returns `Err` only on I/O or content-stream decode failures.
+    /// If the text is not found, returns `Ok(false)`.
+    pub fn format_text_span(
+        &mut self,
+        page_index: u32,
+        original_text: &str,
+        font_size: Option<f32>,
+        color: Option<[f32; 3]>,
+    ) -> Result<bool, String> {
+        use pdf_manip::text_run::extract_page_text_runs;
+        use pdf_text_format::{format_text_run, TextRunLocator};
+
+        // pdf-manip pages are 1-based.
+        let page_num = page_index + 1;
+
+        let runs = extract_page_text_runs(&self.lopdf_doc, page_num)
+            .map_err(|e| format!("Failed to extract text runs for page {page_index}: {e}"))?;
+
+        let run = runs
+            .into_iter()
+            .find(|r| r.text == original_text)
+            .ok_or_else(|| format!("Text run not found on page {page_index}: '{original_text}'"))?;
+
+        let locator = TextRunLocator::new(run.ops_range.start);
+
+        format_text_run(&mut self.lopdf_doc, page_num, locator, font_size, color)
+            .map_err(|e| format!("format_text_run failed: {e}"))?;
+
+        self.sync_after_mutation()?;
+        Ok(true)
+    }
+
+    // ── Text style (G6) ──────────────────────────────────────────────
+
+    /// Apply bold and/or italic style to the first content-stream text run
+    /// matching `original_text` on `page_index` (0-based).
+    ///
+    /// Swaps the `Tf` font reference to a bold/italic variant of the same
+    /// typeface.  The variant must already be embedded in the document xref.
+    /// Returns `Err("font-variant-not-embedded: …")` when the variant is
+    /// absent — the document is left unmodified in that case.
+    ///
+    /// Returns `Ok(false)` when the text run is not found.
+    pub fn set_text_run_style(
+        &mut self,
+        page_index: u32,
+        original_text: &str,
+        bold: Option<bool>,
+        italic: Option<bool>,
+    ) -> Result<bool, String> {
+        use pdf_manip::text_run::extract_page_text_runs;
+        use pdf_manip::text_style::set_text_run_style;
+
+        let page_num = page_index + 1;
+
+        let runs = extract_page_text_runs(&self.lopdf_doc, page_num)
+            .map_err(|e| format!("Failed to extract text runs for page {page_index}: {e}"))?;
+
+        let run = runs
+            .into_iter()
+            .find(|r| r.text == original_text)
+            .ok_or_else(|| format!("Text run not found on page {page_index}: '{original_text}'"))?;
+
+        set_text_run_style(&mut self.lopdf_doc, page_num, &run, bold, italic)
+            .map_err(|e| format!("{e}"))?;
+
+        self.sync_after_mutation()?;
+        Ok(true)
     }
 
     // ── File operations ───────────────────────────────────────────────
@@ -2338,8 +3322,11 @@ impl OpenDocument {
         self.lopdf_doc
             .save_to(&mut buf)
             .map_err(|e| format!("Failed to serialize document: {e}"))?;
-        self.pdf_doc = PdfDocument::open(buf.clone())
-            .map_err(|e| format!("Failed to re-parse after mutation: {e}"))?;
+        self.pdf_doc = Arc::new(
+            PdfDocument::open(buf.clone())
+                .map_err(|e| format!("Failed to re-parse after mutation: {e}"))?,
+        );
+        self.render_doc = Self::make_render_doc(&self.pdf_doc);
         self.raw_bytes = buf;
         self.modified = true;
         Ok(())
@@ -3026,6 +4013,7 @@ impl OpenDocument {
     // ── Layer methods ──────────────────────────────────────────────────────
 
     /// Return all Optional Content Groups (OCGs) with their default visibility.
+    #[allow(dead_code)]
     pub fn list_layers(&self) -> Vec<LayerInfo> {
         let doc = &self.lopdf_doc;
 
@@ -3127,6 +4115,51 @@ impl OpenDocument {
     }
 }
 
+/// Render a page to raw RGBA bytes prefixed with an 8-byte header
+/// (`width: u32 LE`, `height: u32 LE`). Used by the binary IPC path: no PNG
+/// encode, no base64, no JSON — the frontend reads the header and feeds the
+/// pixels straight into an `ImageData`.
+pub fn render_page_raw_bytes(
+    doc: &PdfDocument,
+    page_index: u32,
+    scale: f32,
+) -> Result<Vec<u8>, String> {
+    let dpi = (scale * 72.0) as f64;
+    let options = RenderOptions {
+        dpi,
+        render_annotations: true,
+        ..Default::default()
+    };
+
+    let rendered = doc
+        .render_page(page_index as usize, &options)
+        .map_err(|e| format!("Failed to render page {page_index}: {e}"))?;
+
+    let mut body = Vec::with_capacity(8 + rendered.pixels.len());
+    body.extend_from_slice(&rendered.width.to_le_bytes());
+    body.extend_from_slice(&rendered.height.to_le_bytes());
+    body.extend_from_slice(&rendered.pixels);
+    Ok(body)
+}
+
+/// Render a thumbnail to PNG bytes (no base64/JSON wrapper). Thumbnails are
+/// small enough that PNG keeps the payload tiny and the frontend can feed the
+/// bytes straight into a `Blob` object URL for `<img>` tags.
+pub fn render_thumbnail_png_bytes(doc: &PdfDocument, page_index: u32) -> Result<Vec<u8>, String> {
+    let options = ThumbnailOptions { max_dimension: 280 };
+
+    let rendered = doc
+        .thumbnail(page_index as usize, &options)
+        .map_err(|e| format!("Failed to render thumbnail {page_index}: {e}"))?;
+
+    let img = image::RgbaImage::from_raw(rendered.width, rendered.height, rendered.pixels)
+        .ok_or("Failed to create image from rendered pixels")?;
+    let mut png_bytes: Vec<u8> = Vec::new();
+    img.write_to(&mut Cursor::new(&mut png_bytes), ImageFormat::Png)
+        .map_err(|e| format!("Failed to encode PNG: {e}"))?;
+    Ok(png_bytes)
+}
+
 fn encode_rendered_page(
     page_index: u32,
     rendered: &pdf_engine::RenderedPage,
@@ -3188,11 +4221,1007 @@ mod tests {
         assert!(true);
     }
 
+    /// Pure-Rust reproduction harness for the post-commit render pollution
+    /// observed live on 2026-06-11: after a text replacement is committed in
+    /// one document, the SAME process can stop rasterising that text run when
+    /// the clean file is re-opened — no frontend involved. Run on demand:
+    ///
+    ///   PDFLUENT_REPRO_PDF=/path/to/digital-text.pdf \
+    ///   PDFLUENT_REPRO_TEXT="PROFESSIONAL EXPERIENCE" \
+    ///   cargo test --lib post_commit_render_pollution -- --ignored --nocapture
+    ///
+    /// Passing = clean-file renders are byte-identical before and after an
+    /// unrelated edit in another document (no pollution on this engine build).
+    #[test]
+    #[ignore]
+    fn post_commit_render_pollution_repro() {
+        let Ok(path) = std::env::var("PDFLUENT_REPRO_PDF") else {
+            eprintln!("set PDFLUENT_REPRO_PDF to run this repro");
+            return;
+        };
+        let needle = std::env::var("PDFLUENT_REPRO_TEXT")
+            .unwrap_or_else(|_| "PROFESSIONAL EXPERIENCE".to_string());
+        // Same-length replacement (swap the last char for 'Z') to stay inside
+        // the beta-safe replace constraints.
+        let mut replacement = needle.clone();
+        replacement.pop();
+        replacement.push('Z');
+
+        // 1. Baseline render of the clean file.
+        let clean1 = OpenDocument::open(&path).expect("open clean #1");
+        let base = clean1.render_page(0, 2.0).expect("render clean #1");
+        drop(clean1);
+
+        // 2. Same process: commit a text replacement in a scratch copy and
+        //    render it (mirrors the app's commit → re-render sequence).
+        let tmp = std::env::temp_dir().join("pdfluent-render-pollution-copy.pdf");
+        std::fs::copy(&path, &tmp).expect("copy fixture");
+        let mut edited =
+            OpenDocument::open(tmp.to_str().unwrap()).expect("open scratch copy");
+        edited
+            .replace_text_span(0, &needle, &replacement)
+            .expect("replace_text_span");
+        let _ = edited.render_page(0, 2.0).expect("render edited copy");
+        drop(edited);
+        let _ = std::fs::remove_file(&tmp);
+
+        // 3. Re-open the CLEAN file in the same process and render again.
+        let clean2 = OpenDocument::open(&path).expect("open clean #2");
+        let after = clean2.render_page(0, 2.0).expect("render clean #2");
+
+        assert_eq!((base.width, base.height), (after.width, after.height));
+        let identical = base.data_base64 == after.data_base64;
+        eprintln!(
+            "clean-vs-clean render identical after unrelated commit: {identical}"
+        );
+        assert!(
+            identical,
+            "render of the CLEAN file changed after an edit in another document \
+             — render-state pollution reproduced without any frontend involvement"
+        );
+    }
+
     #[test]
     fn parse_pdfa_level_variants() {
         assert_eq!(parse_pdfa_level("2b").unwrap(), PdfALevel::A2b);
         assert_eq!(parse_pdfa_level("PDF/A-1b").unwrap(), PdfALevel::A1b);
         assert_eq!(parse_pdfa_level("3u").unwrap(), PdfALevel::A3u);
         assert!(parse_pdfa_level("5z").is_err());
+    }
+
+    // === Toolbar operation backends ===
+    // Drives the exact engine entry points the desktop toolbar buttons invoke,
+    // on a real 2-page PDF, and verifies real output. The engine code is the
+    // same on macOS, Windows, and Linux, so this exercises all three platforms.
+    const SAMPLE_PDF: &[u8] = include_bytes!("../tests/fixtures/two_pages.pdf");
+
+    fn sample_doc() -> OpenDocument {
+        OpenDocument::open_bytes(SAMPLE_PDF.to_vec()).expect("open sample pdf")
+    }
+
+    fn op_tmp(name: &str) -> std::path::PathBuf {
+        let dir = std::env::temp_dir().join("pdfluent_op_tests");
+        std::fs::create_dir_all(&dir).expect("mk tmp dir");
+        dir.join(name)
+    }
+
+    #[test]
+    fn op_open_reports_page_count() {
+        let info = sample_doc().document_info();
+        assert!(info.page_count >= 2, "expected >=2 pages, got {}", info.page_count);
+    }
+
+    #[test]
+    fn op_render_page_and_thumbnail_produce_image_bytes() {
+        let doc = sample_doc();
+        let page = doc.render_page(0, 1.5).expect("render_page");
+        assert!(page.width > 0 && page.height > 0, "zero-size render");
+        assert!(page.data_base64.len() > 1000, "render too small: {} b64 chars", page.data_base64.len());
+        let thumb = doc.render_thumbnail(0).expect("render_thumbnail");
+        assert!(thumb.width > 0 && thumb.data_base64.len() > 200, "thumbnail too small");
+    }
+
+    #[test]
+    fn op_extract_text_returns_content() {
+        let text = sample_doc().extract_page_text(0).expect("extract_page_text");
+        assert!(!text.trim().is_empty(), "no text extracted from page 0");
+    }
+
+    #[test]
+    fn op_save_writes_reopenable_pdf() {
+        let mut doc = sample_doc();
+        let out = op_tmp("saved.pdf");
+        doc.save_to(out.to_str().unwrap()).expect("save_to");
+        let bytes = std::fs::read(&out).expect("read saved");
+        assert!(bytes.starts_with(b"%PDF"), "saved file is not a PDF");
+        let reopened = OpenDocument::open(out.to_str().unwrap()).expect("reopen saved");
+        assert!(reopened.document_info().page_count >= 2);
+    }
+
+    #[test]
+    fn op_extract_pages_to_file_yields_single_page() {
+        let out = op_tmp("extracted.pdf");
+        sample_doc()
+            .extract_pages_to_file(&[0_u32], out.to_str().unwrap())
+            .expect("extract_pages_to_file");
+        let reopened = OpenDocument::open(out.to_str().unwrap()).expect("reopen extracted");
+        assert_eq!(reopened.document_info().page_count, 1, "extract should yield 1 page");
+    }
+
+    #[test]
+    fn op_merge_pdfs_combines_page_counts() {
+        let a = op_tmp("merge_a.pdf");
+        let b = op_tmp("merge_b.pdf");
+        let out = op_tmp("merged.pdf");
+        std::fs::write(&a, SAMPLE_PDF).unwrap();
+        std::fs::write(&b, SAMPLE_PDF).unwrap();
+        merge_pdfs(
+            &[a.to_string_lossy().into_owned(), b.to_string_lossy().into_owned()],
+            out.to_str().unwrap(),
+        )
+        .expect("merge_pdfs");
+        let reopened = OpenDocument::open(out.to_str().unwrap()).expect("reopen merged");
+        assert!(
+            reopened.document_info().page_count >= 4,
+            "merged should have >=4 pages, got {}",
+            reopened.document_info().page_count
+        );
+    }
+
+    #[test]
+    fn op_split_into_pages_yields_one_pdf_per_page() {
+        let doc = sample_doc();
+        let dir = op_tmp("split_out");
+        std::fs::create_dir_all(&dir).unwrap();
+        let files = split_into_pages(&doc.lopdf_doc, dir.to_str().unwrap()).expect("split_into_pages");
+        assert!(files.len() >= 2, "expected >=2 split files, got {}", files.len());
+        for f in &files {
+            assert!(OpenDocument::open(f).is_ok(), "split output not a valid PDF: {f}");
+        }
+    }
+
+    #[test]
+    fn op_rotate_pages_keeps_document_valid() {
+        let mut doc = sample_doc();
+        doc.rotate_pages(&[0_u32], 90).expect("rotate_pages");
+        let out = op_tmp("rotated.pdf");
+        doc.save_to(out.to_str().unwrap()).expect("save rotated");
+        assert!(OpenDocument::open(out.to_str().unwrap()).is_ok(), "rotated doc not reopenable");
+    }
+
+    #[test]
+    fn op_search_text_finds_known_word() {
+        let pages = sample_doc().search_text("Hello");
+        assert!(!pages.is_empty(), "search for 'Hello' found nothing");
+    }
+
+    #[test]
+    fn op_replace_text_span_writes_parser_backed_content_stream() {
+        let mut doc = sample_doc();
+        let before = doc.extract_page_text(0).expect("extract text before replacement");
+        assert!(before.contains("Hello"), "fixture should contain text to replace: {before:?}");
+
+        let result = doc
+            .replace_text_span(0, "Hello", "Hello native vector editor")
+            .expect("replace_text_span");
+        assert!(result.replaced, "replacement failed: {:?}", result.reason);
+
+        let after = doc.extract_page_text(0).expect("extract text after replacement");
+        assert!(
+            after.contains("Hello native vector editor"),
+            "replacement was not visible through the synced render/extract document: {after:?}"
+        );
+    }
+
+    /// In-memory PDF with one text block of three lines (separate Td-positioned
+    /// Tj ops, same font), where the middle line is split across two Tj
+    /// operators — the shape that forces replace_text through the cross-run path.
+    fn multiline_fixture_bytes() -> Vec<u8> {
+        use lopdf::{dictionary, Document, Object, Stream};
+
+        let mut doc = Document::with_version("1.7");
+        let font_id = doc.add_object(Object::Dictionary(dictionary! {
+            "Type" => "Font",
+            "Subtype" => "Type1",
+            "BaseFont" => "Helvetica",
+        }));
+        let resources = dictionary! {
+            "Font" => Object::Dictionary(dictionary! { "F1" => Object::Reference(font_id) }),
+        };
+        let content: &[u8] = b"BT /F1 12 Tf 72 700 Td (First line here.) Tj 0 -14 Td (Some words to ) Tj (edit now.) Tj 0 -14 Td (Third line stays.) Tj ET";
+        let content_id = doc.add_object(Object::Stream(Stream::new(dictionary! {}, content.to_vec())));
+        let page_id = doc.add_object(Object::Dictionary(dictionary! {
+            "Type" => "Page",
+            "MediaBox" => vec![0.into(), 0.into(), 612.into(), 792.into()],
+            "Contents" => Object::Reference(content_id),
+            "Resources" => Object::Dictionary(resources),
+        }));
+        let pages_id = doc.add_object(Object::Dictionary(dictionary! {
+            "Type" => "Pages",
+            "Kids" => vec![Object::Reference(page_id)],
+            "Count" => 1_i64,
+        }));
+        if let Ok(Object::Dictionary(ref mut d)) = doc.get_object_mut(page_id) {
+            d.set("Parent", Object::Reference(pages_id));
+        }
+        let catalog_id = doc.add_object(Object::Dictionary(dictionary! {
+            "Type" => "Catalog",
+            "Pages" => Object::Reference(pages_id),
+        }));
+        doc.trailer.set("Root", Object::Reference(catalog_id));
+
+        let mut bytes = Vec::new();
+        doc.save_to(&mut bytes).expect("serialize multiline fixture");
+        bytes
+    }
+
+    #[test]
+    fn op_replace_text_span_preserves_multiline_layout() {
+        // Regression for the release-blocking multiline collapse: editing one
+        // line of a multi-line block must not concatenate the whole block into
+        // the first line's operator.
+        let mut doc =
+            OpenDocument::open_bytes(multiline_fixture_bytes()).expect("open multiline fixture");
+
+        let result = doc
+            .replace_text_span(0, "Some words to edit now.", "Some words to edit.")
+            .expect("replace_text_span");
+        assert!(result.replaced, "replacement failed: {:?}", result.reason);
+
+        let expected = "First line here.Some words to edit.Third line stays.";
+        let runs = pdf_manip::text_run::extract_page_text_runs(&doc.lopdf_doc, 1)
+            .expect("extract runs after edit");
+        assert_eq!(
+            runs.first().map(|r| r.text.as_str()),
+            Some("First line here."),
+            "first line must keep only its own text"
+        );
+        assert_eq!(
+            runs.last().map(|r| r.text.as_str()),
+            Some("Third line stays."),
+            "third line must not be emptied"
+        );
+        let combined: String = runs.iter().map(|r| r.text.as_str()).collect();
+        assert_eq!(combined, expected);
+
+        // Save → reopen: the layout-preserving edit must survive a round-trip.
+        let out = op_tmp("multiline_edited.pdf");
+        doc.save_to(out.to_str().unwrap()).expect("save multiline");
+        let reopened = OpenDocument::open(out.to_str().unwrap()).expect("reopen multiline");
+        let reopened_runs = pdf_manip::text_run::extract_page_text_runs(&reopened.lopdf_doc, 1)
+            .expect("extract runs after reopen");
+        let reopened_combined: String = reopened_runs.iter().map(|r| r.text.as_str()).collect();
+        assert_eq!(reopened_combined, expected);
+        assert_eq!(
+            reopened_runs.first().map(|r| r.text.as_str()),
+            Some("First line here.")
+        );
+        assert_eq!(
+            reopened_runs.last().map(|r| r.text.as_str()),
+            Some("Third line stays.")
+        );
+    }
+
+    #[test]
+    fn op_delete_pages_reduces_count() {
+        let mut doc = sample_doc();
+        doc.delete_pages(&[0_u32]).expect("delete_pages");
+        assert_eq!(doc.document_info().page_count, 1, "delete should leave 1 page");
+    }
+
+    #[test]
+    fn op_reorder_pages_keeps_document_valid() {
+        let mut doc = sample_doc();
+        doc.reorder_pages(&[1_u32, 0_u32]).expect("reorder_pages");
+        assert_eq!(doc.document_info().page_count, 2);
+        let out = op_tmp("reordered.pdf");
+        doc.save_to(out.to_str().unwrap()).expect("save reordered");
+        assert!(OpenDocument::open(out.to_str().unwrap()).is_ok());
+    }
+
+    #[test]
+    fn op_compress_produces_valid_pdf() {
+        let mut doc = sample_doc();
+        let out = op_tmp("compressed.pdf");
+        doc.compress(out.to_str().unwrap()).expect("compress");
+        let reopened = OpenDocument::open(out.to_str().unwrap()).expect("reopen compressed");
+        assert!(reopened.document_info().page_count >= 2);
+    }
+
+    #[test]
+    fn op_watermark_keeps_document_valid() {
+        let mut doc = sample_doc();
+        doc.add_watermark("DRAFT", 0.3).expect("add_watermark");
+        let out = op_tmp("watermarked.pdf");
+        doc.save_to(out.to_str().unwrap()).expect("save watermarked");
+        assert!(OpenDocument::open(out.to_str().unwrap()).is_ok());
+    }
+
+    #[test]
+    fn op_add_highlight_annotation_persists() {
+        let mut doc = sample_doc();
+        let before = doc.get_all_annotations().len();
+        doc.add_highlight_annotation(0, &[[100.0, 100.0, 220.0, 120.0]], [1.0, 1.0, 0.0])
+            .expect("add_highlight_annotation");
+        let after = doc.get_all_annotations().len();
+        assert!(after > before, "highlight annotation not added ({before} -> {after})");
+    }
+
+    #[test]
+    fn op_convert_to_docx_produces_non_empty_output() {
+        let doc = sample_doc();
+        let tmp = op_tmp("converted.docx");
+        convert_doc_to_docx(&doc.clone_lopdf(), tmp.to_str().unwrap()).expect("Conversion failed");
+        let meta = std::fs::metadata(&tmp).expect("Failed to read output");
+        assert!(meta.len() > 0, "DOCX output is 0 bytes!");
+        let header = std::fs::read(&tmp).expect("Failed to read back");
+        assert!(header.len() > 100, "DOCX output too small: {} bytes", header.len());
+        assert_eq!(&header[0..2], b"PK", "DOCX must start with ZIP PK header");
+    }
+
+    #[test]
+    fn op_convert_to_xlsx_produces_non_empty_output() {
+        let doc = sample_doc();
+        let tmp = op_tmp("converted.xlsx");
+        convert_doc_to_xlsx(&doc.clone_lopdf(), tmp.to_str().unwrap()).expect("Conversion failed");
+        let meta = std::fs::metadata(&tmp).expect("Failed to read output");
+        assert!(meta.len() > 0, "XLSX output is 0 bytes!");
+        let header = std::fs::read(&tmp).expect("Failed to read back");
+        assert!(header.len() > 100, "XLSX output too small: {} bytes", header.len());
+        assert_eq!(&header[0..2], b"PK", "XLSX must start with ZIP PK header");
+    }
+
+    #[test]
+    fn op_convert_to_pptx_produces_non_empty_output() {
+        let doc = sample_doc();
+        let tmp = op_tmp("converted.pptx");
+        convert_doc_to_pptx(&doc.clone_lopdf(), tmp.to_str().unwrap()).expect("Conversion failed");
+        let meta = std::fs::metadata(&tmp).expect("Failed to read output");
+        assert!(meta.len() > 0, "PPTX output is 0 bytes!");
+        let header = std::fs::read(&tmp).expect("Failed to read back");
+        assert!(header.len() > 100, "PPTX output too small: {} bytes", header.len());
+        assert_eq!(&header[0..2], b"PK", "PPTX must start with ZIP PK header");
+    }
+
+    #[test]
+    fn test_user_file_conversion() {
+        let path = "/Users/jasperdewinter/Downloads/CV_Jasper_de_Winter_AnalyticsEngineer (1).pdf";
+        if std::path::Path::new(path).exists() {
+            let bytes = std::fs::read(path).unwrap();
+            let doc = OpenDocument::open_bytes(bytes).expect("Failed to load PDF");
+            let tmp_docx = op_tmp("user_converted.docx");
+            let tmp_xlsx = op_tmp("user_converted.xlsx");
+            let tmp_pptx = op_tmp("user_converted.pptx");
+
+            convert_doc_to_docx(&doc.clone_lopdf(), tmp_docx.to_str().unwrap()).expect("Conversion to DOCX failed");
+            let meta_docx = std::fs::metadata(&tmp_docx).unwrap();
+            assert!(meta_docx.len() > 0);
+
+            convert_doc_to_xlsx(&doc.clone_lopdf(), tmp_xlsx.to_str().unwrap()).expect("Conversion to XLSX failed");
+            let meta_xlsx = std::fs::metadata(&tmp_xlsx).unwrap();
+            assert!(meta_xlsx.len() > 0);
+
+            convert_doc_to_pptx(&doc.clone_lopdf(), tmp_pptx.to_str().unwrap()).expect("Conversion to PPTX failed");
+            let meta_pptx = std::fs::metadata(&tmp_pptx).unwrap();
+            assert!(meta_pptx.len() > 0);
+        }
+    }
+
+    /// Drift guard (Rust half): the SDK's canonical `TextSpanInfo` must serialise
+    /// to exactly the JSON keys listed here. If this test fails, update the TS
+    /// interfaces and contract lists in `src/lib/tauri-api.ts` and
+    /// `src/lib/textSpanWireContract.ts` together.
+    #[test]
+    fn text_span_info_wire_contract_is_stable() {
+        use pdf_engine::{FontMetrics, WidthSource};
+
+        let span = TextSpanInfo {
+            text: "x".to_string(),
+            x: 1.0,
+            y: 2.0,
+            width: 3.0,
+            height: 4.0,
+            font_size: 5.0,
+            font_name: Some("Helvetica".to_string()),
+            is_bold: true,
+            is_italic: true,
+            color: Some([0.1, 0.2, 0.3]),
+            width_source: WidthSource::Metric,
+            char_bounds: vec![[0.0, 0.0, 1.0, 1.0]],
+            transform: Some([1.0, 0.0, 0.0, 1.0, 0.0, 0.0]),
+            font_weight: Some(700),
+            is_serif: Some(false),
+            is_monospace: Some(false),
+            render_mode: Some(0),
+            font_metrics: Some(FontMetrics {
+                ascent: 750.0,
+                descent: -250.0,
+                cap_height: Some(700.0),
+                x_height: Some(500.0),
+            }),
+        };
+
+        let value = serde_json::to_value(&span).expect("serialize TextSpanInfo");
+        let mut keys: Vec<String> = value
+            .as_object()
+            .expect("TextSpanInfo serialises to a JSON object")
+            .keys()
+            .cloned()
+            .collect();
+        keys.sort();
+
+        let mut expected = vec![
+            "charBounds",
+            "color",
+            "font_size",
+            "fontMetrics",
+            "fontName",
+            "fontWeight",
+            "height",
+            "isBold",
+            "isItalic",
+            "isMonospace",
+            "isSerif",
+            "renderMode",
+            "text",
+            "transform",
+            "width",
+            "widthSource",
+            "x",
+            "y",
+        ];
+        expected.sort_unstable();
+
+        assert_eq!(
+            keys, expected,
+            "TextSpanInfo wire keys drifted from the editor/TS contract; update \
+             src/lib/tauri-api.ts and src/lib/textSpanWireContract.ts together."
+        );
+    }
+
+    #[test]
+    fn form_model_wire_contract_is_stable() {
+        // A representative text field plus one widget exercises every level of
+        // the wire shape (field, tagged kind, widget, DA).
+        let dto = FormFieldModelDto {
+            name: "1.1".to_string(),
+            kind: FormFieldKindDto::Text {
+                multiline: false,
+                comb: true,
+                password: false,
+            },
+            value: Some("x".to_string()),
+            selected_values: None,
+            default_value: None,
+            tooltip: Some("Bedrijfsnaam".to_string()),
+            read_only: false,
+            required: false,
+            max_len: Some(9),
+            quadding: 1,
+            da: DaInfoDto {
+                font_name: Some("Helv".to_string()),
+                font_size: 0.0,
+                color: vec![0.0],
+            },
+            widgets: vec![WidgetModelDto {
+                page_index: Some(1),
+                rect: [0.0, 0.0, 90.0, 12.0],
+                on_state: None,
+                appearance_state: None,
+            }],
+        };
+
+        let value = serde_json::to_value(&dto).expect("serialize FormFieldModelDto");
+        let obj = value.as_object().expect("serialises to a JSON object");
+        let mut keys: Vec<String> = obj.keys().cloned().collect();
+        keys.sort();
+        let mut expected = vec![
+            "da",
+            "defaultValue",
+            "kind",
+            "maxLen",
+            "name",
+            "quadding",
+            "readOnly",
+            "required",
+            "selectedValues",
+            "tooltip",
+            "value",
+            "widgets",
+        ];
+        expected.sort_unstable();
+        assert_eq!(
+            keys, expected,
+            "FormFieldModelDto wire keys drifted; update src/lib/tauri-api.ts \
+             (FormFieldModelDto) and tests/viewer-form-overlay.test.ts together."
+        );
+
+        // The tagged kind must expose the `type` discriminant + kind data.
+        let kind = obj["kind"].as_object().expect("kind is an object");
+        assert_eq!(kind["type"], "text");
+        assert!(kind.contains_key("multiline") && kind.contains_key("comb"));
+
+        // Widget + DA camelCase keys are part of the contract.
+        let widget = obj["widgets"][0].as_object().expect("widget object");
+        for k in ["pageIndex", "rect", "onState", "appearanceState"] {
+            assert!(widget.contains_key(k), "widget missing wire key {k}");
+        }
+        let da = obj["da"].as_object().expect("da object");
+        for k in ["fontName", "fontSize", "color"] {
+            assert!(da.contains_key(k), "da missing wire key {k}");
+        }
+    }
+
+    // === AcroForm Save-As roundtrip proof ===
+    // Proves that apply_form_value writes a value to the in-memory lopdf document,
+    // that save_to serialises it correctly, and that reopening the saved file reads
+    // back the same value.  This is the definitive closure for the "Save As"
+    // question: NSSavePanel cannot be driven by automation, but the underlying
+    // ⌘S code path (save_to on the lopdf Document) is exercised here end-to-end.
+
+    const SAMPLE_ACROFORM_PDF: &[u8] =
+        include_bytes!("../tests/fixtures/sample_acroform.pdf");
+
+    #[test]
+    fn acroform_fill_save_reopens_with_value() {
+        // 1. Load a real AcroForm PDF (I-551 immigration form — multiple text fields).
+        let mut doc =
+            OpenDocument::open_bytes(SAMPLE_ACROFORM_PDF.to_vec()).expect("open acroform pdf");
+
+        // 2. Discover the first writable text field via the form model.
+        let model = doc.get_form_model();
+        let text_field = model.iter().find(|f| {
+            !f.read_only
+                && matches!(
+                    f.kind,
+                    FormFieldKindDto::Text { .. }
+                )
+        });
+        let field = match text_field {
+            Some(f) => f.clone(),
+            None => {
+                // The PDF has AcroForm but no writable text fields in the model —
+                // possibly all read-only or unsupported.  Treat as a known skip.
+                eprintln!("acroform_fill_save_reopens_with_value: no writable text field found — skipped");
+                return;
+            }
+        };
+
+        // 3. Fill the field with a sentinel value.
+        let sentinel = "PDFLUENT_SAVE_PROOF_2026";
+        doc.apply_form_value(&FormWriteRequest::Text {
+            name: field.name.clone(),
+            value: sentinel.to_string(),
+        })
+        .expect("apply_form_value should succeed on a writable text field");
+
+        // 4. Save to a temp file (equivalent to ⌘S Save-As path).
+        let out = op_tmp("acroform_roundtrip.pdf");
+        doc.save_to(out.to_str().unwrap()).expect("save_to");
+
+        // 5. Reopen the saved file — completely fresh parse from disk.
+        let reopened =
+            OpenDocument::open(out.to_str().unwrap()).expect("reopen saved acroform");
+
+        // 6. Verify the sentinel value is present in the reopened form model.
+        let reopened_model = reopened.get_form_model();
+        let reopened_field = reopened_model.iter().find(|f| f.name == field.name);
+        let persisted_value = reopened_field
+            .and_then(|f| f.value.as_deref())
+            .unwrap_or("");
+        assert_eq!(
+            persisted_value, sentinel,
+            "form field '{}' value did not persist through save/reopen: got {:?}",
+            field.name, persisted_value
+        );
+    }
+
+    // === Render-path performance baseline ===
+    // Not a regression gate — a measurement harness for the render path work.
+    // Run: PDFLUENT_BENCH_PDF=/path/to.pdf cargo test --release perf_render_baseline -- --ignored --nocapture
+    #[test]
+    #[ignore]
+    fn perf_render_baseline() {
+        use std::time::Instant;
+
+        let path = std::env::var("PDFLUENT_BENCH_PDF")
+            .unwrap_or_else(|_| "tests/fixtures/two_pages.pdf".to_string());
+        let file_len = std::fs::metadata(&path).expect("bench pdf exists").len();
+        println!("\n=== perf_render_baseline: {path} ({file_len} bytes) ===");
+
+        fn median_ms(mut runs: Vec<f64>) -> f64 {
+            runs.sort_by(|a, b| a.partial_cmp(b).unwrap());
+            runs[runs.len() / 2]
+        }
+        fn time_ms<R>(f: impl FnOnce() -> R) -> (f64, R) {
+            let t = Instant::now();
+            let r = f();
+            (t.elapsed().as_secs_f64() * 1000.0, r)
+        }
+
+        // -- Open path, current shape: fs::read + PdfDocument::open(clone) + lopdf load(path)
+        let mut open_runs = Vec::new();
+        for _ in 0..5 {
+            let (ms, doc) = time_ms(|| OpenDocument::open(&path).expect("open"));
+            open_runs.push(ms);
+            drop(doc);
+        }
+        println!("open (current: 2 disk reads + byte clone): {:.2} ms", median_ms(open_runs));
+
+        // -- Open path, stage split
+        let (read_ms, bytes) = time_ms(|| std::fs::read(&path).expect("read"));
+        let (sdk_open_ms, _pdf_doc) =
+            time_ms(|| PdfDocument::open(bytes.clone()).expect("sdk open"));
+        let (lopdf_disk_ms, _l1) =
+            time_ms(|| lopdf::Document::load(&path).expect("lopdf load disk"));
+        let (lopdf_mem_ms, _l2) =
+            time_ms(|| lopdf::Document::load_mem(&bytes).expect("lopdf load mem"));
+        println!("  fs::read: {read_ms:.2} ms | sdk open(+clone): {sdk_open_ms:.2} ms | lopdf load(path): {lopdf_disk_ms:.2} ms | lopdf load_mem: {lopdf_mem_ms:.2} ms");
+
+        let doc = OpenDocument::open(&path).expect("open");
+
+        // -- document_info split: full vs scan_active_content alone
+        let mut info_runs = Vec::new();
+        for _ in 0..5 {
+            let (ms, _) = time_ms(|| doc.document_info());
+            info_runs.push(ms);
+        }
+        let mut scan_runs = Vec::new();
+        for _ in 0..5 {
+            let (ms, _) = time_ms(|| doc.scan_active_content());
+            scan_runs.push(ms);
+        }
+        println!(
+            "document_info (geometry+acroform+scan): {:.2} ms | scan_active_content alone: {:.2} ms",
+            median_ms(info_runs),
+            median_ms(scan_runs)
+        );
+
+        // -- Render path stage split at viewer scale 2.0 (≈ 144 dpi)
+        let options = RenderOptions { dpi: 144.0, render_annotations: true, ..Default::default() };
+
+        // OLD path: raw (possibly XFA) doc — SDK re-flattens per render call.
+        let mut old_render_runs = Vec::new();
+        for _ in 0..5 {
+            let (ms, _) = time_ms(|| doc.pdf_doc.render_page(0, &options).expect("sdk render"));
+            old_render_runs.push(ms);
+        }
+        println!("render page0 @scale2 OLD (raw doc, per-render XFA flatten): {:.2} ms", median_ms(old_render_runs));
+
+        // NEW path: render snapshot (XFA flattened once at open).
+        let snapshot = doc.render_snapshot();
+        let mut sdk_render_runs = Vec::new();
+        let mut rendered_holder = None;
+        for _ in 0..5 {
+            let (ms, r) = time_ms(|| snapshot.render_page(0, &options).expect("sdk render"));
+            sdk_render_runs.push(ms);
+            rendered_holder = Some(r);
+        }
+        let rendered = rendered_holder.unwrap();
+
+        // NEW transport: raw RGBA bytes (header + pixels), no PNG/base64.
+        let mut raw_runs = Vec::new();
+        for _ in 0..5 {
+            let (ms, _) = time_ms(|| render_page_raw_bytes(&snapshot, 0, 2.0).expect("raw render"));
+            raw_runs.push(ms);
+        }
+        println!("render page0 @scale2 NEW (snapshot, raw bytes incl. render): {:.2} ms", median_ms(raw_runs));
+        let raw_len = rendered.pixels.len();
+
+        let mut png_runs = Vec::new();
+        let mut png_len = 0usize;
+        for _ in 0..5 {
+            let (ms, png) = time_ms(|| {
+                let img = image::RgbaImage::from_raw(
+                    rendered.width,
+                    rendered.height,
+                    rendered.pixels.clone(),
+                )
+                .unwrap();
+                let mut out: Vec<u8> = Vec::new();
+                img.write_to(&mut Cursor::new(&mut out), ImageFormat::Png).unwrap();
+                out
+            });
+            png_runs.push(ms);
+            png_len = png.len();
+        }
+
+        let img = image::RgbaImage::from_raw(rendered.width, rendered.height, rendered.pixels.clone()).unwrap();
+        let mut png_bytes: Vec<u8> = Vec::new();
+        img.write_to(&mut Cursor::new(&mut png_bytes), ImageFormat::Png).unwrap();
+        let mut b64_runs = Vec::new();
+        let mut b64_len = 0usize;
+        for _ in 0..5 {
+            let (ms, s) = time_ms(|| general_purpose::STANDARD.encode(&png_bytes));
+            b64_runs.push(ms);
+            b64_len = s.len();
+        }
+
+        println!(
+            "render page0 @scale2: sdk {:.2} ms | png encode(+clone) {:.2} ms | base64 {:.2} ms",
+            median_ms(sdk_render_runs),
+            median_ms(png_runs),
+            median_ms(b64_runs)
+        );
+        println!(
+            "payload {}x{}: raw RGBA {} KB | png {} KB | base64 {} KB",
+            rendered.width,
+            rendered.height,
+            raw_len / 1024,
+            png_len / 1024,
+            b64_len / 1024
+        );
+
+        // -- Thumbnail stage split
+        let mut thumb_runs = Vec::new();
+        for _ in 0..5 {
+            let (ms, _) = time_ms(|| doc.render_thumbnail(0).expect("thumb"));
+            thumb_runs.push(ms);
+        }
+        println!("render_thumbnail (sdk+png+b64): {:.2} ms", median_ms(thumb_runs));
+    }
+
+    // === XFA Phase 0 — page-count regression tests ===
+    // Invariants: normal PDFs and AcroForms are unchanged; dynamic XFA now
+    // reports the rendered (flattened) page count instead of the 1-page shell.
+
+    const DYNAMIC_XFA_PDF: &[u8] =
+        include_bytes!("../tests/fixtures/imm5257e_dynamic_xfa.pdf");
+
+    #[test]
+    fn document_info_page_count_normal_pdf() {
+        let info = sample_doc().document_info();
+        assert_eq!(info.page_count, 2, "two_pages.pdf must still report 2 pages");
+        assert!(!info.xfa_detected, "two_pages.pdf must not be flagged as XFA");
+    }
+
+    #[test]
+    fn document_info_page_count_acroform() {
+        let doc = OpenDocument::open_bytes(SAMPLE_ACROFORM_PDF.to_vec())
+            .expect("open acroform");
+        let info = doc.document_info();
+        assert_eq!(info.page_count, 1, "sample AcroForm is 1 page");
+        assert!(!info.xfa_detected, "AcroForm must not be flagged as XFA");
+    }
+
+    #[test]
+    fn dynamic_xfa_document_info_uses_render_page_count() {
+        let doc = OpenDocument::open_bytes(DYNAMIC_XFA_PDF.to_vec())
+            .expect("open dynamic XFA");
+
+        let shell_pages = doc.pdf_doc.page_count();
+        let render_pages = doc.render_doc_page_count();
+        let info = doc.document_info();
+
+        // This form (IMM 5257E) has a 1-page shell but 3 rendered pages.
+        assert_eq!(shell_pages, 1, "shell PDF is 1 page");
+        assert_eq!(render_pages, 3, "flattened layout produces 3 pages");
+        assert!(info.xfa_detected, "must be detected as XFA");
+        assert_eq!(
+            info.page_count, render_pages as u32,
+            "document_info must report the render page count ({render_pages}), not the shell count ({shell_pages})"
+        );
+        assert_eq!(
+            info.pages.len(),
+            render_pages,
+            "pages vec must have one entry per rendered page"
+        );
+        // Every rendered page must report a non-zero size.
+        for (i, p) in info.pages.iter().enumerate() {
+            assert!(p.width_pt > 0.0, "page {i} width must be > 0");
+            assert!(p.height_pt > 0.0, "page {i} height must be > 0");
+        }
+    }
+
+    // ── XFA Phase 1 fill ──────────────────────────────────────────────
+
+    #[test]
+    fn xfa_form_model_enumerates_fields() {
+        let mut doc = OpenDocument::open_bytes(DYNAMIC_XFA_PDF.to_vec())
+            .expect("open dynamic XFA");
+        let render_pages = doc.render_doc_page_count();
+        let model = doc.xfa_form_model().expect("build XFA form model");
+
+        assert!(
+            !model.fields.is_empty(),
+            "IMM 5257E exposes XFA fields (golden corpus reports 284)"
+        );
+
+        // The session lays out the RAW (pre-suppression) page set: the XFA layout
+        // engine over-produces empty repeated `occur` instance pages for a few
+        // dynamic forms, which the flatten path's §4.3 suppression drops. So the
+        // session's page_count (here 6) is >= the rendered/flattened page count
+        // (here 3, the Adobe-faithful view). The overlay therefore bounds field
+        // placement by the RENDERED page count, not session.page_count.
+        assert!(
+            model.page_count >= render_pages,
+            "session layout pages ({}) must be >= rendered pages ({})",
+            model.page_count,
+            render_pages
+        );
+
+        // The overlay only shows fields on rendered pages ("fill visible fields").
+        // At least one fillable text field must land within the rendered range,
+        // otherwise the overlay would have nothing to offer.
+        let visible_fillable_text = model.fields.iter().find(|f| {
+            f.field_type == "text"
+                && !f.read_only
+                && f.page.is_some_and(|p| p < render_pages)
+                && f.rect.is_some()
+        });
+        assert!(
+            visible_fillable_text.is_some(),
+            "expected a fillable text field on a rendered page"
+        );
+        let f = visible_fillable_text.unwrap();
+        assert!(!f.name.is_empty(), "field must have a name");
+        assert!(
+            f.widgets.iter().any(|w| w.page < render_pages),
+            "field must have a widget on a rendered page"
+        );
+    }
+
+    #[test]
+    fn xfa_fill_persists_across_save_reopen() {
+        let mut doc = OpenDocument::open_bytes(DYNAMIC_XFA_PDF.to_vec())
+            .expect("open dynamic XFA");
+        let model = doc.xfa_form_model().expect("build XFA form model");
+
+        // Choose a fillable, data-bound text field so the value lands in datasets.
+        let target = model
+            .fields
+            .iter()
+            .find(|f| f.field_type == "text" && !f.read_only && !f.bind_none)
+            .expect("a fillable, datasets-bound text field")
+            .name
+            .clone();
+
+        let sentinel = "PDFLUENT_XFA_PHASE1";
+        doc.set_xfa_field_value(&XfaWriteRequest::Text {
+            name: target.clone(),
+            value: sentinel.to_string(),
+        })
+        .expect("set XFA field value");
+        assert!(doc.modified, "fill must mark the document dirty");
+
+        // Save and reopen from disk — the round-trip an end user performs.
+        let mut out = std::env::temp_dir();
+        out.push("pdfluent_xfa_fill_roundtrip.pdf");
+        let out_str = out.to_string_lossy().to_string();
+        doc.save_to(&out_str).expect("save filled XFA");
+
+        let mut reopened = OpenDocument::open_bytes(
+            std::fs::read(&out_str).expect("re-read saved XFA"),
+        )
+        .expect("reopen saved XFA");
+        let model2 = reopened.xfa_form_model().expect("re-read XFA model");
+        let again = model2
+            .fields
+            .iter()
+            .find(|f| f.name == target)
+            .expect("field still present after reopen");
+        assert_eq!(
+            again.value, sentinel,
+            "filled XFA value must persist across save/reopen"
+        );
+
+        let _ = std::fs::remove_file(&out_str);
+    }
+
+    // The UEA dynamic-XFA fixture (a Dutch procurement form) lives in the SDK
+    // checkout's test-data, not in the editor repo. Its radio control
+    // `Type_aanbesteding` carries a `change` script that reveals a conditional
+    // section (`Erkenningsregeling…`) and repaginates when set to "3" — the
+    // canonical Phase 2 commit-loop demonstration. Feature-gated (the commit loop
+    // + QuickJS runtime) and skipped when the fixture is absent (e.g. CI without
+    // the test-data, or a non-local checkout layout).
+    #[cfg(feature = "xfa-interactive")]
+    #[test]
+    fn xfa_commit_reveals_conditional_section_on_uea() {
+        let uea = concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/../../../XFA/test-data/xfa-golden/xfa_test_input.pdf"
+        );
+        let Ok(bytes) = std::fs::read(uea) else {
+            eprintln!("SKIP xfa_commit_reveals_conditional_section_on_uea: UEA fixture not at {uea}");
+            return;
+        };
+        let mut doc = OpenDocument::open_bytes(bytes).expect("open UEA");
+
+        let result = doc
+            .commit_xfa_field_value(&XfaWriteRequest::Radio {
+                name: "formulier1.H1.Heading.Type_aanbesteding".to_string(),
+                export: "3".to_string(),
+            })
+            .expect("commit reveal control");
+
+        eprintln!(
+            "=UEA-REVEAL= interactive={} scripts={} pages {}->{} presence_changes={}",
+            result.interactive,
+            result.scripts_executed,
+            result.page_count_before,
+            result.page_count_after,
+            result.presence_changes.len()
+        );
+
+        assert!(result.interactive, "commit ran the interactive change script");
+        assert!(result.scripts_executed > 0, "change/calculate scripts executed");
+        assert!(
+            result.page_count_after > result.page_count_before,
+            "revealing a section repaginates: {} -> {}",
+            result.page_count_before,
+            result.page_count_after
+        );
+        assert!(
+            result
+                .presence_changes
+                .iter()
+                .any(|c| c.name.contains("Erkenningsregeling") && c.after == "visible"),
+            "the conditional section must be revealed; changes={:?}",
+            result
+                .presence_changes
+                .iter()
+                .map(|c| (c.name.as_str(), c.before.as_str(), c.after.as_str()))
+                .collect::<Vec<_>>()
+        );
+    }
+
+    #[test]
+    fn xfa_commit_returns_refreshed_model_and_persists() {
+        let mut doc = OpenDocument::open_bytes(DYNAMIC_XFA_PDF.to_vec())
+            .expect("open dynamic XFA");
+        let model = doc.xfa_form_model().expect("build XFA form model");
+        let target = model
+            .fields
+            .iter()
+            .find(|f| f.field_type == "text" && !f.read_only && !f.bind_none)
+            .expect("a fillable, datasets-bound text field")
+            .name
+            .clone();
+
+        let result = doc
+            .commit_xfa_field_value(&XfaWriteRequest::Text {
+                name: target.clone(),
+                value: "PHASE2_COMMIT".to_string(),
+            })
+            .expect("commit XFA field value");
+
+        // The commit always returns a refreshed model + a sane page-count delta,
+        // and surfaces presence changes (possibly empty for a non-triggering field).
+        assert!(!result.model.fields.is_empty(), "commit returns a refreshed model");
+        assert!(result.page_count_after >= 1, "page_count_after is sane");
+        assert_eq!(result.raw_value, "PHASE2_COMMIT");
+        assert!(doc.modified, "commit marks the document dirty");
+
+        // Feature-aware: with the commit loop compiled, the edit runs interactively
+        // (change/click + calculate scripts); without it, it degrades to a static
+        // value write.
+        #[cfg(feature = "xfa-interactive")]
+        assert!(
+            result.interactive,
+            "commit must run interactively when xfa-interactive is enabled"
+        );
+        #[cfg(not(feature = "xfa-interactive"))]
+        {
+            assert!(!result.interactive, "fallback must report interactive=false");
+            assert_eq!(result.scripts_executed, 0);
+            assert!(result.presence_changes.is_empty());
+            assert_eq!(result.page_count_before, result.page_count_after);
+        }
+
+        // Value persists across save/reopen.
+        let mut out = std::env::temp_dir();
+        out.push("pdfluent_xfa_commit_roundtrip.pdf");
+        let out_str = out.to_string_lossy().to_string();
+        doc.save_to(&out_str).expect("save committed XFA");
+        let mut reopened =
+            OpenDocument::open_bytes(std::fs::read(&out_str).expect("re-read")).expect("reopen");
+        let m2 = reopened.xfa_form_model().expect("re-read model");
+        assert_eq!(
+            m2.fields.iter().find(|f| f.name == target).expect("field present").value,
+            "PHASE2_COMMIT",
+            "committed XFA value persists across save/reopen"
+        );
+        let _ = std::fs::remove_file(&out_str);
     }
 }

@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 import { readFileSync } from 'node:fs';
@@ -23,18 +23,21 @@ const rightPanelSource = readFileSync(
   'utf8'
 );
 
-const viewerAppSource = readFileSync(
-  new URL('../src/viewer/ViewerApp.tsx', import.meta.url),
-  'utf8'
-);
+const viewerAppSource = [
+  '../src/viewer/ViewerApp.tsx',
+  '../src/viewer/v3/EditorV3Shell.tsx',
+].map(p => readFileSync(new URL(p, import.meta.url), 'utf8')).join('\n\n');
 
 // ---------------------------------------------------------------------------
 // ModeToolbar — OCR scan wiring
 // ---------------------------------------------------------------------------
 
 describe('ModeToolbar — OCR scan wiring', () => {
-  it('includes toolbar.ocrScan in WIRED_TOOLS', () => {
-    expect(modeToolbarSource).toContain("'toolbar.ocrScan'");
+  it('includes toolbar.ocrScan in getWiredTools Tauri branch', () => {
+    const fnStart = modeToolbarSource.indexOf('export function getWiredTools');
+    const fnEnd = modeToolbarSource.indexOf('return base;', fnStart) + 12;
+    const fnBlock = modeToolbarSource.slice(fnStart, fnEnd);
+    expect(fnBlock).toContain("'toolbar.ocrScan'");
   });
 
   it('accepts onOcrScan prop', () => {
@@ -52,11 +55,14 @@ describe('ModeToolbar — OCR scan wiring', () => {
 // ---------------------------------------------------------------------------
 
 describe('ModeToolbar — protect mode redaction toggle', () => {
-  it('includes toolbar.redact in WIRED_TOOLS', () => {
-    expect(modeToolbarSource).toContain("'toolbar.redact'");
+  it('includes toolbar.redact in getWiredTools Tauri branch', () => {
+    const fnStart = modeToolbarSource.indexOf('export function getWiredTools');
+    const fnEnd = modeToolbarSource.indexOf('return base;', fnStart) + 12;
+    const fnBlock = modeToolbarSource.slice(fnStart, fnEnd);
+    expect(fnBlock).toContain("'toolbar.redact'");
   });
 
-  it('renders redaction toggle button when mode is protect', () => {
+  it('renders redaction toggle button when mode is protect (Tauri only)', () => {
     expect(modeToolbarSource).toContain("mode === 'protect'");
     expect(modeToolbarSource).toContain('annotation-tool-redaction-protect');
   });
@@ -168,7 +174,7 @@ describe('ViewerApp — OCR overlay state wiring', () => {
   });
 
   it('passes ocrPageWords for current page to PageCanvas', () => {
-    expect(viewerAppSource).toContain('ocrWords={ocrPageWords.get(pageIndex)}');
+    expect(viewerAppSource).toContain('ocrWords={ocrPageWords.get(i)}');
   });
 
   it('passes ocrVisible and ocrConfidenceThreshold to PageCanvas', () => {
@@ -176,8 +182,8 @@ describe('ViewerApp — OCR overlay state wiring', () => {
     expect(viewerAppSource).toContain('ocrConfidenceThreshold={ocrConfidenceThreshold}');
   });
 
-  it('passes onOcrScan to ModeToolbar', () => {
-    expect(viewerAppSource).toContain('onOcrScan=');
+  it('passes OCR scan action to EditorV3Shell', () => {
+    expect(viewerAppSource).toContain('onRunOcr=');
     expect(viewerAppSource).toContain('handleRunOcr({');
   });
 });

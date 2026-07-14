@@ -1,11 +1,11 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 import type { UndoStack } from '../undoEngine';
 import type { ViewerMode } from '../types';
 import type { TextParagraphTarget } from '../text/textInteractionModel';
@@ -13,7 +13,9 @@ import type { FormField } from '../../core/document';
 
 interface UseKeyboardShortcutsProps {
   pageCount: number;
+  pageIndex: number;
   setPageIndex: (idx: number | ((prev: number) => number)) => void;
+  scrollToPage?: (idx: number) => void;
   isSearchOpen: boolean;
   searchResults: { pageIndex: number }[];
   nextSearchResult: () => void;
@@ -39,6 +41,7 @@ interface UseKeyboardShortcutsProps {
   isSavingRef: React.MutableRefObject<boolean>;
   handleNextComment: () => void;
   handlePrevComment: () => void;
+  handleDeleteCurrentPage?: () => void;
 }
 
 /**
@@ -47,7 +50,9 @@ interface UseKeyboardShortcutsProps {
  */
 export function useKeyboardShortcuts({
   pageCount,
+  pageIndex,
   setPageIndex,
+  scrollToPage,
   isSearchOpen,
   searchResults,
   nextSearchResult,
@@ -73,7 +78,17 @@ export function useKeyboardShortcuts({
   isSavingRef,
   handleNextComment,
   handlePrevComment,
+  handleDeleteCurrentPage,
 }: UseKeyboardShortcutsProps): React.RefObject<HTMLDivElement | null> {
+
+  // Keep a ref to pageIndex to avoid stale closures in keyboard handlers
+  const pageIndexRef = useRef(pageIndex);
+  useEffect(() => { pageIndexRef.current = pageIndex; }, [pageIndex]);
+
+  const navigatePage = useCallback((next: number) => {
+    setPageIndex(next);
+    scrollToPage?.(next);
+  }, [setPageIndex, scrollToPage]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ⌘C / Ctrl+C copy handler — copies selected text to clipboard
   useEffect(() => {
@@ -192,36 +207,39 @@ export function useKeyboardShortcuts({
       // Guard: block navigation while a save is in progress
       if (isSavingRef.current) return;
 
-      // Do not steal keys when focus is inside a text input, textarea, or select
+      // Do not steal keys when focus is inside a text input, textarea, select,
+      // or the contenteditable inline text editor (End/Home/arrows must move the caret).
       const tag = (e.target as HTMLElement | null)?.tagName ?? '';
       if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+      if ((e.target as HTMLElement | null)?.isContentEditable) return;
+      if (editingTextTargetId) return;
 
       switch (e.key) {
         case 'ArrowRight':
         case 'ArrowDown':
         case 'PageDown':
           e.preventDefault();
-          setPageIndex(i => Math.min(pageCount - 1, i + 1));
+          navigatePage(Math.min(pageCount - 1, pageIndexRef.current + 1));
           break;
         case 'ArrowLeft':
         case 'ArrowUp':
         case 'PageUp':
           e.preventDefault();
-          setPageIndex(i => Math.max(0, i - 1));
+          navigatePage(Math.max(0, pageIndexRef.current - 1));
           break;
         case 'Home':
           e.preventDefault();
-          setPageIndex(0);
+          navigatePage(0);
           break;
         case 'End':
           e.preventDefault();
-          setPageIndex(pageCount - 1);
+          navigatePage(pageCount - 1);
           break;
       }
     }
     window.addEventListener('keydown', handlePageNav);
     return () => { window.removeEventListener('keydown', handlePageNav); };
-  }, [pageCount]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [pageCount, navigatePage, editingTextTargetId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Alt+ArrowDown / Alt+ArrowUp — jump between comments
   useEffect(() => {
@@ -239,16 +257,17 @@ export function useKeyboardShortcuts({
     return () => { window.removeEventListener('keydown', handleCommentJumpKey); };
   }, [handleNextComment, handlePrevComment]);
 
-  // Mode switching keyboard shortcuts — 1–7 map to viewer modes
+  // Mode switching keyboard shortcuts — 1–8 map to viewer modes
   useEffect(() => {
     const MODE_KEYS: Record<string, ViewerMode> = {
       '1': 'read',
       '2': 'review',
       '3': 'edit',
-      '4': 'organize',
-      '5': 'forms',
-      '6': 'protect',
-      '7': 'convert',
+      '4': 'sign',
+      '5': 'organize',
+      '6': 'forms',
+      '7': 'protect',
+      '8': 'convert',
     };
 
     function handleModeKey(e: KeyboardEvent): void {
@@ -276,7 +295,7 @@ export function useKeyboardShortcuts({
         setZoom(z => Math.max(0.25, parseFloat((z - 0.25).toFixed(2))));
       } else if (e.key === '0') {
         e.preventDefault();
-        setZoom(1.0);
+        setZoom(1.5);
       }
     }
     window.addEventListener('keydown', handleZoomKey);
@@ -363,6 +382,51 @@ export function useKeyboardShortcuts({
     window.addEventListener('keydown', handleFieldTabKey);
     return () => { window.removeEventListener('keydown', handleFieldTabKey); };
   }, [mode, formFields, activeFieldIdx, handleFieldNav]);
+
+  // ⌘A / Ctrl+A — select all text across all visible text layers
+  useEffect(() => {
+    function handleSelectAll(e: KeyboardEvent): void {
+      if (!(e.metaKey || e.ctrlKey) || e.key !== 'a') return;
+      // Let the browser handle it inside inputs, textareas, and the inline editor.
+      const tag = (e.target as HTMLElement | null)?.tagName ?? '';
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+      if (editingTextTargetId) return;
+      e.preventDefault();
+      const layers = document.querySelectorAll('.pdf-text-layer');
+      if (layers.length === 0) return;
+      const allSpans = Array.from(layers).flatMap(l => Array.from(l.querySelectorAll('span')));
+      if (allSpans.length === 0) return;
+      const first = allSpans[0]?.firstChild;
+      const last = allSpans[allSpans.length - 1]?.firstChild;
+      if (!first || !last) return;
+      const range = document.createRange();
+      range.setStart(first, 0);
+      range.setEnd(last, last.textContent?.length ?? 0);
+      const sel = window.getSelection();
+      sel?.removeAllRanges();
+      sel?.addRange(range);
+    }
+    window.addEventListener('keydown', handleSelectAll);
+    return () => { window.removeEventListener('keydown', handleSelectAll); };
+  }, [editingTextTargetId]);
+
+  // Backspace / Delete — delete the currently viewed page
+  useEffect(() => {
+    if (!handleDeleteCurrentPage) return;
+    function handleDeletePageKey(e: KeyboardEvent): void {
+      if (e.key !== 'Backspace' && e.key !== 'Delete') return;
+      if (e.metaKey || e.ctrlKey) return;
+      // Guard: don't fire inside inputs, textareas, selects, or contentEditable
+      const tag = (e.target as HTMLElement | null)?.tagName ?? '';
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+      if ((e.target as HTMLElement | null)?.isContentEditable) return;
+      if (editingTextTargetId) return;
+      e.preventDefault();
+      void handleDeleteCurrentPage?.();
+    }
+    window.addEventListener('keydown', handleDeletePageKey);
+    return () => { window.removeEventListener('keydown', handleDeletePageKey); };
+  }, [editingTextTargetId, handleDeleteCurrentPage]);
 
   // Scroll-to-zoom — ⌘/Ctrl + wheel adjusts zoom on the document canvas
   const canvasContainerRef = useRef<HTMLDivElement | null>(null);

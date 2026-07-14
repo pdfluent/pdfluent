@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: LicenseRef-PDFluent-Proprietary
 // Copyright (c) 2026 PDFluent Contributors
 
 import { readFileSync } from "node:fs";
@@ -22,12 +22,13 @@ describe("viewer inline text editing", () => {
     expect(viewerSource).not.toContain("window.alert(");
   });
 
-  it("renders editable controls with save and cancel actions", () => {
-    expect(viewerSource).toContain("viewer-text-inline-editor");
-    expect(viewerSource).toContain("viewer-text-inline-input");
-    expect(viewerSource).toContain("viewer-text-inline-actions");
-    expect(viewerSource).toMatch(/>\s*Save\s*</);
-    expect(viewerSource).toMatch(/>\s*Cancel\s*</);
+  it("renders in-place input with keyboard submit/cancel and telemetry events", () => {
+    // Implementation uses in-place editing (blur-to-submit / Enter-to-submit /
+    // Escape-to-cancel) rather than a dialog with explicit Save/Cancel buttons.
+    expect(viewerSource).toContain("viewer-text-inline-editor-in-place");
+    expect(viewerSource).toContain("viewer-text-edit-hotspot");
+    expect(viewerSource).toContain("void submitInlineTextEditor()");
+    expect(viewerSource).toContain('cancelInlineTextEditor("user_cancel")');
     expect(viewerSource).toContain("text_inline_edit_started");
     expect(viewerSource).toContain("text_inline_edit_submit");
     expect(viewerSource).toContain("text_inline_edit_success");

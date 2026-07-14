@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 import { readFileSync } from 'node:fs';
@@ -157,15 +157,21 @@ describe('WelcomeScreen — welcome-clear-recent-btn', () => {
     const btnPos = welcomeSource.indexOf('data-testid="welcome-clear-recent-btn"');
     const btnEnd = welcomeSource.indexOf('</button>', btnPos) + 9;
     const btnBlock = welcomeSource.slice(btnPos, btnEnd);
-    expect(btnBlock).toContain("t('welcome.clearAll'");
+    // Quote style is project-mixed (single vs double).
+    expect(btnBlock).toMatch(/t\(['"]welcome\.clearAll['"]/);
   });
 
   it('clear button only appears when recentFiles is non-empty', () => {
-    // The clear button is inside the recentFiles.length > 0 branch
+    // v2 uses a `hasRecent` boolean (computed once at top of component)
+    // instead of repeating recentFiles.length > 0 inline near the button.
+    // Either pattern satisfies the conditional render contract.
     const clearBtnPos = welcomeSource.indexOf('data-testid="welcome-clear-recent-btn"');
-    const lengthCheckPos = welcomeSource.lastIndexOf('recentFiles.length > 0', clearBtnPos);
-    expect(lengthCheckPos).toBeGreaterThan(-1);
-    expect(clearBtnPos - lengthCheckPos).toBeLessThan(500);
+    const guardPos = Math.max(
+      welcomeSource.lastIndexOf('recentFiles.length > 0', clearBtnPos),
+      welcomeSource.lastIndexOf('hasRecent', clearBtnPos),
+    );
+    expect(guardPos).toBeGreaterThan(-1);
+    expect(clearBtnPos - guardPos).toBeLessThan(3000);
   });
 });
 
@@ -189,7 +195,8 @@ describe('WelcomeScreen — recent-file-remove-btn', () => {
     const btnPos = welcomeSource.indexOf('data-testid="recent-file-remove-btn"');
     const btnEnd = welcomeSource.indexOf('</button>', btnPos) + 9;
     const btnBlock = welcomeSource.slice(btnPos, btnEnd);
-    expect(btnBlock).toContain('e.stopPropagation()');
+    // v2 uses `event.stopPropagation()` (was: `e.stopPropagation()`).
+    expect(btnBlock).toMatch(/\b(?:e|event)\.stopPropagation\(\)/);
   });
 
   it('remove button has an accessible aria-label', () => {
@@ -200,7 +207,11 @@ describe('WelcomeScreen — recent-file-remove-btn', () => {
   });
 
   it('open button is inside the recent-file-item container', () => {
-    expect(welcomeSource).toContain('data-testid="recent-file-open-btn"');
+    // v2: the entire recent-file-item row is the open affordance
+    // (role="button" + onClick={onOpenRecent}). The separate
+    // recent-file-open-btn testid is no longer rendered; the
+    // recent-file-item testid is the canonical anchor.
+    expect(welcomeSource).toMatch(/data-testid=['"]recent-file-(open-btn|item)['"]/);
   });
 });
 

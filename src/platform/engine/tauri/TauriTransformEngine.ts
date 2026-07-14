@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 import type { PdfDocument, Page } from '../../../core/document';
@@ -12,6 +12,14 @@ import type { TransformEngine } from '../../../core/engine/TransformEngine';
 // Backend response types (snake_case from serde)
 type TauriReorderPageInfo = { index: number; width_pt: number; height_pt: number };
 type TauriReorderDocInfo = { page_count: number; pages: TauriReorderPageInfo[] };
+type TauriDocumentInfo = {
+  page_count: number;
+  pages: TauriReorderPageInfo[];
+  title: string | null;
+  author: string | null;
+  xfa_detected?: boolean;
+  xfa_notice?: string | null;
+};
 
 function notImpl(msg: string): { success: false; error: { code: 'not-implemented'; message: string } } {
   return { success: false, error: { code: 'not-implemented', message: msg } };
@@ -114,6 +122,44 @@ export class TauriTransformEngine implements TransformEngine {
 
   async convertToPdfA(): AsyncEngineResult<PdfDocument> {
     return notImpl('convertToPdfA requires Tauri backend');
+  }
+
+  async flattenXfa(document: PdfDocument): AsyncEngineResult<PdfDocument> {
+    try {
+      const { invoke } = await import('@tauri-apps/api/core');
+      const info = await invoke<TauriDocumentInfo>('flatten_xfa');
+      const pages: Page[] = info.pages.map(p => ({
+        index: p.index,
+        size: { width: p.width_pt, height: p.height_pt },
+        rotation: 0 as const,
+        contentHash: '',
+        isRendered: false,
+        metadata: {
+          label: String(p.index + 1),
+          inRange: true,
+          hasAnnotations: false,
+          hasForms: false,
+        },
+      }));
+      return {
+        success: true,
+        value: {
+          ...document,
+          pages,
+          metadata: {
+            ...document.metadata,
+            ...(info.title != null ? { title: info.title } : {}),
+            ...(info.author != null ? { author: info.author } : {}),
+          },
+          xfaDetected: info.xfa_detected ?? false,
+          xfaNotice: info.xfa_notice ?? null,
+          activeContent: null,
+          isModified: true,
+        },
+      };
+    } catch (e) {
+      return { success: false, error: { code: 'internal-error', message: String(e) } };
+    }
   }
 
   async convertToPdfUa(): AsyncEngineResult<PdfDocument> {

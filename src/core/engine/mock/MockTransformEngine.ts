@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 import type { PdfDocument } from '../../document';
@@ -15,11 +15,11 @@ function notImpl<T>(msg: string): AsyncEngineResult<T> {
 export class MockTransformEngine {
   // Async mutations
 
-  mergeDocuments(): AsyncEngineResult<PdfDocument> {
+  mergeDocuments(_documents: PdfDocument[], _options?: unknown): AsyncEngineResult<PdfDocument> {
     return notImpl('mergeDocuments not implemented in MockTransformEngine');
   }
 
-  appendDocument(): AsyncEngineResult<PdfDocument> {
+  appendDocument(_target: PdfDocument, _source: PdfDocument, _options?: unknown): AsyncEngineResult<PdfDocument> {
     return notImpl('appendDocument not implemented in MockTransformEngine');
   }
 
@@ -111,8 +111,12 @@ export class MockTransformEngine {
     return notImpl('fixXrefTable not implemented in MockTransformEngine');
   }
 
-  convertToPdfA(): AsyncEngineResult<PdfDocument> {
+  convertToPdfA(_document: PdfDocument, _level?: unknown, _options?: unknown): AsyncEngineResult<PdfDocument> {
     return notImpl('convertToPdfA not implemented in MockTransformEngine');
+  }
+
+  flattenXfa(_document: PdfDocument, _options?: unknown): AsyncEngineResult<PdfDocument> {
+    return notImpl('flattenXfa not implemented in MockTransformEngine');
   }
 
   convertToPdfUa(): AsyncEngineResult<PdfDocument> {

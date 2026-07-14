@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 import { readFileSync } from 'node:fs';
@@ -272,11 +272,13 @@ describe('ViewerApp — handleAnnotationClick', () => {
   });
 
   it('passes handleAnnotationClick to PageCanvas as onAnnotationClick', () => {
-    expect(viewerAppSource).toContain('onAnnotationClick={handleAnnotationClick}');
+    // In continuous-scroll mode, prop is guarded by isCurrentPage
+    expect(viewerAppSource).toContain('onAnnotationClick={isCurrentPage ? handleAnnotationClick : undefined}');
   });
 
   it('passes pageAnnotationMarks to PageCanvas as clickableAnnotations', () => {
-    expect(viewerAppSource).toContain('clickableAnnotations={pageAnnotationMarks}');
+    // In continuous-scroll mode, prop is guarded by isCurrentPage
+    expect(viewerAppSource).toContain('clickableAnnotations={isCurrentPage ? pageAnnotationMarks : []}');
   });
 });
 
@@ -290,7 +292,8 @@ describe('No-regression — existing annotation overlay paths', () => {
   });
 
   it('highlights={activeHighlights} still passed to PageCanvas', () => {
-    expect(viewerAppSource).toContain('highlights={activeHighlights}');
+    // In continuous-scroll mode, prop is guarded by isCurrentPage
+    expect(viewerAppSource).toContain('highlights={isCurrentPage ? activeHighlights : []}');
   });
 
   it('handleCommentNav still defined', () => {

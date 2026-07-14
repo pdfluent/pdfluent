@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 /**
@@ -92,13 +92,13 @@ describe('TextMutationEngine — interface shape', () => {
     expect(textMutationEngineSrc).toContain('reason: string | null');
   });
 
-  it('documents Phase 4 MVP constraints', () => {
-    expect(textMutationEngineSrc).toContain('equal-or-shorter');
+  it('documents parser-backed constraints', () => {
+    expect(textMutationEngineSrc).toContain('Parser-backed desktop constraints');
     expect(textMutationEngineSrc).toContain('Tj');
+    expect(textMutationEngineSrc).toContain('TJ');
   });
 
   it('documents all reason codes', () => {
-    expect(textMutationEngineSrc).toContain('replacement-too-long');
     expect(textMutationEngineSrc).toContain('text-not-found-in-content-stream');
     expect(textMutationEngineSrc).toContain('no-content-stream');
     expect(textMutationEngineSrc).toContain('empty-original-text');
@@ -226,8 +226,15 @@ describe('Rust pdf_engine.rs — OpenDocument::replace_text_span', () => {
     expect(pdfEngineRsSrc).toContain('pub fn replace_text_span(');
   });
 
-  it('enforces replacement-too-long guard', () => {
-    expect(pdfEngineRsSrc).toContain('replacement-too-long');
+  it('delegates replacement to the parser-backed pdf-manip writer', () => {
+    const fn_block = pdfEngineRsSrc.slice(
+      pdfEngineRsSrc.indexOf('pub fn replace_text_span('),
+      pdfEngineRsSrc.indexOf('pub fn replace_text_span(') + 2500,
+    );
+    expect(fn_block).toContain('pdf_manip::text_replace');
+    expect(fn_block).toContain('text_replace::replace_text');
+    expect(fn_block).toContain('FontMap::from_page');
+    expect(fn_block).not.toContain('replacement-too-long');
   });
 
   it('enforces empty-original-text guard', () => {
@@ -242,8 +249,13 @@ describe('Rust pdf_engine.rs — OpenDocument::replace_text_span', () => {
     expect(pdfEngineRsSrc).toContain('text-not-found-in-content-stream');
   });
 
-  it('uses simple Tj text show operator pattern', () => {
-    expect(pdfEngineRsSrc).toContain('Tj');
+  it('does not use the legacy simple Tj byte-search pattern', () => {
+    const fn_block = pdfEngineRsSrc.slice(
+      pdfEngineRsSrc.indexOf('pub fn replace_text_span('),
+      pdfEngineRsSrc.indexOf('pub fn replace_text_span(') + 2500,
+    );
+    expect(fn_block).not.toContain('format!("({original_text}) Tj"');
+    expect(fn_block).not.toContain('replace_first_occurrence');
   });
 
   it('calls sync_after_mutation after successful replacement', () => {
@@ -254,24 +266,13 @@ describe('Rust pdf_engine.rs — OpenDocument::replace_text_span', () => {
     expect(fn_block).toContain('sync_after_mutation');
   });
 
-  it('pads replacement with trailing spaces to maintain byte count', () => {
+  it('writes exact replacement text without padding', () => {
     const fn_block = pdfEngineRsSrc.slice(
       pdfEngineRsSrc.indexOf('pub fn replace_text_span('),
       pdfEngineRsSrc.indexOf('pub fn replace_text_span(') + 2000,
     );
-    expect(fn_block).toContain('width');
-  });
-
-  it('defines replace_first_occurrence helper function', () => {
-    expect(pdfEngineRsSrc).toContain('fn replace_first_occurrence(');
-  });
-
-  it('replace_first_occurrence handles needle not found (returns original)', () => {
-    const fn_block = pdfEngineRsSrc.slice(
-      pdfEngineRsSrc.indexOf('fn replace_first_occurrence('),
-      pdfEngineRsSrc.indexOf('fn replace_first_occurrence(') + 400,
-    );
-    expect(fn_block).toContain('haystack.to_vec()');
+    expect(fn_block).toContain('replacement_text');
+    expect(fn_block).not.toContain('format!("{:width$}"');
   });
 });
 

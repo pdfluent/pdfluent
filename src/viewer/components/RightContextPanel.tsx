@@ -1,18 +1,23 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
-import { useState, useRef, useEffect, useMemo } from 'react';
+import { isTauriRuntime } from '../../lib/tauri-detection';
+import { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import type { ReactNode } from 'react';
-import { ChevronRightIcon, CheckIcon, XIcon, TrashIcon, PencilIcon, EyeIcon, EyeOffIcon } from 'lucide-react';
+import { ChevronRightIcon, CheckIcon, XIcon, TrashIcon, PencilIcon, EyeIcon, EyeOffIcon, BoldIcon, ItalicIcon, UnderlineIcon, StrikethroughIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import type { ViewerMode } from '../types';
+import type { AnnotationAppearance, ViewerMode } from '../types';
+import { DEFAULT_ANNOTATION_APPEARANCE } from '../types';
 import type { PdfDocument, DocumentPermissions, FormField, FormFieldType, FormFieldValue, Annotation } from '../../core/document';
+import type { TextParagraphTarget } from '../text/textInteractionModel';
+import type { AnnotationTool } from './ModeToolbar';
 import { useTaskQueueContext } from '../context/TaskQueueContext';
 import { SignaturePanel } from './SignaturePanel';
+import { getOcrStatus, type OcrRuntimeStatus } from '../../lib/tauri-api';
 
 // ---------------------------------------------------------------------------
 // Shared shell
@@ -50,6 +55,9 @@ interface RightContextPanelProps {
   onMetadataChange: (key: 'title' | 'author' | 'subject' | 'keywords', value: string) => void;
   /** The currently selected markup annotation (highlight/underline/strikeout/rectangle). */
   selectedAnnotation?: Annotation | null;
+  activeAnnotationTool?: AnnotationTool;
+  annotationAppearance?: AnnotationAppearance;
+  onAnnotationAppearanceChange?: (appearance: AnnotationAppearance) => void;
   /** Delete the selected markup annotation. */
   onDeleteSelectedAnnotation?: (annotationId: string) => void;
   /** Update the color of the selected markup annotation. */
@@ -58,6 +66,8 @@ interface RightContextPanelProps {
   redactions?: Annotation[];
   /** Permanently apply all pending redactions. */
   onApplyRedactions?: () => void;
+  /** Called after a watermark is applied so the host can re-render + mark dirty. */
+  onWatermarkApplied?: () => void;
   /** Delete a single redaction annotation by id. */
   onDeleteRedaction?: (annotationId: string) => void;
   /** Jump to the page containing a redaction (0-based pageIndex). */
@@ -94,37 +104,77 @@ interface RightContextPanelProps {
   onRedactSearch?: (query: string) => Promise<{ matchesFound: number; areasRedacted: number } | null>;
   /** Permanently strip document metadata. */
   onRedactMetadata?: () => Promise<boolean>;
+  /** Validate the current document against PDF/A. */
+  onValidatePdfA?: (level: '1b' | '2b' | '3b') => Promise<void>;
+  /** Convert the current document to PDF/A. */
+  onConvertPdfA?: (level: '1b' | '2b' | '3b') => Promise<void>;
+  /** Whether PDF/A validation/conversion is running. */
+  pdfaBusy?: boolean;
+  /** Last PDF/A workflow status. */
+  pdfaStatus?: PdfAWorkflowStatus | null;
+  /** Opens the export/download dialog — surfaced inside PdfAPanel after conversion. */
+  onExportOpen?: () => void;
+  /** The currently selected text paragraph in edit mode. */
+  selectedTextTarget?: TextParagraphTarget | null;
+  /** Active editor format states. */
+  formatState?: { isBold: boolean; isItalic: boolean; isUnderline: boolean; isStrikethrough: boolean };
+  /** Trigger editor formatting commands. */
+  onFormatCommand?: (command: string, value?: string) => void;
+  /** Callback to close the panel. */
+  onClose?: () => void;
 }
 
-function CollapsibleSection({ title, children }: { title: string; children: ReactNode }) {
-  const [open, setOpen] = useState(true);
+export interface PdfAWorkflowStatus {
+  kind: 'idle' | 'success' | 'error';
+  message: string;
+  isValid?: boolean;
+}
+
+function CollapsibleSection({
+  title,
+  children,
+  badge,
+  defaultOpen = true,
+}: {
+  title: string;
+  children: ReactNode;
+  badge?: ReactNode;
+  defaultOpen?: boolean;
+}) {
+  const [open, setOpen] = useState(defaultOpen);
 
   return (
-    <div className="border-b border-border last:border-b-0">
+    <section className="contextpanel-section">
       <button
-        onClick={() => { setOpen(o => !o); }}
-        className="w-full flex items-center justify-between px-3 py-2 text-left hover:bg-muted/30 transition-colors"
+        type="button"
+        onClick={() => {
+          setOpen((o) => !o);
+        }}
+        className="contextpanel-section-header"
+        aria-expanded={open}
       >
-        <span className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
-          {title}
+        <span className="contextpanel-section-header-left">
+          <ChevronRightIcon
+            className={
+              open
+                ? 'contextpanel-section-chevron is-open'
+                : 'contextpanel-section-chevron'
+            }
+            aria-hidden="true"
+          />
+          <span className="contextpanel-section-title">{title}</span>
         </span>
-        <ChevronRightIcon
-          className={`w-3 h-3 text-muted-foreground transition-transform duration-150 ${open ? 'rotate-90' : ''}`}
-        />
+        {badge}
       </button>
-      {open && (
-        <div className="px-3 pb-3">
-          {children}
-        </div>
-      )}
-    </div>
+      <div className="contextpanel-section-body" hidden={!open}>
+        {children}
+      </div>
+    </section>
   );
 }
 
 function PlaceholderText({ text }: { text: string }) {
-  return (
-    <p className="text-[10px] text-muted-foreground/60 leading-relaxed">{text}</p>
-  );
+  return <p className="contextpanel-empty">{text}</p>;
 }
 
 // ---------------------------------------------------------------------------
@@ -181,44 +231,44 @@ function MetadataInfo({
     : '—';
 
   return (
-    <div className="flex flex-col gap-2" data-testid="doc-info-panel">
+    <div className="space-y-2 text-sm" data-testid="doc-info-panel">
       <div>
-        <p className="text-[10px] text-muted-foreground">{t('docInfo.title')}</p>
+        <label className="text-xs text-muted-foreground mb-1 block">{t('docInfo.title')}</label>
         <input
           data-testid="metadata-title-input"
-          className="w-full text-[10px] text-foreground bg-transparent border-b border-transparent focus:border-border outline-none truncate"
+          className="w-full text-sm text-foreground bg-card border border-border rounded-md p-2 outline-none focus:ring-1 focus:ring-primary truncate"
           defaultValue={title}
           onBlur={(e) => { onMetadataChange('title', e.currentTarget.value); }}
         />
       </div>
       <div>
-        <p className="text-[10px] text-muted-foreground">{t('docInfo.author')}</p>
+        <label className="text-xs text-muted-foreground mb-1 block">{t('docInfo.author')}</label>
         <input
           data-testid="metadata-author-input"
-          className="w-full text-[10px] text-foreground bg-transparent border-b border-transparent focus:border-border outline-none"
+          className="w-full text-sm text-foreground bg-card border border-border rounded-md p-2 outline-none focus:ring-1 focus:ring-primary"
           defaultValue={author}
           onBlur={(e) => { onMetadataChange('author', e.currentTarget.value); }}
         />
       </div>
-      <div>
-        <p className="text-[10px] text-muted-foreground">{t('docInfo.pages')}</p>
-        <p className="text-[10px] text-foreground" data-testid="doc-info-page-count">{pageCount}</p>
+      <div className="flex justify-between">
+        <span className="text-muted-foreground">{t('docInfo.pages')}</span>
+        <span className="text-foreground" data-testid="doc-info-page-count">{pageCount}</span>
       </div>
-      <div>
-        <p className="text-[10px] text-muted-foreground">{t('docInfo.dimensions')}</p>
-        <p className="text-[10px] text-foreground" data-testid="doc-info-dimensions">{dimensions}</p>
+      <div className="flex justify-between">
+        <span className="text-muted-foreground">{t('docInfo.dimensions')}</span>
+        <span className="text-foreground" data-testid="doc-info-dimensions">{dimensions}</span>
       </div>
-      <div>
-        <p className="text-[10px] text-muted-foreground">{t('docInfo.formType')}</p>
-        <p className="text-[10px] text-foreground" data-testid="doc-info-form-type">{formType}</p>
+      <div className="flex justify-between">
+        <span className="text-muted-foreground">{t('docInfo.formType')}</span>
+        <span className="text-foreground" data-testid="doc-info-form-type">{formType}</span>
       </div>
-      <div>
-        <p className="text-[10px] text-muted-foreground">{t('docInfo.pdfVersion')}</p>
-        <p className="text-[10px] text-foreground" data-testid="doc-info-pdf-version">{pdfVersion}</p>
+      <div className="flex justify-between">
+        <span className="text-muted-foreground">{t('docInfo.pdfVersion')}</span>
+        <span className="text-foreground" data-testid="doc-info-pdf-version">{pdfVersion}</span>
       </div>
-      <div>
-        <p className="text-[10px] text-muted-foreground">{t('docInfo.created')}</p>
-        <p className="text-[10px] text-foreground" data-testid="doc-info-creation-date">{creationDateStr}</p>
+      <div className="flex justify-between">
+        <span className="text-muted-foreground">{t('docInfo.created')}</span>
+        <span className="text-foreground" data-testid="doc-info-creation-date">{creationDateStr}</span>
       </div>
     </div>
   );
@@ -228,7 +278,7 @@ function MetadataInfo({
 // Protect mode — Beveiligingsinstellingen (Encrypt / Decrypt)
 // ---------------------------------------------------------------------------
 
-const isTauri = typeof window !== 'undefined' && '__TAURI__' in window;
+const isTauri = isTauriRuntime();
 
 function EncryptDecryptControls() {
   const { t } = useTranslation();
@@ -282,15 +332,15 @@ function EncryptDecryptControls() {
   }
 
   const inputClass =
-    'w-full text-[10px] bg-card border border-border rounded px-2 py-1 text-foreground placeholder:text-muted-foreground/50 outline-none focus:ring-1 focus:ring-primary';
+    'w-full text-sm bg-card border border-border rounded-md p-2 text-foreground placeholder:text-muted-foreground/50 outline-none focus:ring-1 focus:ring-primary';
   const buttonClass =
-    'w-full mt-1 py-1 text-[10px] font-semibold rounded bg-primary text-primary-foreground hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed';
+    'w-full mt-2 py-2 text-sm font-medium rounded-md bg-primary text-primary-foreground hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed';
 
   return (
     <div className="flex flex-col gap-4">
       {/* Encrypt */}
       <div className="flex flex-col gap-1.5">
-        <span className="text-[10px] font-medium text-muted-foreground">{t('protect.encrypt')}</span>
+        <span className="text-xs font-medium text-muted-foreground">{t('protect.encrypt')}</span>
         <input
           type="password"
           placeholder={t('protect.userPasswordPlaceholder')}
@@ -318,7 +368,7 @@ function EncryptDecryptControls() {
 
       {/* Decrypt */}
       <div className="flex flex-col gap-1.5">
-        <span className="text-[10px] font-medium text-muted-foreground">{t('protect.decrypt')}</span>
+        <span className="text-xs font-medium text-muted-foreground">{t('protect.decrypt')}</span>
         <input
           type="password"
           placeholder={t('protect.currentPasswordPlaceholder')}
@@ -335,6 +385,74 @@ function EncryptDecryptControls() {
           {t('protect.decryptBtn')}
         </button>
       </div>
+    </div>
+  );
+}
+
+/** Apply a text watermark to every page. Backend supports text + opacity only
+ *  (no rotation/position), so the UI exposes exactly those. On success it calls
+ *  onApplied so the host re-renders the (now mutated) document and marks dirty. */
+function WatermarkControls({ onApplied }: { onApplied?: () => void }) {
+  const { t } = useTranslation();
+  const { push, update } = useTaskQueueContext();
+  const [text, setText] = useState('');
+  const [opacity, setOpacity] = useState(0.3);
+  const [busy, setBusy] = useState(false);
+
+  async function handleApply(): Promise<void> {
+    const trimmed = text.trim();
+    if (busy || !isTauri || trimmed.length === 0) return;
+    setBusy(true);
+    const taskId = `watermark-${Date.now()}`;
+    push({ id: taskId, label: t('tasks.watermarkRunning'), progress: null, status: 'running' });
+    try {
+      const { invoke } = await import('@tauri-apps/api/core');
+      await invoke('add_watermark', { text: trimmed, opacity });
+      update(taskId, { status: 'done', label: t('tasks.watermarkDone') });
+      onApplied?.();
+    } catch {
+      update(taskId, { status: 'error', label: t('tasks.watermarkFailed') });
+    }
+    setBusy(false);
+  }
+
+  const inputClass =
+    'w-full text-sm bg-card border border-border rounded-md p-2 text-foreground placeholder:text-muted-foreground/50 outline-none focus:ring-1 focus:ring-primary';
+  const buttonClass =
+    'w-full mt-2 py-2 text-sm font-medium rounded-md bg-primary text-primary-foreground hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed';
+
+  return (
+    <div className="flex flex-col gap-3">
+      <input
+        type="text"
+        placeholder={t('rightPanel.watermarkPlaceholder')}
+        value={text}
+        onChange={e => { setText(e.target.value); }}
+        className={inputClass}
+        aria-label={t('toolbar.watermark')}
+      />
+      <div className="flex flex-col gap-1.5">
+        <span className="text-xs font-medium text-muted-foreground">
+          {t('rightPanel.watermarkOpacity')}: {Math.round(opacity * 100)}%
+        </span>
+        <input
+          type="range"
+          min={5}
+          max={100}
+          step={5}
+          value={Math.round(opacity * 100)}
+          onChange={e => { setOpacity(parseInt(e.target.value, 10) / 100); }}
+          className="w-full accent-primary"
+          aria-label={t('rightPanel.watermarkOpacity')}
+        />
+      </div>
+      <button
+        onClick={() => { void handleApply(); }}
+        disabled={busy || !isTauri || text.trim().length === 0}
+        className={buttonClass}
+      >
+        {t('rightPanel.watermarkApply')}
+      </button>
     </div>
   );
 }
@@ -370,7 +488,7 @@ function PermissionsDisplay({ permissions }: { permissions: DocumentPermissions 
           ) : (
             <XIcon className="w-3 h-3 text-destructive shrink-0" />
           )}
-          <span className="text-[10px] text-foreground">{t(labelKey)}</span>
+          <span className="text-xs text-foreground">{t(labelKey)}</span>
         </div>
       ))}
     </div>
@@ -403,6 +521,9 @@ const TEXT_LIKE_TYPES: ReadonlySet<FormFieldType> = new Set(['text', 'number', '
 
 /** Field types with a boolean checked/unchecked state that toggle on click. */
 const CHECKBOX_TYPES: ReadonlySet<FormFieldType> = new Set(['checkbox', 'radio']);
+
+const isDesktopRuntime = (): boolean =>
+  isTauriRuntime();
 
 function FormsModeContent({
   formFields,
@@ -451,17 +572,22 @@ function FormsModeContent({
   const filledRequired = formFields.filter(f => f.required && isFieldFilled(f));
   const requiredCount = formFields.filter(f => f.required).length;
 
+  if (formFields.length === 0) {
+    return (
+      <div className="flex flex-col gap-2" data-testid="forms-empty-state">
+        <PlaceholderText text={t('forms.noFieldsBrowserHint')} />
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col gap-0.5">
       {/* Completion summary — always visible */}
-      <p data-testid="forms-completion-summary" className="text-[10px] text-muted-foreground mb-1">
+      <p data-testid="forms-completion-summary" className="text-xs text-muted-foreground mb-1">
         {formFields.some(f => f.required)
           ? t('forms.completionRequired', { filled: filledRequired.length, total: requiredCount })
           : t('forms.completionCount', { count: formFields.length })}
       </p>
-      {formFields.length === 0 && (
-        <PlaceholderText text={t('leftNav.noFormFields')} />
-      )}
       {formFields.map((field, idx) => {
         const isActive = idx === activeFieldIdx;
         const filled = isFieldFilled(field);
@@ -487,7 +613,7 @@ function FormsModeContent({
           >
             <div className="flex items-center gap-1">
               <span
-                className="text-[10px] font-medium text-foreground/90 truncate flex-1"
+                className="text-xs font-medium text-foreground/90 truncate flex-1"
                 title={field.label || field.name}
               >
                 {field.label || field.name}
@@ -521,7 +647,7 @@ function FormsModeContent({
                 >
                   {field.value && field.type === 'checkbox' && <CheckIcon className="w-2 h-2 text-primary-foreground" />}
                 </span>
-                <span className="text-[10px] text-foreground/60">
+                <span className="text-xs text-foreground/60">
                   {field.value ? t('forms.enabled') : t('forms.disabled')}
                 </span>
               </div>
@@ -553,7 +679,7 @@ function FormsModeContent({
                 }}
                 placeholder={t('forms.valuePrompt')}
                 aria-label={t('forms.valueAriaLabel', { name: field.label || field.name })}
-                className="mt-0.5 w-full text-[10px] bg-card border border-primary/50 rounded px-2 py-0.5 text-foreground outline-none focus:ring-1 focus:ring-primary focus:border-primary"
+                className="mt-0.5 w-full text-xs bg-card border border-primary/50 rounded px-2 py-0.5 text-foreground outline-none focus:ring-1 focus:ring-primary focus:border-primary"
               />
             )}
           </div>
@@ -564,7 +690,7 @@ function FormsModeContent({
       <button
         data-testid="form-submit-btn"
         onClick={() => { void onFormSubmit(); }}
-        className="mt-2 w-full py-1.5 text-[10px] font-semibold rounded bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
+        className="contextpanel-action contextpanel-action-primary"
       >
         {t('forms.saveForm')}
       </button>
@@ -617,7 +743,6 @@ function ReplyInput({
         onChange={e => { setReplyText(e.target.value); }}
         rows={2}
         placeholder={t('review.replyPlaceholder')}
-        // eslint-disable-next-line jsx-a11y/no-autofocus
         autoFocus
         className="w-full text-[9px] bg-card border border-border rounded px-2 py-1 text-foreground resize-none outline-none focus:ring-1 focus:ring-primary"
       />
@@ -626,14 +751,14 @@ function ReplyInput({
           data-testid="reply-submit-btn"
           onClick={handleSubmit}
           disabled={!replyText.trim()}
-          className="flex-1 py-0.5 text-[9px] font-medium rounded bg-primary text-primary-foreground hover:opacity-90 transition-opacity disabled:opacity-40"
+          className="contextpanel-action contextpanel-action-primary"
         >
           {t('review.send')}
         </button>
         <button
           data-testid="reply-cancel-btn"
           onClick={e => { e.stopPropagation(); setOpen(false); setReplyText(''); }}
-          className="flex-1 py-0.5 text-[9px] rounded border border-border text-muted-foreground hover:bg-muted transition-colors"
+          className="contextpanel-action"
         >
           {t('common.cancel')}
         </button>
@@ -654,6 +779,7 @@ function OcrPanel({
   onOcrVisibleChange,
   ocrConfidenceThreshold = 0.6,
   onOcrConfidenceChange,
+  available = isDesktopRuntime(),
 }: {
   scannedPageIndices: Set<number>;
   onRunOcr?: (options: { language: string; scope: 'scanned' | 'all'; preprocessMode: 'off' | 'auto' | 'manual' }) => void;
@@ -662,31 +788,105 @@ function OcrPanel({
   onOcrVisibleChange?: (v: boolean) => void;
   ocrConfidenceThreshold?: number;
   onOcrConfidenceChange?: (v: number) => void;
+  available?: boolean;
 }) {
   const { t } = useTranslation();
   const [ocrLanguage, setOcrLanguage] = useState('en');
   const [ocrScope, setOcrScope] = useState<'scanned' | 'all'>('scanned');
   const [ocrPreprocessMode, setOcrPreprocessMode] = useState<'off' | 'auto' | 'manual'>('auto');
+  const [ocrStatus, setOcrStatus] = useState<OcrRuntimeStatus | null>(null);
+  const [ocrStatusChecking, setOcrStatusChecking] = useState(false);
+  const [ocrStatusError, setOcrStatusError] = useState<string | null>(null);
 
   const scannedCount = scannedPageIndices.size;
+  const refreshOcrStatus = useCallback(async () => {
+    if (!available || !isDesktopRuntime()) return;
+    setOcrStatusChecking(true);
+    try {
+      const status = await getOcrStatus();
+      setOcrStatus(status);
+      setOcrStatusError(null);
+    } catch (err) {
+      setOcrStatus(null);
+      setOcrStatusError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setOcrStatusChecking(false);
+    }
+  }, [available]);
+
+  useEffect(() => {
+    void refreshOcrStatus();
+  }, [refreshOcrStatus]);
+
+  const runtimeAvailable = available && (ocrStatus?.available ?? false);
+  const controlsDisabled = ocrRunning || !runtimeAvailable || ocrStatusChecking;
+  const missingPackages = ocrStatus?.missing_packages ?? [];
+  const statusText = !available
+    ? t('ocr.desktopOnly')
+    : ocrStatusChecking
+      ? t('ocr.statusChecking')
+      : runtimeAvailable
+        ? t('ocr.statusReady')
+        : ocrStatus
+          ? t('ocr.statusUnavailableWithReason', { reason: ocrStatus.remediation })
+          : ocrStatusError
+            ? t('ocr.statusUnavailableWithReason', { reason: ocrStatusError })
+            : t('ocr.statusUnavailable');
 
   return (
     <div className="flex flex-col gap-2" data-testid="ocr-panel">
+      <div
+        data-testid="ocr-status"
+        className={`rounded-md border px-2 py-1.5 text-[10px] leading-snug ${
+          runtimeAvailable
+            ? 'border-emerald-500/25 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'
+            : 'border-amber-500/25 bg-amber-500/10 text-amber-800 dark:text-amber-200'
+        }`}
+      >
+        <div className="flex items-start justify-between gap-2">
+          <span>{statusText}</span>
+          {available && (
+            <button
+              data-testid="ocr-status-refresh"
+              type="button"
+              onClick={() => { void refreshOcrStatus(); }}
+              disabled={ocrStatusChecking}
+              className="shrink-0 underline-offset-2 hover:underline disabled:opacity-50"
+            >
+              {t('ocr.statusRetry')}
+            </button>
+          )}
+        </div>
+        {ocrStatus?.python_path && (
+          <div className="mt-1 truncate text-[9px] opacity-75">
+            {t('ocr.runtimePath', { path: ocrStatus.python_path })}
+          </div>
+        )}
+        {missingPackages.length > 0 && (
+          <div className="mt-1 text-[9px] opacity-75">
+            {t('ocr.missingPackages', { packages: missingPackages.join(', ') })}
+          </div>
+        )}
+      </div>
+
       {/* Scanned page summary */}
-      <p className="text-[10px] text-muted-foreground">
-        {scannedCount > 0
+      <p className="text-xs text-muted-foreground">
+        {!available
+          ? t('ocr.desktopOnly')
+          : scannedCount > 0
           ? t('ocr.scannedDetected', { count: scannedCount })
           : t('ocr.noScannedDetected')}
       </p>
 
       {/* Language selector */}
       <div className="flex flex-col gap-0.5">
-        <label className="text-[9px] text-muted-foreground/70 uppercase tracking-wide">{t('ocr.language')}</label>
+        <label className="contextpanel-sub-title">{t('ocr.language')}</label>
         <select
           data-testid="ocr-language-select"
           value={ocrLanguage}
           onChange={e => { setOcrLanguage(e.target.value); }}
-          className="text-[10px] bg-card border border-border rounded px-2 py-1 text-foreground outline-none"
+          disabled={!runtimeAvailable}
+          className="contextpanel-input"
         >
           <option value="en">{t('ocr.langEn')}</option>
           <option value="nl">{t('ocr.langNl')}</option>
@@ -698,12 +898,13 @@ function OcrPanel({
 
       {/* Scope selector */}
       <div className="flex flex-col gap-0.5">
-        <label className="text-[9px] text-muted-foreground/70 uppercase tracking-wide">{t('ocr.scope')}</label>
+        <label className="contextpanel-sub-title">{t('ocr.scope')}</label>
         <select
           data-testid="ocr-scope-select"
           value={ocrScope}
           onChange={e => { setOcrScope(e.target.value as 'scanned' | 'all'); }}
-          className="text-[10px] bg-card border border-border rounded px-2 py-1 text-foreground outline-none"
+          disabled={!runtimeAvailable}
+          className="contextpanel-input"
         >
           <option value="scanned">{t('ocr.scopeScanned')}</option>
           <option value="all">{t('ocr.scopeAll')}</option>
@@ -712,12 +913,13 @@ function OcrPanel({
 
       {/* Preprocessing mode */}
       <div className="flex flex-col gap-0.5">
-        <label className="text-[9px] text-muted-foreground/70 uppercase tracking-wide">{t('ocr.preprocess')}</label>
+        <label className="contextpanel-sub-title">{t('ocr.preprocess')}</label>
         <select
           data-testid="ocr-preprocess-select"
           value={ocrPreprocessMode}
           onChange={e => { setOcrPreprocessMode(e.target.value as 'off' | 'auto' | 'manual'); }}
-          className="text-[10px] bg-card border border-border rounded px-2 py-1 text-foreground outline-none"
+          disabled={!runtimeAvailable}
+          className="contextpanel-input"
         >
           <option value="auto">{t('ocr.preprocessAuto')}</option>
           <option value="off">{t('ocr.preprocessOff')}</option>
@@ -727,7 +929,7 @@ function OcrPanel({
 
       {/* Confidence threshold */}
       <div className="flex flex-col gap-0.5">
-        <label className="text-[9px] text-muted-foreground/70 uppercase tracking-wide">
+        <label className="contextpanel-sub-title">
           {t('ocr.confidenceThreshold', { value: Math.round(ocrConfidenceThreshold * 100) })}
         </label>
         <input
@@ -737,6 +939,7 @@ function OcrPanel({
           max={100}
           value={Math.round(ocrConfidenceThreshold * 100)}
           onChange={e => { onOcrConfidenceChange?.(parseInt(e.target.value) / 100); }}
+          disabled={!runtimeAvailable}
           className="w-full accent-primary"
         />
       </div>
@@ -746,11 +949,13 @@ function OcrPanel({
         <button
           data-testid="run-ocr-btn"
           onClick={() => {
+            if (!runtimeAvailable) return;
             onRunOcr?.({ language: ocrLanguage, scope: ocrScope, preprocessMode: ocrPreprocessMode });
           }}
-          disabled={ocrRunning}
-          aria-label={t('ocr.runAriaLabel')}
-          className="flex-1 py-1 text-[10px] font-medium rounded bg-primary text-primary-foreground hover:opacity-90 transition-opacity disabled:opacity-40"
+          disabled={controlsDisabled}
+          aria-label={runtimeAvailable ? t('ocr.runAriaLabel') : statusText}
+          title={runtimeAvailable ? t('ocr.runAriaLabel') : statusText}
+          className="contextpanel-action contextpanel-action-primary"
         >
           {ocrRunning ? t('ocr.running') : t('ocr.run')}
         </button>
@@ -759,11 +964,96 @@ function OcrPanel({
           onClick={() => { onOcrVisibleChange?.(!ocrVisible); }}
           title={t('ocr.toggleOverlay')}
           aria-label={t('ocr.toggleOverlay')}
+          disabled={!runtimeAvailable}
           className="p-1.5 border border-border rounded text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
         >
           {ocrVisible ? <EyeIcon className="w-3 h-3" /> : <EyeOffIcon className="w-3 h-3" />}
         </button>
       </div>
+    </div>
+  );
+}
+
+function PdfAPanel({
+  pdfDoc,
+  busy = false,
+  status = null,
+  onValidatePdfA,
+  onConvertPdfA,
+  onExportOpen,
+}: {
+  pdfDoc: PdfDocument | null;
+  busy?: boolean;
+  status?: PdfAWorkflowStatus | null;
+  onValidatePdfA?: (level: '1b' | '2b' | '3b') => Promise<void>;
+  onConvertPdfA?: (level: '1b' | '2b' | '3b') => Promise<void>;
+  /** Opens the export/download dialog — shown after a successful conversion. */
+  onExportOpen?: () => void;
+}) {
+  const { t } = useTranslation();
+  const [level, setLevel] = useState<'1b' | '2b' | '3b'>('2b');
+  const disabled = !pdfDoc || busy;
+
+  return (
+    <div className="flex flex-col gap-2" data-testid="pdfa-panel">
+      <div className="flex flex-col gap-0.5">
+        <label className="contextpanel-sub-title" htmlFor="pdfa-level-select">
+          {t('pdfa.level')}
+        </label>
+        <select
+          id="pdfa-level-select"
+          data-testid="pdfa-level-select"
+          value={level}
+          onChange={e => { setLevel(e.target.value as '1b' | '2b' | '3b'); }}
+          disabled={busy}
+          className="text-xs bg-card border border-border rounded px-2 py-1 text-foreground outline-none disabled:opacity-50"
+        >
+          <option value="1b">PDF/A-1b</option>
+          <option value="2b">PDF/A-2b</option>
+          <option value="3b">PDF/A-3b</option>
+        </select>
+      </div>
+
+      <div className="flex gap-1">
+        <button
+          data-testid="validate-pdfa-btn"
+          onClick={() => { void onValidatePdfA?.(level); }}
+          disabled={disabled || !onValidatePdfA}
+          className="flex-1 py-1 text-xs font-medium rounded bg-muted text-foreground hover:bg-muted/80 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+        >
+          {busy ? t('common.busy') : t('pdfa.validate')}
+        </button>
+        <button
+          data-testid="convert-pdfa-btn"
+          onClick={() => { void onConvertPdfA?.(level); }}
+          disabled={disabled || !onConvertPdfA}
+          className="contextpanel-action contextpanel-action-primary"
+        >
+          {busy ? t('common.busy') : t('pdfa.convert')}
+        </button>
+      </div>
+
+      {status && (
+        <>
+          <p
+            data-testid="pdfa-status"
+            className={`text-xs leading-relaxed ${status.kind === 'error' ? 'text-destructive' : status.isValid === false ? 'text-amber-600 dark:text-amber-400' : 'text-muted-foreground'}`}
+          >
+            {status.message}
+          </p>
+          {/* After a successful conversion, surface a download button so the
+              user doesn't have to discover the Export toolbar button. */}
+          {status.kind === 'success' && status.isValid === true && onExportOpen && (
+            <button
+              data-testid="pdfa-download-btn"
+              onClick={onExportOpen}
+              className="w-full py-1 text-xs font-medium rounded bg-muted text-foreground hover:bg-muted/80 transition-colors"
+            >
+              {t('pdfa.downloadConverted')}
+            </button>
+          )}
+        </>
+      )}
     </div>
   );
 }
@@ -936,7 +1226,7 @@ function ReviewModeContent({
   const sortedPageIndices = Array.from(groups.keys()).sort((a, b) => a - b);
 
   const inputClass =
-    'w-full text-[10px] bg-card border border-border rounded px-2 py-1 text-foreground placeholder:text-muted-foreground/50 outline-none focus:ring-1 focus:ring-primary';
+    'w-full text-xs bg-card border border-border rounded px-2 py-1 text-foreground placeholder:text-muted-foreground/50 outline-none focus:ring-1 focus:ring-primary';
 
   return (
     <div className="flex flex-col gap-0.5">
@@ -959,6 +1249,7 @@ function ReviewModeContent({
           data-testid="comment-filter-input"
           type="text"
           placeholder={t('review.filterPlaceholder')}
+          aria-label={t('review.filterPlaceholder')}
           value={filterText}
           onChange={e => { setFilterText(e.target.value); }}
           className={inputClass}
@@ -968,7 +1259,7 @@ function ReviewModeContent({
             data-testid="comment-filter-author"
             value={filterAuthor}
             onChange={e => { setFilterAuthor(e.target.value); onCommentSelect(-1); }}
-            className="flex-1 text-[10px] bg-card border border-border rounded px-2 py-1 text-foreground outline-none"
+            className="flex-1 text-xs bg-card border border-border rounded px-2 py-1 text-foreground outline-none"
           >
             <option value="">{t('review.allReviewers')}</option>
             {uniqueAuthors.map(a => <option key={a} value={a}>{a}</option>)}
@@ -991,7 +1282,7 @@ function ReviewModeContent({
           data-testid="comment-filter-page"
           value={filterPage}
           onChange={e => { setFilterPage(e.target.value); onCommentSelect(-1); }}
-          className="w-full text-[10px] bg-card border border-border rounded px-2 py-1 text-foreground outline-none"
+          className="contextpanel-input"
         >
           <option value="">{t('review.allPages')}</option>
           {uniquePages.map(p => <option key={p} value={String(p)}>{t('review.commentPage', { page: p + 1 })}</option>)}
@@ -1000,7 +1291,7 @@ function ReviewModeContent({
           data-testid="comment-filter-status"
           value={filterStatus}
           onChange={e => { setFilterStatus(e.target.value as '' | 'open' | 'resolved'); onCommentSelect(-1); }}
-          className="w-full text-[10px] bg-card border border-border rounded px-2 py-1 text-foreground outline-none"
+          className="contextpanel-input"
         >
           <option value="">{t('review.allStatuses')}</option>
           <option value="open">{t('review.statusOpen')}</option>
@@ -1018,7 +1309,7 @@ function ReviewModeContent({
       </div>
 
       {/* Count label */}
-      <p data-testid="comment-filter-count" className="text-[10px] text-muted-foreground mb-1">
+      <p data-testid="comment-filter-count" className="text-xs text-muted-foreground mb-1">
         {anyFilterActive
           ? t('review.filteredCount', { filtered: filteredComments.length, total: comments.length })
           : comments.length === 1
@@ -1033,7 +1324,7 @@ function ReviewModeContent({
           onClick={() => { handleExportReview('markdown'); }}
           aria-label={t('review.exportMdAriaLabel')}
           title={t('review.exportMd')}
-          className="flex-1 py-0.5 text-[9px] rounded border border-border text-muted-foreground hover:bg-muted transition-colors"
+          className="contextpanel-action"
         >
           {t('review.exportMd')}
         </button>
@@ -1042,7 +1333,7 @@ function ReviewModeContent({
           onClick={() => { handleExportReview('json'); }}
           aria-label={t('review.exportJsonAriaLabel')}
           title={t('review.exportJson')}
-          className="flex-1 py-0.5 text-[9px] rounded border border-border text-muted-foreground hover:bg-muted transition-colors"
+          className="contextpanel-action"
         >
           {t('review.exportJson')}
         </button>
@@ -1057,7 +1348,7 @@ function ReviewModeContent({
             disabled={comments.length === 0}
             aria-label={t('review.resolveAllAriaLabel')}
             title={t('review.resolveAllAriaLabel')}
-            className="flex-1 py-0.5 text-[9px] rounded border border-border text-muted-foreground hover:bg-muted transition-colors disabled:opacity-40"
+            className="contextpanel-action"
           >
             {t('review.markAsResolved')}
           </button>
@@ -1067,7 +1358,7 @@ function ReviewModeContent({
             disabled={!comments.some(c => (c.status ?? 'open') === 'resolved')}
             aria-label={t('review.deleteResolvedAriaLabel')}
             title={t('review.deleteResolvedAriaLabel')}
-            className="flex-1 py-0.5 text-[9px] rounded border border-border text-muted-foreground hover:bg-muted transition-colors disabled:opacity-40"
+            className="contextpanel-action"
           >
             {t('review.deleteResolved')}
           </button>
@@ -1082,7 +1373,7 @@ function ReviewModeContent({
             onClick={() => { onPrevComment?.(); }}
             disabled={comments.length === 0}
             aria-label={t('review.prevCommentAriaLabel')}
-            className="flex-1 py-0.5 text-[9px] rounded border border-border text-muted-foreground hover:bg-muted transition-colors disabled:opacity-40"
+            className="contextpanel-action"
           >
             ← {t('review.prev')}
           </button>
@@ -1091,7 +1382,7 @@ function ReviewModeContent({
             onClick={() => { onNextComment?.(); }}
             disabled={comments.length === 0}
             aria-label={t('review.nextCommentAriaLabel')}
-            className="flex-1 py-0.5 text-[9px] rounded border border-border text-muted-foreground hover:bg-muted transition-colors disabled:opacity-40"
+            className="contextpanel-action"
           >
             {t('review.next')} →
           </button>
@@ -1100,7 +1391,7 @@ function ReviewModeContent({
 
       {/* Zero-results state — shown when filters are active but no comments match */}
       {anyFilterActive && filteredComments.length === 0 && (
-        <p data-testid="comment-filter-empty" className="text-[10px] text-muted-foreground/60 leading-relaxed">
+        <p data-testid="comment-filter-empty" className="text-xs text-muted-foreground/60 leading-relaxed">
           {t('review.noCommentForFilter')}
         </p>
       )}
@@ -1149,7 +1440,7 @@ function ReviewModeContent({
                         className="w-2 h-2 rounded-full shrink-0"
                         style={{ backgroundColor: comment.color || '#FFD700' }}
                       />
-                      <span className="text-[10px] font-medium text-foreground/80 truncate">
+                      <span className="text-xs font-medium text-foreground/80 truncate">
                         {comment.author || unknown}
                       </span>
                     </div>
@@ -1200,9 +1491,8 @@ function ReviewModeContent({
                         value={editText}
                         onChange={e => { setEditText(e.target.value); }}
                         rows={3}
-                        // eslint-disable-next-line jsx-a11y/no-autofocus
                         autoFocus
-                        className="w-full text-[10px] bg-card border border-primary rounded px-2 py-1 text-foreground resize-none outline-none focus:ring-1 focus:ring-primary"
+                        className="w-full text-xs bg-card border border-primary rounded px-2 py-1 text-foreground resize-none outline-none focus:ring-1 focus:ring-primary"
                       />
                       <div className="flex items-center gap-1">
                         <button
@@ -1211,14 +1501,14 @@ function ReviewModeContent({
                             onUpdateComment(comment.id, editText);
                             setEditingId(null);
                           }}
-                          className="flex-1 py-0.5 text-[9px] font-medium rounded bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
+                          className="contextpanel-action contextpanel-action-primary"
                         >
                           {t('common.save')}
                         </button>
                         <button
                           data-testid="comment-edit-cancel-btn"
                           onClick={() => { setEditingId(null); }}
-                          className="flex-1 py-0.5 text-[9px] rounded border border-border text-muted-foreground hover:bg-muted transition-colors"
+                          className="contextpanel-action"
                         >
                           {t('common.cancel')}
                         </button>
@@ -1226,7 +1516,7 @@ function ReviewModeContent({
                     </div>
                   ) : (
                     comment.contents && (
-                      <p className="text-[10px] text-muted-foreground leading-snug line-clamp-2">
+                      <p className="text-xs text-muted-foreground leading-snug line-clamp-2">
                         {comment.contents}
                       </p>
                     )
@@ -1298,7 +1588,21 @@ function RedactionPanel({
 
   async function handleApply(): Promise<void> {
     if (busy) return;
-    const confirmed = window.confirm(t('rightPanel.redactionConfirm', { count: redactions.length }));
+    let confirmed = false;
+    if (isTauriRuntime()) {
+      try {
+        const { ask } = await import('@tauri-apps/plugin-dialog');
+        confirmed = await ask(t('rightPanel.redactionConfirm', { count: redactions.length }), {
+          title: t('tasks.applyRedactTitle') || 'Apply Redactions',
+          kind: 'warning'
+        });
+      } catch (err) {
+        console.error('Tauri ask failed; cancelling redaction apply', err);
+        confirmed = false;
+      }
+    } else {
+      confirmed = false;
+    }
     if (!confirmed) return;
     const taskId = `apply-redactions-${Date.now()}`;
     push({ id: taskId, label: t('tasks.applyRedactRunning'), progress: null, status: 'running' });
@@ -1354,7 +1658,7 @@ function RedactionPanel({
       {/* Search and redact */}
       {onSearchRedact && (
         <div className="flex flex-col gap-0.5">
-          <span className="text-[9px] text-muted-foreground/70 uppercase tracking-wide">{t('protect.searchRedact')}</span>
+          <span className="contextpanel-sub-title">{t('protect.searchRedact')}</span>
           <div className="flex gap-1">
             <input
               data-testid="search-redact-input"
@@ -1363,13 +1667,14 @@ function RedactionPanel({
               onChange={e => { setSearchQuery(e.target.value); }}
               onKeyDown={e => { if (e.key === 'Enter') void handleSearchRedact(); }}
               placeholder={t('protect.searchRedactPlaceholder')}
-              className="flex-1 text-[10px] bg-card border border-border rounded px-2 py-1 text-foreground outline-none focus:ring-1 focus:ring-primary"
+              aria-label={t('protect.searchRedact')}
+              className="flex-1 text-xs bg-card border border-border rounded px-2 py-1 text-foreground outline-none focus:ring-1 focus:ring-primary"
             />
             <button
               data-testid="search-redact-btn"
               onClick={() => { void handleSearchRedact(); }}
               disabled={!searchQuery.trim() || searching}
-              className="text-[10px] px-2 py-1 bg-destructive text-destructive-foreground rounded hover:opacity-90 transition-opacity disabled:opacity-40 shrink-0"
+              className="text-xs px-2 py-1 bg-destructive text-destructive-foreground rounded hover:opacity-90 transition-opacity disabled:opacity-40 shrink-0"
             >
               {searching ? t('common.busy') : t('protect.searchRedactBtn')}
             </button>
@@ -1378,7 +1683,7 @@ function RedactionPanel({
       )}
 
       {/* Pending list + count */}
-      <p className="text-[10px] text-muted-foreground">
+      <p className="text-xs text-muted-foreground">
         {redactions.length === 0
           ? t('rightPanel.noRedactions')
           : t('rightPanel.redactionCount', { count: redactions.length })}
@@ -1388,7 +1693,7 @@ function RedactionPanel({
         data-testid="apply-redactions-btn"
         onClick={() => { void handleApply(); }}
         disabled={busy || redactions.length === 0}
-        className="w-full py-1 text-[10px] font-semibold rounded bg-destructive text-destructive-foreground hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
+        className="w-full py-1 text-xs font-semibold rounded bg-destructive text-destructive-foreground hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
       >
         {busy ? t('common.busy') : t('rightPanel.applyRedactions')}
       </button>
@@ -1401,7 +1706,7 @@ function RedactionPanel({
             className="flex items-center justify-between gap-1 py-0.5 px-1 rounded hover:bg-muted/30 cursor-pointer"
             onClick={() => { onJumpToRedaction?.(r.pageIndex); }}
           >
-            <span className="text-[10px] text-foreground/70 truncate flex-1">
+            <span className="text-xs text-foreground/70 truncate flex-1">
               p.{r.pageIndex + 1}
             </span>
             <button
@@ -1422,13 +1727,13 @@ function RedactionPanel({
       {/* Redact metadata */}
       {onRedactMetadata && (
         <div className="flex flex-col gap-0.5 pt-1 border-t border-border">
-          <span className="text-[9px] text-muted-foreground/70 uppercase tracking-wide">{t('protect.redactMetadataTitle')}</span>
-          <p className="text-[10px] text-muted-foreground">{t('protect.redactMetadataDesc')}</p>
+          <span className="contextpanel-sub-title">{t('protect.redactMetadataTitle')}</span>
+          <p className="text-xs text-muted-foreground">{t('protect.redactMetadataDesc')}</p>
           <button
             data-testid="redact-metadata-btn"
             onClick={() => { void handleRedactMetadata(); }}
             disabled={strippingMeta}
-            className="w-full py-1 text-[10px] font-medium rounded bg-muted text-foreground hover:bg-muted/80 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            className="w-full py-1 text-xs font-medium rounded bg-muted text-foreground hover:bg-muted/80 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           >
             {strippingMeta ? t('common.busy') : t('protect.redactMetadataBtn')}
           </button>
@@ -1452,21 +1757,287 @@ function colorToHex(cssColor: string): string {
   return '#000000';
 }
 
+function rgbTupleToHex(color: [number, number, number]): string {
+  return '#' + color.map(channel => {
+    const value = Math.round(Math.max(0, Math.min(1, channel)) * 255);
+    return value.toString(16).padStart(2, '0');
+  }).join('');
+}
+
+function hexToRgbTuple(hex: string): [number, number, number] {
+  const normalized = hex.startsWith('#') ? hex.slice(1) : hex;
+  const padded = normalized.padEnd(6, '0').slice(0, 6);
+  return [
+    parseInt(padded.slice(0, 2), 16) / 255,
+    parseInt(padded.slice(2, 4), 16) / 255,
+    parseInt(padded.slice(4, 6), 16) / 255,
+  ];
+}
+
+function AnnotationToolPropertiesPanel({
+  tool,
+  appearance,
+  onChange,
+}: {
+  tool: AnnotationTool;
+  appearance: AnnotationAppearance;
+  onChange?: (appearance: AnnotationAppearance) => void;
+}) {
+  const { t } = useTranslation();
+  if (!tool || tool === 'redaction') return null;
+
+  const colorHex = rgbTupleToHex(appearance.color);
+  const setColor = (hex: string) => {
+    onChange?.({ ...appearance, color: hexToRgbTuple(hex) });
+  };
+  const swatches = ['#ffff00', '#22c55e', '#38bdf8', '#f472b6', '#f97316', '#ef4444'];
+
+  return (
+    <div className="flex flex-col gap-3" data-testid="annotation-tool-properties-panel">
+      <div className="flex flex-col gap-1.5">
+        <label className="text-[9px] uppercase tracking-wide text-muted-foreground/70">
+          {t('rightPanel.annotationColor')}
+        </label>
+        <div className="flex items-center gap-1.5">
+          {swatches.map(hex => (
+            <button
+              key={hex}
+              type="button"
+              data-testid={`annotation-tool-color-${hex.slice(1)}`}
+              onClick={() => { setColor(hex); }}
+              className={`h-5 w-5 rounded-full border transition-transform hover:scale-110 ${
+                colorHex.toLowerCase() === hex ? 'border-foreground ring-2 ring-primary/25' : 'border-border'
+              }`}
+              style={{ backgroundColor: hex }}
+              aria-label={t('rightPanel.annotationColorValue', { color: hex })}
+              title={hex}
+            />
+          ))}
+          <input
+            data-testid="annotation-tool-color-picker"
+            type="color"
+            value={colorHex}
+            onChange={(event) => { setColor(event.target.value); }}
+            className="h-5 w-5 rounded border border-border bg-transparent p-0"
+            aria-label={t('rightPanel.changeColor')}
+          />
+        </div>
+      </div>
+
+      {tool === 'rectangle' && (
+        <div className="flex flex-col gap-1.5">
+          <div className="flex items-center justify-between gap-2">
+            <label className="text-[9px] uppercase tracking-wide text-muted-foreground/70">
+              {t('rightPanel.strokeWidth')}
+            </label>
+            <span className="text-[10px] tabular-nums text-muted-foreground">
+              {appearance.strokeWidth.toFixed(1)}
+            </span>
+          </div>
+          <input
+            data-testid="annotation-tool-stroke-width"
+            type="range"
+            min={0.5}
+            max={6}
+            step={0.5}
+            value={appearance.strokeWidth}
+            onChange={(event) => {
+              onChange?.({ ...appearance, strokeWidth: Number(event.target.value) });
+            }}
+            className="w-full accent-primary"
+            aria-label={t('rightPanel.strokeWidth')}
+          />
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Edit mode — text properties panel
+// ---------------------------------------------------------------------------
+
+function TextPropertiesPanel({
+  target,
+  formatState,
+  onFormatCommand
+}: {
+  target: TextParagraphTarget | null | undefined;
+  formatState?: { isBold: boolean; isItalic: boolean; isUnderline: boolean; isStrikethrough: boolean };
+  onFormatCommand?: (command: string, value?: string) => void;
+}) {
+  const { t } = useTranslation();
+  const [localFontSize, setLocalFontSize] = useState<number>(12);
+
+  useEffect(() => {
+    if (target) {
+      const spanFontSize = target.lines[0]?.spans[0]?.fontSize;
+      if (spanFontSize) {
+        setLocalFontSize(Math.round(spanFontSize));
+      }
+    }
+  }, [target]);
+
+  if (!target) {
+    return <PlaceholderText text={t('edit.noTextSelected')} />;
+  }
+
+  const changeFontSize = (delta: number) => {
+    const newSize = Math.max(6, Math.min(72, localFontSize + delta));
+    setLocalFontSize(newSize);
+    onFormatCommand?.('fontSize', String(newSize));
+  };
+
+  return (
+    <div className="flex flex-col gap-4 p-3 bg-background/35 rounded-xl border border-border/10 shadow-sm animate-in fade-in duration-200" data-testid="text-properties-panel">
+      {/* ── Font size ── */}
+      <div className="flex flex-col gap-1">
+        <span className="contextpanel-sub-title">{t('edit.fontSize')}</span>
+        <div className="flex items-center gap-2">
+          <div className="flex items-center bg-muted/40 p-0.5 rounded-lg border border-border/40">
+            <button
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => changeFontSize(-1)}
+              className="px-2 py-1 text-xs hover:bg-background/80 rounded-md transition-all duration-150 text-muted-foreground hover:text-foreground font-bold cursor-pointer font-sans"
+              title={t('edit.smaller')}
+            >
+              −
+            </button>
+            <span className="px-3 text-xs font-medium text-foreground tabular-nums min-w-[3rem] text-center">
+              {localFontSize} pt
+            </span>
+            <button
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => changeFontSize(1)}
+              className="px-2 py-1 text-xs hover:bg-background/80 rounded-md transition-all duration-150 text-muted-foreground hover:text-foreground font-bold cursor-pointer font-sans"
+              title={t('edit.larger')}
+            >
+              +
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Text style ── */}
+      <div className="flex flex-col gap-1">
+        <span className="contextpanel-sub-title">{t('edit.style')}</span>
+        <div className="flex items-center gap-1 bg-muted/40 p-0.5 rounded-lg border border-border/40 w-max">
+          <button
+            data-testid="text-props-bold-btn"
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={() => onFormatCommand?.('bold')}
+            className={`p-1.5 rounded-md hover:bg-background/80 transition-all duration-200 cursor-pointer ${
+              formatState?.isBold
+                ? 'bg-background text-primary shadow-sm ring-1 ring-black/5 font-semibold'
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
+            title={t('edit.bold')}
+          >
+            <BoldIcon className="w-3.5 h-3.5" />
+          </button>
+          <button
+            data-testid="text-props-italic-btn"
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={() => onFormatCommand?.('italic')}
+            className={`p-1.5 rounded-md hover:bg-background/80 transition-all duration-200 cursor-pointer ${
+              formatState?.isItalic
+                ? 'bg-background text-primary shadow-sm ring-1 ring-black/5 font-semibold'
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
+            title={t('edit.italic')}
+          >
+            <ItalicIcon className="w-3.5 h-3.5" />
+          </button>
+          <button
+            data-testid="text-props-underline-btn"
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={() => onFormatCommand?.('underline')}
+            className={`p-1.5 rounded-md hover:bg-background/80 transition-all duration-200 cursor-pointer ${
+              formatState?.isUnderline
+                ? 'bg-background text-primary shadow-sm ring-1 ring-black/5 font-semibold'
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
+            title={t('edit.underline')}
+          >
+            <UnderlineIcon className="w-3.5 h-3.5" />
+          </button>
+          <button
+            data-testid="text-props-strike-btn"
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={() => onFormatCommand?.('strikeThrough')}
+            className={`p-1.5 rounded-md hover:bg-background/80 transition-all duration-200 cursor-pointer ${
+              formatState?.isStrikethrough
+                ? 'bg-background text-primary shadow-sm ring-1 ring-black/5 font-semibold'
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
+            title={t('edit.strikethrough')}
+          >
+            <StrikethroughIcon className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      </div>
+
+      {/* ── Text color ── */}
+      <div className="flex flex-col gap-1.5">
+        <span className="contextpanel-sub-title">{t('edit.textColor')}</span>
+        <div className="flex items-center gap-2 flex-wrap">
+          {[
+            { name: t('edit.colorBlack'), hex: '#000000', bg: 'bg-black' },
+            { name: t('edit.colorDarkGray'), hex: '#4b5563', bg: 'bg-gray-600' },
+            { name: t('edit.colorLightGray'), hex: '#9ca3af', bg: 'bg-gray-400' },
+            { name: t('edit.colorRed'), hex: '#ef4444', bg: 'bg-red-500' },
+            { name: t('edit.colorBlue'), hex: '#3b82f6', bg: 'bg-blue-500' },
+            { name: t('edit.colorGreen'), hex: '#10b981', bg: 'bg-emerald-500' },
+            { name: t('edit.colorGoldOrange'), hex: '#f59e0b', bg: 'bg-amber-500' },
+          ].map((color) => (
+            <button
+              key={color.hex}
+              data-testid={`text-color-${color.hex.slice(1)}`}
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => onFormatCommand?.('foreColor', color.hex)}
+              className={`w-5 h-5 rounded-full border border-border/25 shadow-sm transition-transform duration-200 hover:scale-110 active:scale-95 cursor-pointer ${color.bg}`}
+              title={color.name}
+            />
+          ))}
+        </div>
+      </div>
+
+      {/* Source metadata */}
+      <div className="mt-2 pt-2 border-t border-border/10 flex justify-between items-center text-[9px] text-muted-foreground/50">
+        <span>{t('edit.source')}</span>
+        <span className="font-medium uppercase">
+          {target.source === 'ocr' ? t('edit.sourceOcr') : t('edit.sourceDigital')}
+        </span>
+      </div>
+    </div>
+  );
+}
+
 // ---------------------------------------------------------------------------
 // Main component
 // ---------------------------------------------------------------------------
 
-export function RightContextPanel({ mode, pdfDoc, pageCount, formFields, comments, activeCommentIdx, onCommentSelect, onDeleteComment, onUpdateComment, onToggleResolved, onAddReply, onDeleteReply, onNextComment, onPrevComment, onResolveAll, onDeleteAllResolved, scannedPageIndices = new Set(), onRunOcr, ocrRunning, ocrVisible = true, onOcrVisibleChange, ocrConfidenceThreshold = 0.6, onOcrConfidenceChange, activeFieldIdx, onFieldSelect, onSetFieldValue, formValidationErrors, onFormSubmit, authorName, onAuthorChange, onMetadataChange, selectedAnnotation, onDeleteSelectedAnnotation, onUpdateAnnotationColor, redactions = [], onApplyRedactions, onDeleteRedaction, onJumpToRedaction, onRedactSearch, onRedactMetadata }: RightContextPanelProps) {
+export function RightContextPanel({ mode, pdfDoc, pageCount, formFields, comments, activeCommentIdx, onCommentSelect, onDeleteComment, onUpdateComment, onToggleResolved, onAddReply, onDeleteReply, onNextComment, onPrevComment, onResolveAll, onDeleteAllResolved, scannedPageIndices = new Set(), onRunOcr, ocrRunning, ocrVisible = true, onOcrVisibleChange, ocrConfidenceThreshold = 0.6, onOcrConfidenceChange, activeFieldIdx, onFieldSelect, onSetFieldValue, formValidationErrors, onFormSubmit, authorName, onAuthorChange, onMetadataChange, selectedAnnotation, activeAnnotationTool, annotationAppearance = DEFAULT_ANNOTATION_APPEARANCE, onAnnotationAppearanceChange, onDeleteSelectedAnnotation, onUpdateAnnotationColor, redactions = [], onApplyRedactions, onWatermarkApplied, onDeleteRedaction, onJumpToRedaction, onRedactSearch, onRedactMetadata, onValidatePdfA, onConvertPdfA, pdfaBusy, pdfaStatus, onExportOpen, selectedTextTarget, formatState, onFormatCommand, onClose }: RightContextPanelProps) {
   const { t } = useTranslation();
   return (
-    <div className="w-48 flex flex-col bg-background border-l border-border shrink-0 overflow-hidden">
+    <aside className="contextpanel" aria-label={t('rightPanel.properties')}>
       {/* Panel header */}
-      <div className="h-9 flex items-center px-3 border-b border-border shrink-0">
-        <span className="text-xs font-medium text-foreground">{t('rightPanel.properties')}</span>
-      </div>
+      <header className="contextpanel-header">
+        <span className="contextpanel-title">{t('rightPanel.properties')}</span>
+        {onClose && (
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label={t('rightPanel.close')}
+            className="contextpanel-close"
+          >
+            <XIcon aria-hidden="true" />
+          </button>
+        )}
+      </header>
 
       {/* Sections */}
-      <div className="flex-1 overflow-y-auto pf-scrollbar">
+      <div className="contextpanel-body pf-scrollbar">
 
         {/* ── Read mode ──────────────────────────────────────────────────── */}
         {mode === 'read' && (
@@ -1480,6 +2051,15 @@ export function RightContextPanel({ mode, pdfDoc, pageCount, formFields, comment
         {/* ── Review mode ────────────────────────────────────────────────── */}
         {mode === 'review' && (
           <>
+            {activeAnnotationTool && activeAnnotationTool !== 'redaction' && (
+              <CollapsibleSection title={t('rightPanel.toolProperties')}>
+                <AnnotationToolPropertiesPanel
+                  tool={activeAnnotationTool}
+                  appearance={annotationAppearance}
+                  onChange={onAnnotationAppearanceChange}
+                />
+              </CollapsibleSection>
+            )}
             {/* Selected markup annotation properties */}
             {selectedAnnotation && (
               <CollapsibleSection title={t('rightPanel.markup')}>
@@ -1499,14 +2079,14 @@ export function RightContextPanel({ mode, pdfDoc, pageCount, formFields, comment
                       className="w-5 h-5 rounded shrink-0 border border-border cursor-pointer p-0"
                       aria-label={t('rightPanel.changeColor')}
                     />
-                    <span className="text-[10px] text-muted-foreground truncate capitalize">
+                    <span className="text-xs text-muted-foreground truncate capitalize">
                       {selectedAnnotation.type} · p.{selectedAnnotation.pageIndex + 1}
                     </span>
                   </div>
                   <button
                     data-testid="delete-selected-annotation-btn"
                     onClick={() => { onDeleteSelectedAnnotation?.(selectedAnnotation.id); }}
-                    className="flex items-center gap-1 px-2 py-1 rounded text-[10px] text-destructive hover:bg-destructive/10 transition-colors"
+                    className="flex items-center gap-1 px-2 py-1 rounded text-xs text-destructive hover:bg-destructive/10 transition-colors"
                     aria-label={t('rightPanel.deleteMarkup')}
                   >
                     <TrashIcon className="w-3 h-3" />
@@ -1534,14 +2114,18 @@ export function RightContextPanel({ mode, pdfDoc, pageCount, formFields, comment
           </CollapsibleSection>
         )}
 
+        {/* ── Sign mode ──────────────────────────────────────────────────── */}
+        {mode === 'sign' && (
+          <CollapsibleSection title={t('rightPanel.signatures')}>
+            <SignaturePanel pdfDoc={pdfDoc} />
+          </CollapsibleSection>
+        )}
+
         {/* ── Protect mode ───────────────────────────────────────────────── */}
         {mode === 'protect' && (
           <>
             <CollapsibleSection title={t('rightPanel.redactions')}>
               <RedactionPanel redactions={redactions} onApplyRedactions={onApplyRedactions} onDeleteRedaction={onDeleteRedaction} onJumpToRedaction={onJumpToRedaction} onSearchRedact={onRedactSearch} onRedactMetadata={onRedactMetadata} />
-            </CollapsibleSection>
-            <CollapsibleSection title={t('rightPanel.signatures')}>
-              <SignaturePanel pdfDoc={pdfDoc} />
             </CollapsibleSection>
             <CollapsibleSection title={t('rightPanel.securitySettings')}>
               <EncryptDecryptControls />
@@ -1552,23 +2136,34 @@ export function RightContextPanel({ mode, pdfDoc, pageCount, formFields, comment
           </>
         )}
 
-        {/* ── Edit mode — OCR ─────────────────────────────────────────────── */}
+        {/* ── Edit mode ───────────────────────────────────────────────────── */}
         {mode === 'edit' && (
           <>
-            <CollapsibleSection title={t('rightPanel.ocr')}>
+            <CollapsibleSection title={t('edit.textProperties')}>
+              <TextPropertiesPanel target={selectedTextTarget} formatState={formatState} onFormatCommand={onFormatCommand} />
+            </CollapsibleSection>
+            <CollapsibleSection title={t('rightPanel.ocr')} defaultOpen={false}>
               <OcrPanel scannedPageIndices={scannedPageIndices} onRunOcr={onRunOcr} ocrRunning={ocrRunning} ocrVisible={ocrVisible} onOcrVisibleChange={onOcrVisibleChange} ocrConfidenceThreshold={ocrConfidenceThreshold} onOcrConfidenceChange={onOcrConfidenceChange} />
+            </CollapsibleSection>
+            <CollapsibleSection title={t('toolbar.watermark')} defaultOpen={false}>
+              <WatermarkControls onApplied={onWatermarkApplied} />
             </CollapsibleSection>
           </>
         )}
 
         {/* ── Convert mode — OCR ──────────────────────────────────────────── */}
         {mode === 'convert' && (
-          <CollapsibleSection title={t('rightPanel.ocr')}>
-            <OcrPanel scannedPageIndices={scannedPageIndices} onRunOcr={onRunOcr} ocrRunning={ocrRunning} ocrVisible={ocrVisible} onOcrVisibleChange={onOcrVisibleChange} ocrConfidenceThreshold={ocrConfidenceThreshold} onOcrConfidenceChange={onOcrConfidenceChange} />
-          </CollapsibleSection>
+          <>
+            <CollapsibleSection title={t('rightPanel.pdfa')}>
+              <PdfAPanel pdfDoc={pdfDoc} busy={pdfaBusy} status={pdfaStatus} onValidatePdfA={onValidatePdfA} onConvertPdfA={onConvertPdfA} onExportOpen={onExportOpen} />
+            </CollapsibleSection>
+            <CollapsibleSection title={t('rightPanel.ocr')}>
+              <OcrPanel scannedPageIndices={scannedPageIndices} onRunOcr={onRunOcr} ocrRunning={ocrRunning} ocrVisible={ocrVisible} onOcrVisibleChange={onOcrVisibleChange} ocrConfidenceThreshold={ocrConfidenceThreshold} onOcrConfidenceChange={onOcrConfidenceChange} />
+            </CollapsibleSection>
+          </>
         )}
 
       </div>
-    </div>
+    </aside>
   );
 }

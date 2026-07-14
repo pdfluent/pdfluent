@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 import { readFileSync } from 'node:fs';
@@ -167,8 +167,9 @@ describe('Rust OCR bridge — guardrails', () => {
 // ---------------------------------------------------------------------------
 
 describe('OcrPanel — UI guardrails', () => {
-  it('run button disabled when ocrRunning is true', () => {
-    expect(rightPanelSource).toContain('disabled={ocrRunning}');
+  it('run button disabled through combined runtime guard', () => {
+    expect(rightPanelSource).toContain('const controlsDisabled = ocrRunning || !runtimeAvailable || ocrStatusChecking');
+    expect(rightPanelSource).toContain('disabled={controlsDisabled}');
   });
 
   it('onRunOcr called with optional chaining (safe when prop absent)', () => {

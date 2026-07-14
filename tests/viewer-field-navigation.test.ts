@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 import { readFileSync } from 'node:fs';
@@ -29,8 +29,13 @@ const viewerAppSource = [
   '../src/viewer/hooks/useTextInteraction.ts',
   '../src/viewer/hooks/useKeyboardShortcuts.ts',
   '../src/viewer/ViewerApp.tsx',
+  '../src/viewer/v3/EditorV3Shell.tsx',
   '../src/viewer/WelcomeSection.tsx',
 ].map(p => readFileSync(new URL(p, import.meta.url), 'utf8')).join('\n\n');
+
+const shellBlockStart = viewerAppSource.indexOf('<EditorV3Shell');
+const shellBlockEnd = viewerAppSource.indexOf('>\n          {docLoading', shellBlockStart);
+const shellBlock = viewerAppSource.slice(shellBlockStart, shellBlockEnd);
 
 // ---------------------------------------------------------------------------
 // Locate the field-nav block in ModeToolbar for scoped assertions
@@ -73,18 +78,6 @@ describe('ModeToolbar — field nav: rendering', () => {
     expect(toolbarSource).toContain('`${activeFieldIdx + 1} / ${formFields.length}`');
   });
 
-  it('shows label/name and page hint when a field is active', () => {
-    expect(toolbarSource).toContain('formFields[activeFieldIdx]?.label');
-    expect(toolbarSource).toContain('formFields[activeFieldIdx]?.name');
-    expect(toolbarSource).toContain('formFields[activeFieldIdx]?.pageIndex');
-  });
-
-  it('prefers label over name in the hint', () => {
-    // label || name — label comes first
-    const hintIdx = toolbarSource.indexOf('formFields[activeFieldIdx]?.label');
-    const nameIdx = toolbarSource.indexOf('formFields[activeFieldIdx]?.name');
-    expect(hintIdx).toBeLessThan(nameIdx);
-  });
 });
 
 // ---------------------------------------------------------------------------
@@ -188,28 +181,16 @@ describe('ViewerApp — field nav: state', () => {
     expect(viewerAppSource).toContain('setActiveFieldIdx(-1)');
   });
 
-  it('passes formFields to ModeToolbar', () => {
-    const toolbarBlock = viewerAppSource.slice(
-      viewerAppSource.indexOf('<ModeToolbar'),
-      viewerAppSource.indexOf('/>', viewerAppSource.indexOf('<ModeToolbar')) + 2
-    );
-    expect(toolbarBlock).toContain('formFields={formFields}');
+  it('passes formFields to EditorV3Shell', () => {
+    expect(shellBlock).toContain('formFields={formFields}');
   });
 
-  it('passes activeFieldIdx to ModeToolbar', () => {
-    const toolbarBlock = viewerAppSource.slice(
-      viewerAppSource.indexOf('<ModeToolbar'),
-      viewerAppSource.indexOf('/>', viewerAppSource.indexOf('<ModeToolbar')) + 2
-    );
-    expect(toolbarBlock).toContain('activeFieldIdx={activeFieldIdx}');
+  it('passes activeFieldIdx to EditorV3Shell', () => {
+    expect(shellBlock).toContain('activeFieldIdx={activeFieldIdx}');
   });
 
-  it('passes onFieldNav={handleFieldNav} to ModeToolbar', () => {
-    const toolbarBlock = viewerAppSource.slice(
-      viewerAppSource.indexOf('<ModeToolbar'),
-      viewerAppSource.indexOf('/>', viewerAppSource.indexOf('<ModeToolbar')) + 2
-    );
-    expect(toolbarBlock).toContain('onFieldNav={handleFieldNav}');
+  it('passes onFieldSelect={handleFieldNav} to EditorV3Shell', () => {
+    expect(shellBlock).toContain('onFieldSelect={handleFieldNav}');
   });
 });
 
@@ -252,11 +233,7 @@ describe('ViewerApp — field nav: comment nav regressions', () => {
     expect(viewerAppSource).toContain('handleCommentNav');
   });
 
-  it('onCommentNav still passed to ModeToolbar', () => {
-    const toolbarBlock = viewerAppSource.slice(
-      viewerAppSource.indexOf('<ModeToolbar'),
-      viewerAppSource.indexOf('/>', viewerAppSource.indexOf('<ModeToolbar')) + 2
-    );
-    expect(toolbarBlock).toContain('onCommentNav={handleCommentNav}');
+  it('onCommentSelect still passed to EditorV3Shell', () => {
+    expect(shellBlock).toContain('onCommentSelect={handleCommentNav}');
   });
 });

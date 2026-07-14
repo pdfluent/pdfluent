@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 import { check } from "@tauri-apps/plugin-updater";
@@ -100,4 +100,24 @@ export function scheduleStartupUpdateCheck(
   }, STARTUP_CHECK_DELAY_MS);
 
   return () => clearTimeout(timer);
+}
+
+// ---------------------------------------------------------------------------
+// Restart / relaunch (finishing an installed update)
+// ---------------------------------------------------------------------------
+
+/** True only inside the Tauri desktop runtime (false in a browser / vitest). */
+export function isTauriRuntime(): boolean {
+  return typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
+}
+
+/**
+ * Relaunch the app to finish applying an installed update. No-op outside the
+ * Tauri runtime (browser/tests). Throws if the process-plugin relaunch fails so
+ * the caller can fall back to manual-restart instructions.
+ */
+export async function relaunchApp(): Promise<void> {
+  if (!isTauriRuntime()) return;
+  const { relaunch } = await import("@tauri-apps/plugin-process");
+  await relaunch();
 }

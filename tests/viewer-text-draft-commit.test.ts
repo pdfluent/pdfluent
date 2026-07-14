@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 /**
@@ -327,8 +327,9 @@ describe('errorCenter — makeTextMutationError', () => {
 // ---------------------------------------------------------------------------
 
 describe('ViewerApp — commit pipeline wiring', () => {
-  it('imports getTauriTextMutationEngine', () => {
-    expect(viewerAppSrc).toContain('getTauriTextMutationEngine');
+  it('uses canonical mutation engine, not direct Tauri import', () => {
+    expect(viewerAppSrc).toContain('getCanonicalTextMutationEngine');
+    expect(viewerAppSrc).not.toContain('getTauriTextMutationEngine');
   });
 
   it('imports getMutationSupport from textMutationSupport', () => {
@@ -372,7 +373,8 @@ describe('ViewerApp — commit pipeline wiring', () => {
 
   it('handleDraftCommit appends error on mutation failure', () => {
     const idx = viewerAppSrc.indexOf('handleDraftCommit');
-    const block = viewerAppSrc.slice(idx, idx + 1500);
+    // v2: handleDraftCommit body grew with better error handling.
+    const block = viewerAppSrc.slice(idx, idx + 6000);
     expect(block).toContain('makeTextMutationError');
   });
 

@@ -1,14 +1,16 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
+import { isTauriRuntime } from '../../lib/tauri-detection';
 import { useRef, useEffect, useCallback, type Dispatch, type SetStateAction } from 'react';
 import type { PdfDocument } from '../../core/document';
+import { rememberFileAccess, prepareRecentOpen, releaseFileAccess } from '../state/fileBookmarks';
 
-const isTauri = typeof window !== 'undefined' && '__TAURI__' in window;
+const isTauri = isTauriRuntime();
 
 export function useDocumentLifecycle(
   isDirty: boolean,
@@ -32,6 +34,9 @@ export function useDocumentLifecycle(
   const isSavingRef = useRef(false);
   const docLoadingRef = useRef(docLoading);
   useEffect(() => { docLoadingRef.current = docLoading; }, [docLoading]);
+  // The path whose macOS security-scoped access we started for a recent reopen,
+  // so we can balance it with a stop on document change / close.
+  const activeScopedPathRef = useRef<string | null>(null);
 
   // ---------------------------------------------------------------------------
   // Save As
@@ -42,14 +47,15 @@ export function useDocumentLifecycle(
     if (docLoadingRef.current) return;
     isSavingRef.current = true;
     try {
-      const { save } = await import('@tauri-apps/plugin-dialog');
-      const path = await save({ filters: [{ name: 'PDF', extensions: ['pdf'] }] });
-      if (!path) return;
       const { invoke } = await import('@tauri-apps/api/core');
-      await invoke('save_pdf', { path });
+      const path = await invoke<string | null>('save_pdf_as_dialog');
+      if (!path) return;
       setCurrentFilePath(path);
       clearDirty();
       addRecentFile(path);
+      // Remember a security-scoped bookmark so the saved file survives in Recent
+      // across a sandboxed relaunch (no-op off macOS; blob stays in Rust).
+      void rememberFileAccess(path);
     } catch { /* silent — task queue lives in TopBar, not here */ }
     finally { isSavingRef.current = false; }
   }, [pageCount, clearDirty, addRecentFile]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -61,15 +67,38 @@ export function useDocumentLifecycle(
   // Wrap loadDocument to capture the file path when opened from disk.
   // Guard: ask for confirmation when unsaved changes would be discarded.
   const handleLoadDocument = useCallback(async (source: string | ArrayBuffer): Promise<void> => {
+    // Balance scoped access of the previously-open recent file before switching.
+    const releasePrevious = (): void => {
+      const prev = activeScopedPathRef.current;
+      const next = typeof source === 'string' ? source : null;
+      if (prev && prev !== next) {
+        void releaseFileAccess(prev);
+        activeScopedPathRef.current = null;
+      }
+    };
+    // Re-acquire sandbox access for a recent file reopened by stored path before
+    // loading. No-op for fresh picks (no stored bookmark, already granted) /
+    // ArrayBuffer sources / non-macOS.
+    const beginAccess = async (): Promise<void> => {
+      if (typeof source !== 'string') return;
+      const granted = await prepareRecentOpen(source);
+      if (granted) activeScopedPathRef.current = source;
+    };
     if (isDirty) {
       pendingActionRef.current = () => {
         setCurrentFilePath(typeof source === 'string' ? source : null);
-        void loadDocument(source);
+        void (async () => {
+          releasePrevious();
+          await beginAccess();
+          void loadDocument(source);
+        })();
       };
       setUnsavedDialogOpen(true);
       return;
     }
     setCurrentFilePath(typeof source === 'string' ? source : null);
+    releasePrevious();
+    await beginAccess();
     await loadDocument(source);
   }, [isDirty, loadDocument]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -81,7 +110,22 @@ export function useDocumentLifecycle(
     if (pdfDoc.id === lastDocIdRef.current) return;
     lastDocIdRef.current = pdfDoc.id;
     addRecentFile(currentFilePath);
+    // Remember a security-scoped bookmark so this file can be reopened from
+    // Recent after a sandboxed relaunch (no-op off macOS; blob stays in Rust).
+    void rememberFileAccess(currentFilePath);
   }, [pdfDoc?.id, currentFilePath, addRecentFile]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Balance security-scoped access when the document is closed (pdfDoc → null).
+  // Document *switches* are balanced in handleLoadDocument; app exit is balanced
+  // in the Rust run loop.
+  useEffect(() => {
+    if (pdfDoc) return;
+    const prev = activeScopedPathRef.current;
+    if (prev) {
+      void releaseFileAccess(prev);
+      activeScopedPathRef.current = null;
+    }
+  }, [pdfDoc]);
 
   // Warn the browser / OS when there are unsaved changes and the window is closed.
   useEffect(() => {

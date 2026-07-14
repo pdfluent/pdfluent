@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 import { describe, it, expect } from 'vitest';
@@ -26,19 +26,14 @@ const barSource = readFileSync(
 // ---------------------------------------------------------------------------
 
 describe('TEXT_CONTEXT_ACTIONS', () => {
-  it('contains all five actions', () => {
+  it('contains direct document actions only', () => {
     const ids = TEXT_CONTEXT_ACTIONS.map(a => a.id);
-    const expected: TextContextActionId[] = ['annotate', 'redact', 'copy', 'summarize', 'explain'];
+    const expected: TextContextActionId[] = ['edit-text', 'annotate', 'redact'];
     for (const id of expected) {
       expect(ids).toContain(id);
     }
-  });
-
-  it('copy is available in all main content modes', () => {
-    const copy = TEXT_CONTEXT_ACTIONS.find(a => a.id === 'copy')!;
-    expect(copy.availableIn).toContain('read');
-    expect(copy.availableIn).toContain('review');
-    expect(copy.availableIn).toContain('edit');
+    expect(ids).not.toContain('summarize' as TextContextActionId);
+    expect(ids).not.toContain('explain' as TextContextActionId);
   });
 
   it('annotate is available in review and edit', () => {
@@ -53,10 +48,10 @@ describe('TEXT_CONTEXT_ACTIONS', () => {
     expect(redact.availableIn).toContain('edit');
   });
 
-  it('each action has a label and icon', () => {
+  it('each action has a label and lucide icon component', () => {
     for (const action of TEXT_CONTEXT_ACTIONS) {
       expect(action.label.length).toBeGreaterThan(0);
-      expect(action.icon.length).toBeGreaterThan(0);
+      expect(['function', 'object']).toContain(typeof action.icon);
     }
   });
 
@@ -94,8 +89,8 @@ describe('shouldShowContextBar', () => {
     expect(shouldShowContextBar('edit', makeParagraph())).toBe(true);
   });
 
-  it('returns true in read mode with a selected paragraph (copy is available)', () => {
-    expect(shouldShowContextBar('read', makeParagraph())).toBe(true);
+  it('returns false in read mode with a selected paragraph (no actions available)', () => {
+    expect(shouldShowContextBar('read', makeParagraph())).toBe(false);
   });
 
   it('returns true in review mode', () => {

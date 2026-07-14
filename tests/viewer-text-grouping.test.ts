@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 import { describe, it, expect } from 'vitest';
@@ -15,7 +15,7 @@ import type { OcrWordBox } from '../src/viewer/text/textInteractionModel';
 // ---------------------------------------------------------------------------
 
 function span(text: string, x: number, y: number, w = 40, h = 12, fs = 12): TextSpan {
-  return { text, rect: { x, y, width: w, height: h }, fontSize: fs };
+  return { text, rect: { x, y, width: w, height: h }, fontSize: fs, widthSource: 'Metric' };
 }
 
 // ---------------------------------------------------------------------------
@@ -65,7 +65,9 @@ describe('groupDigitalTextSpans — line grouping', () => {
     const spans = [span('hello', 10, 700), span('world', 60, 700)];
     const result = groupDigitalTextSpans(spans, 0);
     expect(result.lines).toHaveLength(1);
-    expect(result.lines[0]?.spans).toHaveLength(2);
+    // Since they are contiguous and share visual style, they get merged into one span
+    expect(result.lines[0]?.spans).toHaveLength(1);
+    expect(result.lines[0]?.spans[0]?.text).toBe('hello world');
   });
 
   it('separates spans on clearly different Y into different lines', () => {
@@ -86,8 +88,8 @@ describe('groupDigitalTextSpans — line grouping', () => {
   it('orders spans within a line left-to-right', () => {
     const spans = [span('world', 60, 700), span('hello', 10, 700)];
     const result = groupDigitalTextSpans(spans, 0);
-    expect(result.lines[0]?.spans[0]?.text).toBe('hello');
-    expect(result.lines[0]?.spans[1]?.text).toBe('world');
+    // Spans are ordered left-to-right before merging, resulting in "hello world"
+    expect(result.lines[0]?.spans[0]?.text).toBe('hello world');
   });
 
   it('groups spans with slight Y variation into the same line', () => {
@@ -166,7 +168,7 @@ describe('groupDigitalTextSpans — block grouping', () => {
   });
 
   it('union rect of block covers all contained paragraphs', () => {
-    const spans = [span('x', 10, 700, 100, 12), span('y', 20, 680, 80, 12)];
+    const spans = [span('x'.repeat(15), 10, 700, 100, 12), span('y'.repeat(12), 20, 680, 80, 12)];
     const result = groupDigitalTextSpans(spans, 0);
     const block = result.blocks[0]!;
     // The block rect should contain the span rects

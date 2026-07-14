@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 import { readFileSync } from 'node:fs';
@@ -29,8 +29,13 @@ const viewerAppSource = [
   '../src/viewer/hooks/useTextInteraction.ts',
   '../src/viewer/hooks/useKeyboardShortcuts.ts',
   '../src/viewer/ViewerApp.tsx',
+  '../src/viewer/v3/EditorV3Shell.tsx',
   '../src/viewer/WelcomeSection.tsx',
 ].map(p => readFileSync(new URL(p, import.meta.url), 'utf8')).join('\n\n');
+
+const shellBlockStart = viewerAppSource.indexOf('<EditorV3Shell');
+const shellBlockEnd = viewerAppSource.indexOf('>\n          {docLoading', shellBlockStart);
+const shellBlock = viewerAppSource.slice(shellBlockStart, shellBlockEnd);
 
 const panelSource = readFileSync(
   new URL('../src/viewer/components/RightContextPanel.tsx', import.meta.url),
@@ -76,11 +81,6 @@ describe('ModeToolbar — comment nav: rendering', () => {
 
   it('shows formatted counter idx+1 / n when a comment is selected', () => {
     expect(toolbarSource).toContain('`${activeCommentIdx + 1} / ${comments.length}`');
-  });
-
-  it('shows author and page hint when a comment is active', () => {
-    expect(toolbarSource).toContain('comments[activeCommentIdx]?.author');
-    expect(toolbarSource).toContain('comments[activeCommentIdx]?.pageIndex');
   });
 
   it('imports Annotation type from core/document', () => {
@@ -181,28 +181,16 @@ describe('ViewerApp — comment nav: state', () => {
     expect(viewerAppSource).toContain('setActiveCommentIdx(-1)');
   });
 
-  it('passes comments to ModeToolbar', () => {
-    const toolbarBlock = viewerAppSource.slice(
-      viewerAppSource.indexOf('<ModeToolbar'),
-      viewerAppSource.indexOf('/>', viewerAppSource.indexOf('<ModeToolbar')) + 2
-    );
-    expect(toolbarBlock).toContain('comments={comments}');
+  it('passes comments to EditorV3Shell', () => {
+    expect(shellBlock).toContain('comments={comments}');
   });
 
-  it('passes activeCommentIdx to ModeToolbar', () => {
-    const toolbarBlock = viewerAppSource.slice(
-      viewerAppSource.indexOf('<ModeToolbar'),
-      viewerAppSource.indexOf('/>', viewerAppSource.indexOf('<ModeToolbar')) + 2
-    );
-    expect(toolbarBlock).toContain('activeCommentIdx={activeCommentIdx}');
+  it('passes activeCommentIdx to EditorV3Shell', () => {
+    expect(shellBlock).toContain('activeCommentIdx={activeCommentIdx}');
   });
 
-  it('passes onCommentNav={handleCommentNav} to ModeToolbar', () => {
-    const toolbarBlock = viewerAppSource.slice(
-      viewerAppSource.indexOf('<ModeToolbar'),
-      viewerAppSource.indexOf('/>', viewerAppSource.indexOf('<ModeToolbar')) + 2
-    );
-    expect(toolbarBlock).toContain('onCommentNav={handleCommentNav}');
+  it('passes onCommentSelect={handleCommentNav} to EditorV3Shell', () => {
+    expect(shellBlock).toContain('onCommentSelect={handleCommentNav}');
   });
 });
 

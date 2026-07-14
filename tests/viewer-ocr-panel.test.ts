@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 import { readFileSync } from 'node:fs';
@@ -141,11 +141,12 @@ describe('OcrPanel — run OCR button', () => {
     expect(btnBody).toContain('preprocessMode: ocrPreprocessMode');
   });
 
-  it('button is disabled when ocrRunning is true', () => {
+  it('button is disabled when OCR is running or unavailable', () => {
     const btnStart = rightPanelSource.indexOf('run-ocr-btn');
     const btnEnd = rightPanelSource.indexOf('</button>', btnStart) + 9;
     const btnBody = rightPanelSource.slice(btnStart, btnEnd);
-    expect(btnBody).toContain('disabled={ocrRunning}');
+    expect(rightPanelSource).toContain('const controlsDisabled = ocrRunning || !runtimeAvailable || ocrStatusChecking');
+    expect(btnBody).toContain('disabled={controlsDisabled}');
   });
 
   it('button label changes to "OCR bezig…" when running', () => {
@@ -168,6 +169,27 @@ describe('OcrPanel — scanned page count', () => {
 
   it('reads scannedCount from scannedPageIndices.size', () => {
     expect(rightPanelSource).toContain('scannedPageIndices.size');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// OcrPanel — runtime health status
+// ---------------------------------------------------------------------------
+
+describe('OcrPanel — runtime health status', () => {
+  it('imports getOcrStatus from the Tauri API boundary', () => {
+    expect(rightPanelSource).toContain('getOcrStatus');
+    expect(rightPanelSource).toContain('OcrRuntimeStatus');
+  });
+
+  it('renders ocr-status and retry controls', () => {
+    expect(rightPanelSource).toContain('data-testid="ocr-status"');
+    expect(rightPanelSource).toContain('data-testid="ocr-status-refresh"');
+  });
+
+  it('checks OCR runtime status before enabling controls', () => {
+    expect(rightPanelSource).toContain('refreshOcrStatus');
+    expect(rightPanelSource).toContain('const runtimeAvailable = available && (ocrStatus?.available ?? false)');
   });
 });
 

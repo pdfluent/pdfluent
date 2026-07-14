@@ -2,17 +2,43 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-    <!-- App sandbox required for Mac App Store -->
+    <!--
+      Direct distribution (DMG), NOT the Mac App Store.
+
+      App Sandbox is ENABLED (beta.17). A non-sandboxed app that reads files in
+      ~/Documents, ~/Desktop or ~/Downloads triggers a one-time macOS folder
+      (TCC) consent prompt + spinner the first time. The sandbox replaces that
+      with the system "powerbox": files the user picks via the open/save panel,
+      drags onto the window, or launches via Finder are granted automatically —
+      no folder prompt at all.
+
+      `files.user-selected.read-write` is the grant the powerbox needs to let
+      the editor read AND write the file the user picked (open, save, save-as,
+      export). Every write in the active viewer targets either the picked file,
+      a native save-panel result, or a user-picked output folder — all covered
+      by the powerbox grant. Scratch/temp/recovery state lives in the app
+      container, never beside the user's file. Reopening a *recent* file (a path
+      from a previous session, with no fresh pick) is the only flow the grant
+      does not cover; that is handled by security-scoped bookmarks captured via a
+      native panel (see crates/macos-secure).
+
+      `network.client` is needed for the updater and any opt-in network feature.
+      The cs.* Hardened Runtime exceptions are what a WKWebView-based app needs
+      (JIT for the JS engine) and keep the bundle notarization-ready for when a
+      Developer ID signature is added. They only relax runtime restrictions and
+      cannot introduce a sandbox denial.
+    -->
     <key>com.apple.security.app-sandbox</key>
     <true/>
-    <!-- Read/write access to user-selected files (PDF open/save) -->
     <key>com.apple.security.files.user-selected.read-write</key>
     <true/>
-    <!-- Network access for auto-update checks -->
     <key>com.apple.security.network.client</key>
     <true/>
-    <!-- Print support -->
-    <key>com.apple.security.print</key>
+    <key>com.apple.security.cs.allow-jit</key>
+    <true/>
+    <key>com.apple.security.cs.allow-unsigned-executable-memory</key>
+    <true/>
+    <key>com.apple.security.cs.disable-library-validation</key>
     <true/>
 </dict>
 </plist>

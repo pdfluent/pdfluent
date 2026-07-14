@@ -1,9 +1,15 @@
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: LicenseRef-PDFluent-Proprietary
 // Copyright (c) 2026 PDFluent Contributors
 
 import { defineConfig } from "vitest/config";
+import { readFileSync } from "node:fs";
+
+const pkg = JSON.parse(readFileSync(new URL("./package.json", import.meta.url), "utf8")) as { version: string };
 
 export default defineConfig({
+  define: {
+    __APP_VERSION__: JSON.stringify(pkg.version),
+  },
   test: {
     include: ["src/**/__tests__/**/*.test.ts", "tests/**/*.test.ts"],
     exclude: ["tests/e2e/**"],

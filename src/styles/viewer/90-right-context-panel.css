@@ -1,0 +1,274 @@
+/* Copyright (c) 2026 Innovation Trigger B.V. All rights reserved. */
+/* See https://pdfluent.com/license for terms. */
+
+/* RightContextPanel — the mode-specific right rail. See viewer/components/RightContextPanel.tsx. */
+
+/* =============================================================================
+   RightContextPanel — the mode-specific right rail
+   Token-driven shell + collapsible sections. Every sub-panel inherits this
+   styling via the shared `.contextpanel-*` classes.
+   ============================================================================= */
+
+.contextpanel {
+  display: flex;
+  flex-direction: column;
+  width: 288px;
+  flex-shrink: 0;
+  background: var(--bg-surface);
+  border-left: 1px solid var(--border-subtle);
+  overflow: hidden;
+  animation: pf-panel-slide-in var(--pf-dur-med) var(--pf-ease);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .contextpanel {
+    animation: none;
+  }
+}
+
+.contextpanel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 40px;
+  padding: 0 12px;
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--bg-surface-2);
+  flex-shrink: 0;
+}
+
+.contextpanel-title {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: -0.005em;
+  text-transform: capitalize;
+}
+
+.contextpanel-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border: none;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition:
+    background var(--pf-dur-fast) var(--pf-ease),
+    color var(--pf-dur-fast) var(--pf-ease);
+}
+
+.contextpanel-close:hover {
+  background: var(--bg-surface-press);
+  color: var(--text-primary);
+}
+
+.contextpanel-close svg {
+  width: 14px;
+  height: 14px;
+  stroke-width: 1.75;
+}
+
+.contextpanel-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 4px 0;
+}
+
+/* Collapsible section — the dominant pattern inside the panel. */
+.contextpanel-section {
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.contextpanel-section:last-child {
+  border-bottom: none;
+}
+
+.contextpanel-section-header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+  transition: background var(--pf-dur-fast) var(--pf-ease);
+}
+
+.contextpanel-section-header:hover {
+  background: var(--bg-surface-hover);
+}
+
+.contextpanel-section-header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.contextpanel-section-chevron {
+  width: 12px;
+  height: 12px;
+  stroke-width: 2;
+  color: var(--text-muted);
+  flex-shrink: 0;
+  transition: transform var(--pf-dur-fast) var(--pf-ease);
+}
+
+.contextpanel-section-chevron.is-open {
+  transform: rotate(90deg);
+}
+
+.contextpanel-section-title {
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.contextpanel-section-body {
+  padding: 0 14px 14px;
+}
+
+.contextpanel-section-body[hidden] {
+  display: none;
+}
+
+/* Sub-section title inside a CollapsibleSection body — token-driven
+   replacement for the 9px uppercase muted-foreground pattern. */
+.contextpanel-sub-title {
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+  display: block;
+}
+
+/* Inline input for property editing. Matches .settings-input but more
+   compact for dense panel rows. */
+.contextpanel-input,
+.contextpanel-select,
+.contextpanel-textarea {
+  width: 100%;
+  min-height: 26px;
+  padding: 4px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg-surface-elevated);
+  color: var(--text-primary);
+  font-size: 12px;
+  font-family: inherit;
+  outline: none;
+  transition:
+    border-color var(--pf-dur-fast) var(--pf-ease),
+    box-shadow var(--pf-dur-fast) var(--pf-ease);
+}
+
+.contextpanel-input:focus,
+.contextpanel-select:focus,
+.contextpanel-textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-soft);
+}
+
+.contextpanel-input::placeholder {
+  color: var(--text-disabled);
+}
+
+/* Compact action button — equal-weight pair (Apply / Cancel etc). */
+.contextpanel-action {
+  flex: 1;
+  height: 26px;
+  padding: 0 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg-surface-elevated);
+  color: var(--text-secondary);
+  font-size: 11.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition:
+    background var(--pf-dur-fast) var(--pf-ease),
+    border-color var(--pf-dur-fast) var(--pf-ease),
+    color var(--pf-dur-fast) var(--pf-ease);
+}
+
+.contextpanel-action:hover:not(:disabled) {
+  background: var(--bg-surface-hover);
+  color: var(--text-primary);
+  border-color: var(--border-strong);
+}
+
+.contextpanel-action:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Filled primary CTA — used sparingly (one per section at most). */
+.contextpanel-action-primary {
+  background: var(--brand-mark-fill);
+  color: var(--brand-mark-on);
+  border-color: transparent;
+}
+
+.contextpanel-action-primary:hover:not(:disabled) {
+  background: #0a0a0a;
+  border-color: transparent;
+  color: var(--brand-mark-on);
+}
+
+@media (prefers-color-scheme: dark) {
+  .contextpanel-action-primary:hover:not(:disabled) {
+    background: #f5f5f5;
+  }
+}
+
+/* Destructive action — red-tinted hover for delete buttons. */
+.contextpanel-action-danger {
+  color: var(--danger);
+}
+
+.contextpanel-action-danger:hover:not(:disabled) {
+  background: rgba(220, 38, 38, 0.08);
+  color: var(--danger);
+  border-color: rgba(220, 38, 38, 0.3);
+}
+
+/* Empty state inside a section — quieter than .viewer-empty. */
+.contextpanel-empty {
+  padding: 16px 8px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* Label + value horizontal row (metadata, permissions). */
+.contextpanel-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 4px 0;
+  font-size: 12px;
+}
+
+.contextpanel-row-label {
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.contextpanel-row-value {
+  color: var(--text-primary);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+

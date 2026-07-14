@@ -1,0 +1,149 @@
+/* Copyright (c) 2026 Innovation Trigger B.V. All rights reserved. */
+/* See https://pdfluent.com/license for terms. */
+
+/* SignaturePanel — sign + verify (lives inside RightContextPanel). See viewer/components/SignaturePanel.tsx. */
+
+/* =============================================================================
+   SignaturePanel — sign + verify (lives inside RightContextPanel)
+   Uses .contextpanel-* primitives where applicable.
+   ============================================================================= */
+
+.signature-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.signature-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.signature-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.signature-label {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.signature-cert-picker {
+  display: flex;
+  align-items: stretch;
+  gap: 6px;
+}
+
+.signature-cert-path {
+  flex: 1;
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg-surface-2);
+  color: var(--text-secondary);
+  font-size: 11.5px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.signature-submit {
+  margin-top: 6px;
+}
+
+.signature-loading {
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* Verified signature row. data-valid drives the left border colour. */
+.signature-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-left-width: 3px;
+  border-radius: 6px;
+  background: var(--bg-surface-elevated);
+  font-size: 11.5px;
+}
+
+.signature-item[data-valid='true'] {
+  border-left-color: var(--success);
+}
+
+.signature-item[data-status='unknown'] {
+  border-left-color: var(--text-muted);
+}
+
+.signature-item[data-valid='false']:not([data-status='unknown']) {
+  border-left-color: var(--danger);
+}
+
+.signature-item-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.signature-item-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.signature-item-status {
+  font-size: 10.5px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  flex-shrink: 0;
+}
+
+.signature-item[data-valid='true'] .signature-item-status {
+  color: var(--success);
+}
+
+.signature-item[data-valid='false']:not([data-status='unknown']) .signature-item-status {
+  color: var(--danger);
+}
+
+.signature-item-meta {
+  color: var(--text-muted);
+  font-size: 11px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.signature-status-icon {
+  width: 14px;
+  height: 14px;
+  stroke-width: 1.75;
+  flex-shrink: 0;
+}
+
+.signature-status-icon-valid {
+  color: var(--success);
+}
+
+.signature-status-icon-invalid {
+  color: var(--danger);
+}
+
+.signature-status-icon-unknown {
+  color: var(--text-muted);
+}

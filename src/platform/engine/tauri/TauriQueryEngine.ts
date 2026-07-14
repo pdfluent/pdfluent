@@ -1,24 +1,15 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 import { invoke } from '@tauri-apps/api/core';
 import type { PdfDocument, TextSpan } from '../../../core/document';
 import type { EngineResult, AsyncEngineResult } from '../../../core/engine/types';
 import type { QueryEngine } from '../../../core/engine/QueryEngine';
-
-// Backend response type for get_page_text_spans (snake_case from serde)
-interface TauriTextSpan {
-  text: string;
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  font_size: number;
-}
+import type { TextSpanInfo } from '../../../lib/tauri-api';
 
 function notImpl(msg: string): { success: false; error: { code: 'not-implemented'; message: string } } {
   return { success: false, error: { code: 'not-implemented', message: msg } };
@@ -81,9 +72,9 @@ export class TauriQueryEngine implements QueryEngine {
       const parts: string[] = [];
       for (let i = 0; i < document.pages.length; i++) {
         const text = await invoke<string>('extract_page_text', { pageIndex: i });
-        parts.push(text);
+        parts.push(text.trim());
       }
-      return { success: true, value: parts.join('\n') };
+      return { success: true, value: parts.join('\n\n\f\n\n') };
     } catch (e) {
       return { success: false, error: { code: 'internal-error', message: String(e) } };
     }
@@ -116,13 +107,23 @@ export class TauriQueryEngine implements QueryEngine {
     pageIndex: number
   ): AsyncEngineResult<TextSpan[]> {
     try {
-      const spans = await invoke<TauriTextSpan[]>('get_page_text_spans', { pageIndex });
+      const spans = await invoke<TextSpanInfo[]>('get_page_text_spans', { pageIndex });
       return {
         success: true,
-        value: spans.map(s => ({
+        value: spans.map((s): TextSpan => ({
           text: s.text,
           rect: { x: s.x, y: s.y, width: s.width, height: s.height },
           fontSize: s.font_size,
+          // G1 metadata (present when sdkTextMetadata=true in editorFeatureFlags)
+          ...(s.fontName !== undefined && { fontName: s.fontName }),
+          ...(s.isBold !== undefined && { isBold: s.isBold }),
+          ...(s.isItalic !== undefined && { isItalic: s.isItalic }),
+          ...(s.color !== undefined && { color: s.color }),
+          // G2 glyph metrics
+          ...(s.charBounds !== undefined && {
+            charBounds: s.charBounds.map(([x0, , x1]) => ({ x: x0, width: x1 - x0 })),
+          }),
+          ...(s.widthSource !== undefined && { widthSource: s.widthSource }),
         })),
       };
     } catch (e) {

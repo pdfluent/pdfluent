@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 import { readFileSync } from 'node:fs';
@@ -63,8 +63,9 @@ describe('organize batch — batch action bar', () => {
     expect(gridSource).toContain('selectedPages.size');
   });
 
-  it('renders batch-rotate-btn', () => {
-    expect(gridSource).toContain('data-testid="batch-rotate-btn"');
+  it('renders batch rotate left and right buttons', () => {
+    expect(gridSource).toContain('data-testid="batch-rotate-left-btn"');
+    expect(gridSource).toContain('data-testid="batch-rotate-right-btn"');
   });
 
   it('renders batch-delete-btn', () => {
@@ -172,11 +173,12 @@ describe('organize batch — batch rotate', () => {
     expect(gridSource).toContain('pageIndices: indices');
   });
 
-  it('rotates by 90 degrees', () => {
+  it('rotates by direction', () => {
     const fnStart = gridSource.indexOf('handleBatchRotate');
     const fnEnd   = gridSource.indexOf('\n  }', fnStart) + 4;
     const fnBody  = gridSource.slice(fnStart, fnEnd);
-    expect(fnBody).toContain('rotation: 90');
+    expect(fnBody).toContain("direction === 'left' ? 270 : 90");
+    expect(fnBody).toContain('rotation');
   });
 
   it('clears selection after successful batch rotate', () => {
@@ -230,8 +232,9 @@ describe('organize batch — single-page operation regressions', () => {
     expect(gridSource).toContain('data-testid="organize-grid"');
   });
 
-  it('per-tile rotate button still present', () => {
-    expect(gridSource).toContain('data-testid={`organize-rotate-${i}`}');
+  it('per-tile rotate buttons still present', () => {
+    expect(gridSource).toContain('data-testid={`organize-rotate-left-${i}`}');
+    expect(gridSource).toContain('data-testid={`organize-rotate-right-${i}`}');
   });
 
   it('per-tile delete button still present', () => {

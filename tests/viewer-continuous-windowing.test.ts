@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: LicenseRef-PDFluent-Proprietary
 // Copyright (c) 2026 PDFluent Contributors
 
 import { readFileSync } from "node:fs";
@@ -17,7 +17,7 @@ const viewerSource = readFileSync(
 );
 
 describe("continuous viewer windowed rendering", () => {
-  it("keeps native continuous viewer active for every continuous-mode state", () => {
+  it("uses native continuous viewing only for pure read mode", () => {
     expect(
       shouldUseNativeContinuousViewer("continuous", "none", false),
     ).toBe(true);
@@ -26,10 +26,10 @@ describe("continuous viewer windowed rendering", () => {
     ).toBe(false);
     expect(
       shouldUseNativeContinuousViewer("continuous", "highlight", false),
-    ).toBe(true);
+    ).toBe(false);
     expect(
       shouldUseNativeContinuousViewer("continuous", "none", true),
-    ).toBe(true);
+    ).toBe(false);
   });
 
   it("formats native PDF fragment with page and zoom", () => {
@@ -101,10 +101,12 @@ describe("continuous viewer windowed rendering", () => {
   });
 
   it("caps continuous render scale to avoid memory spikes", () => {
+    // Assert the cap exists and is applied, not the exact internal form: HEAD
+    // applies it inline as Math.min(scale, CONTINUOUS_MAX_RENDER_SCALE); a later
+    // refactor extracts a `continuousRenderScale` (with a DPR factor). Grepping
+    // the refactored variable name made this brittle/stale.
     expect(viewerSource).toContain("const CONTINUOUS_MAX_RENDER_SCALE = 1;");
-    expect(viewerSource).toContain(
-      "renderPage(index, Math.min(scale, CONTINUOUS_MAX_RENDER_SCALE))",
-    );
+    expect(viewerSource).toContain("Math.min(scale, CONTINUOUS_MAX_RENDER_SCALE)");
   });
 
   it("forces initial continuous view sync to current page", () => {

@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 import { readFileSync } from 'node:fs';
@@ -49,20 +49,24 @@ describe('ViewerApp — mode switching key mappings', () => {
     expect(effectBody).toContain("'3': 'edit'");
   });
 
-  it("maps '4' to organize", () => {
-    expect(effectBody).toContain("'4': 'organize'");
+  it("maps '4' to sign", () => {
+    expect(effectBody).toContain("'4': 'sign'");
   });
 
-  it("maps '5' to forms", () => {
-    expect(effectBody).toContain("'5': 'forms'");
+  it("maps '5' to organize", () => {
+    expect(effectBody).toContain("'5': 'organize'");
   });
 
-  it("maps '6' to protect", () => {
-    expect(effectBody).toContain("'6': 'protect'");
+  it("maps '6' to forms", () => {
+    expect(effectBody).toContain("'6': 'forms'");
   });
 
-  it("maps '7' to convert", () => {
-    expect(effectBody).toContain("'7': 'convert'");
+  it("maps '7' to protect", () => {
+    expect(effectBody).toContain("'7': 'protect'");
+  });
+
+  it("maps '8' to convert", () => {
+    expect(effectBody).toContain("'8': 'convert'");
   });
 
   it('calls setMode with the resolved mode', () => {

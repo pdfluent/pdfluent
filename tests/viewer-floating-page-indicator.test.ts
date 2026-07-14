@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 import { readFileSync } from 'node:fs';
@@ -24,13 +24,15 @@ const viewerAppSource = [
   '../src/viewer/hooks/useTextInteraction.ts',
   '../src/viewer/hooks/useKeyboardShortcuts.ts',
   '../src/viewer/ViewerApp.tsx',
+  '../src/viewer/v3/EditorV3Shell.tsx',
   '../src/viewer/WelcomeSection.tsx',
 ].map(p => readFileSync(new URL(p, import.meta.url), 'utf8')).join('\n\n');
 
 // Locate the floating zoom control block for scoped assertions
 const floatStart = viewerAppSource.indexOf('Floating zoom controls');
-const floatEnd   = viewerAppSource.indexOf('</div>\n          )}', floatStart);
-const floatBlock = viewerAppSource.slice(floatStart, floatEnd);
+const floatGuardStart = viewerAppSource.lastIndexOf("pageCount > 0 && mode !== 'organize' && (", floatStart);
+const floatEnd   = viewerAppSource.indexOf('<ZoomPresetsPopover', floatStart);
+const floatBlock = viewerAppSource.slice(floatGuardStart, floatEnd);
 
 // ---------------------------------------------------------------------------
 // Presence
@@ -79,20 +81,21 @@ describe('floating page indicator — display', () => {
 // ---------------------------------------------------------------------------
 
 describe('floating page indicator — accessibility', () => {
-  it('has title="Ga naar pagina"', () => {
+  it('has a title attribute (via i18n or literal)', () => {
+    // v3: literal "Ga naar pagina" replaced by t('editorV3.nav.goToPage')
     const idx      = floatBlock.indexOf('floating-page-indicator');
     const btnStart = floatBlock.lastIndexOf('<button', idx);
     const btnEnd   = floatBlock.indexOf('</button>', idx);
     const btn      = floatBlock.slice(btnStart, btnEnd);
-    expect(btn).toContain('title="Ga naar pagina"');
+    expect(btn).toMatch(/title=\{t\(['"]editorV3\.nav\.goToPage['"]/);
   });
 
-  it('has aria-label="Ga naar pagina"', () => {
+  it('has an aria-label (via i18n or literal)', () => {
     const idx      = floatBlock.indexOf('floating-page-indicator');
     const btnStart = floatBlock.lastIndexOf('<button', idx);
     const btnEnd   = floatBlock.indexOf('</button>', idx);
     const btn      = floatBlock.slice(btnStart, btnEnd);
-    expect(btn).toContain('aria-label="Ga naar pagina"');
+    expect(btn).toMatch(/aria-label=\{t\(['"]editorV3\.nav\.goToPage['"]/);
   });
 });
 
@@ -101,12 +104,13 @@ describe('floating page indicator — accessibility', () => {
 // ---------------------------------------------------------------------------
 
 describe('floating page indicator — click behavior', () => {
-  it('onClick calls setGoToPageOpen(true)', () => {
+  it('onClick calls the V3 go-to-page bridge', () => {
     const idx      = floatBlock.indexOf('floating-page-indicator');
     const btnStart = floatBlock.lastIndexOf('<button', idx);
     const btnEnd   = floatBlock.indexOf('</button>', idx);
     const btn      = floatBlock.slice(btnStart, btnEnd);
-    expect(btn).toContain('setGoToPageOpen(true)');
+    expect(btn).toContain('onOpenGoToPage');
+    expect(viewerAppSource).toContain('onOpenGoToPage={() => { setGoToPageOpen(true); }}');
   });
 
   it('onClick is the handler on the indicator button', () => {
@@ -115,7 +119,7 @@ describe('floating page indicator — click behavior', () => {
     const btnEnd   = floatBlock.indexOf('</button>', idx);
     const btn      = floatBlock.slice(btnStart, btnEnd);
     expect(btn).toContain('onClick');
-    expect(btn).toContain('setGoToPageOpen(true)');
+    expect(btn).toContain('onOpenGoToPage');
   });
 });
 
@@ -124,8 +128,8 @@ describe('floating page indicator — click behavior', () => {
 // ---------------------------------------------------------------------------
 
 describe('floating page indicator — separator', () => {
-  it('has a thin vertical separator (w-px h-4 bg-border)', () => {
-    expect(floatBlock).toContain('w-px h-4 bg-border');
+  it('has a thin vertical separator in the V3 bottom bar', () => {
+    expect(floatBlock).toContain('className="bb-sep"');
   });
 
   it('separator carries aria-hidden="true"', () => {
@@ -167,7 +171,7 @@ describe('floating page indicator — zoom control regressions', () => {
   });
 
   it('floating strip only shown when document is loaded', () => {
-    expect(floatBlock).toContain('pdfDoc && !docLoading');
+    expect(floatBlock).toContain("pageCount > 0 && mode !== 'organize'");
   });
 });
 

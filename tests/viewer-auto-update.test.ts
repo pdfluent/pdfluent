@@ -1,12 +1,20 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 import { readFileSync } from 'node:fs';
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, afterEach } from 'vitest';
+import { relaunchApp, isTauriRuntime } from '../src/lib/updater';
+
+// Mock the Tauri plugin modules so importing updater.ts is safe under the test
+// runtime and so relaunch() behavior can be asserted. vi.hoisted keeps the mock
+// fn available to the hoisted vi.mock factory.
+const { relaunchMock } = vi.hoisted(() => ({ relaunchMock: vi.fn() }));
+vi.mock('@tauri-apps/plugin-process', () => ({ relaunch: relaunchMock, exit: vi.fn() }));
+vi.mock('@tauri-apps/plugin-updater', () => ({ check: vi.fn() }));
 
 const updaterSource = readFileSync(
   new URL('../src/lib/updater.ts', import.meta.url),
@@ -199,5 +207,140 @@ describe('useCommands — check-for-updates', () => {
   it('ViewerApp defines handleCheckForUpdates', () => {
     expect(viewerAppSource).toContain('handleCheckForUpdates');
     expect(viewerAppSource).toContain('checkAndInstallUpdate(');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Post-install restart / relaunch UX
+// ---------------------------------------------------------------------------
+
+const enLocale = JSON.parse(
+  readFileSync(new URL('../src/i18n/locales/en.json', import.meta.url), 'utf8'),
+);
+const libRsSource = readFileSync(new URL('../src-tauri/src/lib.rs', import.meta.url), 'utf8');
+// The updater + process permissions live in an INLINE capability in
+// tauri.conf.json (so the Mac App Store overlay can drop them); the MAS overlay
+// omits that capability entirely.
+const confSource = readFileSync(new URL('../src-tauri/tauri.conf.json', import.meta.url), 'utf8');
+const masConfSource = readFileSync(new URL('../src-tauri/tauri.mas.conf.json', import.meta.url), 'utf8');
+const cargoSource = readFileSync(new URL('../src-tauri/Cargo.toml', import.meta.url), 'utf8');
+
+describe('updater — restart/relaunch API', () => {
+  it('exports relaunchApp and isTauriRuntime', () => {
+    expect(updaterSource).toContain('export async function relaunchApp');
+    expect(updaterSource).toContain('export function isTauriRuntime');
+  });
+
+  it('relaunchApp is a no-op outside Tauri and uses the process plugin inside', () => {
+    expect(updaterSource).toContain('if (!isTauriRuntime()) return');
+    expect(updaterSource).toContain('import("@tauri-apps/plugin-process")');
+    expect(updaterSource).toContain('relaunch()');
+  });
+});
+
+describe('UpdateBanner — restart state', () => {
+  it('accepts installed + restartHint + onRestart', () => {
+    expect(updateBannerSource).toContain('installed: boolean');
+    expect(updateBannerSource).toContain("restartHint: 'unsaved' | 'failed' | null");
+    expect(updateBannerSource).toContain('onRestart: () => void');
+  });
+
+  it('renders the installed/restart state with a restart button', () => {
+    expect(updateBannerSource).toContain("t('update.installed')");
+    expect(updateBannerSource).toContain("t('update.restartNow')");
+    expect(updateBannerSource).toContain('data-testid="update-restart"');
+    expect(updateBannerSource).toContain('onClick={onRestart}');
+  });
+
+  it('shows unsaved + manual-restart hints', () => {
+    expect(updateBannerSource).toContain("t('update.restartUnsaved')");
+    expect(updateBannerSource).toContain("t('update.restartManual')");
+  });
+});
+
+describe('ViewerApp — restart wiring', () => {
+  it('imports relaunchApp and tracks updateInstalled', () => {
+    expect(viewerAppSource).toContain('relaunchApp');
+    expect(viewerAppSource).toContain('updateInstalled');
+    expect(viewerAppSource).toContain('setUpdateInstalled(true)');
+  });
+
+  it('marks installed in onUpdateInstalled', () => {
+    expect(viewerAppSource).toContain('setUpdateInstalling(false); setUpdateInstalled(true);');
+  });
+
+  it('defines handleRestartApp that guards unsaved work', () => {
+    expect(viewerAppSource).toContain('handleRestartApp');
+    expect(viewerAppSource).toContain('if (isDirty)');
+    expect(viewerAppSource).toContain("setUpdateRestartHint('unsaved')");
+  });
+
+  it('falls back to a manual-restart hint on relaunch failure', () => {
+    expect(viewerAppSource).toContain("setUpdateRestartHint('failed')");
+  });
+
+  it('passes restart props to UpdateBanner', () => {
+    expect(viewerAppSource).toContain('installed={updateInstalled}');
+    expect(viewerAppSource).toContain('onRestart={handleRestartApp}');
+    expect(viewerAppSource).toContain('restartHint={updateRestartHint}');
+  });
+});
+
+describe('i18n — restart keys (en)', () => {
+  it('defines the post-install restart strings', () => {
+    expect(enLocale.update.installed).toBeTruthy();
+    expect(enLocale.update.restartNow).toBeTruthy();
+    expect(enLocale.update.restartUnsaved).toBeTruthy();
+    expect(enLocale.update.restartManual).toBeTruthy();
+  });
+});
+
+describe('Tauri process plugin — registration', () => {
+  it('declares the tauri-plugin-process dependency', () => {
+    expect(cargoSource).toContain('tauri-plugin-process');
+  });
+  it('registers the process plugin', () => {
+    expect(libRsSource).toContain('tauri_plugin_process::init()');
+  });
+  it('grants the updater + process capability inline (direct-download build)', () => {
+    expect(confSource).toContain('updater:default');
+    expect(confSource).toContain('process:default');
+  });
+  it('the Mac App Store overlay drops the updater/process capability', () => {
+    // The MAS build compiles the updater + process plugins out, so its
+    // capability set must exclude the inline "updater" capability.
+    expect(masConfSource).not.toContain('updater:default');
+    expect(masConfSource).not.toContain('process:default');
+  });
+});
+
+describe('relaunchApp — behavior', () => {
+  afterEach(() => {
+    relaunchMock.mockReset();
+    vi.unstubAllGlobals();
+  });
+
+  it('isTauriRuntime is false without the Tauri global', () => {
+    vi.stubGlobal('window', {});
+    expect(isTauriRuntime()).toBe(false);
+  });
+
+  it('is a no-op outside Tauri (relaunch not called)', async () => {
+    vi.stubGlobal('window', {});
+    await relaunchApp();
+    expect(relaunchMock).not.toHaveBeenCalled();
+  });
+
+  it('calls plugin-process relaunch inside Tauri', async () => {
+    vi.stubGlobal('window', { __TAURI_INTERNALS__: {} });
+    relaunchMock.mockResolvedValue(undefined);
+    await relaunchApp();
+    expect(relaunchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('rejects when relaunch fails so the caller can show manual restart', async () => {
+    vi.stubGlobal('window', { __TAURI_INTERNALS__: {} });
+    relaunchMock.mockRejectedValue(new Error('process plugin unavailable'));
+    await expect(relaunchApp()).rejects.toThrow();
   });
 });

@@ -1,0 +1,723 @@
+[
+  {
+    "id": "VE-001",
+    "use_case_id": "UC-OPEN-PDF",
+    "title": "Open PDF via welcome screen",
+    "runtime": "browser-test",
+    "priority": "beta_blocker",
+    "classification": "active_app_supported",
+    "automation_status": "active",
+    "fixture_document": "tests/fixtures/sample-text.pdf",
+    "setup": [
+      "npm run dev (Vite dev server must be running)",
+      "Seed English locale: localStorage.setItem('pdfluent-lang', 'en')",
+      "Navigate to http://localhost:5173/?v2"
+    ],
+    "steps": [
+      "Assert [data-testid='viewer-empty-state'] is visible",
+      "Assert [data-testid='welcome-screen'] is visible",
+      "Call window.__pdfluent_test__.loadDocument('tests/fixtures/sample-text.pdf')",
+      "Wait for [data-testid='floating-page-indicator'] to be visible (timeout: 10s)"
+    ],
+    "expected_visible_result": "Welcome screen disappears; floating page indicator shows '1 / 3'; [data-testid='rendered-page'] is visible with a non-empty src blob URL",
+    "expected_exported_file_result": null,
+    "expected_capability_gating": null,
+    "visual_checkpoints": [
+      "viewer-empty-state is NOT in DOM after load",
+      "rendered-page img has non-empty src (blob:...)",
+      "floating-page-indicator text matches '1 / 3'"
+    ],
+    "failure_meaning": "Document open flow is broken — the viewer does not transition from welcome to document state",
+    "notes_for_codex": "The loadDocument() hook accepts a path string or an ArrayBuffer. Pass the path string. The hook is only available in dev mode (Vite). In preview mode, use the file input flow instead via [data-testid='welcome-open-btn']."
+  },
+  {
+    "id": "VE-002",
+    "use_case_id": "UC-RENDER-PAGE",
+    "title": "Render first page (PNG from browser-test harness)",
+    "runtime": "browser-test",
+    "priority": "beta_blocker",
+    "fixture_document": "tests/fixtures/sample-text.pdf",
+    "setup": [
+      "Load sample-text.pdf via window.__pdfluent_test__.loadDocument()",
+      "Viewer is in Read mode (default)"
+    ],
+    "steps": [
+      "Assert [data-testid='rendered-page'] is visible",
+      "Assert the img element has a blob: src attribute",
+      "Assert the img naturalWidth > 0 (i.e. image loaded successfully)",
+      "Assert [data-testid='page-view'] wrapper is in DOM"
+    ],
+    "expected_visible_result": "A rendered PDF page image is visible in the viewport. The page renders white with visible text content.",
+    "expected_exported_file_result": null,
+    "expected_capability_gating": null,
+    "visual_checkpoints": [
+      "rendered-page naturalWidth > 0",
+      "rendered-page naturalHeight > 0",
+      "No error message in page-view area"
+    ],
+    "failure_meaning": "browser-test render engine failed — PdfDoc.renderPage() returned an error or empty bytes. Check browser console for browser-test render errors.",
+    "notes_for_codex": "Use page.locator('[data-testid=\"rendered-page\"]').evaluate(el => el.naturalWidth) to assert the image loaded. A src of 'blob:' with naturalWidth=0 means the blob is empty (render failure)."
+  },
+  {
+    "id": "VE-003",
+    "use_case_id": "UC-PAGE-NAV",
+    "title": "Page navigation (prev/next/jump-to-page)",
+    "runtime": "browser-test",
+    "priority": "beta_blocker",
+    "fixture_document": "tests/fixtures/sample-text.pdf",
+    "setup": [
+      "Load 3-page sample-text.pdf",
+      "Viewer is on page 1"
+    ],
+    "steps": [
+      "Assert floating-page-indicator text is '1 / 3'",
+      "Click [data-testid='nav-next-page-btn']",
+      "Assert floating-page-indicator text is '2 / 3'",
+      "Assert [data-testid='rendered-page'] src changes (new render)",
+      "Click [data-testid='nav-next-page-btn']",
+      "Assert floating-page-indicator text is '3 / 3'",
+      "Click [data-testid='nav-prev-page-btn']",
+      "Assert floating-page-indicator text is '2 / 3'",
+      "Clear and type '1' into [data-testid='nav-go-to-page-input'], press Enter",
+      "Assert floating-page-indicator text is '1 / 3'"
+    ],
+    "expected_visible_result": "Page indicator updates on each navigation step; rendered-page img src changes to a new blob URL on each page change",
+    "expected_exported_file_result": null,
+    "expected_capability_gating": null,
+    "visual_checkpoints": [
+      "floating-page-indicator text changes after next/prev clicks",
+      "rendered-page src changes after navigation (different blob URL)"
+    ],
+    "failure_meaning": "Page navigation is broken — either the indicator does not update or the engine fails to render the new page",
+    "notes_for_codex": "Use page.locator('[data-testid=\"floating-page-indicator\"]').textContent() to read the current page label. For the nav-go-to-page-input, use fill('1') then keyboard.press('Enter')."
+  },
+  {
+    "id": "VE-004",
+    "use_case_id": "UC-ZOOM",
+    "title": "Zoom in / zoom out",
+    "runtime": "browser-test",
+    "priority": "beta_blocker",
+    "fixture_document": "tests/fixtures/sample-text.pdf",
+    "setup": [
+      "Load sample-text.pdf",
+      "Viewer is in Read mode"
+    ],
+    "steps": [
+      "Assert [data-testid='toolbar-zoom-display'] shows '100%'",
+      "Find the Zoom in tool button: getByTitle('Zoom in') — must NOT have 'not yet available' in title",
+      "Click Zoom in button",
+      "Assert toolbar-zoom-display shows '125%'",
+      "Click Zoom in button again",
+      "Assert toolbar-zoom-display shows '150%'",
+      "Click Zoom out button (getByTitle('Zoom out'))",
+      "Assert toolbar-zoom-display shows '125%'",
+      "Click [data-testid='zoom-reset-btn']",
+      "Assert toolbar-zoom-display shows '100%'",
+      "Click [data-testid='zoom-fit-width-btn']",
+      "Assert rendered-page img width equals viewport width (fit-to-width)"
+    ],
+    "expected_visible_result": "Zoom display updates; rendered page image visually grows/shrinks accordingly",
+    "expected_exported_file_result": null,
+    "expected_capability_gating": "Zoom buttons must be enabled (not disabled) in browser-test: getWiredTools(false) includes 'toolbar.zoomIn', 'toolbar.zoomOut'",
+    "visual_checkpoints": [
+      "toolbar-zoom-display text matches expected percentage",
+      "Zoom in/out buttons are NOT disabled (no disabled attribute)"
+    ],
+    "failure_meaning": "Zoom controls are broken or incorrectly gated. If disabled: wiredTools configuration regressed.",
+    "notes_for_codex": "Zoom buttons in ModeToolbar do not have data-testid — locate them by title attribute: page.getByTitle('Zoom in'). The ModeToolbar ToolButton sets title to t(tool.label) when wired or t(tool.label) + ' (not yet available)' when not wired. Assert no '(not yet available)' suffix."
+  },
+  {
+    "id": "VE-005",
+    "use_case_id": "UC-SEARCH-TEXT",
+    "title": "Search text in document",
+    "runtime": "browser-test",
+    "priority": "beta_blocker",
+    "fixture_document": "tests/fixtures/sample-text.pdf",
+    "setup": [
+      "Load 3-page sample-text.pdf containing known text (e.g. 'Lorem ipsum')"
+    ],
+    "steps": [
+      "Find the Search text tool button in ModeToolbar: getByTitle('Search text')",
+      "Click it — this opens the left-rail search panel",
+      "Assert [data-testid='search-panel'] is visible",
+      "Type 'Lorem' into [data-testid='search-input']",
+      "Assert [data-testid='search-result-count'] text is not empty (e.g. 'N results')",
+      "Assert at least one [data-testid='search-result-item'] is visible",
+      "Click the first search-result-item",
+      "Assert the page indicator jumps to the page containing the result"
+    ],
+    "expected_visible_result": "Search panel opens in left rail; results list populates; clicking a result navigates to the matching page",
+    "expected_exported_file_result": null,
+    "expected_capability_gating": "Search text tool must be enabled (in getWiredTools(false))",
+    "visual_checkpoints": [
+      "search-panel is visible after clicking Search text tool",
+      "search-result-count shows a non-zero count",
+      "At least one search-result-item is in DOM"
+    ],
+    "failure_meaning": "Text extraction (PdfDoc.text() or PdfDoc.getTextPositions()) is broken, or the search panel does not open",
+    "notes_for_codex": "The Search text toolbar button opens the left-rail search panel (not the command palette). The command palette (search-btn in TopBar / Meta+K) is for commands, not in-document text search. The search is client-side over extracted text positions."
+  },
+  {
+    "id": "VE-006",
+    "use_case_id": "UC-SELECT-TEXT",
+    "title": "Select text on canvas (if automatable)",
+    "runtime": "browser-test",
+    "priority": "beta_blocker",
+    "fixture_document": "tests/fixtures/sample-text.pdf",
+    "setup": [
+      "Load sample-text.pdf with known text content",
+      "Viewer is in Read mode"
+    ],
+    "steps": [
+      "Assert [data-testid='text-interaction-overlay'] is present in DOM",
+      "Simulate a mouse drag across a text span in the rendered-page area",
+      "Assert [data-testid='text-context-bar'] appears (floats above selection)",
+      "Assert at least one text-context-action button is visible inside text-context-bar"
+    ],
+    "expected_visible_result": "Text context bar floats above the selected text. Actions like 'Highlight' or 'Copy' are visible.",
+    "expected_exported_file_result": null,
+    "expected_capability_gating": null,
+    "visual_checkpoints": [
+      "text-interaction-overlay is in DOM",
+      "text-context-bar appears after drag-select"
+    ],
+    "failure_meaning": "Text layer extraction or rendering is broken — PdfDoc.getTextPositions() returned empty or the TextInteractionOverlay is not mounted",
+    "notes_for_codex": "Text spans are positioned as transparent overlays over the rendered-page img. The TextInteractionOverlay mounts only when textSpans (from useSearch hook) are available. If sample-text.pdf has no extractable text, this test cannot pass. Verify the fixture has real selectable text."
+  },
+  {
+    "id": "VE-007",
+    "use_case_id": "UC-ANNOT-HIGHLIGHT",
+    "title": "Add highlight annotation via selection",
+    "runtime": "browser-test",
+    "priority": "beta_blocker",
+    "classification": "runtime_gap",
+    "automation_status": "skipped",
+    "fixture_document": "tests/fixtures/sample-text.pdf",
+    "setup": [
+      "Blocked: browser-test harness exposes no PdfDoc.addHighlight runtime export"
+    ],
+    "steps": [
+      "Do not run as a click-through scenario until native Tauri commands expose highlight creation in the browser build",
+      "Assert runtime capability status remains apiAvailableButRuntimeMissing",
+      "Assert [data-testid='annotation-tool-highlight'] is not shown in browser-test"
+    ],
+    "expected_visible_result": "N/A — highlight creation is a runtime product gap in the current browser-test harness.",
+    "expected_exported_file_result": null,
+    "expected_capability_gating": "add-highlight status is apiAvailableButRuntimeMissing. annotation-tool-highlight must not be visible in browser-test until PdfDoc.addHighlight is exported at runtime.",
+    "visual_checkpoints": [
+      "annotation-tool-highlight is NOT in DOM (runtime gap)",
+      "annotation-tool-underline is NOT in DOM (browser-test gating)",
+      "annotation-tool-strikeout is NOT in DOM (browser-test gating)",
+      "annotation-tool-rectangle is NOT in DOM (browser-test gating)",
+      "annotation-tool-redaction is NOT in DOM (browser-test gating)",
+      "comment-filter-count does not change from unsupported browser-test creation"
+    ],
+    "failure_meaning": "If this scenario runs as a beta-blocker, the scenario classification regressed. If the tool is visible, unsupported browser-test annotation creation is being presented as usable.",
+    "notes_for_codex": "Rust source contains PdfDoc.addHighlight behind the annotate feature, but the browser-test feature excludes annotate. Tauri command surface does not expose addHighlight."
+  },
+  {
+    "id": "VE-008",
+    "use_case_id": "UC-ANNOT-STICKYNOTE",
+    "title": "Add sticky note comment via add-comment button",
+    "runtime": "browser-test",
+    "priority": "later",
+    "classification": "runtime_gap",
+    "automation_status": "skipped",
+    "fixture_document": "tests/fixtures/sample-text.pdf",
+    "setup": [
+      "Blocked: browser-test harness exposes no PdfDoc.addStickyNote runtime export"
+    ],
+    "steps": [
+      "Do not run as a click-through scenario until native Tauri commands expose sticky-note creation in the browser build",
+      "Assert runtime capability status remains apiAvailableButRuntimeMissing",
+      "Assert [data-testid='add-comment-btn'] is not shown in browser-test"
+    ],
+    "expected_visible_result": "N/A — sticky-note creation is a runtime product gap in the current browser-test harness.",
+    "expected_exported_file_result": null,
+    "expected_capability_gating": "add-sticky-note status is apiAvailableButRuntimeMissing. add-comment-btn must not be visible in browser-test until PdfDoc.addStickyNote is exported at runtime.",
+    "visual_checkpoints": [
+      "add-comment-btn is NOT in DOM (runtime gap)",
+      "comment-filter-count does not change from unsupported browser-test creation"
+    ],
+    "failure_meaning": "If this scenario runs as a beta-blocker, the scenario classification regressed. If add-comment-btn is visible in browser-test, unsupported sticky-note creation is being presented as usable.",
+    "notes_for_codex": "Rust source contains PdfDoc.addStickyNote behind the annotate feature, but the browser-test feature excludes annotate. Tauri command surface does not expose addStickyNote."
+  },
+  {
+    "id": "VE-009",
+    "use_case_id": "UC-ANNOT-FREETEXT",
+    "title": "Add free text annotation (engine-level only)",
+    "runtime": "browser-test",
+    "priority": "later",
+    "classification": "runtime_gap",
+    "automation_status": "skipped",
+    "fixture_document": "tests/fixtures/sample-text.pdf",
+    "setup": [
+      "Load sample-text.pdf",
+      "Review mode active"
+    ],
+    "steps": [
+      "NOTE: There is no dedicated free text annotation button in ViewerApp (/?v2).",
+      "browser-test harness reports free text unsupported because the browser-test harness does not expose PdfDoc.addFreeText().",
+      "Test via direct engine call: window.__pdfluent_test__ does not expose createAnnotation() directly.",
+      "This scenario cannot be automated against ViewerApp until a free text tool button is added to the annotation toolbar."
+    ],
+    "expected_visible_result": "N/A — no UI to trigger this operation in ViewerApp",
+    "expected_exported_file_result": null,
+    "expected_capability_gating": "add-free-text status is apiAvailableButRuntimeMissing and there is no free text toolbar button.",
+    "visual_checkpoints": [],
+    "failure_meaning": "Scenario is blocked because the current browser-test harness does not expose PdfDoc.addFreeText.",
+    "notes_for_codex": "Skip this scenario until the browser-test harness exports PdfDoc.addFreeText and a free text annotation button is added to the review mode annotation toolbar with testid 'annotation-tool-freetext'."
+  },
+  {
+    "id": "VE-010",
+    "use_case_id": "UC-EXPORT-ANNOTATED",
+    "title": "Export annotated PDF (browser download)",
+    "runtime": "browser-test",
+    "priority": "later",
+    "classification": "runtime_gap",
+    "automation_status": "skipped",
+    "fixture_document": "tests/fixtures/sample-text.pdf",
+    "setup": [
+      "Blocked: depends on VE-007 or VE-008, which are runtime product gaps in browser-test"
+    ],
+    "steps": [
+      "Do not run as an annotated-export scenario until browser-test annotation creation exists",
+      "Keep clean PDF export covered by VE-017/VE-021"
+    ],
+    "expected_visible_result": "N/A — annotated export is blocked by missing browser-test annotation creation.",
+    "expected_exported_file_result": null,
+    "expected_capability_gating": "In browser-test, only 'pdf' format is offered in the select. All other formats (compressed_pdf, png, jpeg, docx, xlsx, pptx) must not appear.",
+    "visual_checkpoints": [
+      "Scenario is skipped until annotation creation runtime exports exist"
+    ],
+    "failure_meaning": "If this scenario runs as a beta-blocker before annotation creation is exported, the scenario classification regressed.",
+    "notes_for_codex": "Clean browser PDF export remains covered by VE-017/VE-021. Annotated export should be restored when PdfDoc.addHighlight or PdfDoc.addStickyNote exists in Tauri command surface."
+  },
+  {
+    "id": "VE-011",
+    "use_case_id": "UC-XFA-DETECT",
+    "title": "XFA detection banner shown for XFA document",
+    "runtime": "browser-test",
+    "priority": "beta_blocker",
+    "fixture_document": "tests/fixtures/sample-xfa.pdf",
+    "setup": [
+      "Load sample-xfa.pdf (a PDF with XFA form data, so pdfDoc.xfaDetected === true)"
+    ],
+    "steps": [
+      "Load the XFA PDF via window.__pdfluent_test__.loadDocument('tests/fixtures/sample-xfa.pdf')",
+      "Wait for floating-page-indicator",
+      "Assert the XFA warning banner is visible:",
+      "  Locate: page.getByText('contains XFA form data') or page.locator('.bg-amber-500\\/10')",
+      "Assert the banner text matches: 'This document contains XFA form data. Some content may not display correctly'",
+      "Switch to Read mode and open RightContextPanel",
+      "Assert [data-testid='doc-info-form-type'] shows 'XFA' or 'XFA Static' / 'XFA Dynamic' / 'XFA Hybrid'"
+    ],
+    "expected_visible_result": "An amber/yellow warning banner appears below the mode toolbar. The doc-info panel's form type field shows an XFA variant.",
+    "expected_exported_file_result": null,
+    "expected_capability_gating": "The banner is rendered only when pdfDoc.xfaDetected === true. For non-XFA PDFs it must not appear.",
+    "visual_checkpoints": [
+      "Amber banner is visible (locator: '.bg-amber-500\\/10')",
+      "Banner contains the text 'XFA form data'",
+      "doc-info-form-type contains 'XFA'"
+    ],
+    "failure_meaning": "XFA detection is not working — either the native document parser does not set xfaDetected, or the ViewerApp UI banner condition is broken",
+    "notes_for_codex": "The XFA banner can be located by visible text. The fixture sample-xfa.pdf contains an app-owned /XFA marker and is valid for detection workflow testing; deep packet-removal proof requires a redistributable real XFA fixture."
+  },
+  {
+    "id": "VE-012",
+    "use_case_id": "UC-XFA-FLATTEN",
+    "title": "Flatten XFA from XFA banner",
+    "runtime": "browser-test",
+    "priority": "app_ready",
+    "classification": "active_app_supported",
+    "automation_status": "active",
+    "fixture_document": "tests/fixtures/sample-xfa.pdf",
+    "setup": [
+      "Load sample-xfa.pdf",
+      "XFA banner is visible",
+      "Assert [data-testid='xfa-flatten-btn'] is visible and enabled"
+    ],
+    "steps": [
+      "Click [data-testid='xfa-flatten-btn']",
+      "Wait for the XFA banner to disappear",
+      "Assert the rendered page still displays"
+    ],
+    "expected_visible_result": "The XFA banner disappears and the current document remains rendered.",
+    "expected_exported_file_result": "A valid PDF is exported from the current document after flattening and exported bytes reopen successfully. Byte-difference and deep packet-removal assertions require a redistributable real XFA fixture, not the synthetic marker fixture.",
+    "expected_capability_gating": "TauriTransformEngine.flattenXfa() is available in browser-test; TauriTransformEngine.flattenXfa() is NOT available (returns notImpl)",
+    "visual_checkpoints": [
+      "xfa-flatten-btn is visible and enabled",
+      "XFA banner disappears after click",
+      "rendered-page remains visible"
+    ],
+    "failure_meaning": "Flatten UI or TauriTransformEngine.flattenXfa() failed even though PdfDoc.flattenXfa is exposed in the current browser-test harness.",
+    "notes_for_codex": "The XFA banner button calls engine.transform.flattenXfa(pdfDoc), replaces the current document, marks it dirty, and export downloads valid PDF bytes. The current fixture supports workflow and reopen checks; it must not be used for byte-difference or real XFA packet-removal proof."
+  },
+  {
+    "id": "VE-013",
+    "use_case_id": "UC-XFA-EXPORT",
+    "title": "Export after XFA flatten",
+    "runtime": "browser-test",
+    "priority": "app_ready",
+    "classification": "active_app_supported",
+    "automation_status": "active",
+    "fixture_document": "tests/fixtures/sample-xfa.pdf",
+    "setup": [
+      "Depends on VE-012 completing successfully"
+    ],
+    "steps": [
+      "After flattening XFA (VE-012), open export dialog",
+      "Export as PDF",
+      "Verify downloaded file does not contain XFA data"
+    ],
+    "expected_visible_result": "Export completes; downloaded PDF reopens without the XFA banner for the current app fixture",
+    "expected_exported_file_result": "Valid PDF bytes that reopen successfully. Byte-difference and no-/XFA packet assertions require a redistributable real XFA fixture.",
+    "expected_capability_gating": "Export uses current canonical browser-test bytes after flattenXfa replacement.",
+    "visual_checkpoints": [
+      "export-dialog is visible after flatten",
+      "download event fires",
+    "downloaded bytes start with %PDF-",
+    "downloaded bytes reopen successfully"
+    ],
+    "failure_meaning": "Browser export after flatten failed or produced a non-PDF. If a byte-difference or no-/XFA assertion is needed, replace sample-xfa.pdf with a redistributable real XFA fixture.",
+    "notes_for_codex": "This is implemented in the same Playwright flow as VE-012. The current fixture contains a synthetic /XFA marker comment for viewer detection, so tests must not assert that the marker string disappears."
+  },
+  {
+    "id": "VE-014",
+    "use_case_id": "UC-PDFA-VALIDATE",
+    "title": "PDF/A validate from Convert panel",
+    "runtime": "both",
+    "priority": "app_ready",
+    "classification": "active_app_supported",
+    "automation_status": "active",
+    "fixture_document": "tests/fixtures/sample-text.pdf",
+    "setup": [
+      "Load sample-text.pdf",
+      "Switch to Convert mode"
+    ],
+    "steps": [
+      "Assert [data-testid='pdfa-panel'] is visible",
+      "Click [data-testid='validate-pdfa-btn']",
+      "Assert [data-testid='pdfa-status'] contains a PDF/A validation result"
+    ],
+    "expected_visible_result": "The Convert panel shows PDF/A controls and displays a validation result.",
+    "expected_exported_file_result": null,
+    "expected_capability_gating": "TauriValidationEngine.validatePdfA() is implemented. TauriValidationEngine.validatePdfA() invokes 'validate_pdfa' Tauri command.",
+    "visual_checkpoints": [
+      "pdfa-panel is visible in Convert mode",
+      "validate-pdfa-btn is enabled",
+      "pdfa-status appears after validation"
+    ],
+    "failure_meaning": "PDF/A validation UI or TauriValidationEngine.validatePdfA() failed even though PdfDoc.validatePdfA is exposed in the current browser-test harness.",
+    "notes_for_codex": "The app exposes PDF/A controls in the Convert right panel, not the toolbar."
+  },
+  {
+    "id": "VE-015",
+    "use_case_id": "UC-PDFA-CONVERT",
+    "title": "Convert to PDF/A-2B from Convert panel",
+    "runtime": "browser-test",
+    "priority": "app_ready",
+    "classification": "active_app_supported",
+    "automation_status": "active",
+    "fixture_document": "tests/fixtures/sample-text.pdf",
+    "setup": [
+      "Load sample-text.pdf",
+      "Switch to Convert mode"
+    ],
+    "steps": [
+      "Assert [data-testid='convert-pdfa-btn'] is enabled",
+      "Click [data-testid='convert-pdfa-btn']",
+      "Assert [data-testid='pdfa-status'] reports conversion",
+      "Export the PDF and assert a valid PDF download"
+    ],
+    "expected_visible_result": "The Convert panel reports successful PDF/A conversion and the document remains exportable.",
+    "expected_exported_file_result": "A converted PDF is downloaded. The current SDK conversion may still report validation issues for minimal fixtures; this scenario checks mutation/export lifecycle, not conformance perfection.",
+    "expected_capability_gating": "TauriTransformEngine.convertToPdfa() is in TauriPdfEngine.supportedOperations: ['merge', 'append-document', 'flatten-xfa', 'convert-pdfa']",
+    "visual_checkpoints": [
+      "convert-pdfa-btn is enabled",
+      "pdfa-status reports conversion",
+      "export-dialog downloads a valid PDF"
+    ],
+    "failure_meaning": "PDF/A conversion UI, byte replacement, or browser export after conversion failed even though PdfDoc.convertToPdfa is exposed in the current browser-test harness.",
+    "notes_for_codex": "The app calls engine.transform.convertToPdfA(doc, '2b'), replaces current canonical bytes, marks dirty, and browser export clears dirty after download."
+  },
+  {
+    "id": "VE-016",
+    "use_case_id": "UC-MERGE-PDFS",
+    "title": "Merge PDFs (Tauri append flow)",
+    "runtime": "tauri",
+    "priority": "regression",
+    "fixture_document": "tests/fixtures/sample-text.pdf",
+    "setup": [
+      "Run in Tauri desktop build — not testable in browser-test harness",
+      "Load sample-text.pdf (3 pages)",
+      "Switch to Organize mode"
+    ],
+    "steps": [
+      "Assert [data-testid='organize-merge-pdf-btn'] is visible",
+      "Assert organize-merge-pdf-btn is NOT disabled (Tauri runtime)",
+      "Click organize-merge-pdf-btn",
+      "A native file picker dialog appears — select tests/fixtures/sample-b.pdf",
+      "Wait for task queue to show 'done' status",
+      "Assert floating-page-indicator shows increased page count (e.g. '1 / N+M')"
+    ],
+    "expected_visible_result": "Page count increases after merge. The organize-grid shows more page tiles.",
+    "expected_exported_file_result": "A merged PDF combining both input documents",
+    "expected_capability_gating": "In browser-test: organize-merge-pdf-btn has 'disabled' attribute. In Tauri: it is enabled.",
+    "visual_checkpoints": [
+      "organize-merge-pdf-btn is NOT disabled in Tauri",
+      "page count increases after file selection",
+      "organize-grid tile count matches new page count"
+    ],
+    "failure_meaning": "Merge (append) operation failed in Tauri backend, or the native file dialog did not fire",
+    "notes_for_codex": "In browser-test the button is always disabled: disabled={!isTauri || ...}. The browser-test harness supports merge at the API level (PdfDoc.merge(otherBytes)) but the ViewerApp UI exposes it only via Tauri. To test browser-test merge, you would need to invoke the engine directly via the test hook — not possible with the current window.__pdfluent_test__ API."
+  },
+  {
+    "id": "VE-017",
+    "use_case_id": "UC-BROWSER-EXPORT",
+    "title": "Browser PDF download (clean document, no annotations)",
+    "runtime": "browser-test",
+    "priority": "beta_blocker",
+    "fixture_document": "tests/fixtures/minimal.pdf",
+    "setup": [
+      "Load minimal.pdf (clean, no annotations)"
+    ],
+    "steps": [
+      "Click [data-testid='export-btn']",
+      "Assert [data-testid='export-dialog'] is visible",
+      "Assert export-format-select has exactly 1 option with value 'pdf'",
+      "Assert export-submit-btn is NOT disabled",
+      "Set up Playwright download listener: const downloadPromise = page.waitForEvent('download')",
+      "Click [data-testid='export-submit-btn']",
+      "Await the download",
+      "Assert downloaded file has .pdf extension",
+      "Read first 5 bytes of downloaded file and assert they equal '%PDF-'"
+    ],
+    "expected_visible_result": "Download starts immediately after clicking Export. The dialog closes.",
+    "expected_exported_file_result": "A valid PDF file (starts with '%PDF-'). File size should be >= 50 bytes.",
+    "expected_capability_gating": "Only 'pdf' format available in browser-test. BROWSER_FORMATS = new Set(['pdf']) in ExportDialog.tsx.",
+    "visual_checkpoints": [
+      "export-dialog closes after submit",
+      "download event fires within 10 seconds",
+      "downloaded file extension is .pdf"
+    ],
+    "failure_meaning": "browser-test PDF export is completely broken. This is a severity-1 beta blocker.",
+    "notes_for_codex": "The ExportDialog lazily imports the component — if clicking export-btn and the dialog doesn't appear within 3 seconds, the lazy load or the ViewerApp isExportOpen state is broken. Use page.waitForSelector('[data-testid=\"export-dialog\"]', {state: 'visible', timeout: 5000})."
+  },
+  {
+    "id": "VE-018",
+    "use_case_id": "UC-TAURI-SAVE",
+    "title": "Tauri save / export to filesystem",
+    "runtime": "tauri",
+    "priority": "regression",
+    "fixture_document": "tests/fixtures/sample-text.pdf",
+    "setup": [
+      "Run in Tauri desktop build",
+      "Load sample-text.pdf",
+      "Make a change (add highlight or comment) to set isDirty=true"
+    ],
+    "steps": [
+      "Assert [data-testid='save-as-btn'] is visible in TopBar",
+      "Click save-as-btn",
+      "A native 'Save As' dialog appears — choose an output path",
+      "Wait for task queue to show 'Saved' status",
+      "Assert [data-testid='undo-btn'] is present (document is still open)",
+      "Assert isDirty becomes false (save-as-btn may update its visual state)"
+    ],
+    "expected_visible_result": "Document is saved to the selected path. Task bar briefly shows 'Saving...' then 'Saved'.",
+    "expected_exported_file_result": "A valid PDF at the chosen filesystem path, containing the applied annotations",
+    "expected_capability_gating": "Save-as uses Tauri 'save_pdf' command. In browser-test: save-as-btn calls onSaveAs() which triggers the export dialog instead.",
+    "visual_checkpoints": [
+      "save-as-btn is present in TopBar",
+      "native file dialog appears (Tauri only)",
+      "task queue shows 'done' status after save"
+    ],
+    "failure_meaning": "Tauri save_pdf command failed or the dialog was cancelled unexpectedly",
+    "notes_for_codex": "In browser-test, save-as-btn triggers handleSaveAs which opens the export dialog (not a native save dialog). In Tauri, it calls @tauri-apps/plugin-dialog save(). Use WebdriverIO or Tauri-specific test tooling for native dialog interactions — Playwright cannot interact with OS-native dialogs."
+  },
+  {
+    "id": "VE-019",
+    "use_case_id": "UC-GATING-ORGANIZE",
+    "title": "browser-test: organize mode tools are disabled",
+    "runtime": "browser-test",
+    "priority": "beta_blocker",
+    "fixture_document": "tests/fixtures/sample-text.pdf",
+    "setup": [
+      "Load sample-text.pdf",
+      "Switch to Organize mode: page.getByRole('button', {name: 'Organize', exact: true}).click()"
+    ],
+    "steps": [
+      "Assert [data-testid='organize-grid'] is visible",
+      "Assert [data-testid='organize-merge-pdf-btn'] has 'disabled' attribute",
+      "Assert [data-testid='organize-split-btn'] (if visible) has 'disabled' attribute",
+      "Assert [data-testid='batch-action-bar'] is NOT visible (no pages selected yet)",
+      "Click [data-testid='select-all-btn']",
+      "Assert [data-testid='batch-action-bar'] becomes visible",
+      "Assert [data-testid='batch-delete-btn'] has 'disabled' attribute",
+      "Assert [data-testid='batch-rotate-btn'] has 'disabled' attribute",
+      "Click [data-testid='batch-delete-btn'] (disabled click — nothing should happen)",
+      "Assert no task appears in BottomTaskBar",
+      "Assert page count is unchanged"
+    ],
+    "expected_visible_result": "Organize mode shows page thumbnails but all mutating buttons are disabled. Clicking disabled buttons produces no side effects.",
+    "expected_exported_file_result": null,
+    "expected_capability_gating": "getWiredTools(false) does NOT include 'toolbar.deletePage', 'toolbar.rotateLeft', 'toolbar.rotateRight'. OrganizeGrid.organize-merge-pdf-btn: disabled={!isTauri || ...}",
+    "visual_checkpoints": [
+      "organize-grid is visible",
+      "organize-merge-pdf-btn is disabled",
+      "batch-delete-btn is disabled after selection",
+      "batch-rotate-btn is disabled after selection",
+      "No task queue entry after clicking disabled button"
+    ],
+    "failure_meaning": "Capability gating regressed — browser-test can now trigger page deletion or merging which it shouldn't be able to do",
+    "notes_for_codex": "The per-page [data-testid='organize-delete-{i}'] and [data-testid='organize-rotate-{i}'] buttons in the grid may also be disabled in browser-test. Check them too: locator('[data-testid=\"organize-delete-0\"]').isDisabled(). Batch action buttons: disabled={!isTauri || ...} in OrganizeGrid."
+  },
+  {
+    "id": "VE-020",
+    "use_case_id": "UC-GATING-ANNOT-TOOLBAR",
+    "title": "browser-test: annotation creation tools hidden when runtime exports are missing",
+    "runtime": "browser-test",
+    "priority": "beta_blocker",
+    "fixture_document": "tests/fixtures/sample-text.pdf",
+    "setup": [
+      "Load sample-text.pdf",
+      "Switch to Review mode"
+    ],
+    "steps": [
+      "Assert [data-testid='add-comment-btn'] does NOT exist (count === 0)",
+      "Assert [data-testid='annotation-tool-highlight'] does NOT exist (count === 0)",
+      "Assert [data-testid='annotation-tool-underline'] does NOT exist (count === 0)",
+      "Assert [data-testid='annotation-tool-strikeout'] does NOT exist (count === 0)",
+      "Assert [data-testid='annotation-tool-rectangle'] does NOT exist (count === 0)",
+      "Assert [data-testid='annotation-tool-redaction'] does NOT exist (count === 0)"
+    ],
+    "expected_visible_result": "No annotation creation controls are visible in browser-test harness while native Tauri annotation commands are missing.",
+    "expected_exported_file_result": null,
+    "expected_capability_gating": "ModeToolbar annotationTools array is empty in browser-test; add-comment is Tauri-only until PdfDoc.addStickyNote exists in Tauri command surface.",
+    "visual_checkpoints": [
+      "add-comment-btn count === 0",
+      "annotation-tool-highlight count === 0",
+      "annotation-tool-underline count === 0",
+      "annotation-tool-strikeout count === 0",
+      "annotation-tool-rectangle count === 0",
+      "annotation-tool-redaction count === 0"
+    ],
+    "failure_meaning": "Annotation toolbar browser-test gating regressed — unsupported annotation creation is being shown in browser mode",
+    "notes_for_codex": "Use locator.count() and assert all creation controls equal 0. These buttons are conditionally rendered (not just disabled) in browser-test while runtime exports are absent."
+  },
+  {
+    "id": "VE-021",
+    "use_case_id": "UC-GATING-EXPORT-FORMAT",
+    "title": "browser-test: export dialog shows only PDF format",
+    "runtime": "browser-test",
+    "priority": "beta_blocker",
+    "fixture_document": "tests/fixtures/minimal.pdf",
+    "setup": [
+      "Load minimal.pdf"
+    ],
+    "steps": [
+      "Click [data-testid='export-btn']",
+      "Assert [data-testid='export-dialog'] is visible",
+      "Get all <option> elements from [data-testid='export-format-select']",
+      "Assert there is exactly 1 option",
+      "Assert that option's value is 'pdf'",
+      "Assert no option with value 'compressed_pdf' exists",
+      "Assert no option with value 'png' exists",
+      "Assert no option with value 'jpeg' exists",
+      "Assert no option with value 'docx' exists",
+      "Assert no option with value 'xlsx' exists",
+      "Assert no option with value 'pptx' exists"
+    ],
+    "expected_visible_result": "Export format dropdown has exactly one option: 'PDF'",
+    "expected_exported_file_result": null,
+    "expected_capability_gating": "BROWSER_FORMATS = new Set(['pdf']) in ExportDialog.tsx. Filter: .filter(f => isTauri || BROWSER_FORMATS.has(f))",
+    "visual_checkpoints": [
+      "export-format-select has exactly 1 option",
+      "The only option value is 'pdf'"
+    ],
+    "failure_meaning": "Export format gating regressed — formats that require Tauri native commands are now being offered in the browser",
+    "notes_for_codex": "const options = await page.locator('[data-testid=\"export-format-select\"] option').all(); then check options.length === 1 and (await options[0].getAttribute('value')) === 'pdf'."
+  },
+  {
+    "id": "VE-022",
+    "use_case_id": "UC-GATING-DISABLED-CLICK",
+    "title": "browser-test: clicking a disabled tool produces no side effect",
+    "runtime": "browser-test",
+    "priority": "beta_blocker",
+    "fixture_document": "tests/fixtures/sample-text.pdf",
+    "setup": [
+      "Load sample-text.pdf",
+      "Switch to Organize mode"
+    ],
+    "steps": [
+      "Note the current page count from floating-page-indicator",
+      "Assert [data-testid='organize-merge-pdf-btn'] is disabled",
+      "Attempt to click organize-merge-pdf-btn (use page.locator(...).click({ force: true }))",
+      "Wait 500ms",
+      "Assert no entries appeared in BottomTaskBar task queue",
+      "Assert floating-page-indicator page count is unchanged",
+      "Assert no toast or error message is visible"
+    ],
+    "expected_visible_result": "Nothing happens. No task queue entry, no toast, no page count change.",
+    "expected_exported_file_result": null,
+    "expected_capability_gating": "ModeToolbar ToolButton: disabled={!wired}, onClick={wired ? onClick : undefined}. Disabled buttons have no click handler.",
+    "visual_checkpoints": [
+      "No new entries in BottomTaskBar after click",
+      "Page count unchanged",
+      "No error or success toast visible"
+    ],
+    "failure_meaning": "A disabled tool button is dispatching actions or showing toasts — capability gating is broken",
+    "notes_for_codex": "Use { force: true } to click a disabled button (bypass Playwright's disabled-click guard). The ModeToolbar ToolButton sets onClick={undefined} when !wired, so the click should silently do nothing. Use page.locator('[data-task-queue-item]') or inspect the BottomTaskBar to verify no task was pushed."
+  },
+  {
+    "id": "VE-023",
+    "use_case_id": "UC-GATING-OCR",
+    "title": "browser-test: OCR scan tool is disabled in convert mode",
+    "runtime": "browser-test",
+    "priority": "beta_blocker",
+    "fixture_document": "tests/fixtures/sample-text.pdf",
+    "setup": [
+      "Load sample-text.pdf",
+      "Switch to Convert mode"
+    ],
+    "steps": [
+      "Find the OCR scan tool button in ModeToolbar: getByTitle('OCR scan (not yet available)')",
+      "Assert it has the 'disabled' HTML attribute",
+      "Assert its title contains '(not yet available)'",
+      "Assert its CSS includes opacity-40 or similar disabled styling (class 'text-muted-foreground/40 cursor-default')"
+    ],
+    "expected_visible_result": "The OCR scan button is visually greyed out with a 'not yet available' tooltip in browser-test",
+    "expected_exported_file_result": null,
+    "expected_capability_gating": "getWiredTools(false) does NOT include 'toolbar.ocrScan'. getWiredTools(true) DOES include it.",
+    "visual_checkpoints": [
+      "OCR scan button is present but disabled in convert mode browser-test",
+      "Title contains '(not yet available)'"
+    ],
+    "failure_meaning": "OCR scan is incorrectly enabled in browser-test — clicking it would silently fail or error since no browser-test OCR engine is wired",
+    "notes_for_codex": "The OCR tool button has no data-testid in ModeToolbar. Locate it by title: page.getByTitle('OCR scan (not yet available)'). In English locale the title is 'OCR scan (not yet available)' when disabled."
+  },
+  {
+    "id": "VE-024",
+    "use_case_id": "UC-GATING-REDACT",
+    "title": "browser-test: redact draw button hidden in protect mode",
+    "runtime": "browser-test",
+    "priority": "beta_blocker",
+    "fixture_document": "tests/fixtures/sample-text.pdf",
+    "setup": [
+      "Load sample-text.pdf",
+      "Switch to Protect mode"
+    ],
+    "steps": [
+      "Assert [data-testid='annotation-tool-redaction-protect'] does NOT exist in DOM (count === 0)",
+      "Confirm: in ModeToolbar, the protect-mode redaction toggle is wrapped in {mode === 'protect' && pageCount > 0 && isTauri && ...} — isTauri is false in browser-test, so button is not rendered"
+    ],
+    "expected_visible_result": "The redact draw toggle button does not appear in the protect mode toolbar in browser-test",
+    "expected_exported_file_result": null,
+    "expected_capability_gating": "ModeToolbar: protect mode redaction toggle condition: mode === 'protect' && pageCount > 0 && isTauri",
+    "visual_checkpoints": [
+      "annotation-tool-redaction-protect count === 0 in browser-test"
+    ],
+    "failure_meaning": "Redaction draw tool is incorrectly shown in browser-test harness — the isTauri guard failed",
+    "notes_for_codex": "page.locator('[data-testid=\"annotation-tool-redaction-protect\"]').count() must equal 0 in browser-test. This is a DOM-existence check, not a disabled-attribute check. The button is simply not rendered when !isTauri."
+  }
+]

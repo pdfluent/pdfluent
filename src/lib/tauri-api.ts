@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 import { invoke } from "@tauri-apps/api/core";
 
@@ -25,6 +25,19 @@ export interface DocumentInfo {
   xfa_detected?: boolean;
   xfa_rendering_supported?: boolean;
   xfa_notice?: string | null;
+  active_content?: ActiveContentInfo | null;
+}
+
+export interface ActiveContentInfo {
+  has_active_content: boolean;
+  has_javascript: boolean;
+  has_open_action: boolean;
+  has_additional_actions: boolean;
+  has_launch_actions: boolean;
+  has_submit_form: boolean;
+  has_uri_actions: boolean;
+  has_xfa: boolean;
+  flags: string[];
 }
 
 export interface RenderedPage {
@@ -131,6 +144,210 @@ export async function setFormFieldValue(
 }
 
 // ---------------------------------------------------------------------------
+// First-class AcroForm model (mirrors pdf_engine::FormFieldModelDto / the SDK
+// `build_form_model` contract). Wire shape is protected by the
+// formModelWireContract drift-guard — keep these in sync with the Rust DTO.
+// ---------------------------------------------------------------------------
+
+export interface FormFieldOptionDto {
+  export: string;
+  display: string;
+}
+
+export type FormFieldKindDto =
+  | { type: "text"; multiline: boolean; comb: boolean; password: boolean }
+  | { type: "checkbox"; onState: string; checked: boolean }
+  | { type: "radioGroup"; options: string[] }
+  | { type: "comboBox"; editable: boolean; options: FormFieldOptionDto[] }
+  | { type: "listBox"; multiSelect: boolean; options: FormFieldOptionDto[] }
+  | { type: "pushButton" }
+  | { type: "signature" };
+
+export interface WidgetModelDto {
+  pageIndex: number | null;
+  /** [x0, y0, x1, y1] in PDF user space (origin bottom-left). */
+  rect: [number, number, number, number];
+  onState: string | null;
+  appearanceState: string | null;
+}
+
+export interface DaInfoDto {
+  fontName: string | null;
+  /** Font size in points; 0 means auto-size. */
+  fontSize: number;
+  color: number[];
+}
+
+export interface FormFieldModelDto {
+  name: string;
+  kind: FormFieldKindDto;
+  value: string | null;
+  /** Array of selected export values; only set for multi-select list boxes. */
+  selectedValues: string[] | null;
+  defaultValue: string | null;
+  tooltip: string | null;
+  readOnly: boolean;
+  required: boolean;
+  maxLen: number | null;
+  /** 0 = left, 1 = centered, 2 = right. */
+  quadding: number;
+  da: DaInfoDto;
+  widgets: WidgetModelDto[];
+}
+
+/** Typed write request matching pdf_engine::FormWriteRequest (serde tag "kind"). */
+export type FormWriteRequest =
+  | { kind: "text"; name: string; value: string }
+  | { kind: "checkbox"; name: string; checked: boolean }
+  | { kind: "radio"; name: string; export: string }
+  | { kind: "choice"; name: string; value: string }
+  | { kind: "multiChoice"; name: string; values: string[] };
+
+export async function getFormModel(): Promise<FormFieldModelDto[]> {
+  return invoke<FormFieldModelDto[]>("get_form_model");
+}
+
+/** A /Link annotation carrying a /URI action (mirrors pdf_engine::LinkAnnotationDto). */
+export interface LinkAnnotationDto {
+  pageIndex: number;
+  /** [x0, y0, x1, y1] in PDF user space (origin bottom-left). */
+  rect: [number, number, number, number];
+  uri: string;
+}
+
+export async function getLinkAnnotations(): Promise<LinkAnnotationDto[]> {
+  return invoke<LinkAnnotationDto[]>("get_link_annotations");
+}
+
+/** Apply a typed value through the SDK writeback chain (/V + /AS + /AP). */
+export async function setFormValue(request: FormWriteRequest): Promise<void> {
+  return invoke<void>("set_form_value", { request });
+}
+
+// ---------------------------------------------------------------------------
+// XFA form model (Phase 1 fill). Distinct from the AcroForm model above: XFA
+// rects are in page space with a TOP-LEFT origin (y grows downward), so the
+// XFA overlay maps them WITHOUT the y-flip the AcroForm overlay applies.
+// Mirrors pdf_engine::Xfa*Dto (serde camelCase). Keep in sync with the Rust DTOs.
+// ---------------------------------------------------------------------------
+
+export type XfaFieldType =
+  | "text"
+  | "checkbox"
+  | "radioGroup"
+  | "button"
+  | "dropdown"
+  | "signature"
+  | "dateTime"
+  | "numeric"
+  | "password"
+  | "image"
+  | "barcode";
+
+/** Rectangle in XFA page space: points, top-left origin (y grows downward). */
+export interface XfaRectDto {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+export interface XfaFieldOptionDto {
+  display: string;
+  save: string;
+}
+
+/** One layouted widget occurrence of an XFA field. */
+export interface XfaWidgetDto {
+  /** 0-based page index in the XFA layout. */
+  page: number;
+  rect: XfaRectDto;
+  /** For radio groups: the on-value this member widget asserts. */
+  onValue: string | null;
+}
+
+/** One logical XFA form field. */
+export interface XfaFieldDto {
+  name: string;
+  somPath: string;
+  fieldType: XfaFieldType;
+  value: string;
+  readOnly: boolean;
+  required: boolean;
+  multiline: boolean;
+  hidden: boolean;
+  options: XfaFieldOptionDto[];
+  onValue: string | null;
+  offValue: string | null;
+  /** First layout page (0-based); null when not in the current layout. */
+  page: number | null;
+  rect: XfaRectDto | null;
+  widgets: XfaWidgetDto[];
+  boundToData: boolean;
+  bindNone: boolean;
+}
+
+export interface XfaFormModelDto {
+  /** XFA layout page count. May exceed the rendered page count when the layout
+   *  over-produces empty `occur` instance pages (flatten suppresses those), so
+   *  the overlay bounds placement by the document's rendered page count. */
+  pageCount: number;
+  fields: XfaFieldDto[];
+}
+
+/** Typed XFA write request (mirrors pdf_engine::XfaWriteRequest, tag "kind"). */
+export type XfaWriteRequest =
+  | { kind: "text"; name: string; value: string }
+  | { kind: "checkbox"; name: string; checked: boolean }
+  | { kind: "radio"; name: string; export: string };
+
+/** Enumerate the XFA form model (layout page count + fields). */
+export async function xfaFormModel(): Promise<XfaFormModelDto> {
+  return invoke<XfaFormModelDto>("xfa_form_model");
+}
+
+/** Set one XFA field value (persists into the datasets packet on save). */
+export async function setXfaFieldValue(request: XfaWriteRequest): Promise<void> {
+  return invoke<void>("set_xfa_field_value", { request });
+}
+
+/** One field/subform whose presence changed during a Phase 2 interactive commit. */
+export interface XfaPresenceChangeDto {
+  name: string;
+  /** Presence before the commit: visible|hidden|invisible|inactive. */
+  before: string;
+  /** Presence after re-layout. */
+  after: string;
+}
+
+/** Result of a Phase 2 interactive commit (commit_xfa_field_value). */
+export interface XfaCommitResultDto {
+  rawValue: string;
+  persistedToDatasets: boolean;
+  /** True when the SDK commit loop ran change/click+calculate scripts (Phase 2);
+   *  false in the Phase 1 fallback (xfa-interactive feature off). */
+  interactive: boolean;
+  scriptsExecuted: number;
+  pageCountBefore: number;
+  pageCountAfter: number;
+  presenceChanges: XfaPresenceChangeDto[];
+  /** Refreshed field model after the commit (revealed/hidden fields, geometry). */
+  model: XfaFormModelDto;
+}
+
+/**
+ * Phase 2 interactive XFA commit: routes through the SDK commit loop
+ * (change/click + calculate scripts → re-layout → presence changes) when the
+ * backend `xfa-interactive` feature is compiled, else falls back to the Phase 1
+ * value write. Returns the outcome plus the refreshed model.
+ */
+export async function commitXfaFieldValue(
+  request: XfaWriteRequest,
+): Promise<XfaCommitResultDto> {
+  return invoke<XfaCommitResultDto>("commit_xfa_field_value", { request });
+}
+
+// ---------------------------------------------------------------------------
 // PDF manipulation
 // ---------------------------------------------------------------------------
 
@@ -222,12 +439,14 @@ export async function addShapeAnnotation(
   rect: [number, number, number, number],
   shapeType: string,
   color: [number, number, number],
+  strokeWidth?: number,
 ): Promise<void> {
   return invoke<void>("add_shape_annotation", {
     pageIndex,
     rect,
     shapeType,
     color,
+    strokeWidth,
   });
 }
 
@@ -559,14 +778,98 @@ export interface PaddleOcrResponse {
   };
 }
 
+export interface OcrRuntimeStatus {
+  available: boolean;
+  python_path: string | null;
+  python_source: string | null;
+  bridge_path: string;
+  bridge_available: boolean;
+  missing_packages: string[];
+  diagnostics: string[];
+  remediation: string;
+  package_versions: Record<string, string>;
+}
+
 export async function validateStorageProfile(
   _profile: StorageProfilePayload,
 ): Promise<StorageValidationResult> {
   throw new Error("Storage validation not yet implemented in XFA SDK backend");
 }
 
+export async function getOcrStatus(): Promise<OcrRuntimeStatus> {
+  return invoke<OcrRuntimeStatus>("get_ocr_status");
+}
+
 export async function runPaddleOcr(
   payload: PaddleOcrRequestPayload,
 ): Promise<PaddleOcrResponse> {
   return invoke<PaddleOcrResponse>("run_paddle_ocr", { payload });
+}
+
+// ---------------------------------------------------------------------------
+// TextSpanInfo — SDK canonical wire DTO
+// ---------------------------------------------------------------------------
+
+/**
+ * Vertical font metrics from the embedded font (/1000 em units).
+ * Mirrors `pdf_engine::text::FontMetrics`.
+ */
+export interface FontMetricsInfo {
+  ascent: number;
+  descent: number;
+  /** Omitted when not present in the font. */
+  capHeight?: number;
+  /** Omitted when not present in the font. */
+  xHeight?: number;
+}
+
+/**
+ * Raw serde JSON of the SDK's `pdf_engine::TextSpanInfo` as returned by
+ * `get_page_text_spans`.
+ *
+ * All field names and optionality mirror the Rust serde representation exactly.
+ * Note: `font_size` uses snake_case (no serde rename); all other metadata keys
+ * are camelCase via `#[serde(rename = ...)]`.
+ *
+ * Do NOT add fields here unless they are also present in the Rust struct.
+ * The drift-guard test in `src/lib/__tests__/textSpanWireContract.test.ts`
+ * asserts this list equals the SDK wire contract.
+ */
+export interface TextSpanInfo {
+  text: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  /** Snake_case: no serde rename on the Rust side. */
+  font_size: number;
+  /** PostScript font name with subset prefix stripped. Absent when unknown. */
+  fontName?: string;
+  /** Bold flag derived from font descriptor or PostScript name. */
+  isBold: boolean;
+  /** Italic flag derived from font descriptor or PostScript name. */
+  isItalic: boolean;
+  /** RGB fill color [0.0–1.0]. Absent for pattern/shading paints. */
+  color?: [number, number, number];
+  /** Whether glyph widths came from real font metrics or an estimate. */
+  widthSource: 'Metric' | 'Estimate';
+  /** Per-glyph bounding boxes [x0, y0, x1, y1] (y up). Absent when empty. */
+  charBounds?: [number, number, number, number][];
+  /** Full affine transform [a,b,c,d,e,f] of the span's first glyph. Absent when not captured. */
+  transform?: [number, number, number, number, number, number];
+  /** Numeric font weight (~100–900) from embedded font data. Absent when unavailable. */
+  fontWeight?: number;
+  /** Serif flag from embedded font data. Absent when unavailable. */
+  isSerif?: boolean;
+  /** Monospace flag from embedded font data. Absent when unavailable. */
+  isMonospace?: boolean;
+  /** Coarse PDF text render mode: 0=fill, 1=stroke, 3=invisible. Absent when default. */
+  renderMode?: number;
+  /** Vertical font metrics from the embedded font. Absent when unavailable. */
+  fontMetrics?: FontMetricsInfo;
+}
+
+/** Fetch positioned text spans for a single page (SDK extraction path). */
+export async function getPageTextSpans(pageIndex: number): Promise<TextSpanInfo[]> {
+  return invoke<TextSpanInfo[]>('get_page_text_spans', { pageIndex });
 }

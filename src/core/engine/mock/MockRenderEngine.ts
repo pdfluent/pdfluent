@@ -1,30 +1,79 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 import type { PdfDocument, Page } from '../../document';
 import type { RenderOptions, EngineResult, AsyncEngineResult } from '../types';
 
-// Minimal PNG (1x1 transparent pixel) for testing
-const MOCK_PNG = new Uint8Array([
-  0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, // PNG signature
+// Valid 1×1 grey PNG (67 bytes) — fallback when OffscreenCanvas is unavailable.
+const FALLBACK_PNG = new Uint8Array([
+  0x89,0x50,0x4E,0x47,0x0D,0x0A,0x1A,0x0A, // PNG signature
+  0x00,0x00,0x00,0x0D,0x49,0x48,0x44,0x52, // IHDR chunk
+  0x00,0x00,0x00,0x01,0x00,0x00,0x00,0x01, // 1×1
+  0x08,0x02,0x00,0x00,0x00,0x90,0x77,0x53, // 8-bit RGB
+  0xDE,0x00,0x00,0x00,0x0C,0x49,0x44,0x41, // IDAT chunk
+  0x54,0x08,0xD7,0x63,0xD8,0xD0,0xD0,0x00, // compressed grey pixel
+  0x00,0x00,0x11,0x00,0x05,0xE4,0xA8,0x3E, // CRC
+  0x28,0x00,0x00,0x00,0x00,0x49,0x45,0x4E, // IEND chunk
+  0x44,0xAE,0x42,0x60,0x82,
 ]);
+
+/**
+ * Generates a valid synthetic PNG for a mock page using OffscreenCanvas.
+ * White background with centred "Page {N}" label at A4 aspect ratio.
+ * Falls back to FALLBACK_PNG if OffscreenCanvas is unavailable (e.g. Node).
+ */
+async function generateMockPagePng(
+  pageNumber: number,
+  width: number,
+  height: number,
+): Promise<Uint8Array> {
+  if (typeof OffscreenCanvas === 'undefined') return FALLBACK_PNG;
+
+  const canvas = new OffscreenCanvas(width, height);
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return FALLBACK_PNG;
+
+  // White background
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, width, height);
+
+  // Light border to indicate page bounds
+  ctx.strokeStyle = '#cccccc';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(0.5, 0.5, width - 1, height - 1);
+
+  // Centred page label
+  const fontSize = Math.max(12, Math.round(height / 20));
+  ctx.fillStyle = '#888888';
+  ctx.font = `${fontSize}px sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(`Page ${pageNumber}`, width / 2, height / 2);
+
+  const blob = await canvas.convertToBlob({ type: 'image/png' });
+  return new Uint8Array(await blob.arrayBuffer());
+}
 
 export class MockRenderEngine {
   async renderPage(
     document: PdfDocument,
     pageIndex: number,
-    _width: number,
-    _height: number,
+    width: number,
+    height: number,
     _options?: RenderOptions
   ): AsyncEngineResult<Uint8Array> {
     if (!document.pages[pageIndex]) {
       return { success: false, error: { code: 'page-not-found', message: `Page ${pageIndex} not found` } };
     }
-    return { success: true, value: MOCK_PNG };
+    // Ensure minimum size for valid rendering
+    const w = Math.max(1, Math.round(width));
+    const h = Math.max(1, Math.round(height));
+    const png = await generateMockPagePng(pageIndex + 1, w, h);
+    return { success: true, value: png };
   }
 
   async renderPages(

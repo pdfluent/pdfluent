@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 /**
@@ -108,6 +108,10 @@ describe('TextInlineEditor — props', () => {
   it('has zoom prop', () => {
     expect(inlineEditorSrc).toContain('zoom');
   });
+
+  it('has maxLength prop for beta-safe text replacement', () => {
+    expect(inlineEditorSrc).toContain('maxLength?: number | null');
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -119,20 +123,26 @@ describe('TextInlineEditor — testid attributes', () => {
     expect(inlineEditorSrc).toContain('text-inline-editor"');
   });
 
-  it('textarea has text-inline-editor-textarea testid', () => {
-    expect(inlineEditorSrc).toContain('text-inline-editor-textarea');
+  it('renders beta limitation help text below the active editor', () => {
+    expect(inlineEditorSrc).toContain('text-inline-editor-help');
+    expect(inlineEditorSrc).toContain("t('textEdit.betaLimitHelp')");
   });
 
-  it('commit button has text-inline-editor-commit testid', () => {
-    expect(inlineEditorSrc).toContain('text-inline-editor-commit');
+  it('editor element uses contentEditable (not textarea)', () => {
+    expect(inlineEditorSrc).toContain('contentEditable');
   });
 
-  it('cancel button has text-inline-editor-cancel testid', () => {
-    expect(inlineEditorSrc).toContain('text-inline-editor-cancel');
+  it('uses committedRef to prevent double-commit on blur+Escape', () => {
+    expect(inlineEditorSrc).toContain('committedRef');
   });
 
-  it('actions row has text-inline-editor-actions testid', () => {
-    expect(inlineEditorSrc).toContain('text-inline-editor-actions');
+  it('editor is a div element (not a button or textarea)', () => {
+    expect(inlineEditorSrc).not.toContain('text-inline-editor-commit');
+    expect(inlineEditorSrc).not.toContain('text-inline-editor-cancel');
+  });
+
+  it('no separate actions row — editing is commit-on-blur', () => {
+    expect(inlineEditorSrc).not.toContain('text-inline-editor-actions');
   });
 });
 
@@ -146,10 +156,13 @@ describe('TextInlineEditor — keyboard behavior', () => {
     expect(inlineEditorSrc).toContain('onCancel()');
   });
 
-  it('Cmd/Ctrl+Enter calls onCommit', () => {
+  it('Enter (plain and Cmd/Ctrl) commits via the normalized editor reader', () => {
     expect(inlineEditorSrc).toContain("e.key === 'Enter'");
-    expect(inlineEditorSrc).toContain('e.metaKey || e.ctrlKey');
-    expect(inlineEditorSrc).toContain('onCommit(draft)');
+    expect(inlineEditorSrc).toContain('onCommit(readEditorText() || draft)');
+    // Plain Enter must never insert a contenteditable line break: writable
+    // targets are single-line PDF runs and a <br>/<div> would be silently
+    // glued into the committed text.
+    expect(inlineEditorSrc).not.toContain("e.key === 'Enter' && (e.metaKey || e.ctrlKey)");
   });
 
   it('has handleKeyDown function', () => {
@@ -166,18 +179,44 @@ describe('TextInlineEditor — keyboard behavior', () => {
 });
 
 // ---------------------------------------------------------------------------
+// TextInlineEditor — honesty gating
+// ---------------------------------------------------------------------------
+
+describe('TextInlineEditor — honesty gating', () => {
+  it('exposes the computed edit limit on the contenteditable element', () => {
+    expect(inlineEditorSrc).toContain('data-max-length={effectiveMaxLength ?? undefined}');
+  });
+
+  it('blocks over-limit typing before contentEditable mutates', () => {
+    expect(inlineEditorSrc).toContain('handleBeforeInput');
+    expect(inlineEditorSrc).toContain('onBeforeInput={handleBeforeInput}');
+    expect(inlineEditorSrc).toContain('insertedText.length > remaining');
+    expect(inlineEditorSrc).toContain('e.preventDefault()');
+  });
+
+  it('clips oversized paste content to remaining writable characters', () => {
+    expect(inlineEditorSrc).toContain('handlePaste');
+    expect(inlineEditorSrc).toContain('onPaste={handlePaste}');
+    expect(inlineEditorSrc).toContain("document.execCommand('insertText', false, allowedText)");
+  });
+
+  it('clamps programmatic input before updating draft state', () => {
+    expect(inlineEditorSrc).toContain('clampText(currentText)');
+    expect(inlineEditorSrc).toContain('setEditorText(clampedText)');
+    expect(inlineEditorSrc).toContain('onDraftChange(clampedText)');
+  });
+});
+
+// ---------------------------------------------------------------------------
 // TextInlineEditor — blur does NOT auto-commit
 // ---------------------------------------------------------------------------
 
 describe('TextInlineEditor — blur behavior', () => {
-  it('onBlur handler is a no-op (does not auto-commit)', () => {
+  it('onBlur handler auto-commits via handleBlur', () => {
     expect(inlineEditorSrc).toContain('onBlur');
-    // The onBlur should NOT call onCommit
-    const blurSection = inlineEditorSrc.slice(
-      inlineEditorSrc.indexOf('onBlur'),
-      inlineEditorSrc.indexOf('onBlur') + 60,
-    );
-    expect(blurSection).not.toContain('onCommit');
+    expect(inlineEditorSrc).toContain('handleBlur');
+    // committedRef prevents double-commit when Escape fires before blur
+    expect(inlineEditorSrc).toContain('committedRef.current');
   });
 });
 
@@ -227,9 +266,9 @@ describe('TextInlineEditor — auto-focus', () => {
     expect(inlineEditorSrc).toContain('el.focus()');
   });
 
-  it('uses a textarea ref', () => {
-    expect(inlineEditorSrc).toContain('textareaRef');
-    expect(inlineEditorSrc).toContain('useRef<HTMLTextAreaElement>');
+  it('uses a div ref (editorRef)', () => {
+    expect(inlineEditorSrc).toContain('editorRef');
+    expect(inlineEditorSrc).toContain('useRef<HTMLDivElement>');
   });
 });
 
@@ -280,6 +319,21 @@ describe('ViewerApp — TextInlineEditor integration', () => {
     expect(block).toContain('onCancel={handleDraftCancel}');
   });
 
+  it('passes maxLength={textEditMaxLength} to TextInlineEditor', () => {
+    const start = viewerAppSrc.indexOf('<TextInlineEditor');
+    const block = viewerAppSrc.slice(
+      start,
+      viewerAppSrc.indexOf('/>', start),
+    );
+    expect(block).toContain('maxLength={textEditMaxLength}');
+  });
+
+  it('derives textEditMaxLength from mutation support constraints', () => {
+    expect(viewerAppSrc).toContain('textEditMaxLength');
+    expect(viewerAppSrc).toContain('mutationSupport.constraints?.maxLength ?? null');
+    expect(viewerAppSrc).not.toContain('computeBboxExpansionChars(selectedTextTarget)');
+  });
+
   it('has handleDraftCancel that clears editingTextTargetId', () => {
     expect(viewerAppSrc).toContain('handleDraftCancel');
     const fn = viewerAppSrc.slice(
@@ -292,9 +346,11 @@ describe('ViewerApp — TextInlineEditor integration', () => {
 
   it('has handleDraftCommit that clears editing state', () => {
     expect(viewerAppSrc).toContain('handleDraftCommit');
+    const start = viewerAppSrc.indexOf('const handleDraftCommit = useCallback');
+    const end = viewerAppSrc.indexOf('\n  }, [', start);
     const fn = viewerAppSrc.slice(
-      viewerAppSrc.indexOf('handleDraftCommit'),
-      viewerAppSrc.indexOf('handleDraftCommit') + 300,
+      start,
+      end,
     );
     expect(fn).toContain('setEditingTextTargetId(null)');
   });

@@ -1,16 +1,16 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 /**
  * TextContextBar
  *
  * A small floating action bar that appears above a hovered or selected
- * text target. Exposes quick actions: annotate, redact, copy, summarize,
- * explain.
+ * text target. Exposes only direct document actions: edit, annotate,
+ * redact, and copy.
  *
  * Phase 2 scope:
  * - UI trigger + routing only.
@@ -26,6 +26,7 @@
 
 import { memo } from 'react';
 import { useTranslation } from 'react-i18next';
+import { MessageSquareIcon, PencilIcon, ShieldIcon } from 'lucide-react';
 import type { TextParagraphTarget, TextRect } from '../text/textInteractionModel';
 import { pdfRectToDom } from '../text/textInteractionModel';
 import { viewerActionRegistry } from '../interaction/contextActions';
@@ -39,16 +40,12 @@ import type { TextEditabilityResult } from '../text/textEditability';
 export type TextContextActionId =
   | 'edit-text'
   | 'annotate'
-  | 'redact'
-  | 'copy'
-  | 'summarize'
-  | 'explain';
+  | 'redact';
 
 export interface TextContextAction {
   id: TextContextActionId;
   label: string;
-  /** Icon character or emoji — placeholder until icon library is finalised. */
-  icon: string;
+  icon: typeof PencilIcon;
   /** Whether this action is available in the given mode. */
   availableIn: ReadonlyArray<ViewerMode>;
 }
@@ -57,38 +54,20 @@ export const TEXT_CONTEXT_ACTIONS: ReadonlyArray<TextContextAction> = [
   {
     id: 'edit-text',
     label: 'textContext.editText',
-    icon: '✏',
+    icon: PencilIcon,
     availableIn: ['edit'],
   },
   {
     id: 'annotate',
     label: 'textContext.annotate',
-    icon: '✏️',
+    icon: MessageSquareIcon,
     availableIn: ['review', 'edit'],
   },
   {
     id: 'redact',
     label: 'textContext.redact',
-    icon: '⬛',
+    icon: ShieldIcon,
     availableIn: ['protect', 'edit'],
-  },
-  {
-    id: 'copy',
-    label: 'textContext.copy',
-    icon: '📋',
-    availableIn: ['read', 'review', 'edit', 'protect', 'forms'],
-  },
-  {
-    id: 'summarize',
-    label: 'textContext.summarize',
-    icon: '📝',
-    availableIn: ['read', 'review', 'edit'],
-  },
-  {
-    id: 'explain',
-    label: 'textContext.explain',
-    icon: '💡',
-    availableIn: ['read', 'review', 'edit'],
   },
 ];
 
@@ -225,6 +204,7 @@ export const TextContextBar = memo(function TextContextBar({
         </>
       ) : (
         availableActions.map(action => {
+          const ActionIcon = action.icon;
           // "edit-text" is disabled when the target is not editable
           const isDisabled = action.id === 'edit-text' && editability !== null && editability.status !== 'editable';
           const title = isDisabled ? (editability?.label ?? t(action.label)) : t(action.label);
@@ -234,6 +214,7 @@ export const TextContextBar = memo(function TextContextBar({
               data-testid={`text-context-action-${action.id}`}
               data-editability-status={action.id === 'edit-text' ? (editability?.status ?? 'unknown') : undefined}
               title={title}
+              aria-label={title}
               disabled={isDisabled}
               onClick={(e) => {
                 e.stopPropagation();
@@ -257,7 +238,6 @@ export const TextContextBar = memo(function TextContextBar({
                 background: 'transparent',
                 borderRadius: 4,
                 cursor: isDisabled ? 'not-allowed' : 'pointer',
-                fontSize: 13,
                 padding: 0,
                 color: isDisabled ? 'var(--muted-foreground, #94a3b8)' : 'var(--foreground, #1a1a1a)',
                 opacity: isDisabled ? 0.5 : 1,
@@ -272,7 +252,7 @@ export const TextContextBar = memo(function TextContextBar({
                 (e.currentTarget as HTMLButtonElement).style.background = 'transparent';
               }}
             >
-              {action.icon}
+              <ActionIcon aria-hidden="true" size={14} strokeWidth={1.8} />
             </button>
           );
         })

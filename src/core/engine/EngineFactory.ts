@@ -1,14 +1,15 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 // ---------------------------------------------------------------------------
 // Engine Factory
 // ---------------------------------------------------------------------------
 
+import { isTauriRuntime } from '../../lib/tauri-detection';
 import type { Runtime } from '../types';
 import type { PdfEngine } from './PdfEngine';
 import type { EngineConfig } from './types';
@@ -311,6 +312,8 @@ export class DefaultEngineFactory implements EngineFactory {
     logLevel: 'warning' as 'error' | 'warning' | 'info' | 'debug',
   };
 
+  constructor() {}
+
   async createEngine(runtime: Runtime, config?: Partial<EngineConfig>): Promise<PdfEngine> {
     // Try runtime adapter first
     if (this.runtimeAdapter && this.runtimeAdapter.isAvailable(runtime)) {
@@ -483,7 +486,11 @@ export class DefaultEngineFactory implements EngineFactory {
       return 'tauri';
     }
 
-    // Otherwise use browser-test
+    // Browser is a dev/test harness only; production PDF work requires Tauri.
+    if (typeof window !== 'undefined' && !isTauriRuntime()) {
+      return 'browser-test';
+    }
+
     return 'browser-test';
   }
 

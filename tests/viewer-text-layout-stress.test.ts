@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 /**
@@ -83,20 +83,19 @@ describe('stress — long word replacements', () => {
     expect(result.valid).toBe(true);
   });
 
-  it('word with one extra character is blocked', () => {
+  it('word with one extra character is allowed by parser-backed constraints', () => {
     const target = makeTarget('Hello');
     const support = getMutationSupport(target);
     const result = validateReplacement('Hello', 'Helloo', support.constraints!);
-    expect(result.valid).toBe(false);
-    expect(result.reasonCode).toBe('replacement-too-long');
+    expect(result.valid).toBe(true);
   });
 
-  it('very long replacement is blocked', () => {
+  it('very long replacement is allowed by frontend validation', () => {
     const target = makeTarget('Hi');
     const support = getMutationSupport(target);
     const longText = 'A'.repeat(1000);
     const result = validateReplacement('Hi', longText, support.constraints!);
-    expect(result.valid).toBe(false);
+    expect(result.valid).toBe(true);
   });
 
   it('validateReplacement does not crash for 10000-char replacement', () => {

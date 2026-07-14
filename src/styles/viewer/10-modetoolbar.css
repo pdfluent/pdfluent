@@ -1,0 +1,48 @@
+/* Copyright (c) 2026 Innovation Trigger B.V. All rights reserved. */
+/* See https://pdfluent.com/license for terms. */
+
+/* ModeToolbar — thin contextual row below the mode tabs. See viewer/components/ModeToolbar.tsx. */
+
+/* =============================================================================
+   ModeToolbar — thin contextual row below the mode tabs
+   Mirrors .mode-contextual but rendered as a separate sibling component.
+   Token-driven, dark-mode + Windows aware.
+   ============================================================================= */
+
+.modetoolbar {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  min-height: 40px;
+  padding: 6px 12px;
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border-subtle);
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-app-region: no-drag;
+}
+
+.modetoolbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Empty-state hint that appears when a mode has no wired tools outside Tauri. */
+.modetoolbar-empty-hint {
+  font-size: 12px;
+  color: var(--text-muted);
+  padding: 0 6px;
+  font-style: italic;
+}
+
+/* Inline meta readout — used for zoom %, page counters, etc. */
+.modetoolbar-meta {
+  font-size: 11.5px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-muted);
+  padding: 0 6px;
+  min-width: 44px;
+  text-align: center;
+  user-select: none;
+  white-space: nowrap;
+}

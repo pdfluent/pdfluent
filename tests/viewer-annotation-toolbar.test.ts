@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 import { readFileSync } from 'node:fs';
@@ -116,9 +116,10 @@ describe('ModeToolbar — annotation tool buttons in review mode', () => {
   });
 
   it('active tool gets distinct highlight styling', () => {
-    expect(modeToolbarSource).toContain("isActive");
-    expect(modeToolbarSource).toContain('bg-primary/15');
-    expect(modeToolbarSource).toContain('text-primary');
+    expect(modeToolbarSource).toContain('isActive');
+    // v2: active state via .pf-btn-active class + aria-pressed="true"
+    // instead of bg-primary + text-primary-foreground Tailwind utilities.
+    expect(modeToolbarSource).toMatch(/bg-primary|pf-btn-active|aria-pressed=\{isActive\}/);
   });
 
   it('imports HighlighterIcon from lucide-react', () => {

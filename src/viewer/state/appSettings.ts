@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 // ---------------------------------------------------------------------------
@@ -27,6 +27,22 @@ export interface AppSettings {
   themePreference: ThemePreference;
   /** Default ISO-639-2/T language code used when starting OCR (e.g. "nld"). */
   ocrDefaultLanguage: string;
+  /**
+   * Telemetry consent (opt-in, default OFF). When false the app never sends a
+   * crash or feedback report — it works 100% offline regardless. See the
+   * crash-reporting plan §1.
+   */
+  crashReportingEnabled: boolean;
+  /**
+   * Send future reports without showing the review dialog. Only meaningful
+   * when crashReportingEnabled is true; itself opt-in and reversible here.
+   */
+  crashReportAutoSend: boolean;
+  /**
+   * Whether we've already asked for consent once, so we don't nag on every
+   * crash. Set the first time the review dialog is shown.
+   */
+  crashReportConsentAsked: boolean;
 }
 
 export const DEFAULT_APP_SETTINGS: AppSettings = {
@@ -35,6 +51,9 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
   autosaveEnabled: true,
   themePreference: 'system',
   ocrDefaultLanguage: 'nld',
+  crashReportingEnabled: false,
+  crashReportAutoSend: false,
+  crashReportConsentAsked: false,
 };
 
 /** localStorage key under which settings are persisted. */

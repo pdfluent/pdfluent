@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 import { readFileSync } from 'node:fs';
@@ -29,6 +29,7 @@ const viewerAppSource = [
   '../src/viewer/hooks/useTextInteraction.ts',
   '../src/viewer/hooks/useKeyboardShortcuts.ts',
   '../src/viewer/ViewerApp.tsx',
+  '../src/viewer/v3/EditorV3Shell.tsx',
   '../src/viewer/WelcomeSection.tsx',
 ].map(p => readFileSync(new URL(p, import.meta.url), 'utf8')).join('\n\n');
 
@@ -180,8 +181,8 @@ describe('ZoomPresetsPopover — structure', () => {
 // ---------------------------------------------------------------------------
 
 describe('ViewerApp — zoom presets: wiring', () => {
-  it('imports ZoomPresetsPopover', () => {
-    expect(viewerAppSource).toContain("import { ZoomPresetsPopover } from './components/ZoomPresetsPopover'");
+  it('imports ZoomPresetsPopover in the V3 shell', () => {
+    expect(viewerAppSource).toContain("import { ZoomPresetsPopover } from '../components/ZoomPresetsPopover'");
   });
 
   it('tracks zoomPresetsOpen state', () => {
@@ -203,7 +204,8 @@ describe('ViewerApp — zoom presets: wiring', () => {
   });
 
   it('onZoomChange wires to setZoom', () => {
-    expect(viewerAppSource).toContain('onZoomChange={(z) => { setZoom(z); }}');
+    expect(viewerAppSource).toContain('onZoomChange={setZoom}');
+    expect(viewerAppSource).toContain('onZoomChange={(z) => { onZoomChange(z); }}');
   });
 });
 
@@ -229,12 +231,12 @@ describe('ViewerApp — zoom presets: no regressions', () => {
     expect(viewerAppSource).toContain("e.key === '='");
   });
 
-  it('⌘0 zoom-reset shortcut still calls setZoom(1.0)', () => {
-    // The keyboard shortcut for ⌘0 still resets to 100%
+  it('⌘0 zoom-reset shortcut still calls setZoom(1.5) (new default)', () => {
+    // The keyboard shortcut for ⌘0 resets to 150% (new default zoom level)
     const zoomKeyStart = viewerAppSource.indexOf('handleZoomKey');
     const zoomKeyEnd   = viewerAppSource.indexOf('}, [pageCount])', zoomKeyStart) + 15;
     const zoomKeyBody  = viewerAppSource.slice(zoomKeyStart, zoomKeyEnd);
-    expect(zoomKeyBody).toContain('setZoom(1.0)');
+    expect(zoomKeyBody).toContain('setZoom(1.5)');
   });
 
   it('scroll-to-zoom still present', () => {

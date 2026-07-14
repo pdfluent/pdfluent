@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 import { readFileSync } from 'node:fs';
@@ -201,8 +201,13 @@ describe('ViewerApp — recent files: no regressions', () => {
     expect(viewerAppSource).toContain("import { useRecentFiles } from './hooks/useRecentFiles'");
   });
 
-  it('empty state still has viewer-empty-state testid', () => {
-    expect(viewerAppSource).toContain('data-testid="viewer-empty-state"');
+  it('active empty state uses welcome-screen testid (WelcomeScreen.tsx)', () => {
+    // viewer-empty-state was the old testid in dead WelcomeSection.tsx (zero importers).
+    // The active welcome screen is components/WelcomeScreen.tsx with welcome-screen testid.
+    const welcomeScreenSource = readFileSync(
+      new URL('../src/viewer/components/WelcomeScreen.tsx', import.meta.url), 'utf8'
+    );
+    expect(welcomeScreenSource).toContain('data-testid="welcome-screen"');
   });
 
   it('unsaved-changes guard still present', () => {

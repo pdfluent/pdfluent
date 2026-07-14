@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 import { readFileSync } from 'node:fs';
@@ -22,16 +22,16 @@ const actionBody = toolbarSource.slice(actionStart, actionEnd);
 // WIRED_TOOLS registration
 // ---------------------------------------------------------------------------
 
-describe('ModeToolbar — full screen: WIRED_TOOLS entry', () => {
-  it("adds 'Volledig scherm' to WIRED_TOOLS", () => {
+describe('ModeToolbar — full screen: getWiredTools entry', () => {
+  it("adds 'Volledig scherm' to getWiredTools", () => {
     expect(toolbarSource).toContain("'toolbar.fullscreen'");
   });
 
-  it("'Volledig scherm' is inside the WIRED_TOOLS Set literal", () => {
-    const wiredStart = toolbarSource.indexOf('WIRED_TOOLS');
-    const wiredEnd = toolbarSource.indexOf(']);', wiredStart);
-    const wiredBlock = toolbarSource.slice(wiredStart, wiredEnd);
-    expect(wiredBlock).toContain("'toolbar.fullscreen'");
+  it("'Volledig scherm' is inside the getWiredTools function body", () => {
+    const fnStart = toolbarSource.indexOf('export function getWiredTools');
+    const fnEnd = toolbarSource.indexOf('return base;', fnStart) + 12;
+    const fnBlock = toolbarSource.slice(fnStart, fnEnd);
+    expect(fnBlock).toContain("'toolbar.fullscreen'");
   });
 });
 
@@ -71,22 +71,22 @@ describe('ModeToolbar — full screen: handleToolAction case', () => {
 // ---------------------------------------------------------------------------
 
 describe('ModeToolbar — full screen: no regressions', () => {
-  it("'Inzoomen' is still in WIRED_TOOLS", () => {
-    const wiredStart = toolbarSource.indexOf('WIRED_TOOLS');
-    const wiredEnd = toolbarSource.indexOf(']);', wiredStart);
-    expect(toolbarSource.slice(wiredStart, wiredEnd)).toContain("'toolbar.zoomIn'");
+  it("'Inzoomen' is still in getWiredTools", () => {
+    const fnStart = toolbarSource.indexOf('export function getWiredTools');
+    const fnEnd = toolbarSource.indexOf('return base;', fnStart) + 12;
+    expect(toolbarSource.slice(fnStart, fnEnd)).toContain("'toolbar.zoomIn'");
   });
 
-  it("'Uitzoomen' is still in WIRED_TOOLS", () => {
-    const wiredStart = toolbarSource.indexOf('WIRED_TOOLS');
-    const wiredEnd = toolbarSource.indexOf(']);', wiredStart);
-    expect(toolbarSource.slice(wiredStart, wiredEnd)).toContain("'toolbar.zoomOut'");
+  it("'Uitzoomen' is still in getWiredTools", () => {
+    const fnStart = toolbarSource.indexOf('export function getWiredTools');
+    const fnEnd = toolbarSource.indexOf('return base;', fnStart) + 12;
+    expect(toolbarSource.slice(fnStart, fnEnd)).toContain("'toolbar.zoomOut'");
   });
 
-  it("'Zoek tekst' is still in WIRED_TOOLS", () => {
-    const wiredStart = toolbarSource.indexOf('WIRED_TOOLS');
-    const wiredEnd = toolbarSource.indexOf(']);', wiredStart);
-    expect(toolbarSource.slice(wiredStart, wiredEnd)).toContain("'toolbar.searchText'");
+  it("'Zoek tekst' is still in getWiredTools", () => {
+    const fnStart = toolbarSource.indexOf('export function getWiredTools');
+    const fnEnd = toolbarSource.indexOf('return base;', fnStart) + 12;
+    expect(toolbarSource.slice(fnStart, fnEnd)).toContain("'toolbar.searchText'");
   });
 
   it('zoom in/out cases still dispatch', () => {

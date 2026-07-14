@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 import { readFileSync } from 'node:fs';
@@ -63,8 +63,10 @@ describe('ExportDialog — format options', () => {
     expect(exportDialogSource).toContain("'docx'");
   });
 
-  it('invokes save_pdf for PDF export', () => {
-    expect(exportDialogSource).toContain("invoke('save_pdf'");
+  it('invokes a save command for PDF export', () => {
+    // v2: PDF format routes through compress_pdf by default (compression
+    // pipeline). Either save_pdf or compress_pdf is acceptable.
+    expect(exportDialogSource).toMatch(/invoke\(['"](?:save_pdf|compress_pdf)['"]/);
   });
 
   it('invokes compress_pdf for compressed PDF export', () => {
@@ -165,10 +167,16 @@ describe('ExportDialog — task queue integration', () => {
   });
 
   it('closes the dialog before the async operation completes', () => {
-    // onClose() must appear before the awaited invoke call
+    // onClose() must appear before the awaited invoke call.
+    // v2: ExportDialog uses compress_pdf as the first invoke (PDF
+    // format goes through the compression pipeline by default).
     const pushIndex = exportDialogSource.indexOf('push({');
     const firstOnCloseIndex = exportDialogSource.indexOf('onClose();', pushIndex);
-    const firstInvokeIndex = exportDialogSource.indexOf("await invoke('save_pdf'");
+    const firstInvokeIndex = Math.min(
+      ...['save_pdf', 'compress_pdf', 'export_pdf']
+        .map((cmd) => exportDialogSource.indexOf(`await invoke('${cmd}'`))
+        .filter((i) => i > -1),
+    );
     expect(firstOnCloseIndex).toBeGreaterThan(pushIndex);
     expect(firstOnCloseIndex).toBeLessThan(firstInvokeIndex);
   });
@@ -195,8 +203,11 @@ describe('ExportDialog — dialog structure', () => {
     expect(exportDialogSource).toContain("t('common.export'");
   });
 
-  it('export button is disabled in non-Tauri environments', () => {
-    expect(exportDialogSource).toContain('!isTauri');
+  it('supports browser PDF export without enabling unsupported browser formats', () => {
+    expect(exportDialogSource).toContain("format === 'pdf'");
+    expect(exportDialogSource).toContain('engine.document.saveDocument(document)');
+    expect(exportDialogSource).toContain('downloadPdfBytesInBrowser');
+    expect(exportDialogSource).toContain("isTauri || (format === 'pdf'");
   });
 
   it('resets state when dialog opens', () => {
@@ -256,6 +267,8 @@ describe('ViewerApp — ExportDialog wiring', () => {
     expect(viewerAppSource).toContain('isOpen={exportOpen}');
     expect(viewerAppSource).toContain('pageIndex={pageIndex}');
     expect(viewerAppSource).toContain('pageCount={pageCount}');
+    expect(viewerAppSource).toContain('document={pdfDoc}');
+    expect(viewerAppSource).toContain('engine={engine}');
   });
 
   it('passes onClose that sets exportOpen to false', () => {

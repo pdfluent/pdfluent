@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 import { useState, useEffect, useCallback } from 'react';
@@ -19,8 +19,13 @@ export function useSidebarState() {
 
   const [leftRailOpen, setLeftRailOpen] = useState(() => {
     try {
-      return localStorage.getItem('pdfluent.viewer.rail') !== 'false';
-    } catch { /* localStorage unavailable */ }
+      const stored = localStorage.getItem('pdfluent.viewer.rail');
+      if (stored !== null) {
+        return stored !== 'false';
+      }
+    } catch {
+      return true;
+    }
     return true;
   });
 

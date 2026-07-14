@@ -31,8 +31,8 @@ PDFluent is a fast, privacy-first PDF editor for macOS. Every operation runs loc
 **Privacy by design:**
 All processing happens on your device. No cloud uploads, no accounts required, no telemetry. Your documents stay yours.
 
-**Free for personal use.**
-Commercial use in a business context requires a per-seat license. See pdfluent.com/license for details.
+**Completely free.**
+Free for everyone, including business and commercial use. No account, no subscription.
 
 ### Keywords
 pdf, editor, viewer, annotate, sign, merge, split, forms, privacy, local
@@ -81,7 +81,7 @@ Features:
 
 Privacy: all processing is local. No cloud, no accounts, no telemetry.
 
-Free for personal non-commercial use. Commercial license required for business use.
+Completely free, including for business and commercial use.
 
 ### Category
 Productivity

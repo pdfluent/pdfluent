@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 /**
@@ -10,7 +10,7 @@
  *
  * Verifies:
  * - Both OCR and digital text can be hovered and selected
- * - Both can use summarize / explain / copy / annotate
+ * - Both can use direct context actions without the old summarize/explain hover affordance
  * - Only eligible digital targets can enter real edit mode
  * - OCR targets show read-only affordance (ocr-read-only status, selectable=true)
  * - No crashes when OCR grouping is sparse or noisy
@@ -140,34 +140,20 @@ describe('OCR vs digital — shared selection behaviour', () => {
 });
 
 // ---------------------------------------------------------------------------
-// Shared behaviour — summarize / explain / copy / annotate available to both
+// Shared behaviour — direct context actions available without summarize/explain hover noise
 // ---------------------------------------------------------------------------
 
 describe('OCR vs digital — shared context bar actions', () => {
-  it('copy action is available in edit mode (both OCR and digital would see it)', () => {
-    expect(contextBarSrc).toContain("id: 'copy'");
-    // copy is in availableIn: ['read', 'review', 'edit', 'protect', 'forms']
-    const copyBlock = contextBarSrc.slice(
-      contextBarSrc.indexOf("id: 'copy'"),
-      contextBarSrc.indexOf("id: 'copy'") + 150,
-    );
-    expect(copyBlock).toContain("'edit'");
+  it('copy action is not exposed in the hover context bar', () => {
+    expect(contextBarSrc).not.toContain("id: 'copy'");
   });
 
-  it('summarize action is available in edit mode', () => {
-    const sumBlock = contextBarSrc.slice(
-      contextBarSrc.indexOf("id: 'summarize'"),
-      contextBarSrc.indexOf("id: 'summarize'") + 150,
-    );
-    expect(sumBlock).toContain("'edit'");
+  it('summarize action is not exposed in the hover context bar', () => {
+    expect(contextBarSrc).not.toContain("id: 'summarize'");
   });
 
-  it('explain action is available in edit mode', () => {
-    const expBlock = contextBarSrc.slice(
-      contextBarSrc.indexOf("id: 'explain'"),
-      contextBarSrc.indexOf("id: 'explain'") + 150,
-    );
-    expect(expBlock).toContain("'edit'");
+  it('explain action is not exposed in the hover context bar', () => {
+    expect(contextBarSrc).not.toContain("id: 'explain'");
   });
 });
 
@@ -189,7 +175,7 @@ describe('OCR vs digital — edit mode divergence', () => {
     expect(isOcrReadOnly(makeOcrParagraph())).toBe(true);
   });
 
-  it('OCR editability has selectable=true to support copy/summarize/explain', () => {
+  it('OCR editability has selectable=true to support copy and direct actions', () => {
     const result = getEditability(makeOcrParagraph(), 'edit', null);
     expect(result.selectable).toBe(true);
   });

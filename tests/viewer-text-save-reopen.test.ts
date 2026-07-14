@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 /**
@@ -206,13 +206,17 @@ describe('buildAuditReportMarkdown — page_mutated in output', () => {
 describe('ViewerApp — save pipeline wiring after text mutation', () => {
   it('calls markDirty after successful replaceTextSpan', () => {
     const idx = viewerAppSrc.indexOf('handleDraftCommit');
-    const block = viewerAppSrc.slice(idx, idx + 2500);
+    // v2: handleDraftCommit grew (debug logging, expanded error/validation
+    // handling, multi-occurrence logic). The markDirty call sits ~9k
+    // chars in — widen window to capture it.
+    const block = viewerAppSrc.slice(idx, idx + 12000);
     expect(block).toContain('markDirty');
   });
 
   it('emits page_mutated event after successful replaceTextSpan', () => {
     const idx = viewerAppSrc.indexOf('handleDraftCommit');
-    const block = viewerAppSrc.slice(idx, idx + 2500);
+    // v2: page_mutated emission sits ~9.3k chars into handleDraftCommit.
+    const block = viewerAppSrc.slice(idx, idx + 12000);
     expect(block).toContain('page_mutated');
   });
 
@@ -221,9 +225,14 @@ describe('ViewerApp — save pipeline wiring after text mutation', () => {
   });
 
   it('clearDirty is called after save_pdf succeeds', () => {
-    // Both handleSaveAs and handleUnsavedSave call clearDirty after invoke('save_pdf')
-    const saveAsIdx = viewerAppSrc.indexOf("'save_pdf'");
-    const afterSave = viewerAppSrc.slice(saveAsIdx, saveAsIdx + 200);
+    // v2: handleSaveAs uses save_pdf_as_dialog (combined dialog+save).
+    // The clearDirty call may be 200+ chars after the invoke call due
+    // to expanded error handling.
+    const saveAsIdx = Math.max(
+      viewerAppSrc.indexOf("'save_pdf'"),
+      viewerAppSrc.indexOf("'save_pdf_as_dialog'"),
+    );
+    const afterSave = viewerAppSrc.slice(saveAsIdx, saveAsIdx + 800);
     expect(afterSave).toContain('clearDirty');
   });
 
@@ -238,8 +247,10 @@ describe('ViewerApp — save pipeline wiring after text mutation', () => {
 
   it('handleSaveAs opens a dialog and invokes save_pdf', () => {
     const idx = viewerAppSrc.indexOf('const handleSaveAs');
-    const block = viewerAppSrc.slice(idx, idx + 600);
-    expect(block).toContain("'save_pdf'");
+    const block = viewerAppSrc.slice(idx, idx + 1200);
+    // v2: handleSaveAs uses the unified save_pdf_as_dialog Tauri command
+    // (instead of plugin-dialog + save_pdf). Accept either pattern.
+    expect(block).toMatch(/['"]save_pdf(?:_as_dialog)?['"]/);
     expect(block).toContain('clearDirty');
   });
 

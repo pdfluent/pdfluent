@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 // ---------------------------------------------------------------------------
@@ -41,6 +41,26 @@ export interface RenderEngine {
     height: number,
     options?: RenderOptions
   ): AsyncEngineResult<Uint8Array[]>; // Returns array of image bytes
+
+  /**
+   * Optional binary fast path: render a page to raw RGBA pixels at a scale
+   * factor (1.0 = 72 dpi). No PNG round-trip — the caller feeds the pixels
+   * straight into an ImageData. Falls back to `renderPage` when absent.
+   */
+  renderPageRaw?(
+    document: PdfDocument,
+    pageIndex: number,
+    scale: number
+  ): AsyncEngineResult<{ width: number; height: number; pixels: Uint8ClampedArray<ArrayBuffer> }>;
+
+  /**
+   * Optional binary fast path: thumbnail as encoded PNG bytes without any
+   * base64/JSON wrapper. Falls back to `getThumbnail` when absent.
+   */
+  getThumbnailRaw?(
+    document: PdfDocument,
+    pageIndex: number
+  ): AsyncEngineResult<Uint8Array>;
 
   /**
    * Get page dimensions (width, height in points)
@@ -173,4 +193,16 @@ export interface RenderEngine {
    * Get rendering performance hints
    */
   getPerformanceHints(): string[];
+
+  /**
+   * Render a page directly to an HTMLCanvasElement (preferred fast path).
+   * Implementations that support this return `success: true`; callers fall back
+   * to `renderPage` when this returns `success: false` with code `not-implemented`.
+   */
+  renderPageToCanvas?(
+    document: PdfDocument,
+    pageIndex: number,
+    canvas: HTMLCanvasElement,
+    scale: number
+  ): EngineResult<void>;
 }

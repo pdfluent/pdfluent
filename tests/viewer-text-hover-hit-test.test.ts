@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 import { describe, it, expect } from 'vitest';
@@ -14,7 +14,7 @@ const PAGE_HEIGHT = 842;
 const ZOOM = 1;
 
 function span(text: string, x: number, y: number, w = 60, h = 12): TextSpan {
-  return { text, rect: { x, y, width: w, height: h }, fontSize: 12 };
+  return { text, rect: { x, y, width: w, height: h }, fontSize: 12, widthSource: 'Metric' };
 }
 
 /** Convert PDF rect to DOM coords for hit testing (top-left of rect centre). */
@@ -64,7 +64,11 @@ describe('hitTestText — paragraph hit', () => {
   it('hits the line within the paragraph', () => {
     const [domX, domY] = pdfCentreToDom(10, 700, 100, 12);
     const result = hitTestText(domX, domY, structure, PAGE_HEIGHT, ZOOM);
-    expect(result?.line.spans[0]?.text).toBe('hello world');
+    expect(result?.line.spans.map(s => s.text).join(' ')).toBe('hello world');
+
+    const [wordDomX, wordDomY] = pdfCentreToDom(10, 700, 40, 12);
+    const wordResult = hitTestText(wordDomX, wordDomY, structure, PAGE_HEIGHT, ZOOM);
+    expect(wordResult?.span?.text).toBe('hello world');
   });
 
   it('returns null when pointer is far outside all text', () => {

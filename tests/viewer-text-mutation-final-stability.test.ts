@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 /**
@@ -100,14 +100,13 @@ describe('final stability — full mutation pipeline', () => {
     expect(glyphRisk.risk).toBe(false);
   });
 
-  it('writable target: pipeline correctly blocks a too-long replacement', () => {
+  it('writable target: pipeline lets longer replacement reach parser-backed backend', () => {
     const target = makeWritableTarget('Hi');
     const support = getMutationSupport(target);
     expect(support.writable).toBe(true);
 
     const validation = validateReplacement('Hi', 'Hello world', support.constraints!);
-    expect(validation.valid).toBe(false);
-    expect(validation.reasonCode).toBe('replacement-too-long');
+    expect(validation.valid).toBe(true);
   });
 
   it('OCR target: blocked at getMutationSupport before reaching validation', () => {

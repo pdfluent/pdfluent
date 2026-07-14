@@ -1,15 +1,15 @@
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: LicenseRef-PDFluent-Proprietary
 // Copyright (c) 2026 PDFluent Contributors
 
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { calculateFitToWidthScale } from "../src/App";
+import { calculateFitToWidthScale } from "../src/legacy/App";
 
 const toolbarSource = readFileSync(
   new URL("../src/components/Toolbar.tsx", import.meta.url),
   "utf8",
 );
-const appSource = readFileSync(new URL("../src/App.tsx", import.meta.url), "utf8");
+const appSource = readFileSync(new URL("../src/legacy/App.tsx", import.meta.url), "utf8");
 
 describe("fit width controls", () => {
   it("renders a dedicated Fit Width button in the toolbar", () => {

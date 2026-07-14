@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 /**
@@ -234,7 +234,7 @@ describe('getEditability — annotation-tool-active', () => {
 // ---------------------------------------------------------------------------
 
 describe('getEditability — protected-mode', () => {
-  const nonEditModes = ['read', 'review', 'protect', 'forms', 'organize', 'convert'] as const;
+  const nonEditModes = ['read', 'review', 'sign', 'protect', 'forms', 'organize', 'convert'] as const;
 
   for (const mode of nonEditModes) {
     it(`returns protected-mode for mode="${mode}"`, () => {

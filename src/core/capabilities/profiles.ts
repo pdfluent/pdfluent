@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 import type {
@@ -17,6 +17,7 @@ import type {
   LimitType,
   LimitInfo,
 } from '../types';
+import { detectRuntime } from '../types';
 
 // ---------------------------------------------------------------------------
 // Base Capability Registry Implementation
@@ -40,12 +41,14 @@ abstract class BaseCapabilityRegistry implements CapabilityRegistry {
   abstract readonly supportsOCR: boolean;
   abstract readonly supportsRedaction: boolean;
   abstract readonly supportsPdfaValidation: boolean;
+  abstract readonly supportsPdfaConversion: boolean;
 
   // Document manipulation capabilities
   abstract readonly supportsMerge: boolean;
   abstract readonly supportsSplit: boolean;
   abstract readonly supportsRotation: boolean;
   abstract readonly supportsCompression: boolean;
+  abstract readonly supportsXfaFlatten: boolean;
   abstract readonly supportsWatermark: boolean;
   abstract readonly supportsEncryption: boolean;
 
@@ -79,6 +82,8 @@ abstract class BaseCapabilityRegistry implements CapabilityRegistry {
       'redact': this.supportsRedaction,
       'sign': this.supportsSignatures,
       'validate-pdfa': this.supportsPdfaValidation,
+      'convert-pdfa': this.supportsPdfaConversion,
+      'xfa-flatten': this.supportsXfaFlatten,
       'extract-text': this.supportsTextExtraction,
       'extract-images': this.supportsImageExtraction,
     };
@@ -217,12 +222,14 @@ export class TauriCapabilityRegistry extends BaseCapabilityRegistry {
   readonly supportsOCR = true;
   readonly supportsRedaction = true;
   readonly supportsPdfaValidation = true;
+  readonly supportsPdfaConversion = true;
 
   // Document manipulation capabilities
   readonly supportsMerge = true;
   readonly supportsSplit = true;
   readonly supportsRotation = true;
   readonly supportsCompression = true;
+  readonly supportsXfaFlatten = true;
   readonly supportsWatermark = true;
   readonly supportsEncryption = true;
 
@@ -266,12 +273,14 @@ export class BrowserTestCapabilityRegistry extends BaseCapabilityRegistry {
   readonly supportsOCR = false;
   readonly supportsRedaction = false;
   readonly supportsPdfaValidation = false;
+  readonly supportsPdfaConversion = false;
 
   // Document manipulation capabilities (limited)
   readonly supportsMerge = false;
   readonly supportsSplit = false;
   readonly supportsRotation = true; // Basic rotation supported
   readonly supportsCompression = false;
+  readonly supportsXfaFlatten = false;
   readonly supportsWatermark = false;
   readonly supportsEncryption = false;
 
@@ -303,10 +312,10 @@ export function createCapabilityRegistry(runtime: Runtime): CapabilityRegistry {
       return new TauriCapabilityRegistry();
     case 'browser-test':
       return new BrowserTestCapabilityRegistry();
-    default:
-      // TypeScript should catch this, but we need a runtime fallback
+    default: {
       const exhaustiveCheck: never = runtime;
       throw new Error(`Unsupported runtime: ${exhaustiveCheck}`);
+    }
   }
 }
 
@@ -316,10 +325,7 @@ export function createCapabilityRegistry(runtime: Runtime): CapabilityRegistry {
  * @returns Capability registry for current environment
  */
 export function createCapabilityRegistryForCurrentRuntime(): CapabilityRegistry {
-  // This would use actual runtime detection
-  // For now, default to browser-test for safety
-  const runtime: Runtime = 'browser-test';
-  return createCapabilityRegistry(runtime);
+  return createCapabilityRegistry(detectRuntime());
 }
 
 // ---------------------------------------------------------------------------

@@ -1,12 +1,17 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 import { readFileSync } from 'node:fs';
+import { join, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { describe, it, expect } from 'vitest';
+
+const __dir = dirname(fileURLToPath(import.meta.url));
+const viewerV3Css = readFileSync(join(__dir, '../src/styles/viewer-v3.css'), 'utf8');
 
 const textLayerSource = readFileSync(
   new URL('../src/viewer/components/TextLayer.tsx', import.meta.url),
@@ -178,7 +183,7 @@ describe('ViewerApp — text selection wiring', () => {
   });
 
   it('passes textSpans to PageCanvas', () => {
-    expect(viewerAppSource).toContain('textSpans={textSpans}');
+    expect(viewerAppSource).toContain('textSpans={isCurrentPage ? textSpans : []}');
   });
 
   it('passes pageWidthPt to PageCanvas', () => {
@@ -220,5 +225,48 @@ describe('TextSpan type', () => {
     const spanIdx = documentModelSource.indexOf('interface TextSpan');
     const fontSizeIdx = documentModelSource.indexOf('fontSize:', spanIdx);
     expect(fontSizeIdx).toBeGreaterThan(spanIdx);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// View-mode text selection — CSS override
+// ---------------------------------------------------------------------------
+
+describe('view-mode text selection — CSS override', () => {
+  it('viewer-v3.css defines .pdf-text-layer class', () => {
+    expect(viewerV3Css).toContain('.pdf-text-layer');
+  });
+
+  it('.pdf-text-layer sets -webkit-user-select: text for WKWebView compatibility', () => {
+    const classIdx = viewerV3Css.indexOf('.pdf-text-layer');
+    expect(classIdx).toBeGreaterThan(-1);
+    const classBody = viewerV3Css.slice(classIdx, classIdx + 200);
+    expect(classBody).toContain('-webkit-user-select: text');
+  });
+
+  it('.pdf-text-layer sets user-select: text for standard compliance', () => {
+    const classIdx = viewerV3Css.indexOf('.pdf-text-layer');
+    const classBody = viewerV3Css.slice(classIdx, classIdx + 200);
+    expect(classBody).toContain('user-select: text');
+  });
+
+  it('TextLayer container applies pdf-text-layer class', () => {
+    expect(textLayerSource).toContain('className="pdf-text-layer"');
+  });
+
+  it('TextLayer container retains inline userSelect: text as non-WebKit fallback', () => {
+    expect(textLayerSource).toContain("userSelect: 'text'");
+  });
+
+  it('global body rule has user-select: none (UI chrome protection still in place)', () => {
+    const globalCss = readFileSync(join(__dir, '../src/styles/global.css'), 'utf8');
+    expect(globalCss).toContain('user-select: none');
+  });
+
+  it('TextLayer z-index is above TextInteractionOverlay', () => {
+    const overlayIdx = pageCanvasSource.indexOf('zIndex: 15');
+    const textLayerIdx = pageCanvasSource.indexOf('zIndex: 20');
+    expect(overlayIdx).toBeGreaterThan(-1);
+    expect(textLayerIdx).toBeGreaterThan(overlayIdx);
   });
 });

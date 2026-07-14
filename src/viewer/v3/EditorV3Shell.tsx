@@ -1,0 +1,2880 @@
+// Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
+// See https://pdfluent.com/license for terms.
+
+import { isTauriRuntime } from '../../lib/tauri-detection';
+import { useTranslation } from 'react-i18next';
+import { createPortal } from 'react-dom';
+import {
+  useEffect,
+  useRef,
+  useState,
+  type ChangeEvent,
+  type ReactNode,
+  type RefObject,
+} from 'react';
+import {
+  BadgeCheckIcon,
+  BoldIcon,
+  CalendarIcon,
+  ChevronDownIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  ChevronUpIcon,
+  CombineIcon,
+  DownloadIcon,
+  EraserIcon,
+  FileTextIcon,
+  GalleryVerticalEndIcon,
+  HandIcon,
+  HardDriveIcon,
+  HeadphonesIcon,
+  HighlighterIcon,
+  ImageIcon,
+  InfoIcon,
+  ItalicIcon,
+  LayersIcon,
+  LayoutGridIcon,
+  LinkIcon,
+  LockIcon,
+  MailIcon,
+  MaximizeIcon,
+  MessageSquareTextIcon,
+  Minimize2Icon,
+  MoonIcon,
+  MoreHorizontalIcon,
+  MousePointer2Icon,
+  PauseIcon,
+  PenLineIcon,
+  PencilIcon,
+  PencilLineIcon,
+  PlayIcon,
+  PrinterIcon,
+  Redo2Icon,
+  RefreshCwIcon,
+  RotateCcwIcon,
+  RulerIcon,
+  SaveIcon,
+  ScissorsIcon,
+  SearchIcon,
+  SendIcon,
+  Share2Icon,
+  ShieldCheckIcon,
+  SignatureIcon,
+  StampIcon,
+  StrikethroughIcon,
+  TypeIcon,
+  UnderlineIcon,
+  Undo2Icon,
+  UserRoundIcon,
+  Languages as LanguagesIcon,
+  XIcon,
+} from 'lucide-react';
+import type { AnnotationAppearance, ViewerMode } from '../types';
+import type { Annotation, FormField, FormFieldValue, OutlineNode, PdfDocument } from '../../core/document';
+import type { AnnotationTool } from '../components/ModeToolbar';
+import type { AttachmentInfo, LayerInfo } from '../components/LeftNavRail';
+import type { TextParagraphTarget } from '../text/textInteractionModel';
+import { ZoomPresetsPopover } from '../components/ZoomPresetsPopover';
+import { LanguageSwitcher } from '../components/LanguageSwitcher';
+import { pickPdfPath } from '../../platform/native/fileDialogs';
+import { useTaskQueueContext } from '../context/TaskQueueContext';
+import { Settings } from '../../components/Settings';
+import {
+  detectNativeCapabilities,
+  pauseSpeech,
+  resumeSpeech,
+  speakText,
+  stopSpeech,
+  type NativeCapabilities,
+  type NativeFeatureCapability,
+} from '../../platform/native/nativeServices';
+type V3Panel = 'tools' | 'edit' | 'convert' | 'esign' | 'protect' | 'watermark' | 'compress' | 'split' | 'merge' | 'redact';
+type RailTool = 'select' | 'hand' | 'comment' | 'highlight' | 'draw' | 'text' | 'sign' | 'more';
+type V3Modal = 'privacy' | 'author' | 'native';
+
+interface EditorV3ShellProps {
+  children: ReactNode;
+  canvasRef: RefObject<HTMLDivElement | null>;
+  fileName: string | null;
+  pageIndex: number;
+  pageCount: number;
+  zoom: number;
+  mode: ViewerMode;
+  isDirty: boolean;
+  currentFilePath: string | null;
+  readAloudText: string;
+  authorName: string;
+  thumbnails: Map<number, string>;
+  outline: OutlineNode[];
+  pageLabels: string[];
+  comments: Annotation[];
+  activeCommentIdx: number;
+  onCommentSelect: (idx: number) => void;
+  onDeleteComment: (annotationId: string) => void;
+  onUpdateComment: (annotationId: string, contents: string) => void;
+  onToggleResolved: (annotationId: string) => void;
+  onAddReply: (annotationId: string, contents: string, author: string) => void;
+  onDeleteReply: (annotationId: string, replyId: string) => void;
+  onNextComment: () => void;
+  onPrevComment: () => void;
+  onResolveAll: () => void;
+  onDeleteAllResolved: () => void;
+  formFields: FormField[];
+  activeFieldIdx: number;
+  onFieldSelect: (idx: number) => void;
+  onSetFieldValue: (fieldId: string, value: FormFieldValue) => void;
+  formValidationErrors: Array<{ fieldId: string; errors: string[] }>;
+  onFormSubmit: () => Promise<void>;
+  pdfDoc: PdfDocument | null;
+  onMetadataChange: (key: 'title' | 'author' | 'subject' | 'keywords', value: string) => void;
+  selectedAnnotation: Annotation | null;
+  annotationAppearance: AnnotationAppearance;
+  onAnnotationAppearanceChange: (appearance: AnnotationAppearance | ((prev: AnnotationAppearance) => AnnotationAppearance)) => void;
+  onDeleteSelectedAnnotation: (annotationId: string) => void;
+  onUpdateAnnotationColor: (annotationId: string, color: [number, number, number]) => void;
+  redactions: Annotation[];
+  documentIssues: unknown[];
+  onApplyRedactions: () => void;
+  onDeleteRedaction: (annotationId: string) => void;
+  onJumpToRedaction: (idx: number | ((prev: number) => number)) => void;
+  onRedactSearch: (query: string) => Promise<{ matchesFound: number; areasRedacted: number } | null>;
+  onRedactMetadata: () => Promise<boolean>;
+  scannedPageIndices: Set<number>;
+  ocrRunning: boolean;
+  ocrVisible: boolean;
+  onOcrVisibleChange: (visible: boolean | ((prev: boolean) => boolean)) => void;
+  ocrConfidenceThreshold: number;
+  onOcrConfidenceChange: (threshold: number | ((prev: number) => number)) => void;
+  attachments: AttachmentInfo[];
+  onExtractAttachment: (name: string) => void;
+  onAddAttachment: () => void;
+  onRemoveAttachment: (name: string) => void;
+  layers: LayerInfo[];
+  layerVisibility: Map<string, boolean>;
+  onToggleLayer: (id: string) => void;
+  activeAnnotationTool: AnnotationTool;
+  canUndo: boolean;
+  canRedo: boolean;
+  searchResultCount: number;
+  activeSearchResultIndex: number;
+  isSearchOpen: boolean;
+  searchQuery: string;
+  onOpenFile: (source: string | ArrayBuffer) => Promise<void>;
+  onSaveComplete: () => void;
+  onSaveAs: () => Promise<void>;
+  onCloseDocument: () => void;
+  onUndo: () => void;
+  onRedo: () => void;
+  onModeChange: (mode: ViewerMode) => void;
+  onOpenAllTools: () => void;
+  onOpenExport: (format?: any) => void;
+  onOpenCommandPalette: () => void;
+  onOpenSearch: () => void;
+  onSearchQueryChange: (query: string) => void;
+  onRunSearch: (query: string) => void;
+  onNextSearchResult: () => void;
+  onPrevSearchResult: () => void;
+  onAnnotationToolChange: (tool: AnnotationTool) => void;
+  onAddComment: () => void;
+  onFormatCommand: (command: string, value?: string) => void;
+  onNavigatePage: (pageIndex: number) => void;
+  onZoomChange: (zoom: number | ((prev: number) => number)) => void;
+  zoomPresetsOpen: boolean;
+  setZoomPresetsOpen: (open: boolean | ((prev: boolean) => boolean)) => void;
+  onOpenGoToPage: () => void;
+  onRunOcr: () => void;
+  onProtectDocument: () => void;
+  onWatermark: () => void;
+  onCheckForUpdates: () => void;
+  onAuthorChange: (name: string) => void;
+  onReorderPages: (newOrder: number[]) => Promise<void>;
+  /** Called at each TTS word boundary so the viewer can highlight the active span.
+   *  charIndex -1 signals TTS has stopped. */
+  onTtsBoundary?: (charIndex: number, charLength: number) => void;
+  selectedTextTarget: TextParagraphTarget | null;
+  formatState: {
+    isBold: boolean;
+    isItalic: boolean;
+    isUnderline: boolean;
+    isStrikethrough: boolean;
+  };
+  onDocumentMutated?: () => void;
+}
+
+const isTauri = isTauriRuntime();
+
+const PANEL_TO_MODE: Record<V3Panel, ViewerMode> = {
+  tools: 'read',
+  edit: 'edit',
+  convert: 'convert',
+  esign: 'sign',
+  protect: 'protect',
+  watermark: 'protect',
+  compress: 'read',
+  split: 'read',
+  merge: 'read',
+  redact: 'review',
+};
+
+export function EditorV3Shell(props: EditorV3ShellProps) {
+  const {
+    children,
+    canvasRef,
+    fileName,
+    pageIndex,
+    pageCount,
+    zoom,
+    mode,
+    isDirty,
+    currentFilePath,
+    readAloudText,
+    authorName,
+    thumbnails,
+    pageLabels,
+    comments,
+    activeCommentIdx,
+    onCommentSelect,
+    onNextComment,
+    onPrevComment,
+    onResolveAll,
+    formFields,
+    activeFieldIdx,
+    onFieldSelect,
+    formValidationErrors,
+    onFormSubmit,
+    selectedAnnotation,
+    redactions,
+    documentIssues,
+    onApplyRedactions,
+    scannedPageIndices,
+    ocrRunning,
+    ocrVisible,
+    onOcrVisibleChange,
+    ocrConfidenceThreshold,
+    onOcrConfidenceChange,
+    attachments,
+    onExtractAttachment,
+    onAddAttachment,
+    onRemoveAttachment,
+    layers,
+    layerVisibility,
+    activeAnnotationTool,
+    pdfDoc,
+    canUndo,
+    canRedo,
+    searchResultCount,
+    activeSearchResultIndex,
+    isSearchOpen,
+    searchQuery,
+    onOpenFile,
+    onSaveComplete,
+    onSaveAs,
+    onCloseDocument,
+    onUndo,
+    onRedo,
+    onModeChange,
+    onOpenAllTools,
+    onOpenExport,
+    onOpenCommandPalette,
+    onOpenSearch,
+    onSearchQueryChange,
+    onRunSearch,
+    onNextSearchResult,
+    onPrevSearchResult,
+    onAnnotationToolChange,
+    onFormatCommand,
+    onNavigatePage,
+    onZoomChange,
+    zoomPresetsOpen,
+    setZoomPresetsOpen,
+    onOpenGoToPage,
+    onRunOcr,
+    onProtectDocument,
+    onWatermark,
+    onCheckForUpdates,
+    onRedactSearch,
+    onAuthorChange,
+    onDocumentMutated,
+    onReorderPages,
+    onTtsBoundary,
+  } = props;
+
+  const { t } = useTranslation();
+
+  const [activePanel, setActivePanel] = useState<V3Panel | null>(pageCount > 0 ? 'tools' : null);
+  const handlePanelChange = (nextPanel: V3Panel | null) => {
+    setActivePanel(nextPanel);
+    if (nextPanel) {
+      onModeChange(PANEL_TO_MODE[nextPanel]);
+    } else {
+      onModeChange('read');
+    }
+  };
+  const [thumbsOpen, setThumbsOpen] = useState(() => {
+    try {
+      const stored = localStorage.getItem('pdfluent.viewer.thumbs');
+      if (stored !== null) return stored !== 'false';
+    } catch { /* ignore */ }
+    return true;
+  });
+  const [shareOpen, setShareOpen] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
+  const [readOpen, setReadOpen] = useState(false);
+  const [passiveRailTool, setPassiveRailTool] = useState<'select' | 'hand' | 'comment'>('select');
+
+  // E-Sign modal & state variables
+  const [showSignModal, setShowSignModal] = useState(false);
+  const [showInitialsModal, setShowInitialsModal] = useState(false);
+  const [showInviteDialog, setShowInviteDialog] = useState(false);
+  const [signType, setSignType] = useState<'type' | 'draw'>('type');
+  const [signatureName, setSignatureName] = useState('');
+  const [signatureFont, setSignatureFont] = useState('font-signature-1');
+  const [typedInitials, setTypedInitials] = useState('');
+  const [inviteName, setInviteName] = useState('');
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [inviteMessage, setInviteMessage] = useState('');
+
+  const [isInsertingText, setIsInsertingText] = useState(false);
+  const [isInsertingImage, setIsInsertingImage] = useState(false);
+  const [pendingSignature, setPendingSignature] = useState<{
+    type: 'signature' | 'initials';
+    content: string;
+    font?: string;
+  } | null>(null);
+
+  // Disarm insert/placement tools when the document changes — an armed tool
+  // must never carry over into the next document (surprise inserts on click).
+  useEffect(() => {
+    setIsInsertingText(false);
+    setIsInsertingImage(false);
+    setPendingSignature(null);
+  }, [pdfDoc?.id]);
+  const [localOverlays, setLocalOverlays] = useState<Array<{
+    id: string;
+    pageIndex: number;
+    x: number;
+    y: number;
+    type: 'text' | 'image' | 'signature' | 'initials';
+    content: string;
+    font?: string;
+  }>>([]);
+  const [textOverlayDraft, setTextOverlayDraft] = useState<{
+    id?: string;
+    pageIndex: number;
+    x: number;
+    y: number;
+    value: string;
+  } | null>(null);
+
+  // Persist thumbnail sidebar visibility to localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem('pdfluent.viewer.thumbs', String(thumbsOpen));
+    } catch { /* ignore write errors */ }
+  }, [thumbsOpen]);
+
+  // Click outside listener for dropdown dismissal
+  useEffect(() => {
+    const handleOutsideClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (moreOpen && !target.closest('.topbar-more-menu') && !target.closest('.more-trigger')) {
+        setMoreOpen(false);
+      }
+      if (shareOpen && !target.closest('.share-menu') && !target.closest('.share-trigger')) {
+        setShareOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleOutsideClick, true);
+    return () => {
+      document.removeEventListener('mousedown', handleOutsideClick, true);
+    };
+  }, [moreOpen, shareOpen]);
+
+  // Click handler to place text, images, or signature on canvas
+  useEffect(() => {
+    const canvasEl = canvasRef.current;
+    if (!canvasEl) return;
+
+    const handleCanvasClick = (e: MouseEvent) => {
+      const pageEl = (e.target as HTMLElement).closest('.page') as HTMLElement;
+      if (!pageEl) return;
+
+      const pageIdx = parseInt(pageEl.getAttribute('data-page-index') || '0', 10);
+      const rect = pageEl.getBoundingClientRect();
+      const clickX = e.clientX - rect.left;
+      const clickY = e.clientY - rect.top;
+
+      if (pendingSignature) {
+        const sig = pendingSignature;
+        setPendingSignature(null);
+        setLocalOverlays(prev => [...prev, {
+          id: `local-sig-${Date.now()}`,
+          pageIndex: pageIdx,
+          x: clickX / zoom,
+          y: clickY / zoom,
+          type: sig.type,
+          content: sig.content,
+          font: sig.font
+        }]);
+        showToast(sig.type === 'signature' ? t('editorV3.overlay.signaturePlaced') : t('editorV3.overlay.initialsPlaced'));
+        if (onDocumentMutated) onDocumentMutated();
+        return;
+      }
+
+      if (isInsertingText) {
+        setIsInsertingText(false);
+        setTextOverlayDraft({
+          pageIndex: pageIdx,
+          x: clickX / zoom,
+          y: clickY / zoom,
+          value: '',
+        });
+        return;
+      }
+
+      if (isInsertingImage) {
+        setIsInsertingImage(false);
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/*';
+        input.onchange = (ev) => {
+          const file = (ev.target as HTMLInputElement).files?.[0];
+          if (file) {
+            const reader = new FileReader();
+            reader.onload = (readEv) => {
+              const src = readEv.target?.result as string;
+              setLocalOverlays(prev => [...prev, {
+                id: `local-img-${Date.now()}`,
+                pageIndex: pageIdx,
+                x: clickX / zoom,
+                y: clickY / zoom,
+                type: 'image',
+                content: src
+              }]);
+              showToast(t('editorV3.overlay.imagePlaced'));
+              if (onDocumentMutated) onDocumentMutated();
+            };
+            reader.readAsDataURL(file);
+          }
+        };
+        input.click();
+      }
+    };
+
+    canvasEl.addEventListener('click', handleCanvasClick);
+    return () => {
+      canvasEl.removeEventListener('click', handleCanvasClick);
+    };
+  }, [canvasRef, isInsertingText, isInsertingImage, pendingSignature, zoom, onDocumentMutated]);
+
+  const commitTextOverlayDraft = () => {
+    if (!textOverlayDraft) return;
+    const value = textOverlayDraft.value.trim();
+    if (!value) {
+      if (textOverlayDraft.id) {
+        setLocalOverlays(prev => prev.filter(overlay => overlay.id !== textOverlayDraft.id));
+        showToast(t('editorV3.textbox.deleted'));
+        onDocumentMutated?.();
+      }
+      setTextOverlayDraft(null);
+      return;
+    }
+
+    if (textOverlayDraft.id) {
+      setLocalOverlays(prev => prev.map(overlay => (
+        overlay.id === textOverlayDraft.id ? { ...overlay, content: value } : overlay
+      )));
+      showToast(t('editorV3.textbox.updated'));
+    } else {
+      setLocalOverlays(prev => [...prev, {
+        id: `local-txt-${Date.now()}`,
+        pageIndex: textOverlayDraft.pageIndex,
+        x: textOverlayDraft.x,
+        y: textOverlayDraft.y,
+        type: 'text',
+        content: value,
+      }]);
+      showToast(t('editorV3.textbox.added'));
+    }
+    setTextOverlayDraft(null);
+    onDocumentMutated?.();
+  };
+
+  useEffect(() => {
+    const canvasEl = canvasRef.current;
+    if (!canvasEl) return;
+    
+    if (isInsertingText || isInsertingImage || pendingSignature) {
+      canvasEl.style.cursor = 'crosshair';
+    } else {
+      canvasEl.style.cursor = '';
+    }
+  }, [canvasRef, isInsertingText, isInsertingImage, pendingSignature]);
+
+  const [readPaused, setReadPaused] = useState(false);
+  const [moreToolsOpen, setMoreToolsOpen] = useState(false);
+  const [themeDark, setThemeDark] = useState(false);
+  const [toast, setToast] = useState<string | null>(null);
+  const [activeModal, setActiveModal] = useState<V3Modal | null>(null);
+  const [showSettings, setShowSettings] = useState(false);
+  const [authorDraft, setAuthorDraft] = useState(authorName);
+  const [nativeCapabilities, setNativeCapabilities] = useState<NativeCapabilities | null>(null);
+
+  const showToast = (message: string) => {
+    setToast(message);
+    window.clearTimeout((showToast as unknown as { timer?: number }).timer);
+    (showToast as unknown as { timer?: number }).timer = window.setTimeout(() => setToast(null), 2600);
+  };
+
+  // Track previous pageCount so we only collapse UI when a document is CLOSED,
+  // not on initial mount (where pageCount is already 0).
+  // The thumbs drawer is NOT touched here: it renders only with a document
+  // (open={pageCount > 0 && thumbsOpen}), and forcing it closed would persist
+  // `false` and silently override the user's open-by-default preference for
+  // the next document.
+  const prevPageCountRef = useRef(pageCount);
+  useEffect(() => {
+    const prev = prevPageCountRef.current;
+    prevPageCountRef.current = pageCount;
+    if (pageCount === 0 && prev > 0) {
+      setActivePanel(null);
+      setShareOpen(false);
+      setMoreOpen(false);
+      setReadOpen(false);
+    }
+  }, [pageCount]);
+
+  useEffect(() => {
+    setAuthorDraft(authorName);
+  }, [authorName]);
+
+  useEffect(() => {
+    let cancelled = false;
+    void detectNativeCapabilities().then(capabilities => {
+      if (!cancelled) setNativeCapabilities(capabilities);
+    });
+    return () => { cancelled = true; };
+  }, []);
+
+  useEffect(() => {
+    if (mode === 'edit') setActivePanel('edit');
+    if (mode === 'convert') setActivePanel('convert');
+    if (mode === 'sign') setActivePanel('esign');
+    if (mode === 'protect') {
+      if (activePanel !== 'watermark') {
+        setActivePanel('protect');
+      }
+    }
+  }, [mode]);
+
+  const effectiveRailTool: RailTool =
+    activeAnnotationTool === 'highlight' || activeAnnotationTool === 'underline' || activeAnnotationTool === 'strikeout'
+      ? 'highlight'
+      : activeAnnotationTool === 'rectangle'
+        ? 'draw'
+        : mode === 'edit'
+          ? 'text'
+          : mode === 'sign'
+            ? 'sign'
+            : mode === 'review' && passiveRailTool === 'comment'
+              ? 'comment'
+              : passiveRailTool === 'hand'
+                ? 'hand'
+                : 'select';
+
+  function togglePanel(panel: V3Panel) {
+    if (activePanel === panel) {
+      setActivePanel(null);
+      if (mode === PANEL_TO_MODE[panel]) onModeChange('read');
+      return;
+    }
+    setActivePanel(panel);
+    onModeChange(PANEL_TO_MODE[panel]);
+  }
+
+  function setRailTool(tool: RailTool) {
+    setMoreToolsOpen(false);
+    switch (tool) {
+      case 'select':
+        onAnnotationToolChange(null);
+        setPassiveRailTool(mode === 'read' && passiveRailTool === 'select' ? 'hand' : 'select');
+        onModeChange('read');
+        break;
+      case 'hand':
+        onAnnotationToolChange(null);
+        setPassiveRailTool('hand');
+        onModeChange('read');
+        break;
+      case 'comment':
+        onAnnotationToolChange(null);
+        setPassiveRailTool('comment');
+        onModeChange('review');
+        showToast(t('editorV3.railToasts.commentMode'));
+        break;
+      case 'highlight':
+        setPassiveRailTool('select');
+        onModeChange('review');
+        onAnnotationToolChange('highlight');
+        break;
+      case 'draw':
+        setPassiveRailTool('select');
+        onModeChange('review');
+        onAnnotationToolChange('rectangle');
+        break;
+      case 'text':
+        setPassiveRailTool('select');
+        onAnnotationToolChange(null);
+        onModeChange('edit');
+        setActivePanel('edit');
+        break;
+      case 'sign':
+        setPassiveRailTool('select');
+        onAnnotationToolChange(null);
+        onModeChange('sign');
+        setActivePanel('esign');
+        break;
+      case 'more':
+        setMoreToolsOpen(open => !open);
+        break;
+    }
+  }
+
+  function handleMoreTool(action: 'strikeout' | 'underline' | 'textbox' | 'stamp' | 'date' | 'attachment' | 'ruler') {
+    setMoreToolsOpen(false);
+    if (action === 'strikeout') {
+      onModeChange('review');
+      onAnnotationToolChange('strikeout');
+      showToast(t('editorV3.railToasts.strikeout'));
+      return;
+    }
+    if (action === 'underline') {
+      onModeChange('review');
+      onAnnotationToolChange('underline');
+      showToast(t('editorV3.railToasts.underline'));
+      return;
+    }
+    if (action === 'textbox') {
+      setRailTool('text');
+      showToast(t('editorV3.railToasts.textboxOpened'));
+      return;
+    }
+    if (action === 'stamp') {
+      onOpenAllTools();
+      showToast(t('editorV3.railToasts.stampsInAllTools'));
+      return;
+    }
+    if (action === 'date') {
+      return;
+    }
+    if (action === 'attachment') {
+      onAddAttachment();
+      return;
+    }
+  }
+
+  async function startReadAloud() {
+    try {
+      await speakText(readAloudText, { rate: 1, onBoundary: onTtsBoundary });
+      setReadOpen(true);
+      setReadPaused(false);
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : String(error));
+    }
+  }
+
+  function handleReadToggle() {
+    if (readOpen) {
+      setReadOpen(false);
+      setReadPaused(false);
+      void stopSpeech();
+      onTtsBoundary?.(-1, 0);
+      return;
+    }
+    void startReadAloud();
+  }
+
+  function handleReadPauseToggle() {
+    const nextPaused = !readPaused;
+    setReadPaused(nextPaused);
+    void (nextPaused ? pauseSpeech() : resumeSpeech());
+  }
+
+  function handleReadRestart() {
+    void stopSpeech().finally(() => {
+      void startReadAloud();
+    });
+  }
+
+  function handleReadStop() {
+    setReadOpen(false);
+    setReadPaused(false);
+    void stopSpeech();
+    onTtsBoundary?.(-1, 0);
+  }
+
+  function commitAuthorName() {
+    const cleaned = authorDraft.trim();
+    onAuthorChange(cleaned);
+    setActiveModal(null);
+    showToast(cleaned ? t('editorV3.commentName.saved', { name: cleaned }) : t('editorV3.commentName.cleared'));
+  }
+
+  return (
+    <div className={themeDark ? 'pfv3 theme-dark' : 'pfv3'} data-mode={mode} data-has-document={pageCount > 0} style={{ '--thumbs-offset': pageCount > 0 && thumbsOpen ? '75px' : '0px' } as React.CSSProperties}>
+      <EditorV3TopBar
+        fileName={fileName}
+        pageIndex={pageIndex}
+        pageCount={pageCount}
+        isDirty={isDirty}
+        currentFilePath={currentFilePath}
+        canUndo={canUndo}
+        canRedo={canRedo}
+        activePanel={activePanel}
+        shareOpen={shareOpen}
+        moreOpen={moreOpen}
+        readOpen={readOpen}
+        readPaused={readPaused}
+        searchOpen={isSearchOpen}
+        searchQuery={searchQuery}
+        searchResultCount={searchResultCount}
+        activeSearchResultIndex={activeSearchResultIndex}
+        nativeCapabilities={nativeCapabilities}
+        onOpenFile={onOpenFile}
+        onSaveAs={onSaveAs}
+        onSaveComplete={onSaveComplete}
+        onCloseDocument={onCloseDocument}
+        onUndo={onUndo}
+        onRedo={onRedo}
+        onPanelToggle={togglePanel}
+        onShareToggle={() => { setShareOpen(open => !open); setMoreOpen(false); }}
+        onMoreToggle={() => { setMoreOpen(open => !open); setShareOpen(false); }}
+        onReadToggle={handleReadToggle}
+        onReadPauseToggle={handleReadPauseToggle}
+        onReadRestart={handleReadRestart}
+        onReadStop={handleReadStop}
+        onOpenCommandPalette={onOpenCommandPalette}
+        onOpenExport={onOpenExport}
+        onOpenSearch={onOpenSearch}
+        onSearchQueryChange={onSearchQueryChange}
+        onRunSearch={onRunSearch}
+        onNextSearchResult={onNextSearchResult}
+        onPrevSearchResult={onPrevSearchResult}
+        onNavigatePage={onNavigatePage}
+        onShowPrivacy={() => { setActiveModal('privacy'); setMoreOpen(false); }}
+        onShowAuthor={() => { setActiveModal('author'); setMoreOpen(false); }}
+        onShowNative={() => { setActiveModal('native'); setMoreOpen(false); }}
+        onShowSettings={() => { setShowSettings(true); setMoreOpen(false); }}
+        onToggleTheme={() => { setThemeDark(dark => !dark); }}
+        onProtectDocument={onProtectDocument}
+        onCheckForUpdates={() => { onCheckForUpdates(); setMoreOpen(false); }}
+        onShowToast={showToast}
+        themeDark={themeDark}
+      />
+
+      <div className="workspace">
+        <V3Thumbnails
+          open={pageCount > 0 && thumbsOpen}
+          thumbnails={thumbnails}
+          pageLabels={pageLabels}
+          pageCount={pageCount}
+          currentPage={pageIndex}
+          onPageSelect={onNavigatePage}
+          onReorderPages={onReorderPages}
+        />
+
+        {pageCount > 0 && activePanel && (
+          <EditorV3Panel
+            panel={activePanel}
+            onClose={() => handlePanelChange(null)}
+            onPanelChange={handlePanelChange}
+            onAnnotationToolChange={onAnnotationToolChange}
+            onOpenAllTools={onOpenAllTools}
+            onOpenExport={onOpenExport}
+            onRunOcr={onRunOcr}
+            onProtectDocument={onProtectDocument}
+            onWatermark={onWatermark}
+            currentFilePath={currentFilePath}
+            onFormatCommand={onFormatCommand}
+            onModeChange={onModeChange}
+            isInsertingText={isInsertingText}
+            setIsInsertingText={setIsInsertingText}
+            isInsertingImage={isInsertingImage}
+            setIsInsertingImage={setIsInsertingImage}
+            pendingSignature={pendingSignature}
+            setPendingSignature={setPendingSignature}
+            comments={comments}
+            activeCommentIdx={activeCommentIdx}
+            onCommentSelect={onCommentSelect}
+            onNextComment={onNextComment}
+            onPrevComment={onPrevComment}
+            onResolveAll={onResolveAll}
+            formFields={formFields}
+            activeFieldIdx={activeFieldIdx}
+            onFieldSelect={onFieldSelect}
+            formValidationErrors={formValidationErrors}
+            onFormSubmit={onFormSubmit}
+            selectedAnnotation={selectedAnnotation}
+            redactions={redactions}
+            documentIssues={documentIssues}
+            onApplyRedactions={onApplyRedactions}
+            onRedactSearch={onRedactSearch}
+            scannedPageIndices={scannedPageIndices}
+            ocrRunning={ocrRunning}
+            ocrVisible={ocrVisible}
+            onOcrVisibleChange={onOcrVisibleChange}
+            ocrConfidenceThreshold={ocrConfidenceThreshold}
+            onOcrConfidenceChange={onOcrConfidenceChange}
+            attachments={attachments}
+            onExtractAttachment={onExtractAttachment}
+            onAddAttachment={onAddAttachment}
+            onRemoveAttachment={onRemoveAttachment}
+            layers={layers}
+            layerVisibility={layerVisibility}
+            onShowToast={showToast}
+            onDocumentMutated={onDocumentMutated}
+            onOpenSignModal={() => setShowSignModal(true)}
+            onOpenInitialsModal={() => setShowInitialsModal(true)}
+            onOpenInviteDialog={() => setShowInviteDialog(true)}
+          />
+        )}
+
+        <div className="docarea" id="docarea">
+          {pageCount > 0 && mode !== 'organize' && (
+            <EditorV3ToolRail
+              activeTool={effectiveRailTool}
+              moreOpen={moreToolsOpen}
+              commentsCount={comments.length}
+              onToolSelect={setRailTool}
+              onMoreTool={handleMoreTool}
+            />
+          )}
+
+          <div ref={canvasRef} data-print-region className="canvas" aria-label="PDF document">
+            {children}
+          </div>
+
+          {pageCount > 0 && mode !== 'organize' && (
+            <>
+              <div className="rightrail" aria-label={t('editorV3.nav.pageNavigation')}>
+                <button className="rail-btn" data-tip={t('editorV3.nav.pages')} onClick={() => setThumbsOpen(open => !open)} aria-label={t('editorV3.nav.pages')}>
+                  <GalleryVerticalEndIcon aria-hidden="true" />
+                </button>
+                <div className="rail-sep" />
+                <button className="rail-btn" data-tip={t('editorV3.nav.prevPage')} onClick={() => onNavigatePage(Math.max(0, pageIndex - 1))} disabled={pageIndex <= 0} aria-label={t('editorV3.nav.prevPage')}>
+                  <ChevronUpIcon aria-hidden="true" />
+                </button>
+                <div className="page-num tnum">{pageIndex + 1}<br />/<br />{pageCount}</div>
+                <button className="rail-btn" data-tip={t('editorV3.nav.nextPage')} onClick={() => onNavigatePage(Math.min(pageCount - 1, pageIndex + 1))} disabled={pageIndex >= pageCount - 1} aria-label={t('editorV3.nav.nextPage')}>
+                  <ChevronDownIcon aria-hidden="true" />
+                </button>
+                <div className="rail-sep" />
+                <button className="rail-btn" data-tip={t('editorV3.nav.fitToView')} onClick={() => { onZoomChange(1.0); }} aria-label={t('editorV3.nav.fitToView')}>
+                  <MaximizeIcon aria-hidden="true" />
+                </button>
+              </div>
+
+              {/* Floating zoom controls */}
+              <div className="bottombar">
+                <button className="bb-btn" onClick={() => onNavigatePage(Math.max(0, pageIndex - 1))} disabled={pageIndex <= 0} title={t('editorV3.common.previous')}>
+                  <ChevronLeftIcon aria-hidden="true" />
+                </button>
+                <button
+                  className="bb-page tabular-nums"
+                  data-testid="floating-page-indicator"
+                  type="button"
+                  title={t('editorV3.nav.goToPage')}
+                  aria-label={t('editorV3.nav.goToPage')}
+                  onClick={onOpenGoToPage}
+                >
+                  {pageIndex + 1} / {pageCount}
+                </button>
+                <button className="bb-btn" onClick={() => onNavigatePage(Math.min(pageCount - 1, pageIndex + 1))} disabled={pageIndex >= pageCount - 1} title={t('editorV3.common.next')}>
+                  <ChevronRightIcon aria-hidden="true" />
+                </button>
+                <div className="bb-sep" aria-hidden="true" />
+                <button
+                  className="bb-btn"
+                  data-testid="zoom-out-btn"
+                  onClick={() => onZoomChange(z => Math.max(0.25, Number((z - 0.25).toFixed(2))))}
+                  disabled={zoom <= 0.25}
+                  title={t('editorV3.zoom.zoomOut')}
+                >
+                  −
+                </button>
+                <button
+                  className="bb-zoom"
+                  data-testid="zoom-reset-btn"
+                  type="button"
+                  title={t('editorV3.zoom.chooseLevel')}
+                  aria-label={t('editorV3.zoom.chooseLevel')}
+                  onClick={() => setZoomPresetsOpen(o => !o)}
+                >
+                  {Math.round(zoom * 100)}%
+                </button>
+                <button
+                  className="bb-btn"
+                  data-testid="zoom-in-btn"
+                  onClick={() => onZoomChange(z => Math.min(4, Number((z + 0.25).toFixed(2))))}
+                  disabled={zoom >= 4}
+                  title={t('editorV3.zoom.zoomIn')}
+                >
+                  +
+                </button>
+                <button
+                  className="bb-btn"
+                  data-testid="zoom-fit-width-btn"
+                  onClick={() => { onZoomChange(1.0); }}
+                  aria-label={t('editorV3.nav.fitToView')}
+                  title={t('editorV3.nav.fitToView')}
+                >
+                  <MaximizeIcon aria-hidden="true" />
+                </button>
+              </div>
+              <ZoomPresetsPopover
+                isOpen={zoomPresetsOpen}
+                onClose={() => { setZoomPresetsOpen(false); }}
+                onZoomChange={(z) => { onZoomChange(z); }}
+              />
+            </>
+          )}
+        </div>
+
+      </div>
+
+      {readOpen && (
+        <div className={readPaused ? 'read-bar show paused' : 'read-bar show'}>
+          <span className="label"><span className="eq"><i /><i /><i /><i /></span>{t('editorV3.read.readAloud')}</span>
+          <button className="read-btn" onClick={handleReadRestart} title={t('editorV3.read.restart')}>
+            <RotateCcwIcon aria-hidden="true" />
+          </button>
+          <button className="read-btn primary" onClick={handleReadPauseToggle} title={readPaused ? t('editorV3.read.play') : t('editorV3.read.pause')}>
+            {readPaused ? <PlayIcon aria-hidden="true" /> : <PauseIcon aria-hidden="true" />}
+          </button>
+          <button className="read-btn" onClick={handleReadStop} title={t('editorV3.read.stop')}>
+            <XIcon aria-hidden="true" />
+          </button>
+        </div>
+      )}
+
+      {activeModal === 'privacy' && (
+        <EditorV3Modal title={t('editorV3.privacy.title')} onClose={() => setActiveModal(null)}>
+          <div className="modal-kicker"><ShieldCheckIcon aria-hidden="true" />{t('editorV3.privacy.localFirst')}</div>
+          <p>{t('editorV3.privacy.intro')}</p>
+          <div className="modal-grid">
+            <CapabilityRow title={t('editorV3.privacy.documentDataTitle')} detail={t('editorV3.privacy.documentDataDetail')} />
+            <CapabilityRow title={t('editorV3.privacy.crashTitle')} detail={t('editorV3.privacy.crashDetail')} />
+            <CapabilityRow title={t('editorV3.privacy.osTitle')} detail={t('editorV3.privacy.osDetail')} />
+          </div>
+        </EditorV3Modal>
+      )}
+
+      {activeModal === 'author' && (
+        <EditorV3Modal title={t('editorV3.commentName.title')} onClose={() => setActiveModal(null)}>
+          <p>{t('editorV3.commentName.intro')}</p>
+          <label className="modal-field">
+            <span>{t('editorV3.commentName.nameLabel')}</span>
+            <input
+              value={authorDraft}
+              onChange={(event) => setAuthorDraft(event.target.value)}
+              placeholder={t('editorV3.commentName.placeholder')}
+              autoFocus
+            />
+          </label>
+          <div className="modal-actions">
+            <button className="modal-secondary" type="button" onClick={() => setActiveModal(null)}>{t('editorV3.common.cancel')}</button>
+            <button className="modal-primary" type="button" onClick={commitAuthorName}>{t('editorV3.common.save')}</button>
+          </div>
+        </EditorV3Modal>
+      )}
+
+      {activeModal === 'native' && (
+        <EditorV3Modal title={t('editorV3.native.title')} onClose={() => setActiveModal(null)}>
+          <p>{t('editorV3.native.intro')}</p>
+          <NativeCapabilityList capabilities={nativeCapabilities} />
+        </EditorV3Modal>
+      )}
+
+      {showSignModal && (
+        <EditorV3Modal title={t('editorV3.sign.addSignature')} onClose={() => setShowSignModal(false)}>
+          <div className="esign-tabs" style={{ display: 'flex', gap: 12, marginBottom: 16 }}>
+            <button className={`btn-ghost ${signType === 'type' ? 'active' : ''}`} style={{ flex: 1, borderBottom: signType === 'type' ? '2px solid var(--accent)' : 'none', borderRadius: 0, paddingBottom: 8 }} onClick={() => setSignType('type')}>{t('editorV3.sign.type')}</button>
+            <button className={`btn-ghost ${signType === 'draw' ? 'active' : ''}`} style={{ flex: 1, borderBottom: signType === 'draw' ? '2px solid var(--accent)' : 'none', borderRadius: 0, paddingBottom: 8 }} onClick={() => setSignType('draw')}>{t('editorV3.sign.draw')}</button>
+          </div>
+
+          {signType === 'type' ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <label className="modal-field">
+                <span>{t('editorV3.sign.signatureName')}</span>
+                <input
+                  value={signatureName}
+                  onChange={(e) => setSignatureName(e.target.value)}
+                  placeholder={t('editorV3.sign.typeName')}
+                  autoFocus
+                />
+              </label>
+              <div className="panel-section-label">{t('editorV3.sign.selectStyle')}</div>
+              <label className="select-wrap" style={{ width: '100%' }}>
+                <select className="select native-select" value={signatureFont} onChange={e => setSignatureFont(e.target.value)}>
+                  <option value="font-signature-1">{t('editorV3.sign.styleClassic')}</option>
+                  <option value="font-signature-2">{t('editorV3.sign.styleElegant')}</option>
+                  <option value="font-signature-3">{t('editorV3.sign.styleBrush')}</option>
+                  <option value="font-signature-4">{t('editorV3.sign.styleModern')}</option>
+                </select>
+                <ChevronDownIcon aria-hidden="true" />
+              </label>
+              {signatureName && (
+                <div style={{
+                  padding: '24px',
+                  background: 'rgba(30,31,36,0.02)',
+                  border: '1px solid var(--border)',
+                  borderRadius: 8,
+                  textAlign: 'center',
+                  fontSize: 28,
+                  color: 'rgb(22, 101, 52)',
+                  fontFamily: 
+                    signatureFont === 'font-signature-1' ? 'Brush Script MT, cursive' :
+                    signatureFont === 'font-signature-2' ? 'Caveat, cursive' :
+                    signatureFont === 'font-signature-3' ? 'Satisfy, cursive' : 'Lucida Handwriting, cursive'
+                }}>
+                  {signatureName}
+                </div>
+              )}
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <div style={{
+                height: 180,
+                background: 'rgba(30,31,36,0.02)',
+                border: '1px dashed var(--border)',
+                borderRadius: 8,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: 'var(--text-muted)',
+                fontSize: 13,
+                cursor: 'crosshair',
+                position: 'relative'
+              }}>
+                <span>{t('editorV3.sign.drawHere')}</span>
+                <div style={{ position: 'absolute', bottom: 10, right: 10, fontSize: 10 }}>{t('editorV3.sign.clear')}</div>
+              </div>
+            </div>
+          )}
+
+          <div className="modal-actions" style={{ marginTop: 20 }}>
+            <button className="modal-secondary" type="button" onClick={() => setShowSignModal(false)}>{t('editorV3.common.cancel')}</button>
+            <button className="modal-primary" type="button" onClick={() => {
+              setShowSignModal(false);
+              setPendingSignature({
+                type: 'signature',
+                content: signatureName || t('editorV3.sign.defaultSignature'),
+                font: signatureFont
+              });
+              showToast(t('editorV3.sign.clickToPlaceSignature'));
+            }}>{t('editorV3.sign.apply')}</button>
+          </div>
+        </EditorV3Modal>
+      )}
+
+      {showInitialsModal && (
+        <EditorV3Modal title={t('editorV3.sign.addInitials')} onClose={() => setShowInitialsModal(false)}>
+          <p style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 16 }}>{t('editorV3.sign.initialsIntro')}</p>
+          <label className="modal-field">
+            <span>{t('editorV3.sign.initials')}</span>
+            <input
+              value={typedInitials}
+              onChange={(e) => setTypedInitials(e.target.value)}
+              placeholder={t('editorV3.sign.initialsPlaceholder')}
+              maxLength={4}
+              autoFocus
+            />
+          </label>
+          {typedInitials && (
+            <div style={{
+              marginTop: 16,
+              padding: '16px',
+              background: 'rgba(30,31,36,0.02)',
+              border: '1px solid var(--border)',
+              borderRadius: 8,
+              textAlign: 'center',
+              fontSize: 24,
+              color: 'rgb(22, 101, 52)',
+              fontFamily: 'Caveat, cursive'
+            }}>
+              {typedInitials}
+            </div>
+          )}
+          <div className="modal-actions" style={{ marginTop: 20 }}>
+            <button className="modal-secondary" type="button" onClick={() => setShowInitialsModal(false)}>{t('editorV3.common.cancel')}</button>
+            <button className="modal-primary" type="button" onClick={() => {
+              setShowInitialsModal(false);
+              setPendingSignature({
+                type: 'initials',
+                content: typedInitials || t('editorV3.sign.defaultInitials')
+              });
+              showToast(t('editorV3.sign.clickToPlaceInitials'));
+            }}>{t('editorV3.sign.apply')}</button>
+          </div>
+        </EditorV3Modal>
+      )}
+
+      {showInviteDialog && (
+        <EditorV3Modal title={t('editorV3.sign.invite')} onClose={() => setShowInviteDialog(false)}>
+          <p style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 16 }}>
+            {t('editorV3.sign.inviteIntro')}
+          </p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <label className="modal-field">
+              <span>{t('editorV3.sign.recipientName')}</span>
+              <input
+                value={inviteName}
+                onChange={(e) => setInviteName(e.target.value)}
+                placeholder={t('editorV3.sign.recipientNamePlaceholder')}
+                autoFocus
+              />
+            </label>
+            <label className="modal-field">
+              <span>{t('editorV3.sign.email')}</span>
+              <input
+                type="email"
+                value={inviteEmail}
+                onChange={(e) => setInviteEmail(e.target.value)}
+                placeholder={t('editorV3.sign.emailPlaceholder')}
+              />
+            </label>
+            <label className="modal-field">
+              <span>{t('editorV3.sign.message')}</span>
+              <textarea
+                style={{
+                  width: '100%',
+                  height: 80,
+                  padding: 8,
+                  border: '1px solid var(--border)',
+                  borderRadius: 6,
+                  fontSize: 12,
+                  outline: 'none',
+                  resize: 'none'
+                }}
+                value={inviteMessage}
+                onChange={(e) => setInviteMessage(e.target.value)}
+                placeholder={t('editorV3.sign.messagePlaceholder')}
+              />
+            </label>
+          </div>
+          <div className="modal-actions" style={{ marginTop: 20 }}>
+            <button className="modal-secondary" type="button" onClick={() => setShowInviteDialog(false)}>{t('editorV3.common.cancel')}</button>
+            <button className="modal-primary" type="button" onClick={() => {
+              if (!inviteEmail) {
+                showToast(t('editorV3.sign.emailRequired'));
+                return;
+              }
+              setShowInviteDialog(false);
+              showToast(t('editorV3.sign.inviteSent', { email: inviteEmail }));
+              setInviteName('');
+              setInviteEmail('');
+              setInviteMessage('');
+            }}>{t('editorV3.sign.send')}</button>
+          </div>
+        </EditorV3Modal>
+      )}
+
+      {textOverlayDraft && (
+        <EditorV3Modal
+          title={textOverlayDraft.id ? t('editorV3.textbox.editTitle') : t('editorV3.textbox.newTitle')}
+          onClose={() => setTextOverlayDraft(null)}
+        >
+          <p style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 16 }}>
+            {t('editorV3.textbox.intro')}
+          </p>
+          <label className="modal-field">
+            <span>{t('editorV3.textbox.label')}</span>
+            <textarea
+              value={textOverlayDraft.value}
+              onChange={(event) => setTextOverlayDraft(prev => prev ? { ...prev, value: event.target.value } : prev)}
+              placeholder={t('editorV3.textbox.placeholder')}
+              autoFocus
+              style={{
+                width: '100%',
+                minHeight: 96,
+                padding: 10,
+                border: '1px solid var(--border)',
+                borderRadius: 6,
+                fontSize: 13,
+                lineHeight: 1.4,
+                outline: 'none',
+                resize: 'vertical',
+              }}
+            />
+          </label>
+          <div className="modal-actions" style={{ marginTop: 20 }}>
+            {textOverlayDraft.id && (
+              <button
+                className="modal-secondary"
+                type="button"
+                onClick={() => {
+                  setLocalOverlays(prev => prev.filter(overlay => overlay.id !== textOverlayDraft.id));
+                  setTextOverlayDraft(null);
+                  showToast(t('editorV3.textbox.deleted'));
+                  onDocumentMutated?.();
+                }}
+              >
+                {t('editorV3.textbox.delete')}
+              </button>
+            )}
+            <button className="modal-secondary" type="button" onClick={() => setTextOverlayDraft(null)}>{t('editorV3.common.cancel')}</button>
+            <button className="modal-primary" type="button" onClick={commitTextOverlayDraft}>{t('editorV3.common.save')}</button>
+          </div>
+        </EditorV3Modal>
+      )}
+
+      {localOverlays.map(overlay => {
+        const pageContainer = canvasRef.current?.querySelector(`[data-page-index="${overlay.pageIndex}"]`);
+        if (!pageContainer) return null;
+
+        const style: React.CSSProperties = {
+          position: 'absolute',
+          left: overlay.x * zoom,
+          top: overlay.y * zoom,
+          transform: 'translate(-50%, -50%)',
+          zIndex: 40,
+          pointerEvents: 'auto',
+        };
+
+        return createPortal(
+          <div key={overlay.id} style={style} className="local-overlay-item">
+            {overlay.type === 'text' ? (
+              <div style={{
+                padding: '4px 8px',
+                background: 'transparent',
+                color: 'var(--text-primary)',
+                fontSize: 14 * zoom,
+                fontFamily: 'Helvetica, Arial, sans-serif',
+                whiteSpace: 'pre',
+                border: '1px dashed transparent',
+                cursor: 'pointer'
+              }}
+              onClick={(e) => {
+                e.stopPropagation();
+                setTextOverlayDraft({
+                  id: overlay.id,
+                  pageIndex: overlay.pageIndex,
+                  x: overlay.x,
+                  y: overlay.y,
+                  value: overlay.content,
+                });
+              }}
+              title={t('editorV3.overlay.clickToEdit')}
+              >
+                {overlay.content}
+              </div>
+            ) : overlay.type === 'image' ? (
+              <img
+                src={overlay.content}
+                alt={t('editorV3.overlay.placed')}
+                style={{
+                  maxWidth: 150 * zoom,
+                  maxHeight: 150 * zoom,
+                  border: '1px dashed transparent',
+                  cursor: 'pointer'
+                }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setLocalOverlays(prev => prev.filter(o => o.id !== overlay.id));
+                  showToast(t('editorV3.overlay.imageRemoved'));
+                }}
+                title={t('editorV3.overlay.clickToRemove')}
+              />
+            ) : (
+              <div style={{
+                padding: '6px 12px',
+                background: 'rgba(239, 246, 255, 0.95)',
+                border: '1.5px dashed var(--accent)',
+                borderRadius: 4,
+                color: 'rgb(22, 101, 52)',
+                fontSize: overlay.type === 'signature' ? 24 * zoom : 18 * zoom,
+                fontFamily: 
+                  overlay.font === 'font-signature-1' ? 'Brush Script MT, cursive' :
+                  overlay.font === 'font-signature-2' ? 'Caveat, cursive' :
+                  overlay.font === 'font-signature-3' ? 'Satisfy, cursive' : 
+                  overlay.type === 'initials' ? 'Caveat, cursive' : 'Lucida Handwriting, cursive',
+                whiteSpace: 'nowrap',
+                boxShadow: '0 4px 12px rgba(10, 102, 255, 0.15)',
+                cursor: 'pointer',
+                userSelect: 'none'
+              }}
+              onClick={(e) => {
+                e.stopPropagation();
+                setLocalOverlays(prev => prev.filter(o => o.id !== overlay.id));
+                showToast(t('editorV3.overlay.signatureRemoved'));
+              }}
+              title={t('editorV3.overlay.clickToRemove')}
+              >
+                {overlay.content}
+              </div>
+            )}
+          </div>,
+          pageContainer
+        );
+      })}
+
+      {toast && (
+        <div className="toast-wrap">
+          <div className="toast show"><ShieldCheckIcon className="ok" aria-hidden="true" /><span>{toast}</span></div>
+        </div>
+      )}
+
+      <Settings
+        visible={showSettings}
+        onClose={() => setShowSettings(false)}
+      />
+    </div>
+  );
+}
+
+function EditorV3Modal({
+  title,
+  children,
+  onClose,
+}: {
+  title: string;
+  children: ReactNode;
+  onClose: () => void;
+}) {
+  const { t } = useTranslation();
+  return (
+    <div className="modal-backdrop" role="presentation" onMouseDown={onClose}>
+      <section
+        className="v3-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-label={title}
+        onMouseDown={(event) => event.stopPropagation()}
+      >
+        <div className="modal-head">
+          <h2>{title}</h2>
+          <button className="panel-close" type="button" onClick={onClose} aria-label={t('common.close')}>
+            <XIcon aria-hidden="true" />
+          </button>
+        </div>
+        <div className="modal-body">{children}</div>
+      </section>
+    </div>
+  );
+}
+
+function CapabilityRow({ title, detail }: { title: string; detail: string }) {
+  return (
+    <div className="cap-row">
+      <b>{title}</b>
+      <span>{detail}</span>
+    </div>
+  );
+}
+
+function NativeCapabilityList({ capabilities }: { capabilities: NativeCapabilities | null }) {
+  const { t } = useTranslation();
+  if (!capabilities) {
+    return (
+      <div className="modal-grid">
+        <CapabilityRow title={t('editorV3.native.detection')} detail={t('editorV3.native.loading')} />
+      </div>
+    );
+  }
+
+  const rows: Array<[string, NativeFeatureCapability]> = [
+    [t('editorV3.native.ocr'), capabilities.ocr],
+    [t('editorV3.native.tts'), capabilities.tts],
+    [t('editorV3.native.scanner'), capabilities.scanner],
+    [t('editorV3.native.spellcheck'), capabilities.spellcheck],
+    [t('editorV3.native.dictation'), capabilities.dictation],
+    [t('editorV3.native.share'), capabilities.share],
+    [t('editorV3.native.secureStorage'), capabilities.secureStorage],
+  ];
+
+  return (
+    <div className="native-list">
+      <div className="native-platform">{t('editorV3.native.platform', { platform: capabilities.platform })}</div>
+      {rows.map(([label, feature]) => (
+        <div key={label} className={`native-row ${feature.status}`}>
+          <span className="state">{feature.status}</span>
+          <div>
+            <b>{label}</b>
+            <span>{feature.provider} - {feature.detail}</span>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+interface TopBarProps {
+  fileName: string | null;
+  pageIndex: number;
+  pageCount: number;
+  isDirty: boolean;
+  currentFilePath: string | null;
+  canUndo: boolean;
+  canRedo: boolean;
+  activePanel: V3Panel | null;
+  shareOpen: boolean;
+  moreOpen: boolean;
+  readOpen: boolean;
+  readPaused: boolean;
+  searchOpen: boolean;
+  searchQuery: string;
+  searchResultCount: number;
+  activeSearchResultIndex: number;
+  nativeCapabilities: NativeCapabilities | null;
+  themeDark: boolean;
+  onOpenFile: (source: string | ArrayBuffer) => Promise<void>;
+  onSaveAs: () => Promise<void>;
+  onSaveComplete: () => void;
+  onCloseDocument: () => void;
+  onUndo: () => void;
+  onRedo: () => void;
+  onPanelToggle: (panel: V3Panel) => void;
+  onShareToggle: () => void;
+  onMoreToggle: () => void;
+  onReadToggle: () => void;
+  onReadPauseToggle: () => void;
+  onReadRestart: () => void;
+  onReadStop: () => void;
+  onOpenCommandPalette: () => void;
+  onOpenExport: (format?: any) => void;
+  onOpenSearch: () => void;
+  onSearchQueryChange: (query: string) => void;
+  onRunSearch: (query: string) => void;
+  onNextSearchResult: () => void;
+  onPrevSearchResult: () => void;
+  onNavigatePage: (pageIndex: number) => void;
+  onShowPrivacy: () => void;
+  onShowAuthor: () => void;
+  onShowNative: () => void;
+  onShowSettings: () => void;
+  onToggleTheme: () => void;
+  onProtectDocument: () => void;
+  onCheckForUpdates: () => void;
+  onShowToast: (message: string) => void;
+}
+
+function EditorV3TopBar(props: TopBarProps) {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const menuTabsRef = useRef<HTMLElement>(null);
+  const { push, update } = useTaskQueueContext();
+  const hasDocument = props.pageCount > 0;
+  const canSave = props.isDirty && hasDocument;
+  const ttsAvailable = props.nativeCapabilities?.tts.available ?? true;
+  const [tabOverflow, setTabOverflow] = useState({ left: false, right: false });
+
+  useEffect(() => {
+    const el = menuTabsRef.current;
+    if (!el || !hasDocument) return;
+
+    const updateOverflow = () => {
+      setTabOverflow({
+        left: el.scrollLeft > 2,
+        right: el.scrollLeft + el.clientWidth < el.scrollWidth - 2,
+      });
+    };
+
+    updateOverflow();
+    el.addEventListener('scroll', updateOverflow, { passive: true });
+    const observer = new ResizeObserver(updateOverflow);
+    observer.observe(el);
+    return () => {
+      el.removeEventListener('scroll', updateOverflow);
+      observer.disconnect();
+    };
+  }, [hasDocument]);
+
+  function scrollTabs(direction: -1 | 1) {
+    menuTabsRef.current?.scrollBy({ left: direction * 156, behavior: 'smooth' });
+  }
+
+  async function handleSave(): Promise<void> {
+    if (!canSave) return;
+    const taskId = `save-${Date.now()}`;
+    push({ id: taskId, label: t('editorV3.toasts.saving'), progress: null, status: 'running' });
+    try {
+      if (isTauri && props.currentFilePath) {
+        const { invoke } = await import('@tauri-apps/api/core');
+        await invoke('save_pdf', { path: props.currentFilePath });
+      } else {
+        await props.onSaveAs();
+      }
+      props.onSaveComplete();
+      update(taskId, { status: 'done', label: t('editorV3.toasts.saved') });
+      props.onShowToast(t('editorV3.toasts.savedOnDevice'));
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      update(taskId, { status: 'error', label: t('editorV3.toasts.saveFailed', { message }) });
+    }
+  }
+
+  function handleFileInputChange(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const buffer = ev.target?.result;
+      if (buffer instanceof ArrayBuffer) void props.onOpenFile(buffer);
+    };
+    reader.readAsArrayBuffer(file);
+    event.target.value = '';
+  }
+
+  async function handleOpen(): Promise<void> {
+    if (isTauri) {
+      const path = await pickPdfPath();
+      if (typeof path === 'string') await props.onOpenFile(path);
+    } else {
+      fileInputRef.current?.click();
+    }
+  }
+
+  async function openExternalUrl(url: string): Promise<void> {
+    if (isTauri) {
+      const { invoke } = await import('@tauri-apps/api/core');
+      await invoke('open_external_url', { url });
+      return;
+    }
+    window.open(url, '_blank', 'noopener,noreferrer');
+  }
+
+  const { t } = useTranslation();
+  const modeTabs: Array<{ id: V3Panel; label: string; icon: typeof LayoutGridIcon }> = [
+    { id: 'tools', label: t('modes.allTools'), icon: LayoutGridIcon },
+    { id: 'edit', label: t('modes.edit'), icon: PencilIcon },
+    { id: 'convert', label: t('modes.convert'), icon: RefreshCwIcon },
+    { id: 'esign', label: t('modes.sign'), icon: PenLineIcon },
+  ];
+
+  return (
+    <>
+      <header className="topbar">
+        {!isTauri && <input ref={fileInputRef} type="file" accept=".pdf" className="hidden" onChange={handleFileInputChange} aria-label={t('topbar.openPdfFile')} />}
+        <div className="tb-left">
+          <button className="brand" onClick={() => { void handleOpen(); }} type="button">
+            <span className="brand-mark">P</span>
+            <span className="brand-name">PDFluent</span>
+          </button>
+          <div className="brand-divider" />
+          {hasDocument ? (
+            <div className="menu-tabs-wrap">
+              <button
+                className={tabOverflow.left ? 'tab-scroll show' : 'tab-scroll'}
+                type="button"
+                onClick={() => scrollTabs(-1)}
+                aria-label={t('editorV3.topbar.scrollLeft')}
+                tabIndex={tabOverflow.left ? 0 : -1}
+              >
+                <ChevronLeftIcon aria-hidden="true" />
+              </button>
+              <nav ref={menuTabsRef} className="menu-tabs" aria-label={t('editorV3.topbar.workMode')}>
+                {modeTabs.map(tab => {
+                  const Icon = tab.icon;
+                  return (
+                    <button
+                      key={tab.id}
+                      type="button"
+                      className={props.activePanel === tab.id ? 'menu-tab active' : 'menu-tab'}
+                      onClick={() => props.onPanelToggle(tab.id)}
+                    >
+                      <Icon aria-hidden="true" />
+                      {tab.label}
+                    </button>
+                  );
+                })}
+              </nav>
+              <button
+                className={tabOverflow.right ? 'tab-scroll right show' : 'tab-scroll right'}
+                type="button"
+                onClick={() => scrollTabs(1)}
+                aria-label={t('editorV3.topbar.scrollRight')}
+                tabIndex={tabOverflow.right ? 0 : -1}
+              >
+                <ChevronRightIcon aria-hidden="true" />
+              </button>
+            </div>
+          ) : (
+            <button className="share-btn" type="button" onClick={() => { void handleOpen(); }}>
+              <FileTextIcon aria-hidden="true" />
+              {t('editorV3.topbar.openPdf')}
+            </button>
+          )}
+        </div>
+
+        <div className="tb-center">
+          <div className="crumb">
+            <HardDriveIcon className="pre" aria-hidden="true" />
+            <span className="pre">{t('editorV3.topbar.myFiles')}</span>
+            <span className="sep pre">/</span>
+            <span className="file" title={props.fileName ?? t('editorV3.topbar.noDocument')}>{props.fileName ?? t('editorV3.topbar.noDocument')}</span>
+            {hasDocument && <span className="badge">PDF</span>}
+            {props.isDirty && <span className="dirty-dot" title={t('editorV3.topbar.unsaved')} />}
+            {hasDocument && <ChevronDownIcon className="chev" aria-hidden="true" />}
+          </div>
+        </div>
+
+        <div className="tb-right">
+          {hasDocument && (
+            <>
+              <div className="tb-group">
+                <button className="iconbtn" disabled={!props.canUndo} onClick={props.onUndo} title={t('editorV3.topbar.undo')} data-testid="undo-btn">
+                  <Undo2Icon aria-hidden="true" />
+                </button>
+                <button className="iconbtn" disabled={!props.canRedo} onClick={props.onRedo} title={t('editorV3.topbar.redo')} data-testid="redo-btn">
+                  <Redo2Icon aria-hidden="true" />
+                </button>
+              </div>
+              <div className="brand-divider" />
+              <button className={props.searchOpen ? 'iconbtn on' : 'iconbtn'} onClick={props.onOpenSearch} title={t('editorV3.topbar.search')}>
+                <SearchIcon aria-hidden="true" />
+              </button>
+              <button
+                className={props.readOpen ? 'iconbtn live' : 'iconbtn'}
+                onClick={props.onReadToggle}
+                title={ttsAvailable ? t('editorV3.read.readAloud') : t('editorV3.read.notAvailable')}
+                disabled={!ttsAvailable}
+              >
+                <HeadphonesIcon aria-hidden="true" />
+              </button>
+              <button className="iconbtn" onClick={() => { void handleSave(); }} disabled={!canSave} title={t('editorV3.topbar.save')} data-testid="save-btn">
+                <SaveIcon aria-hidden="true" />
+              </button>
+            </>
+          )}
+          <button className={props.moreOpen ? 'iconbtn on more-trigger' : 'iconbtn more-trigger'} onClick={props.onMoreToggle} title={t('editorV3.topbar.more')}>
+            <MoreHorizontalIcon aria-hidden="true" />
+          </button>
+          {hasDocument && (
+            <>
+              <div className="brand-divider" />
+              <div className="privacy-badge" title={t('editorV3.topbar.localTooltip')}>
+                <ShieldCheckIcon aria-hidden="true" />
+                <span>{t('editorV3.topbar.local')}</span>
+              </div>
+              <button className="share-btn share-trigger" onClick={props.onShareToggle} type="button">
+                <Share2Icon aria-hidden="true" />
+                {t('editorV3.topbar.share')}
+              </button>
+            </>
+          )}
+        </div>
+
+        {props.searchOpen && hasDocument && (
+          <div className="searchpop show">
+            <div className="row">
+              <input
+                type="text"
+                placeholder={t('editorV3.topbar.searchPlaceholder')}
+                value={props.searchQuery}
+                autoFocus
+                onChange={(event) => {
+                  props.onSearchQueryChange(event.target.value);
+                  props.onRunSearch(event.target.value);
+                }}
+              />
+              <span className="count">{props.searchResultCount ? `${props.activeSearchResultIndex + 1}/${props.searchResultCount}` : ''}</span>
+              <button className="iconbtn" style={{ width: 32, height: 32 }} onClick={props.onPrevSearchResult}><ChevronUpIcon aria-hidden="true" /></button>
+              <button className="iconbtn" style={{ width: 32, height: 32 }} onClick={props.onNextSearchResult}><ChevronDownIcon aria-hidden="true" /></button>
+            </div>
+          </div>
+        )}
+      </header>
+
+      {props.moreOpen && (
+        <div className="dropdown show topbar-more-menu">
+          {hasDocument && (
+            <button className="dd-item" onClick={() => window.print()}><PrinterIcon aria-hidden="true" />{t('editorV3.menu.print')}<span className="sc">⌘P</span></button>
+          )}
+          <button className="dd-item" onClick={props.onOpenCommandPalette}><InfoIcon aria-hidden="true" />{t('editorV3.menu.commandPalette')}<span className="sc">⌘K</span></button>
+          <div className="dd-sep" />
+          <div className="dd-label">{t('editorV3.menu.view')}</div>
+          <button className="dd-item" onClick={props.onToggleTheme}><MoonIcon aria-hidden="true" />{t('editorV3.menu.darkMode')}<span className="val">{props.themeDark ? t('editorV3.menu.on') : t('editorV3.menu.off')}</span></button>
+          <div className="dd-item" style={{ cursor: 'default' }}><LanguagesIcon aria-hidden="true" />{t('editorV3.menu.language')}<span className="val"><LanguageSwitcher /></span></div>
+          <button className="dd-item" onClick={props.onShowNative}><HardDriveIcon aria-hidden="true" />{t('editorV3.menu.nativeFeatures')}<span className="val">{props.nativeCapabilities?.platform ?? t('editorV3.menu.detecting')}</span></button>
+          <div className="dd-sep" />
+          <div className="dd-label">{t('editorV3.menu.privacy')}</div>
+          <button className="dd-item" onClick={props.onShowAuthor}><UserRoundIcon aria-hidden="true" />{t('editorV3.menu.commentName')}</button>
+          <button className="dd-item" onClick={props.onShowPrivacy}><ShieldCheckIcon aria-hidden="true" />{t('editorV3.menu.aboutPrivacy')}</button>
+          <div className="dd-sep" />
+          <button className="dd-item" onClick={props.onShowSettings}><BadgeCheckIcon aria-hidden="true" />{t('editorV3.menu.about')}</button>
+          {/* Self-updater menu entry is omitted from the Mac App Store build
+              (the App Store delivers updates there). */}
+          {!__IS_MAS_BUILD__ && (
+            <button className="dd-item" onClick={props.onCheckForUpdates}><DownloadIcon aria-hidden="true" />{t('editorV3.menu.checkForUpdates')}<span className="val">v{__APP_VERSION__}</span></button>
+          )}
+          <button className="dd-item" onClick={() => { void openExternalUrl('https://pdfluent.com'); }}><InfoIcon aria-hidden="true" />{t('editorV3.menu.website')}</button>
+          {hasDocument && (
+            <>
+              <div className="dd-sep" />
+              <button className="dd-item" onClick={props.onCloseDocument}><XIcon aria-hidden="true" />{t('editorV3.menu.closeDocument')}</button>
+            </>
+          )}
+        </div>
+      )}
+
+      {props.shareOpen && hasDocument && (
+        <div className="dropdown show share-menu">
+          <div className="dd-label">{t('editorV3.share.localHeading')}</div>
+          <button className="dd-item" onClick={() => { void handleSave(); }} disabled={!canSave}><SaveIcon aria-hidden="true" />{t('editorV3.share.saveCopy')}</button>
+          <button className="dd-item" onClick={props.onOpenExport} data-testid="export-btn"><DownloadIcon aria-hidden="true" />{t('editorV3.share.exportAs')}<span className="val">{t('editorV3.share.exportFormats')}</span></button>
+          <button className="dd-item" onClick={props.onSaveAs} data-testid="save-as-btn"><SaveIcon aria-hidden="true" />{t('editorV3.share.saveAs')}</button>
+          <button className="dd-item" onClick={props.onProtectDocument}><LockIcon aria-hidden="true" />{t('editorV3.share.protectedCopy')}</button>
+          <button className="dd-item" onClick={() => { window.location.href = `mailto:?subject=${encodeURIComponent(props.fileName ?? 'PDF')}&body=${encodeURIComponent(t('editorV3.share.emailBody'))}`; }}><MailIcon aria-hidden="true" />{t('editorV3.share.sendByEmail')}</button>
+          <button className="dd-item" onClick={props.onOpenExport}><LayersIcon aria-hidden="true" />{t('editorV3.share.flatCopy')}</button>
+          <div className="dd-sep" />
+          <p className="share-note">{t('editorV3.share.note')}</p>
+        </div>
+      )}
+    </>
+  );
+}
+
+function EditorV3Panel({
+  panel,
+  onClose,
+  onPanelChange,
+  onAnnotationToolChange,
+  onOpenSignModal,
+  onOpenInitialsModal,
+  onOpenInviteDialog,
+  onOpenAllTools: _onOpenAllTools,
+  onOpenExport,
+  onRunOcr,
+  onProtectDocument: _onProtectDocument,
+  onWatermark: _onWatermark,
+  currentFilePath,
+  onFormatCommand,
+  onModeChange,
+  comments,
+  activeCommentIdx: _activeCommentIdx,
+  onCommentSelect: _onCommentSelect,
+  onNextComment,
+  onPrevComment,
+  onResolveAll,
+  formFields,
+  activeFieldIdx: _activeFieldIdx,
+  onFieldSelect: _onFieldSelect,
+  formValidationErrors,
+  onFormSubmit,
+  selectedAnnotation,
+  redactions,
+  documentIssues: _documentIssues,
+  onApplyRedactions,
+  onRedactSearch,
+  scannedPageIndices,
+  ocrRunning,
+  ocrVisible,
+  onOcrVisibleChange,
+  ocrConfidenceThreshold,
+  onOcrConfidenceChange,
+  attachments,
+  onExtractAttachment,
+  onAddAttachment,
+  onRemoveAttachment,
+  layers,
+  layerVisibility,
+  onShowToast,
+  onDocumentMutated,
+  isInsertingText: _isInsertingText,
+  setIsInsertingText,
+  isInsertingImage: _isInsertingImage,
+  setIsInsertingImage,
+  pendingSignature,
+  setPendingSignature,
+}: {
+  panel: V3Panel;
+  onClose: () => void;
+  onPanelChange: (panel: V3Panel | null) => void;
+  onAnnotationToolChange: (tool: AnnotationTool) => void;
+  onOpenSignModal?: () => void;
+  onOpenInitialsModal?: () => void;
+  onOpenInviteDialog?: () => void;
+  isInsertingText: boolean;
+  setIsInsertingText: (val: boolean) => void;
+  isInsertingImage: boolean;
+  setIsInsertingImage: (val: boolean) => void;
+  pendingSignature: { type: 'signature' | 'initials'; content: string; font?: string } | null;
+  setPendingSignature: (val: { type: 'signature' | 'initials'; content: string; font?: string } | null) => void;
+  onOpenAllTools: () => void;
+  onOpenExport: (format?: any) => void;
+  onRunOcr: () => void;
+  onProtectDocument: () => void;
+  onWatermark: () => void;
+  currentFilePath: string | null;
+  onFormatCommand: (command: string, value?: string) => void;
+  onModeChange: (mode: ViewerMode) => void;
+  comments: Annotation[];
+  activeCommentIdx: number;
+  onCommentSelect: (idx: number) => void;
+  onNextComment: () => void;
+  onPrevComment: () => void;
+  onResolveAll: () => void;
+  formFields: FormField[];
+  activeFieldIdx: number;
+  onFieldSelect: (idx: number) => void;
+  formValidationErrors: Array<{ fieldId: string; errors: string[] }>;
+  onFormSubmit: () => Promise<void>;
+  selectedAnnotation: Annotation | null;
+  redactions: Annotation[];
+  documentIssues: unknown[];
+  onApplyRedactions: () => void;
+  onRedactSearch: (query: string) => Promise<{ matchesFound: number; areasRedacted: number } | null>;
+  scannedPageIndices: Set<number>;
+  ocrRunning: boolean;
+  ocrVisible: boolean;
+  onOcrVisibleChange: (visible: boolean | ((prev: boolean) => boolean)) => void;
+  ocrConfidenceThreshold: number;
+  onOcrConfidenceChange: (threshold: number | ((prev: number) => number)) => void;
+  attachments: AttachmentInfo[];
+  onExtractAttachment: (name: string) => void;
+  onAddAttachment: () => void;
+  onRemoveAttachment: (name: string) => void;
+  layers: LayerInfo[];
+  layerVisibility: Map<string, boolean>;
+  onShowToast: (message: string) => void;
+  onDocumentMutated?: () => void;
+}) {
+  const { t } = useTranslation();
+  const { push, update } = useTaskQueueContext();
+  const title =
+    panel === 'tools' ? t('modes.allTools') :
+    panel === 'edit' ? t('modes.edit') :
+    panel === 'convert' ? t('modes.convert') :
+    panel === 'esign' ? t('modes.sign') :
+    panel === 'protect' ? t('modes.protect') :
+    panel === 'watermark' ? t('toolbar.watermark') :
+    panel === 'compress' ? t('toolbar.compress') :
+    panel === 'split' ? t('toolbar.split') :
+    panel === 'merge' ? t('toolbar.merge') :
+    panel === 'redact' ? t('toolbar.redact') : t('modes.protect');
+
+  const basenameFromPath = (path: string): string => path.split(/[\\/]/).filter(Boolean).pop() ?? path;
+  const normalizeDialogPaths = (value: string | string[] | null): string[] => {
+    if (!value) return [];
+    return Array.isArray(value) ? value : [value];
+  };
+
+  type MergeFileEntry = { name: string; size: string; path: string; locked?: boolean };
+
+  const [compressBusy, setCompressBusy] = useState(false);
+  const [compressProgress, setCompressProgress] = useState(0);
+
+  const [splitType, setSplitType] = useState('page');
+  const [splitRange, setSplitRange] = useState('1-2, 3-4');
+  const [splitBusy, setSplitBusy] = useState(false);
+
+  const [filesToMerge, setFilesToMerge] = useState<MergeFileEntry[]>([]);
+  const [mergeBusy, setMergeBusy] = useState(false);
+
+  const [redactSearchQuery, setRedactSearchQuery] = useState('');
+  const [redactSearchBusy, setRedactSearchBusy] = useState(false);
+  const [redactApplyBusy, setRedactApplyBusy] = useState(false);
+
+  useEffect(() => {
+    setFilesToMerge(currentFilePath
+      ? [{
+          name: basenameFromPath(currentFilePath),
+          size: t('editorV3.merge.currentDocument'),
+          path: currentFilePath,
+          locked: true,
+        }]
+      : []);
+  }, [currentFilePath]);
+
+  useEffect(() => {
+    if (panel === 'redact') {
+      onAnnotationToolChange('redaction');
+    }
+  }, [panel, onAnnotationToolChange]);
+
+  const handleCompress = async () => {
+    if (!isTauri || compressBusy) return;
+    setCompressBusy(true);
+    setCompressProgress(10);
+    const taskId = `compress-${Date.now()}`;
+    try {
+      const [{ save }, { invoke }] = await Promise.all([
+        import('@tauri-apps/plugin-dialog'),
+        import('@tauri-apps/api/core'),
+      ]);
+      const defaultName = currentFilePath
+        ? basenameFromPath(currentFilePath).replace(/\.pdf$/i, '-compressed.pdf')
+        : 'compressed.pdf';
+      const outputPath = await save({
+        title: t('editorV3.toasts.saveCompressedPdf'),
+        defaultPath: defaultName,
+        filters: [{ name: 'PDF', extensions: ['pdf'] }],
+      });
+      if (!outputPath) return;
+
+      push({ id: taskId, label: t('editorV3.toasts.compressingPdf'), progress: null, status: 'running' });
+      setCompressProgress(55);
+      const result = await invoke<{
+        objects_before: number;
+        objects_after: number;
+        streams_compressed: number;
+        duplicates_merged: number;
+        unused_removed: number;
+      }>('compress_pdf', { outputPath });
+      setCompressProgress(100);
+      update(taskId, { status: 'done', label: t('editorV3.toasts.pdfCompressedTask', { count: result.streams_compressed }) });
+      onShowToast(t('editorV3.toasts.pdfCompressedToast', { name: basenameFromPath(outputPath) }));
+      onPanelChange('tools');
+      onDocumentMutated?.();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      update(taskId, { status: 'error', label: t('editorV3.toasts.compressFailed', { message }) });
+      onShowToast(t('editorV3.toasts.compressFailed', { message }));
+    } finally {
+      setCompressBusy(false);
+      window.setTimeout(() => setCompressProgress(0), 350);
+    }
+  };
+
+  const handleSplit = async () => {
+    if (!isTauri || splitBusy) return;
+    setSplitBusy(true);
+    const taskId = `split-${Date.now()}`;
+    try {
+      const [{ open }, { invoke }] = await Promise.all([
+        import('@tauri-apps/plugin-dialog'),
+        import('@tauri-apps/api/core'),
+      ]);
+      const pickedDir = await open({ directory: true, multiple: false, title: t('editorV3.toasts.splitFolder') });
+      const outputDir = normalizeDialogPaths(pickedDir)[0];
+      if (!outputDir) return;
+
+      const ranges = splitRange
+        .split(',')
+        .map(range => range.trim())
+        .filter(Boolean);
+      if (splitType === 'range' && ranges.length === 0) {
+        onShowToast(t('editorV3.toasts.splitRangeRequired'));
+        return;
+      }
+
+      push({ id: taskId, label: t('editorV3.toasts.splittingPdf'), progress: null, status: 'running' });
+      const paths = splitType === 'page'
+        ? await invoke<string[]>('split_into_pages', { outputDir })
+        : await invoke<string[]>('split_pdf', { ranges, outputDir });
+      update(taskId, { status: 'done', label: t('editorV3.toasts.splitFilesCreated', { count: paths.length }) });
+      onShowToast(t('editorV3.toasts.splitFilesSaved', { count: paths.length }));
+      onPanelChange('tools');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      update(taskId, { status: 'error', label: t('editorV3.toasts.splitFailed', { message }) });
+      onShowToast(t('editorV3.toasts.splitFailed', { message }));
+    } finally {
+      setSplitBusy(false);
+    }
+  };
+
+  const handleAddMergeFile = async () => {
+    if (!isTauri) return;
+    const { open } = await import('@tauri-apps/plugin-dialog');
+    const picked = await open({
+      filters: [{ name: 'PDF', extensions: ['pdf'] }],
+      multiple: true,
+      title: t('editorV3.toasts.addPdfFiles'),
+    });
+    const paths = normalizeDialogPaths(picked);
+    if (paths.length === 0) return;
+
+    setFilesToMerge(prev => {
+      const seen = new Set(prev.map(file => file.path));
+      const additions = paths
+        .filter(path => !seen.has(path))
+        .map(path => ({
+          name: basenameFromPath(path),
+          size: 'PDF',
+          path,
+        }));
+      return [...prev, ...additions];
+    });
+    onShowToast(t('editorV3.toasts.filesAddedToMerge', { count: paths.length }));
+  };
+
+  const handleMerge = async () => {
+    if (!isTauri || mergeBusy) return;
+    if (filesToMerge.length <= 1) {
+      onShowToast(t('editorV3.toasts.mergeAddMore'));
+      return;
+    }
+    setMergeBusy(true);
+    const taskId = `merge-${Date.now()}`;
+    try {
+      const [{ save }, { invoke }] = await Promise.all([
+        import('@tauri-apps/plugin-dialog'),
+        import('@tauri-apps/api/core'),
+      ]);
+      const outputPath = await save({
+        title: t('editorV3.toasts.saveMergedPdf'),
+        defaultPath: t('editorV3.toasts.mergedFilename'),
+        filters: [{ name: 'PDF', extensions: ['pdf'] }],
+      });
+      if (!outputPath) return;
+      const paths = filesToMerge.map(file => file.path);
+      push({ id: taskId, label: t('editorV3.toasts.mergingPdfs', { count: paths.length }), progress: null, status: 'running' });
+      await invoke('merge_pdfs', { paths, outputPath });
+      update(taskId, { status: 'done', label: t('editorV3.toasts.pdfsMerged', { count: paths.length }) });
+      onShowToast(t('editorV3.toasts.mergedSaved', { name: basenameFromPath(outputPath) }));
+      onPanelChange('tools');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      update(taskId, { status: 'error', label: t('editorV3.toasts.mergeFailed', { message }) });
+      onShowToast(t('editorV3.toasts.mergeFailed', { message }));
+    } finally {
+      setMergeBusy(false);
+    }
+  };
+
+  const handleTextRedactSearch = async () => {
+    if (!redactSearchQuery.trim()) return;
+    setRedactSearchBusy(true);
+    try {
+      const result = await onRedactSearch(redactSearchQuery.trim());
+      if (result) {
+        onShowToast(t('editorV3.toasts.redactMatches', { matches: result.matchesFound, areas: result.areasRedacted }));
+      } else {
+        onShowToast(t('editorV3.toasts.noRedactMatches'));
+      }
+      setRedactSearchQuery('');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      onShowToast(t('editorV3.toasts.redactSearchFailed', { message }));
+    } finally {
+      setRedactSearchBusy(false);
+    }
+  };
+
+  const handleApplyRedactions = async () => {
+    if (redactApplyBusy || redactions.length === 0) return;
+    let confirmed = false;
+    const message = t('editorV3.toasts.applyRedactConfirm', { count: redactions.length });
+
+    if (isTauri) {
+      try {
+        const { ask } = await import('@tauri-apps/plugin-dialog');
+        confirmed = await ask(message, { title: t('editorV3.toasts.applyRedactTitle'), kind: 'warning' });
+      } catch {
+        confirmed = false;
+      }
+    } else {
+      confirmed = false;
+    }
+    if (!confirmed) return;
+
+    const taskId = `apply-redactions-v3-${Date.now()}`;
+    setRedactApplyBusy(true);
+    push({ id: taskId, label: t('editorV3.toasts.applyRedactRunning'), progress: null, status: 'running' });
+    try {
+      await Promise.resolve(onApplyRedactions());
+      update(taskId, { status: 'done', label: t('editorV3.toasts.applyRedactDone') });
+      onShowToast(t('editorV3.toasts.redactionsApplied'));
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      update(taskId, { status: 'error', label: t('editorV3.toasts.redactFailed', { message }) });
+      onShowToast(t('editorV3.toasts.redactFailed', { message }));
+    } finally {
+      setRedactApplyBusy(false);
+    }
+  };
+
+  return (
+    <aside className="panel">
+      <div className="panel-head">
+        <div className="panel-title-row">
+          {panel !== 'tools' && (
+            <button
+              className="panel-back"
+              type="button"
+              onClick={() => onPanelChange('tools')}
+              aria-label={t('editorV3.common.backToTools')}
+            >
+              <ChevronLeftIcon aria-hidden="true" />
+            </button>
+          )}
+          <span className="panel-title">{title}</span>
+        </div>
+        <button className="panel-close" onClick={onClose} aria-label={t('editorV3.common.closePanel')}><XIcon aria-hidden="true" /></button>
+      </div>
+      <div className="panel-body">
+        {panel === 'tools' && (
+          <>
+            <p className="panel-lede">{t('editorV3.tools.lede')}</p>
+            <div className="panel-section-label">{t('editorV3.tools.maybeUseful')}</div>
+            <ToolRow icon={Minimize2Icon} title={t('editorV3.tools.compress')} sub={t('editorV3.tools.compressSub')} onClick={() => onPanelChange('compress')} />
+            <div className="panel-section-label">{t('editorV3.tools.pages')}</div>
+            <ToolRow icon={LayoutGridIcon} title={t('editorV3.tools.organize')} sub={t('editorV3.tools.organizeSub')} onClick={() => onModeChange('organize')} />
+            <ToolRow icon={ScissorsIcon} title={t('editorV3.tools.split')} sub={t('editorV3.tools.splitSub')} onClick={() => onPanelChange('split')} />
+            <ToolRow icon={CombineIcon} title={t('editorV3.tools.merge')} sub={t('editorV3.tools.mergeSub')} onClick={() => onPanelChange('merge')} />
+            <div className="panel-section-label">{t('editorV3.tools.contentSecurity')}</div>
+            <ToolRow
+              icon={EraserIcon}
+              title={t('editorV3.tools.redact')}
+              sub={t('editorV3.tools.redactSub')}
+              onClick={() => {
+                onPanelChange('redact');
+                onAnnotationToolChange('redaction');
+              }}
+            />
+            <ToolRow icon={ShieldCheckIcon} title={t('editorV3.tools.protect')} sub={t('editorV3.tools.protectSub')} onClick={() => onPanelChange('protect')} />
+            <ToolRow icon={StampIcon} title={t('editorV3.tools.watermark')} sub={t('editorV3.tools.watermarkSub')} onClick={() => onPanelChange('watermark')} />
+            <ToolRow icon={ImageIcon} title={t('editorV3.tools.convert')} sub={t('editorV3.tools.convertSub')} onClick={() => onModeChange('convert')} />
+            <div className="panel-section-label">{t('editorV3.tools.documentStatus')}</div>
+            <div className="flex flex-col gap-2" style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {/* Opmerkingen */}
+              <div className="esign-card">
+                <div className="row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><MessageSquareTextIcon aria-hidden="true" style={{ width: 16, height: 16 }} />{t('editorV3.tools.comments', { count: comments.length })}</span>
+                  {comments.length > 0 && (
+                    <div style={{ display: 'flex', gap: 4 }}>
+                      <button className="ep-fmt" style={{ width: 24, height: 24, padding: 0 }} onClick={onPrevComment} title={t('editorV3.common.previous')}><ChevronLeftIcon aria-hidden="true" style={{ width: 14, height: 14 }} /></button>
+                      <button className="ep-fmt" style={{ width: 24, height: 24, padding: 0 }} onClick={onNextComment} title={t('editorV3.common.next')}><ChevronRightIcon aria-hidden="true" style={{ width: 14, height: 14 }} /></button>
+                      <button className="ep-fmt" style={{ width: 24, height: 24, padding: 0 }} onClick={onResolveAll} title={t('editorV3.tools.resolveAll')}><BadgeCheckIcon aria-hidden="true" style={{ width: 14, height: 14 }} /></button>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Formuliervelden */}
+              {formFields.length > 0 && (
+                <div className="esign-card">
+                  <div className="row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><FileTextIcon aria-hidden="true" style={{ width: 16, height: 16 }} />{t('editorV3.tools.fields', { count: formFields.length })}</span>
+                    <button className="btn-primary accent" type="button" style={{ height: 24, fontSize: 10, padding: '0 8px', minHeight: 'unset', width: 'auto' }} onClick={() => { void onFormSubmit(); }}>
+                      <SaveIcon aria-hidden="true" style={{ width: 12, height: 12, marginRight: 4 }} /><span>Check ({formValidationErrors.length})</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Bijlagen & Lagen */}
+              <div className="esign-card">
+                <div className="row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><LinkIcon aria-hidden="true" style={{ width: 16, height: 16 }} />{t('editorV3.tools.attachments', { count: attachments.length })}</span>
+                  <button className="btn-ghost" style={{ height: 24, fontSize: 10, padding: '0 8px', minHeight: 'unset', width: 'auto' }} onClick={onAddAttachment}>
+                    <span>{t('editorV3.tools.addAttachment')}</span>
+                  </button>
+                </div>
+                {attachments.length > 0 && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 8 }}>
+                    {attachments.slice(0, 4).map(attachment => (
+                      <div
+                        key={attachment.name}
+                        style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) auto auto', gap: 6, alignItems: 'center', paddingTop: 6, borderTop: '1px solid var(--border)' }}
+                      >
+                        <span title={attachment.name} style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: 11 }}>
+                          {attachment.name}
+                        </span>
+                        <button className="ep-fmt" type="button" title={t('editorV3.tools.saveAttachment')} onClick={() => onExtractAttachment(attachment.name)}>
+                          <DownloadIcon aria-hidden="true" />
+                        </button>
+                        <button className="ep-fmt" type="button" title={t('editorV3.tools.removeAttachment')} onClick={() => onRemoveAttachment(attachment.name)}>
+                          <XIcon aria-hidden="true" />
+                        </button>
+                      </div>
+                    ))}
+                    {attachments.length > 4 && <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>{t('editorV3.tools.moreAttachments', { count: attachments.length - 4 })}</span>}
+                  </div>
+                )}
+                {layers.length > 0 && (
+                  <div className="row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', marginTop: 8, borderTop: '1px solid var(--border-color, rgba(0,0,0,0.06))', paddingTop: 8 }}>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><LayersIcon aria-hidden="true" style={{ width: 16, height: 16 }} />{t('editorV3.tools.layers', { count: layers.length })}</span>
+                    <button className="btn-ghost" style={{ height: 24, fontSize: 10, padding: '0 8px', minHeight: 'unset', width: 'auto' }} onClick={() => onShowToast(t('editorV3.tools.layersVisible', { count: Array.from(layerVisibility.values()).filter(Boolean).length }))}>
+                      <span>{t('editorV3.tools.manageLayers')}</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </>
+        )}
+
+        {panel === 'edit' && (
+          <>
+            <p className="panel-lede">{t('editorV3.edit.lede')}</p>
+            <div className="panel-section-label">{t('editorV3.edit.formatText')}</div>
+            <label className="select-wrap">
+              <span className="sr-only">{t('editorV3.edit.fontLabel')}</span>
+              <select
+                className="select native-select"
+                defaultValue="embedded"
+                onChange={(event) => {
+                  if (event.target.value === 'embedded') return;
+                  onShowToast(t('editorV3.edit.fontHint', { font: event.target.value }));
+                  event.target.value = 'embedded';
+                }}
+              >
+                <option value="embedded">{t('editorV3.edit.fontEmbedded')}</option>
+                <option value="Helvetica, Arial, sans-serif">Helvetica / Arial (Sans-Serif)</option>
+                <option value="Times New Roman, Times, serif">Times New Roman / Georgia (Serif)</option>
+                <option value="Courier New, Courier, monospace">Courier New / Consolas (Monospace)</option>
+                <option value="Georgia, serif">Georgia (Classic Serif)</option>
+                <option value="Garamond, serif">Garamond (Elegant Serif)</option>
+                <option value="Verdana, sans-serif">Verdana (Readable Sans)</option>
+                <option value="Calibri, sans-serif">Calibri (Office Standard)</option>
+              </select>
+              <ChevronDownIcon aria-hidden="true" />
+            </label>
+            <div className="format-grid">
+              <button className="ep-fmt" onMouseDown={(event) => { event.preventDefault(); onFormatCommand('bold'); }}><BoldIcon aria-hidden="true" /></button>
+              <button className="ep-fmt" onMouseDown={(event) => { event.preventDefault(); onFormatCommand('italic'); }}><ItalicIcon aria-hidden="true" /></button>
+              <button className="ep-fmt" onMouseDown={(event) => { event.preventDefault(); onFormatCommand('underline'); }}><UnderlineIcon aria-hidden="true" /></button>
+              <button className="ep-fmt" onMouseDown={(event) => { event.preventDefault(); onFormatCommand('strikeThrough'); }}><StrikethroughIcon aria-hidden="true" /></button>
+            </div>
+            <div className="panel-section-label">{t('editorV3.edit.color')}</div>
+            <div className="color-row">
+              {['#141414', '#0a66ff', '#dc2626', '#16a34a', '#8a8f9c'].map(color => (
+                <button key={color} className="ep-color" style={{ background: color }} onMouseDown={(event) => { event.preventDefault(); onFormatCommand('foreColor', color); }} aria-label={t('editorV3.edit.colorLabel', { color })} />
+              ))}
+            </div>
+            <div className="divider" />
+            <div className="panel-section-label">{t('editorV3.edit.addContent')}</div>
+            <button className="btn-ghost" onClick={() => { setIsInsertingText(true); setIsInsertingImage(false); onShowToast(t('editorV3.edit.clickToPlaceTextBox')); }}><span><TypeIcon aria-hidden="true" />{t('editorV3.edit.insertTextBox')}</span><TypeIcon aria-hidden="true" /></button>
+            <button className="btn-ghost" onClick={() => { setIsInsertingImage(true); setIsInsertingText(false); onShowToast(t('editorV3.edit.clickToPlaceImage')); }}><span><ImageIcon aria-hidden="true" />{t('editorV3.edit.placeImage')}</span><ImageIcon aria-hidden="true" /></button>
+
+            {(_isInsertingText || _isInsertingImage) && (
+              <div className="esign-card" style={{ marginTop: 12, border: '1px dashed var(--accent)', background: 'rgba(10,102,255,0.02)', padding: '10px 12px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--accent)' }}>
+                    {_isInsertingText ? t('editorV3.edit.placementModeTextBox') : t('editorV3.edit.placementModeImage')}
+                  </span>
+                  <span style={{ fontSize: 10, color: 'var(--text-secondary)' }}>
+                    {_isInsertingText ? t('editorV3.edit.clickAnywhereTextBox') : t('editorV3.edit.clickAnywhereImage')}
+                  </span>
+                  <button
+                    className="btn-ghost"
+                    style={{ height: 26, minHeight: 'unset', width: '100%', marginTop: 4, display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: 10 }}
+                    onClick={() => {
+                      setIsInsertingText(false);
+                      setIsInsertingImage(false);
+                    }}
+                  >
+                    {t('editorV3.common.cancel')}
+                  </button>
+                </div>
+              </div>
+            )}
+            {selectedAnnotation && (
+              <>
+                <div className="panel-section-label">{t('editorV3.edit.selection')}</div>
+                <div className="esign-card">
+                  <div className="row"><HighlighterIcon aria-hidden="true" />{t('editorV3.edit.annotationOnPage', { type: selectedAnnotation.type, page: selectedAnnotation.pageIndex + 1 })}</div>
+                </div>
+              </>
+            )}
+          </>
+        )}
+
+        {panel === 'convert' && (
+          <>
+            <div className="panel-section-label">{t('editorV3.convert.exportPdfTo')}</div>
+            {[
+              { name: 'Microsoft Word', ext: 'DOCX', val: 'docx' },
+              { name: 'Microsoft Excel', ext: 'XLSX', val: 'xlsx' },
+              { name: 'Microsoft PowerPoint', ext: 'PPTX', val: 'pptx' },
+              { name: t('editorV3.convert.image'), ext: 'JPG', val: 'jpeg' },
+              { name: t('editorV3.convert.archive'), ext: 'PDF/A-1b', val: 'pdf' }
+            ].map((item, index) => {
+              return (
+                <button
+                  key={item.name}
+                  className={index === 0 ? 'fmt sel' : 'fmt'}
+                  onClick={() => onOpenExport(item.val as any)}
+                >
+                  <span className="radio" />
+                  <span className="nm">{item.name}</span>
+                  <span className="ext">{item.ext}</span>
+                </button>
+              );
+            })}
+            <div className="field-label">{t('editorV3.convert.documentLanguage')}</div>
+            <div className="select"><span>{t('editorV3.convert.dutch')}</span><ChevronDownIcon aria-hidden="true" /></div>
+            <button className="btn-primary accent" onClick={() => onOpenExport('docx')}><RefreshCwIcon aria-hidden="true" /><span>{t('editorV3.convert.convertToDocx')}</span></button>
+            <div className="divider" />
+            <div className="panel-section-label">{t('editorV3.convert.otherOptions')}</div>
+            <ToolRow icon={Minimize2Icon} title={t('editorV3.tools.compress')} sub={t('editorV3.tools.compressSub')} onClick={() => onPanelChange('compress')} />
+            <ToolRow icon={FileTextIcon} title={t('editorV3.convert.runOcr')} sub={t('editorV3.convert.runOcrSub')} onClick={onRunOcr} />
+            <div className="panel-section-label">{t('editorV3.convert.ocrStatus')}</div>
+            <div className="esign-card">
+              <div className="row"><FileTextIcon aria-hidden="true" />{t('editorV3.convert.possibleScanPages', { count: scannedPageIndices.size })}</div>
+              <div className="row"><BadgeCheckIcon aria-hidden="true" />{t('editorV3.convert.ocrOverlay', { state: ocrVisible ? t('editorV3.convert.overlayVisible') : t('editorV3.convert.overlayHidden') })}</div>
+              <div className="row"><RulerIcon aria-hidden="true" />{t('editorV3.convert.confidenceFrom', { value: Math.round(ocrConfidenceThreshold * 100) })}</div>
+            </div>
+            <div className="format-grid">
+              <button className="ep-fmt" type="button" onClick={() => onOcrVisibleChange(v => !v)}>{ocrVisible ? t('editorV3.convert.ocrOff') : t('editorV3.convert.ocrOn')}</button>
+              <button className="ep-fmt" type="button" onClick={() => onOcrConfidenceChange(v => Math.max(0, Number((v - 0.1).toFixed(2))))}>-</button>
+              <button className="ep-fmt" type="button" onClick={() => onOcrConfidenceChange(v => Math.min(1, Number((v + 0.1).toFixed(2))))}>+</button>
+            </div>
+            {ocrRunning && <p className="panel-lede">{t('editorV3.convert.ocrRunning')}</p>}
+          </>
+        )}
+
+        {panel === 'esign' && (
+          <>
+            <p className="panel-lede">{t('editorV3.esign.lede')}</p>
+            <div className="esign-card">
+              <div className="row"><ShieldCheckIcon aria-hidden="true" />{t('editorV3.esign.localSigned')}</div>
+              <div className="row"><BadgeCheckIcon aria-hidden="true" />{t('editorV3.esign.padesCompliant')}</div>
+            </div>
+            <div className="panel-section-label">{t('editorV3.esign.fillAndSign')}</div>
+            <button className="btn-ghost" onClick={onOpenSignModal}><span><PenLineIcon aria-hidden="true" />{t('editorV3.esign.addSignature')}</span><PenLineIcon aria-hidden="true" /></button>
+            <button className="btn-ghost" onClick={onOpenInitialsModal}><span><TypeIcon aria-hidden="true" />{t('editorV3.esign.addInitials')}</span><TypeIcon aria-hidden="true" /></button>
+            <button className="btn-primary accent" onClick={onOpenInviteDialog}><SendIcon aria-hidden="true" /><span>{t('editorV3.esign.invite')}</span></button>
+
+            {pendingSignature && (
+              <div className="esign-card" style={{ marginTop: 12, border: '1px dashed var(--accent)', background: 'rgba(10,102,255,0.02)', padding: '10px 12px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--accent)' }}>
+                    {pendingSignature.type === 'signature' ? t('editorV3.esign.placementModeSignature') : t('editorV3.esign.placementModeInitials')}
+                  </span>
+                  <span style={{ fontSize: 10, color: 'var(--text-secondary)' }}>
+                    {pendingSignature.type === 'signature' ? t('editorV3.esign.clickToPlaceSignature') : t('editorV3.esign.clickToPlaceInitials')}
+                  </span>
+                  <button
+                    className="btn-ghost"
+                    style={{ height: 26, minHeight: 'unset', width: '100%', marginTop: 4, display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: 10 }}
+                    onClick={() => {
+                      setPendingSignature(null);
+                    }}
+                  >
+                    {t('editorV3.common.cancel')}
+                  </button>
+                </div>
+              </div>
+            )}
+          </>
+        )}
+
+        {panel === 'protect' && (
+          <>
+            <p className="panel-lede">{t('editorV3.protect.lede')}</p>
+            <div className="panel-section-label">{t('editorV3.protect.passwordProtection')}</div>
+            <EncryptDecryptControls onApplied={onDocumentMutated} />
+            <div className="esign-card" style={{ marginTop: 12, padding: '10px 12px', fontSize: 11, background: 'rgba(30,31,36,0.02)', border: '1px solid var(--border)' }}>
+              <div style={{ fontWeight: 'bold', marginBottom: 4, color: 'var(--text-primary)' }}>{t('editorV3.protect.passwordDifference')}</div>
+              <p style={{ color: 'var(--text-secondary)', lineHeight: 1.4 }}>
+                <b>{t('editorV3.protect.userPasswordLabel')}</b> {t('editorV3.protect.userPasswordDesc')}
+              </p>
+              <p style={{ color: 'var(--text-secondary)', lineHeight: 1.4, marginTop: 6 }}>
+                <b>{t('editorV3.protect.ownerPasswordLabel')}</b> {t('editorV3.protect.ownerPasswordDesc')}
+              </p>
+            </div>
+          </>
+        )}
+
+        {panel === 'watermark' && (
+          <>
+            <p className="panel-lede">{t('editorV3.watermark.lede')}</p>
+            <div className="panel-section-label">{t('editorV3.watermark.settings')}</div>
+            <WatermarkControls onApplied={onDocumentMutated} />
+          </>
+        )}
+
+        {panel === 'compress' && (
+          <>
+            <p className="panel-lede">{t('editorV3.compress.lede')}</p>
+            <div className="panel-section-label">{t('editorV3.compress.section')}</div>
+            <div className="esign-card" style={{ marginBottom: 12 }}>
+              <div className="row"><HardDriveIcon aria-hidden="true" />{t('editorV3.compress.nativeOptimization')}</div>
+              <div className="row"><ShieldCheckIcon aria-hidden="true" />{t('editorV3.compress.localViaTauri')}</div>
+            </div>
+
+            {compressBusy ? (
+              <div style={{ marginTop: 16 }}>
+                <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 6 }}>{t('editorV3.compress.compressingImages')}</div>
+                <div style={{ height: 6, background: 'var(--border)', borderRadius: 3, overflow: 'hidden' }}>
+                  <div style={{ height: '100%', width: `${compressProgress}%`, background: 'var(--accent)', transition: 'width 0.2s' }} />
+                </div>
+                <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 4, textAlign: 'right' }}>{t('editorV3.compress.percentComplete', { percent: compressProgress })}</div>
+              </div>
+            ) : (
+              <button className="btn-primary accent" style={{ marginTop: 16 }} onClick={handleCompress} disabled={!isTauri}>
+                <Minimize2Icon aria-hidden="true" />
+                <span>{isTauri ? t('editorV3.compress.compressPdf') : t('editorV3.compress.desktopOnly')}</span>
+              </button>
+            )}
+            <div className="divider" style={{ margin: '16px 0' }} />
+            <button className="btn-ghost" onClick={() => onPanelChange('tools')}>{t('editorV3.compress.backToTools')}</button>
+          </>
+        )}
+
+        {panel === 'split' && (
+          <>
+            <p className="panel-lede">{t('editorV3.split.lede')}</p>
+            <div className="panel-section-label">{t('editorV3.split.method')}</div>
+            {[
+              { id: 'page', title: t('editorV3.split.perPageTitle'), desc: t('editorV3.split.perPageDesc') },
+              { id: 'range', title: t('editorV3.split.rangeTitle'), desc: t('editorV3.split.rangeDesc') }
+            ].map(item => (
+              <button
+                key={item.id}
+                className={splitType === item.id ? 'fmt sel' : 'fmt'}
+                onClick={() => setSplitType(item.id)}
+                style={{ padding: '8px 12px', minHeight: 'unset', height: 'auto', marginBottom: 8, display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 2 }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span className="radio" style={{ top: 0 }} />
+                  <span style={{ fontSize: 12, fontWeight: 600 }}>{item.title}</span>
+                </div>
+                <span style={{ fontSize: 10, color: 'var(--text-secondary)', marginLeft: 20 }}>{item.desc}</span>
+              </button>
+            ))}
+
+            {splitType === 'range' && (
+              <div style={{ marginTop: 12 }}>
+                <span className="panel-label">{t('editorV3.split.rangesLabel')}</span>
+                <input
+                  type="text"
+                  className="panel-input"
+                  value={splitRange}
+                  onChange={e => setSplitRange(e.target.value)}
+                  placeholder={t('editorV3.split.rangesPlaceholder')}
+                />
+              </div>
+            )}
+
+            {splitBusy ? (
+              <div style={{ marginTop: 16, display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'var(--text-secondary)' }}>
+                <div className="animate-spin" style={{ width: 14, height: 14, borderRadius: '50%', border: '2px solid var(--accent)', borderTopColor: 'transparent' }} />
+                {t('editorV3.split.splitting')}
+              </div>
+            ) : (
+              <button className="btn-primary accent" style={{ marginTop: 16 }} onClick={handleSplit}>
+                <ScissorsIcon aria-hidden="true" />
+                <span>{t('editorV3.split.splitPdf')}</span>
+              </button>
+            )}
+            <div className="divider" style={{ margin: '16px 0' }} />
+            <button className="btn-ghost" onClick={() => onPanelChange('tools')}>{t('editorV3.split.backToTools')}</button>
+          </>
+        )}
+
+        {panel === 'merge' && (
+          <>
+            <p className="panel-lede">{t('editorV3.merge.lede')}</p>
+            <div className="panel-section-label">{t('editorV3.merge.filesToMerge')}</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 12 }}>
+              {filesToMerge.map((file, idx) => (
+                <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 10px', background: 'rgba(30,31,36,0.02)', border: '1px solid var(--border)', borderRadius: 6, fontSize: 12 }}>
+                  <span style={{ fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 180 }}>{file.name}</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>{file.size}</span>
+                    {!file.locked && (
+                      <button type="button" style={{ color: 'var(--danger)', background: 'transparent', padding: 0 }} onClick={() => setFilesToMerge(prev => prev.filter((_, i) => i !== idx))} aria-label={t('editorV3.merge.removeFile', { name: file.name })}>
+                        <XIcon style={{ width: 14, height: 14 }} />
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <button className="btn-ghost" style={{ marginBottom: 16 }} onClick={handleAddMergeFile} disabled={!isTauri}>
+              <LinkIcon aria-hidden="true" />
+              <span>{isTauri ? t('editorV3.merge.addFile') : t('editorV3.merge.desktopOnly')}</span>
+            </button>
+
+            {mergeBusy ? (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'var(--text-secondary)' }}>
+                <div className="animate-spin" style={{ width: 14, height: 14, borderRadius: '50%', border: '2px solid var(--accent)', borderTopColor: 'transparent' }} />
+                {t('editorV3.merge.merging')}
+              </div>
+            ) : (
+              <button className="btn-primary accent" onClick={handleMerge} disabled={!isTauri || filesToMerge.length <= 1}>
+                <CombineIcon aria-hidden="true" />
+                <span>{t('editorV3.merge.mergeFiles')}</span>
+              </button>
+            )}
+            <div className="divider" style={{ margin: '16px 0' }} />
+            <button className="btn-ghost" onClick={() => onPanelChange('tools')}>{t('editorV3.merge.backToTools')}</button>
+          </>
+        )}
+
+        {panel === 'redact' && (
+          <>
+            <p className="panel-lede">{t('editorV3.redact.lede')}</p>
+
+            <div className="panel-section-label">{t('editorV3.redact.modeActive')}</div>
+            <div className="esign-card" style={{ marginBottom: 16, background: 'rgba(220,38,38,0.02)', border: '1px solid rgba(220,38,38,0.2)' }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 11, color: 'var(--danger)' }}>
+                <EraserIcon style={{ width: 16, height: 16, flexShrink: 0, marginTop: 1 }} />
+                <div>
+                  {t('editorV3.redact.dragHint')}
+                </div>
+              </div>
+            </div>
+
+            <div className="panel-section-label">{t('editorV3.redact.searchAndRedact')}</div>
+            <div style={{ display: 'flex', gap: 6, marginBottom: 16 }}>
+              <input
+                type="text"
+                className="panel-input"
+                style={{ marginBottom: 0 }}
+                placeholder={t('editorV3.redact.searchPlaceholder')}
+                value={redactSearchQuery}
+                onChange={e => setRedactSearchQuery(e.target.value)}
+              />
+              <button className="btn-ghost" style={{ padding: '0 10px', height: 34, minHeight: 'unset', width: 'auto' }} onClick={() => { void handleTextRedactSearch(); }} disabled={redactSearchBusy || !redactSearchQuery.trim()}>
+                {redactSearchBusy ? '...' : t('editorV3.redact.mark')}
+              </button>
+            </div>
+
+            {redactions.length > 0 ? (
+              <div style={{ marginBottom: 16 }}>
+                <div className="panel-section-label">{t('editorV3.redact.draftRedactions', { count: redactions.length })}</div>
+                <button className="btn-primary accent" type="button" style={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 6, background: 'var(--danger)', color: '#fff' }} onClick={() => { void handleApplyRedactions(); }} disabled={redactApplyBusy}>
+                  <EraserIcon aria-hidden="true" style={{ width: 14, height: 14 }} />
+                  <span>{redactApplyBusy ? t('editorV3.redact.applying') : t('editorV3.redact.applyPermanently')}</span>
+                </button>
+              </div>
+            ) : (
+              <div style={{ fontSize: 11, color: 'var(--text-muted)', textAlign: 'center', padding: '12px 0', border: '1px dashed var(--border)', borderRadius: 6, marginBottom: 16 }}>
+                {t('editorV3.redact.noActiveMarkings')}
+              </div>
+            )}
+            <div className="divider" style={{ margin: '16px 0' }} />
+            <button
+              className="btn-ghost"
+              onClick={() => {
+                onAnnotationToolChange(null);
+                onPanelChange('tools');
+              }}
+            >
+              {t('editorV3.redact.backToTools')}
+            </button>
+          </>
+        )}
+      </div>
+    </aside>
+  );
+}
+
+function ToolRow({
+  icon: Icon,
+  title,
+  sub,
+  tag,
+  onClick,
+}: {
+  icon: typeof FileTextIcon;
+  title: string;
+  sub: string;
+  tag?: string;
+  onClick: () => void;
+}) {
+  return (
+    <button className="tool-row" onClick={onClick}>
+      <span className="ic"><Icon aria-hidden="true" /></span>
+      <span className="tx"><b>{title}</b><span>{sub}</span></span>
+      {tag && <span className="tag">{tag}</span>}
+    </button>
+  );
+}
+
+function EditorV3ToolRail({
+  activeTool,
+  moreOpen,
+  commentsCount,
+  onToolSelect,
+  onMoreTool,
+}: {
+  activeTool: RailTool;
+  moreOpen: boolean;
+  commentsCount: number;
+  onToolSelect: (tool: RailTool) => void;
+  onMoreTool: (tool: 'strikeout' | 'underline' | 'textbox' | 'stamp' | 'date' | 'attachment' | 'ruler') => void;
+}) {
+  const { t } = useTranslation();
+  return (
+    <>
+      <div className="toolrail" role="toolbar" aria-label={t('editorV3.rail.tools')}>
+        <RailButton tool="select" activeTool={activeTool} label={t('editorV3.rail.select')} icon={MousePointer2Icon} onToolSelect={onToolSelect} />
+        <RailButton tool="hand" activeTool={activeTool} label={t('editorV3.rail.hand')} icon={HandIcon} onToolSelect={onToolSelect} />
+        <div className="rail-sep" />
+        <RailButton tool="comment" activeTool={activeTool} label={t('editorV3.rail.comment')} icon={MessageSquareTextIcon} onToolSelect={onToolSelect} badge={commentsCount} />
+        <RailButton tool="highlight" activeTool={activeTool} label={t('editorV3.rail.highlight')} icon={HighlighterIcon} onToolSelect={onToolSelect} caret />
+        <RailButton tool="draw" activeTool={activeTool} label={t('editorV3.rail.draw')} icon={PencilLineIcon} onToolSelect={onToolSelect} caret />
+        <RailButton tool="text" activeTool={activeTool} label={t('editorV3.rail.addText')} icon={TypeIcon} onToolSelect={onToolSelect} />
+        <RailButton tool="sign" activeTool={activeTool} label={t('editorV3.rail.fillAndSign')} icon={SignatureIcon} onToolSelect={onToolSelect} />
+        <div className="rail-sep" />
+        <RailButton tool="more" activeTool={moreOpen ? 'more' : activeTool} label={t('editorV3.rail.more')} icon={MoreHorizontalIcon} onToolSelect={onToolSelect} />
+      </div>
+      {moreOpen && (
+        <div className="more-pop show">
+          <div className="lbl">{t('editorV3.rail.formatting')}</div>
+          <button className="more-item" onClick={() => onMoreTool('strikeout')} data-testid="annotation-tool-strikeout"><StrikethroughIcon aria-hidden="true" />{t('editorV3.rail.strikeText')}</button>
+          <button className="more-item" onClick={() => onMoreTool('underline')} data-testid="annotation-tool-underline"><UnderlineIcon aria-hidden="true" />{t('editorV3.rail.underlineText')}</button>
+          <button className="more-item" onClick={() => onMoreTool('textbox')}><TypeIcon aria-hidden="true" />{t('editorV3.rail.insertTextBox')}</button>
+          <div className="more-sep" />
+          <div className="lbl">{t('editorV3.rail.stampsAndInsert')}</div>
+          <button className="more-item" onClick={() => onMoreTool('stamp')}><StampIcon aria-hidden="true" />{t('editorV3.rail.stamps')}</button>
+          <button className="more-item" onClick={() => onMoreTool('date')}><CalendarIcon aria-hidden="true" />{t('editorV3.rail.insertDate')}</button>
+          <button className="more-item" onClick={() => onMoreTool('attachment')}><LinkIcon aria-hidden="true" />{t('editorV3.rail.addAttachment')}</button>
+          <button className="more-item" onClick={() => onMoreTool('ruler')}><RulerIcon aria-hidden="true" />{t('editorV3.rail.ruler')}</button>
+        </div>
+      )}
+    </>
+  );
+}
+
+function RailButton({
+  tool,
+  activeTool,
+  label,
+  icon: Icon,
+  onToolSelect,
+  caret,
+  badge,
+}: {
+  tool: RailTool;
+  activeTool: RailTool;
+  label: string;
+  icon: typeof MousePointer2Icon;
+  onToolSelect: (tool: RailTool) => void;
+  caret?: boolean;
+  badge?: number;
+}) {
+  return (
+    <button className={activeTool === tool ? 'rail-btn active' : 'rail-btn'} data-tip={label} onClick={() => onToolSelect(tool)} aria-label={label}>
+      <Icon aria-hidden="true" />
+      {caret && <span className="caret" />}
+      {!!badge && <span className="rail-badge">{badge}</span>}
+    </button>
+  );
+}
+
+function V3Thumbnails({
+  open,
+  thumbnails,
+  pageLabels,
+  pageCount,
+  currentPage,
+  onPageSelect,
+  onReorderPages,
+}: {
+  open: boolean;
+  thumbnails: Map<number, string>;
+  pageLabels: string[];
+  pageCount: number;
+  currentPage: number;
+  onPageSelect: (page: number) => void;
+  onReorderPages?: (newOrder: number[]) => Promise<void>;
+}) {
+  const { t } = useTranslation();
+  const dragSrcIndex = useRef<number | null>(null);
+
+  function handleDrop(dropIndex: number) {
+    const src = dragSrcIndex.current;
+    if (src === null || src === dropIndex) return;
+    const order = Array.from({ length: pageCount }, (_, i) => i);
+    order.splice(src, 1);
+    order.splice(dropIndex, 0, src);
+    void onReorderPages?.(order);
+    dragSrcIndex.current = null;
+  }
+
+  return (
+    <aside className={open ? 'thumbs open' : 'thumbs'}>
+      <div className="thumbs-head">{t('editorV3.thumbnails.pages')}</div>
+      <div className="thumbs-body">
+        {Array.from({ length: pageCount }, (_, index) => {
+          const src = thumbnails.get(index);
+          return (
+            <button
+              key={index}
+              className={index === currentPage ? 'thumb active' : 'thumb'}
+              onClick={() => onPageSelect(index)}
+              draggable={!!onReorderPages}
+              onDragStart={() => { dragSrcIndex.current = index; }}
+              onDragOver={(e) => { e.preventDefault(); }}
+              onDrop={() => handleDrop(index)}
+            >
+              <div className="thumb-img">{src && <img src={src} alt={t('editorV3.thumbnails.pageAlt', { page: index + 1 })} />}</div>
+              <div className="thumb-label">{pageLabels[index] || index + 1}</div>
+            </button>
+          );
+        })}
+      </div>
+    </aside>
+  );
+}
+
+function EncryptDecryptControls({ onApplied }: { onApplied?: () => void }) {
+  const { t } = useTranslation();
+  const { push, update } = useTaskQueueContext();
+  const [userPassword, setUserPassword] = useState('');
+  const [ownerPassword, setOwnerPassword] = useState('');
+  const [decryptPassword, setDecryptPassword] = useState('');
+  const [busy, setBusy] = useState(false);
+
+  async function handleEncrypt(): Promise<void> {
+    if (busy || !isTauri || !userPassword) return;
+    setBusy(true);
+
+    const { save } = await import('@tauri-apps/plugin-dialog');
+    const path = await save({ filters: [{ name: 'PDF', extensions: ['pdf'] }] });
+    if (!path) { setBusy(false); return; }
+
+    const taskId = `encrypt-${Date.now()}`;
+    push({ id: taskId, label: t('tasks.encryptRunning'), progress: null, status: 'running' });
+
+    try {
+      const { invoke } = await import('@tauri-apps/api/core');
+      await invoke('encrypt_pdf', { userPassword, ownerPassword, outputPath: path });
+      update(taskId, { status: 'done', label: t('tasks.encryptDone') });
+      setUserPassword('');
+      setOwnerPassword('');
+      onApplied?.();
+    } catch {
+      update(taskId, { status: 'error', label: t('tasks.encryptFailed') });
+    }
+
+    setBusy(false);
+  }
+
+  async function handleDecrypt(): Promise<void> {
+    if (busy || !isTauri || !decryptPassword) return;
+    setBusy(true);
+
+    const taskId = `decrypt-${Date.now()}`;
+    push({ id: taskId, label: t('tasks.decryptRunning'), progress: null, status: 'running' });
+
+    try {
+      const { invoke } = await import('@tauri-apps/api/core');
+      await invoke('decrypt_pdf', { password: decryptPassword });
+      update(taskId, { status: 'done', label: t('tasks.decryptDone') });
+      setDecryptPassword('');
+      onApplied?.();
+    } catch {
+      update(taskId, { status: 'error', label: t('tasks.decryptFailed') });
+    }
+
+    setBusy(false);
+  }
+
+  const inputClass = 'panel-input';
+  const buttonClass = 'btn-primary accent';
+
+  return (
+    <div className="flex flex-col gap-4">
+      {/* Encrypt */}
+      <div className="flex flex-col gap-1">
+        <span className="panel-label">{t('protect.encrypt')}</span>
+        <input
+          type="password"
+          placeholder={t('protect.userPasswordPlaceholder')}
+          value={userPassword}
+          onChange={e => { setUserPassword(e.target.value); }}
+          className={inputClass}
+          aria-label={t('protect.userPasswordPlaceholder')}
+        />
+        <input
+          type="password"
+          placeholder={t('protect.ownerPasswordPlaceholder')}
+          value={ownerPassword}
+          onChange={e => { setOwnerPassword(e.target.value); }}
+          className={inputClass}
+          aria-label={t('protect.ownerPasswordPlaceholder')}
+        />
+        <button
+          onClick={() => { void handleEncrypt(); }}
+          disabled={busy || !userPassword || !isTauri}
+          className={buttonClass}
+          style={{ marginTop: 8, height: 36 }}
+        >
+          {t('protect.encryptBtn')}
+        </button>
+      </div>
+
+      {/* Decrypt */}
+      <div className="flex flex-col gap-1" style={{ marginTop: 12 }}>
+        <span className="panel-label">{t('protect.decrypt')}</span>
+        <input
+          type="password"
+          placeholder={t('protect.currentPasswordPlaceholder')}
+          value={decryptPassword}
+          onChange={e => { setDecryptPassword(e.target.value); }}
+          className={inputClass}
+          aria-label={t('protect.currentPasswordPlaceholder')}
+        />
+        <button
+          onClick={() => { void handleDecrypt(); }}
+          disabled={busy || !decryptPassword || !isTauri}
+          className={buttonClass}
+          style={{ marginTop: 8, height: 36 }}
+        >
+          {t('protect.decryptBtn')}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function WatermarkControls({ onApplied }: { onApplied?: () => void }) {
+  const { t } = useTranslation();
+  const { push, update } = useTaskQueueContext();
+  const [text, setText] = useState('');
+  const [opacity, setOpacity] = useState(0.3);
+  const [busy, setBusy] = useState(false);
+
+  async function handleApply(): Promise<void> {
+    const trimmed = text.trim();
+    if (busy || !isTauri || trimmed.length === 0) return;
+    setBusy(true);
+    const taskId = `watermark-${Date.now()}`;
+    push({ id: taskId, label: t('tasks.watermarkRunning'), progress: null, status: 'running' });
+    try {
+      const { invoke } = await import('@tauri-apps/api/core');
+      await invoke('add_watermark', { text: trimmed, opacity });
+      update(taskId, { status: 'done', label: t('tasks.watermarkDone') });
+      onApplied?.();
+    } catch {
+      update(taskId, { status: 'error', label: t('tasks.watermarkFailed') });
+    }
+    setBusy(false);
+  }
+
+  const inputClass = 'panel-input';
+  const buttonClass = 'btn-primary accent';
+
+  return (
+    <div className="flex flex-col gap-3">
+      <input
+        type="text"
+        placeholder={t('rightPanel.watermarkPlaceholder')}
+        value={text}
+        onChange={e => { setText(e.target.value); }}
+        className={inputClass}
+        aria-label={t('toolbar.watermark')}
+      />
+      <div className="flex flex-col gap-1">
+        <span className="panel-label">
+          {t('rightPanel.watermarkOpacity')}: {Math.round(opacity * 100)}%
+        </span>
+        <input
+          type="range"
+          min={5}
+          max={100}
+          step={5}
+          value={Math.round(opacity * 100)}
+          onChange={e => { setOpacity(parseInt(e.target.value, 10) / 100); }}
+          className="w-full accent-primary"
+          aria-label={t('rightPanel.watermarkOpacity')}
+        />
+      </div>
+      <button
+        onClick={() => { void handleApply(); }}
+        disabled={busy || !isTauri || text.trim().length === 0}
+        className={buttonClass}
+        style={{ marginTop: 8, height: 36 }}
+      >
+        {t('rightPanel.watermarkApply')}
+      </button>
+    </div>
+  );
+}

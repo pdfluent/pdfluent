@@ -1,13 +1,53 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
-import type { RuntimeAdapter, RuntimeAdapterMetadata, RuntimeCapabilities } from '../types';
+import { isTauriRuntime } from '../../../lib/tauri-detection';
+import type {
+  RuntimeAdapter,
+  RuntimeAdapterMetadata,
+  RuntimeCapabilities,
+  RuntimeOperationCapability,
+} from '../types';
 import type { PdfEngine } from '../../../core/engine/PdfEngine';
 import type { EngineConfig } from '../../../core/engine/types';
+
+const TAURI_OPERATION_DETAILS: Record<string, RuntimeOperationCapability> = {
+  open: { status: 'supported' },
+  save: { status: 'supported' },
+  'filesystem-save': { status: 'supported' },
+  'pdf-export': { status: 'supported' },
+  render: { status: 'supported' },
+  thumbnails: { status: 'supported' },
+  'render-thumbnail': { status: 'supported' },
+  annotate: { status: 'supported' },
+  'form-fill': { status: 'supported' },
+  merge: { status: 'supported' },
+  split: { status: 'supported' },
+  rotate: { status: 'supported' },
+  compress: { status: 'supported' },
+  'validate-pdfa': { status: 'supported' },
+  text: { status: 'supported' },
+  'extract-text': { status: 'supported' },
+  'text-positions': { status: 'supported' },
+  'extract-text-positions': { status: 'supported' },
+  search: { status: 'supported' },
+  'search-text': { status: 'supported' },
+  'extract-images': { status: 'supported' },
+  redact: { status: 'supported' },
+  'verify-signatures': { status: 'supported' },
+  'convert-pdfa': { status: 'supported' },
+  ocr: { status: 'supported' },
+  'office-export': { status: 'supported' },
+  'flatten-xfa': { status: 'supported' },
+};
+
+const TAURI_SUPPORTED_OPERATIONS = Object.entries(TAURI_OPERATION_DETAILS)
+  .filter(([, capability]) => capability.status === 'supported')
+  .map(([operation]) => operation);
 
 /**
  * Tauri runtime adapter for production desktop environment
@@ -22,7 +62,7 @@ export class TauriRuntimeAdapter implements RuntimeAdapter {
       return false;
     }
 
-    const tauri = (window as any).__TAURI__;
+    const tauri = isTauriRuntime();
     return !!tauri;
   }
 
@@ -42,22 +82,9 @@ export class TauriRuntimeAdapter implements RuntimeAdapter {
   }
 
   getCapabilities(): RuntimeCapabilities {
-    // Placeholder capabilities - will be populated from actual XFA SDK
     return {
-      supportedOperations: [
-        'open',
-        'save',
-        'render',
-        'annotate',
-        'form-fill',
-        'merge',
-        'split',
-        'rotate',
-        'compress',
-        'validate-pdfa',
-        'extract-text',
-        'extract-images'
-      ],
+      supportedOperations: [...TAURI_SUPPORTED_OPERATIONS],
+      operationDetails: { ...TAURI_OPERATION_DETAILS },
       maxFileSize: 1024 * 1024 * 1024, // 1GB
       maxPageCount: 10000,
       supportsStreaming: true,

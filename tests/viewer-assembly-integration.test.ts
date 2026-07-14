@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 import { readFileSync } from 'node:fs';
@@ -56,24 +56,24 @@ describe('useThumbnails — page count override', () => {
     expect(thumbnailsSource).toContain('pageCount ?? document');
   });
 
-  it('adds effectiveCount to the useEffect dependency array', () => {
-    expect(thumbnailsSource).toContain('[engine, document, effectiveCount]');
+  it('adds effectiveCount and documentVersion to the useEffect dependency array', () => {
+    expect(thumbnailsSource).toContain('[engine, document, effectiveCount, documentVersion]');
   });
 
   it('guards against effectiveCount === 0 (not just document.pages.length === 0)', () => {
     expect(thumbnailsSource).toContain('effectiveCount === 0');
   });
 
-  it('loops to effectiveCount, not document.pages.length', () => {
-    // The loop must use effectiveCount
-    const loopIdx = thumbnailsSource.indexOf('for (let i = 0; i < effectiveCount');
-    expect(loopIdx).toBeGreaterThan(-1);
+  it('generates all effectiveCount pages (outward fill order covers every page)', () => {
+    // The fill order is seeded from effectiveCount and the batch loop walks it fully
+    expect(thumbnailsSource).toContain('order.length < effectiveCount');
+    expect(thumbnailsSource).toContain('batch < order.length');
   });
 });
 
-describe('ViewerApp — passes pageCount to useThumbnails', () => {
-  it('passes pageCount as third argument to useThumbnails', () => {
-    expect(viewerAppSource).toContain('useThumbnails(engine, pdfDoc, pageCount)');
+describe('ViewerApp — passes pageCount and documentVersion to useThumbnails', () => {
+  it('passes pageCount, documentVersion and pageIndex to useThumbnails', () => {
+    expect(viewerAppSource).toContain('useThumbnails(engine, pdfDoc, pageCount, documentVersion, pageIndex)');
   });
 });
 

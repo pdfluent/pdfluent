@@ -1,10 +1,11 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
+import { isTauriRuntime } from '../../lib/tauri-detection';
 import type { Runtime } from '../../core/types';
 import type {
   RuntimeAdapter,
@@ -150,7 +151,7 @@ export class DefaultRuntimeRegistry implements RuntimeRegistry {
     return {
       runtime,
       confidence: 0.9, // High confidence for simple detection
-      method: 'window.__TAURI__ check',
+      method: 'Tauri IPC marker check',
       environment
     };
   }
@@ -159,7 +160,7 @@ export class DefaultRuntimeRegistry implements RuntimeRegistry {
    * Detect environment details
    */
   private detectEnvironment(): RuntimeEnvironment {
-    const tauriAvailable = typeof window !== 'undefined' && !!(window as any).__TAURI__;
+    const tauriAvailable = isTauriRuntime();
 
     const webAPIs: string[] = [];
     if (typeof window !== 'undefined') {

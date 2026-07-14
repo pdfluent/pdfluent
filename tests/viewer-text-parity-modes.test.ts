@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: LicenseRef-PDFluent-Proprietary
 // Copyright (c) 2026 PDFluent Contributors
 
 import { readFileSync } from "node:fs";
@@ -15,10 +15,10 @@ const viewerSource = readFileSync(
 );
 
 describe("viewer text parity across modes", () => {
-  it("keeps native continuous mode active regardless edit tool state", () => {
+  it("uses native continuous mode only for pure reading", () => {
     expect(shouldUseNativeContinuousViewer("continuous", "none", false)).toBe(true);
-    expect(shouldUseNativeContinuousViewer("continuous", "pen", false)).toBe(true);
-    expect(shouldUseNativeContinuousViewer("continuous", "none", true)).toBe(true);
+    expect(shouldUseNativeContinuousViewer("continuous", "pen", false)).toBe(false);
+    expect(shouldUseNativeContinuousViewer("continuous", "none", true)).toBe(false);
     expect(shouldUseNativeContinuousViewer("single", "none", false)).toBe(false);
   });
 
@@ -38,9 +38,8 @@ describe("viewer text parity across modes", () => {
     expect(shouldShowSelectableTextLayer("single", "none", true, 1)).toBe(true);
     expect(shouldShowSelectableTextLayer("single", "none", false, 0)).toBe(false);
     expect(shouldShowSelectableTextLayer("continuous", "none", false, 4)).toBe(false);
-    expect(viewerSource).toContain("return viewMode === \"continuous\";");
     expect(viewerSource).toContain(
-      "return viewMode === \"single\" && textLineCount > 0;",
+      'return viewMode === "single" && textLineCount > 0;',
     );
   });
 });

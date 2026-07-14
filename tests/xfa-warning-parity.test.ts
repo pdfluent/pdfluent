@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: LicenseRef-PDFluent-Proprietary
 // Copyright (c) 2026 PDFluent Contributors
 
 import { readFileSync } from "node:fs";
@@ -31,9 +31,9 @@ describe("xfa warning parity", () => {
   });
 
   it("detects xfa markers in backend engine", () => {
-    expect(pdfEngineSource).toContain("fn detect_xfa_markers(path: &str) -> bool");
-    expect(pdfEngineSource).toContain("contains_ascii_case_insensitive(&bytes, b\"/XFA\")");
-    expect(pdfEngineSource).toContain("Dynamic XFA forms are not supported in this build");
+    expect(pdfEngineSource).toContain("pub xfa_detected: bool");
+    expect(pdfEngineSource).toContain("acro_form.has(b\"XFA\")");
+    expect(pdfEngineSource).toContain("xfa_notice");
   });
 });
 

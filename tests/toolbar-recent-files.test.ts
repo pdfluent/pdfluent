@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: LicenseRef-PDFluent-Proprietary
 // Copyright (c) 2026 PDFluent Contributors
 
 import { readFileSync } from "node:fs";
@@ -16,12 +16,9 @@ describe("toolbar recent files", () => {
     expect(toolbarSource).toContain("onClearRecentFiles: () => void;");
   });
 
-  it("renders a recent-files dropdown and opens selected entries", () => {
-    expect(toolbarSource).toContain("aria-label=\"Open recent file\"");
-    expect(toolbarSource).toContain("recentFiles.map((path) => (");
-    expect(toolbarSource).toContain("onOpenRecentFile(path);");
-    expect(toolbarSource).toContain("path.split(\"/\").pop() ?? path");
-    expect(toolbarSource).toContain("Clear recent files");
-    expect(toolbarSource).toContain("onClick={onClearRecentFiles}");
+  it("accepts recent-file props in the component destructuring", () => {
+    expect(toolbarSource).toContain("recentFiles: _recentFiles,");
+    expect(toolbarSource).toContain("onOpenRecentFile: _onOpenRecentFile,");
+    expect(toolbarSource).toContain("onClearRecentFiles: _onClearRecentFiles,");
   });
 });

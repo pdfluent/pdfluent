@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 import { readFileSync } from 'node:fs';
@@ -24,6 +24,7 @@ const viewerAppSource = [
   '../src/viewer/hooks/useTextInteraction.ts',
   '../src/viewer/hooks/useKeyboardShortcuts.ts',
   '../src/viewer/ViewerApp.tsx',
+  '../src/viewer/v3/EditorV3Shell.tsx',
   '../src/viewer/WelcomeSection.tsx',
 ].map(p => readFileSync(new URL(p, import.meta.url), 'utf8')).join('\n\n');
 
@@ -42,12 +43,14 @@ describe('ViewerApp — scroll-to-zoom: canvas ref', () => {
   });
 
   it('attaches canvasContainerRef to the canvas container div', () => {
-    expect(viewerAppSource).toContain('ref={canvasContainerRef}');
+    expect(viewerAppSource).toContain('canvasRef={canvasContainerRef}');
   });
 
   it('ref is on the document canvas container', () => {
-    const refIdx = viewerAppSource.indexOf('ref={canvasContainerRef}');
-    const classIdx = viewerAppSource.indexOf('overflow-auto bg-muted/30', refIdx);
+    const propIdx = viewerAppSource.indexOf('canvasRef={canvasContainerRef}');
+    const refIdx = viewerAppSource.indexOf('ref={canvasRef}');
+    const classIdx = viewerAppSource.indexOf('className="canvas"', refIdx);
+    expect(propIdx).toBeGreaterThan(-1);
     expect(classIdx - refIdx).toBeLessThan(80);
   });
 });

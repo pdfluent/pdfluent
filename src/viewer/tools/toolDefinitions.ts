@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 // Shared tool definitions consumed by ModeToolbar and AllToolsPanel.
@@ -41,22 +41,25 @@ import {
   RefreshCwIcon,
   PackageIcon,
   FileSignatureIcon,
-  CalendarIcon,
   SlidersHorizontalIcon,
   BookOpenIcon,
+  DownloadIcon,
 } from 'lucide-react';
 import type { ViewerMode } from '../types';
 
 export interface ToolDefinition {
   icon: ComponentType<{ className?: string }>;
   label: string;
+  /** Tailwind color class for AllToolsPanel icons (e.g. 'text-blue-600'). */
+  color?: string;
 }
 
 /** i18n key for each viewer mode — used in AllToolsPanel section headings. */
 export const MODE_LABELS: Record<ViewerMode, string> = {
   read:     'modes.read',
-  review:   'modes.review',
-  edit:     'modes.edit',
+  review:   'modes.reviewAnnotate',
+  edit:     'modes.editContent',
+  sign:     'modes.sign',
   organize: 'modes.organize',
   forms:    'modes.forms',
   protect:  'modes.protect',
@@ -72,97 +75,98 @@ export const MODE_LABELS: Record<ViewerMode, string> = {
 export const TOOLS_BY_MODE: Record<ViewerMode, ToolDefinition[][]> = {
   read: [
     [
-      { icon: MousePointerIcon, label: 'toolbar.select' },
-      { icon: HandIcon,         label: 'toolbar.pan' },
+      { icon: MousePointerIcon, label: 'toolbar.select',     color: 'text-blue-600' },
+      { icon: HandIcon,         label: 'toolbar.pan',        color: 'text-blue-500' },
     ],
     [
-      { icon: ZoomInIcon,   label: 'toolbar.zoomIn' },
-      { icon: ZoomOutIcon,  label: 'toolbar.zoomOut' },
-      { icon: MaximizeIcon, label: 'toolbar.fullscreen' },
+      { icon: ZoomInIcon,   label: 'toolbar.zoomIn',     color: 'text-blue-600' },
+      { icon: ZoomOutIcon,  label: 'toolbar.zoomOut',    color: 'text-blue-500' },
+      { icon: MaximizeIcon, label: 'toolbar.fullscreen', color: 'text-blue-600' },
     ],
     [
-      { icon: SearchIcon,   label: 'toolbar.searchText' },
-      { icon: BookOpenIcon, label: 'toolbar.readAloud' },
+      { icon: SearchIcon,   label: 'toolbar.searchText', color: 'text-green-600' },
+      { icon: BookOpenIcon, label: 'toolbar.readAloud',  color: 'text-green-500' },
     ],
   ],
   review: [
     [
-      { icon: HighlighterIcon,    label: 'toolbar.highlight' },
-      { icon: UnderlineIcon,      label: 'toolbar.underline' },
-      { icon: StrikethroughIcon,  label: 'toolbar.strikethrough' },
+      { icon: HighlighterIcon,   label: 'toolbar.highlight',     color: 'text-yellow-600' },
+      { icon: UnderlineIcon,     label: 'toolbar.underline',     color: 'text-yellow-500' },
+      { icon: StrikethroughIcon, label: 'toolbar.strikethrough', color: 'text-yellow-600' },
     ],
     [
-      { icon: StickyNoteIcon,    label: 'toolbar.note' },
-      { icon: MessageSquareIcon, label: 'toolbar.comment' },
+      { icon: StickyNoteIcon,    label: 'toolbar.note',    color: 'text-orange-500' },
+      { icon: MessageSquareIcon, label: 'toolbar.comment', color: 'text-orange-600' },
     ],
     [
-      { icon: PenIcon,    label: 'toolbar.freeDraw' },
-      { icon: LayersIcon, label: 'toolbar.stamp' },
+      { icon: PenIcon,    label: 'toolbar.freeDraw', color: 'text-pink-600' },
+      { icon: LayersIcon, label: 'toolbar.stamp',    color: 'text-pink-500' },
     ],
   ],
   edit: [
     [
-      { icon: TypeIcon, label: 'toolbar.editText' },
-      { icon: TypeIcon, label: 'toolbar.addText' },
+      { icon: TypeIcon, label: 'toolbar.editText', color: 'text-purple-600' },
+      { icon: TypeIcon, label: 'toolbar.addText',  color: 'text-purple-500' },
     ],
     [
-      { icon: ImageIcon, label: 'toolbar.image' },
-      { icon: LinkIcon,  label: 'toolbar.link' },
+      { icon: ImageIcon, label: 'toolbar.image', color: 'text-blue-600' },
+      { icon: LinkIcon,  label: 'toolbar.link',  color: 'text-blue-500' },
     ],
     [
-      { icon: SlidersHorizontalIcon, label: 'toolbar.headerFooter' },
-      { icon: LayersIcon,            label: 'toolbar.watermark' },
+      { icon: SlidersHorizontalIcon, label: 'toolbar.headerFooter', color: 'text-purple-500' },
+      { icon: LayersIcon,            label: 'toolbar.watermark',    color: 'text-purple-600' },
+    ],
+  ],
+  sign: [
+    [
+      { icon: FileSignatureIcon, label: 'toolbar.signature', color: 'text-pink-600' },
+      { icon: PenIcon,           label: 'toolbar.initials',  color: 'text-pink-500' },
     ],
   ],
   organize: [
     [
-      { icon: LayoutGridIcon, label: 'toolbar.insertPage' },
-      { icon: Trash2Icon,     label: 'toolbar.deletePage' },
-      { icon: RotateCcwIcon,  label: 'toolbar.rotateLeft' },
-      { icon: RotateCwIcon,   label: 'toolbar.rotateRight' },
+      { icon: LayoutGridIcon, label: 'toolbar.insertPage',  color: 'text-green-600' },
+      { icon: Trash2Icon,     label: 'toolbar.deletePage',  color: 'text-red-500' },
+      { icon: RotateCcwIcon,  label: 'toolbar.rotateLeft',  color: 'text-green-500' },
+      { icon: RotateCwIcon,   label: 'toolbar.rotateRight', color: 'text-green-500' },
     ],
     [
-      { icon: ScissorsIcon, label: 'toolbar.split' },
-      { icon: LayersIcon,   label: 'toolbar.merge' },
+      { icon: ScissorsIcon, label: 'toolbar.split', color: 'text-green-600' },
+      { icon: LayersIcon,   label: 'toolbar.merge', color: 'text-green-500' },
     ],
   ],
   forms: [
     [
-      { icon: SlidersHorizontalIcon, label: 'toolbar.autoDetect' },
+      { icon: SlidersHorizontalIcon, label: 'toolbar.autoDetect', color: 'text-purple-600' },
     ],
     [
-      { icon: TypeIcon,        label: 'toolbar.textField' },
-      { icon: CheckSquareIcon, label: 'toolbar.checkbox' },
-      { icon: CircleIcon,      label: 'toolbar.radioButton' },
-    ],
-    [
-      { icon: FileSignatureIcon, label: 'toolbar.signature' },
-      { icon: PenIcon,           label: 'toolbar.initials' },
-      { icon: CalendarIcon,      label: 'toolbar.date' },
+      { icon: TypeIcon,        label: 'toolbar.textField',   color: 'text-purple-500' },
+      { icon: CheckSquareIcon, label: 'toolbar.checkbox',    color: 'text-purple-600' },
+      { icon: CircleIcon,      label: 'toolbar.radioButton', color: 'text-purple-500' },
     ],
   ],
   protect: [
     [
-      { icon: LockIcon, label: 'toolbar.password' },
-      { icon: KeyIcon,  label: 'toolbar.permissions' },
+      { icon: LockIcon, label: 'toolbar.password',    color: 'text-teal-600' },
+      { icon: KeyIcon,  label: 'toolbar.permissions', color: 'text-teal-500' },
     ],
     [
-      { icon: EyeOffIcon, label: 'toolbar.redact' },
-      { icon: Trash2Icon, label: 'toolbar.hide' },
+      { icon: EyeOffIcon, label: 'toolbar.redact', color: 'text-pink-600' },
+      { icon: Trash2Icon, label: 'toolbar.hide',   color: 'text-pink-500' },
     ],
     [
-      { icon: SearchIcon,            label: 'toolbar.compare' },
-      { icon: SlidersHorizontalIcon, label: 'toolbar.accessibility' },
+      { icon: SearchIcon,            label: 'toolbar.compare',      color: 'text-teal-600' },
+      { icon: SlidersHorizontalIcon, label: 'toolbar.accessibility', color: 'text-teal-500' },
     ],
   ],
   convert: [
     [
-      { icon: RefreshCwIcon, label: 'toolbar.toPdf' },
-      { icon: LayersIcon,    label: 'toolbar.exportPdf' },
+      { icon: RefreshCwIcon, label: 'toolbar.toPdf',     color: 'text-red-600' },
+      { icon: DownloadIcon,  label: 'toolbar.exportPdf', color: 'text-red-500' },
     ],
     [
-      { icon: PackageIcon, label: 'toolbar.compress' },
-      { icon: SearchIcon,  label: 'toolbar.ocrScan' },
+      { icon: PackageIcon, label: 'toolbar.compress', color: 'text-red-500' },
+      { icon: SearchIcon,  label: 'toolbar.ocrScan',  color: 'text-green-600' },
     ],
   ],
 };

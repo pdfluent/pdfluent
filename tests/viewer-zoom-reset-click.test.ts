@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 import { readFileSync } from 'node:fs';
@@ -24,13 +24,15 @@ const viewerAppSource = [
   '../src/viewer/hooks/useTextInteraction.ts',
   '../src/viewer/hooks/useKeyboardShortcuts.ts',
   '../src/viewer/ViewerApp.tsx',
+  '../src/viewer/v3/EditorV3Shell.tsx',
   '../src/viewer/WelcomeSection.tsx',
 ].map(p => readFileSync(new URL(p, import.meta.url), 'utf8')).join('\n\n');
 
 // Locate the floating zoom control block for scoped assertions
 const floatStart = viewerAppSource.indexOf('Floating zoom controls');
-const floatEnd = viewerAppSource.indexOf('</div>\n          )}', floatStart);
-const floatBlock = viewerAppSource.slice(floatStart, floatEnd);
+const floatGuardStart = viewerAppSource.lastIndexOf("pageCount > 0 && mode !== 'organize' && (", floatStart);
+const floatEnd = viewerAppSource.indexOf('<ZoomPresetsPopover', floatStart);
+const floatBlock = viewerAppSource.slice(floatGuardStart, floatEnd);
 
 // ---------------------------------------------------------------------------
 // Reset button presence
@@ -79,11 +81,12 @@ describe('ViewerApp — zoom reset button: display', () => {
   });
 
   it('has a title attribute for discoverability', () => {
-    expect(floatBlock).toContain('title="Zoomniveau kiezen"');
+    // v3: literal "Zoomniveau kiezen" replaced by t('editorV3.zoom.chooseLevel')
+    expect(floatBlock).toMatch(/title=\{t\(['"]editorV3\.zoom\.chooseLevel['"]/);
   });
 
   it('has an aria-label', () => {
-    expect(floatBlock).toContain('aria-label="Zoomniveau kiezen"');
+    expect(floatBlock).toMatch(/aria-label=\{t\(['"]editorV3\.zoom\.chooseLevel['"]/);
   });
 
   it('uses tabular-nums for stable width', () => {
@@ -97,12 +100,12 @@ describe('ViewerApp — zoom reset button: display', () => {
 
 describe('ViewerApp — zoom reset button: surrounding controls unchanged', () => {
   it('zoom-out (−) button is still present', () => {
-    expect(floatBlock).toContain('Zoom out');
+    expect(floatBlock).toContain("title={t('editorV3.zoom.zoomOut')}");
     expect(floatBlock).toContain('Math.max(0.25,');
   });
 
   it('zoom-in (+) button is still present', () => {
-    expect(floatBlock).toContain('Zoom in');
+    expect(floatBlock).toContain("title={t('editorV3.zoom.zoomIn')}");
     expect(floatBlock).toContain('Math.min(4,');
   });
 
@@ -115,7 +118,7 @@ describe('ViewerApp — zoom reset button: surrounding controls unchanged', () =
   });
 
   it('floating control is only shown when document is loaded', () => {
-    expect(floatBlock).toContain('pdfDoc && !docLoading');
+    expect(floatBlock).toContain("pageCount > 0 && mode !== 'organize'");
   });
 });
 

@@ -1,14 +1,35 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
-import type { RuntimeAdapter, RuntimeAdapterMetadata, RuntimeCapabilities } from '../types';
+import type {
+  RuntimeAdapter,
+  RuntimeAdapterMetadata,
+  RuntimeCapabilities,
+  RuntimeOperationCapability,
+} from '../types';
 import type { PdfEngine } from '../../../core/engine/PdfEngine';
 import type { EngineConfig } from '../../../core/engine/types';
 import { MockPdfEngine } from '../../../core/engine/mock/MockPdfEngine';
+
+const BROWSER_TEST_OPERATION_DETAILS: Record<string, RuntimeOperationCapability> = {
+  open: { status: 'degraded', reason: 'Mock-only test runtime.' },
+  save: { status: 'degraded', reason: 'Mock-only test runtime; no real filesystem save.' },
+  'filesystem-save': { status: 'unsupported', reason: 'Browser test runtime has no filesystem save.' },
+  'pdf-export': { status: 'degraded', reason: 'Mock-only PDF byte export.' },
+  'browser-download': { status: 'degraded', reason: 'Browser download plumbing is available; PDF bytes are mock-only.' },
+  render: { status: 'degraded', reason: 'Mock-only rendering.' },
+  annotate: { status: 'degraded', reason: 'Mock-only annotation behavior.' },
+  'form-fill': { status: 'unsupported', reason: 'Form editing is not implemented in the mock runtime.' },
+  text: { status: 'degraded', reason: 'Mock-only text extraction.' },
+  'extract-text': { status: 'degraded', reason: 'Mock-only text extraction.' },
+  ocr: { status: 'unsupported', reason: 'OCR is not implemented in the mock runtime.' },
+  redact: { status: 'unsupported', reason: 'Redaction is not implemented in the mock runtime.' },
+  'office-export': { status: 'unsupported', reason: 'Office export is not implemented in the mock runtime.' },
+};
 
 /**
  * Browser test runtime adapter for development and testing
@@ -42,11 +63,13 @@ export class BrowserTestRuntimeAdapter implements RuntimeAdapter {
       supportedOperations: [
         'open',
         'save',
+        'pdf-export',
+        'browser-download',
         'render',
         'annotate',
-        'form-fill',
         'extract-text'
       ],
+      operationDetails: { ...BROWSER_TEST_OPERATION_DETAILS },
       maxFileSize: 10 * 1024 * 1024, // 10MB for testing
       maxPageCount: 100,
       supportsStreaming: false,

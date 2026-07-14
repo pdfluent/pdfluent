@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
@@ -117,6 +117,80 @@ describe('TauriDocumentEngine — loadDocument mapping', () => {
 
       expect(mockedInvoke).toHaveBeenCalledOnce();
       expect(mockedInvoke).toHaveBeenCalledWith('open_pdf', { path: '/docs/test.pdf' });
+    });
+  });
+
+  describe('XFA mapping (IMM 5257E shape)', () => {
+    // Exact serde shape returned by open_pdf for a dynamic XFA document:
+    // snake_case keys, xfa_detected=true, render-doc page count (3), an
+    // AcroForm shell (form_type=acro_form), and the active_content block.
+    const XFA_DOCUMENT_INFO = {
+      page_count: 3,
+      pages: [
+        { index: 0, width_pt: 612, height_pt: 792 },
+        { index: 1, width_pt: 612, height_pt: 792 },
+        { index: 2, width_pt: 612, height_pt: 792 },
+      ],
+      title: 'IMM 5257 E',
+      author: null,
+      form_type: 'acro_form',
+      xfa_detected: true,
+      xfa_notice: 'XFA-document: alle pagina\'s worden alleen-lezen weergegeven.',
+      active_content: {
+        has_active_content: true,
+        has_javascript: true,
+        has_open_action: false,
+        has_additional_actions: false,
+        has_launch_actions: false,
+        has_submit_form: false,
+        has_uri_actions: false,
+        has_xfa: true,
+        flags: ['xfa', 'javascript'],
+      },
+    };
+
+    it('maps xfa_detected:true to xfaDetected:true on the document', async () => {
+      mockedInvoke.mockResolvedValue(XFA_DOCUMENT_INFO);
+
+      const result = await engine.loadDocument('/Users/x/Desktop/imm5257e_test.pdf');
+
+      expect(result.success).toBe(true);
+      if (!result.success) return;
+      expect(result.value.xfaDetected).toBe(true);
+    });
+
+    it('maps xfa_notice and uses render-doc page count (3)', async () => {
+      mockedInvoke.mockResolvedValue(XFA_DOCUMENT_INFO);
+
+      const result = await engine.loadDocument('/Users/x/Desktop/imm5257e_test.pdf');
+
+      expect(result.success).toBe(true);
+      if (!result.success) return;
+      expect(result.value.pages).toHaveLength(3);
+      expect(result.value.xfaNotice).toContain('XFA-document');
+    });
+
+    it('maps active_content snake_case to camelCase', async () => {
+      mockedInvoke.mockResolvedValue(XFA_DOCUMENT_INFO);
+
+      const result = await engine.loadDocument('/Users/x/Desktop/imm5257e_test.pdf');
+
+      expect(result.success).toBe(true);
+      if (!result.success) return;
+      expect(result.value.activeContent?.hasXfa).toBe(true);
+      expect(result.value.activeContent?.hasJavascript).toBe(true);
+    });
+
+    it('maps xfa_detected:false to xfaDetected:false for a non-XFA document', async () => {
+      // Rust's DocumentInfo.xfa_detected is a non-optional bool, so serde always
+      // emits the field — a plain PDF/AcroForm reports xfa_detected: false.
+      mockedInvoke.mockResolvedValue({ ...MOCK_DOCUMENT_INFO, xfa_detected: false });
+
+      const result = await engine.loadDocument('/docs/test.pdf');
+
+      expect(result.success).toBe(true);
+      if (!result.success) return;
+      expect(result.value.xfaDetected).toBe(false);
     });
   });
 

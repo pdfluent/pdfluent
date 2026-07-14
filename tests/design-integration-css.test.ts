@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: LicenseRef-PDFluent-Proprietary
 // Copyright (c) 2026 PDFluent Contributors
 
 import { readFileSync } from "node:fs";
@@ -18,11 +18,13 @@ const css = readFileSync(
 
 describe("magic-patterns design integration", () => {
   it("defines the mac-style neutral surface tokens", () => {
-    expect(css).toContain("--pf-surface-0: hsl(36 2% 76%);");
-    expect(css).toContain("--pf-surface-1: hsl(0 0% 96%);");
-    expect(css).toContain("--pf-accent: hsl(211 100% 50%);");
-    expect(css).toContain("--pf-toolbar-height: 52px;");
-    expect(css).toContain("--pf-sidebar-width: 170px;");
+    // Neutral gray macOS palette (migrated from warm beige in v1; updated 2026-05-20).
+    // These are the canonical light-mode values — update here when the design system changes.
+    expect(css).toContain("--pf-surface-0: hsl(0 0% 90%);");
+    expect(css).toContain("--pf-surface-1: hsl(0 0% 97%);");
+    expect(css).toContain("--pf-accent: hsl(0 0% 10%);");
+    expect(css).toContain("--pf-toolbar-height: 40px;");
+    expect(css).toContain("--pf-sidebar-width: 88px;");
   });
 
   it("enables tailwind base and custom scrollbar utilities", () => {

@@ -1,14 +1,19 @@
 # PDFluent Architecture
 
-_Last updated: 2026-03-19_
+_Last updated: 2026-03-19. Shell section updated 2026-06-11._
+
+> **Note:** This document covers subsystem internals (text mutation, layout editing, reliability,
+> tests). For the current active product path, engine, and release gate, see
+> `docs/architecture/current-editor-architecture.md`. The shell section below is updated
+> to reflect the V3 state; the version history section is a historical record.
 
 ## Core Principles
 
-1. **Viewer-first MVP**: Build minimal working viewer with new architecture before migrating existing features
-2. **Capability-driven**: Runtime capability checking enables graceful degradation and feature discovery
-3. **Engine abstraction**: Clean separation between PDF operations and runtime-specific implementations
-4. **Multi-runtime support**: Tauri (production), Browser-test (development/testing)
-5. **Reliability-first**: Every edit path is validated, telemetered, and collision-checked before mutation
+1. **V3 shell is the product**: `ViewerApp.tsx` + `EditorV3Shell.tsx` at the default `/` URL.
+2. **Capability-driven**: Runtime capability checking enables graceful degradation and feature discovery.
+3. **Engine abstraction**: Clean separation between PDF operations and runtime-specific implementations.
+4. **Tauri-native**: Production runtime is Tauri with XFA Rust SDK. No in-browser PDF engine (WASM removed).
+5. **Reliability-first**: Every edit path is validated, telemetered, and collision-checked before mutation.
 
 ---
 

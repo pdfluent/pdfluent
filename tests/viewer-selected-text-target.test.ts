@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 /**
@@ -98,11 +98,11 @@ describe('ViewerApp — selected text target state', () => {
 
 describe('ViewerApp — passes controlled props to PageCanvas', () => {
   it('passes selectedTextTarget to PageCanvas', () => {
-    expect(viewerAppSrc).toContain('selectedTextTarget={selectedTextTarget}');
+    expect(viewerAppSrc).toContain('selectedTextTarget={isCurrentPage ? selectedTextTarget : null}');
   });
 
   it('passes onTextTargetSelect to PageCanvas', () => {
-    expect(viewerAppSrc).toContain('onTextTargetSelect={handleTextTargetSelect}');
+    expect(viewerAppSrc).toContain('onTextTargetSelect={isCurrentPage ? handleTextTargetSelect : undefined}');
   });
 });
 
@@ -174,8 +174,10 @@ describe('PageCanvas — controlled text target props', () => {
   });
 
   it('toggle logic: deselects when clicking same paragraph', () => {
-    // Toggle: pass null when selectedTextTarget.id === para.id
-    expect(pageCanvasSrc).toContain('selectedTextTarget?.id === para.id ? null : para');
+    // Toggle: pass null when the currently-selected target matches the
+    // clicked paragraph. The param name may be `para` or `target` after
+    // the v2 text-interaction refactor.
+    expect(pageCanvasSrc).toMatch(/selectedTextTarget\?\.id === (?:para|target)\.id\s*\?\s*null\s*:\s*\1?/);
   });
 });
 

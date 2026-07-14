@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 import type { Size, Rect, Rotation } from '../types';
@@ -329,14 +329,35 @@ export interface FieldFormatting {
  * A single span of text extracted from a PDF page, with positional information.
  */
 export interface TextSpan {
-  /** Text content of the span */
+  /** Text content of the span (may be artifact-repaired for display). */
   text: string;
+  /** Original SDK text before artifact repair. Present only when repair changed the text.
+   *  Must be used as the content-stream replacement key sent to the Rust backend. */
+  rawText?: string;
 
   /** Bounding rectangle in page coordinate space (points, origin at bottom-left) */
   rect: { x: number; y: number; width: number; height: number };
 
   /** Font size in points */
   fontSize: number;
+
+  // Optional SDK Track G fields — undefined in current SDK builds.
+  // Will be populated when extract_text_blocks / getTextPositions delivers them.
+  /** PDF font name, e.g. "Helvetica-Bold". Undefined until sdkTextMetadata=true. */
+  fontName?: string;
+  /** Bold flag derived from font name or FontDescriptor. Undefined until sdkTextMetadata=true. */
+  isBold?: boolean;
+  /** Italic flag derived from font name or FontDescriptor. Undefined until sdkTextMetadata=true. */
+  isItalic?: boolean;
+  /** RGB fill color [0.0, 1.0] at Tj execution time. Undefined until sdkTextMetadata=true. */
+  color?: [number, number, number];
+  /** Per-character advance widths in PDF user space points. Undefined until sdkTextCharBounds=true. */
+  charBounds?: Array<{ x: number; width: number }>;
+  /**
+   * Source of glyph width data: 'Metric' = from the font's width table,
+   * 'Estimate' = heuristic fallback. Undefined until sdkTextCharBounds=true.
+   */
+  widthSource?: 'Metric' | 'Estimate';
 }
 
 // ---------------------------------------------------------------------------
@@ -385,6 +406,27 @@ export interface PdfDocument {
 
   /** Last modification timestamp */
   readonly modifiedAt: Date;
+
+  /** Whether the document contains XFA form data */
+  readonly xfaDetected?: boolean;
+
+  /** XFA notice message for the user */
+  readonly xfaNotice?: string | null;
+
+  /** Active PDF features that are detected but intentionally inert in PDFluent */
+  readonly activeContent?: DocumentActiveContent | null;
+}
+
+export interface DocumentActiveContent {
+  readonly hasActiveContent: boolean;
+  readonly hasJavascript: boolean;
+  readonly hasOpenAction: boolean;
+  readonly hasAdditionalActions: boolean;
+  readonly hasLaunchActions: boolean;
+  readonly hasSubmitForm: boolean;
+  readonly hasUriActions: boolean;
+  readonly hasXfa: boolean;
+  readonly flags: readonly string[];
 }
 
 /**

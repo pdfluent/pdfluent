@@ -1,10 +1,10 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { convertFileSrc } from "@tauri-apps/api/core";
 import { renderPage } from "../lib/tauri-api";
 import type { DocumentInfo, RenderedPage } from "../lib/tauri-api";
@@ -97,21 +97,59 @@ export function getContinuousLoadTargetPages(
   return Array.from(targets).sort((left, right) => left - right);
 }
 
+/**
+ * Whether this platform's WebView can render a PDF inside an <iframe> via the
+ * asset protocol. macOS (WKWebView/PDFKit) and Windows (WebView2) can; Linux
+ * (WebKitGTK) ships no built-in PDF viewer, so the asset:// iframe renders
+ * nothing there and we fall back to the raster (render_page) path. A
+ * "pdfluent_render_mode=raster" localStorage value forces the raster path
+ * everywhere - an escape hatch for users and a test hook.
+ */
+function nativePdfViewerSupported(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    // The raster renderer (render_page images) is the reliable default: it
+    // renders consistently on every platform and supports the editable-text,
+    // search, and selection overlays aligned to the page. The native WebView
+    // PDF viewer (asset:// iframe) depends on the platform PDF plugin and can
+    // render blank, so it is opt-in only via pdfluent_render_mode=native.
+    if (window.localStorage.getItem("pdfluent_render_mode") !== "native") {
+      return false;
+    }
+    // Opt-in native is still unavailable on WebKitGTK (Linux has no PDF plugin).
+    const ua = window.navigator?.userAgent ?? "";
+    return !(/\bLinux\b/.test(ua) && !/Android/.test(ua));
+  } catch {
+    return false;
+  }
+}
+
+const NATIVE_PDF_SUPPORTED = nativePdfViewerSupported();
+
 export function shouldUseNativeContinuousViewer(
   viewMode: "single" | "continuous",
-  _annotationTool: AnnotationTool,
-  _textEditorEnabled: boolean,
+  annotationTool: AnnotationTool,
+  textEditorEnabled: boolean,
 ): boolean {
-  return viewMode === "continuous";
+  // The native PDF iframe is opaque, so the editable-text and annotation
+  // overlays cannot be aligned on top of it. Whenever the user is editing or
+  // annotating, fall back to the raster render so the overlays line up with the
+  // page exactly. The native viewer is reserved for pure viewing.
+  return viewMode === "continuous" && annotationTool === "none" && !textEditorEnabled;
 }
 
 export function shouldUseNativeSingleViewer(
   viewMode: "single" | "continuous",
-  _annotationTool: AnnotationTool,
-  _textEditorEnabled: boolean,
-  _hasSearchHighlights: boolean,
+  annotationTool: AnnotationTool,
+  textEditorEnabled: boolean,
+  hasSearchHighlights: boolean,
 ): boolean {
-  return viewMode === "single";
+  return (
+    viewMode === "single" &&
+    annotationTool === "none" &&
+    !textEditorEnabled &&
+    !hasSearchHighlights
+  );
 }
 
 export function getNativePdfViewFragment(
@@ -296,6 +334,68 @@ function pruneContinuousPageCache(
   return next;
 }
 
+interface TextLineItemProps {
+  line: EditableTextLine;
+  scale: number;
+  toScreenRect: (rect: PdfRect) => { x: number; y: number; width: number; height: number } | null;
+}
+
+function TextLineItem({ line, scale, toScreenRect }: TextLineItemProps) {
+  const rect = toScreenRect(line.bbox);
+  const elementRef = useRef<HTMLDivElement>(null);
+  const [scaleX, setScaleX] = useState(1);
+  const rectWidth = rect?.width;
+
+  useLayoutEffect(() => {
+    const el = elementRef.current;
+    if (!el || rectWidth === undefined) return;
+
+    const prevTransform = el.style.transform;
+    el.style.transform = "none";
+    const measuredWidth = el.getBoundingClientRect().width;
+    el.style.transform = prevTransform;
+
+    if (measuredWidth > 0 && rectWidth > 0) {
+      setScaleX(rectWidth / measuredWidth);
+    }
+  }, [line.text, rectWidth, scale]);
+
+  if (!rect) return null;
+
+  const scaledFontSize = Math.max(
+    8,
+    Math.min(96, Number.isFinite(line.fontSize) ? line.fontSize * scale : rect.height),
+  );
+
+  return (
+    <div
+      ref={elementRef}
+      style={{
+        position: "absolute",
+        left: `${rect.x}px`,
+        top: `${rect.y}px`,
+        width: "max-content",
+        height: `${rect.height}px`,
+        fontSize: `${scaledFontSize}px`,
+        fontFamily: '"SF Pro Text", "SF Pro Display", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
+        fontWeight: "normal",
+        whiteSpace: "pre",
+        transformOrigin: "left top",
+        transform: scaleX !== 1 ? `scaleX(${scaleX})` : undefined,
+        color: "transparent",
+        pointerEvents: "auto",
+        cursor: "text",
+        userSelect: "text",
+        WebkitUserSelect: "text",
+        lineHeight: 1.1,
+        overflow: "hidden",
+      }}
+    >
+      {line.text}
+    </div>
+  );
+}
+
 export function Viewer({
   filePath,
   docInfo,
@@ -350,6 +450,7 @@ export function Viewer({
   const [inlineEditLine, setInlineEditLine] = useState<EditableTextLine | null>(null);
   const [inlineEditValue, setInlineEditValue] = useState("");
   const inlineEditInputRef = useRef<HTMLInputElement>(null);
+  const isCancellingRef = useRef(false);
   const [nativeViewerUnavailable, setNativeViewerUnavailable] = useState(false);
   const currentPageInfo = useMemo(
     () => docInfo?.pages[currentPage] ?? null,
@@ -389,8 +490,9 @@ export function Viewer({
     hasSearchHighlights,
   );
   const isNativeContinuousViewer =
-    prefersNativeContinuousViewer && !nativeViewerUnavailable;
-  const isNativeSingleViewer = prefersNativeSingleViewer && !nativeViewerUnavailable;
+    prefersNativeContinuousViewer && !nativeViewerUnavailable && NATIVE_PDF_SUPPORTED;
+  const isNativeSingleViewer =
+    prefersNativeSingleViewer && !nativeViewerUnavailable && NATIVE_PDF_SUPPORTED;
   const isNativeViewer = isNativeContinuousViewer || isNativeSingleViewer;
   const nativePdfSrc = useMemo(() => {
     if (!nativePdfBaseUrl || !isNativeViewer) {
@@ -577,7 +679,11 @@ export function Viewer({
 
     return {
       x: rect.x * scale,
-      y: (singlePageDisplayHeight - (rect.y + rect.height)) * scale,
+      // singlePageDisplayHeight is already in display pixels (height_pt * scale);
+      // flip the PDF bottom-left origin to a top-left screen origin by scaling
+      // only the point-space top edge. (Previously the whole expression was
+      // multiplied by scale, double-scaling the flip and pushing rects off-screen.)
+      y: singlePageDisplayHeight - (rect.y + rect.height) * scale,
       width: rect.width * scale,
       height: rect.height * scale,
     };
@@ -639,6 +745,9 @@ export function Viewer({
         reason,
       });
 
+      if (reason === "user_cancel") {
+        isCancellingRef.current = true;
+      }
       setInlineEditLine(null);
       setInlineEditValue("");
     },
@@ -1759,45 +1868,27 @@ export function Viewer({
                 }}
               />
             )}
-            {showRasterPageImage && renderedPage && (
-              <img
-                className="viewer-page-image w-full h-full object-contain"
-                src={`data:image/png;base64,${renderedPage.data_base64}`}
-                width={renderedPage.width}
-                height={renderedPage.height}
-                alt={`Page ${currentPage + 1}`}
-                draggable={false}
-              />
-            )}
+             {showRasterPageImage && renderedPage && (
+               <img
+                 className="viewer-page-image w-full h-full object-contain"
+                 src={`data:image/png;base64,${renderedPage.data_base64}`}
+                 width={renderedPage.width}
+                 height={renderedPage.height}
+                 alt={`Page ${currentPage + 1}`}
+                 draggable={false}
+               />
+             )}
 
              {showSelectableTextLayer && (
                <div className="viewer-text-selection-layer" aria-label="Selectable text layer">
-                 {editableTextLines.map((line) => {
-                  const rect = toScreenRect(line.bbox);
-                  if (!rect) return null;
-
-                  const scaledFontSize = Math.max(
-                    8,
-                    Math.min(96, Number.isFinite(line.fontSize) ? line.fontSize * scale : rect.height),
-                  );
-
-                  return (
-                    <span
-                      key={`${line.lineIndex}-${line.bbox.x}-${line.bbox.y}-select`}
-                      className="viewer-text-selection-line"
-                      style={{
-                        left: `${rect.x}px`,
-                        top: `${rect.y}px`,
-                        width: `${Math.max(6, rect.width)}px`,
-                        height: `${Math.max(10, rect.height)}px`,
-                        fontSize: `${scaledFontSize}px`,
-                        lineHeight: `${Math.max(10, rect.height)}px`,
-                      }}
-                    >
-                      {line.text}
-                    </span>
-                  );
-                 })}
+                 {editableTextLines.map((line) => (
+                   <TextLineItem
+                     key={`${line.lineIndex}-${line.bbox.x}-${line.bbox.y}-select`}
+                     line={line}
+                     scale={scale}
+                     toScreenRect={toScreenRect}
+                   />
+                 ))}
                </div>
              )}
 
@@ -1928,6 +2019,54 @@ export function Viewer({
                   const rect = toScreenRect(line.bbox);
                   if (!rect) return null;
 
+                  const isEditing = inlineEditLine?.lineIndex === line.lineIndex;
+
+                  if (isEditing) {
+                    const scaledFontSize = Math.max(
+                      8,
+                      Math.min(96, Number.isFinite(line.fontSize) ? line.fontSize * scale : rect.height),
+                    );
+
+                    return (
+                      <input
+                        key={`${line.lineIndex}-${line.bbox.x}-${line.bbox.y}-input`}
+                        ref={inlineEditInputRef}
+                        type="text"
+                        value={inlineEditValue}
+                        onChange={(event) => {
+                          setInlineEditValue(event.target.value);
+                        }}
+                        onKeyDown={(event) => {
+                          if (event.key === "Enter") {
+                            event.preventDefault();
+                            void submitInlineTextEditor();
+                          } else if (event.key === "Escape") {
+                            event.preventDefault();
+                            cancelInlineTextEditor("user_cancel");
+                          }
+                        }}
+                        onBlur={() => {
+                          if (isCancellingRef.current) {
+                            isCancellingRef.current = false;
+                            return;
+                          }
+                          void submitInlineTextEditor();
+                        }}
+                        className="viewer-text-inline-editor-in-place"
+                        style={{
+                          left: `${rect.x}px`,
+                          top: `${rect.y}px`,
+                          width: `${Math.max(80, rect.width + 10)}px`,
+                          height: `${Math.max(16, rect.height + 4)}px`,
+                          fontSize: `${scaledFontSize}px`,
+                          fontFamily: '"SF Pro Text", "SF Pro Display", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
+                          lineHeight: `${rect.height}px`,
+                        }}
+                        disabled={!canInlineEdit}
+                      />
+                    );
+                  }
+
                   return (
                     <button
                       key={`${line.lineIndex}-${line.bbox.x}-${line.bbox.y}`}
@@ -1948,65 +2087,6 @@ export function Viewer({
                 })}
               </div>
             )}
-
-            {textEditorEnabled && inlineEditLine && (() => {
-              const rect = toScreenRect(inlineEditLine.bbox);
-              if (!rect) return null;
-
-              return (
-                <div
-                  className="viewer-text-inline-editor"
-                  style={{
-                    left: `${rect.x}px`,
-                    top: `${rect.y}px`,
-                    width: `${Math.max(120, rect.width)}px`,
-                    minHeight: `${Math.max(34, rect.height + 16)}px`,
-                  }}
-                >
-                  <input
-                    ref={inlineEditInputRef}
-                    type="text"
-                    value={inlineEditValue}
-                    onChange={(event) => {
-                      setInlineEditValue(event.target.value);
-                    }}
-                    onKeyDown={(event) => {
-                      if (event.key === "Enter") {
-                        event.preventDefault();
-                        void submitInlineTextEditor();
-                      } else if (event.key === "Escape") {
-                        event.preventDefault();
-                        cancelInlineTextEditor("user_cancel");
-                      }
-                    }}
-                    className="viewer-text-inline-input"
-                    disabled={!canInlineEdit}
-                  />
-                  <div className="viewer-text-inline-actions">
-                    <button
-                      type="button"
-                      className="viewer-text-inline-button"
-                      onClick={() => {
-                        void submitInlineTextEditor();
-                      }}
-                      disabled={!canInlineEdit}
-                    >
-                      Save
-                    </button>
-                    <button
-                      type="button"
-                      className="viewer-text-inline-button viewer-text-inline-button-secondary"
-                      onClick={() => {
-                        cancelInlineTextEditor("user_cancel");
-                      }}
-                      disabled={!canInlineEdit}
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </div>
-              );
-            })()}
 
             {annotationSaving && (
               <div className="viewer-annotation-saving">

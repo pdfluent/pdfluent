@@ -1,14 +1,19 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
-import { useEffect } from 'react';
+import { isTauriRuntime } from '../../lib/tauri-detection';
+import { useEffect, useRef, useState } from 'react';
 import { XIcon } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import type { ViewerMode } from '../types';
 import { TOOLS_BY_MODE, MODE_LABELS } from '../tools/toolDefinitions';
+import type { ToolDefinition } from '../tools/toolDefinitions';
+import { getWiredTools } from './ModeToolbar';
+import { useFocusTrap } from '../hooks/useFocusTrap';
 
 interface AllToolsPanelProps {
   isOpen: boolean;
@@ -16,9 +21,34 @@ interface AllToolsPanelProps {
   onModeSelect: (mode: ViewerMode) => void;
 }
 
-const MODES: ViewerMode[] = ['read', 'review', 'edit', 'organize', 'forms', 'protect', 'convert'];
+type ToolTab = 'alle' | 'bewerken' | 'converteren' | 'ondertekenen';
+
+const TABS: { id: ToolTab; labelKey: string }[] = [
+  { id: 'alle',         labelKey: 'allTools.tabAll' },
+  { id: 'bewerken',     labelKey: 'allTools.tabEdit' },
+  { id: 'converteren',  labelKey: 'allTools.tabConvert' },
+  { id: 'ondertekenen', labelKey: 'allTools.tabSign' },
+];
+
+/** Which modes appear under each tab filter. 'alle' shows everything. */
+const TAB_MODE_MAP: Record<ToolTab, ViewerMode[]> = {
+  alle:         ['read', 'review', 'edit', 'sign', 'organize', 'forms', 'protect', 'convert'],
+  bewerken:     ['edit', 'review', 'organize'],
+  converteren:  ['convert', 'read'],
+  ondertekenen: ['sign'],
+};
+
+const MODES: ViewerMode[] = ['read', 'review', 'edit', 'sign', 'organize', 'forms', 'protect', 'convert'];
+
+const isTauri = isTauriRuntime();
 
 export function AllToolsPanel({ isOpen, onClose, onModeSelect }: AllToolsPanelProps) {
+  const { t } = useTranslation();
+  const [activeTab, setActiveTab] = useState<ToolTab>('alle');
+  const wiredTools = getWiredTools(isTauri);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(dialogRef, isOpen);
+
   useEffect(() => {
     function handleKey(e: KeyboardEvent) {
       if (e.key === 'Escape') onClose();
@@ -32,60 +62,104 @@ export function AllToolsPanel({ isOpen, onClose, onModeSelect }: AllToolsPanelPr
 
   if (!isOpen) return null;
 
+  const visibleModes = TAB_MODE_MAP[activeTab];
+
   return (
     <>
-      {/* Backdrop */}
+      {/* Backdrop — uses the shared app-dialog-backdrop so dismiss feels
+          consistent with every other overlay in the editor. */}
       <div
-        className="fixed inset-0 bg-black/40 z-40"
+        className="alltools-backdrop"
         onClick={onClose}
         aria-hidden="true"
       />
 
-      {/* Panel */}
+      {/* Sliding panel from left */}
       <div
+        ref={dialogRef}
         role="dialog"
-        aria-label="Alle tools"
-        className="fixed left-1/2 top-[8vh] -translate-x-1/2 w-full max-w-2xl max-h-[80vh] bg-background border border-border rounded-xl shadow-2xl z-50 flex flex-col overflow-hidden"
+        aria-modal="true"
+        aria-label={t('modes.allTools')}
+        className="alltools-panel"
       >
-        {/* Header */}
-        <div className="flex items-center justify-between px-5 py-3 border-b border-border shrink-0">
-          <h2 className="text-sm font-semibold text-foreground">Alle tools</h2>
-          <button
-            onClick={onClose}
-            aria-label="Sluit alle tools"
-            className="p-1 text-muted-foreground hover:text-foreground rounded transition-colors"
-          >
-            <XIcon className="w-4 h-4" />
-          </button>
-        </div>
-
-        {/* Tool browser — scrollable */}
-        <div className="overflow-y-auto flex-1 px-5 py-4 space-y-5">
-          {MODES.map((modeId) => (
-            <section key={modeId}>
-              <h3 className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground mb-2">
-                {MODE_LABELS[modeId]}
-              </h3>
-              <div className="flex flex-wrap gap-1.5">
-                {TOOLS_BY_MODE[modeId].flat().map((tool) => (
-                  <button
-                    key={`${modeId}-${tool.label}`}
-                    onClick={() => { onModeSelect(modeId); onClose(); }}
-                    title={tool.label}
-                    className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs text-foreground bg-muted/50 hover:bg-muted border border-border transition-colors"
-                  >
-                    <tool.icon className="w-3.5 h-3.5 shrink-0" />
-                    {tool.label}
-                  </button>
-                ))}
-              </div>
-            </section>
+        {/* Tab bar */}
+        <div className="flex border-b border-border bg-background shrink-0 overflow-x-auto">
+          {TABS.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 transition-colors ${
+                activeTab === tab.id
+                  ? 'border-primary text-foreground'
+                  : 'border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/50'
+              }`}
+            >
+              {t(tab.labelKey)}
+            </button>
           ))}
         </div>
 
-        {/* Footer hint */}
-        <div className="px-5 py-2 border-t border-border shrink-0">
-          <span className="text-[10px] text-muted-foreground/50">Esc sluiten</span>
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 py-3 border-b border-border">
+          <h2 className="text-base font-semibold text-foreground">
+            {t(TABS.find((tb) => tb.id === activeTab)?.labelKey ?? 'modes.allTools')}
+          </h2>
+          <button
+            type="button"
+            onClick={onClose}
+            className="settings-dialog-close"
+            aria-label={t('allTools.close')}
+          >
+            <XIcon aria-hidden="true" />
+          </button>
+        </div>
+
+        {/* Tools list */}
+        <div className="flex-1 overflow-y-auto">
+          <nav className="py-2" aria-label="Tools">
+            {MODES.filter((m) => visibleModes.includes(m)).map((modeId) => {
+              const allTools: ToolDefinition[] = TOOLS_BY_MODE[modeId].flat();
+              // In browser-test mode hide tools that aren't available; skip the whole
+              // section if no tools remain after filtering.
+              const tools = isTauri ? allTools : allTools.filter(t => wiredTools.has(t.label));
+              if (tools.length === 0) return null;
+              return (
+                <div key={modeId}>
+                  <div className="px-5 pt-4 pb-1">
+                    <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      {t(MODE_LABELS[modeId])}
+                    </span>
+                  </div>
+                  {tools.map((tool, idx) => {
+                    const Icon = tool.icon;
+                    const isWired = wiredTools.has(tool.label);
+                    return (
+                      <button
+                        key={`${modeId}-${idx}`}
+                        onClick={() => { onModeSelect(modeId); onClose(); }}
+                        disabled={!isWired}
+                        className={`w-full flex items-center gap-4 px-5 py-3 text-left transition-colors group ${
+                          isWired
+                            ? 'hover:bg-muted/60'
+                            : 'opacity-40 cursor-default'
+                        }`}
+                      >
+                        <div className={`shrink-0 ${tool.color ?? 'text-muted-foreground'}`}>
+                          <Icon className="w-5 h-5" />
+                        </div>
+                        <span className="text-sm text-foreground group-hover:text-foreground font-medium">
+                          {t(tool.label)}
+                          {!isWired && (
+                            <span className="ml-2 text-xs text-muted-foreground">({t('common.notYetAvailable')})</span>
+                          )}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              );
+            })}
+          </nav>
         </div>
       </div>
     </>

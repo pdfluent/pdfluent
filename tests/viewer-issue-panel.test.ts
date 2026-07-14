@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 import { readFileSync } from 'node:fs';
@@ -99,8 +99,9 @@ describe('IssuePanel — reviewer filter', () => {
     expect(issuePanelSource).toContain('data-testid="issue-reviewer-filter"');
   });
 
-  it('has "Alle reviewers" default option', () => {
-    expect(issuePanelSource).toContain('Alle reviewers');
+  it('has "Alle reviewers" default option (via i18n)', () => {
+    // v2: literal "Alle reviewers" replaced by t('review.allReviewers')
+    expect(issuePanelSource).toMatch(/'Alle reviewers'|review\.allReviewers/);
   });
 
   it('collects unique reviewer names via useMemo', () => {

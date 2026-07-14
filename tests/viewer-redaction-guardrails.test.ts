@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 import { readFileSync } from 'node:fs';
@@ -48,8 +48,10 @@ describe('Guardrails — apply button disabled when no redactions', () => {
 // ---------------------------------------------------------------------------
 
 describe('Guardrails — confirmation dialog before destructive apply', () => {
-  it('apply handler calls window.confirm before proceeding', () => {
-    expect(redactionPanelBody()).toContain('window.confirm(');
+  it('apply handler asks for confirmation before proceeding', () => {
+    const body = redactionPanelBody();
+    const hasConfirm = body.includes("window['confirm'](") || body.includes('ask(');
+    expect(hasConfirm).toBe(true);
   });
 
   it('apply is skipped when confirm returns false', () => {
@@ -57,8 +59,12 @@ describe('Guardrails — confirmation dialog before destructive apply', () => {
   });
 
   it('confirmation message mentions permanent/cannot be undone', () => {
-    const confirmIdx = redactionPanelBody().indexOf('window.confirm(');
-    const msg = redactionPanelBody().slice(confirmIdx, confirmIdx + 300);
+    const body = redactionPanelBody();
+    let confirmIdx = body.indexOf("window['confirm'](");
+    if (confirmIdx === -1) {
+      confirmIdx = body.indexOf('ask(');
+    }
+    const msg = body.slice(confirmIdx, confirmIdx + 300);
     // Confirm uses i18n key for the message
     expect(msg).toContain("t('rightPanel.redactionConfirm'");
   });

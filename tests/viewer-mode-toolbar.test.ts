@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 import { readFileSync } from 'node:fs';
@@ -29,6 +29,7 @@ const viewerAppSource = [
   '../src/viewer/hooks/useTextInteraction.ts',
   '../src/viewer/hooks/useKeyboardShortcuts.ts',
   '../src/viewer/ViewerApp.tsx',
+  '../src/viewer/v3/EditorV3Shell.tsx',
   '../src/viewer/WelcomeSection.tsx',
 ].map(p => readFileSync(new URL(p, import.meta.url), 'utf8')).join('\n\n');
 
@@ -41,9 +42,9 @@ const useDocumentSource = readFileSync(
 // WIRED_TOOLS definition
 // ---------------------------------------------------------------------------
 
-describe('ModeToolbar — WIRED_TOOLS', () => {
-  it('exports WIRED_TOOLS as a ReadonlySet', () => {
-    expect(toolbarSource).toContain('WIRED_TOOLS');
+describe('ModeToolbar — getWiredTools', () => {
+  it('exports getWiredTools as a function returning ReadonlySet', () => {
+    expect(toolbarSource).toContain('export function getWiredTools');
     expect(toolbarSource).toContain('ReadonlySet<string>');
   });
 
@@ -53,17 +54,17 @@ describe('ModeToolbar — WIRED_TOOLS', () => {
     expect(toolbarSource).toContain("'toolbar.searchText'");
   });
 
-  it('includes both wired organize mode tools', () => {
+  it('includes organize mode tools inside the Tauri branch', () => {
     expect(toolbarSource).toContain("'toolbar.deletePage'");
     expect(toolbarSource).toContain("'toolbar.rotateLeft'");
     expect(toolbarSource).toContain("'toolbar.rotateRight'");
   });
 
-  it('does not include annotation tool labels in WIRED_TOOLS set', () => {
-    // Annotation tools (Markeren, Onderstrepen, etc.) have their own active/inactive state
-    // and are NOT gated by WIRED_TOOLS. Check only the WIRED_TOOLS set definition itself.
-    const wiredStart = toolbarSource.indexOf('export const WIRED_TOOLS');
-    const wiredEnd = toolbarSource.indexOf(']);', wiredStart) + 3;
+  it('does not include annotation tool labels in the wired set', () => {
+    // Annotation tools have their own active/inactive state
+    // and are NOT gated by getWiredTools. Check only the function body.
+    const wiredStart = toolbarSource.indexOf('export function getWiredTools');
+    const wiredEnd = toolbarSource.indexOf('return base;', wiredStart) + 12;
     const wiredBlock = toolbarSource.slice(wiredStart, wiredEnd);
     expect(wiredBlock).not.toContain("'Markeren'");
     expect(wiredBlock).not.toContain("'Onderstrepen'");
@@ -189,8 +190,8 @@ describe('ModeToolbar — task queue integration', () => {
 // ---------------------------------------------------------------------------
 
 describe('ModeToolbar — disabled tools', () => {
-  it('checks WIRED_TOOLS.has to determine enabled state', () => {
-    expect(toolbarSource).toContain('WIRED_TOOLS.has(');
+  it('checks wired.has to determine enabled state', () => {
+    expect(toolbarSource).toContain('wired.has(');
   });
 
   it('renders all tools regardless of wired state (no filtering)', () => {
@@ -218,12 +219,14 @@ describe('ViewerApp — ModeToolbar wiring', () => {
     expect(viewerAppSource).toContain('pageCount={pageCount}');
   });
 
-  it('passes onZoomIn to ModeToolbar', () => {
-    expect(viewerAppSource).toContain('onZoomIn=');
+  it('renders the V3 zoom-in control', () => {
+    expect(viewerAppSource).toContain('data-testid="zoom-in-btn"');
+    expect(viewerAppSource).toContain('Math.min(4,');
   });
 
-  it('passes onZoomOut to ModeToolbar', () => {
-    expect(viewerAppSource).toContain('onZoomOut=');
+  it('renders the V3 zoom-out control', () => {
+    expect(viewerAppSource).toContain('data-testid="zoom-out-btn"');
+    expect(viewerAppSource).toContain('Math.max(0.25,');
   });
 
   it('passes onOpenSearch to ModeToolbar', () => {
@@ -240,8 +243,11 @@ describe('ViewerApp — ModeToolbar wiring', () => {
     expect(viewerAppSource).toContain('setDocumentVersion');
   });
 
-  it('passes documentVersion as key to PageCanvas', () => {
-    expect(viewerAppSource).toContain('key={documentVersion}');
+  it('passes documentVersion as key or renderRevision to PageCanvas', () => {
+    // v2: documentVersion is passed as `renderRevision` prop to
+    // PageCanvas (more explicit than a remount-via-key). PageCanvas
+    // uses it to invalidate cached rasters.
+    expect(viewerAppSource).toMatch(/(?:`\$\{documentVersion\}|renderRevision=\{documentVersion\})/);
   });
 
   it('handlePageMutation clamps pageIndex and increments documentVersion', () => {

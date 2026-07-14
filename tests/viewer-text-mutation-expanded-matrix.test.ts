@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 /**
@@ -101,17 +101,17 @@ describe('expanded matrix — equal-length replacement', () => {
   });
 });
 
-describe('expanded matrix — longer replacement blocked', () => {
-  it('longer replacement (12 chars vs 11) is invalid', () => {
+describe('expanded matrix — longer replacement allowed for parser-backed writer', () => {
+  it('longer replacement (12 chars vs 11) is valid', () => {
     const support = getMutationSupport(REPLACEMENT_MATRIX_TARGET);
     const result = validateReplacement('Hello world', 'Hello worlds', support.constraints!);
-    expect(result.valid).toBe(false);
+    expect(result.valid).toBe(true);
   });
 
-  it('longer replacement returns replacement-too-long reason code', () => {
+  it('longer replacement returns valid reason code', () => {
     const support = getMutationSupport(REPLACEMENT_MATRIX_TARGET);
     const result = validateReplacement('Hello world', 'Hello worlds', support.constraints!);
-    expect(result.reasonCode).toBe('replacement-too-long');
+    expect(result.reasonCode).toBe('valid');
   });
 
   it('longer replacement has non-empty message', () => {
@@ -121,12 +121,11 @@ describe('expanded matrix — longer replacement blocked', () => {
   });
 });
 
-describe('expanded matrix — large overflow blocked', () => {
-  it('large overflow (30 chars vs 11) is invalid', () => {
+describe('expanded matrix — large overflow deferred to native writer', () => {
+  it('large overflow (30 chars vs 11) is valid in frontend validation', () => {
     const support = getMutationSupport(REPLACEMENT_MATRIX_TARGET);
     const result = validateReplacement('Hello world', 'Hello world this is very long text', support.constraints!);
-    expect(result.valid).toBe(false);
-    expect(result.reasonCode).toBe('replacement-too-long');
+    expect(result.valid).toBe(true);
   });
 });
 

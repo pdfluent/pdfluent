@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 /**
@@ -119,16 +119,16 @@ describe('TextContextBar — normal actions', () => {
     expect(contextBarSrc).toContain("id: 'edit-text'");
   });
 
-  it("still has 'copy' action", () => {
-    expect(contextBarSrc).toContain("id: 'copy'");
+  it("does not expose 'copy' action", () => {
+    expect(contextBarSrc).not.toContain("id: 'copy'");
   });
 
-  it("still has 'summarize' action", () => {
-    expect(contextBarSrc).toContain("id: 'summarize'");
+  it("does not expose 'summarize' as a hover action", () => {
+    expect(contextBarSrc).not.toContain("id: 'summarize'");
   });
 
-  it("still has 'explain' action", () => {
-    expect(contextBarSrc).toContain("id: 'explain'");
+  it("does not expose 'explain' as a hover action", () => {
+    expect(contextBarSrc).not.toContain("id: 'explain'");
   });
 
   it("still has 'annotate' action", () => {

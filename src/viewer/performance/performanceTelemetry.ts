@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 /**
@@ -221,4 +221,193 @@ export function startPerfTimer(category: PerfEventCategory, label: string): Perf
       return durationMs;
     },
   };
+}
+
+// ---------------------------------------------------------------------------
+// Long-task recording via PerformanceObserver
+// ---------------------------------------------------------------------------
+
+const _longTasks: Array<{ startTime: number; durationMs: number; attribution?: string }> = [];
+
+if (typeof PerformanceObserver !== 'undefined') {
+  try {
+    const obs = new PerformanceObserver((list) => {
+      for (const entry of list.getEntries()) {
+        _longTasks.push({
+          startTime: entry.startTime,
+          durationMs: entry.duration,
+          attribution: (entry as unknown as { attribution?: Array<{ name: string }> })
+            .attribution?.[0]?.name,
+        });
+      }
+    });
+    obs.observe({ entryTypes: ['longtask'] });
+  } catch {
+    // longtask not supported in all environments (e.g. WebKit)
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Sub-timer hook — records fine-grained timings from render pipeline
+// ---------------------------------------------------------------------------
+
+const _devPerfData: Array<{label: string; ms: number; page: number}> = [];
+
+// ---------------------------------------------------------------------------
+// window.__PDFLUENT_PERF__ — rich devtools namespace
+// ---------------------------------------------------------------------------
+
+/**
+ * Rich performance summary callable from devtools:
+ *   window.__PDFLUENT_PERF__.summary()   — prints timers + long tasks + cache + render stats
+ *   window.__PDFLUENT_PERF__.data        — raw sub-timer entries
+ *   window.__PDFLUENT_PERF__.longTasks   — long tasks (>50 ms)
+ *   window.__PDFLUENT_PERF__.clear()
+ *
+ * Render stats are also available separately at:
+ *   window.__PDFLUENT_RENDER__ — { state, workerRenderCount, nativeCommandRenderCount,
+ *                                  mainThreadRenderCount, fallbackReasons }
+ */
+export interface PdfluetPerfNamespace {
+  /** Print a formatted summary of all sub-timer data to the console. */
+  summary(): void;
+  /** Raw sub-timer entries. */
+  readonly data: ReadonlyArray<{label: string; ms: number; page: number}>;
+  /** Long tasks recorded by PerformanceObserver (>50ms main-thread blocks). */
+  readonly longTasks: ReadonlyArray<{ startTime: number; durationMs: number; attribution?: string }>;
+  /** Clear all sub-timer data and long-task records. */
+  clear(): void;
+  /** Record a sub-timer entry (same as calling window.__pdfluent_dev_perf). */
+  record(label: string, ms: number, page: number): void;
+}
+
+// ---------------------------------------------------------------------------
+// Console helper — callable from devtools: window.__pdfluent_perf()
+// ---------------------------------------------------------------------------
+if (typeof window !== 'undefined') {
+  (window as unknown as Record<string, unknown>).__pdfluent_perf = () => {
+    const events = getPerfEvents();
+    if (events.length === 0) { console.log('[PDFluent perf] No events recorded yet.'); return; }
+    const byLabel: Record<string, number[]> = {};
+    for (const e of events) {
+      const key = e.label;
+      (byLabel[key] ??= []).push(e.durationMs);
+    }
+    const rows = Object.entries(byLabel).map(([label, ms]) => ({
+      label,
+      count: ms.length,
+      avgMs: (ms.reduce((a, b) => a + b, 0) / ms.length).toFixed(1),
+      maxMs: Math.max(...ms).toFixed(1),
+      minMs: Math.min(...ms).toFixed(1),
+    }));
+    console.table(rows);
+  };
+
+  (window as unknown as Record<string, unknown>).__pdfluent_dev_perf_data = _devPerfData;
+  (window as unknown as Record<string, unknown>).__pdfluent_dev_perf = (label: string, ms: number, page: number) => {
+    _devPerfData.push({ label, ms, page });
+  };
+  (window as unknown as Record<string, unknown>).__pdfluent_dev_perf_report = () => {
+    const byLabel: Record<string, number[]> = {};
+    for (const e of _devPerfData) { (byLabel[e.label] ??= []).push(e.ms); }
+    console.table(Object.entries(byLabel).map(([label, ms]) => ({
+      label, count: ms.length,
+      avgMs: (ms.reduce((a,b)=>a+b,0)/ms.length).toFixed(1),
+      maxMs: Math.max(...ms).toFixed(1),
+    })));
+  };
+
+  // Rich namespace — primary devtools entry point
+  const perfNs: PdfluetPerfNamespace = {
+    summary() {
+      console.group('[PDFluent PERF] Summary');
+
+      // Sub-timer breakdown
+      if (_devPerfData.length > 0) {
+        const byLabel: Record<string, number[]> = {};
+        for (const e of _devPerfData) { (byLabel[e.label] ??= []).push(e.ms); }
+        const rows = Object.entries(byLabel).map(([label, ms]) => {
+          const avg = ms.reduce((a,b)=>a+b,0) / ms.length;
+          return {
+            label,
+            n: ms.length,
+            'avg ms': avg.toFixed(1),
+            'min ms': Math.min(...ms).toFixed(1),
+            'max ms': Math.max(...ms).toFixed(1),
+            'p95 ms': computePercentile(ms, 95).toFixed(1),
+          };
+        });
+        console.log('Render sub-timers:');
+        console.table(rows);
+      } else {
+        console.log('No sub-timer data — open a PDF and navigate pages first.');
+      }
+
+      // Long tasks
+      if (_longTasks.length > 0) {
+        console.log(`Long tasks (>50 ms): ${_longTasks.length}`);
+        const longTaskRows = _longTasks.map(lt => ({
+          'start ms': lt.startTime.toFixed(0),
+          'duration ms': lt.durationMs.toFixed(1),
+          attribution: lt.attribution ?? '(unknown)',
+        }));
+        console.table(longTaskRows);
+      } else {
+        console.log('No long tasks recorded (good!)');
+      }
+
+      // Render stats via __PDFLUENT_RENDER__ hook
+      const renderHook = (window as unknown as Record<string, unknown>).__PDFLUENT_RENDER__;
+      if (renderHook && typeof renderHook === 'object') {
+        const w = renderHook as {
+          state: string;
+          workerRenderCount: number;
+          nativeCommandRenderCount: number | null;
+          mainThreadRenderCount: number;
+          fallbackReasons: string[];
+        };
+        const total = w.workerRenderCount + w.mainThreadRenderCount;
+        const workerPct = total > 0
+          ? ((w.workerRenderCount / total) * 100).toFixed(1)
+          : 'n/a';
+        console.log(`Render: state=${w.state}`);
+        console.log(`Renders: ${w.workerRenderCount} worker (${workerPct}%) | ${w.mainThreadRenderCount} main-thread fallback`);
+        if (w.nativeCommandRenderCount !== null) {
+          console.log(`Native command renders: ${w.nativeCommandRenderCount}`);
+        }
+        if (w.fallbackReasons.length > 0) {
+          console.warn('Fallback reasons:', w.fallbackReasons);
+        }
+      }
+
+      // Cache stats via __PDFLUENT_CACHE__ hook if available
+      const cacheHook = (window as unknown as Record<string, unknown>).__pdfluent_cache_stats;
+      if (typeof cacheHook === 'function') {
+        const stats = (cacheHook as () => { hits: number; misses: number; entries: number })();
+        const hitRate = stats.hits + stats.misses > 0
+          ? ((stats.hits / (stats.hits + stats.misses)) * 100).toFixed(1)
+          : 'n/a';
+        console.log(`Render cache: ${stats.entries} entries | ${stats.hits} hits | ${stats.misses} misses | ${hitRate}% hit rate`);
+      }
+
+      // Environment
+      console.log(`DPR: ${window.devicePixelRatio.toFixed(2)} | viewport: ${window.innerWidth}×${window.innerHeight}`);
+      console.groupEnd();
+    },
+
+    get data() { return _devPerfData as ReadonlyArray<{label: string; ms: number; page: number}>; },
+    get longTasks() { return _longTasks as ReadonlyArray<{ startTime: number; durationMs: number; attribution?: string }>; },
+
+    clear() {
+      _devPerfData.length = 0;
+      _longTasks.length = 0;
+      console.log('[PDFluent PERF] Cleared.');
+    },
+
+    record(label: string, ms: number, page: number) {
+      _devPerfData.push({ label, ms, page });
+    },
+  };
+
+  (window as unknown as Record<string, unknown>).__PDFLUENT_PERF__ = perfNs;
 }

@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 import type { PdfDocument } from '../../document';
@@ -15,7 +15,7 @@ function notImpl<T>(msg: string): AsyncEngineResult<T> {
 export class MockValidationEngine {
   // Async validations
 
-  validatePdfA(): AsyncEngineResult<{
+  validatePdfA(_document?: PdfDocument, _level?: unknown, _options?: unknown): AsyncEngineResult<{
     isValid: boolean;
     complianceLevel: string;
     errors: Array<{
@@ -304,7 +304,7 @@ export class MockValidationEngine {
 
   // Sync reads
 
-  checkPdfACompliance(): EngineResult<{
+  checkPdfACompliance(_document?: PdfDocument): EngineResult<{
     claimedCompliance?: string;
     actualCompliance?: string;
     likelyCompliant: boolean;

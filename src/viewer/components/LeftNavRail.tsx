@@ -1,12 +1,13 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
+import { isTauriRuntime } from '../../lib/tauri-detection';
 import {
   LayoutIcon,
   BookmarkIcon,
@@ -24,9 +25,11 @@ import {
   EyeIcon,
   EyeOffIcon,
   LockIcon,
+  Type,
 } from 'lucide-react';
 import type { OutlineNode, FormField, FormFieldType, Annotation } from '../../core/document';
 import type { NavigationPanel } from '../types';
+import type { TextParagraphTarget } from '../text/textInteractionModel';
 
 // ── Attachment & Layer types (mirrors Rust structs) ─────────────────────────
 
@@ -66,6 +69,13 @@ interface LeftNavRailProps {
   layers?: LayerInfo[];
   layerVisibility?: Map<string, boolean>;
   onToggleLayer?: (id: string) => void;
+
+  // Format sidebar props
+  isEditMode?: boolean;
+  selectedTextTarget?: TextParagraphTarget | null;
+  formatState?: { isBold: boolean; isItalic: boolean; isUnderline: boolean; };
+  onFormatCommand?: (command: string, value?: string) => void;
+  editorDivRef?: React.RefObject<HTMLDivElement | null>;
 }
 
 interface PanelTab {
@@ -75,12 +85,13 @@ interface PanelTab {
 }
 
 const PANELS: PanelTab[] = [
-  { id: 'thumbnails', icon: <LayoutIcon className="w-5 h-5" />, label: 'leftNav.thumbnails' },
-  { id: 'bookmarks', icon: <BookmarkIcon className="w-5 h-5" />, label: 'leftNav.bookmarks' },
-{ id: 'comments', icon: <MessageSquareIcon className="w-5 h-5" />, label: 'leftNav.comments' },
-  { id: 'attachments', icon: <PaperclipIcon className="w-5 h-5" />, label: 'leftNav.attachments' },
-  { id: 'layers', icon: <LayersIcon className="w-5 h-5" />, label: 'leftNav.layers' },
-  { id: 'fields', icon: <FileInputIcon className="w-5 h-5" />, label: 'leftNav.formFields' },
+  { id: 'thumbnails', icon: <LayoutIcon className="w-4 h-4" />, label: 'leftNav.thumbnails' },
+  { id: 'bookmarks', icon: <BookmarkIcon className="w-4 h-4" />, label: 'leftNav.bookmarks' },
+  { id: 'comments', icon: <MessageSquareIcon className="w-4 h-4" />, label: 'leftNav.comments' },
+  { id: 'attachments', icon: <PaperclipIcon className="w-4 h-4" />, label: 'leftNav.attachments' },
+  { id: 'layers', icon: <LayersIcon className="w-4 h-4" />, label: 'leftNav.layers' },
+  { id: 'fields', icon: <FileInputIcon className="w-4 h-4" />, label: 'leftNav.formFields' },
+  { id: 'format', icon: <Type className="w-4 h-4" />, label: 'leftNav.formatText' },
 ];
 
 // ── Individual panel content ────────────────────────────────────────────────
@@ -170,12 +181,7 @@ function ThumbnailPanel({
             onDragStart={() => { handleDragStart(i); }}
             onDragOver={handleDragOver}
             onDrop={() => { handleDrop(i); }}
-            className="flex flex-col items-center gap-1.5 w-full rounded-md p-1.5 transition-colors hover:bg-muted/50 focus:outline-none"
-            style={{
-              border: isActive ? '2px solid #2563eb' : '2px solid transparent',
-              borderRadius: '6px',
-              background: isActive ? 'rgba(37,99,235,0.06)' : undefined,
-            }}
+            className={isActive ? 'leftrail-thumb leftrail-thumb-active' : 'leftrail-thumb'}
           >
             {thumbUrl ? (
               <img
@@ -268,9 +274,11 @@ function BookmarksPanel({
   const { t } = useTranslation();
   if (outline.length === 0) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center p-4 text-center gap-2">
-        <BookmarkIcon className="w-8 h-8 text-muted-foreground/40" />
-        <p className="text-xs text-muted-foreground">{t('leftNav.noBookmarks')}</p>
+      <div className="leftrail-empty">
+        <span className="leftrail-empty-mark" aria-hidden="true">
+          <BookmarkIcon />
+        </span>
+        <p className="leftrail-empty-message">{t('leftNav.noBookmarks')}</p>
       </div>
     );
   }
@@ -291,9 +299,11 @@ function SearchPanel() {
     <div className="flex-1 flex flex-col gap-2 p-2">
       <input
         disabled
+        type="search"
         placeholder={t('search.placeholder')}
+        aria-label={t('search.placeholder')}
         className="w-full text-xs bg-muted border border-border rounded-md px-2 py-1.5 text-muted-foreground/50 cursor-default"
-        title="Search not yet available"
+        title={t('leftNav.searchUnavailableTitle')}
       />
       <p className="text-[10px] text-muted-foreground/60 text-center mt-4">{t('leftNav.searchComingSoon')}</p>
     </div>
@@ -304,9 +314,11 @@ function CommentsPanel({ comments }: { comments: Annotation[] }) {
   const { t } = useTranslation();
   if (comments.length === 0) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center p-4 text-center gap-2">
-        <MessageSquareIcon className="w-8 h-8 text-muted-foreground/40" />
-        <p className="text-xs text-muted-foreground">{t('leftNav.noCommentsSide')}</p>
+      <div className="leftrail-empty">
+        <span className="leftrail-empty-mark" aria-hidden="true">
+          <MessageSquareIcon />
+        </span>
+        <p className="leftrail-empty-message">{t('leftNav.noCommentsSide')}</p>
       </div>
     );
   }
@@ -381,9 +393,11 @@ function AttachmentsPanel({
       </div>
 
       {attachments.length === 0 ? (
-        <div className="flex-1 flex flex-col items-center justify-center p-4 text-center gap-2">
-          <PaperclipIcon className="w-8 h-8 text-muted-foreground/40" />
-          <p className="text-xs text-muted-foreground">{t('leftNav.noAttachments')}</p>
+        <div className="leftrail-empty">
+          <span className="leftrail-empty-mark" aria-hidden="true">
+            <PaperclipIcon />
+          </span>
+          <p className="leftrail-empty-message">{t('leftNav.noAttachments')}</p>
         </div>
       ) : (
         <div className="flex-1 overflow-y-auto pf-scrollbar py-1 px-1">
@@ -409,8 +423,23 @@ function AttachmentsPanel({
                 </button>
                 <button
                   data-testid="remove-attachment-btn"
-                  onClick={() => {
-                    if (window.confirm(t('leftNav.removeAttachmentConfirm', { name: att.name }))) {
+                  onClick={async () => {
+                    let confirmed = false;
+                    if (isTauriRuntime()) {
+                      try {
+                        const { ask } = await import('@tauri-apps/plugin-dialog');
+                        confirmed = await ask(t('leftNav.removeAttachmentConfirm', { name: att.name }), {
+                          title: t('leftNav.removeAttachment') || 'Remove Attachment',
+                          kind: 'warning'
+                        });
+                      } catch (err) {
+                        console.error('Tauri ask failed; cancelling attachment removal', err);
+                        confirmed = false;
+                      }
+                    } else {
+                      confirmed = false;
+                    }
+                    if (confirmed) {
                       onRemoveAttachment?.(att.name);
                     }
                   }}
@@ -437,9 +466,11 @@ function LayersPanel({
 
   if (layers.length === 0) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center p-4 text-center gap-2">
-        <LayersIcon className="w-8 h-8 text-muted-foreground/40" />
-        <p className="text-xs text-muted-foreground">{t('leftNav.noLayers')}</p>
+      <div className="leftrail-empty">
+        <span className="leftrail-empty-mark" aria-hidden="true">
+          <LayersIcon />
+        </span>
+        <p className="leftrail-empty-message">{t('leftNav.noLayers')}</p>
       </div>
     );
   }
@@ -509,9 +540,11 @@ function FieldsPanel({
   const { t } = useTranslation();
   if (formFields.length === 0) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center p-4 text-center gap-2">
-        <FileInputIcon className="w-8 h-8 text-muted-foreground/40" />
-        <p className="text-xs text-muted-foreground">{t('leftNav.noFormFields')}</p>
+      <div className="leftrail-empty">
+        <span className="leftrail-empty-mark" aria-hidden="true">
+          <FileInputIcon />
+        </span>
+        <p className="leftrail-empty-message">{t('leftNav.noFormFields')}</p>
       </div>
     );
   }
@@ -541,6 +574,201 @@ function FieldsPanel({
   );
 }
 
+// ── Format Text Panel ────────────────────────────────────────────────────────
+
+function FormatPanel({
+  selectedTextTarget,
+  formatState,
+  onFormatCommand,
+  editorDivRef,
+}: {
+  selectedTextTarget?: TextParagraphTarget | null;
+  formatState?: { isBold: boolean; isItalic: boolean; isUnderline: boolean; };
+  onFormatCommand?: (command: string, value?: string) => void;
+  editorDivRef?: React.RefObject<HTMLDivElement | null>;
+}) {
+  const { t } = useTranslation();
+
+  const [activeSize, setActiveSize] = useState('11');
+  const [activeColor, setActiveColor] = useState('#000000');
+
+  // Houdt synchronisatie bij
+  useEffect(() => {
+    const el = editorDivRef?.current;
+    if (!el) return;
+
+    function handleSelectionChange() {
+      try {
+        const style = window.getComputedStyle(el as HTMLDivElement);
+
+        // Font Size
+        const size = parseInt(style.fontSize, 10);
+        if (!isNaN(size)) {
+          setActiveSize(size.toString());
+        }
+
+        // Color
+        const color = style.color;
+        setActiveColor(color);
+      } catch (e) {
+        // Safe fallback
+      }
+    }
+
+    document.addEventListener('selectionchange', handleSelectionChange);
+    // Voer ook direct een keer uit op mount/update van editorDivRef
+    handleSelectionChange();
+
+    return () => {
+      document.removeEventListener('selectionchange', handleSelectionChange);
+    };
+  }, [editorDivRef, selectedTextTarget]);
+
+  if (!selectedTextTarget) {
+    return (
+      <div className="flex-1 flex flex-col items-center justify-center p-6 text-center gap-3">
+        <div className="w-12 h-12 rounded-full bg-primary/5 flex items-center justify-center text-primary">
+          <Type className="w-6 h-6" />
+        </div>
+        <h3 className="text-sm font-semibold text-foreground">{t('leftNav.formatPanelTitle', 'Tekst Opmaak')}</h3>
+        <p className="text-xs text-muted-foreground max-w-[180px]">
+          {t('leftNav.formatPanelEmpty', 'Selecteer een tekstblok in Edit Mode om deze aan te passen.')}
+        </p>
+      </div>
+    );
+  }
+
+  const sizes = ['8', '9', '10', '11', '12', '14', '16', '18', '20', '24', '28', '32', '36', '48'];
+
+  const colors = [
+    { name: 'Zwart', hex: '#000000', rgb: 'rgb(0, 0, 0)' },
+    { name: 'Grijs', hex: '#6b7280', rgb: 'rgb(107, 114, 128)' },
+    { name: 'Rood', hex: '#ef4444', rgb: 'rgb(239, 68, 68)' },
+    { name: 'Blauw', hex: '#3b82f6', rgb: 'rgb(59, 130, 246)' },
+    { name: 'Groen', hex: '#10b981', rgb: 'rgb(16, 185, 129)' },
+    { name: 'Oranje', hex: '#f97316', rgb: 'rgb(249, 115, 22)' },
+    { name: 'Paars', hex: '#8b5cf6', rgb: 'rgb(139, 92, 246)' },
+  ];
+
+  const handleSizeChange = (size: string) => {
+    setActiveSize(size);
+    onFormatCommand?.('fontSize', size);
+    if (editorDivRef?.current) {
+      editorDivRef.current.style.fontSize = `${size}px`;
+    }
+  };
+
+  const handleSizeIncrement = (amount: number) => {
+    const current = parseInt(activeSize, 10) || 12;
+    const next = Math.max(6, Math.min(120, current + amount));
+    handleSizeChange(next.toString());
+  };
+
+  const handleColorSelect = (hex: string) => {
+    setActiveColor(hex);
+    onFormatCommand?.('foreColor', hex);
+  };
+
+  return (
+    <div className="flex-1 flex flex-col overflow-y-auto pf-scrollbar p-4 gap-5">
+      <div className="flex flex-col gap-1.5">
+        <label className="leftrail-section-title">
+          {t('leftNav.fontSizeLabel', 'Lettergrootte')}
+        </label>
+        <div className="flex items-center gap-1.5">
+          <button
+            onClick={() => handleSizeIncrement(-1)}
+            className="w-8 h-8 rounded-lg border border-border/80 bg-background flex items-center justify-center text-sm font-semibold hover:bg-accent active:bg-accent/80 transition-colors shadow-sm cursor-pointer"
+          >
+            -
+          </button>
+          <select
+            value={activeSize}
+            onChange={(e) => handleSizeChange(e.target.value)}
+            className="flex-1 bg-background border border-border/80 rounded-lg px-2 py-1.5 text-xs text-center focus:outline-none focus:ring-1 focus:ring-primary shadow-sm hover:border-border transition-colors cursor-pointer"
+          >
+            {sizes.map(s => (
+              <option key={s} value={s}>{s} px</option>
+            ))}
+          </select>
+          <button
+            onClick={() => handleSizeIncrement(1)}
+            className="w-8 h-8 rounded-lg border border-border/80 bg-background flex items-center justify-center text-sm font-semibold hover:bg-accent active:bg-accent/80 transition-colors shadow-sm cursor-pointer"
+          >
+            +
+          </button>
+        </div>
+      </div>
+
+      <div className="flex flex-col gap-1.5">
+        <label className="leftrail-section-title">
+          {t('leftNav.stylingLabel', 'Stijl')}
+        </label>
+        <div className="flex flex-col gap-2">
+          {/* Bold/Italic/Underline */}
+          <div className="flex rounded-lg border border-border/80 overflow-hidden shadow-sm">
+            <button
+              data-testid="text-left-bold-btn"
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => onFormatCommand?.('bold')}
+              className={`flex-1 py-1.5 flex items-center justify-center font-bold text-xs hover:bg-accent transition-colors ${formatState?.isBold ? 'bg-primary/10 text-primary hover:bg-primary/15' : 'text-foreground'}`}
+              title={t('leftNav.bold', 'Vet')}
+            >
+              B
+            </button>
+            <div className="w-px bg-border/80" />
+            <button
+              data-testid="text-left-italic-btn"
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => onFormatCommand?.('italic')}
+              className={`flex-1 py-1.5 flex items-center justify-center italic text-xs hover:bg-accent transition-colors ${formatState?.isItalic ? 'bg-primary/10 text-primary hover:bg-primary/15' : 'text-foreground'}`}
+              title={t('leftNav.italic', 'Cursief')}
+            >
+              I
+            </button>
+            <div className="w-px bg-border/80" />
+            <button
+              data-testid="text-left-underline-btn"
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => onFormatCommand?.('underline')}
+              className={`flex-1 py-1.5 flex items-center justify-center underline text-xs hover:bg-accent transition-colors ${formatState?.isUnderline ? 'bg-primary/10 text-primary hover:bg-primary/15' : 'text-foreground'}`}
+              title={t('leftNav.underline', 'Onderstreept')}
+            >
+              U
+            </button>
+          </div>
+
+        </div>
+      </div>
+
+      <div className="flex flex-col gap-1.5">
+        <label className="leftrail-section-title">
+          {t('leftNav.colorLabel', 'Tekstkleur')}
+        </label>
+        <div className="flex items-center gap-2 py-1 px-0.5 overflow-x-auto pf-scrollbar">
+          {colors.map(color => {
+            const isActive = activeColor.toLowerCase() === color.hex || activeColor === color.rgb;
+            return (
+              <button
+                key={color.hex}
+                onClick={() => handleColorSelect(color.hex)}
+                className={`w-6 h-6 rounded-full flex-shrink-0 relative transition-transform hover:scale-105 active:scale-95 cursor-pointer shadow-[0_0_0_1px_rgba(0,0,0,0.05)]`}
+                style={{ backgroundColor: color.hex }}
+                title={color.name}
+              >
+                {isActive && (
+                  <span className="absolute inset-0 rounded-full border-2 border-background scale-75 flex items-center justify-center bg-transparent" />
+                )}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+    </div>
+  );
+}
+
 // ── Panel content router ────────────────────────────────────────────────────
 
 function PanelContent({
@@ -561,6 +789,10 @@ function PanelContent({
   layers,
   layerVisibility,
   onToggleLayer,
+  selectedTextTarget,
+  formatState,
+  onFormatCommand,
+  editorDivRef,
 }: { panel: NavigationPanel } & LeftNavRailProps) {
   switch (panel) {
     case 'thumbnails':
@@ -577,6 +809,15 @@ function PanelContent({
       return <LayersPanel layers={layers} layerVisibility={layerVisibility} onToggleLayer={onToggleLayer} />;
     case 'fields':
       return <FieldsPanel formFields={formFields} onPageSelect={onPageSelect} />;
+    case 'format':
+      return (
+        <FormatPanel
+          selectedTextTarget={selectedTextTarget}
+          formatState={formatState}
+          onFormatCommand={onFormatCommand}
+          editorDivRef={editorDivRef}
+        />
+      );
   }
 }
 
@@ -591,64 +832,116 @@ export function LeftNavRail(props: LeftNavRailProps) {
   const [activePanel, setActivePanel] = useState<NavigationPanel | null>(() => {
     try {
       const saved = localStorage.getItem('pdfluent.nav.panel');
+      // 'none' is the explicit closed state written when user closes the panel
+      if (saved === 'none') return null;
       if (saved && PANELS.some(p => p.id === saved)) return saved as NavigationPanel;
     } catch { /* localStorage unavailable (e.g. sandboxed iframe) */ }
-    return 'thumbnails';
+    return null; // default: closed — user opens on demand
   });
 
   useEffect(() => {
     try {
       if (activePanel === null) {
-        localStorage.removeItem('pdfluent.nav.panel');
+        localStorage.setItem('pdfluent.nav.panel', 'none'); // explicit closed
       } else {
         localStorage.setItem('pdfluent.nav.panel', activePanel);
       }
     } catch { /* ignore write errors */ }
   }, [activePanel]);
 
+  // Automatisch het format paneel openen als we in Edit Mode zijn en er een tekst geselecteerd is
+  useEffect(() => {
+    if (props.isEditMode && props.selectedTextTarget) {
+      setActivePanel('format');
+    } else if (!props.isEditMode && activePanel === 'format') {
+      setActivePanel(null);
+    }
+  }, [activePanel, props.isEditMode, props.selectedTextTarget]);
+
+  // Filter panels om 'format' conditioneel te tonen
+  const visiblePanels = PANELS.filter(p => {
+    if (p.id === 'format') {
+      return props.isEditMode;
+    }
+    return true;
+  });
+
+  // Panel resize state — must be declared before any conditional return
+  const [panelWidth, setPanelWidth] = useState(256);
+  const [isResizing, setIsResizing] = useState(false);
+
+  const handleResizeMouseDown = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsResizing(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isResizing) return;
+    const handleMouseMove = (e: MouseEvent) => {
+      // Calculate new width: mouse X minus the icon rail width (48px)
+      const newWidth = e.clientX - 48;
+      if (newWidth >= 180 && newWidth <= 400) {
+        setPanelWidth(newWidth);
+      }
+    };
+    const handleMouseUp = () => { setIsResizing(false); };
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isResizing]);
+
+  // No document — don't render the rail at all (after all hooks)
+  if (!hasDoc) return null;
+
   function togglePanel(id: NavigationPanel) {
-    if (!hasDoc) return;
-    setActivePanel(id);
+    setActivePanel(prev => prev === id ? null : id);
   }
 
-  const panelOpen = hasDoc && activePanel !== null;
-  const panelLabelKey = panelOpen && activePanel ? (PANELS.find(p => p.id === activePanel)?.label ?? '') : '';
+  const effectiveActivePanel = activePanel === 'format' && !props.isEditMode ? null : activePanel;
+  const panelOpen = effectiveActivePanel !== null;
+  const panelLabelKey = panelOpen && effectiveActivePanel ? (PANELS.find(p => p.id === effectiveActivePanel)?.label ?? '') : '';
   const panelLabel = panelLabelKey ? t(panelLabelKey) : '';
 
   return (
-    <div className="flex h-full border-r border-border bg-background shrink-0 z-10">
+    <div className="flex h-full shadow-[1px_0_0_0_hsl(0,0%,88%)] bg-transparent shrink-0 z-10 relative">
       {/* ── Icon rail (48px) ────────────────────────────────────────────── */}
-      <div className="w-12 flex flex-col items-center py-3 gap-1 border-r border-border bg-muted/10 shrink-0">
-        {PANELS.map((panel) => {
-          const isActive = hasDoc && activePanel === panel.id;
+      <div className="w-12 flex flex-col items-center py-2 gap-0.5 shrink-0">
+        {visiblePanels.map((panel) => {
+          const isActive = effectiveActivePanel === panel.id;
           const commentCount = panel.id === 'comments' ? comments.length : 0;
+          const showSeparator = panel.id === 'comments';
           return (
-            <button
-              key={panel.id}
-              onClick={() => { togglePanel(panel.id); }}
-              title={t(panel.label)}
-              aria-label={t(panel.label)}
-              className={[
-                'p-2 rounded-md transition-colors duration-100',
-                isActive
-                  ? 'bg-accent text-accent-foreground'
-                  : hasDoc
-                    ? 'text-muted-foreground hover:text-foreground hover:bg-muted'
-                    : 'text-muted-foreground/40 cursor-default',
-              ].join(' ')}
-            >
-              <div className="relative">
-                {panel.icon}
-                {commentCount > 0 && (
-                  <span
-                    data-testid="comments-badge"
-                    className="absolute -top-1.5 -right-1.5 min-w-[14px] h-[14px] bg-primary text-primary-foreground text-[8px] font-bold rounded-full flex items-center justify-center px-[3px] leading-none"
-                  >
-                    {commentCount}
-                  </span>
-                )}
-              </div>
-            </button>
+            <div key={panel.id} className="w-full flex flex-col items-center">
+              {showSeparator && (
+                <div className="w-5 h-px bg-border my-1.5" />
+              )}
+              <button
+                onClick={() => { togglePanel(panel.id); }}
+                title={t(panel.label)}
+                aria-label={t(panel.label)}
+                className={[
+                  'w-9 h-9 flex items-center justify-center rounded-xl transition-colors duration-100',
+                  isActive
+                    ? 'bg-primary/10 text-primary'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-black/5',
+                ].join(' ')}
+              >
+                <div className="relative">
+                  {panel.icon}
+                  {commentCount > 0 && (
+                    <span
+                      data-testid="comments-badge"
+                      className="absolute -top-1.5 -right-1.5 min-w-[14px] h-[14px] bg-primary text-primary-foreground text-[8px] font-bold rounded-full flex items-center justify-center px-[3px] leading-none"
+                    >
+                      {commentCount}
+                    </span>
+                  )}
+                </div>
+              </button>
+            </div>
           );
         })}
         {/* Navigation controls — always visible when document is open */}
@@ -660,7 +953,7 @@ export function LeftNavRail(props: LeftNavRailProps) {
               data-testid="nav-prev-page-btn"
               aria-label={t('leftNav.prevPageAriaLabel')}
               title={t('leftNav.prevPageAriaLabel')}
-              className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+              className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
             >
               <ChevronUpIcon className="w-3.5 h-3.5" />
             </button>
@@ -683,7 +976,7 @@ export function LeftNavRail(props: LeftNavRailProps) {
               data-testid="nav-next-page-btn"
               aria-label={t('leftNav.nextPageAriaLabel')}
               title={t('leftNav.nextPageAriaLabel')}
-              className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+              className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
             >
               <ChevronDownIcon className="w-3.5 h-3.5" />
             </button>
@@ -691,26 +984,39 @@ export function LeftNavRail(props: LeftNavRailProps) {
         )}
       </div>
 
-      {/* ── Expandable panel (160px) ────────────────────────────────────── */}
-      {panelOpen && activePanel && (
-        <div className="w-40 flex flex-col bg-background overflow-hidden">
-          {/* Panel header */}
-          <div className="flex items-center justify-between px-3 py-2 border-b border-border shrink-0">
-            <span className="text-xs font-medium text-foreground">{panelLabel}</span>
-            <button
-              onClick={() => { setActivePanel(null); }}
-              aria-label="Close panel"
-              className="p-0.5 text-muted-foreground hover:text-foreground rounded hover:bg-muted transition-colors"
-            >
-              <XIcon className="w-3.5 h-3.5" />
-            </button>
-          </div>
+      {/* ── Expandable panel (resizable, 240px default) ────────────────── */}
+      <div
+        className={`flex flex-col bg-transparent overflow-hidden relative ${!isResizing ? 'transition-all duration-200 ease-in-out' : ''}`}
+        style={{ width: panelOpen && effectiveActivePanel ? `${panelWidth}px` : '0px' }}
+      >
+        {panelOpen && effectiveActivePanel && (
+          <>
+            {/* Panel header — minimal */}
+            <div className="flex items-center justify-between px-3 py-2 border-b border-border/60 shrink-0">
+              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{panelLabel}</span>
+              <button
+                onClick={() => { setActivePanel(null); }}
+                aria-label={t('leftNav.closePanelAriaLabel')}
+                className="p-1 text-muted-foreground/50 hover:text-foreground rounded-lg hover:bg-muted transition-colors"
+              >
+                <XIcon className="w-3.5 h-3.5" />
+              </button>
+            </div>
 
-          {/* Panel content */}
-          <div className="flex-1 overflow-hidden flex flex-col">
-            <PanelContent panel={activePanel} {...props} />
-          </div>
-        </div>
+            {/* Panel content */}
+            <div className="flex-1 overflow-hidden flex flex-col">
+              <PanelContent panel={effectiveActivePanel} {...props} />
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* Resize handle */}
+      {panelOpen && effectiveActivePanel && (
+        <div
+          className="absolute right-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-primary/30 active:bg-primary/50 transition-colors z-20"
+          onMouseDown={handleResizeMouseDown}
+        />
       )}
     </div>
   );

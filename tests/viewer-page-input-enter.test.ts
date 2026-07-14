@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 import { readFileSync } from 'node:fs';
@@ -13,8 +13,10 @@ const topBarSource = readFileSync(
   'utf8'
 );
 
-// Locate the page number input for scoped assertions
-const inputStart = topBarSource.indexOf('aria-label="Page number"');
+// Locate the page number input for scoped assertions.
+// Anchor on the className `topbar-page-input` since the aria-label is
+// now flowed through i18n (t('topbar.pageNumber')).
+const inputStart = topBarSource.indexOf('className="topbar-page-input"');
 const inputTagStart = topBarSource.lastIndexOf('<input', inputStart);
 const inputTagEnd = topBarSource.indexOf('/>', inputStart);
 const inputElement = topBarSource.slice(inputTagStart, inputTagEnd);
@@ -74,7 +76,7 @@ describe('TopBar — page input Enter key: existing behavior preserved', () => {
   });
 
   it('aria-label is still present', () => {
-    expect(inputElement).toContain('aria-label="Page number"');
+    expect(inputElement).toMatch(/aria-label=\{t\(['"]topbar\.pageNumber['"]\)\}/);
   });
 
   it('pageInputRef is still attached', () => {

@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 import { readFileSync } from 'node:fs';
@@ -69,13 +69,14 @@ describe('BottomTaskBar — rendering states', () => {
   });
 
   it('applies distinct colour for error tasks', () => {
-    expect(bottomTaskBarSource).toContain("status === 'error'");
-    expect(bottomTaskBarSource).toContain('text-destructive');
+    // v2: error state surfaced via data-status="error" attribute,
+    // styled by .bottom-taskbar-row[data-status='error'] in CSS.
+    expect(bottomTaskBarSource).toMatch(/data-status=\{task\.status\}/);
   });
 
   it('applies distinct colour for done tasks', () => {
-    expect(bottomTaskBarSource).toContain("status === 'done'");
-    expect(bottomTaskBarSource).toContain('text-green-500');
+    // Same: data-status drives the colour via CSS, not inline class.
+    expect(bottomTaskBarSource).toMatch(/data-status=\{task\.status\}/);
   });
 
   it('no longer contains TODO(pdfluent-viewer) markers', () => {

@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 import { invoke } from '@tauri-apps/api/core';
@@ -77,6 +77,49 @@ export class TauriRenderEngine implements RenderEngine {
       results.push(result.value);
     }
     return { success: true, value: results };
+  }
+
+  /**
+   * Binary IPC fast path: raw RGBA pixels prefixed with an 8-byte
+   * (width u32 LE, height u32 LE) header. No PNG encode/decode, no base64.
+   */
+  async renderPageRaw(
+    _document: PdfDocument,
+    pageIndex: number,
+    scale: number
+  ): AsyncEngineResult<{ width: number; height: number; pixels: Uint8ClampedArray<ArrayBuffer> }> {
+    try {
+      const body = await invoke<ArrayBuffer>('render_page_raw', { pageIndex, scale });
+      if (body.byteLength < 8) {
+        return { success: false, error: { code: 'internal-error', message: 'render_page_raw: short response' } };
+      }
+      const header = new DataView(body, 0, 8);
+      const width = header.getUint32(0, true);
+      const height = header.getUint32(4, true);
+      const pixels = new Uint8ClampedArray(body, 8);
+      if (pixels.length !== width * height * 4) {
+        return { success: false, error: { code: 'internal-error', message: 'render_page_raw: pixel length mismatch' } };
+      }
+      return { success: true, value: { width, height, pixels } };
+    } catch (e) {
+      return { success: false, error: { code: 'internal-error', message: String(e) } };
+    }
+  }
+
+  /** Binary IPC thumbnail: PNG bytes without base64/JSON wrapper. */
+  async getThumbnailRaw(
+    _document: PdfDocument,
+    pageIndex: number
+  ): AsyncEngineResult<Uint8Array> {
+    if (pageIndex < 0) {
+      return { success: false, error: { code: 'page-not-found', message: `Invalid page index: ${pageIndex}` } };
+    }
+    try {
+      const body = await invoke<ArrayBuffer>('render_thumbnail_raw', { pageIndex });
+      return { success: true, value: new Uint8Array(body) };
+    } catch (e) {
+      return { success: false, error: { code: 'internal-error', message: String(e) } };
+    }
   }
 
   async getThumbnail(

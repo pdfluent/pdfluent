@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 import { readFileSync } from 'node:fs';
@@ -128,9 +128,9 @@ describe('lib.rs — get_page_labels Tauri command', () => {
     expect(libSource.slice(fnIdx - 40, fnIdx)).toContain('#[tauri::command]');
   });
 
-  it('delegates to doc.get_page_labels()', () => {
+  it('delegates to sdk_facade::get_page_labels', () => {
     const fnIdx = libSource.indexOf('fn get_page_labels(');
-    expect(libSource.slice(fnIdx, fnIdx + 200)).toContain('doc.get_page_labels()');
+    expect(libSource.slice(fnIdx, fnIdx + 200)).toContain('sdk_facade::get_page_labels');
   });
 
   it('returns Vec<String>', () => {

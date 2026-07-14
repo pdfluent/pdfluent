@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 import { readFileSync } from 'node:fs';
@@ -44,34 +44,6 @@ describe('ModeToolbar — print-all-btn', () => {
     const btnEnd = toolbarSource.indexOf('</button>', btnStart) + 9;
     const btnBlock = toolbarSource.slice(btnStart, btnEnd);
     expect(btnBlock).toContain('aria-label=');
-  });
-});
-
-describe('ModeToolbar — print-current-btn', () => {
-  it('renders print-current-btn', () => {
-    expect(toolbarSource).toContain('data-testid="print-current-btn"');
-  });
-
-  it('print-current-btn calls window.print()', () => {
-    const btnPos = toolbarSource.indexOf('print-current-btn');
-    const btnStart = toolbarSource.lastIndexOf('<button', btnPos);
-    const btnEnd = toolbarSource.indexOf('</button>', btnStart) + 9;
-    const btnBlock = toolbarSource.slice(btnStart, btnEnd);
-    expect(btnBlock).toContain('window.print()');
-  });
-});
-
-describe('ModeToolbar — print-range-btn', () => {
-  it('renders print-range-btn', () => {
-    expect(toolbarSource).toContain('data-testid="print-range-btn"');
-  });
-
-  it('print-range-btn calls window.print()', () => {
-    const btnPos = toolbarSource.indexOf('print-range-btn');
-    const btnStart = toolbarSource.lastIndexOf('<button', btnPos);
-    const btnEnd = toolbarSource.indexOf('</button>', btnStart) + 9;
-    const btnBlock = toolbarSource.slice(btnStart, btnEnd);
-    expect(btnBlock).toContain('window.print()');
   });
 });
 

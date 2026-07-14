@@ -1,0 +1,230 @@
+/* Copyright (c) 2026 Innovation Trigger B.V. All rights reserved. */
+/* See https://pdfluent.com/license for terms. */
+
+/* LeftNavRail panels — outline / comments / forms / attachments / layers / format. */
+
+/* =============================================================================
+   LeftNavRail panels — outline / comments / forms / attachments / layers /
+   format. Token-driven panel-tab + list-item + empty-state primitives so
+   the side rail family reads as one design.
+   ============================================================================= */
+
+/* Empty state inside any LeftNavRail panel. Same visual idea as
+   .viewer-empty but compact (panels are narrow). */
+.leftrail-empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 24px 16px;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.leftrail-empty-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: var(--bg-surface-2);
+  color: var(--text-muted);
+  margin-bottom: 2px;
+}
+
+.leftrail-empty-mark svg {
+  width: 18px;
+  height: 18px;
+  stroke-width: 1.75;
+}
+
+.leftrail-empty-message {
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.4;
+  margin: 0;
+}
+
+/* Panel sub-section title — uppercase muted, consistent with .contextpanel-sub-title. */
+.leftrail-section-title {
+  display: block;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  padding: 6px 12px 4px;
+}
+
+/* Tab strip at the top of LeftNavRail for switching between panel kinds. */
+.leftrail-tabs {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 4px 8px;
+  border-bottom: 1px solid var(--border-subtle);
+  flex-shrink: 0;
+}
+
+.leftrail-tab {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 28px;
+  padding: 0 8px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 11.5px;
+  font-weight: 500;
+  cursor: pointer;
+  position: relative;
+  transition:
+    background var(--pf-dur-fast) var(--pf-ease),
+    color var(--pf-dur-fast) var(--pf-ease);
+}
+
+.leftrail-tab:hover:not(:disabled) {
+  background: var(--bg-surface-hover);
+  color: var(--text-primary);
+}
+
+.leftrail-tab-active {
+  color: var(--text-primary);
+  background: var(--bg-surface-press);
+}
+
+.leftrail-tab svg {
+  width: 14px;
+  height: 14px;
+  stroke-width: 1.75;
+}
+
+.leftrail-tab-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 14px;
+  height: 14px;
+  padding: 0 4px;
+  border-radius: var(--radius-pill);
+  background: var(--accent);
+  color: var(--brand-mark-on);
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 1;
+  position: absolute;
+  top: -2px;
+  right: -2px;
+}
+
+/* List item used by outline / comments / forms / attachments / layers. */
+.leftrail-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 6px 12px;
+  border: none;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  color: var(--text-primary);
+  font-size: 12px;
+  transition: background var(--pf-dur-fast) var(--pf-ease);
+}
+
+.leftrail-item:hover:not([disabled]) {
+  background: var(--bg-surface-hover);
+}
+
+.leftrail-item-active {
+  background: var(--accent-soft);
+  color: var(--text-primary);
+}
+
+.leftrail-item-icon {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+}
+
+.leftrail-item-icon svg {
+  width: 14px;
+  height: 14px;
+  stroke-width: 1.75;
+}
+
+.leftrail-item-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.leftrail-item-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 500;
+}
+
+.leftrail-item-meta {
+  font-size: 10.5px;
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.leftrail-item-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  opacity: 0;
+  transition: opacity var(--pf-dur-fast) var(--pf-ease);
+}
+
+.leftrail-item:hover .leftrail-item-actions {
+  opacity: 1;
+}
+
+.leftrail-item-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition:
+    background var(--pf-dur-fast) var(--pf-ease),
+    color var(--pf-dur-fast) var(--pf-ease);
+}
+
+.leftrail-item-action:hover {
+  background: var(--bg-surface-press);
+  color: var(--text-primary);
+}
+
+.leftrail-item-action-danger:hover {
+  color: var(--danger);
+}
+
+.leftrail-item-action svg {
+  width: 12px;
+  height: 12px;
+  stroke-width: 1.75;
+}
+

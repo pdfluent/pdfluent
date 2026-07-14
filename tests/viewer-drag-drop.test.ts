@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 import { readFileSync } from 'node:fs';
@@ -170,8 +170,9 @@ describe('ViewerApp — drag-active overlay', () => {
     expect(viewerAppSource).toContain('{isDragging && (');
   });
 
-  it('overlay shows "Drop PDF hier" label', () => {
-    expect(viewerAppSource).toContain('Drop PDF hier');
+  it('overlay shows drop-pdf label via i18n', () => {
+    // v2: literal "Drop PDF hier" replaced by i18n.t('welcome.dropPdfHere')
+    expect(viewerAppSource).toMatch(/'Drop PDF hier'|welcome\.dropPdfHere/);
   });
 
   it('overlay uses fixed positioning to cover the full viewport', () => {
@@ -183,7 +184,11 @@ describe('ViewerApp — drag-active overlay', () => {
   });
 
   it('overlay clears isDragging on drag-leave', () => {
-    const overlay = viewerAppSource.indexOf('Drop PDF hier');
+    // v2: dropPdfHere label now references the i18n key — anchor on either form
+    const overlay = Math.max(
+      viewerAppSource.indexOf('Drop PDF hier'),
+      viewerAppSource.indexOf('welcome.dropPdfHere'),
+    );
     const dragLeaveOnOverlay = viewerAppSource.lastIndexOf('setIsDragging(false)', overlay);
     expect(dragLeaveOnOverlay).toBeGreaterThan(0);
   });

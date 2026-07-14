@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 /**
@@ -177,5 +177,12 @@ function result(status: TextEditabilityStatus, selectable = false): TextEditabil
 export function extractText(target: TextParagraphTarget): string {
   return target.lines
     .flatMap(l => l.spans.map(s => s.text))
+    .join(' ');
+}
+
+/** Extract raw (pre-repair) text for use as the PDF content-stream replacement key. */
+export function extractRawText(target: TextParagraphTarget): string {
+  return target.lines
+    .flatMap(l => l.spans.map(s => s.rawText ?? s.text))
     .join(' ');
 }

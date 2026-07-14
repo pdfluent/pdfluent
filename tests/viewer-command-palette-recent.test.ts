@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 import { readFileSync } from 'node:fs';
@@ -139,11 +139,12 @@ describe('command palette recent — section rendering', () => {
   });
 
   it('has a divider between the recent section and the full list', () => {
-    // The separator element sits between the recent section and the main list
+    // v2: the divider uses the .cmdpalette-divider class (token-driven)
+    // instead of the legacy border-t border-border Tailwind utilities.
     const sectionStart = paletteSource.indexOf('recent-commands-section');
     const sectionEnd   = paletteSource.indexOf('filtered.length === 0', sectionStart);
     const sectionBlock = paletteSource.slice(sectionStart, sectionEnd);
-    expect(sectionBlock).toContain('border-t border-border');
+    expect(sectionBlock).toMatch(/border-t border-border|cmdpalette-divider/);
   });
 });
 

@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 import JSZip from "jszip";
 import { PDF } from "@libpdf/core";
@@ -383,6 +383,13 @@ export async function convertPdfToDocx(bytes: Uint8Array): Promise<Uint8Array> {
   );
 
   zip.folder("word")?.file("document.xml", documentXml);
+
+  zip.folder("word")?.folder("_rels")?.file(
+    "document.xml.rels",
+    `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+</Relationships>`,
+  );
 
   return zip.generateAsync({
     type: "uint8array",

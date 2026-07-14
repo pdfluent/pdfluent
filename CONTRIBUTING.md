@@ -39,8 +39,8 @@ npm run tauri dev
 - Update documentation if you change user-facing behavior
 - All source files must include the SPDX license header:
   ```
-  // SPDX-License-Identifier: AGPL-3.0-or-later
-  // Copyright (c) 2026 PDFluent Contributors
+  // SPDX-License-Identifier: LicenseRef-PDFluent-Proprietary
+  // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
   ```
 
 ## Reporting bugs
@@ -60,4 +60,7 @@ If you are new to the codebase, start with issues labeled **good first issue**.
 
 ## License
 
-By contributing, you agree that your contributions will be licensed under AGPL-3.0.
+PDFluent is proprietary software and is not an open-source project; see
+[LICENSE.md](LICENSE.md) for the End-User License Agreement. Contributions are
+accepted only under a separate written agreement — please contact
+license@pdfluent.com before submitting a contribution.

@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 /**
@@ -246,14 +246,20 @@ describe('TimelinePanel — EVENT_LABELS covers text edit types', () => {
 describe('ViewerApp — page_mutated used for successful text edit', () => {
   it('handleDraftCommit emits page_mutated event on success', () => {
     const idx = viewerAppSrc.indexOf('handleDraftCommit');
-    const block = viewerAppSrc.slice(idx, idx + 2500);
+    // v2: handleDraftCommit body grew significantly (debug logging,
+    // expanded error handling, validation/multi-occurrence logic).
+    // The markDirty/page_mutated/originalText calls sit ~9k chars in.
+    const block = viewerAppSrc.slice(idx, idx + 12000);
     expect(block).toContain('page_mutated');
     expect(block).toContain('makeDocumentEvent');
   });
 
   it('handleDraftCommit includes original and replacement text in description', () => {
     const idx = viewerAppSrc.indexOf('handleDraftCommit');
-    const block = viewerAppSrc.slice(idx, idx + 2500);
+    // v2: handleDraftCommit body grew significantly (debug logging,
+    // expanded error handling, validation/multi-occurrence logic).
+    // The markDirty/page_mutated/originalText calls sit ~9k chars in.
+    const block = viewerAppSrc.slice(idx, idx + 12000);
     expect(block).toContain('originalText');
     expect(block).toContain('committedText');
   });

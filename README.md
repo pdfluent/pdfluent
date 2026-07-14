@@ -1,46 +1,45 @@
 # PDFluent
 
-The open-source PDF editor. Your documents, your region, your choice.
+The privacy-first PDF editor. Your documents, your region, your choice.
 
-PDFluent is a privacy-first desktop PDF editor built with [Tauri v2](https://tauri.app/) (Rust + React), [Pdfium](https://pdfium.googlesource.com/pdfium/) (rendering) and [LibPDF](https://libpdf.documenso.com/) (manipulation). It works offline, never phones home, and lets you choose where your files are stored.
+PDFluent is a privacy-first desktop PDF editor built with [Tauri v2](https://tauri.app/) (Rust + React/TypeScript) and the XFA Rust SDK — a pure-Rust PDF engine (no Pdfium, Poppler, MuPDF or other C/C++ dependencies). It works offline, never phones home, and lets you choose where your files are stored.
 
 ## Status
 
-Early development. Core PDF viewing works (open, navigate, zoom, thumbnails). Not yet ready for end-user use.
+Release-candidate for the non-XFA feature set on macOS and Windows: viewing, AcroForm filling (text, checkbox, radio, combo/list, comb), annotations, page management, merge/split, digital signatures, conversions, and OCR. XFA documents are viewed and can be converted/flattened to a standard PDF; dynamic XFA interactive fill is experimental and not part of this release.
 
 ## Architecture
 
 ```
 pdfluent/
 ├── src/                    # React frontend (TypeScript)
-│   ├── App.tsx             # Main app - state management, keyboard shortcuts
-│   ├── components/
-│   │   ├── Viewer.tsx      # PDF page rendering (base64 PNG from Rust)
-│   │   ├── Sidebar.tsx     # Page thumbnails with progressive loading
-│   │   └── Toolbar.tsx     # Page navigation + zoom controls
-│   ├── lib/
-│   │   ├── tauri-api.ts    # Typed wrappers for Tauri commands
-│   │   └── pdf-manipulator.ts  # LibPDF wrappers (merge, split, rotate)
-│   └── styles/
-│       └── global.css      # Full dark theme UI
+│   ├── viewer/
+│   │   ├── ViewerApp.tsx   # V3 app shell — state, modes, keyboard shortcuts
+│   │   ├── components/     # Overlays (forms, annotations, text, links)
+│   │   └── hooks/          # Document, forms, search, annotations, …
+│   ├── platform/engine/    # Engine abstraction over the Tauri backend
+│   ├── lib/tauri-api.ts    # Typed wrappers for Tauri commands
+│   └── i18n/               # Localised UI strings
 ├── src-tauri/              # Rust backend
 │   ├── src/
-│   │   ├── main.rs         # Entry point
-│   │   ├── lib.rs          # Tauri commands (open_pdf, render_page, etc.)
-│   │   └── pdf_engine.rs   # Pdfium rendering engine
-│   ├── lib/                # Pdfium native library (not in git)
-│   └── Cargo.toml          # Rust dependencies
-├── scripts/
-│   └── setup-pdfium.sh     # Downloads platform-specific Pdfium binary
+│   │   ├── lib.rs          # Tauri commands (open_pdf, render_page, …)
+│   │   └── pdf_engine.rs   # Document model over the XFA Rust SDK
+│   └── Cargo.toml          # Links the XFA SDK crates by path
 └── package.json            # Node dependencies
 ```
 
+The PDF engine is the XFA Rust SDK (separate workspace), consumed as Cargo path
+dependencies: `pdf-engine` (parse, render via the `vello_cpu` rasteriser, text,
+thumbnails), `pdf-forms` (AcroForm), `pdf-manip` (merge/split/rotate/encrypt/
+watermark), `pdf-annot`, `pdf-sign`, `pdf-extract`, `pdf-redact`, plus
+conversion crates. No native PDF library is downloaded or bundled.
+
 ### How it works
 
-1. **Rust backend** loads PDFs via Pdfium, renders pages to PNG bitmaps, encodes as base64
-2. **Frontend** calls Tauri commands (`open_pdf`, `render_page`) to get rendered pages
-3. **Viewer** displays pages as `<img>` tags from base64 data
-4. **LibPDF** (TypeScript) handles document manipulation (merge, split, rotate)
+1. **Rust backend** parses PDFs with the XFA SDK and renders pages to bitmaps
+2. **Frontend** calls Tauri commands (`open_pdf`, `render_page`, …) for rendered pages and the form/annotation models
+3. **Overlays** draw interactive inputs (forms, annotations, links) over the rendered page
+4. **Manipulation** (merge, split, rotate, sign, convert) runs in Rust via the SDK crates
 
 ### Tauri Commands (Rust → Frontend)
 
@@ -66,17 +65,17 @@ pdfluent/
 # 1. Install Node dependencies
 npm install
 
-# 2. Download Pdfium native library (REQUIRED before first run)
-./scripts/setup-pdfium.sh
-
-# 3. (Optional) Install PaddleOCR Python bridge dependencies for OCR + PP-Structure
+# 2. (Optional) Install PaddleOCR Python bridge dependencies for OCR + PP-Structure
 ./scripts/setup-ocr.sh
 
-# 4. Start dev server
+# 3. Start dev server
 npm run tauri dev
 ```
 
-The Pdfium setup script automatically detects your platform (macOS ARM64/x64, Linux x64/ARM64, Windows x64/ARM64) and downloads the correct binary to `src-tauri/lib/`.
+The PDF engine is the XFA Rust SDK, linked via Cargo path dependencies (see
+`src-tauri/Cargo.toml`); no native PDF library needs to be downloaded. The SDK
+workspace must be checked out alongside this repo at the path those dependencies
+expect.
 
 ### Build
 
@@ -112,15 +111,18 @@ CI also runs a dedicated compliance workflow at `.github/workflows/compliance.ym
 - [x] Zoom controls (Cmd +/-, reset)
 - [x] Page thumbnails in sidebar
 - [x] Keyboard navigation (arrows, PageUp/Down, Home/End)
-- [x] LibPDF integration (merge, split, rotate, remove pages)
-- [ ] Annotations (highlight, comment, freehand)
-- [ ] Form filling (AcroForms)
-- [ ] Digital signatures
-- [ ] Page management UI (drag to reorder)
+- [x] Manipulation (merge, split, rotate, delete/reorder pages, compress, watermark)
+- [x] Annotations (highlight, underline, strikeout, comment, shapes, freehand)
+- [x] Form filling (AcroForms — text, checkbox, radio, combo/list, comb, multi-select, link trust)
+- [x] Digital signatures (PAdES / PKCS#12)
+- [x] Conversions (DOCX/XLSX/PPTX, PDF/A) and OCR
+- [x] XFA: view + convert/flatten to standard PDF (interactive XFA fill is experimental, not shipped)
 - [ ] Storage integration (BYOS, managed storage)
 
 ## License
 
-AGPL-3.0-or-later. See [LICENSE](LICENSE) for details.
+PDFluent is proprietary software — **free to use, including for commercial and business use.** It is not open-source. Extracting or embedding its components outside the application requires a separate license — see [pdfluent.com](https://pdfluent.com) for SDK licensing.
 
-Commercial licenses available for businesses. See [pdfluent.com](https://pdfluent.com) for pricing.
+See the full End-User License Agreement in [LICENSE.md](LICENSE.md) (summary in [LICENSE](LICENSE)) and [pdfluent.com/license](https://pdfluent.com/license); SDK licensing at [pdfluent.com](https://pdfluent.com).
+
+Third-party open-source components bundled with PDFluent remain under their own licenses; see [THIRD_PARTY.md](THIRD_PARTY.md) and [THIRD_PARTY_ATTRIBUTIONS.md](THIRD_PARTY_ATTRIBUTIONS.md) (also surfaced in-app under **Help → Open Source Notices**).

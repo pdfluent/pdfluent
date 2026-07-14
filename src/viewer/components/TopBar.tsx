@@ -1,24 +1,47 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
+//
+// =============================================================================
+// TopBar — the editor's primary chrome row
+//
+// Applies the PDFluent design philosophy:
+//   1. Content is the hero — chrome serves the document, never competes.
+//      The bar is a single 44 px row; brand mark is small; nothing pulses.
+//   2. Calm by default — only the primary actions are surfaced (open,
+//      undo/redo, page nav, search, save, export). Share is hidden until
+//      it actually does something; Save As stays as a secondary affordance.
+//   3. One route per action — Save handles both in-place and save-as
+//      internally (Save As is a separate, less prominent affordance for
+//      explicit copy-to-new-path).
+//   4. Predictable structure — file identity left, page nav + actions
+//      right, with .toolbar-sep hairlines grouping by function.
+//   5. Quiet motion — focus rings via the design tokens; no continuous
+//      animations on this surface.
+// =============================================================================
 
-import { useRef, useEffect, type RefObject, type ChangeEvent } from 'react';
+import { isTauriRuntime } from '../../lib/tauri-detection';
+import { useEffect, useRef, type ChangeEvent, type RefObject } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
-  LayersIcon,
-  Undo2Icon,
-  Redo2Icon,
-  SearchIcon,
-  Share2Icon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
   DownloadIcon,
+  Redo2Icon,
   SaveIcon,
-  MenuIcon,
+  SearchIcon,
+  Undo2Icon,
   XIcon,
 } from 'lucide-react';
 import { useTaskQueueContext } from '../context/TaskQueueContext';
+import { pickPdfPath } from '../../platform/native/fileDialogs';
+
+// ---------------------------------------------------------------------------
+// Props
+// ---------------------------------------------------------------------------
 
 interface TopBarProps {
   fileName: string | null;
@@ -46,7 +69,11 @@ interface TopBarProps {
   onRedo?: () => void;
 }
 
-const isTauri = typeof window !== 'undefined' && '__TAURI__' in window;
+const isTauri = isTauriRuntime();
+
+// ---------------------------------------------------------------------------
+// Component
+// ---------------------------------------------------------------------------
 
 export function TopBar({
   fileName,
@@ -74,39 +101,48 @@ export function TopBar({
   const { push, update } = useTaskQueueContext();
 
   // ---------------------------------------------------------------------------
-  // Save
+  // Save flow — branches on Tauri vs browser and on whether we know the path.
+  // The Save button always invokes this; Save As bypasses it via onSaveAs.
   // ---------------------------------------------------------------------------
 
   async function handleSave(): Promise<void> {
-    if (!isTauri || !isDirty || pageCount === 0) return;
+    if (!isDirty || pageCount === 0) return;
 
     const taskId = `save-${Date.now()}`;
 
+    if (!isTauri) {
+      push({ id: taskId, label: t('tasks.savingLabel'), progress: null, status: 'running' });
+      try {
+        await onSaveAs();
+        update(taskId, { status: 'done', label: t('tasks.savedLabel') });
+        onSaveComplete();
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        update(taskId, { status: 'error', label: `${t('tasks.saveFailed')}: ${message}` });
+      }
+      return;
+    }
+
     if (currentFilePath) {
-      // Save in place — known file path
       push({ id: taskId, label: t('tasks.savingLabel'), progress: null, status: 'running' });
       try {
         const { invoke } = await import('@tauri-apps/api/core');
         await invoke('save_pdf', { path: currentFilePath });
         update(taskId, { status: 'done', label: t('tasks.savedLabel') });
         onSaveComplete();
-      } catch {
-        update(taskId, { status: 'error', label: t('tasks.saveFailed') });
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        update(taskId, { status: 'error', label: `${t('tasks.saveFailed')}: ${message}` });
       }
     } else {
-      // Save as — no known path (browser source or first save)
-      const { save } = await import('@tauri-apps/plugin-dialog');
-      const path = await save({ filters: [{ name: 'PDF', extensions: ['pdf'] }] });
-      if (!path) return;
-
       push({ id: taskId, label: t('tasks.savingAsLabel'), progress: null, status: 'running' });
       try {
-        const { invoke } = await import('@tauri-apps/api/core');
-        await invoke('save_pdf', { path });
+        await onSaveAs();
         update(taskId, { status: 'done', label: t('tasks.savedLabel') });
         onSaveComplete();
-      } catch {
-        update(taskId, { status: 'error', label: t('tasks.saveFailed') });
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        update(taskId, { status: 'error', label: `${t('tasks.saveFailed')}: ${message}` });
       }
     }
   }
@@ -114,28 +150,31 @@ export function TopBar({
   // Keep a ref so the ⌘S listener always calls the latest handleSave without
   // re-registering on every render.
   const handleSaveRef = useRef(handleSave);
-  useEffect(() => { handleSaveRef.current = handleSave; });
-
-  // ⌘S / Ctrl+S — registered once on mount
   useEffect(() => {
-    function handleKey(e: KeyboardEvent) {
-      if ((e.metaKey || e.ctrlKey) && e.key === 's') {
+    handleSaveRef.current = handleSave;
+  });
+
+  // ⌘S / Ctrl+S — registered once on mount, dispatches to the latest handler.
+  useEffect(() => {
+    function handleKey(e: KeyboardEvent): void {
+      if ((e.metaKey || e.ctrlKey) && e.key === 's' && !e.shiftKey) {
         e.preventDefault();
         void handleSaveRef.current();
       }
     }
     window.addEventListener('keydown', handleKey);
-    return () => { window.removeEventListener('keydown', handleKey); };
+    return () => {
+      window.removeEventListener('keydown', handleKey);
+    };
   }, []);
 
   // ---------------------------------------------------------------------------
-  // Open
+  // Open flow — Tauri picks via dialog, browser via hidden file input.
   // ---------------------------------------------------------------------------
 
   async function handleOpen(): Promise<void> {
     if (isTauri) {
-      const { open } = await import('@tauri-apps/plugin-dialog');
-      const path = await open({ filters: [{ name: 'PDF', extensions: ['pdf'] }] });
+      const path = await pickPdfPath();
       if (typeof path === 'string') await onOpenFile(path);
     } else {
       fileInputRef.current?.click();
@@ -162,10 +201,50 @@ export function TopBar({
   }
 
   const canSave = isDirty && pageCount > 0;
+  const hasDocument = pageCount > 0;
+
+  // ---------------------------------------------------------------------------
+  // State A — no document open. Minimal bar: brand + single CTA.
+  // ---------------------------------------------------------------------------
+
+  if (!hasDocument) {
+    return (
+      <header className="topbar topbar-empty" role="banner">
+        {!isTauri && (
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".pdf"
+            className="hidden"
+            aria-label={t('topbar.openPdfFile')}
+            onChange={handleFileInputChange}
+          />
+        )}
+
+        <div className="topbar-brand">
+          <span className="toolbar-logo-mark" aria-hidden="true" />
+          <span className="toolbar-brand-name">PDFluent</span>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => {
+            void handleOpen();
+          }}
+          className="topbar-primary-cta"
+        >
+          {t('welcome.openFile')}
+        </button>
+      </header>
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // State B — document open. Full bar.
+  // ---------------------------------------------------------------------------
 
   return (
-    <div className="h-12 flex items-center justify-between px-3 border-b border-border bg-background shrink-0">
-      {/* Hidden file input — browser mode only */}
+    <header className="topbar" role="banner">
       {!isTauri && (
         <input
           ref={fileInputRef}
@@ -176,180 +255,186 @@ export function TopBar({
         />
       )}
 
-      {/* ── Left: branding + history controls ─────────────────────────────── */}
-      <div className="flex items-center gap-0.5 w-1/3">
-        {/* TODO(pdfluent-viewer): wire menu button to application menu / settings
-            Status: design integrated, functionality not implemented yet */}
-        <button
-          disabled
-          className="p-1.5 text-muted-foreground/40 rounded-md cursor-default"
-          title="Menu"
-          aria-label="Menu"
-        >
-          <MenuIcon className="w-4 h-4" />
-        </button>
-
-        <div className="flex items-center gap-1.5 text-primary px-1.5">
-          <LayersIcon className="w-5 h-5" />
-          <span className="font-semibold text-sm hidden sm:inline-block">PDFluent</span>
+      {/* ── Left: brand · history · document identity ─────────────────── */}
+      <div className="topbar-left">
+        <div className="topbar-brand">
+          <span className="toolbar-logo-mark" aria-hidden="true" />
         </div>
 
-        <div className="w-px h-4 bg-border mx-1 shrink-0" />
+        <span className="toolbar-sep" aria-hidden="true" />
 
         <button
-          data-testid="undo-btn"
+          type="button"
+          className="pf-btn"
           disabled={!canUndo}
           onClick={onUndo}
-          className={`p-1.5 rounded-md ${canUndo ? 'text-foreground hover:bg-accent cursor-pointer' : 'text-muted-foreground/40 cursor-default'}`}
           title={canUndo ? t('topbar.undoTooltip') : t('topbar.nothingToUndo')}
-          aria-label="Undo"
+          aria-label={t('topbar.undoTooltip')}
+          data-testid="undo-btn"
         >
-          <Undo2Icon className="w-3.5 h-3.5" />
+          <Undo2Icon aria-hidden="true" />
         </button>
 
         <button
-          data-testid="redo-btn"
+          type="button"
+          className="pf-btn"
           disabled={!canRedo}
           onClick={onRedo}
-          className={`p-1.5 rounded-md ${canRedo ? 'text-foreground hover:bg-accent cursor-pointer' : 'text-muted-foreground/40 cursor-default'}`}
           title={canRedo ? t('topbar.redoTooltip') : t('topbar.nothingToRedo')}
-          aria-label="Redo"
+          aria-label={t('topbar.redoTooltip')}
+          data-testid="redo-btn"
         >
-          <Redo2Icon className="w-3.5 h-3.5" />
-        </button>
-      </div>
-
-      {/* ── Center: active document tab ────────────────────────────────────── */}
-      <div className="flex-1 flex items-end justify-center h-full max-w-lg overflow-hidden pt-2">
-        {fileName ? (
-          <div className="flex items-center gap-2 px-4 py-1.5 border-b-2 border-primary bg-primary/5 rounded-t-lg min-w-[150px] max-w-[300px]">
-            <span className="text-sm font-medium text-foreground truncate">{fileName}</span>
-            <span
-              className={`w-1.5 h-1.5 rounded-full shrink-0 ${isDirty ? 'bg-orange-400' : 'bg-green-500'}`}
-              title={isDirty ? 'Unsaved changes' : 'Saved'}
-              aria-label={isDirty ? 'Unsaved changes' : 'Saved'}
-            />
-            <button
-              onClick={onCloseDocument}
-              className="p-0.5 text-muted-foreground hover:text-foreground hover:bg-muted rounded transition-colors shrink-0"
-              title={t('common.close')}
-              aria-label={t('topbar.closeDocument')}
-              data-testid="close-document-btn"
-            >
-              <XIcon className="w-3 h-3" />
-            </button>
-          </div>
-        ) : (
-          <div className="flex items-center gap-2 px-4 py-1.5 border-b-2 border-transparent">
-            <span className="text-sm text-muted-foreground">No document open</span>
-          </div>
-        )}
-      </div>
-
-      {/* ── Right: open + page navigation + actions ────────────────────────── */}
-      <div className="flex items-center justify-end gap-1 w-1/3">
-        <button
-          onClick={() => { void handleOpen(); }}
-          className="flex items-center px-3 py-1.5 bg-primary text-primary-foreground text-xs font-semibold rounded-md hover:opacity-90 transition-opacity shrink-0"
-        >
-          Open PDF
+          <Redo2Icon aria-hidden="true" />
         </button>
 
-        {pageCount > 0 && (
+        {fileName && (
           <>
-            <div className="w-px h-4 bg-border mx-0.5 shrink-0" />
-
-            <button
-              onClick={onPrevPage}
-              disabled={pageIndex === 0}
-              className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors disabled:opacity-30 disabled:cursor-not-allowed text-sm font-medium leading-none shrink-0"
-              title="Previous page"
-            >
-              ‹
-            </button>
-
-            <input
-              ref={pageInputRef}
-              type="number"
-              min={1}
-              max={pageCount}
-              value={pageIndex + 1}
-              onChange={handlePageInputChange}
-              onKeyDown={(e) => { if (e.key === 'Enter') e.currentTarget.blur(); }}
-              className="w-10 text-center text-xs bg-card border border-border rounded-md py-1 text-foreground focus:ring-1 focus:ring-primary outline-none shrink-0"
-              aria-label="Page number"
-            />
-
-            <span className="text-xs text-muted-foreground shrink-0">/ {pageCount}</span>
-
-            <button
-              onClick={onNextPage}
-              disabled={pageIndex === pageCount - 1}
-              className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors disabled:opacity-30 disabled:cursor-not-allowed text-sm font-medium leading-none shrink-0"
-              title="Next page"
-            >
-              ›
-            </button>
+            <span className="toolbar-sep" aria-hidden="true" />
+            <div className="topbar-doc-chip" data-dirty={isDirty}>
+              <span className="topbar-doc-name" title={fileName}>
+                {fileName}
+              </span>
+              <span
+                className="topbar-doc-status"
+                aria-label={isDirty ? t('topbar.unsavedChanges') : t('topbar.saved')}
+                title={isDirty ? t('topbar.unsavedChanges') : t('topbar.saved')}
+              />
+              <button
+                type="button"
+                className="topbar-doc-close"
+                onClick={onCloseDocument}
+                title={t('common.close')}
+                aria-label={t('topbar.closeDocument')}
+                data-testid="close-document-btn"
+              >
+                <XIcon aria-hidden="true" />
+              </button>
+            </div>
           </>
         )}
+      </div>
 
-        <div className="w-px h-4 bg-border mx-0.5 shrink-0" />
+      <div className="topbar-spacer" />
 
+      {/* ── Right: open · page nav · search · save · export ───────────── */}
+      <div className="topbar-right">
         <button
-          onClick={onOpenCommandPalette}
-          data-testid="search-btn"
-          className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors shrink-0"
-          title="Search / Command Palette (⌘K)"
-          aria-label="Search"
+          type="button"
+          onClick={() => {
+            void handleOpen();
+          }}
+          className="topbar-primary-cta topbar-primary-cta-compact"
+          title={t('welcome.openFile')}
         >
-          <SearchIcon className="w-4 h-4" />
+          {t('welcome.openFile')}
         </button>
 
+        <span className="toolbar-sep" aria-hidden="true" />
+
         <button
-          onClick={() => { void handleSave(); }}
+          type="button"
+          className="pf-btn"
+          onClick={onPrevPage}
+          disabled={pageIndex === 0}
+          title={t('topbar.previousPage')}
+          aria-label={t('topbar.previousPage')}
+        >
+          <ChevronLeftIcon aria-hidden="true" />
+        </button>
+
+        <div className="topbar-page-group">
+          <input
+            ref={pageInputRef}
+            type="number"
+            min={1}
+            max={pageCount}
+            value={pageIndex + 1}
+            onChange={handlePageInputChange}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') e.currentTarget.blur();
+            }}
+            className="topbar-page-input"
+            aria-label={t('topbar.pageNumber')}
+          />
+          <span className="topbar-page-total" aria-hidden="true">
+            / {pageCount}
+          </span>
+        </div>
+
+        <button
+          type="button"
+          className="pf-btn"
+          onClick={onNextPage}
+          disabled={pageIndex === pageCount - 1}
+          title={t('topbar.nextPage')}
+          aria-label={t('topbar.nextPage')}
+        >
+          <ChevronRightIcon aria-hidden="true" />
+        </button>
+
+        <span className="toolbar-sep" aria-hidden="true" />
+
+        <button
+          type="button"
+          className="topbar-search-trigger"
+          onClick={onOpenCommandPalette}
+          title={t('topbar.searchTooltip')}
+          aria-label={t('topbar.searchTooltip')}
+          data-testid="search-btn"
+        >
+          <SearchIcon aria-hidden="true" />
+          <span className="topbar-search-label">{t('common.search')}</span>
+          <kbd className="topbar-search-kbd" aria-hidden="true">
+            ⌘K
+          </kbd>
+        </button>
+
+        <span className="toolbar-sep" aria-hidden="true" />
+
+        <button
+          type="button"
+          className="topbar-action"
+          onClick={() => {
+            void handleSave();
+          }}
           disabled={!canSave}
-          className="flex items-center gap-1 px-2 py-1.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
           title={canSave ? t('topbar.saveTooltip') : t('topbar.saveNoChanges')}
           aria-label={t('common.save')}
+          data-testid="save-btn"
         >
-          <SaveIcon className="w-3.5 h-3.5" />
-          <span className="hidden md:inline">{t('common.save')}</span>
+          <SaveIcon aria-hidden="true" />
+          <span className="topbar-action-label">{t('common.save')}</span>
         </button>
 
         <button
-          onClick={() => { void onSaveAs(); }}
-          disabled={!isTauri || pageCount === 0}
-          data-testid="save-as-btn"
-          className="flex items-center gap-1 px-2 py-1.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
+          type="button"
+          className="topbar-action topbar-action-quiet"
+          onClick={() => {
+            void onSaveAs();
+          }}
+          disabled={!hasDocument}
           title={t('topbar.saveAsTooltip')}
           aria-label={t('common.saveAs')}
+          data-testid="save-as-btn"
         >
-          <SaveIcon className="w-3.5 h-3.5" />
-          <span className="hidden md:inline">{t('common.saveAs')}</span>
-        </button>
-
-        {/* TODO(pdfluent-viewer): implement share / collaboration
-            Status: design integrated, functionality not implemented yet */}
-        <button
-          disabled
-          className="flex items-center gap-1 px-2 py-1.5 text-xs text-muted-foreground/40 rounded-md cursor-default shrink-0"
-          title="Share (not yet available)"
-        >
-          <Share2Icon className="w-3.5 h-3.5" />
-          <span className="hidden md:inline">{t('topbar.share')}</span>
+          <span className="topbar-action-label topbar-action-label-wide">
+            {t('common.saveAs')}
+          </span>
         </button>
 
         <button
+          type="button"
+          className="topbar-action"
           onClick={onOpenExport}
-          disabled={pageCount === 0}
-          data-testid="export-btn"
-          className="flex items-center gap-1 px-2 py-1.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
+          disabled={!hasDocument}
           title={t('common.export')}
+          aria-label={t('common.export')}
+          data-testid="export-btn"
         >
-          <DownloadIcon className="w-3.5 h-3.5" />
-          <span className="hidden md:inline">{t('common.export')}</span>
+          <DownloadIcon aria-hidden="true" />
+          <span className="topbar-action-label">{t('common.export')}</span>
         </button>
       </div>
-    </div>
+    </header>
   );
 }

@@ -1,0 +1,423 @@
+/* Copyright (c) 2026 Innovation Trigger B.V. All rights reserved. */
+/* See https://pdfluent.com/license for terms. */
+
+/* TopBar — the editor primary chrome row (44 px). See viewer/components/TopBar.tsx. */
+
+/* =============================================================================
+   TopBar — the editor's primary chrome row (44 px)
+   Token-driven, dark-mode + Windows aware. See viewer/components/TopBar.tsx.
+   ============================================================================= */
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 44px;
+  padding: 0 10px;
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  -webkit-app-region: drag;
+  user-select: none;
+}
+
+/* Inner elements must opt out of window drag so they're actually clickable. */
+.topbar > *,
+.topbar button,
+.topbar input,
+.topbar .toolbar-sep {
+  -webkit-app-region: no-drag;
+}
+
+.topbar-empty {
+  justify-content: space-between;
+  padding: 0 16px;
+}
+
+.topbar-left,
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+
+.topbar-right {
+  justify-content: flex-end;
+}
+
+.topbar-spacer {
+  flex: 1;
+  min-width: 12px;
+}
+
+/* ── Brand ─────────────────────────────────────────────────────────────── */
+
+.topbar-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 4px;
+}
+
+/* Primary CTA — the "Open PDF" pill. Brand-fill, brand-on text. Compact
+   variant trims horizontal padding so it fits inside the dense doc-open
+   row without crowding the rest of the controls. */
+
+.topbar-primary-cta {
+  display: inline-flex;
+  align-items: center;
+  height: 30px;
+  padding: 0 16px;
+  border-radius: var(--radius-pill);
+  border: 1px solid transparent;
+  background: var(--brand-mark-fill);
+  color: var(--brand-mark-on);
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  cursor: pointer;
+  transition:
+    background var(--pf-dur-fast) var(--pf-ease),
+    transform var(--pf-dur-fast) var(--pf-ease),
+    box-shadow var(--pf-dur-fast) var(--pf-ease);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.topbar-primary-cta:hover {
+  background: #0a0a0a;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
+}
+
+@media (prefers-color-scheme: dark) {
+  .topbar-primary-cta:hover {
+    background: #f5f5f5;
+  }
+}
+
+.topbar-primary-cta:active {
+  transform: scale(0.985);
+}
+
+.topbar-primary-cta:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--accent-soft);
+}
+
+.topbar-primary-cta-compact {
+  height: 28px;
+  padding: 0 12px;
+  font-size: 12px;
+}
+
+/* ── Document identity chip ────────────────────────────────────────────── */
+
+.topbar-doc-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 28px;
+  max-width: 280px;
+  padding: 0 8px 0 10px;
+  border-radius: var(--radius-pill);
+  background: var(--bg-surface-2);
+  border: 1px solid var(--border-subtle);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-primary);
+  animation: pf-fade-slide-down var(--pf-dur-med) var(--pf-ease);
+}
+
+.topbar-doc-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 200px;
+  min-width: 0;
+}
+
+/* Status dot — green when clean, amber-ish when dirty. Subtle on dark mode. */
+.topbar-doc-status {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--success);
+  flex-shrink: 0;
+  transition: background var(--pf-dur-fast) var(--pf-ease);
+}
+
+.topbar-doc-chip[data-dirty='true'] .topbar-doc-status {
+  background: var(--warning);
+}
+
+/* Close X — small, quiet by default, full opacity on hover. */
+.topbar-doc-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 5px;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition:
+    background var(--pf-dur-fast) var(--pf-ease),
+    color var(--pf-dur-fast) var(--pf-ease);
+}
+
+.topbar-doc-close:hover {
+  background: var(--bg-surface-press);
+  color: var(--text-primary);
+}
+
+.topbar-doc-close svg {
+  width: 12px;
+  height: 12px;
+  stroke-width: 2;
+}
+
+/* ── Page nav group ────────────────────────────────────────────────────── */
+
+.topbar-page-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-variant-numeric: tabular-nums;
+}
+
+.topbar-page-input {
+  width: 44px;
+  height: 26px;
+  padding: 0 6px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg-surface-elevated);
+  color: var(--text-primary);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  -moz-appearance: textfield;
+  appearance: textfield;
+  transition:
+    border-color var(--pf-dur-fast) var(--pf-ease),
+    box-shadow var(--pf-dur-fast) var(--pf-ease);
+}
+
+.topbar-page-input::-webkit-outer-spin-button,
+.topbar-page-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.topbar-page-input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-soft);
+}
+
+.topbar-page-total {
+  font-size: 12px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+/* ── Search trigger ────────────────────────────────────────────────────── */
+
+.topbar-search-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 30px;
+  padding: 0 10px 0 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-surface-elevated);
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition:
+    background var(--pf-dur-fast) var(--pf-ease),
+    border-color var(--pf-dur-fast) var(--pf-ease),
+    color var(--pf-dur-fast) var(--pf-ease);
+}
+
+.topbar-search-trigger:hover {
+  background: var(--bg-surface-hover);
+  color: var(--text-primary);
+  border-color: var(--border-strong);
+}
+
+.topbar-search-trigger:focus-visible {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-soft);
+}
+
+.topbar-search-trigger svg {
+  width: 14px;
+  height: 14px;
+  stroke-width: 1.75;
+  flex-shrink: 0;
+}
+
+.topbar-search-label {
+  white-space: nowrap;
+}
+
+.topbar-search-kbd {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 5px;
+  height: 18px;
+  border-radius: 4px;
+  background: var(--bg-surface-2);
+  color: var(--text-muted);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+  .topbar-search-label,
+  .topbar-search-kbd {
+    display: none;
+  }
+  .topbar-search-trigger {
+    padding: 0;
+    width: 30px;
+    justify-content: center;
+  }
+}
+
+/* ── Action buttons (Save, Save As, Export) ────────────────────────────── */
+
+.topbar-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+  padding: 0 10px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition:
+    background var(--pf-dur-fast) var(--pf-ease),
+    color var(--pf-dur-fast) var(--pf-ease);
+}
+
+.topbar-action:hover:not(:disabled) {
+  background: var(--bg-surface-hover);
+  color: var(--text-primary);
+}
+
+.topbar-action:active:not(:disabled) {
+  background: var(--bg-surface-press);
+}
+
+.topbar-action:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--accent-soft);
+  border-color: var(--accent);
+}
+
+.topbar-action:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.topbar-action svg {
+  width: 14px;
+  height: 14px;
+  stroke-width: 1.75;
+}
+
+.topbar-action-label {
+  white-space: nowrap;
+}
+
+.topbar-action-quiet {
+  color: var(--text-muted);
+}
+
+.topbar-action-quiet .topbar-action-label {
+  font-weight: 400;
+}
+
+@media (max-width: 1024px) {
+  .topbar-action-label {
+    display: none;
+  }
+  .topbar-action {
+    width: 30px;
+    padding: 0;
+    justify-content: center;
+  }
+  /* Quiet text-only actions disappear entirely on tight screens — they
+     remain reachable via keyboard shortcuts. */
+  .topbar-action-quiet {
+    display: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .topbar-action-label-wide {
+    display: none;
+  }
+}
+
+/* Browser-test "Get Desktop App" CTA sits at the right edge of the mode-tabs
+   row. Quiet by default; uses the brand-mark fill on hover so the offer
+   reads as a brand affordance, not a marketing nag. */
+.mode-tabs .mode-tab-cta {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 26px;
+  padding: 0 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  background: var(--bg-surface-elevated);
+  color: var(--text-muted);
+  font-size: 11.5px;
+  font-weight: 500;
+  text-decoration: none;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition:
+    background var(--pf-dur-fast) var(--pf-ease),
+    color var(--pf-dur-fast) var(--pf-ease),
+    border-color var(--pf-dur-fast) var(--pf-ease);
+}
+
+.mode-tabs .mode-tab-cta:hover {
+  background: var(--bg-surface-hover);
+  color: var(--text-primary);
+  border-color: var(--border-strong);
+}
+
+.mode-tabs .mode-tab-cta:focus-visible {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-soft);
+}
+
+.mode-tabs .mode-tab-cta svg {
+  width: 13px;
+  height: 13px;
+  stroke-width: 1.75;
+}

@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 // ---------------------------------------------------------------------------
@@ -14,6 +14,7 @@
 // ---------------------------------------------------------------------------
 
 import { useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { DocumentIssue } from '../documentIssues';
 
 interface IssuePanelProps {
@@ -24,6 +25,7 @@ interface IssuePanelProps {
 }
 
 export function IssuePanel({ issues, onNavigate }: IssuePanelProps) {
+  const { t } = useTranslation();
   const [filterReviewer, setFilterReviewer] = useState('');
   const [showResolved, setShowResolved] = useState(false);
 
@@ -52,10 +54,10 @@ export function IssuePanel({ issues, onNavigate }: IssuePanelProps) {
       {/* Summary counts */}
       <div className="flex items-center gap-3 mb-1">
         <span data-testid="issue-open-count" className="text-[10px] text-muted-foreground">
-          {openCount} open
+          {openCount} {t('review.statusOpen')}
         </span>
         <span data-testid="issue-resolved-count" className="text-[10px] text-muted-foreground">
-          {resolvedCount} opgelost
+          {resolvedCount} {t('review.statusResolved')}
         </span>
       </div>
 
@@ -66,7 +68,7 @@ export function IssuePanel({ issues, onNavigate }: IssuePanelProps) {
         onChange={e => { setFilterReviewer(e.target.value); }}
         className="text-[10px] border border-border rounded px-1.5 py-0.5 bg-background text-foreground"
       >
-        <option value="">Alle reviewers</option>
+        <option value="">{t('review.allReviewers')}</option>
         {reviewers.map(r => (
           <option key={r} value={r}>{r}</option>
         ))}
@@ -81,12 +83,12 @@ export function IssuePanel({ issues, onNavigate }: IssuePanelProps) {
           onChange={e => { setShowResolved(e.target.checked); }}
           className="rounded"
         />
-        <span className="text-[10px] text-muted-foreground">Toon opgelost</span>
+        <span className="text-[10px] text-muted-foreground">{t('review.showResolved')}</span>
       </label>
 
       {/* Issue list */}
       {filteredIssues.length === 0 ? (
-        <p className="text-[10px] text-muted-foreground/60 mt-2">Geen problemen gevonden.</p>
+        <p className="text-[10px] text-muted-foreground/60 mt-2">{t('review.noIssuesFound')}</p>
       ) : (
         <div className="flex flex-col gap-0.5 mt-1">
           {filteredIssues.map(issue => (

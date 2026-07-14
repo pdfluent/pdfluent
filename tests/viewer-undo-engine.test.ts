@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 import { readFileSync } from 'node:fs';
@@ -29,6 +29,7 @@ const viewerAppSource = [
   '../src/viewer/hooks/useTextInteraction.ts',
   '../src/viewer/hooks/useKeyboardShortcuts.ts',
   '../src/viewer/ViewerApp.tsx',
+  '../src/viewer/v3/EditorV3Shell.tsx',
   '../src/viewer/WelcomeSection.tsx',
 ].map(p => readFileSync(new URL(p, import.meta.url), 'utf8')).join('\n\n');
 
@@ -282,35 +283,33 @@ describe('ViewerApp — undo/redo keyboard shortcuts', () => {
 });
 
 // ---------------------------------------------------------------------------
-// ViewerApp — TopBar undo/redo wiring
+// ViewerApp — EditorV3Shell undo/redo wiring
 // ---------------------------------------------------------------------------
 
-describe('ViewerApp — TopBar undo/redo wiring', () => {
-  it('passes canUndo to TopBar', () => {
-    const topBarStart = viewerAppSource.indexOf('<TopBar');
-    const topBarEnd = viewerAppSource.indexOf('/>', topBarStart) + 2;
-    const topBarEl = viewerAppSource.slice(topBarStart, topBarEnd);
+describe('ViewerApp — EditorV3Shell undo/redo wiring', () => {
+  function shellBlock(): string {
+    const topBarStart = viewerAppSource.indexOf('<EditorV3Shell');
+    const topBarEnd = viewerAppSource.indexOf('>\n          {docLoading', topBarStart);
+    return viewerAppSource.slice(topBarStart, topBarEnd);
+  }
+
+  it('passes canUndo to EditorV3Shell', () => {
+    const topBarEl = shellBlock();
     expect(topBarEl).toContain('canUndo={canUndo}');
   });
 
-  it('passes canRedo to TopBar', () => {
-    const topBarStart = viewerAppSource.indexOf('<TopBar');
-    const topBarEnd = viewerAppSource.indexOf('/>', topBarStart) + 2;
-    const topBarEl = viewerAppSource.slice(topBarStart, topBarEnd);
+  it('passes canRedo to EditorV3Shell', () => {
+    const topBarEl = shellBlock();
     expect(topBarEl).toContain('canRedo={canRedo}');
   });
 
-  it('passes onUndo callback to TopBar', () => {
-    const topBarStart = viewerAppSource.indexOf('<TopBar');
-    const topBarEnd = viewerAppSource.indexOf('/>', topBarStart) + 2;
-    const topBarEl = viewerAppSource.slice(topBarStart, topBarEnd);
+  it('passes onUndo callback to EditorV3Shell', () => {
+    const topBarEl = shellBlock();
     expect(topBarEl).toContain('onUndo=');
   });
 
-  it('passes onRedo callback to TopBar', () => {
-    const topBarStart = viewerAppSource.indexOf('<TopBar');
-    const topBarEnd = viewerAppSource.indexOf('/>', topBarStart) + 2;
-    const topBarEl = viewerAppSource.slice(topBarStart, topBarEnd);
+  it('passes onRedo callback to EditorV3Shell', () => {
+    const topBarEl = shellBlock();
     expect(topBarEl).toContain('onRedo=');
   });
 });
@@ -359,28 +358,44 @@ describe('TopBar — undo/redo button props', () => {
   it('undo button disabled state is controlled by canUndo', () => {
     const btnStart = topBarSource.indexOf('data-testid="undo-btn"');
     const btnEnd = topBarSource.indexOf('</button>', btnStart) + 9;
-    const btn = topBarSource.slice(Math.max(0, btnStart - 50), btnEnd);
+    // Slice the entire button element — search back from the testid
+    // to the opening <button tag so we catch all attributes regardless
+    // of their order in JSX.
+    const btnOpenTag = topBarSource.lastIndexOf('<button', btnStart);
+    const btn = topBarSource.slice(btnOpenTag, btnEnd);
     expect(btn).toContain('disabled={!canUndo}');
   });
 
   it('redo button disabled state is controlled by canRedo', () => {
     const btnStart = topBarSource.indexOf('data-testid="redo-btn"');
     const btnEnd = topBarSource.indexOf('</button>', btnStart) + 9;
-    const btn = topBarSource.slice(Math.max(0, btnStart - 50), btnEnd);
+    // Slice the entire button element — search back from the testid
+    // to the opening <button tag so we catch all attributes regardless
+    // of their order in JSX.
+    const btnOpenTag = topBarSource.lastIndexOf('<button', btnStart);
+    const btn = topBarSource.slice(btnOpenTag, btnEnd);
     expect(btn).toContain('disabled={!canRedo}');
   });
 
   it('undo button calls onUndo when clicked', () => {
     const btnStart = topBarSource.indexOf('data-testid="undo-btn"');
     const btnEnd = topBarSource.indexOf('</button>', btnStart) + 9;
-    const btn = topBarSource.slice(Math.max(0, btnStart - 50), btnEnd);
+    // Slice the entire button element — search back from the testid
+    // to the opening <button tag so we catch all attributes regardless
+    // of their order in JSX.
+    const btnOpenTag = topBarSource.lastIndexOf('<button', btnStart);
+    const btn = topBarSource.slice(btnOpenTag, btnEnd);
     expect(btn).toContain('onClick={onUndo}');
   });
 
   it('redo button calls onRedo when clicked', () => {
     const btnStart = topBarSource.indexOf('data-testid="redo-btn"');
     const btnEnd = topBarSource.indexOf('</button>', btnStart) + 9;
-    const btn = topBarSource.slice(Math.max(0, btnStart - 50), btnEnd);
+    // Slice the entire button element — search back from the testid
+    // to the opening <button tag so we catch all attributes regardless
+    // of their order in JSX.
+    const btnOpenTag = topBarSource.lastIndexOf('<button', btnStart);
+    const btn = topBarSource.slice(btnOpenTag, btnEnd);
     expect(btn).toContain('onClick={onRedo}');
   });
 });

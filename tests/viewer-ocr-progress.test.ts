@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 import { readFileSync } from 'node:fs';
@@ -46,8 +46,7 @@ describe('ViewerApp — OCR state', () => {
     expect(viewerAppSource).toContain('setOcrPageWords');
   });
 
-  it('has ocrProgress state', () => {
-    expect(viewerAppSource).toContain('ocrProgress');
+  it('has OCR progress setter state', () => {
     expect(viewerAppSource).toContain('setOcrProgress');
   });
 

@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 /**
@@ -27,6 +27,7 @@ import type {
   PageTextStructure,
   TextParagraphTarget,
   TextLineTarget,
+  TextSpanTarget,
   TextRect,
 } from './textInteractionModel';
 
@@ -39,6 +40,8 @@ export interface TextHoverTarget {
   paragraph: TextParagraphTarget | null;
   /** The hovered line (always set when anything is hovered). */
   line: TextLineTarget;
+  /** The exact span under the pointer, when available. */
+  span: TextSpanTarget | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -75,14 +78,14 @@ export function hitTestText(
       // Find the specific line within the paragraph
       const line = para.lines.find(l => rectContains(l.rect, pdfX, pdfY))
         ?? para.lines[0]!; // fallback to first line
-      return { paragraph: para, line };
+      return { paragraph: para, line, span: findSpanInLine(line, pdfX, pdfY) };
     }
   }
 
   // Fallback: line-only hit (pointer is in a line but outside its paragraph rect)
   for (const line of structure.lines) {
     if (rectContains(line.rect, pdfX, pdfY)) {
-      return { paragraph: null, line };
+      return { paragraph: null, line, span: findSpanInLine(line, pdfX, pdfY) };
     }
   }
 
@@ -117,13 +120,13 @@ export function hitTestTextWithPadding(
     if (rectContainsPadded(para.rect, pdfX, pdfY, paddingPt)) {
       const line = para.lines.find(l => rectContainsPadded(l.rect, pdfX, pdfY, paddingPt))
         ?? para.lines[0]!;
-      return { paragraph: para, line };
+      return { paragraph: para, line, span: findSpanInLine(line, pdfX, pdfY, paddingPt) };
     }
   }
 
   for (const line of structure.lines) {
     if (rectContainsPadded(line.rect, pdfX, pdfY, paddingPt)) {
-      return { paragraph: null, line };
+      return { paragraph: null, line, span: findSpanInLine(line, pdfX, pdfY, paddingPt) };
     }
   }
 
@@ -150,6 +153,14 @@ function rectContainsPadded(rect: TextRect, x: number, y: number, pad: number): 
     y >= rect.y - pad &&
     y <= rect.y + rect.height + pad
   );
+}
+
+function findSpanInLine(line: TextLineTarget, x: number, y: number, pad = 0): TextSpanTarget | null {
+  return line.spans.find(span => (
+    pad > 0
+      ? rectContainsPadded(span.rect, x, y, pad)
+      : rectContains(span.rect, x, y)
+  )) ?? null;
 }
 
 // ---------------------------------------------------------------------------

@@ -1,15 +1,17 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
+import { isTauriRuntime } from '../../lib/tauri-detection';
 import { useState, useCallback, useMemo, useEffect, type Dispatch, type SetStateAction } from 'react';
 import type { PdfDocument, Annotation, Reply, FormField, OutlineNode } from '../../core/document';
 import type { PdfEngine } from '../../core/engine/PdfEngine';
 import type { DocumentMetadata } from '../../core/document/metadata';
-import type { ViewerMode } from '../types';
+import type { AnnotationAppearance, ViewerMode } from '../types';
+import { DEFAULT_ANNOTATION_APPEARANCE } from '../types';
 import type { AnnotationTool } from '../components/ModeToolbar';
 import type { DocumentEvent } from '../state/documentEvents';
 import { makeDocumentEvent, appendEvent } from '../state/documentEvents';
@@ -26,7 +28,15 @@ import type { RevisionSnapshot } from '../revisionSnapshot';
 import { compareSnapshots, formatSnapshotDiffMarkdown } from '../revisionCompare';
 import i18n from '../../i18n';
 
-const isTauri = typeof window !== 'undefined' && '__TAURI__' in window;
+const isTauri = isTauriRuntime();
+
+function annotationColorToHex(color: [number, number, number]): string {
+  const channels = color.map((channel) => {
+    const value = Math.round(Math.max(0, Math.min(1, channel)) * 255);
+    return value.toString(16).padStart(2, '0');
+  });
+  return `#${channels.join('')}`;
+}
 
 export function useAnnotations(
   pdfDoc: PdfDocument | null,
@@ -55,9 +65,10 @@ export function useAnnotations(
   const [ocrRunning, setOcrRunning] = useState(false);
   // Per-page OCR word boxes — used by OcrOverlay to render bounding boxes
   const [ocrPageWords, setOcrPageWords] = useState<Map<number, Array<{ text: string; confidence: number; x0: number; y0: number; x1: number; y1: number; renderedWidth: number; renderedHeight: number }>>>(new Map());
-  const [_ocrProgress, setOcrProgress] = useState<{ processed: number; total: number }>({ processed: 0, total: 0 });
+  const [, setOcrProgress] = useState<{ processed: number; total: number }>({ processed: 0, total: 0 });
   // Active annotation tool — drives canvas cursor and annotation creation
   const [activeAnnotationTool, setActiveAnnotationTool] = useState<AnnotationTool>(null);
+  const [annotationAppearance, setAnnotationAppearance] = useState<AnnotationAppearance>(DEFAULT_ANNOTATION_APPEARANCE);
   // Selected non-text annotation (markup type) — rendered with distinct outline in overlay
   const [selectedAnnotationId, setSelectedAnnotationId] = useState<string | null>(null);
   // Revision snapshots — list of captured review-state snapshots for comparison
@@ -170,17 +181,26 @@ export function useAnnotations(
     // Detect scanned pages: probe each page's extractable text length.
     // Pages with fewer than SCANNED_PAGE_TEXT_THRESHOLD characters are
     // considered scanned (no native text layer) and added to scannedPageIndices.
+    // Process in parallel batches of 8 for performance.
     const SCANNED_PAGE_TEXT_THRESHOLD = 12;
+    const SCAN_BATCH_SIZE = 8;
     void (async () => {
       const scanned = new Set<number>();
-      for (let p = 0; p < pdfDoc.pages.length; p++) {
-        const result = await engine.query.extractPageTextSpans(pdfDoc, p);
-        const totalChars = result.success
-          ? result.value.reduce((acc, span) => acc + span.text.length, 0)
-          : 0;
-        if (totalChars < SCANNED_PAGE_TEXT_THRESHOLD) {
-          scanned.add(p);
+      const totalPages = pdfDoc.pages.length;
+      for (let batch = 0; batch < totalPages; batch += SCAN_BATCH_SIZE) {
+        const batchEnd = Math.min(batch + SCAN_BATCH_SIZE, totalPages);
+        const promises = [];
+        for (let p = batch; p < batchEnd; p++) {
+          promises.push(
+            engine.query.extractPageTextSpans(pdfDoc, p).then(result => {
+              const totalChars = result.success
+                ? result.value.reduce((acc, span) => acc + span.text.length, 0)
+                : 0;
+              if (totalChars < SCANNED_PAGE_TEXT_THRESHOLD) scanned.add(p);
+            })
+          );
         }
+        await Promise.all(promises);
       }
       setScannedPageIndices(scanned);
     })();
@@ -453,6 +473,11 @@ export function useAnnotations(
     setOcrProgress({ processed: 0, total: pagesToProcess.length });
     try {
       const { invoke } = await import('@tauri-apps/api/core');
+      const ocrStatus = await invoke<{ available: boolean; remediation: string }>('get_ocr_status');
+      if (!ocrStatus.available) {
+        console.error('OCR runtime unavailable:', ocrStatus.remediation);
+        return;
+      }
       const results = new Map(ocrPageWords);
       for (const idx of pagesToProcess) {
         const rendered = await invoke<{ data_base64: string; width: number; height: number }>(
@@ -476,6 +501,8 @@ export function useAnnotations(
         setOcrProgress(prev => ({ ...prev, processed: prev.processed + 1 }));
       }
       setOcrPageWords(results);
+    } catch (err) {
+      console.error('OCR failed:', err);
     } finally {
       setOcrRunning(false);
     }
@@ -485,13 +512,27 @@ export function useAnnotations(
   const handleTextSelection = useCallback(async (
     rects: Array<{ x: number; y: number; width: number; height: number }>
   ) => {
-    if (!pdfDoc || !isTauri || !activeAnnotationTool) return;
+    if (!pdfDoc || !engine || !activeAnnotationTool) return;
     if (docLoadingRef.current) return;
     if (activeAnnotationTool !== 'highlight' && activeAnnotationTool !== 'underline' && activeAnnotationTool !== 'strikeout' && activeAnnotationTool !== 'redaction') return;
     if (rects.length === 0) return;
     const validRects = rects.filter(r => r.width > 0 && r.height > 0);
     if (validRects.length === 0) return;
-    const color: [number, number, number] = [1.0, 1.0, 0.0];
+    if (!isTauri) {
+      if (activeAnnotationTool !== 'highlight') return;
+      for (const rect of validRects) {
+        const result = await engine.annotation.createAnnotation(
+          pdfDoc, pageIndex, 'highlight', rect,
+          { contents: '', author: authorName || 'User', color: annotationColorToHex(annotationAppearance.color) }
+        );
+        if (!result.success) return;
+      }
+      await refetchComments();
+      markDirty();
+      setActiveAnnotationTool(null);
+      return;
+    }
+    const color = annotationAppearance.color;
     const backendRects = validRects.map(r => [r.x, r.y, r.x + r.width, r.y + r.height] as [number, number, number, number]);
     try {
       const { invoke } = await import('@tauri-apps/api/core');
@@ -513,7 +554,46 @@ export function useAnnotations(
       markDirty();
       setActiveAnnotationTool(null);
     } catch { /* silent — task queue surfaces errors */ }
-  }, [pdfDoc, pageIndex, activeAnnotationTool, refetchComments, markDirty]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [pdfDoc, pageIndex, activeAnnotationTool, annotationAppearance, refetchComments, markDirty, authorName]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Create a text-markup annotation directly (from floating selection toolbar, no active tool required).
+  const createTextMarkupFromSelection = useCallback(async (
+    type: 'highlight' | 'underline' | 'strikeout',
+    rects: Array<{ x: number; y: number; width: number; height: number }>
+  ) => {
+    if (!pdfDoc || !engine) return;
+    if (docLoadingRef.current) return;
+    if (rects.length === 0) return;
+    const validRects = rects.filter(r => r.width > 0 && r.height > 0);
+    if (validRects.length === 0) return;
+    if (!isTauri) {
+      if (type !== 'highlight') return;
+      for (const rect of validRects) {
+        const result = await engine.annotation.createAnnotation(
+          pdfDoc, pageIndex, 'highlight', rect,
+          { contents: '', author: authorName || 'User', color: annotationColorToHex(annotationAppearance.color) }
+        );
+        if (!result.success) return;
+      }
+      await refetchComments();
+      markDirty();
+      return;
+    }
+    const color = annotationAppearance.color;
+    const backendRects = validRects.map(r => [r.x, r.y, r.x + r.width, r.y + r.height] as [number, number, number, number]);
+    try {
+      const { invoke } = await import('@tauri-apps/api/core');
+      if (type === 'highlight') {
+        await invoke('add_highlight_annotation', { pageIndex, rects: backendRects, color });
+      } else if (type === 'underline') {
+        await invoke('add_underline_annotation', { pageIndex, rects: backendRects, color });
+      } else if (type === 'strikeout') {
+        await invoke('add_strikeout_annotation', { pageIndex, rects: backendRects, color });
+      }
+      await refetchComments();
+      markDirty();
+    } catch { /* silent — task queue surfaces errors */ }
+  }, [pdfDoc, pageIndex, annotationAppearance, refetchComments, markDirty, authorName]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Create a rectangle annotation from a drag on the canvas.
   const handleRectDraw = useCallback(async (
@@ -521,16 +601,16 @@ export function useAnnotations(
   ) => {
     if (!pdfDoc || !isTauri) return;
     if (docLoadingRef.current) return;
-    const color: [number, number, number] = [0.2, 0.4, 0.9];
+    const color = annotationAppearance.color;
     const backendRect: [number, number, number, number] = [rect.x, rect.y, rect.x + rect.width, rect.y + rect.height];
     try {
       const { invoke } = await import('@tauri-apps/api/core');
-      await invoke('add_shape_annotation', { pageIndex, rect: backendRect, shapeType: 'rectangle', color });
+      await invoke('add_shape_annotation', { pageIndex, rect: backendRect, shapeType: 'rectangle', color, strokeWidth: annotationAppearance.strokeWidth });
       await refetchComments();
       markDirty();
       setActiveAnnotationTool(null);
     } catch { /* silent */ }
-  }, [pdfDoc, pageIndex, refetchComments, markDirty]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [pdfDoc, pageIndex, refetchComments, markDirty, annotationAppearance]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Create a redaction annotation from a rect.
   const handleRedactionDraw = useCallback(async (
@@ -646,6 +726,16 @@ export function useAnnotations(
     } catch { /* silent */ }
   }, [pdfDoc, markDirty]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Delete a single page by index; returns the new page count or null on failure.
+  const handleDeletePage = useCallback(async (pageIndex: number): Promise<number | null> => {
+    if (!pdfDoc || !isTauri) return null;
+    try {
+      const { invoke } = await import('@tauri-apps/api/core');
+      const result = await invoke<{ page_count: number }>('delete_pages', { pageIndices: [pageIndex] });
+      return result.page_count;
+    } catch { return null; }
+  }, [pdfDoc]); // eslint-disable-line react-hooks/exhaustive-deps
+
   return {
     allAnnotations,
     setAllAnnotations,
@@ -659,6 +749,8 @@ export function useAnnotations(
     ocrPageWords,
     activeAnnotationTool,
     setActiveAnnotationTool,
+    annotationAppearance,
+    setAnnotationAppearance,
     selectedAnnotationId,
     setSelectedAnnotationId,
     revisionSnapshots,
@@ -681,6 +773,7 @@ export function useAnnotations(
     handleDeleteAllResolved,
     handleRunOcr,
     handleTextSelection,
+    createTextMarkupFromSelection,
     handleRectDraw,
     handleRedactionDraw,
     handleDeleteSelectedAnnotation,
@@ -690,5 +783,6 @@ export function useAnnotations(
     handleRedactMetadata,
     handleAnnotationClick,
     handleReorderPages,
+    handleDeletePage,
   };
 }

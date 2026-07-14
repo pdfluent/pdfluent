@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 /**
@@ -21,6 +21,9 @@
  *
  * 'edit'     — Full text hover affordance: paragraph/line targeting with
  *              selection chrome and the contextual action bar.
+ *
+ * 'sign'     — No text interaction. Signature placement controls take
+ *              pointer priority.
  *
  * 'forms'    — Text hover is suppressed. Form field affordances have priority
  *              over text blocks on the same page.
@@ -107,6 +110,12 @@ export function getTextInteractionRule(
       return {
         level: 'none',
         reason: 'Forms mode: form field affordances take priority over text blocks',
+      };
+
+    case 'sign':
+      return {
+        level: 'none',
+        reason: 'Sign mode: signature placement controls take priority over text',
       };
 
     case 'read':

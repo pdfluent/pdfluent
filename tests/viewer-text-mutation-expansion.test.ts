@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 /**
@@ -165,35 +165,27 @@ describe('computeBboxExpansionChars — geometry', () => {
 
 describe('validateReplacement — with expansionChars', () => {
   it('allows replacement 1 char longer when expansionChars=5', () => {
-    const target = makeSingleSpanTarget('Hello', 400, 12);
-    const support = getMutationSupport(target);
-    const expandedConstraints = { ...support.constraints!, expansionChars: 5 };
+    const expandedConstraints = { maxLength: 5, assumedEncoding: 'standard-latin' as const, expansionChars: 5 };
     const result = validateReplacement('Hello', 'Helloo', expandedConstraints);
     expect(result.valid).toBe(true);
   });
 
-  it('allows replacement 5 chars longer when expansionChars=5', () => {
-    const target = makeSingleSpanTarget('Hello', 400, 12);
-    const support = getMutationSupport(target);
-    const expandedConstraints = { ...support.constraints!, expansionChars: 5 };
+  it('blocks replacement beyond original + expansionChars', () => {
+    const expandedConstraints = { maxLength: 5, assumedEncoding: 'standard-latin' as const, expansionChars: 5 };
     const result = validateReplacement('Hello', 'Hello World', expandedConstraints); // 11 vs 5+5=10 effective max → blocked (11 > 10)
     // 5 + 5 = 10 effective max; "Hello World" = 11 chars → blocked
     expect(result.valid).toBe(false);
   });
 
   it('exactly at effective max (original + expansionChars) passes', () => {
-    const target = makeSingleSpanTarget('Hello', 400, 12);
-    const support = getMutationSupport(target);
-    const expandedConstraints = { ...support.constraints!, expansionChars: 3 };
+    const expandedConstraints = { maxLength: 5, assumedEncoding: 'standard-latin' as const, expansionChars: 3 };
     // maxLength=5, expansionChars=3, effective=8; "Hello!!!" = 8 chars → valid
     const result = validateReplacement('Hello', 'Hello!!!', expandedConstraints);
     expect(result.valid).toBe(true);
   });
 
   it('one over effective max is blocked', () => {
-    const target = makeSingleSpanTarget('Hello', 400, 12);
-    const support = getMutationSupport(target);
-    const expandedConstraints = { ...support.constraints!, expansionChars: 3 };
+    const expandedConstraints = { maxLength: 5, assumedEncoding: 'standard-latin' as const, expansionChars: 3 };
     // effective max = 8; "Hello!!!!" = 9 chars → blocked
     const result = validateReplacement('Hello', 'Hello!!!!', expandedConstraints);
     expect(result.valid).toBe(false);
@@ -201,9 +193,7 @@ describe('validateReplacement — with expansionChars', () => {
   });
 
   it('expansionChars=0 is identical to no-expansion (regression)', () => {
-    const target = makeSingleSpanTarget('Hello world', 200, 12);
-    const support = getMutationSupport(target);
-    const expandedConstraints = { ...support.constraints!, expansionChars: 0 };
+    const expandedConstraints = { maxLength: 11, assumedEncoding: 'standard-latin' as const, expansionChars: 0 };
     const result = validateReplacement('Hello world', 'Hello worlds', expandedConstraints);
     expect(result.valid).toBe(false);
     expect(result.reasonCode).toBe('replacement-too-long');
@@ -214,23 +204,22 @@ describe('validateReplacement — with expansionChars', () => {
 // validateReplacement — backward compat (no expansionChars)
 // ---------------------------------------------------------------------------
 
-describe('validateReplacement — backward compat (no expansion)', () => {
-  it('Phase 4 behaviour: one char longer is blocked', () => {
+describe('validateReplacement — parser-backed support constraints', () => {
+  it('one char longer is allowed when getMutationSupport returns maxLength=null', () => {
     const target = makeSingleSpanTarget('Hello world', 200, 12);
     const support = getMutationSupport(target);
     const result = validateReplacement('Hello world', 'Hello worlds', support.constraints!);
-    expect(result.valid).toBe(false);
-    expect(result.reasonCode).toBe('replacement-too-long');
+    expect(result.valid).toBe(true);
   });
 
-  it('Phase 4 behaviour: equal length passes', () => {
+  it('equal length passes', () => {
     const target = makeSingleSpanTarget('Hello world', 200, 12);
     const support = getMutationSupport(target);
     const result = validateReplacement('Hello world', 'Hello earth', support.constraints!);
     expect(result.valid).toBe(true);
   });
 
-  it('Phase 4 behaviour: shorter passes', () => {
+  it('shorter passes', () => {
     const target = makeSingleSpanTarget('Hello world', 200, 12);
     const support = getMutationSupport(target);
     const result = validateReplacement('Hello world', 'Hi', support.constraints!);

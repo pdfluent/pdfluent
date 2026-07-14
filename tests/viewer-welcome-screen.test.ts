@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 import { readFileSync } from 'node:fs';
@@ -54,20 +54,34 @@ describe('WelcomeScreen — structure', () => {
   });
 
   it('renders empty state text "Nog geen bestanden geopend."', () => {
-    expect(welcomeSource).toContain("t('welcome.noRecentFiles'");
+    // v2: no separate noRecentFiles text — the recent-files rail simply
+    // doesn't render when empty. The welcome-empty-state testid hook
+    // remains for backward-compat. Accept either pattern.
+    expect(welcomeSource).toMatch(
+      /(?:t\(['"]welcome\.noRecentFiles['"]|data-testid=['"]welcome-empty-state['"])/,
+    );
   });
 
   it('renders PDF openen… label on open button', () => {
-    expect(welcomeSource).toContain("t('welcome.openFile'");
+    // Quote style is project-mixed (Prettier on some files, ESLint on
+    // others). Accept either.
+    expect(welcomeSource).toMatch(/t\(['"]welcome\.openFile['"]/);
   });
 
-  it('uses LayersIcon from lucide-react', () => {
-    expect(welcomeSource).toContain('LayersIcon');
+  it('uses XIcon from lucide-react', () => {
+    // FolderOpenIcon + ShieldCheckIcon + FileTextIcon also added in v2
+    // for the new CTA + privacy chip + recent-file rows; XIcon remains
+    // for remove-recent + close affordances.
+    expect(welcomeSource).toContain('XIcon');
     expect(welcomeSource).toContain('lucide-react');
   });
 
-  it('renders PDFluent wordmark', () => {
-    expect(welcomeSource).toContain('PDFluent');
+  it('renders PDFluent brand mark', () => {
+    // v2 brand mark is rendered via `.welcome-card-mark` CSS class with
+    // a single "P" character — visually the wordmark. Either the literal
+    // string "PDFluent" (legacy h1) or the welcome-card-mark class
+    // satisfies the contract.
+    expect(welcomeSource).toMatch(/PDFluent|welcome-card-mark/);
   });
 });
 

@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 import { readFileSync } from 'node:fs';
@@ -24,6 +24,7 @@ const viewerAppSource = [
   '../src/viewer/hooks/useTextInteraction.ts',
   '../src/viewer/hooks/useKeyboardShortcuts.ts',
   '../src/viewer/ViewerApp.tsx',
+  '../src/viewer/v3/EditorV3Shell.tsx',
   '../src/viewer/WelcomeSection.tsx',
 ].map(p => readFileSync(new URL(p, import.meta.url), 'utf8')).join('\n\n');
 
@@ -84,18 +85,17 @@ describe('ViewerApp — go-to-page shortcut: preventDefault', () => {
 // ---------------------------------------------------------------------------
 
 describe('ViewerApp — go-to-page shortcut: dialog wiring', () => {
-  it('creates pageInputRef with useRef (still passed to TopBar)', () => {
-    expect(sectionBody).toContain('pageInputRef = useRef<HTMLInputElement | null>(null)');
+  it('exposes a V3 bottom-bar trigger for the dialog', () => {
+    expect(viewerAppSource).toContain('onOpenGoToPage={() => { setGoToPageOpen(true); }}');
+    expect(viewerAppSource).toContain('data-testid="floating-page-indicator"');
   });
 
   it('opens the go-to-page dialog on ⌘G', () => {
     expect(sectionBody).toContain('setGoToPageOpen(true)');
   });
 
-  it('passes pageInputRef to TopBar', () => {
-    // Check the TopBar JSX in the full source
-    const topBarJsx = viewerAppSource.indexOf('pageInputRef={pageInputRef}');
-    expect(topBarJsx).toBeGreaterThan(-1);
+  it('does not require a TopBar input ref in V3', () => {
+    expect(viewerAppSource).toContain('onClick={onOpenGoToPage}');
   });
 });
 

@@ -1,0 +1,126 @@
+/* Copyright (c) 2026 Innovation Trigger B.V. All rights reserved. */
+/* See https://pdfluent.com/license for terms. */
+
+/* BottomTaskBar — quiet status strip. See viewer/components/BottomTaskBar.tsx. */
+
+/* =============================================================================
+   BottomTaskBar — quiet status strip
+   Only renders when there are active tasks. 28 px tall, token-driven.
+   ============================================================================= */
+
+.bottom-taskbar {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  height: 28px;
+  padding: 0 12px;
+  border-top: 1px solid var(--border-subtle);
+  background: var(--bg-surface-2);
+  flex-shrink: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-app-region: no-drag;
+  user-select: none;
+}
+
+.bottom-taskbar::-webkit-scrollbar {
+  display: none;
+}
+
+.bottom-taskbar-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex-shrink: 0;
+  max-width: 360px;
+}
+
+/* Status indicator dot. Colour is the only signal — small, calm. */
+.bottom-taskbar-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.bottom-taskbar-row[data-status='running'] .bottom-taskbar-dot {
+  background: var(--accent);
+  animation: pf-pulse 1.4s ease-in-out infinite;
+}
+
+.bottom-taskbar-row[data-status='done'] .bottom-taskbar-dot {
+  background: var(--success);
+}
+
+.bottom-taskbar-row[data-status='error'] .bottom-taskbar-dot {
+  background: var(--danger);
+}
+
+.bottom-taskbar-label {
+  font-size: 11.5px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.bottom-taskbar-row[data-status='error'] .bottom-taskbar-label {
+  color: var(--danger);
+}
+
+/* Slim progress strip — only rendered for tasks that report progress. */
+.bottom-taskbar-progress {
+  width: 80px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--bg-surface-3);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.bottom-taskbar-progress-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 2px;
+  transition: width var(--pf-dur-med) var(--pf-ease);
+}
+
+/* Tiny dismiss button — easy hover target without dominating the row. */
+.bottom-taskbar-dismiss {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: none;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition:
+    background var(--pf-dur-fast) var(--pf-ease),
+    color var(--pf-dur-fast) var(--pf-ease);
+}
+
+.bottom-taskbar-dismiss:hover {
+  background: var(--bg-surface-press);
+  color: var(--text-primary);
+}
+
+.bottom-taskbar-dismiss svg {
+  width: 12px;
+  height: 12px;
+  stroke-width: 2;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bottom-taskbar-row[data-status='running'] .bottom-taskbar-dot {
+    animation: none;
+  }
+}
+

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <!--
+      Nested-helper entitlements for the Mac App Store build. Every executable
+      bundled under the .app (e.g. resources/bin/pdfluent_translate_helper) must
+      be signed for the sandbox. `inherit` makes the helper run inside the parent
+      app's sandbox container rather than declaring its own entitlements — the
+      required pattern for sandboxed helper tools spawned by the main app.
+    -->
+    <key>com.apple.security.app-sandbox</key>
+    <true/>
+    <key>com.apple.security.inherit</key>
+    <true/>
+</dict>
+</plist>

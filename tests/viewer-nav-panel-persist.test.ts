@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 import { readFileSync } from 'node:fs';
@@ -57,12 +57,13 @@ describe('LeftNavRail — restore valid saved panel', () => {
 // ---------------------------------------------------------------------------
 
 describe('LeftNavRail — fallback to thumbnails', () => {
-  it('returns thumbnails when localStorage is empty or invalid', () => {
-    // The initializer must end with returning 'thumbnails' as fallback
+  it('returns null (closed) when localStorage is empty or invalid', () => {
+    // Nav panel defaults to CLOSED (null) when no valid saved state exists.
+    // User opens the panel on demand — panel-open-by-default was intentionally removed (2026-05-20).
     const initFnStart = navRailSource.indexOf('useState<NavigationPanel | null>(() =>');
     const initFnEnd = navRailSource.indexOf('});', initFnStart);
     const initBody = navRailSource.slice(initFnStart, initFnEnd);
-    expect(initBody).toContain("return 'thumbnails'");
+    expect(initBody).toContain('return null');
   });
 
   it('wraps localStorage access in try/catch for unavailable environments', () => {
@@ -106,12 +107,14 @@ describe('LeftNavRail — persist panel changes', () => {
 // ---------------------------------------------------------------------------
 
 describe('LeftNavRail — persist panel close', () => {
-  it('removes the key when activePanel is null', () => {
-    expect(navRailSource).toContain('localStorage.removeItem');
-    expect(navRailSource).toContain("localStorage.removeItem('pdfluent.nav.panel')");
+  it("writes 'none' sentinel when activePanel is null", () => {
+    // Persistence contract: on close, write the explicit sentinel 'none' rather than
+    // removing the key. This preserves the user's intent across reloads and lets the
+    // initializer distinguish "intentionally closed" from "never opened". (2026-05-20)
+    expect(navRailSource).toContain("localStorage.setItem('pdfluent.nav.panel', 'none')");
   });
 
-  it('guards removeItem behind activePanel === null check', () => {
+  it('guards the none sentinel behind activePanel === null check', () => {
     const effectStart = navRailSource.indexOf('}, [activePanel])');
     const effectBody = navRailSource.slice(navRailSource.lastIndexOf('useEffect(', effectStart), effectStart);
     expect(effectBody).toContain('activePanel === null');

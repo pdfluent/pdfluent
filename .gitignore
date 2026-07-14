@@ -24,7 +24,11 @@ Thumbs.db
 # Logs
 *.log
 
-# Pdfium native library (downloaded separately)
+# Wrangler local state (from release scripts that call wrangler)
+.wrangler/
+
+# Pdfium native library (pre-XFA engine, no longer used — entries kept in case
+# the directory still exists on older dev machines so they are not accidentally committed)
 src-tauri/lib/lib/
 src-tauri/lib/include/
 src-tauri/lib/licenses/
@@ -33,3 +37,33 @@ src-tauri/lib/args.gn
 
 # Tauri generated
 src-tauri/gen/
+
+# Generated compliance report (regenerate via: npm run compliance:generate)
+compliance-report.json
+
+# Playwright test results (generated on each run)
+test-results/
+
+# Python tooling
+.venv-ocr/
+.venv/
+__pycache__/
+scripts/__pycache__/
+*.pyc
+*.pyo
+
+# Transient Windows MSI build-config (created by release-windows.ps1)
+tauri.winbuild.json
+
+# Local release build output
+dist-release/
+docs/analysis/assets/
+
+# Staged updater artifacts + generated updater feed (signed installers/sigs +
+# latest.json) — produced by release-*.{sh,ps1}/ci-generate-latest-json.mjs.
+# Never commit installers or signatures.
+artifacts/
+latest.json
+
+# Mac App Store provisioning profile (per-developer, not committed)
+*.provisionprofile

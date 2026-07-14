@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 import { readFileSync } from 'node:fs';
@@ -159,18 +159,18 @@ describe('ModeToolbar — handleRotatePageRight', () => {
   });
 });
 
-describe('ModeToolbar — WIRED_TOOLS includes rotation', () => {
-  it('Links roteren is in WIRED_TOOLS', () => {
-    const wiredStart = toolbarSource.indexOf('export const WIRED_TOOLS');
-    const wiredEnd = toolbarSource.indexOf(']);', wiredStart) + 3;
-    const wiredBlock = toolbarSource.slice(wiredStart, wiredEnd);
-    expect(wiredBlock).toContain("'toolbar.rotateLeft'");
+describe('ModeToolbar — getWiredTools includes rotation for Tauri', () => {
+  it('Links roteren is in getWiredTools Tauri branch', () => {
+    const fnStart = toolbarSource.indexOf('export function getWiredTools');
+    const fnEnd = toolbarSource.indexOf('return base;', fnStart) + 12;
+    const fnBlock = toolbarSource.slice(fnStart, fnEnd);
+    expect(fnBlock).toContain("'toolbar.rotateLeft'");
   });
 
-  it('Rechts roteren is in WIRED_TOOLS', () => {
-    const wiredStart = toolbarSource.indexOf('export const WIRED_TOOLS');
-    const wiredEnd = toolbarSource.indexOf(']);', wiredStart) + 3;
-    const wiredBlock = toolbarSource.slice(wiredStart, wiredEnd);
-    expect(wiredBlock).toContain("'toolbar.rotateRight'");
+  it('Rechts roteren is in getWiredTools Tauri branch', () => {
+    const fnStart = toolbarSource.indexOf('export function getWiredTools');
+    const fnEnd = toolbarSource.indexOf('return base;', fnStart) + 12;
+    const fnBlock = toolbarSource.slice(fnStart, fnEnd);
+    expect(fnBlock).toContain("'toolbar.rotateRight'");
   });
 });

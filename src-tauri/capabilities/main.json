@@ -2,28 +2,43 @@
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "main",
   "description": "Main window capability for PDFluent desktop workflows.",
-  "windows": ["main"],
+  "windows": [
+    "main",
+    "main-recovery"
+  ],
   "permissions": [
     "core:default",
     "core:event:default",
+    "core:webview:allow-print",
+    "core:window:allow-set-title",
     "dialog:default",
-    "updater:default",
-    "fs:allow-read",
-    "fs:allow-read-file",
-    "fs:allow-read-text-file",
     "fs:allow-exists",
-    "fs:allow-write",
+    "fs:allow-read-file",
     "fs:allow-write-file",
-    "fs:allow-write-text-file",
-    "fs:allow-mkdir",
-    "fs:allow-rename",
-    "fs:allow-remove",
     "fs:allow-copy-file",
+    "fs:allow-remove",
     {
       "identifier": "fs:scope",
-      "allow": ["$HOME/**", "$DOCUMENT/**", "$DESKTOP/**", "$DOWNLOAD/**", "$TEMP/**"],
-      "deny": []
-    },
-    "shell:allow-open"
+      "allow": [
+        {
+          "path": "**"
+        },
+        {
+          "path": "/**"
+        },
+        {
+          "path": "$HOME/**"
+        },
+        {
+          "path": "$APPDATA/**"
+        },
+        {
+          "path": "$APPLOCALDATA/**"
+        },
+        {
+          "path": "$TEMP/**"
+        }
+      ]
+    }
   ]
 }

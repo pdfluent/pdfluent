@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 /**
@@ -123,14 +123,15 @@ describe('PageCanvas — double-click edit entry trigger', () => {
     expect(pageCanvasSrc).toContain('handlePageDoubleClick');
   });
 
-  it('double-click handler fires onTextTargetDoubleClick with hovered paragraph', () => {
-    expect(pageCanvasSrc).toContain('onTextTargetDoubleClick?.(hoveredTextTarget.paragraph)');
+  it('double-click handler fires onTextTargetDoubleClick with the editable hit target', () => {
+    expect(pageCanvasSrc).toContain('const target = clickTarget ? getEditableTargetFromHit(clickTarget) : null');
+    expect(pageCanvasSrc).toContain('onTextTargetDoubleClick?.(target)');
   });
 
   it('double-click guard requires textInteractionActive and no active tool', () => {
     const dblClickFn = pageCanvasSrc.slice(
       pageCanvasSrc.indexOf('handlePageDoubleClick'),
-      pageCanvasSrc.indexOf('handlePageDoubleClick') + 300,
+      pageCanvasSrc.indexOf('handlePageDoubleClick') + 500,
     );
     expect(dblClickFn).toContain('textInteractionActive');
     expect(dblClickFn).toContain('activeAnnotationTool');
@@ -177,25 +178,30 @@ describe('ViewerApp — handleEditEntry', () => {
     expect(entryFn).toContain("status !== 'editable'");
   });
 
-  it('handleEditEntry sets editingTextTargetId when editable', () => {
+  it('handleEditEntry starts the overlay when parser-backed editing is available', () => {
     const entryFn = viewerAppSrc.slice(
       viewerAppSrc.indexOf('handleEditEntry'),
-      viewerAppSrc.indexOf('handleEditEntry') + 500,
+      viewerAppSrc.indexOf('/** Handle context bar action'),
     );
-    expect(entryFn).toContain('setEditingTextTargetId');
+    expect(entryFn).toContain("replaceTextMode !== 'parser-backed'");
+    expect(entryFn).toContain('setEditingTextTargetId(target.id)');
+    expect(entryFn).toContain('setTextDraft(extractText(target))');
+    expect(entryFn).not.toContain('De huidige basis-writer');
   });
 
-  it('handleEditEntry sets textDraft from extractText', () => {
+  it('handleEditEntry reports unsupported structures without entering edit mode', () => {
     const entryFn = viewerAppSrc.slice(
       viewerAppSrc.indexOf('handleEditEntry'),
-      viewerAppSrc.indexOf('handleEditEntry') + 500,
+      viewerAppSrc.indexOf('/** Handle context bar action'),
     );
-    expect(entryFn).toContain('setTextDraft');
-    expect(entryFn).toContain('extractText');
+    expect(entryFn).toContain('setSelectedTextTargetId(target.id)');
+    expect(entryFn).toContain('setEditingTextTargetId(null)');
+    expect(entryFn).toContain('getUnsupportedMessage(mutationSupport)');
   });
 
   it('passes onTextTargetDoubleClick to PageCanvas', () => {
-    expect(viewerAppSrc).toContain('onTextTargetDoubleClick={handleEditEntry}');
+    // handler name changed to handleDoubleClickForEdit to support auto-mode-switch from read mode
+    expect(viewerAppSrc).toContain('onTextTargetDoubleClick={isCurrentPage ? handleDoubleClickForEdit : undefined}');
   });
 
   it('has handleTextContextAction routing edit-text to handleEditEntry', () => {

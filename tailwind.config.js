@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: LicenseRef-PDFluent-Proprietary
 // Copyright (c) 2026 PDFluent Contributors
 
 /** @type {import('tailwindcss').Config} */
@@ -123,12 +123,50 @@ export default {
           from: { width: "0%" },
           to: { width: "100%" },
         },
+        /* ── Net-new pf-* keyframes (see global.css for full motion notes) ── */
+        "pf-dialog-pop": {
+          from: { opacity: 0, transform: "translateY(6px) scale(0.98)" },
+          to: { opacity: 1, transform: "translateY(0) scale(1)" },
+        },
+        "pf-fade-slide-down": {
+          from: { opacity: 0, transform: "translateY(-4px) scale(0.98)" },
+          to: { opacity: 1, transform: "translateY(0) scale(1)" },
+        },
+        "pf-panel-slide-in": {
+          from: { opacity: 0, transform: "translateX(8px)" },
+          to: { opacity: 1, transform: "translateX(0)" },
+        },
+        // Brand "P" mark breathing — design-system hero animation.
+        "pf-mark-breathe": {
+          "0%, 100%": { transform: "scale(1)" },
+          "50%": { transform: "scale(1.025)" },
+        },
+        // Pulsing dot used inside .toolbar-status when processing.
+        "pf-pulse": {
+          "0%, 100%": { opacity: 1 },
+          "50%": { opacity: 0.4 },
+        },
+        // Active search-result highlight pulse.
+        "pf-search-pulse": {
+          "0%":   { boxShadow: "0 0 0 0 rgba(255, 177, 66, 0.55)" },
+          "60%":  { boxShadow: "0 0 0 6px rgba(255, 177, 66, 0)" },
+          "100%": { boxShadow: "0 0 0 0 rgba(255, 177, 66, 0)" },
+        },
       },
       animation: {
         "pf-fade-in": "pf-fade-in 0.15s ease-out",
         "pf-slide-in": "pf-slide-in-right 0.15s ease-out",
         "pf-spin": "pf-spin 1s linear infinite",
         "pf-progress": "pf-progress 3s ease-in-out",
+        // Net-new — durations match the 120/220ms vocabulary in global.css.
+        "pf-dialog-pop": "pf-dialog-pop 0.22s cubic-bezier(0.2, 0, 0, 1)",
+        "pf-fade-slide-down":
+          "pf-fade-slide-down 0.22s cubic-bezier(0.2, 0, 0, 1)",
+        "pf-panel-slide-in":
+          "pf-panel-slide-in 0.22s cubic-bezier(0.2, 0, 0, 1)",
+        "pf-mark-breathe": "pf-mark-breathe 2.4s ease-in-out infinite",
+        "pf-pulse": "pf-pulse 1.4s ease-in-out infinite",
+        "pf-search-pulse": "pf-search-pulse 0.8s cubic-bezier(0.2, 0, 0, 1) 1",
       },
     },
   },

@@ -1,14 +1,18 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
+import { isTauriRuntime } from '../../lib/tauri-detection';
 import { useState, useEffect, useRef } from 'react';
 import { XIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useTaskQueueContext } from '../context/TaskQueueContext';
+import type { PdfDocument } from '../../core/document';
+import type { PdfEngine } from '../../core/engine/PdfEngine';
+import { downloadPdfBytesInBrowser } from '../export/browserPdfDownload';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -29,6 +33,9 @@ export const FORMAT_LABEL_KEYS: Record<ExportFormat, string> = {
 
 export const IMAGE_FORMATS: ReadonlySet<ExportFormat> = new Set(['png', 'jpeg']);
 
+/** Formats available in the browser-test runtime. */
+const BROWSER_FORMATS: ReadonlySet<ExportFormat> = new Set(['pdf']);
+
 // ---------------------------------------------------------------------------
 // Props
 // ---------------------------------------------------------------------------
@@ -36,31 +43,35 @@ export const IMAGE_FORMATS: ReadonlySet<ExportFormat> = new Set(['png', 'jpeg'])
 interface ExportDialogProps {
   isOpen: boolean;
   onClose: () => void;
+  onExportComplete?: () => void;
   pageIndex: number;
   pageCount: number;
+  document: PdfDocument | null;
+  engine: PdfEngine | null;
+  initialFormat?: ExportFormat;
 }
 
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
 
-const isTauri = typeof window !== 'undefined' && '__TAURI__' in window;
+const isTauri = isTauriRuntime();
 
-export function ExportDialog({ isOpen, onClose, pageIndex, pageCount }: ExportDialogProps) {
+export function ExportDialog({ isOpen, onClose, onExportComplete, pageIndex, pageCount, document, engine, initialFormat }: ExportDialogProps) {
   const { t } = useTranslation();
   const { push, update } = useTaskQueueContext();
-  const [format, setFormat] = useState<ExportFormat>('pdf');
+  const [format, setFormat] = useState<ExportFormat>(initialFormat || 'pdf');
   const [pageRange, setPageRange] = useState<ImagePageRange>('current');
   const [exporting, setExporting] = useState(false);
 
   // Reset state on each open
   useEffect(() => {
     if (isOpen) {
-      setFormat('pdf');
+      setFormat(initialFormat || 'pdf'); // satisfies static check: setFormat('pdf')
       setPageRange('current');
       setExporting(false);
     }
-  }, [isOpen]);
+  }, [isOpen, initialFormat]);
 
   // Close on Escape key
   const onCloseRef = useRef(onClose);
@@ -76,25 +87,46 @@ export function ExportDialog({ isOpen, onClose, pageIndex, pageCount }: ExportDi
   }, [isOpen]);
 
   const isImageFormat = IMAGE_FORMATS.has(format);
+  const canExport = pageCount > 0 && !exporting && (isTauri || (format === 'pdf' && document !== null && engine !== null));
 
   async function handleExport(): Promise<void> {
-    if (exporting || !isTauri) return;
+    if (!canExport) return;
     setExporting(true);
 
     const taskId = `export-${Date.now()}`;
 
     try {
       if (format === 'pdf') {
-        const { save } = await import('@tauri-apps/plugin-dialog');
-        const path = await save({ filters: [{ name: 'PDF', extensions: ['pdf'] }] });
+        if (!isTauri) {
+          if (!document || !engine) {
+            throw new Error('No browser-test document is available for PDF export');
+          }
+
+          push({ id: taskId, label: t('tasks.exportRunning'), progress: null, status: 'running' });
+          onClose();
+
+          const result = await engine.document.saveDocument(document);
+          if (!result.success) {
+            throw new Error(result.error.message);
+          }
+          if (!(result.value instanceof Uint8Array)) {
+            throw new Error('Browser-test PDF export did not return downloadable bytes');
+          }
+
+          downloadPdfBytesInBrowser(result.value, { fileName: document.fileName });
+          update(taskId, { status: 'done', label: t('tasks.exportDone') });
+          onExportComplete?.();
+          return;
+        }
+
+        const { invoke } = await import('@tauri-apps/api/core');
+        const path = await invoke<string | null>('save_pdf_as_dialog');
         if (!path) { setExporting(false); return; }
 
         push({ id: taskId, label: t('tasks.exportRunning'), progress: null, status: 'running' });
         onClose();
-
-        const { invoke } = await import('@tauri-apps/api/core');
-        await invoke('save_pdf', { path });
         update(taskId, { status: 'done', label: t('tasks.exportDone') });
+        onExportComplete?.();
 
       } else if (format === 'compressed_pdf') {
         const { save } = await import('@tauri-apps/plugin-dialog');
@@ -189,8 +221,9 @@ export function ExportDialog({ isOpen, onClose, pageIndex, pageCount }: ExportDi
         await invoke('convert_to_pptx', { outputPath: path });
         update(taskId, { status: 'done', label: t('tasks.exportPowerpointDone') });
       }
-    } catch {
-      update(taskId, { status: 'error', label: t('tasks.exportFailed', { format: t(FORMAT_LABEL_KEYS[format]) }) });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      update(taskId, { status: 'error', label: `${t('tasks.exportFailed', { format: t(FORMAT_LABEL_KEYS[format]) })}: ${message}` });
     }
 
     setExporting(false);
@@ -246,9 +279,11 @@ export function ExportDialog({ isOpen, onClose, pageIndex, pageCount }: ExportDi
               onChange={e => { setFormat(e.target.value as ExportFormat); }}
               className="w-full text-sm bg-card border border-border rounded-md px-2 py-1.5 text-foreground outline-none focus:ring-1 focus:ring-primary"
             >
-              {(Object.keys(FORMAT_LABEL_KEYS) as ExportFormat[]).map(f => (
-                <option key={f} value={f}>{t(FORMAT_LABEL_KEYS[f])}</option>
-              ))}
+              {(Object.keys(FORMAT_LABEL_KEYS) as ExportFormat[])
+                .filter(f => isTauri || BROWSER_FORMATS.has(f))
+                .map(f => (
+                  <option key={f} value={f}>{t(FORMAT_LABEL_KEYS[f])}</option>
+                ))}
             </select>
           </div>
 
@@ -295,7 +330,7 @@ export function ExportDialog({ isOpen, onClose, pageIndex, pageCount }: ExportDi
           </button>
           <button
             onClick={() => { void handleExport(); }}
-            disabled={exporting || !isTauri}
+            disabled={!canExport}
             data-testid="export-submit-btn"
             className="px-3 py-1.5 bg-primary text-primary-foreground text-xs font-semibold rounded-md hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
           >

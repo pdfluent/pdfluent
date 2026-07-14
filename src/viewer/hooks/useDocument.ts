@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 import { useState, useCallback } from 'react';
@@ -20,6 +20,7 @@ interface UseDocumentResult {
   markDirty: () => void;
   clearDirty: () => void;
   updatePageCount: (n: number) => void;
+  replaceDocument: (document: PdfDocument, dirty?: boolean) => void;
   loadDocument: (source: string | ArrayBuffer) => Promise<void>;
   closeDocument: () => void;
 }
@@ -38,6 +39,14 @@ export function useDocument(engine: PdfEngine | null): UseDocumentResult {
   const updatePageCount = useCallback((n: number): void => {
     setPageCount(n);
     setIsDirty(true);
+  }, []);
+
+  const replaceDocument = useCallback((document: PdfDocument, dirty = true): void => {
+    setDoc(document);
+    setMetadata(document.metadata);
+    setPageCount(document.pages.length);
+    setIsDirty(dirty);
+    setError(null);
   }, []);
 
   const loadDocument = useCallback(async (source: string | ArrayBuffer): Promise<void> => {
@@ -80,5 +89,5 @@ export function useDocument(engine: PdfEngine | null): UseDocumentResult {
     setIsDirty(false);
   }, [engine, doc]);
 
-  return { document: doc, metadata, pageCount, loading, error, isDirty, markDirty, clearDirty, updatePageCount, loadDocument, closeDocument };
+  return { document: doc, metadata, pageCount, loading, error, isDirty, markDirty, clearDirty, updatePageCount, replaceDocument, loadDocument, closeDocument };
 }

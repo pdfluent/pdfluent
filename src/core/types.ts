@@ -1,14 +1,15 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 // ---------------------------------------------------------------------------
 // Runtime Types
 // ---------------------------------------------------------------------------
 
+import { isTauriRuntime } from '../lib/tauri-detection';
 /** Supported runtime environments */
 export type Runtime = 'tauri' | 'browser-test';
 
@@ -30,6 +31,8 @@ export type OperationType =
   | 'redact'
   | 'sign'
   | 'validate-pdfa'
+  | 'convert-pdfa'
+  | 'xfa-flatten'
   | 'extract-text'
   | 'extract-images';
 
@@ -132,10 +135,13 @@ export function isFailure<T, E>(result: Result<T, E>): result is { success: fals
 
 /** Platform detection utility */
 export function detectRuntime(): Runtime {
-  // In Tauri environment, we can check for Tauri APIs
-  // For now, we'll use a simple check - this will be enhanced in actual implementation
-  if (typeof window !== 'undefined' && (window as any).__TAURI__) {
+  if (isTauriRuntime()) {
     return 'tauri';
+  }
+  // Browser without Tauri is only a development/test harness. The desktop
+  // product uses native Rust via Tauri commands for all real PDF work.
+  if (typeof window !== 'undefined') {
+    return 'browser-test';
   }
   return 'browser-test';
 }

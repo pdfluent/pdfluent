@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 import { describe, it, expect } from 'vitest';
@@ -180,10 +180,10 @@ describe('ViewerApp — text interaction wiring', () => {
   });
 
   it('passes textStructure to PageCanvas', () => {
-    expect(viewerAppSource).toContain('textStructure={pageTextStructure}');
+    expect(viewerAppSource).toContain('textStructure={isCurrentPage ? pageTextStructure : null}');
   });
 
   it('passes textInteractionActive to PageCanvas', () => {
-    expect(viewerAppSource).toContain('textInteractionActive={textInteractionActive}');
+    expect(viewerAppSource).toContain('textInteractionActive={isCurrentPage && textInteractionActive}');
   });
 });

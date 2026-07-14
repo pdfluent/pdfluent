@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 // ---------------------------------------------------------------------------
@@ -308,6 +308,14 @@ export interface TransformEngine {
   convertToPdfA(
     document: PdfDocument,
     level: '1a' | '1b' | '2a' | '2b' | '2u' | '3a' | '3b' | '3u',
+    options?: TransformOptions
+  ): AsyncEngineResult<PdfDocument>;
+
+  /**
+   * Flatten XFA form fields into static PDF content
+   */
+  flattenXfa(
+    document: PdfDocument,
     options?: TransformOptions
   ): AsyncEngineResult<PdfDocument>;
 

@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 import { readFileSync } from 'node:fs';
@@ -18,8 +18,8 @@ const ocrOverlaySource = readFileSync(
 // ---------------------------------------------------------------------------
 
 describe('OcrOverlay — component structure', () => {
-  it('exports OcrOverlay function', () => {
-    expect(ocrOverlaySource).toContain('export function OcrOverlay(');
+  it('exports OcrOverlay component', () => {
+    expect(ocrOverlaySource).toContain('export const OcrOverlay = memo(');
   });
 
   it('renders SVG with data-testid="ocr-overlay"', () => {
@@ -41,7 +41,7 @@ describe('OcrOverlay — component structure', () => {
 
 describe('OcrOverlay — props', () => {
   it('accepts words prop', () => {
-    const fnStart = ocrOverlaySource.indexOf('export function OcrOverlay(');
+    const fnStart = ocrOverlaySource.indexOf('export const OcrOverlay = memo(');
     const sigEnd = fnStart + 400;
     const sig = ocrOverlaySource.slice(fnStart, sigEnd);
     expect(sig).toContain('words');

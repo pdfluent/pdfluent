@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 import { readFileSync } from 'node:fs';
@@ -24,13 +24,15 @@ const viewerAppSource = [
   '../src/viewer/hooks/useTextInteraction.ts',
   '../src/viewer/hooks/useKeyboardShortcuts.ts',
   '../src/viewer/ViewerApp.tsx',
+  '../src/viewer/v3/EditorV3Shell.tsx',
   '../src/viewer/WelcomeSection.tsx',
 ].map(p => readFileSync(new URL(p, import.meta.url), 'utf8')).join('\n\n');
 
 // Locate the floating zoom control block for scoped assertions.
 const floatStart = viewerAppSource.indexOf('Floating zoom controls');
-const floatEnd = viewerAppSource.indexOf('</div>\n          )}', floatStart) + 8;
-const floatBlock = viewerAppSource.slice(floatStart, floatEnd);
+const floatGuardStart = viewerAppSource.lastIndexOf("pageCount > 0 && mode !== 'organize' && (", floatStart);
+const floatEnd = viewerAppSource.indexOf('<ZoomPresetsPopover', floatStart);
+const floatBlock = viewerAppSource.slice(floatGuardStart, floatEnd);
 
 // ---------------------------------------------------------------------------
 // Batch 1 — Zoom controls: zoom-in button
@@ -99,7 +101,7 @@ describe('ViewerApp — floating zoom controls: fit to width', () => {
   it('fit-to-width button resets zoom to 1.0', () => {
     const btnIdx = floatBlock.indexOf('data-testid="zoom-fit-width-btn"');
     const btn = floatBlock.slice(Math.max(0, btnIdx - 100), btnIdx + 400);
-    expect(btn).toContain('setZoom(1.0)');
+    expect(btn).toContain('onZoomChange(1.0)');
   });
 
   it('fit-to-width button has accessible aria-label', () => {

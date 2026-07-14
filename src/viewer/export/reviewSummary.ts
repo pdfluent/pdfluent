@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 // ---------------------------------------------------------------------------
@@ -105,20 +105,20 @@ export function buildReviewSummaryJson(data: ReviewSummaryData): string {
 export function buildReviewSummaryMarkdown(data: ReviewSummaryData): string {
   const lines: string[] = [];
 
-  lines.push(`# Review samenvatting — ${data.title}`);
-  lines.push(`Gegenereerd op: ${data.generatedAt}`);
+  lines.push(`# ${i18n.t('reviewSummary.title')} — ${data.title}`);
+  lines.push(`${i18n.t('reviewSummary.generatedAt')}: ${data.generatedAt}`);
   lines.push('');
 
-  lines.push('## Commentaren');
+  lines.push(`## ${i18n.t('reviewSummary.comments')}`);
   if (data.comments.length === 0) {
-    lines.push('_Geen commentaren._');
+    lines.push(`_${i18n.t('reviewSummary.noComments')}_`);
   } else {
     for (const c of data.comments) {
       lines.push(`### [${c.status.toUpperCase()}] p.${c.page + 1} — ${c.author || '—'}`);
-      lines.push(c.contents || '_leeg_');
+      lines.push(c.contents || `_${i18n.t('reviewSummary.empty')}_`);
       if (c.replies.length > 0) {
         lines.push('');
-        lines.push('**Reacties:**');
+        lines.push(`**${i18n.t('reviewSummary.replies')}**`);
         for (const r of c.replies) {
           lines.push(`- **${r.author}**: ${r.contents}`);
         }
@@ -127,9 +127,9 @@ export function buildReviewSummaryMarkdown(data: ReviewSummaryData): string {
     }
   }
 
-  lines.push('## Redacties');
+  lines.push(`## ${i18n.t('reviewSummary.redactions')}`);
   if (data.redactions.length === 0) {
-    lines.push('_Geen redacties._');
+    lines.push(`_${i18n.t('reviewSummary.noRedactions')}_`);
   } else {
     for (const r of data.redactions) {
       lines.push(`- p.${r.page + 1} — ${r.author || '—'}`);
@@ -139,7 +139,7 @@ export function buildReviewSummaryMarkdown(data: ReviewSummaryData): string {
 
   lines.push(i18n.t('auditReport.issues'));
   if (data.issues.length === 0) {
-    lines.push('_Geen problemen._');
+    lines.push(`_${i18n.t('reviewSummary.noIssues')}_`);
   } else {
     for (const issue of data.issues) {
       lines.push(`- [${issue.status.toUpperCase()}] p.${issue.page + 1} ${issue.description} (${issue.author || '—'})`);
@@ -147,12 +147,12 @@ export function buildReviewSummaryMarkdown(data: ReviewSummaryData): string {
   }
   lines.push('');
 
-  lines.push('## Metadata wijzigingen');
+  lines.push(`## ${i18n.t('reviewSummary.metadataChanges')}`);
   if (data.metadataChanges.length === 0) {
-    lines.push('_Geen wijzigingen._');
+    lines.push(`_${i18n.t('reviewSummary.noMetadataChanges')}_`);
   } else {
     for (const m of data.metadataChanges) {
-      lines.push(`- ${m.field} door ${m.user} op ${m.timestamp}`);
+      lines.push(`- ${m.field} ${i18n.t('reviewSummary.changedBy')} ${m.user} ${i18n.t('reviewSummary.on')} ${m.timestamp}`);
     }
   }
 
@@ -166,15 +166,15 @@ export function buildReviewSummaryHtml(data: ReviewSummaryData): string {
 
   const lines: string[] = [];
   lines.push('<!DOCTYPE html>');
-  lines.push('<html lang="nl"><head><meta charset="utf-8">');
-  lines.push(`<title>Review — ${esc(data.title)}</title>`);
+  lines.push(`<html lang="${esc(i18n.language)}"><head><meta charset="utf-8">`);
+  lines.push(`<title>${esc(i18n.t('reviewSummary.title'))} — ${esc(data.title)}</title>`);
   lines.push('</head><body>');
-  lines.push(`<h1>Review samenvatting — ${esc(data.title)}</h1>`);
-  lines.push(`<p>Gegenereerd op: ${esc(data.generatedAt)}</p>`);
+  lines.push(`<h1>${esc(i18n.t('reviewSummary.title'))} — ${esc(data.title)}</h1>`);
+  lines.push(`<p>${esc(i18n.t('reviewSummary.generatedAt'))}: ${esc(data.generatedAt)}</p>`);
 
-  lines.push('<h2>Commentaren</h2>');
+  lines.push(`<h2>${esc(i18n.t('reviewSummary.comments'))}</h2>`);
   if (data.comments.length === 0) {
-    lines.push('<p><em>Geen commentaren.</em></p>');
+    lines.push(`<p><em>${esc(i18n.t('reviewSummary.noComments'))}</em></p>`);
   } else {
     lines.push('<ul>');
     for (const c of data.comments) {
@@ -183,9 +183,9 @@ export function buildReviewSummaryHtml(data: ReviewSummaryData): string {
     lines.push('</ul>');
   }
 
-  lines.push('<h2>Redacties</h2>');
+  lines.push(`<h2>${esc(i18n.t('reviewSummary.redactions'))}</h2>`);
   if (data.redactions.length === 0) {
-    lines.push('<p><em>Geen redacties.</em></p>');
+    lines.push(`<p><em>${esc(i18n.t('reviewSummary.noRedactions'))}</em></p>`);
   } else {
     lines.push('<ul>');
     for (const r of data.redactions) {
@@ -196,7 +196,7 @@ export function buildReviewSummaryHtml(data: ReviewSummaryData): string {
 
   lines.push(`<h2>${i18n.t('auditReport.issuesHeading')}</h2>`);
   if (data.issues.length === 0) {
-    lines.push('<p><em>Geen problemen.</em></p>');
+    lines.push(`<p><em>${esc(i18n.t('reviewSummary.noIssues'))}</em></p>`);
   } else {
     lines.push('<ul>');
     for (const issue of data.issues) {

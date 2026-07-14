@@ -1,20 +1,20 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 /**
- * Text Mutation Support Classification — Phase 4 Batch 1
+ * Text Mutation Support Classification — parser-backed native writer
  *
  * Verifies:
  * - writable_digital_text: single-line, single-span digital paragraphs
  * - non_writable_digital_text: multi-span and multi-line digital paragraphs
  * - ocr_read_only: OCR source paragraphs
  * - unknown_structure: empty content and unknown sources
- * - MutationConstraints: maxLength equals original text length
- * - validateReplacement: valid, no-change, empty, too-long paths
+ * - MutationConstraints: parser-backed path has no UI maxLength
+ * - validateReplacement: valid, no-change, empty, explicit maxLength paths
  * - isWritable and isNonWritableDigital predicates
  * - Source readiness: all expected exports present in the module
  */
@@ -184,9 +184,9 @@ describe('textMutationSupport — source readiness', () => {
     expect(mutationSupportSrc).toContain('assumedEncoding');
   });
 
-  it('documents encoding assumption explicitly', () => {
-    expect(mutationSupportSrc).toContain('standard-latin');
-    expect(mutationSupportSrc).toContain('WinAnsi');
+  it('documents parser-backed encoding behaviour explicitly', () => {
+    expect(mutationSupportSrc).toContain('FontMap');
+    expect(mutationSupportSrc).toContain('ToUnicode/CMap');
   });
 
   it('documents save-safety rule', () => {
@@ -222,20 +222,20 @@ describe('getMutationSupport — writable_digital_text', () => {
     expect(constraints).not.toBeNull();
   });
 
-  it('maxLength equals original text length', () => {
+  it('maxLength is null because parser-backed writer owns layout safety', () => {
     const text = 'Hello world'; // 11 chars
     const { constraints } = getMutationSupport(makeWritableParagraph(text));
-    expect(constraints?.maxLength).toBe(11);
+    expect(constraints?.maxLength).toBeNull();
   });
 
-  it('maxLength reflects actual span text, not paragraph text', () => {
+  it('maxLength stays null regardless of span length', () => {
     const result = getMutationSupport(makeWritableParagraph('Short'));
-    expect(result.constraints?.maxLength).toBe(5);
+    expect(result.constraints?.maxLength).toBeNull();
   });
 
-  it('assumedEncoding is standard-latin', () => {
+  it('assumedEncoding is unknown because Rust resolves the page font map', () => {
     expect(getMutationSupport(makeWritableParagraph()).constraints?.assumedEncoding).toBe(
-      'standard-latin',
+      'unknown',
     );
   });
 });
@@ -427,23 +427,23 @@ describe('validateReplacement — rejection cases', () => {
 // ---------------------------------------------------------------------------
 
 describe('validateReplacement — integrated with getMutationSupport constraints', () => {
-  it('writable paragraph constraints reject too-long replacement', () => {
-    const para = makeWritableParagraph('Hi'); // maxLength: 2
+  it('writable paragraph constraints allow longer replacement', () => {
+    const para = makeWritableParagraph('Hi');
     const { constraints } = getMutationSupport(para);
     expect(constraints).not.toBeNull();
     const result = validateReplacement('Hi', 'Hello world!', constraints!);
-    expect(result.valid).toBe(false);
+    expect(result.valid).toBe(true);
   });
 
   it('writable paragraph constraints allow shorter replacement', () => {
-    const para = makeWritableParagraph('Hello world'); // maxLength: 11
+    const para = makeWritableParagraph('Hello world');
     const { constraints } = getMutationSupport(para);
     const result = validateReplacement('Hello world', 'Hi', constraints!);
     expect(result.valid).toBe(true);
   });
 
   it('writable paragraph constraints allow same-length replacement', () => {
-    const para = makeWritableParagraph('Hello'); // maxLength: 5
+    const para = makeWritableParagraph('Hello');
     const { constraints } = getMutationSupport(para);
     const result = validateReplacement('Hello', 'World', constraints!);
     expect(result.valid).toBe(true);

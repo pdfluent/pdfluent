@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 import { readFileSync } from 'node:fs';
@@ -71,8 +71,9 @@ describe('TextLayer — onTextSelection prop', () => {
 // ---------------------------------------------------------------------------
 
 describe('TextLayer — handleMouseUp text-to-PDF coordinate conversion', () => {
-  it('returns early when onTextSelection is not provided', () => {
-    expect(textLayerSource).toContain('if (!onTextSelection) return');
+  it('forwards rects to onTextSelection when active annotation tool is set', () => {
+    expect(textLayerSource).toContain('if (onTextSelection)');
+    expect(textLayerSource).toContain('onTextSelection(pdfRects)');
   });
 
   it('returns early when selection is collapsed', () => {
@@ -189,7 +190,7 @@ describe('ViewerApp — handleTextSelection callback', () => {
   });
 
   it('passes handleTextSelection to PageCanvas as onTextSelection', () => {
-    expect(viewerAppSource).toContain('onTextSelection={handleTextSelection}');
+    expect(viewerAppSource).toContain('onTextSelection={isCurrentPage ? handleTextSelection : undefined}');
   });
 });
 

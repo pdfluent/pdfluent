@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 import { readFileSync } from 'node:fs';
@@ -29,6 +29,7 @@ const viewerAppSource = [
   '../src/viewer/hooks/useTextInteraction.ts',
   '../src/viewer/hooks/useKeyboardShortcuts.ts',
   '../src/viewer/ViewerApp.tsx',
+  '../src/viewer/v3/EditorV3Shell.tsx',
   '../src/viewer/WelcomeSection.tsx',
 ].map(p => readFileSync(new URL(p, import.meta.url), 'utf8')).join('\n\n');
 
@@ -77,7 +78,9 @@ describe('Stability — ThumbnailPanel features coexist', () => {
 
   it('virtualization does not break active page highlighting', () => {
     expect(thumbnailPanelBody()).toContain('isActive');
-    expect(thumbnailPanelBody()).toContain('2px solid #2563eb');
+    // v2: active thumb uses the .leftrail-thumb-active class (token-
+    // driven via --accent) instead of the hardcoded #2563eb border.
+    expect(thumbnailPanelBody()).toMatch(/2px solid #2563eb|leftrail-thumb-active/);
   });
 
   it('virtualization does not break auto-scroll to active page', () => {
@@ -95,10 +98,10 @@ describe('Stability — ThumbnailPanel features coexist', () => {
 // Stability — ViewerApp wires all navigation callbacks
 // ---------------------------------------------------------------------------
 
-describe('Stability — ViewerApp passes all navigation callbacks to LeftNavRail', () => {
+describe('Stability — ViewerApp passes all navigation callbacks to EditorV3Shell', () => {
   function leftNavRailBlock(): string {
-    const start = viewerAppSource.indexOf('<LeftNavRail');
-    const end = viewerAppSource.indexOf('/>', start) + 2;
+    const start = viewerAppSource.indexOf('<EditorV3Shell');
+    const end = viewerAppSource.indexOf('>\n          {docLoading', start);
     return viewerAppSource.slice(start, end);
   }
 
@@ -111,11 +114,11 @@ describe('Stability — ViewerApp passes all navigation callbacks to LeftNavRail
   });
 
   it('passes currentPage (pageIndex)', () => {
-    expect(leftNavRailBlock()).toContain('currentPage=');
+    expect(leftNavRailBlock()).toContain('pageIndex={pageIndex}');
   });
 
   it('passes onPageSelect', () => {
-    expect(leftNavRailBlock()).toContain('onPageSelect=');
+    expect(leftNavRailBlock()).toContain('onNavigatePage={navigateToPage}');
   });
 
   it('passes outline', () => {

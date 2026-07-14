@@ -1,11 +1,11 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
-import { useState } from 'react';
+import { useState, memo } from 'react';
 
 // ---------------------------------------------------------------------------
 // Props
@@ -43,7 +43,7 @@ interface AnnotationOverlayProps {
 // Component
 // ---------------------------------------------------------------------------
 
-export function AnnotationOverlay({
+export const AnnotationOverlay = memo(function AnnotationOverlay({
   highlights,
   pageWidthPt: _pageWidthPt,
   pageHeightPt,
@@ -278,4 +278,4 @@ export function AnnotationOverlay({
       )}
     </svg>
   );
-}
+});

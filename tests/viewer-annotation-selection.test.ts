@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 import { readFileSync } from 'node:fs';
@@ -54,7 +54,7 @@ describe('ViewerApp — selectedAnnotationId state', () => {
   });
 
   it('passes selectedAnnotationId to PageCanvas', () => {
-    expect(viewerAppSource).toContain('selectedAnnotationId={selectedAnnotationId}');
+    expect(viewerAppSource).toContain('selectedAnnotationId={isCurrentPage ? selectedAnnotationId : null}');
   });
 });
 

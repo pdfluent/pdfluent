@@ -1,12 +1,22 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
+//
+// =============================================================================
+// SignaturePanel — sign + verify digital signatures
+//
+// Lives in the RightContextPanel when Sign mode is active. Reuses the
+// .contextpanel-* primitive family so it reads as part of the same
+// surface as the other mode-specific panels. Replaces the previous
+// text-[9px] / text-[10px] mini-font hierarchy with proper scale.
+// =============================================================================
 
-import { useState, useEffect } from 'react';
-import { CheckCircleIcon, XCircleIcon, HelpCircleIcon } from 'lucide-react';
+import { isTauriRuntime } from '../../lib/tauri-detection';
+import { useEffect, useState } from 'react';
+import { CheckCircleIcon, HelpCircleIcon, XCircleIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useTaskQueueContext } from '../context/TaskQueueContext';
 import type { PdfDocument } from '../../core/document';
@@ -23,24 +33,39 @@ interface SignatureResult {
   valid: boolean;
 }
 
-// ---------------------------------------------------------------------------
-// Props
-// ---------------------------------------------------------------------------
-
 interface SignaturePanelProps {
   pdfDoc: PdfDocument | null;
 }
+
+const isTauri = isTauriRuntime();
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
-const isTauri = typeof window !== 'undefined' && '__TAURI__' in window;
-
 function StatusIcon({ valid, status }: { valid: boolean; status: string }) {
-  if (status === 'unknown') return <HelpCircleIcon className="w-3 h-3 text-muted-foreground shrink-0" />;
-  if (valid) return <CheckCircleIcon className="w-3 h-3 text-green-500 shrink-0" />;
-  return <XCircleIcon className="w-3 h-3 text-destructive shrink-0" />;
+  if (status === 'unknown') {
+    return (
+      <HelpCircleIcon
+        className="signature-status-icon signature-status-icon-unknown"
+        aria-hidden="true"
+      />
+    );
+  }
+  if (valid) {
+    return (
+      <CheckCircleIcon
+        className="signature-status-icon signature-status-icon-valid"
+        aria-hidden="true"
+      />
+    );
+  }
+  return (
+    <XCircleIcon
+      className="signature-status-icon signature-status-icon-invalid"
+      aria-hidden="true"
+    />
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -61,34 +86,48 @@ export function SignaturePanel({ pdfDoc }: SignaturePanelProps) {
 
   // Verify signatures whenever the document changes.
   useEffect(() => {
-    if (!pdfDoc || !isTauri) { setSignatures([]); return; }
-    setVerifying(true);
-    import('@tauri-apps/api/core').then(({ invoke }) =>
-      invoke<SignatureResult[]>('verify_signatures')
-    ).then(results => {
-      setSignatures(results);
-    }).catch(() => {
+    if (!pdfDoc || !isTauri) {
       setSignatures([]);
-    }).finally(() => {
-      setVerifying(false);
-    });
+      return;
+    }
+    setVerifying(true);
+    import('@tauri-apps/api/core')
+      .then(({ invoke }) => invoke<SignatureResult[]>('verify_signatures'))
+      .then((results) => {
+        setSignatures(results);
+      })
+      .catch(() => {
+        setSignatures([]);
+      })
+      .finally(() => {
+        setVerifying(false);
+      });
   }, [pdfDoc]);
 
   async function handleBrowseCert(): Promise<void> {
     if (!isTauri) return;
     const { open } = await import('@tauri-apps/plugin-dialog');
-    const path = await open({ filters: [{ name: 'Certificate', extensions: ['p12', 'pfx'] }] });
+    const path = await open({
+      filters: [{ name: 'Certificate', extensions: ['p12', 'pfx'] }],
+    });
     if (typeof path === 'string') setCertPath(path);
   }
 
   async function handleSign(): Promise<void> {
     if (!pdfDoc || !isTauri || !certPath || signing) return;
     const { save } = await import('@tauri-apps/plugin-dialog');
-    const outputPath = await save({ filters: [{ name: 'PDF', extensions: ['pdf'] }] });
+    const outputPath = await save({
+      filters: [{ name: 'PDF', extensions: ['pdf'] }],
+    });
     if (!outputPath) return;
 
     const taskId = `sign-${Date.now()}`;
-    push({ id: taskId, label: t('tasks.signRunning'), progress: null, status: 'running' });
+    push({
+      id: taskId,
+      label: t('tasks.signRunning'),
+      progress: null,
+      status: 'running',
+    });
     setSigning(true);
     try {
       const { invoke } = await import('@tauri-apps/api/core');
@@ -104,27 +143,34 @@ export function SignaturePanel({ pdfDoc }: SignaturePanelProps) {
     }
   }
 
-  return (
-    <div data-testid="signature-panel" className="flex flex-col gap-3">
+  const canSign = Boolean(certPath && password && pdfDoc && isTauri && !signing);
 
+  return (
+    <div data-testid="signature-panel" className="signature-panel">
       {/* ── Sign section ─────────────────────────────────────────────── */}
-      <div className="flex flex-col gap-1.5">
-        <span className="text-[9px] text-muted-foreground/70 uppercase tracking-wide">{t('signature.signSection')}</span>
+      <section className="signature-section">
+        <span className="contextpanel-sub-title">
+          {t('signature.signSection')}
+        </span>
 
         {/* Certificate picker */}
-        <div className="flex flex-col gap-0.5">
-          <span className="text-[9px] text-muted-foreground/70">{t('signature.certFile')}</span>
-          <div className="flex gap-1">
+        <div className="signature-row">
+          <label className="signature-label">{t('signature.certFile')}</label>
+          <div className="signature-cert-picker">
             <span
               data-testid="cert-path-display"
-              className="flex-1 text-[10px] text-foreground/60 truncate border border-border rounded px-1.5 py-1 bg-card"
+              className="signature-cert-path"
+              title={certPath ?? undefined}
             >
               {certPath ? certPath.split(/[/\\]/).pop() : t('signature.noCert')}
             </span>
             <button
+              type="button"
               data-testid="browse-cert-btn"
-              onClick={() => { void handleBrowseCert(); }}
-              className="text-[10px] px-2 py-1 border border-border rounded hover:bg-muted transition-colors shrink-0"
+              onClick={() => {
+                void handleBrowseCert();
+              }}
+              className="contextpanel-action"
             >
               {t('signature.browseCert')}
             </button>
@@ -132,75 +178,105 @@ export function SignaturePanel({ pdfDoc }: SignaturePanelProps) {
         </div>
 
         {/* Password */}
-        <div className="flex flex-col gap-0.5">
-          <span className="text-[9px] text-muted-foreground/70">{t('signature.password')}</span>
+        <div className="signature-row">
+          <label className="signature-label" htmlFor="signature-password">
+            {t('signature.password')}
+          </label>
           <input
+            id="signature-password"
             data-testid="cert-password-input"
             type="password"
             value={password}
-            onChange={e => { setPassword(e.target.value); }}
+            onChange={(e) => {
+              setPassword(e.target.value);
+            }}
             placeholder={t('signature.password')}
-            className="text-[10px] bg-card border border-border rounded px-2 py-1 text-foreground outline-none focus:ring-1 focus:ring-primary"
+            className="contextpanel-input"
           />
         </div>
 
         {/* Reason */}
-        <div className="flex flex-col gap-0.5">
-          <span className="text-[9px] text-muted-foreground/70">{t('signature.reason')}</span>
+        <div className="signature-row">
+          <label className="signature-label" htmlFor="signature-reason">
+            {t('signature.reason')}
+          </label>
           <input
+            id="signature-reason"
             data-testid="sign-reason-input"
             type="text"
             value={reason}
-            onChange={e => { setReason(e.target.value); }}
+            onChange={(e) => {
+              setReason(e.target.value);
+            }}
             placeholder={t('signature.reason')}
-            className="text-[10px] bg-card border border-border rounded px-2 py-1 text-foreground outline-none focus:ring-1 focus:ring-primary"
+            className="contextpanel-input"
           />
         </div>
 
         <button
+          type="button"
           data-testid="sign-btn"
-          onClick={() => { void handleSign(); }}
-          disabled={!certPath || !password || signing || !pdfDoc || !isTauri}
-          className="w-full py-1 text-[10px] font-medium rounded bg-primary text-primary-foreground hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
+          onClick={() => {
+            void handleSign();
+          }}
+          disabled={!canSign}
+          className="contextpanel-action contextpanel-action-primary signature-submit"
         >
           {signing ? t('signature.signing') : t('signature.signBtn')}
         </button>
-      </div>
+      </section>
 
       {/* ── Verify section ───────────────────────────────────────────── */}
-      <div className="flex flex-col gap-1">
-        <span className="text-[9px] text-muted-foreground/70 uppercase tracking-wide">{t('signature.verifySection')}</span>
+      <section className="signature-section">
+        <span className="contextpanel-sub-title">
+          {t('signature.verifySection')}
+        </span>
 
         {verifying && (
-          <p className="text-[10px] text-muted-foreground">{t('common.loading')}</p>
+          <p className="signature-loading">{t('common.loading')}</p>
         )}
 
         {!verifying && signatures.length === 0 && (
-          <p data-testid="no-signatures" className="text-[10px] text-muted-foreground">{t('signature.noSignatures')}</p>
+          <p data-testid="no-signatures" className="contextpanel-empty">
+            {t('signature.noSignatures')}
+          </p>
         )}
 
-        {!verifying && signatures.map((sig, i) => (
-          <div
-            key={i}
-            data-testid="signature-item"
-            className="flex flex-col gap-0.5 p-1.5 rounded border border-border bg-card/50 text-[10px]"
-          >
-            <div className="flex items-center gap-1">
-              <StatusIcon valid={sig.valid} status={sig.status} />
-              <span className="font-medium text-foreground truncate flex-1">{sig.field_name}</span>
-              <span className={`text-[9px] ${sig.valid ? 'text-green-600' : sig.status === 'unknown' ? 'text-muted-foreground' : 'text-destructive'}`}>
-                {sig.status === 'unknown' ? t('signature.statusUnknown') : sig.valid ? t('signature.statusValid') : t('signature.statusInvalid')}
-              </span>
+        {!verifying &&
+          signatures.map((sig, i) => (
+            <div
+              key={i}
+              data-testid="signature-item"
+              className="signature-item"
+              data-valid={sig.valid}
+              data-status={sig.status}
+            >
+              <div className="signature-item-header">
+                <StatusIcon valid={sig.valid} status={sig.status} />
+                <span className="signature-item-name" title={sig.field_name}>
+                  {sig.field_name}
+                </span>
+                <span className="signature-item-status">
+                  {sig.status === 'unknown'
+                    ? t('signature.statusUnknown')
+                    : sig.valid
+                      ? t('signature.statusValid')
+                      : t('signature.statusInvalid')}
+                </span>
+              </div>
+              {sig.signer && (
+                <span className="signature-item-meta">
+                  {t('signature.signer')}: {sig.signer}
+                </span>
+              )}
+              {sig.timestamp && (
+                <span className="signature-item-meta">
+                  {t('signature.date')}: {sig.timestamp}
+                </span>
+              )}
             </div>
-            {sig.signer && (
-              <span className="text-muted-foreground">{t('signature.signer')}: {sig.signer}</span>
-            )}
-            {sig.timestamp && (
-              <span className="text-muted-foreground">{t('signature.date')}: {sig.timestamp}</span>
-            )}
-          </div>
-        ))}
-      </div>
+          ))}
+      </section>
     </div>
   );
 }

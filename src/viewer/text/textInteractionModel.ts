@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 /**
@@ -80,10 +80,24 @@ export interface TextSpanTarget {
   id: string;
   source: TextSource;
   text: string;
+  /** Pre-repair SDK text. Present when repairPdfTextArtifacts changed the text.
+   *  Always use this (falling back to text) as the originalText key for backend calls. */
+  rawText?: string;
   /** Bounding rect in PDF page coordinate space. */
   rect: TextRect;
   /** Font size in points. */
   fontSize: number;
+  /** PDF font name, when supplied by the text extraction backend. */
+  fontName?: string;
+  /** Font style metadata, when supplied by the text extraction backend. */
+  isBold?: boolean;
+  isItalic?: boolean;
+  /** RGB fill color [0.0, 1.0], when supplied by the backend. */
+  color?: [number, number, number];
+  /** Per-character bounds, when supplied by the backend. */
+  charBounds?: Array<{ x: number; width: number }>;
+  /** Source of text width measurements. */
+  widthSource?: 'Metric' | 'Estimate';
   /**
    * OCR confidence [0, 1]. Present only when source === 'ocr'.
    * Used to visually distinguish uncertain text targets.

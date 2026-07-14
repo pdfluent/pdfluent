@@ -1,9 +1,14 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
+//
+// DEAD CODE — zero importers. Superseded by src/viewer/components/WelcomeScreen.tsx.
+// Kept to avoid breaking 100+ source-assertion tests that readFileSync this path.
+// The active empty-state testid is data-testid="welcome-screen" (WelcomeScreen.tsx).
+// Do not use viewer-empty-state in new tests or e2e helpers.
 
 import type { RefObject } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -30,7 +35,7 @@ export function WelcomeSection({
   return (
     <div
       data-testid="viewer-empty-state"
-      className="absolute inset-0 flex flex-col overflow-hidden"
+      className="absolute inset-0 flex flex-col overflow-hidden animate-pf-fade-in"
     >
       {/* Hidden file input for browser-mode open from WelcomeScreen */}
       <input

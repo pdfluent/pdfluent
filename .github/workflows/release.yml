@@ -128,6 +128,16 @@ jobs:
           prerelease: false
           args: ${{ matrix.args }}
 
+      # ── Embed gate ──────────────────────────────────────────────────────
+      # Fail the release if the built .app embeds a stale frontend bundle (not
+      # the one the current dist references). Guards against the incremental
+      # stale-embed defect; the canonical pre-publish gate is
+      # `npm run build:verified` (clean build + this same check).
+      - name: Verify embedded frontend bundle (no stale)
+        if: runner.os == 'macOS'
+        working-directory: PDFluent/pdfluent
+        run: node scripts/verify-frontend-embed.mjs src-tauri/target/universal-apple-darwin/release/bundle/macos/PDFluent.app
+
       # ── Cleanup ─────────────────────────────────────────────────────────
       - name: Cleanup Windows signing certificate
         if: always() && runner.os == 'Windows'

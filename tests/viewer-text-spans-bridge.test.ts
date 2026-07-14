@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 import { readFileSync } from 'node:fs';
@@ -73,14 +73,9 @@ describe('TauriQueryEngine — extractPageTextSpans', () => {
     expect(tauriQuerySource).toContain("import type { PdfDocument, TextSpan }");
   });
 
-  it('defines TauriTextSpan interface with all fields', () => {
-    expect(tauriQuerySource).toContain('interface TauriTextSpan');
-    expect(tauriQuerySource).toContain('text: string');
-    expect(tauriQuerySource).toContain('x: number');
-    expect(tauriQuerySource).toContain('y: number');
-    expect(tauriQuerySource).toContain('width: number');
-    expect(tauriQuerySource).toContain('height: number');
-    expect(tauriQuerySource).toContain('font_size: number');
+  it('imports TextSpanInfo from tauri-api (SDK canonical wire type)', () => {
+    expect(tauriQuerySource).toContain("import type { TextSpanInfo } from '../../../lib/tauri-api'");
+    expect(tauriQuerySource).not.toContain('interface TauriTextSpan');
   });
 
   it('declares extractPageTextSpans method', () => {
@@ -88,7 +83,7 @@ describe('TauriQueryEngine — extractPageTextSpans', () => {
   });
 
   it('calls invoke get_page_text_spans with pageIndex', () => {
-    expect(tauriQuerySource).toContain("invoke<TauriTextSpan[]>('get_page_text_spans'");
+    expect(tauriQuerySource).toContain("invoke<TextSpanInfo[]>('get_page_text_spans'");
     expect(tauriQuerySource).toContain('pageIndex');
   });
 
@@ -158,7 +153,11 @@ describe('ViewerApp — text span fetch effect', () => {
 
   it('clears textSpans immediately on page change before async result', () => {
     const effectStart = viewerAppSource.indexOf('Fetch positioned text spans');
-    const effectEnd = viewerAppSource.indexOf('}, [pageIndex, pdfDoc?.id])', effectStart) + 30;
+    // v2: the dependency array gained `documentVersion` (forces refetch
+    // after page-mutation commands). Match the closing brace with any
+    // dependency suffix.
+    const closingMatch = viewerAppSource.slice(effectStart).search(/\}, \[pageIndex, pdfDoc\?\.id[^\]]*\]\)/);
+    const effectEnd = effectStart + closingMatch + 60;
     const effectBlock = viewerAppSource.slice(effectStart, effectEnd);
     expect(effectBlock).toContain('setTextSpans([])');
     expect(effectBlock).toContain('extractPageTextSpans');
@@ -166,26 +165,40 @@ describe('ViewerApp — text span fetch effect', () => {
 
   it('clears selection on page change', () => {
     const effectStart = viewerAppSource.indexOf('Fetch positioned text spans');
-    const effectEnd = viewerAppSource.indexOf('}, [pageIndex, pdfDoc?.id])', effectStart) + 30;
+    // v2: the dependency array gained `documentVersion` (forces refetch
+    // after page-mutation commands). Match the closing brace with any
+    // dependency suffix.
+    const closingMatch = viewerAppSource.slice(effectStart).search(/\}, \[pageIndex, pdfDoc\?\.id[^\]]*\]\)/);
+    const effectEnd = effectStart + closingMatch + 60;
     const effectBlock = viewerAppSource.slice(effectStart, effectEnd);
     expect(effectBlock).toContain("window.getSelection()?.removeAllRanges()");
   });
 
   it('has cancellation guard to prevent stale setState', () => {
     const effectStart = viewerAppSource.indexOf('Fetch positioned text spans');
-    const effectEnd = viewerAppSource.indexOf('}, [pageIndex, pdfDoc?.id])', effectStart) + 30;
+    // v2: the dependency array gained `documentVersion` (forces refetch
+    // after page-mutation commands). Match the closing brace with any
+    // dependency suffix.
+    const closingMatch = viewerAppSource.slice(effectStart).search(/\}, \[pageIndex, pdfDoc\?\.id[^\]]*\]\)/);
+    const effectEnd = effectStart + closingMatch + 60;
     const effectBlock = viewerAppSource.slice(effectStart, effectEnd);
     expect(effectBlock).toContain('cancelled = true');
     expect(effectBlock).toContain('!cancelled');
   });
 
   it('depends on both pageIndex and pdfDoc.id to refetch on doc change', () => {
-    expect(viewerAppSource).toContain('[pageIndex, pdfDoc?.id]');
+    // v2: dependency array also includes documentVersion so page
+    // mutations trigger a re-fetch. Accept either old or new form.
+    expect(viewerAppSource).toMatch(/\[pageIndex, pdfDoc\?\.id(?:, documentVersion)?\]/);
   });
 
   it('guards on pdfDoc and engine before invoking', () => {
     const effectStart = viewerAppSource.indexOf('Fetch positioned text spans');
-    const effectEnd = viewerAppSource.indexOf('}, [pageIndex, pdfDoc?.id])', effectStart) + 30;
+    // v2: the dependency array gained `documentVersion` (forces refetch
+    // after page-mutation commands). Match the closing brace with any
+    // dependency suffix.
+    const closingMatch = viewerAppSource.slice(effectStart).search(/\}, \[pageIndex, pdfDoc\?\.id[^\]]*\]\)/);
+    const effectEnd = effectStart + closingMatch + 60;
     const effectBlock = viewerAppSource.slice(effectStart, effectEnd);
     expect(effectBlock).toContain('if (!pdfDoc || !engine) return');
   });

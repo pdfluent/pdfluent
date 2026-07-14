@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 import { useEffect, useState } from 'react';
@@ -13,16 +13,32 @@ interface UseEngineResult {
   engine: PdfEngine | null;
   loading: boolean;
   error: string | null;
+  /** True when init exceeded the watchdog timeout without resolving. */
+  timedOut: boolean;
 }
+
+/** Engine init watchdog — if init hasn't resolved by then, surface an error UI. */
+const ENGINE_INIT_TIMEOUT_MS = 15_000;
 
 export function useEngine(): UseEngineResult {
   const [engine, setEngine] = useState<PdfEngine | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [timedOut, setTimedOut] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
     let createdEngine: PdfEngine | null = null;
+
+    // Watchdog: the dynamic engine-chunk import has been observed to never
+    // resolve in some launch contexts. Without this, the user is stuck on an
+    // eternal spinner with no error and no way to recover.
+    const watchdog = setTimeout(() => {
+      if (!cancelled) {
+        setTimedOut(true);
+        setLoading(false);
+      }
+    }, ENGINE_INIT_TIMEOUT_MS);
 
     async function init(): Promise<void> {
       try {
@@ -36,15 +52,18 @@ export function useEngine(): UseEngineResult {
         }
 
         createdEngine = e;
+        clearTimeout(watchdog);
 
         if (initResult.success) {
           setEngine(e);
+          setTimedOut(false);
         } else {
           setError(initResult.error.message);
         }
         setLoading(false);
       } catch (err) {
         if (!cancelled) {
+          clearTimeout(watchdog);
           setError(err instanceof Error ? err.message : String(err));
           setLoading(false);
         }
@@ -55,9 +74,10 @@ export function useEngine(): UseEngineResult {
 
     return () => {
       cancelled = true;
+      clearTimeout(watchdog);
       createdEngine?.shutdown();
     };
   }, []);
 
-  return { engine, loading, error };
+  return { engine, loading, error, timedOut };
 }

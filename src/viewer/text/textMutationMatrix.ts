@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 /**
@@ -332,15 +332,13 @@ export const REPLACEMENT_SAFETY_MATRIX: readonly ReplacementMatrixEntry[] = [
     description: 'longer replacement — small overflow (12 chars vs 11)',
     original: 'Hello world',
     replacement: 'Hello worlds',
-    expectedValid: false,
-    expectedReasonCode: 'replacement-too-long',
+    expectedValid: true,
   },
   {
     description: 'large overflow (30 chars vs 11)',
     original: 'Hello world',
     replacement: 'Hello world this is very long text',
-    expectedValid: false,
-    expectedReasonCode: 'replacement-too-long',
+    expectedValid: true,
   },
   {
     description: 'empty replacement (blocked)',

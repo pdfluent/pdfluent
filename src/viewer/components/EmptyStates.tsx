@@ -1,17 +1,28 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 // ---------------------------------------------------------------------------
 // Empty State Components
 //
-// Reusable empty-state UI blocks for all zero-content surfaces in the viewer.
-// Each component is self-contained and accepts an optional action callback.
+// Reusable empty-state blocks for zero-content surfaces in the viewer.
+// Uses the .viewer-empty class family — same as the welcome card — so
+// every "nothing here" surface feels like one product.
+//
+// Note: each wrapper renders its own JSX (no shared shell helper) so the
+// literal `data-testid` strings appear in source for the source-grep
+// tests in tests/viewer-empty-states.test.ts.
 // ---------------------------------------------------------------------------
 
+import {
+  CheckCircle2Icon,
+  FileTextIcon,
+  MessageSquareIcon,
+  SearchIcon,
+} from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 interface EmptyStateProps {
@@ -29,20 +40,18 @@ interface EmptyStateProps {
 export function EmptyStateNoDocument({ actionLabel, onAction }: EmptyStateProps = {}) {
   const { t } = useTranslation();
   return (
-    <div
-      data-testid="empty-state-no-document"
-      className="flex flex-col items-center justify-center gap-3 py-16 px-6 text-center"
-    >
-      <span className="text-4xl select-none" aria-hidden="true">📄</span>
-      <p className="text-sm font-medium text-foreground">{t('emptyStates.noDocument')}</p>
-      <p className="text-xs text-muted-foreground max-w-56">
-        {t('emptyStates.noDocumentHint')}
-      </p>
+    <div data-testid="empty-state-no-document" className="viewer-empty">
+      <span className="viewer-empty-mark" aria-hidden="true">
+        <FileTextIcon />
+      </span>
+      <p className="viewer-empty-title">{t('emptyStates.noDocument')}</p>
+      <p className="viewer-empty-description">{t('emptyStates.noDocumentHint')}</p>
       {actionLabel && onAction && (
         <button
+          type="button"
           data-testid="empty-state-no-document-action"
           onClick={onAction}
-          className="mt-1 text-xs px-3 py-1.5 rounded bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+          className="viewer-empty-action viewer-empty-action-primary"
         >
           {actionLabel}
         </button>
@@ -59,20 +68,18 @@ export function EmptyStateNoDocument({ actionLabel, onAction }: EmptyStateProps 
 export function EmptyStateNoAnnotations({ actionLabel, onAction }: EmptyStateProps = {}) {
   const { t } = useTranslation();
   return (
-    <div
-      data-testid="empty-state-no-annotations"
-      className="flex flex-col items-center justify-center gap-3 py-10 px-4 text-center"
-    >
-      <span className="text-3xl select-none" aria-hidden="true">💬</span>
-      <p className="text-sm font-medium text-foreground">{t('emptyStates.noAnnotations')}</p>
-      <p className="text-xs text-muted-foreground max-w-48">
-        {t('emptyStates.noAnnotationsHint')}
-      </p>
+    <div data-testid="empty-state-no-annotations" className="viewer-empty">
+      <span className="viewer-empty-mark" aria-hidden="true">
+        <MessageSquareIcon />
+      </span>
+      <p className="viewer-empty-title">{t('emptyStates.noAnnotations')}</p>
+      <p className="viewer-empty-description">{t('emptyStates.noAnnotationsHint')}</p>
       {actionLabel && onAction && (
         <button
+          type="button"
           data-testid="empty-state-no-annotations-action"
           onClick={onAction}
-          className="mt-1 text-xs px-3 py-1.5 rounded border border-border text-foreground hover:bg-muted transition-colors"
+          className="viewer-empty-action"
         >
           {actionLabel}
         </button>
@@ -89,20 +96,18 @@ export function EmptyStateNoAnnotations({ actionLabel, onAction }: EmptyStatePro
 export function EmptyStateNoIssues({ actionLabel, onAction }: EmptyStateProps = {}) {
   const { t } = useTranslation();
   return (
-    <div
-      data-testid="empty-state-no-issues"
-      className="flex flex-col items-center justify-center gap-3 py-10 px-4 text-center"
-    >
-      <span className="text-3xl select-none" aria-hidden="true">✅</span>
-      <p className="text-sm font-medium text-foreground">{t('emptyStates.noIssues')}</p>
-      <p className="text-xs text-muted-foreground max-w-48">
-        {t('emptyStates.noIssuesHint')}
-      </p>
+    <div data-testid="empty-state-no-issues" className="viewer-empty">
+      <span className="viewer-empty-mark" data-tone="success" aria-hidden="true">
+        <CheckCircle2Icon />
+      </span>
+      <p className="viewer-empty-title">{t('emptyStates.noIssues')}</p>
+      <p className="viewer-empty-description">{t('emptyStates.noIssuesHint')}</p>
       {actionLabel && onAction && (
         <button
+          type="button"
           data-testid="empty-state-no-issues-action"
           onClick={onAction}
-          className="mt-1 text-xs px-3 py-1.5 rounded border border-border text-foreground hover:bg-muted transition-colors"
+          className="viewer-empty-action"
         >
           {actionLabel}
         </button>
@@ -119,20 +124,18 @@ export function EmptyStateNoIssues({ actionLabel, onAction }: EmptyStateProps = 
 export function EmptyStateNoResults({ actionLabel, onAction }: EmptyStateProps = {}) {
   const { t } = useTranslation();
   return (
-    <div
-      data-testid="empty-state-no-results"
-      className="flex flex-col items-center justify-center gap-3 py-10 px-4 text-center"
-    >
-      <span className="text-3xl select-none" aria-hidden="true">🔍</span>
-      <p className="text-sm font-medium text-foreground">{t('emptyStates.noResults')}</p>
-      <p className="text-xs text-muted-foreground max-w-48">
-        {t('emptyStates.noResultsHint')}
-      </p>
+    <div data-testid="empty-state-no-results" className="viewer-empty">
+      <span className="viewer-empty-mark" aria-hidden="true">
+        <SearchIcon />
+      </span>
+      <p className="viewer-empty-title">{t('emptyStates.noResults')}</p>
+      <p className="viewer-empty-description">{t('emptyStates.noResultsHint')}</p>
       {actionLabel && onAction && (
         <button
+          type="button"
           data-testid="empty-state-no-results-action"
           onClick={onAction}
-          className="mt-1 text-xs px-3 py-1.5 rounded border border-border text-foreground hover:bg-muted transition-colors"
+          className="viewer-empty-action"
         >
           {actionLabel}
         </button>

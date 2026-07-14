@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 import { readFileSync } from 'node:fs';
@@ -47,7 +47,8 @@ const groupsBody  = sheetSource.slice(groupsStart, groupsEnd);
 
 describe('ViewerApp — shortcut sheet: trigger wiring', () => {
   it('imports ShortcutSheet', () => {
-    expect(viewerAppSource).toContain("import { ShortcutSheet } from './components/ShortcutSheet'");
+    expect(viewerAppSource).toContain("ShortcutSheet");
+    expect(viewerAppSource).toContain("'./components/ShortcutSheet'");
   });
 
   it('tracks shortcutSheetOpen state', () => {
@@ -180,8 +181,8 @@ describe('ShortcutSheet — implemented shortcuts present', () => {
     expect(groupsBody).toContain("'shortcuts.toggleFullscreen'");
   });
 
-  it('lists 1–7 → mode switching', () => {
-    expect(groupsBody).toContain('1 – 7');
+  it('lists 1–8 → mode switching', () => {
+    expect(groupsBody).toContain('1 – 8');
     expect(groupsBody).toContain("'shortcuts.switchMode'");
   });
 

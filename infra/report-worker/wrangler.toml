@@ -1,0 +1,33 @@
+# Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
+#
+# This software is proprietary. The PDFluent application is free to use,
+# including for commercial purposes. Redistribution, or extraction or reuse
+# of its components (including the embedded PDF engine), requires a licence.
+# See https://pdfluent.com/license for terms.
+
+# PDFluent crash ingest Worker (plan §5).
+# Fase 0: crash reports only. General feedback/contact is the website form at
+# pdfluent.com/feedback (via feedback.pdfluent.com), not this Worker.
+# Fill in the *_id placeholders after running the `wrangler … create` commands
+# in README.md. No secrets live here — the endpoint needs none.
+
+name = "pdfluent-report"
+main = "worker.js"
+compatibility_date = "2025-01-01"
+
+# Bind the app's own address. The app bakes in only report.pdfluent.com; this
+# route attaches the Worker to that hostname (DNS already at Cloudflare).
+routes = [
+  { pattern = "report.pdfluent.com/*", zone_name = "pdfluent.com" }
+]
+
+# D1: the single `reports` table (schema.sql).
+[[d1_databases]]
+binding = "DB"
+database_name = "pdfluent-reports"
+database_id = "REPLACE_WITH_D1_DATABASE_ID"
+
+# KV: ephemeral fixed-window rate-limit counter (no IP, no PII).
+[[kv_namespaces]]
+binding = "RATE_LIMIT"
+id = "REPLACE_WITH_KV_NAMESPACE_ID"

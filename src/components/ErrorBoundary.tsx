@@ -1,12 +1,13 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 import type { ErrorInfo, ReactNode } from "react";
 import { Component } from "react";
 import { appendDebugLog } from "../lib/debug-log";
+import { emitCrash } from "../lib/telemetry/crashChannel";
 
 interface ErrorBoundaryProps {
   children: ReactNode;
@@ -38,6 +39,14 @@ export class ErrorBoundary extends Component<
       message: error.message,
       stack: error.stack,
       componentStack: info.componentStack,
+    });
+    // Publish to the crash channel so the always-mounted CrashReporter (a
+    // sibling of this boundary) can offer the privacy-first review dialog.
+    // The raw text is scrubbed later, in buildReport().
+    emitCrash({
+      message: error.message || "Unexpected render error",
+      stack: error.stack ?? info.componentStack ?? null,
+      source: "react",
     });
   }
 

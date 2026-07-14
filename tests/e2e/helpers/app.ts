@@ -1,15 +1,17 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 import type { Page } from '@playwright/test';
 import { tid } from './selectors';
 
-/** The ViewerApp is served at /?v2 via main.tsx's URL-param switch. */
-export const VIEWER_URL = '/?v2';
+// ViewerApp (V3 shell) is served at the root URL '/'.
+// There is no '?v2' switch — that was a comment error. The only URL param is
+// '?legacy' which loads the retired V1 shell. Do not use '/?v2' in new tests.
+export const VIEWER_URL = '/';
 
 /**
  * Navigate to the viewer and wait for the welcome screen to be visible.
@@ -19,8 +21,10 @@ export const VIEWER_URL = '/?v2';
 export async function gotoViewer(page: Page): Promise<void> {
   await page.addInitScript(() => { localStorage.setItem('pdfluent-lang', 'nl'); });
   await page.goto(VIEWER_URL);
-  // Wait for React to hydrate and the empty-state wrapper to appear.
-  await page.locator(tid('viewer-empty-state')).waitFor({ state: 'visible', timeout: 15_000 });
+  // Wait for React to hydrate and the welcome screen to appear.
+  // The active testid is 'welcome-screen' (components/WelcomeScreen.tsx).
+  // The old 'viewer-empty-state' was in WelcomeSection.tsx which has zero importers.
+  await page.locator(tid('welcome-screen')).waitFor({ state: 'visible', timeout: 15_000 });
 }
 
 /**

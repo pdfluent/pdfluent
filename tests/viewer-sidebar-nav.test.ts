@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 import { readFileSync } from 'node:fs';
@@ -29,6 +29,7 @@ const viewerAppSource = [
   '../src/viewer/hooks/useTextInteraction.ts',
   '../src/viewer/hooks/useKeyboardShortcuts.ts',
   '../src/viewer/ViewerApp.tsx',
+  '../src/viewer/v3/EditorV3Shell.tsx',
   '../src/viewer/WelcomeSection.tsx',
 ].map(p => readFileSync(new URL(p, import.meta.url), 'utf8')).join('\n\n');
 
@@ -172,29 +173,21 @@ describe('LeftNavRail — nav controls only shown when document open', () => {
 // ViewerApp wiring
 // ---------------------------------------------------------------------------
 
-describe('ViewerApp — LeftNavRail nav props', () => {
-  it('passes onNextPage to LeftNavRail', () => {
-    expect(viewerAppSource).toContain('onNextPage=');
+describe('ViewerApp — V3 nav props', () => {
+  it('passes onNavigatePage to EditorV3Shell', () => {
+    expect(viewerAppSource).toContain('onNavigatePage={navigateToPage}');
   });
 
-  it('passes onPrevPage to LeftNavRail', () => {
-    expect(viewerAppSource).toContain('onPrevPage=');
+  it('renders previous-page controls in the V3 shell', () => {
+    expect(viewerAppSource).toContain('onNavigatePage(Math.max(0, pageIndex - 1))');
   });
 
-  it('onNextPage increments pageIndex clamped to pageCount - 1', () => {
-    const railBlock = viewerAppSource.slice(
-      viewerAppSource.indexOf('<LeftNavRail'),
-      viewerAppSource.indexOf('/>', viewerAppSource.indexOf('<LeftNavRail')) + 2
-    );
-    expect(railBlock).toContain('Math.min(pageCount - 1, i + 1)');
+  it('renders next-page controls in the V3 shell', () => {
+    expect(viewerAppSource).toContain('onNavigatePage(Math.min(pageCount - 1, pageIndex + 1))');
   });
 
-  it('onPrevPage decrements pageIndex clamped to 0', () => {
-    const railBlock = viewerAppSource.slice(
-      viewerAppSource.indexOf('<LeftNavRail'),
-      viewerAppSource.indexOf('/>', viewerAppSource.indexOf('<LeftNavRail')) + 2
-    );
-    expect(railBlock).toContain('Math.max(0, i - 1)');
+  it('keeps the floating page indicator in the V3 shell', () => {
+    expect(viewerAppSource).toContain('data-testid="floating-page-indicator"');
   });
 });
 

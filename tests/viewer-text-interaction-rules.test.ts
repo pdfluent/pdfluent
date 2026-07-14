@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 import { describe, it, expect } from 'vitest';
@@ -37,7 +37,7 @@ describe('getTextInteractionRule — protect mode', () => {
 });
 
 describe('getTextInteractionRule — suppressed modes', () => {
-  const suppressedModes = ['read', 'review', 'forms', 'organize', 'convert'] as const;
+  const suppressedModes = ['read', 'review', 'sign', 'forms', 'organize', 'convert'] as const;
 
   for (const mode of suppressedModes) {
     it(`returns none for mode "${mode}"`, () => {
@@ -126,14 +126,14 @@ describe('isHoverOnlyTextInteractionActive', () => {
 // ---------------------------------------------------------------------------
 
 describe('textInteractionRules — source coverage', () => {
-  it('covers all seven viewer modes', () => {
+  it('covers all eight viewer modes', () => {
     const { readFileSync } = require('node:fs');
     const { join } = require('node:path');
     const src = readFileSync(
       join(import.meta.dirname, '../src/viewer/text/textInteractionRules.ts'),
       'utf8',
     );
-    const modes = ['read', 'review', 'edit', 'forms', 'protect', 'organize', 'convert'];
+    const modes = ['read', 'review', 'edit', 'sign', 'forms', 'protect', 'organize', 'convert'];
     for (const m of modes) {
       expect(src).toContain(`'${m}'`);
     }

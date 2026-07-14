@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 import { readFileSync } from 'node:fs';
@@ -64,29 +64,29 @@ describe('ViewerApp — scanned page detection logic', () => {
   });
 
   it('calls extractPageTextSpans for each page', () => {
-    const detectionStart = viewerAppSource.indexOf('SCANNED_PAGE_TEXT_THRESHOLD');
-    const detectionEnd = detectionStart + 500;
+    const detectionStart = viewerAppSource.indexOf('const SCANNED_PAGE_TEXT_THRESHOLD');
+    const detectionEnd = detectionStart + 1200;
     const block = viewerAppSource.slice(detectionStart, detectionEnd);
     expect(block).toContain('extractPageTextSpans');
   });
 
   it('sums text length from spans', () => {
-    const detectionStart = viewerAppSource.indexOf('SCANNED_PAGE_TEXT_THRESHOLD');
-    const detectionEnd = detectionStart + 500;
+    const detectionStart = viewerAppSource.indexOf('const SCANNED_PAGE_TEXT_THRESHOLD');
+    const detectionEnd = detectionStart + 1200;
     const block = viewerAppSource.slice(detectionStart, detectionEnd);
     expect(block).toContain('span.text.length');
   });
 
   it('adds page to scanned set when chars below threshold', () => {
-    const detectionStart = viewerAppSource.indexOf('SCANNED_PAGE_TEXT_THRESHOLD');
-    const detectionEnd = detectionStart + 600;
+    const detectionStart = viewerAppSource.indexOf('const SCANNED_PAGE_TEXT_THRESHOLD');
+    const detectionEnd = detectionStart + 1200;
     const block = viewerAppSource.slice(detectionStart, detectionEnd);
     expect(block).toContain('scanned.add(p)');
   });
 
   it('calls setScannedPageIndices with the discovered set', () => {
-    const detectionStart = viewerAppSource.indexOf('SCANNED_PAGE_TEXT_THRESHOLD');
-    const detectionEnd = detectionStart + 700;
+    const detectionStart = viewerAppSource.indexOf('const SCANNED_PAGE_TEXT_THRESHOLD');
+    const detectionEnd = detectionStart + 1200;
     const block = viewerAppSource.slice(detectionStart, detectionEnd);
     expect(block).toContain('setScannedPageIndices(scanned)');
   });

@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 import { readFileSync } from 'node:fs';
@@ -29,6 +29,7 @@ const viewerAppSource = [
   '../src/viewer/hooks/useTextInteraction.ts',
   '../src/viewer/hooks/useKeyboardShortcuts.ts',
   '../src/viewer/ViewerApp.tsx',
+  '../src/viewer/v3/EditorV3Shell.tsx',
   '../src/viewer/WelcomeSection.tsx',
 ].map(p => readFileSync(new URL(p, import.meta.url), 'utf8')).join('\n\n');
 
@@ -181,28 +182,28 @@ describe('RightContextPanel — panel sync: wiring', () => {
 });
 
 // ---------------------------------------------------------------------------
-// ViewerApp — passes 4 new props to RightContextPanel
+// ViewerApp — passes 4 sync props to EditorV3Shell
 // ---------------------------------------------------------------------------
 
-// Locate the RightContextPanel JSX block for scoped assertions
-const panelBlockStart = viewerAppSource.indexOf('<RightContextPanel');
-const panelBlockEnd   = viewerAppSource.indexOf('/>', panelBlockStart) + 2;
+// Locate the EditorV3Shell JSX block for scoped assertions
+const panelBlockStart = viewerAppSource.indexOf('<EditorV3Shell');
+const panelBlockEnd   = viewerAppSource.indexOf('>\n          {docLoading', panelBlockStart);
 const panelBlock      = viewerAppSource.slice(panelBlockStart, panelBlockEnd);
 
-describe('ViewerApp — panel sync: RightContextPanel wiring', () => {
-  it('passes activeCommentIdx to RightContextPanel', () => {
+describe('ViewerApp — panel sync: EditorV3Shell wiring', () => {
+  it('passes activeCommentIdx to EditorV3Shell', () => {
     expect(panelBlock).toContain('activeCommentIdx={activeCommentIdx}');
   });
 
-  it('passes onCommentSelect={handleCommentNav} to RightContextPanel', () => {
+  it('passes onCommentSelect={handleCommentNav} to EditorV3Shell', () => {
     expect(panelBlock).toContain('onCommentSelect={handleCommentNav}');
   });
 
-  it('passes activeFieldIdx to RightContextPanel', () => {
+  it('passes activeFieldIdx to EditorV3Shell', () => {
     expect(panelBlock).toContain('activeFieldIdx={activeFieldIdx}');
   });
 
-  it('passes onFieldSelect={handleFieldNav} to RightContextPanel', () => {
+  it('passes onFieldSelect={handleFieldNav} to EditorV3Shell', () => {
     expect(panelBlock).toContain('onFieldSelect={handleFieldNav}');
   });
 });

@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 import { readFileSync } from 'node:fs';
@@ -124,14 +124,14 @@ describe('RightContextPanel — forms mode content', () => {
 describe('RightContextPanel — forms mode empty state', () => {
   it('renders empty state when formFields is empty', () => {
     const formsContent = panelSource.indexOf('function FormsModeContent');
-    const emptyText = panelSource.indexOf("t('leftNav.noFormFields'", formsContent);
+    const emptyText = panelSource.indexOf("t('forms.noFieldsBrowserHint'", formsContent);
     expect(emptyText).toBeGreaterThan(formsContent);
   });
 
   it('empty state is inside FormsModeContent (not a generic placeholder)', () => {
     const formsContent = panelSource.indexOf('function FormsModeContent');
     const nextFunction = panelSource.indexOf('\nfunction ', formsContent + 1);
-    const emptyText = panelSource.indexOf("t('leftNav.noFormFields'", formsContent);
+    const emptyText = panelSource.indexOf("t('forms.noFieldsBrowserHint'", formsContent);
     expect(emptyText).toBeLessThan(nextFunction);
   });
 });

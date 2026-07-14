@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 import type { Runtime, Engine, OperationType, LimitType, LimitInfo, Result } from '../types';
@@ -73,6 +73,9 @@ export interface CapabilityRegistry {
   /** Whether PDF/A validation is supported */
   readonly supportsPdfaValidation: boolean;
 
+  /** Whether PDF/A conversion is supported */
+  readonly supportsPdfaConversion: boolean;
+
   // -------------------------------------------------------------------------
   // Document Manipulation Capabilities
   // -------------------------------------------------------------------------
@@ -88,6 +91,9 @@ export interface CapabilityRegistry {
 
   /** Whether compressing PDFs is supported */
   readonly supportsCompression: boolean;
+
+  /** Whether XFA flattening is supported */
+  readonly supportsXfaFlatten: boolean;
 
   /** Whether watermarking is supported */
   readonly supportsWatermark: boolean;

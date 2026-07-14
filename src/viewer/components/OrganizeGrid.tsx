@@ -1,14 +1,16 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
+import { isTauriRuntime } from '../../lib/tauri-detection';
 import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { RotateCwIcon, Trash2Icon, CheckSquareIcon, SquareIcon, XIcon, FilePlusIcon, ScissorsIcon, DownloadIcon, LogInIcon } from 'lucide-react';
+import { RotateCwIcon, RotateCcwIcon, Trash2Icon, CheckSquareIcon, SquareIcon, XIcon, FilePlusIcon, FilesIcon, ScissorsIcon, DownloadIcon, LogInIcon, ChevronLeftIcon, ChevronRightIcon } from 'lucide-react';
 import { useTaskQueueContext } from '../context/TaskQueueContext';
+import { pageIndicesToRanges } from './pageRanges';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -28,7 +30,7 @@ interface OrganizeGridProps {
 // Helpers
 // ---------------------------------------------------------------------------
 
-const isTauri = typeof window !== 'undefined' && '__TAURI__' in window;
+const isTauri = isTauriRuntime();
 
 // ---------------------------------------------------------------------------
 // Component
@@ -62,6 +64,8 @@ export function OrganizeGrid({ thumbnails, pageCount, onPageMutation, onMarkDirt
 
   // Prevents concurrent assembly operations (append, insert, export, split)
   const [isAssemblyBusy, setIsAssemblyBusy] = useState(false);
+  const unavailableTitle = (label: string): string =>
+    isTauri ? label : `${label} (${t('common.notYetAvailable')})`;
 
   function toggleSelection(index: number): void {
     // Shift+click range selection: fill range from lastClickedRef to index
@@ -109,22 +113,25 @@ export function OrganizeGrid({ thumbnails, pageCount, onPageMutation, onMarkDirt
       const result = await invoke<{ page_count: number }>('delete_pages', { pageIndices: [pageIndex] });
       update(taskId, { status: 'done', label: t('tasks.deletePageDone', { page: pageIndex + 1 }) });
       onPageMutation(result.page_count);
-    } catch {
-      update(taskId, { status: 'error', label: t('tasks.deleteFailed') });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      update(taskId, { status: 'error', label: `${t('tasks.deleteFailed')}: ${message}` });
     }
   }
 
-  async function handleRotatePage(pageIndex: number): Promise<void> {
+  async function handleRotatePage(pageIndex: number, direction: 'left' | 'right' = 'right'): Promise<void> {
     if (!isTauri) return;
+    const rotation = direction === 'left' ? 270 : 90;
     const taskId = `rotate-page-${Date.now()}`;
     push({ id: taskId, label: t('tasks.rotatePageRunning', { page: pageIndex + 1 }), progress: null, status: 'running' });
     try {
       const { invoke } = await import('@tauri-apps/api/core');
-      const result = await invoke<{ page_count: number }>('rotate_pages', { pageIndices: [pageIndex], rotation: 90 });
+      const result = await invoke<{ page_count: number }>('rotate_pages', { pageIndices: [pageIndex], rotation });
       update(taskId, { status: 'done', label: t('tasks.rotatePageDone', { page: pageIndex + 1 }) });
       onPageMutation(result.page_count);
-    } catch {
-      update(taskId, { status: 'error', label: t('tasks.rotateFailed') });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      update(taskId, { status: 'error', label: `${t('tasks.rotateFailed')}: ${message}` });
     }
   }
 
@@ -146,19 +153,21 @@ export function OrganizeGrid({ thumbnails, pageCount, onPageMutation, onMarkDirt
     }
   }
 
-  async function handleBatchRotate(): Promise<void> {
+  async function handleBatchRotate(direction: 'left' | 'right' = 'right'): Promise<void> {
     if (!isTauri || selectedPages.size === 0) return;
+    const rotation = direction === 'left' ? 270 : 90;
     const indices = Array.from(selectedPages).sort((a, b) => a - b);
     const taskId = `batch-rotate-${Date.now()}`;
     push({ id: taskId, label: t('tasks.batchRotateRunning', { count: indices.length }), progress: null, status: 'running' });
     try {
       const { invoke } = await import('@tauri-apps/api/core');
-      const result = await invoke<{ page_count: number }>('rotate_pages', { pageIndices: indices, rotation: 90 });
+      const result = await invoke<{ page_count: number }>('rotate_pages', { pageIndices: indices, rotation });
       update(taskId, { status: 'done', label: t('tasks.batchRotateDone', { count: indices.length }) });
       clearSelection();
       onPageMutation(result.page_count);
-    } catch {
-      update(taskId, { status: 'error', label: t('tasks.rotateFailed') });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      update(taskId, { status: 'error', label: `${t('tasks.rotateFailed')}: ${message}` });
     }
   }
 
@@ -185,14 +194,26 @@ export function OrganizeGrid({ thumbnails, pageCount, onPageMutation, onMarkDirt
       update(taskId, { status: 'done', label: t('organize.orderApplied') });
       setPendingOrder(null);
       onPageMutation(result.page_count);
-    } catch {
-      update(taskId, { status: 'error', label: t('organize.orderFailed') });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      update(taskId, { status: 'error', label: `${t('organize.orderFailed')}: ${message}` });
     }
   }
 
   // Discard pending order — reverts to original page sequence
   function handleCancelOrder(): void {
     setPendingOrder(null);
+  }
+
+  function moveSelectedPage(direction: -1 | 1): void {
+    if (selectedPages.size !== 1 || isAssemblyBusy) return;
+    const [pageIndex] = Array.from(selectedPages);
+    if (pageIndex === undefined) return;
+    const current = pendingOrder ?? Array.from({ length: pageCount }, (_, k) => k);
+    const src = current.indexOf(pageIndex);
+    const dst = src + direction;
+    if (src < 0 || dst < 0 || dst >= current.length) return;
+    handleLocalReorder(src, dst);
   }
 
   // ── Document assembly handlers ───────────────────────────────────────
@@ -207,15 +228,51 @@ export function OrganizeGrid({ thumbnails, pageCount, onPageMutation, onMarkDirt
     // Capture current count before the operation so we can navigate to the first new page
     const firstNewPageIndex = pageCount;
     const taskId = `append-pdf-${Date.now()}`;
-    push({ id: taskId, label: 'PDF toevoegen…', progress: null, status: 'running' });
+    push({ id: taskId, label: t('organize.addingPdf'), progress: null, status: 'running' });
     try {
       const { invoke } = await import('@tauri-apps/api/core');
       const result = await invoke<{ page_count: number }>('append_pdf', { sourcePath });
-      update(taskId, { status: 'done', label: 'PDF toegevoegd' });
+      update(taskId, { status: 'done', label: t('organize.pdfAdded') });
       onMarkDirty();
       onPageMutation(result.page_count, firstNewPageIndex);
-    } catch {
-      update(taskId, { status: 'error', label: t('organize.addFailed') });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      update(taskId, { status: 'error', label: `${t('organize.addFailed')}: ${message}` });
+    } finally {
+      setIsAssemblyBusy(false);
+    }
+  }
+
+  /** Open a multi-file picker and append every chosen PDF to the current
+   *  document — Acrobat-style "Combine files" into this document. Reuses the
+   *  proven append_pdf command per file (no on-disk merge of the current,
+   *  possibly-dirty, document). */
+  async function handleCombinePdfs(): Promise<void> {
+    if (!isTauri || pageCount === 0 || isAssemblyBusy) return;
+    const { open } = await import('@tauri-apps/plugin-dialog');
+    const picked = await open({ filters: [{ name: 'PDF', extensions: ['pdf'] }], multiple: true });
+    if (!picked) return;
+    const sources = (Array.isArray(picked) ? picked : [picked]).filter(
+      (p): p is string => typeof p === 'string',
+    );
+    if (sources.length === 0) return;
+    setIsAssemblyBusy(true);
+    const firstNewPageIndex = pageCount;
+    const taskId = `combine-pdf-${Date.now()}`;
+    push({ id: taskId, label: t('organize.combiningFiles', { count: sources.length }), progress: null, status: 'running' });
+    try {
+      const { invoke } = await import('@tauri-apps/api/core');
+      let latestCount = pageCount;
+      for (const sourcePath of sources) {
+        const result = await invoke<{ page_count: number }>('append_pdf', { sourcePath });
+        latestCount = result.page_count;
+      }
+      update(taskId, { status: 'done', label: t('organize.filesCombined', { count: sources.length }) });
+      onMarkDirty();
+      onPageMutation(latestCount, firstNewPageIndex);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      update(taskId, { status: 'error', label: `${t('organize.addFailed')}: ${message}` });
     } finally {
       setIsAssemblyBusy(false);
     }
@@ -233,16 +290,17 @@ export function OrganizeGrid({ thumbnails, pageCount, onPageMutation, onMarkDirt
     const atIndex = selectedPages.size > 0 ? Math.min(...selectedPages) : 0;
     setIsAssemblyBusy(true);
     const taskId = `insert-pdf-${Date.now()}`;
-    push({ id: taskId, label: `PDF invoegen vóór pagina ${atIndex + 1}…`, progress: null, status: 'running' });
+    push({ id: taskId, label: t('organize.insertingPdf', { page: atIndex + 1 }), progress: null, status: 'running' });
     try {
       const { invoke } = await import('@tauri-apps/api/core');
       const result = await invoke<{ page_count: number }>('insert_pdf_at', { sourcePath, atIndex });
-      update(taskId, { status: 'done', label: 'PDF ingevoegd' });
+      update(taskId, { status: 'done', label: t('organize.pdfInserted') });
       clearSelection();
       onMarkDirty();
       onPageMutation(result.page_count, atIndex);
-    } catch {
-      update(taskId, { status: 'error', label: t('organize.insertFailed') });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      update(taskId, { status: 'error', label: `${t('organize.insertFailed')}: ${message}` });
     } finally {
       setIsAssemblyBusy(false);
     }
@@ -257,14 +315,15 @@ export function OrganizeGrid({ thumbnails, pageCount, onPageMutation, onMarkDirt
     const indices = Array.from(selectedPages).sort((a, b) => a - b);
     setIsAssemblyBusy(true);
     const taskId = `export-selection-${Date.now()}`;
-    push({ id: taskId, label: `${indices.length} pagina('s) exporteren…`, progress: null, status: 'running' });
+    push({ id: taskId, label: t('organize.exportingPages', { count: indices.length }), progress: null, status: 'running' });
     try {
       const { invoke } = await import('@tauri-apps/api/core');
       await invoke('extract_pages_to_file', { pageIndices: indices, outputPath });
-      update(taskId, { status: 'done', label: `Selectie geëxporteerd naar ${outputPath.split('/').pop() ?? outputPath}` });
+      update(taskId, { status: 'done', label: t('organize.selectionExported', { name: outputPath.split('/').pop() ?? outputPath }) });
       // Current document is unchanged — no dirty or page mutation
-    } catch {
-      update(taskId, { status: 'error', label: t('organize.exportFailed') });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      update(taskId, { status: 'error', label: `${t('organize.exportFailed')}: ${message}` });
     } finally {
       setIsAssemblyBusy(false);
     }
@@ -278,14 +337,40 @@ export function OrganizeGrid({ thumbnails, pageCount, onPageMutation, onMarkDirt
     if (!outputDir || typeof outputDir !== 'string') return;
     setIsAssemblyBusy(true);
     const taskId = `split-pages-${Date.now()}`;
-    push({ id: taskId, label: 'Splits in losse pagina\'s…', progress: null, status: 'running' });
+    push({ id: taskId, label: t('organize.splittingPages'), progress: null, status: 'running' });
     try {
       const { invoke } = await import('@tauri-apps/api/core');
       const paths = await invoke<string[]>('split_into_pages', { outputDir });
-      update(taskId, { status: 'done', label: `${paths.length} pagina's opgeslagen` });
+      update(taskId, { status: 'done', label: t('organize.pagesSaved', { count: paths.length }) });
       // Current document is unchanged — no dirty or page mutation
-    } catch {
-      update(taskId, { status: 'error', label: t('organize.splitFailed') });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      update(taskId, { status: 'error', label: `${t('organize.splitFailed')}: ${message}` });
+    } finally {
+      setIsAssemblyBusy(false);
+    }
+  }
+
+  /** Split the document into separate files, one per contiguous run of the
+   *  current page selection — Acrobat-style "split by range". Disabled until
+   *  pages are selected; ranges are derived from the selection (1-based). */
+  async function handleSplitByRange(): Promise<void> {
+    if (!isTauri || isAssemblyBusy || selectedPages.size === 0) return;
+    const ranges = pageIndicesToRanges(Array.from(selectedPages));
+    if (ranges.length === 0) return;
+    const { open } = await import('@tauri-apps/plugin-dialog');
+    const outputDir = await open({ directory: true, multiple: false });
+    if (!outputDir || typeof outputDir !== 'string') return;
+    setIsAssemblyBusy(true);
+    const taskId = `split-range-${Date.now()}`;
+    push({ id: taskId, label: t('organize.splittingRanges', { count: ranges.length }), progress: null, status: 'running' });
+    try {
+      const { invoke } = await import('@tauri-apps/api/core');
+      const paths = await invoke<string[]>('split_pdf', { ranges, outputDir });
+      update(taskId, { status: 'done', label: t('organize.filesSaved', { count: paths.length }) });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      update(taskId, { status: 'error', label: `${t('organize.splitFailed')}: ${message}` });
     } finally {
       setIsAssemblyBusy(false);
     }
@@ -322,6 +407,10 @@ export function OrganizeGrid({ thumbnails, pageCount, onPageMutation, onMarkDirt
 
   const hasSelection = selectedPages.size > 0;
   const canBatchDelete = hasSelection && selectedPages.size < pageCount;
+  const selectedPageForMove = selectedPages.size === 1 ? Array.from(selectedPages)[0] : undefined;
+  const selectedDisplayIndex = selectedPageForMove === undefined ? -1 : displayOrder.indexOf(selectedPageForMove);
+  const canMoveSelectedLeft = selectedDisplayIndex > 0 && !isAssemblyBusy;
+  const canMoveSelectedRight = selectedDisplayIndex >= 0 && selectedDisplayIndex < displayOrder.length - 1 && !isAssemblyBusy;
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
@@ -340,50 +429,82 @@ export function OrganizeGrid({ thumbnails, pageCount, onPageMutation, onMarkDirt
           </span>
           <div className="flex items-center gap-2 ml-auto flex-wrap">
             <button
-              onClick={() => { void handleBatchRotate(); }}
-              disabled={!isTauri}
-              data-testid="batch-rotate-btn"
-              className="flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-md bg-background border border-border text-foreground hover:bg-muted transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-            >
-              <RotateCwIcon className="w-3.5 h-3.5" />
-              {t('organize.rotate')}
-            </button>
-            <button
               onClick={() => { void handleInsertPdf(); }}
               disabled={!isTauri || isAssemblyBusy}
               data-testid="organize-insert-before-btn"
-              title={selectedPages.size > 0 ? `PDF invoegen vóór pagina ${Math.min(...selectedPages) + 1}` : 'PDF invoegen'}
+              title={unavailableTitle(selectedPages.size > 0 ? t('organize.insertBeforePage', { page: Math.min(...selectedPages) + 1 }) : t('organize.insertBefore'))}
               className="flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-md bg-background border border-border text-foreground hover:bg-muted transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
-              <LogInIcon className="w-3.5 h-3.5" />
+              <LogInIcon className="w-4 h-4" />
               {t('organize.insertBefore')}
             </button>
             <button
               onClick={() => { void handleExportSelection(); }}
               disabled={!isTauri || isAssemblyBusy}
               data-testid="organize-export-selection-btn"
-              title={`${selectedPages.size} pagina('s) exporteren naar nieuw PDF`}
+              title={unavailableTitle(t('organize.exportSelection'))}
               className="flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-md bg-background border border-border text-foreground hover:bg-muted transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
-              <DownloadIcon className="w-3.5 h-3.5" />
+              <DownloadIcon className="w-4 h-4" />
               {t('organize.exportSelection')}
+            </button>
+            <button
+              onClick={() => moveSelectedPage(-1)}
+              disabled={!canMoveSelectedLeft}
+              data-testid="organize-move-left-btn"
+              title={t('organize.moveLeft')}
+              className="flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-md bg-background border border-border text-foreground hover:bg-muted transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              <ChevronLeftIcon className="w-4 h-4" />
+              <span>{t('organize.moveLeftShort')}</span>
+            </button>
+            <button
+              onClick={() => moveSelectedPage(1)}
+              disabled={!canMoveSelectedRight}
+              data-testid="organize-move-right-btn"
+              title={t('organize.moveRight')}
+              className="flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-md bg-background border border-border text-foreground hover:bg-muted transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              <ChevronRightIcon className="w-4 h-4" />
+              <span>{t('organize.moveRightShort')}</span>
+            </button>
+            <button
+              onClick={() => { void handleBatchRotate('left'); }}
+              disabled={!isTauri}
+              data-testid="batch-rotate-left-btn"
+              title={unavailableTitle(t('organize.rotateLeft'))}
+              className="flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-md bg-background border border-border text-foreground hover:bg-muted transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              <RotateCcwIcon className="w-4 h-4" />
+              <span>{t('organize.rotateLeftShort')}</span>
+            </button>
+            <button
+              onClick={() => { void handleBatchRotate('right'); }}
+              disabled={!isTauri}
+              data-testid="batch-rotate-right-btn"
+              title={unavailableTitle(t('organize.rotateRight'))}
+              className="flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-md bg-background border border-border text-foreground hover:bg-muted transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              <RotateCwIcon className="w-4 h-4" />
+              <span>{t('organize.rotateRightShort')}</span>
             </button>
             <button
               onClick={() => { void handleBatchDelete(); }}
               disabled={!isTauri || !canBatchDelete}
               data-testid="batch-delete-btn"
+              title={unavailableTitle(t('common.delete'))}
               className="flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-md bg-destructive/10 border border-destructive/30 text-destructive hover:bg-destructive/20 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
-              <Trash2Icon className="w-3.5 h-3.5" />
+              <Trash2Icon className="w-4 h-4" />
               {t('common.delete')}
             </button>
             <button
               onClick={clearSelection}
               data-testid="clear-selection-btn"
               className="p-1 text-muted-foreground hover:text-foreground hover:bg-muted rounded transition-colors"
-              aria-label="Selectie wissen"
+              aria-label={t('organize.clearSelection')}
             >
-              <XIcon className="w-3.5 h-3.5" />
+              <XIcon className="w-4 h-4" />
             </button>
           </div>
         </div>
@@ -398,7 +519,7 @@ export function OrganizeGrid({ thumbnails, pageCount, onPageMutation, onMarkDirt
             data-testid="select-all-btn"
             className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
           >
-            <SquareIcon className="w-3.5 h-3.5" />
+            <SquareIcon className="w-4 h-4" />
             {t('organize.selectAll')}
           </button>
           <div className="flex items-center gap-2 ml-auto flex-wrap">
@@ -406,22 +527,44 @@ export function OrganizeGrid({ thumbnails, pageCount, onPageMutation, onMarkDirt
               onClick={() => { void handleAppendPdf(); }}
               disabled={!isTauri || pageCount === 0 || isAssemblyBusy}
               data-testid="organize-merge-pdf-btn"
-              title="PDF toevoegen aan het einde van dit document"
+              title={unavailableTitle(t('organize.addPdf'))}
               className="flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-md bg-background border border-border text-foreground hover:bg-muted transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
-              <FilePlusIcon className="w-3.5 h-3.5" />
+              <FilePlusIcon className="w-4 h-4" />
               {t('organize.addPdf')}
+            </button>
+            <button
+              onClick={() => { void handleCombinePdfs(); }}
+              disabled={!isTauri || pageCount === 0 || isAssemblyBusy}
+              data-testid="organize-combine-btn"
+              title={unavailableTitle(t('organize.combine'))}
+              className="flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-md bg-background border border-border text-foreground hover:bg-muted transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              <FilesIcon className="w-4 h-4" />
+              {t('organize.combine')}
             </button>
             {pageCount > 1 && (
               <button
                 onClick={() => { void handleSplitIntoPages(); }}
                 disabled={!isTauri || isAssemblyBusy}
                 data-testid="organize-split-btn"
-                title="Document splitsen in losse pagina's"
+                title={unavailableTitle(t('organize.splitPages'))}
                 className="flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-md bg-background border border-border text-foreground hover:bg-muted transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
               >
-                <ScissorsIcon className="w-3.5 h-3.5" />
+                <ScissorsIcon className="w-4 h-4" />
                 {t('organize.splitPages')}
+              </button>
+            )}
+            {pageCount > 1 && (
+              <button
+                onClick={() => { void handleSplitByRange(); }}
+                disabled={!isTauri || isAssemblyBusy || selectedPages.size === 0}
+                data-testid="organize-split-range-btn"
+                title={selectedPages.size === 0 ? t('organize.splitRangeHint') : unavailableTitle(t('organize.splitRange'))}
+                className="flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-md bg-background border border-border text-foreground hover:bg-muted transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                <ScissorsIcon className="w-4 h-4" />
+                {t('organize.splitRange')}
               </button>
             )}
           </div>
@@ -448,6 +591,7 @@ export function OrganizeGrid({ thumbnails, pageCount, onPageMutation, onMarkDirt
             data-testid="organize-apply-order-btn"
             onClick={() => { void handleApplyOrder(); }}
             disabled={!isTauri}
+            title={unavailableTitle(t('common.apply'))}
             className="px-3 py-1 text-xs font-medium rounded-md bg-primary text-primary-foreground hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
           >
             {t('common.apply')}
@@ -458,8 +602,8 @@ export function OrganizeGrid({ thumbnails, pageCount, onPageMutation, onMarkDirt
       {/* Page grid — iterates displayOrder so pending drags are reflected immediately */}
       <div
         data-testid="organize-grid"
-        className="flex-1 p-6 grid gap-4 overflow-auto"
-        style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))' }}
+        className="flex-1 p-6 grid gap-5 overflow-auto"
+        style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))' }}
       >
         {displayOrder.map((i, displayPos) => {
           const thumbUrl = thumbnails.get(i);
@@ -494,12 +638,12 @@ export function OrganizeGrid({ thumbnails, pageCount, onPageMutation, onMarkDirt
                 dragSrcRef.current = -1;
               }}
               className={[
-                'flex flex-col items-center gap-2 p-3 bg-background border rounded-lg transition-colors cursor-pointer select-none',
+                'flex flex-col items-center gap-2 p-3 bg-card border rounded-lg transition-all duration-150 cursor-pointer select-none group',
                 isSelected
-                  ? 'border-primary ring-2 ring-primary/30'
+                  ? 'border-primary ring-2 ring-primary/30 shadow-sm'
                   : dragOverIdx === displayPos && dragSrcRef.current !== displayPos
                     ? 'border-primary/60 ring-2 ring-primary/40 bg-primary/5'
-                    : 'border-border hover:border-primary/50',
+                    : 'border-border hover:border-primary/50 hover:shadow-md',
               ].join(' ')}
             >
               {/* Selection indicator */}
@@ -515,7 +659,7 @@ export function OrganizeGrid({ thumbnails, pageCount, onPageMutation, onMarkDirt
               </div>
 
               {/* Thumbnail */}
-              <div className="w-[120px] h-[170px] flex items-center justify-center bg-muted rounded overflow-hidden shrink-0">
+              <div className="w-[130px] h-[184px] flex items-center justify-center bg-muted/50 rounded-md overflow-hidden shrink-0 border border-border/50">
                 {thumbUrl ? (
                   <img
                     src={thumbUrl}
@@ -553,28 +697,38 @@ export function OrganizeGrid({ thumbnails, pageCount, onPageMutation, onMarkDirt
 
               {/* Per-tile actions — stop propagation to avoid toggling selection */}
               <div
-                className="flex items-center gap-1"
+                className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-150"
                 onClick={(e) => { e.stopPropagation(); }}
               >
                 <button
-                  onClick={() => { void handleRotatePage(i); }}
+                  onClick={() => { void handleRotatePage(i, 'left'); }}
                   disabled={!isTauri}
                   className="p-1 text-muted-foreground hover:text-foreground hover:bg-muted rounded transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                  title={t('organize.rotatePage', { page: i + 1 })}
-                  aria-label={t('organize.rotatePage', { page: i + 1 })}
-                  data-testid={`organize-rotate-${i}`}
+                  title={unavailableTitle(t('organize.rotateLeft'))}
+                  aria-label={t('organize.rotateLeft')}
+                  data-testid={`organize-rotate-left-${i}`}
                 >
-                  <RotateCwIcon className="w-3.5 h-3.5" />
+                  <RotateCcwIcon className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => { void handleRotatePage(i, 'right'); }}
+                  disabled={!isTauri}
+                  className="p-1 text-muted-foreground hover:text-foreground hover:bg-muted rounded transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                  title={unavailableTitle(t('organize.rotateRight'))}
+                  aria-label={t('organize.rotateRight')}
+                  data-testid={`organize-rotate-right-${i}`}
+                >
+                  <RotateCwIcon className="w-4 h-4" />
                 </button>
                 <button
                   onClick={() => { void handleDeletePage(i); }}
                   disabled={!isTauri || !canDelete}
                   className="p-1 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                  title={canDelete ? t('organize.deletePage', { page: i + 1 }) : t('errors.cannotDeleteLastPage')}
+                  title={canDelete ? unavailableTitle(t('organize.deletePage', { page: i + 1 })) : t('errors.cannotDeleteLastPage')}
                   aria-label={t('organize.deletePage', { page: i + 1 })}
                   data-testid={`organize-delete-${i}`}
                 >
-                  <Trash2Icon className="w-3.5 h-3.5" />
+                  <Trash2Icon className="w-4 h-4" />
                 </button>
               </div>
             </div>

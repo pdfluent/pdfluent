@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 // ---------------------------------------------------------------------------
@@ -65,9 +65,25 @@ export interface RuntimeAdapterMetadata {
 /**
  * Capabilities supported by a runtime adapter
  */
+export type RuntimeCapabilityStatus =
+  | 'supported'
+  | 'unsupported'
+  | 'apiAvailableButNotWired'
+  | 'apiAvailableButRuntimeMissing'
+  | 'degraded';
+
+export interface RuntimeOperationCapability {
+  /** Current usability of the operation in this runtime adapter. */
+  status: RuntimeCapabilityStatus;
+  /** Short reason for unsupported, degraded, or not-yet-wired operations. */
+  reason?: string;
+}
+
 export interface RuntimeCapabilities {
   /** Operations supported by this adapter */
   supportedOperations: string[];
+  /** Granular operation status. Supported operations remain duplicated in supportedOperations for compatibility. */
+  operationDetails?: Record<string, RuntimeOperationCapability>;
   /** Maximum file size in bytes (0 = no limit) */
   maxFileSize: number;
   /** Maximum page count (0 = no limit) */

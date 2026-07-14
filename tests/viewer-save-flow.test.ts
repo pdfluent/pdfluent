@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 import { readFileSync } from 'node:fs';
@@ -86,9 +86,10 @@ describe('TopBar — handleSave', () => {
   });
 
   it('opens save dialog when no currentFilePath', () => {
-    expect(topBarSource).toContain('@tauri-apps/plugin-dialog');
-    expect(topBarSource).toContain("name: 'PDF'");
-    expect(topBarSource).toContain("extensions: ['pdf']");
+    // v2: TopBar delegates save-as to onSaveAs (handed down). The
+    // plugin-dialog import + extension filters live in the upstream
+    // useDocumentLifecycle hook or save_pdf_as_dialog Tauri command.
+    expect(topBarSource).toMatch(/await onSaveAs\(\)|@tauri-apps\/plugin-dialog/);
   });
 
   it('calls onSaveComplete after successful save', () => {

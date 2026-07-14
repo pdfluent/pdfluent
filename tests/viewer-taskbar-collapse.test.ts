@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 import { readFileSync } from 'node:fs';
@@ -44,55 +44,62 @@ describe('BottomTaskBar — renders task rows when non-empty', () => {
   });
 
   it('maps over tasks', () => {
-    expect(taskBarSource).toContain('tasks.map(task =>');
+    // The v2 refactor switched from `task =>` (no parens) to `(task) =>`
+    // (parens around the param). Either is correct — match permissively.
+    expect(taskBarSource).toMatch(/tasks\.map\(\(?task\)? =>/);
   });
 
-  it('passes dismiss to each TaskRow', () => {
-    expect(taskBarSource).toContain('onDismiss={() => { dismiss(task.id); }}');
-  });
-});
-
-// ---------------------------------------------------------------------------
-// Container styling preserved
-// ---------------------------------------------------------------------------
-
-describe('BottomTaskBar — container styling unchanged', () => {
-  it('still uses h-6 height', () => {
-    expect(taskBarSource).toContain('h-6');
-  });
-
-  it('still has border-t', () => {
-    expect(taskBarSource).toContain('border-t');
-  });
-
-  it('still has bg-muted/20', () => {
-    expect(taskBarSource).toContain('bg-muted/20');
-  });
-
-  it('still uses shrink-0', () => {
-    expect(taskBarSource).toContain('shrink-0');
+  it('wires a dismiss handler per task row', () => {
+    // v2 uses a `makeDismiss(task.id)` factory for stable callback identity
+    // (perf opt: enables TaskRow memo). Either inline arrow or factory
+    // satisfies the contract.
+    expect(taskBarSource).toMatch(
+      /onDismiss=\{(?:\(\) => \{ dismiss\(task\.id\); \}|makeDismiss\(task\.id\))\}/,
+    );
   });
 });
 
 // ---------------------------------------------------------------------------
-// TaskRow unchanged
+// Container styling — token-driven (was: hardcoded Tailwind)
 // ---------------------------------------------------------------------------
 
-describe('BottomTaskBar — TaskRow unchanged', () => {
-  it('TaskRow still renders task label', () => {
+describe('BottomTaskBar — container uses token-driven .bottom-taskbar class', () => {
+  it('uses the .bottom-taskbar wrapper class', () => {
+    expect(taskBarSource).toContain('className="bottom-taskbar"');
+  });
+
+  it('has role="status" for screen-reader live region', () => {
+    expect(taskBarSource).toContain('role="status"');
+  });
+
+  it('has aria-live="polite" for non-intrusive announcement', () => {
+    expect(taskBarSource).toContain('aria-live="polite"');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// TaskRow contract
+// ---------------------------------------------------------------------------
+
+describe('BottomTaskBar — TaskRow renders task data', () => {
+  it('renders task label', () => {
     expect(taskBarSource).toContain('task.label');
   });
 
-  it('TaskRow still shows progress bar for running tasks', () => {
-    expect(taskBarSource).toContain("task.status === 'running'");
+  it('renders progress bar for running tasks', () => {
+    // v2 uses data-status="running" attribute, but the underlying
+    // running-state check still lives in code.
+    expect(taskBarSource).toMatch(/task\.status === ['"]running['"]/);
   });
 
-  it('TaskRow still has dismiss button', () => {
+  it('has a dismiss button', () => {
     expect(taskBarSource).toContain('onDismiss');
   });
 
-  it('TaskRow status colours still defined', () => {
-    expect(taskBarSource).toContain("task.status === 'error'");
-    expect(taskBarSource).toContain("task.status === 'done'");
+  it('exposes status via data-status attribute for CSS', () => {
+    // v2 refactor: instead of branching colour in JS, expose
+    // task.status via a data attribute and let CSS pick the colour.
+    // This is the canonical way to test status states now.
+    expect(taskBarSource).toContain('data-status={task.status}');
   });
 });

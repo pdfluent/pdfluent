@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: LicenseRef-PDFluent-Proprietary
 // Copyright (c) 2026 PDFluent Contributors
 
 import { spawnSync } from "node:child_process";
@@ -127,6 +127,9 @@ function gatherNpmEntries() {
     if (!lockPath.includes("node_modules/")) continue;
     const dependencyName = String(lockPath.split("node_modules/").pop() ?? "");
     if (!dependencyName || typeof lockEntry !== "object" || lockEntry === null) {
+      continue;
+    }
+    if (lockEntry.optional === true && !directDependencies.has(dependencyName)) {
       continue;
     }
 
@@ -537,6 +540,9 @@ ${content}
               `- ${entry.name} (${entry.licenseFilePath}) sha256=${entry.sha256 ?? "unknown"}`,
           )
           .join("\n")}`;
+  const sections = [modelSection.trimEnd(), bundledNotices.trimEnd()]
+    .filter(Boolean)
+    .join("\n\n");
 
   const markdown = `# THIRD_PARTY_ATTRIBUTIONS
 
@@ -545,9 +551,7 @@ Generator: \`scripts/generate-third-party.mjs\`
 
 This file stores bundled notice texts and model-asset references.
 
-${modelSection}
-
-${bundledNotices}
+${sections}
 `;
 
   writeFileSync(attributionsPath, markdown, "utf8");

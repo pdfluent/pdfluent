@@ -1,13 +1,14 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 import { useEffect, useRef, useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { SearchIcon, XIcon } from 'lucide-react';
+import { useFocusTrap } from '../hooks/useFocusTrap';
 
 export interface Command {
   id: string;
@@ -27,6 +28,8 @@ interface CommandPaletteProps {
 export function CommandPalette({ isOpen, onClose, commands, recentIds = [], onRun }: CommandPaletteProps) {
   const { t } = useTranslation();
   const inputRef = useRef<HTMLInputElement>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(dialogRef, isOpen);
   const [query, setQuery] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
 
@@ -107,23 +110,25 @@ export function CommandPalette({ isOpen, onClose, commands, recentIds = [], onRu
 
   return (
     <>
-      {/* Backdrop */}
+      {/* Backdrop — blurred + tinted, shared style with all overlays. */}
       <div
-        className="fixed inset-0 bg-black/30 z-40"
+        className="cmdpalette-backdrop"
         onClick={onClose}
         aria-hidden="true"
       />
 
-      {/* Palette */}
+      {/* Centered floating palette. */}
       <div
+        ref={dialogRef}
         role="dialog"
-        aria-label="Command palette"
+        aria-modal="true"
+        aria-label={t('commandPalette.placeholder')}
         data-testid="command-palette"
-        className="fixed left-1/2 top-[15vh] -translate-x-1/2 w-full max-w-lg bg-background border border-border rounded-xl shadow-2xl z-50 overflow-hidden"
+        className="cmdpalette"
       >
         {/* Search input */}
-        <div className="flex items-center gap-2 px-4 py-3 border-b border-border">
-          <SearchIcon className="w-4 h-4 text-muted-foreground shrink-0" />
+        <div className="cmdpalette-input-row">
+          <SearchIcon className="cmdpalette-input-icon" aria-hidden="true" />
           <input
             ref={inputRef}
             type="text"
@@ -131,60 +136,75 @@ export function CommandPalette({ isOpen, onClose, commands, recentIds = [], onRu
             placeholder={t('commandPalette.placeholder')}
             aria-label={t('commandPalette.placeholder')}
             value={query}
-            onChange={e => { setQuery(e.target.value); }}
-            className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground/60 outline-none"
+            onChange={(e) => {
+              setQuery(e.target.value);
+            }}
+            className="cmdpalette-input"
           />
           <button
+            type="button"
             onClick={onClose}
-            aria-label="Close command palette"
-            className="p-0.5 text-muted-foreground hover:text-foreground rounded transition-colors"
+            aria-label={t('commandPalette.dismiss')}
+            className="cmdpalette-input-clear"
           >
-            <XIcon className="w-4 h-4" />
+            <XIcon aria-hidden="true" />
           </button>
         </div>
 
         {/* Command list */}
-        <div className="max-h-72 overflow-y-auto">
+        <div className="cmdpalette-list">
           {/* Recent commands section — shown only when query is empty */}
           {showRecent && (
             <div data-testid="recent-commands-section">
-              <p className="px-4 pt-2 pb-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground/60">
+              <p className="cmdpalette-section-title">
                 {t('commandPalette.recent')}
               </p>
               <ul>
-                {recentCommands.map(cmd => (
+                {recentCommands.map((cmd) => (
                   <li key={cmd.id}>
                     <button
+                      type="button"
                       data-testid="recent-command-item"
-                      className="w-full text-left px-4 py-2 text-sm text-foreground hover:bg-muted/50 transition-colors"
-                      onClick={() => { onRun?.(cmd.id); cmd.action(); onClose(); }}
+                      className="cmdpalette-item"
+                      onClick={() => {
+                        onRun?.(cmd.id);
+                        cmd.action();
+                        onClose();
+                      }}
                     >
                       {cmd.label}
                     </button>
                   </li>
                 ))}
               </ul>
-              <div className="mx-4 my-1 border-t border-border" aria-hidden="true" />
+              <div className="cmdpalette-divider" aria-hidden="true" />
             </div>
           )}
 
           {filtered.length === 0 ? (
-            <div className="px-4 py-8 text-center">
-              <p className="text-sm text-muted-foreground">{t('commandPalette.empty')}</p>
+            <div className="cmdpalette-empty">
+              <p>{t('commandPalette.empty')}</p>
             </div>
           ) : (
             <ul>
               {filtered.map((cmd, i) => (
                 <li key={cmd.id}>
                   <button
+                    type="button"
                     data-testid="command-item"
-                    className={`w-full text-left px-4 py-2.5 text-sm transition-colors ${
+                    className={
                       i === selectedIndex
-                        ? 'bg-primary/10 text-foreground'
-                        : 'text-foreground hover:bg-muted/50'
-                    }`}
-                    onMouseEnter={() => { setSelectedIndex(i); }}
-                    onClick={() => { onRun?.(cmd.id); cmd.action(); onClose(); }}
+                        ? 'cmdpalette-item cmdpalette-item-active'
+                        : 'cmdpalette-item'
+                    }
+                    onMouseEnter={() => {
+                      setSelectedIndex(i);
+                    }}
+                    onClick={() => {
+                      onRun?.(cmd.id);
+                      cmd.action();
+                      onClose();
+                    }}
                   >
                     {cmd.label}
                   </button>
@@ -194,11 +214,11 @@ export function CommandPalette({ isOpen, onClose, commands, recentIds = [], onRu
           )}
         </div>
 
-        {/* Footer */}
-        <div className="px-4 py-2 border-t border-border flex items-center gap-4">
-          <span className="text-[10px] text-muted-foreground/50">{t('commandPalette.navigate')}</span>
-          <span className="text-[10px] text-muted-foreground/50">{t('commandPalette.select')}</span>
-          <span className="text-[10px] text-muted-foreground/50">{t('commandPalette.dismiss')}</span>
+        {/* Footer — keyboard hint row. */}
+        <div className="cmdpalette-footer">
+          <span>{t('commandPalette.navigate')}</span>
+          <span>{t('commandPalette.select')}</span>
+          <span>{t('commandPalette.dismiss')}</span>
         </div>
       </div>
     </>

@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 import { useMemo } from 'react';
@@ -102,6 +102,8 @@ export function useCommands({
         action: () => { setMode('review'); } },
       { id: 'mode-edit', label: t('commands.modeEdit'), keywords: ['edit'],
         action: () => { setMode('edit'); } },
+      { id: 'mode-sign', label: t('commands.modeSign'), keywords: ['sign', 'signature', 'ondertekenen'],
+        action: () => { setMode('sign'); } },
       { id: 'mode-organize', label: t('commands.modeOrganize'), keywords: ['organize', 'pages'],
         action: () => { setMode('organize'); } },
       { id: 'mode-forms', label: t('commands.modeForms'), keywords: ['forms', 'fill'],

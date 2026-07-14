@@ -1,10 +1,10 @@
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: LicenseRef-PDFluent-Proprietary
 // Copyright (c) 2026 PDFluent Contributors
 
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
-const appSource = readFileSync(new URL("../src/App.tsx", import.meta.url), "utf8");
+const appSource = readFileSync(new URL("../src/legacy/App.tsx", import.meta.url), "utf8");
 
 // NOTE: One test case that asserted pf-thumbnail-item and shadow-pf-page CSS
 // class names on the legacy Sidebar.tsx was removed. That magic-patterns CSS

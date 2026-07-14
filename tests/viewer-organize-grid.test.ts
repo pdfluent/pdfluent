@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 import { readFileSync } from 'node:fs';
@@ -29,6 +29,7 @@ const viewerAppSource = [
   '../src/viewer/hooks/useTextInteraction.ts',
   '../src/viewer/hooks/useKeyboardShortcuts.ts',
   '../src/viewer/ViewerApp.tsx',
+  '../src/viewer/v3/EditorV3Shell.tsx',
   '../src/viewer/WelcomeSection.tsx',
 ].map(p => readFileSync(new URL(p, import.meta.url), 'utf8')).join('\n\n');
 
@@ -59,7 +60,7 @@ describe('OrganizeGrid — rendering', () => {
 
   it('uses auto-fill grid columns', () => {
     expect(gridSource).toContain('auto-fill');
-    expect(gridSource).toContain('minmax(140px');
+    expect(gridSource).toContain('minmax(160px');
   });
 
   it('iterates over pageCount pages', () => {
@@ -142,14 +143,16 @@ describe('OrganizeGrid — delete action', () => {
 // ---------------------------------------------------------------------------
 
 describe('OrganizeGrid — rotate action', () => {
-  it('renders a rotate button with data-testid="organize-rotate-{i}"', () => {
-    expect(gridSource).toContain('data-testid={`organize-rotate-${i}`}');
+  it('renders left and right rotate buttons per page', () => {
+    expect(gridSource).toContain('data-testid={`organize-rotate-left-${i}`}');
+    expect(gridSource).toContain('data-testid={`organize-rotate-right-${i}`}');
   });
 
-  it('invokes rotate_pages with the correct pageIndex and 90-degree rotation', () => {
+  it('invokes rotate_pages with the correct pageIndex and direction-based rotation', () => {
     expect(rotateBody).toContain("'rotate_pages'");
     expect(rotateBody).toContain('pageIndices: [pageIndex]');
-    expect(rotateBody).toContain('rotation: 90');
+    expect(rotateBody).toContain("direction === 'left' ? 270 : 90");
+    expect(rotateBody).toContain('rotation');
   });
 
   it('calls onPageMutation with the new page count after success', () => {
@@ -239,7 +242,7 @@ describe('ViewerApp — organize mode integration', () => {
 
   it('hides the floating zoom controls in organize mode', () => {
     // The guard comment appears before the zoom float block in source order
-    const guardIdx  = viewerAppSource.indexOf("mode !== 'organize' && (", viewerAppSource.indexOf('zoom-reset-btn') - 2000);
+    const guardIdx  = viewerAppSource.lastIndexOf("pageCount > 0 && mode !== 'organize' && (", viewerAppSource.indexOf('zoom-reset-btn'));
     const resetIdx  = viewerAppSource.indexOf('zoom-reset-btn');
     expect(guardIdx).toBeGreaterThan(-1);
     expect(resetIdx).toBeGreaterThan(guardIdx);

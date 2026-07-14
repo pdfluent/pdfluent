@@ -1,0 +1,81 @@
+/* Copyright (c) 2026 Innovation Trigger B.V. All rights reserved. */
+/* See https://pdfluent.com/license for terms. */
+
+/* SearchPanel — full-text search side panel (when docked into a panel slot). */
+
+/* =============================================================================
+   SearchPanel — full-text search side panel (when docked into a panel slot)
+   ============================================================================= */
+
+.searchpanel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--bg-surface);
+}
+
+.searchpanel-input-row {
+  padding: 10px;
+  border-bottom: 1px solid var(--border-subtle);
+  flex-shrink: 0;
+}
+
+.searchpanel-status {
+  padding: 8px 12px;
+  font-size: 11.5px;
+  color: var(--text-muted);
+  background: var(--bg-surface-2);
+  border-bottom: 1px solid var(--border-subtle);
+  flex-shrink: 0;
+  user-select: none;
+}
+
+.searchpanel-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.searchpanel-result {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 9px 12px;
+  border: none;
+  border-bottom: 1px solid var(--border-subtle);
+  background: transparent;
+  color: var(--text-primary);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 12px;
+  transition:
+    background var(--pf-dur-fast) var(--pf-ease),
+    color var(--pf-dur-fast) var(--pf-ease);
+}
+
+.searchpanel-result:hover {
+  background: var(--bg-surface-hover);
+}
+
+.searchpanel-result-active {
+  background: var(--accent-soft);
+  color: var(--text-primary);
+  animation: pf-search-pulse var(--pf-dur-med) var(--pf-ease);
+}
+
+.searchpanel-result-page {
+  display: block;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--text-muted);
+  margin-bottom: 2px;
+}
+
+.searchpanel-result-text {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+

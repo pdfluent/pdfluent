@@ -1,14 +1,14 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 import type { Runtime } from '../../core/types';
 import type { PdfEngine } from '../../core/engine/PdfEngine';
 import type { EngineConfig } from '../../core/engine/types';
-import type { RuntimeRegistry, RuntimeAdapter } from './types';
+import type { RuntimeRegistry, RuntimeAdapter, RuntimeOperationCapability } from './types';
 import { runtimeRegistry } from './RuntimeRegistry';
 import { createTauriRuntimeAdapter } from './adapters/TauriRuntimeAdapter';
 import { createBrowserTestRuntimeAdapter } from './adapters/BrowserTestRuntimeAdapter';
@@ -40,7 +40,9 @@ export class RuntimeAdapterFactory {
       this.registry.register(tauriAdapter);
     }
 
-    // Always register browser test adapter
+    // Desktop product runtime is native Rust through Tauri commands only.
+    // Browser-test exists purely for local React/Vitest harnesses and never
+    // handles real PDF files.
     const browserAdapter = createBrowserTestRuntimeAdapter();
     this.registry.register(browserAdapter);
   }
@@ -121,6 +123,7 @@ export class RuntimeAdapterFactory {
    */
   getAdapterCapabilities(runtime: Runtime): {
     supportedOperations: string[];
+    operationDetails?: Record<string, RuntimeOperationCapability>;
     maxFileSize: number;
     maxPageCount: number;
     supportsStreaming: boolean;
@@ -133,6 +136,7 @@ export class RuntimeAdapterFactory {
     const capabilities = adapter.getCapabilities();
     return {
       supportedOperations: capabilities.supportedOperations,
+      operationDetails: capabilities.operationDetails,
       maxFileSize: capabilities.maxFileSize,
       maxPageCount: capabilities.maxPageCount,
       supportsStreaming: capabilities.supportsStreaming,

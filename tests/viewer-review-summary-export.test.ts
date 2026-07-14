@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 import { readFileSync } from 'node:fs';
@@ -126,11 +126,11 @@ describe('buildReviewSummaryMarkdown', () => {
   });
 
   it('includes comments section', () => {
-    expect(summarySource).toContain('## Commentaren');
+    expect(summarySource).toContain("i18n.t('reviewSummary.comments')");
   });
 
   it('includes redactions section', () => {
-    expect(summarySource).toContain('## Redacties');
+    expect(summarySource).toContain("i18n.t('reviewSummary.redactions')");
   });
 
   it('includes issues section', () => {
@@ -138,7 +138,7 @@ describe('buildReviewSummaryMarkdown', () => {
   });
 
   it('includes metadata changes section', () => {
-    expect(summarySource).toContain('## Metadata wijzigingen');
+    expect(summarySource).toContain("i18n.t('reviewSummary.metadataChanges')");
   });
 
   it('renders replies in comments section', () => {
@@ -165,7 +165,7 @@ describe('buildReviewSummaryHtml', () => {
   });
 
   it('includes comments section heading', () => {
-    expect(summarySource).toContain('<h2>Commentaren</h2>');
+    expect(summarySource).toContain("<h2>${esc(i18n.t('reviewSummary.comments'))}</h2>");
   });
 });
 

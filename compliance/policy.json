@@ -29,5 +29,5 @@
   ],
   "unknown_license_policy": "fail",
   "manual_review_allowed": true,
-  "notes": "Project license is AGPL-3.0-or-later. Blocked list applies to third-party dependencies only."
+  "notes": "PDFluent Editor is proprietary software (see LICENSE.md / LICENSE-Ref PDFluent-Proprietary). The allowed/blocked lists apply to third-party dependencies only: copyleft licenses (GPL/LGPL/AGPL) and source-available/non-commercial licenses are blocked for bundled dependencies."
 }

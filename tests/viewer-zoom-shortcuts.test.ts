@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 import { readFileSync } from 'node:fs';
@@ -91,8 +91,8 @@ describe('ViewerApp — zoom shortcuts: zoom bounds', () => {
     expect(effectBody).toContain('Math.max(0.25,');
   });
 
-  it('resets zoom to exactly 1.0 on ⌘0', () => {
-    expect(effectBody).toContain('setZoom(1.0)');
+  it('resets zoom to exactly 1.5 on ⌘0 (new default)', () => {
+    expect(effectBody).toContain('setZoom(1.5)');
   });
 
   it('increments zoom by 0.25 on zoom in', () => {

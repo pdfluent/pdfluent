@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 import { useState, useCallback, type Dispatch, type SetStateAction } from 'react';
@@ -13,8 +13,7 @@ import type { DocumentEvent } from '../state/documentEvents';
 import { makeCommand } from '../undoEngine';
 import type { UndoCommand } from '../undoEngine';
 import i18n from '../../i18n';
-
-const isTauri = typeof window !== 'undefined' && '__TAURI__' in window;
+import { supports as runtimeSupports } from '../../core/capabilities';
 
 export function useFormFields(
   pdfDoc: PdfDocument | null,
@@ -72,7 +71,7 @@ export function useFormFields(
     }
     setFormValidationErrors([]);
     // Save to current path if known; otherwise open Save As dialog
-    if (currentFilePath && isTauri) {
+    if (currentFilePath && runtimeSupports('save')) {
       try {
         const { invoke } = await import('@tauri-apps/api/core');
         await invoke('save_pdf', { path: currentFilePath });

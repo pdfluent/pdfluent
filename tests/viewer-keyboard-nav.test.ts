@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 import { readFileSync } from 'node:fs';
@@ -34,7 +34,7 @@ const viewerAppSource = [
 describe('ViewerApp — keyboard page navigation mappings', () => {
   it('maps ArrowRight to next page', () => {
     expect(viewerAppSource).toContain("case 'ArrowRight'");
-    expect(viewerAppSource).toContain('Math.min(pageCount - 1, i + 1)');
+    expect(viewerAppSource).toContain('Math.min(pageCount - 1, pageIndexRef.current + 1)');
   });
 
   it('maps ArrowDown to next page', () => {
@@ -47,7 +47,7 @@ describe('ViewerApp — keyboard page navigation mappings', () => {
 
   it('maps ArrowLeft to previous page', () => {
     expect(viewerAppSource).toContain("case 'ArrowLeft'");
-    expect(viewerAppSource).toContain('Math.max(0, i - 1)');
+    expect(viewerAppSource).toContain('Math.max(0, pageIndexRef.current - 1)');
   });
 
   it('maps ArrowUp to previous page', () => {
@@ -60,12 +60,12 @@ describe('ViewerApp — keyboard page navigation mappings', () => {
 
   it('maps Home to first page', () => {
     expect(viewerAppSource).toContain("case 'Home'");
-    expect(viewerAppSource).toContain('setPageIndex(0)');
+    expect(viewerAppSource).toContain('navigatePage(0)');
   });
 
   it('maps End to last page', () => {
     expect(viewerAppSource).toContain("case 'End'");
-    expect(viewerAppSource).toContain('setPageIndex(pageCount - 1)');
+    expect(viewerAppSource).toContain('navigatePage(pageCount - 1)');
   });
 });
 
@@ -75,22 +75,22 @@ describe('ViewerApp — keyboard page navigation mappings', () => {
 
 describe('ViewerApp — keyboard nav clamping', () => {
   it('clamps next page at pageCount - 1 (cannot go past last page)', () => {
-    expect(viewerAppSource).toContain('Math.min(pageCount - 1, i + 1)');
+    expect(viewerAppSource).toContain('Math.min(pageCount - 1, pageIndexRef.current + 1)');
   });
 
   it('clamps prev page at 0 (cannot go before first page)', () => {
-    expect(viewerAppSource).toContain('Math.max(0, i - 1)');
+    expect(viewerAppSource).toContain('Math.max(0, pageIndexRef.current - 1)');
   });
 
-  it('Home always sets index to 0', () => {
+  it('Home always navigates to 0', () => {
     const homeBlock = viewerAppSource.indexOf("case 'Home'");
-    const setZeroAfterHome = viewerAppSource.indexOf('setPageIndex(0)', homeBlock);
+    const setZeroAfterHome = viewerAppSource.indexOf('navigatePage(0)', homeBlock);
     expect(setZeroAfterHome).toBeGreaterThan(homeBlock);
   });
 
-  it('End always sets index to pageCount - 1', () => {
+  it('End always navigates to pageCount - 1', () => {
     const endBlock = viewerAppSource.indexOf("case 'End'");
-    const setLastAfterEnd = viewerAppSource.indexOf('setPageIndex(pageCount - 1)', endBlock);
+    const setLastAfterEnd = viewerAppSource.indexOf('navigatePage(pageCount - 1)', endBlock);
     expect(setLastAfterEnd).toBeGreaterThan(endBlock);
   });
 });
@@ -145,14 +145,14 @@ describe('ViewerApp — keyboard nav does not conflict with existing shortcuts',
     // handler must NOT react to those combos — confirm it has no metaKey check.
     const cmdKBlock = viewerAppSource.indexOf("e.key === 'k'");
     const pageNavStart = viewerAppSource.indexOf('handlePageNav', cmdKBlock);
-    const pageNavEnd = viewerAppSource.indexOf('}, [pageCount])', pageNavStart);
+    const pageNavEnd = viewerAppSource.indexOf('}, [pageCount, navigatePage, editingTextTargetId])', pageNavStart);
     const pageNavBody = viewerAppSource.slice(pageNavStart, pageNavEnd);
     expect(pageNavBody).not.toContain('metaKey');
     expect(pageNavBody).not.toContain('ctrlKey');
   });
 
-  it('page nav useEffect depends on pageCount', () => {
-    expect(viewerAppSource).toContain('}, [pageCount])');
+  it('page nav useEffect depends on pageCount and navigatePage', () => {
+    expect(viewerAppSource).toContain('}, [pageCount, navigatePage, editingTextTargetId])');
   });
 
   it('page nav listener is registered and cleaned up', () => {
@@ -163,7 +163,7 @@ describe('ViewerApp — keyboard nav does not conflict with existing shortcuts',
   it('calls preventDefault for all navigation keys', () => {
     // Each case group calls e.preventDefault() — verify it appears in the nav handler
     const pageNavStart = viewerAppSource.indexOf('handlePageNav');
-    const pageNavEnd = viewerAppSource.indexOf('}, [pageCount])', pageNavStart);
+    const pageNavEnd = viewerAppSource.indexOf('}, [pageCount, navigatePage, editingTextTargetId])', pageNavStart);
     const pageNavBody = viewerAppSource.slice(pageNavStart, pageNavEnd);
     const preventCount = (pageNavBody.match(/e\.preventDefault\(\)/g) ?? []).length;
     // One call per case group: next (ArrowRight/Down/PageDown), prev (ArrowLeft/Up/PageUp), Home, End = 4

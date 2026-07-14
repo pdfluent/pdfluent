@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 /**
@@ -107,7 +107,7 @@ describe('safety matrix — individual target shapes', () => {
     )!;
     const result = getMutationSupport(entry.target);
     expect(result.constraints).not.toBeNull();
-    expect(result.constraints!.maxLength).toBeGreaterThan(0);
+    expect(result.constraints!.maxLength).toBeNull();
   });
 
   it('multi-line paragraph → non_writable_digital_text', () => {

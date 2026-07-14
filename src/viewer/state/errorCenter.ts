@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 // ---------------------------------------------------------------------------
@@ -18,6 +18,44 @@
 import i18n from '../../i18n';
 
 export type ErrorSeverity = 'error' | 'warning' | 'info';
+
+/** Machine-readable error taxonomy categories.
+ *  See benchmarks/ERROR_TAXONOMY.md for full documentation.
+ */
+export type ErrorTaxonomy =
+  | 'parser_crash.missing_trailer'
+  | 'parser_crash.bad_xref'
+  | 'parser_crash.invalid_object'
+  | 'parser_crash.unsupported_version'
+  | 'parser_crash.encrypted_no_password'
+  | 'render_crash.font_not_found'
+  | 'render_crash.invalid_geometry'
+  | 'render_crash.limit_exceeded'
+  | 'render_crash.unsupported_blend'
+  | 'flatten_crash.xfa_not_found'
+  | 'flatten_crash.unsupported_script'
+  | 'flatten_crash.layout_overflow'
+  | 'tauri_runtime_failure.ipc_timeout'
+  | 'tauri_runtime_failure.fs_permission'
+  | 'tauri_runtime_failure.plugin_crash'
+  | 'tauri_runtime_failure.license_unavailable'
+  | 'unsupported_feature.browser_save'
+  | 'unsupported_feature.tier_gated'
+  | 'unsupported_feature.not_compiled'
+  | 'environment_failure.disk_full'
+  | 'environment_failure.memory_exhausted'
+  | 'environment_failure.missing_font'
+  | 'environment_failure.ocr_model_missing'
+  | 'artifact_failure.resource_missing'
+  | 'artifact_failure.font_cache_missing'
+  | 'artifact_failure.dts_drift'
+  | 'validation_failure.pdfa_noncompliant'
+  | 'validation_failure.signature_invalid'
+  | 'validation_failure.pdfua_noncompliant'
+  | 'package_failure.version_mismatch'
+  | 'package_failure.license_incoherent'
+  | 'package_failure.missing_dependency'
+  | 'unknown';
 
 export interface AppError {
   /** Auto-generated unique identifier. */
@@ -35,6 +73,20 @@ export interface AppError {
    * Examples: 'ocr', 'export', 'redaction', 'document_load'
    */
   readonly source: string;
+  /**
+   * Machine-readable taxonomy classification.
+   * Used for support bundles, log pipelines, and CI gates.
+   */
+  readonly taxonomy: ErrorTaxonomy;
+  /**
+   * Whether the error is potentially recoverable (retry may succeed).
+   */
+  readonly recoverable: boolean;
+  /**
+   * Stable error code for programmatic dispatch.
+   * Examples: 'INVALID_PDF', 'RENDER_ERROR', 'LIMIT_EXCEEDED'
+   */
+  readonly code: string;
 }
 
 /** Maximum number of errors kept in the registry before oldest entries are evicted. */
@@ -48,6 +100,9 @@ export function makeAppError(
   title: string,
   message: string,
   source: string,
+  taxonomy: ErrorTaxonomy = 'unknown',
+  recoverable: boolean = false,
+  code: string = 'UNKNOWN',
 ): AppError {
   return {
     id: `err-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
@@ -56,6 +111,9 @@ export function makeAppError(
     message,
     timestamp: new Date(),
     source,
+    taxonomy,
+    recoverable,
+    code,
   };
 }
 
@@ -92,28 +150,28 @@ export function clearAllErrors(_errors: readonly AppError[]): AppError[] {
 // ---------------------------------------------------------------------------
 
 export const makeOcrError = (message: string): AppError =>
-  makeAppError('error', i18n.t('errors.ocrFailed'), message, 'ocr');
+  makeAppError('error', i18n.t('errors.ocrFailed'), message, 'ocr', 'environment_failure.ocr_model_missing', false, 'OCR_MODEL_MISSING');
 
 export const makeExportError = (message: string): AppError =>
-  makeAppError('error', i18n.t('errors.exportFailed'), message, 'export');
+  makeAppError('error', i18n.t('errors.exportFailed'), message, 'export', 'unsupported_feature.browser_save', false, 'UNSUPPORTED_ON_BROWSER');
 
 export const makeRedactionError = (message: string): AppError =>
-  makeAppError('error', i18n.t('errors.redactionFailed'), message, 'redaction');
+  makeAppError('error', i18n.t('errors.redactionFailed'), message, 'redaction', 'tauri_runtime_failure.plugin_crash', false, 'REDACT_FAILED');
 
 export const makeDocumentLoadError = (message: string): AppError =>
-  makeAppError('error', i18n.t('errors.loadFailed'), message, 'document_load');
+  makeAppError('error', i18n.t('errors.loadFailed'), message, 'document_load', 'parser_crash.invalid_object', false, 'CORRUPT_PDF');
 
 export const makeTextMutationError = (message: string): AppError =>
-  makeAppError('error', i18n.t('errors.textEditFailed'), message, 'text_edit');
+  makeAppError('error', i18n.t('errors.textEditFailed'), message, 'text_edit', 'tauri_runtime_failure.fs_permission', false, 'PERMISSION_DENIED');
 
 export const makeLayoutEditError = (message: string): AppError =>
-  makeAppError('error', i18n.t('errors.layoutEditFailed'), message, 'layout_edit');
+  makeAppError('error', i18n.t('errors.layoutEditFailed'), message, 'layout_edit', 'tauri_runtime_failure.fs_permission', false, 'PERMISSION_DENIED');
 
 export const makeSaveError = (message: string): AppError =>
-  makeAppError('error', i18n.t('errors.saveFailed'), message, 'save');
+  makeAppError('error', i18n.t('errors.saveFailed'), message, 'save', 'environment_failure.disk_full', true, 'IO_ERROR');
 
 export const makeAnnotationError = (message: string): AppError =>
-  makeAppError('error', i18n.t('errors.annotationFailed'), message, 'annotation');
+  makeAppError('error', i18n.t('errors.annotationFailed'), message, 'annotation', 'tauri_runtime_failure.fs_permission', false, 'PERMISSION_DENIED');
 
 // ---------------------------------------------------------------------------
 // Query helpers — ACROBAT_CLASS_RELIABILITY_AND_UX_HARDENING_BLOCK Batch 4
@@ -159,6 +217,8 @@ export interface ErrorSummary {
   readonly warningCount: number;
   readonly infoCount: number;
   readonly sources: readonly string[];
+  /** Unique taxonomy categories present in the registry. */
+  readonly taxonomies: readonly string[];
 }
 
 /**
@@ -171,6 +231,7 @@ export function getErrorSummary(errors: readonly AppError[]): ErrorSummary {
     warningCount: errors.filter(e => e.severity === 'warning').length,
     infoCount: errors.filter(e => e.severity === 'info').length,
     sources: [...new Set(errors.map(e => e.source))],
+    taxonomies: [...new Set(errors.map(e => e.taxonomy))],
   };
 }
 

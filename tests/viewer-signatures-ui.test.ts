@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 import { readFileSync } from 'node:fs';
@@ -181,9 +181,17 @@ describe('RightContextPanel — SignaturePanel integration', () => {
     expect(rightPanelSource).toContain("import { SignaturePanel }");
   });
 
-  it('renders SignaturePanel in protect mode', () => {
+  it('renders SignaturePanel in sign mode', () => {
+    expect(rightPanelSource).toContain("mode === 'sign'");
     expect(rightPanelSource).toContain('<SignaturePanel');
     expect(rightPanelSource).toContain('pdfDoc={pdfDoc}');
+  });
+
+  it('does not render SignaturePanel inside protect mode', () => {
+    const protectStart = rightPanelSource.indexOf("mode === 'protect'");
+    const editStart = rightPanelSource.indexOf("mode === 'edit'", protectStart);
+    const protectBlock = rightPanelSource.slice(protectStart, editStart);
+    expect(protectBlock).not.toContain('<SignaturePanel');
   });
 
   it('uses rightPanel.signatures i18n key', () => {

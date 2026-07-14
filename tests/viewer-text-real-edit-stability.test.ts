@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 /**
@@ -171,9 +171,12 @@ describe('stability — unsupported cases are never silently successful', () => 
     expect(result.message.length).toBeGreaterThan(0);
   });
 
-  it('validateReplacement rejects too-long replacement with explicit message', () => {
-    const support = getMutationSupport(makeWritableParagraph('Hi'));
-    const validation = validateReplacement('Hi', 'Hello world is too long', support.constraints!);
+  it('validateReplacement rejects too-long replacement when explicit maxLength is supplied', () => {
+    const validation = validateReplacement(
+      'Hi',
+      'Hello world is too long',
+      { maxLength: 2, assumedEncoding: 'standard-latin' },
+    );
     expect(validation.valid).toBe(false);
     expect(validation.message.length).toBeGreaterThan(0);
   });
@@ -363,8 +366,9 @@ describe('stability — ViewerApp Phase 4 wiring completeness', () => {
     expect(viewerAppSrc).toContain('validateReplacement');
   });
 
-  it('imports getTauriTextMutationEngine', () => {
-    expect(viewerAppSrc).toContain('getTauriTextMutationEngine');
+  it('uses canonical mutation engine, not direct Tauri import', () => {
+    expect(viewerAppSrc).toContain('getCanonicalTextMutationEngine');
+    expect(viewerAppSrc).not.toContain('getTauriTextMutationEngine');
   });
 
   it('imports makeTextMutationError', () => {

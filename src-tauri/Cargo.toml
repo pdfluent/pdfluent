@@ -1,9 +1,9 @@
 [package]
-name = "pdfluent"
-version = "1.0.0-beta.1"
+name = "pdfluent-desktop"
+version = "1.0.0-beta.20"
 description = "Privacy-first desktop PDF editor powered by the XFA Rust SDK"
 authors = ["Innovation Trigger B.V."]
-license = "Proprietary"
+license = "LicenseRef-PDFluent-Proprietary"
 repository = "https://github.com/pdfluent/pdfluent"
 edition = "2021"
 
@@ -17,8 +17,8 @@ tauri-build = { version = "2", features = [] }
 [dependencies]
 tauri = { version = "2", features = ["protocol-asset"] }
 tauri-plugin-dialog = "2"
-tauri-plugin-fs = "2"
 tauri-plugin-shell = "2"
+tauri-plugin-fs = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 base64 = "0.22"
@@ -27,27 +27,58 @@ tokio = { version = "1", features = ["rt-multi-thread"] }
 dirs = "5"
 open = "5"
 flate2 = "1"
+# macOS security-scoped bookmarks (recent-files reopen under App Sandbox).
+# Isolated crate so this main crate keeps `#![forbid(unsafe_code)]`.
+pdfluent-macos-secure = { path = "crates/macos-secure" }
 
 # XFA Rust SDK crates
-pdf-engine = { path = "../../../XFA/crates/pdf-engine" }
-pdf-forms = { path = "../../../XFA/crates/pdf-forms" }
+pdf-engine = { path = "../../../XFA/crates/pdf-engine", features = ["xfa", "serde"] }
+pdf-forms = { package = "pdfluent-forms", path = "../../../XFA/crates/pdf-forms" }
 pdf-annot = { path = "../../../XFA/crates/pdf-annot", features = ["write"] }
-pdf-sign = { path = "../../../XFA/crates/pdf-sign" }
+pdf-sign = { package = "pdfluent-sign", path = "../../../XFA/crates/pdf-sign" }
 pdf-manip = { path = "../../../XFA/crates/pdf-manip", features = ["image-insert", "font-subset", "pdfa-convert"] }
+pdf-text-format = { path = "../../../XFA/crates/pdf-text-format" }
 pdf-compliance = { path = "../../../XFA/crates/pdf-compliance" }
-pdf-extract = { path = "../../../XFA/crates/pdf-extract" }
+pdf-extract = { package = "pdfluent-extract", path = "../../../XFA/crates/pdf-extract" }
 pdf-redact = { path = "../../../XFA/crates/pdf-redact" }
 pdf-docx = { path = "../../../XFA/crates/pdf-docx" }
 pdf-xlsx = { path = "../../../XFA/crates/pdf-xlsx" }
 pdf-pptx = { path = "../../../XFA/crates/pdf-pptx" }
 pdf-invoice = { path = "../../../XFA/crates/pdf-invoice" }
 xfa-license = { path = "../../../XFA/crates/xfa-license" }
-lopdf = { path = "../../../XFA/crates/lopdf" }
+lopdf = { package = "pdfluent-lopdf", path = "../../../XFA/crates/lopdf" }
 pdf-syntax = { path = "../../../XFA/crates/pdf-syntax" }
 
+# PDFluent public SDK facade (Phase 2 migration boundary)
+pdfluent = { path = "../../../XFA/crates/pdfluent" }
+
 [target."cfg(not(any(target_os = \"android\", target_os = \"ios\")))".dependencies]
-tauri-plugin-updater = "2"
+# Optional so the Mac App Store build can drop them (see the `updater` feature).
+tauri-plugin-updater = { version = "2", optional = true }
+# Restart the app to finish applying an installed update (frontend relaunch()).
+tauri-plugin-process = { version = "2", optional = true }
 
 [features]
-default = ["custom-protocol"]
+default = ["custom-protocol", "updater"]
 custom-protocol = ["tauri/custom-protocol"]
+# Self-updater + relaunch. On by default for direct distribution. The Mac App
+# Store build omits it with `--no-default-features --features custom-protocol`
+# (App Store delivers updates; Apple forbids app self-updating).
+updater = ["dep:tauri-plugin-updater", "dep:tauri-plugin-process"]
+# XFA Phase 2 interactive commit loop. Enabling this compiles the SDK's
+# sandboxed QuickJS runtime (pdf-engine/xfa-js-sandboxed) and routes XFA field
+# commits through `XfaSession::commit_value` (change/click + calculate scripts →
+# re-layout → presence changes). NOT default: it requires an SDK build that
+# includes the Phase 2 commit loop (xfa/sdk-phase2-commit-loop @ 5e8a74ee2+).
+# Without it the editor falls back to the Phase 1 static value write
+# (`set_value`), which compiles against any XFA-capable SDK. Enable locally with
+# `--features xfa-interactive`.
+xfa-interactive = ["pdf-engine/xfa-js-sandboxed"]
+
+# Render hot loops (vello_cpu rasteriser, PDF interpreter) benefit from
+# cross-crate inlining. Thin LTO recovers most of the fat-LTO speedup at an
+# acceptable build-time cost; without this section the SDK ships with plain
+# Cargo defaults (no LTO, 16 codegen units).
+[profile.release]
+lto = "thin"
+codegen-units = 4

@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 import { readFileSync } from 'node:fs';
@@ -238,8 +238,9 @@ describe('organize pending order — no regressions', () => {
     expect(gridSource).toContain('data-testid={`organize-page-tile-${i}`}');
   });
 
-  it('rotate button testid still uses i', () => {
-    expect(gridSource).toContain('data-testid={`organize-rotate-${i}`}');
+  it('rotate button testids still use i', () => {
+    expect(gridSource).toContain('data-testid={`organize-rotate-left-${i}`}');
+    expect(gridSource).toContain('data-testid={`organize-rotate-right-${i}`}');
   });
 
   it('delete button testid still uses i', () => {

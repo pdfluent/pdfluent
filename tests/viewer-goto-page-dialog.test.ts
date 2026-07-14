@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 import { readFileSync } from 'node:fs';
@@ -29,6 +29,7 @@ const viewerAppSource = [
   '../src/viewer/hooks/useTextInteraction.ts',
   '../src/viewer/hooks/useKeyboardShortcuts.ts',
   '../src/viewer/ViewerApp.tsx',
+  '../src/viewer/v3/EditorV3Shell.tsx',
   '../src/viewer/WelcomeSection.tsx',
 ].map(p => readFileSync(new URL(p, import.meta.url), 'utf8')).join('\n\n');
 
@@ -43,7 +44,8 @@ const handlerBody  = viewerAppSource.slice(handlerStart, handlerEnd);
 
 describe('ViewerApp — go-to-page dialog: wiring', () => {
   it('imports GoToPageDialog', () => {
-    expect(viewerAppSource).toContain("import { GoToPageDialog } from './components/GoToPageDialog'");
+    expect(viewerAppSource).toContain("GoToPageDialog");
+    expect(viewerAppSource).toContain("'./components/GoToPageDialog'");
   });
 
   it('tracks goToPageOpen state', () => {
@@ -249,7 +251,8 @@ describe('ViewerApp — go-to-page dialog: no regressions', () => {
     expect(viewerAppSource).toContain('<ShortcutSheet');
   });
 
-  it('pageInputRef still passed to TopBar', () => {
-    expect(viewerAppSource).toContain('pageInputRef={pageInputRef}');
+  it('V3 bottom page indicator still opens the dialog', () => {
+    expect(viewerAppSource).toContain('onOpenGoToPage={() => { setGoToPageOpen(true); }}');
+    expect(viewerAppSource).toContain('data-testid="floating-page-indicator"');
   });
 });

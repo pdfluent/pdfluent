@@ -1,10 +1,11 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
+import { isTauriRuntime } from '../../../lib/tauri-detection';
 import type { PdfDocument } from '../../../core/document';
 import type { PdfEngine } from '../../../core/engine/PdfEngine';
 import type { EngineConfig, EngineResult } from '../../../core/engine/types';
@@ -42,7 +43,7 @@ export class TauriPdfEngine implements PdfEngine {
     options: {},
   };
 
-  private tauriAvailable = typeof window !== 'undefined' && !!(window as any).__TAURI__;
+  private tauriAvailable = isTauriRuntime();
 
   /**
    * Create a new TauriPdfEngine instance

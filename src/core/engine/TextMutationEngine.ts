@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 /**
@@ -10,9 +10,9 @@
  *
  * Defines the narrow backend contract for real text mutation.
  *
- * Phase 4 MVP contract: only one shape is supported —
+ * Parser-backed desktop contract: only one conservative target shape is sent
+ * from the V3 editor —
  *   - Single text span replacement
- *   - Equal-or-shorter replacement text (no reflow)
  *   - Same page, same target span (no cross-paragraph changes)
  *   - Digital text only (not OCR)
  *
@@ -22,8 +22,8 @@
  *   3. Calling replaceTextSpan only after both checks pass
  *
  * The backend is responsible for:
- *   1. Finding the actual text operator in the content stream
- *   2. Replacing the text bytes safely
+ *   1. Parsing the page content stream and font map
+ *   2. Decoding/re-encoding Tj/TJ text runs safely
  *   3. Marking the document as modified
  *   4. Returning honest errors when replacement is not possible
  *
@@ -49,17 +49,29 @@ import type { AsyncEngineResult } from './types';
  *   originalText  — The exact text currently in the PDF span.
  *                   Used as the search key. First occurrence in the content
  *                   stream is replaced. Must not be empty.
- *   replacementText — The new text to write. Must be ≤ originalText.length
- *                     characters. Shorter text is padded with trailing spaces
- *                     to preserve glyph advance widths and prevent reflow.
+ *   replacementText — The exact new text to write. The native parser-backed
+ *                     writer owns encoding/layout safety and returns a typed
+ *                     rejection when the replacement cannot be encoded safely.
  */
 export interface ReplaceTextSpanRequest {
   /** 0-based page index. */
   pageIndex: number;
   /** Exact text of the span to replace. Used as search key (first occurrence). */
   originalText: string;
-  /** New text (must be equal-or-shorter than originalText). */
+  /** New text to write. */
   replacementText: string;
+  /**
+   * Optional PDF-space target metadata for editor redraw fallbacks.
+   * Desktop engines can ignore this. It lets the UI redraw a precise
+   * word/segment when the extractor split a larger PDF text run for UX.
+   */
+  target?: {
+    rect: { x: number; y: number; width: number; height: number };
+    fontSize?: number;
+    color?: [number, number, number];
+    isBold?: boolean;
+    isItalic?: boolean;
+  };
 }
 
 /**
@@ -71,7 +83,6 @@ export interface ReplaceTextSpanRequest {
  *                   The document is unchanged. reason explains why.
  *
  * Reason codes when replaced is false:
- *   'replacement-too-long'              — replacement.length > original.length
  *   'text-not-found-in-content-stream'  — original text not in any content stream
  *   'no-content-stream'                 — page has no content streams
  *   'empty-original-text'               — originalText was empty
@@ -103,11 +114,11 @@ export interface TextMutationEngine {
   /**
    * Replace a single text span in a PDF page content stream.
    *
-   * Phase 4 MVP constraints:
-   *   - Replacement must be equal-or-shorter (no reflow)
-   *   - Only simple Tj operators are handled (not TJ arrays or hex strings)
-   *   - Only the first occurrence of originalText is replaced
-   *   - Encoding is assumed to be standard Latin (WinAnsi/MacRoman)
+   * Parser-backed desktop constraints:
+   *   - Page content streams are parsed natively
+   *   - Tj/TJ text runs are decoded through the page font map
+   *   - Replacement text is re-encoded into the matched font or a safe fallback
+   *   - Unsupported encodings/fonts return typed rejections, never silent writes
    *
    * The caller MUST:
    *   1. Confirm the target is 'writable_digital_text' (textMutationSupport.ts)
@@ -115,4 +126,162 @@ export interface TextMutationEngine {
    *   3. Mark the document dirty and emit an event log entry after success
    */
   replaceTextSpan(request: ReplaceTextSpanRequest): AsyncEngineResult<ReplaceTextSpanResult>;
+}
+
+// ---------------------------------------------------------------------------
+// Format request / response — SDK Track G contract (interface only)
+// ---------------------------------------------------------------------------
+
+/**
+ * Request to change the visual formatting of a text span in the PDF content stream.
+ *
+ * SDK Track G will implement the Tauri command that fulfils this contract.
+ * Until `sdkTextFormatWrites = true`, calling formatTextSpan is not available.
+ */
+export interface FormatTextSpanRequest {
+  /** 0-based page index. */
+  pageIndex: number;
+  /** Exact text of the span (used as search key, same as replaceTextSpan). */
+  originalText: string;
+  /** Formatting changes to apply. Only specified fields are changed. */
+  formatting: {
+    /** New font size in points. */
+    fontSize?: number;
+    /** New fill color RGB in [0.0, 1.0]. */
+    color?: [number, number, number];
+  };
+}
+
+export interface FormatTextSpanResult {
+  readonly formatted: boolean;
+  readonly reason: string | null;
+  /** C8 error code when formatted is false (e.g. `'E-ENV-DESKTOP-NATIVE-REQUIRED'`). */
+  readonly code?: string;
+}
+
+/**
+ * Request to change formatting for a substring inside one PDF text run.
+ *
+ * Offsets are JavaScript string offsets into `originalText`. This is used by
+ * the inline editor when the user selects a word inside the inline
+ * contenteditable surface and applies a color.
+ */
+export interface FormatTextRangeRequest {
+  /** 0-based page index. */
+  pageIndex: number;
+  /** Exact text of the PDF run that contains the selected range. */
+  originalText: string;
+  /** Inclusive start offset inside originalText. */
+  startOffset: number;
+  /** Exclusive end offset inside originalText. */
+  endOffset: number;
+  /** Formatting changes to apply to the selected range. */
+  formatting: {
+    /** New fill color RGB in [0.0, 1.0]. */
+    color?: [number, number, number];
+    /** New font size in points. */
+    fontSize?: number;
+    /** Set bold on or off. */
+    bold?: boolean;
+    /** Set italic on or off. */
+    italic?: boolean;
+    /** Draw an underline for the selected range. */
+    underline?: boolean;
+    /** Draw a strikethrough for the selected range. */
+    strikethrough?: boolean;
+  };
+}
+
+export interface FormatTextRangesRequest {
+  /** 0-based page index. */
+  pageIndex: number;
+  /** Exact text of the PDF run that contains all selected ranges. */
+  originalText: string;
+  /** One or more non-empty ranges inside originalText. */
+  ranges: ReadonlyArray<Omit<FormatTextRangeRequest, 'pageIndex' | 'originalText'>>;
+}
+
+// ---------------------------------------------------------------------------
+// Style request / response — SDK Track G6 contract (bold / italic writes)
+// ---------------------------------------------------------------------------
+
+/**
+ * Request to change the bold/italic style of a text span via font substitution.
+ *
+ * Tauri-desktop only. The PDF must already contain the target font variant in
+ * its xref table. Returns `styled: false` with reason `'font-variant-not-embedded'`
+ * when the variant is absent (document is left unmodified).
+ */
+export interface SetTextRunStyleRequest {
+  /** 0-based page index. */
+  pageIndex: number;
+  /** Exact text of the span (used as search key, same as replaceTextSpan). */
+  originalText: string;
+  /** Style changes to apply. At least one of bold/italic must be specified. */
+  style: {
+    /** Set bold on or off. Omit to leave as-is. */
+    bold?: boolean;
+    /** Set italic on or off. Omit to leave as-is. */
+    italic?: boolean;
+  };
+}
+
+export interface SetTextRunStyleResult {
+  readonly styled: boolean;
+  /**
+   * Machine-readable reason when styled is false:
+   *   'font-variant-not-embedded'          — the requested bold/italic variant is not in the xref
+   *   'text-not-found'                     — originalText not found in the page's content streams
+   *   'page-not-found'                     — pageIndex out of range
+   *   'internal-error'                     — unexpected backend failure
+   *   'desktop-native-runtime-required'      — native Tauri runtime is required
+   */
+  readonly reason: string | null;
+  /** C8 error code when styled is false (e.g. `'E-ENV-DESKTOP-NATIVE-REQUIRED'`). */
+  readonly code?: string;
+}
+
+/**
+ * Extended TextMutationEngine interface that includes format and style writes.
+ *
+ * Implementations:
+ *   - TauriTextMutationEngine: Tauri IPC path for the desktop product.
+ *   - DesktopRequiredTextMutationEngine: typed unsupported fallback for
+ *     browser-test harnesses.
+ *
+ * Feature gates in editorTextSpan.ts decide which implementation's capabilities
+ * are surfaced to the UI based on isTauriEnvironment().
+ */
+export interface TextMutationEngineWithFormatting extends TextMutationEngine {
+  /**
+   * Apply visual formatting changes to a text span in the PDF content stream.
+   *
+   * Track G5 constraints:
+   * - Only simple Tf + rg operator sequences are handled
+   * - Returns { formatted: false, reason: 'complex-graphics-state' } for others
+   * - Font size and color only — bold/italic via font substitution is G6 below
+   */
+  formatTextSpan(request: FormatTextSpanRequest): AsyncEngineResult<FormatTextSpanResult>;
+
+  /**
+   * Apply color formatting to an exact substring of a text run.
+   *
+   * This is intentionally separate from formatTextSpan because SDK G5 targets
+   * whole runs by run index. The inline editor needs selection-level writes.
+   */
+  formatTextRange?(request: FormatTextRangeRequest): AsyncEngineResult<FormatTextSpanResult>;
+
+  /** Apply formatting to one or more selected ranges inside the same text run. */
+  formatTextRanges?(request: FormatTextRangesRequest): AsyncEngineResult<FormatTextSpanResult>;
+
+  /**
+   * Apply bold/italic style to a text span via font substitution.
+   *
+   * Track G6 constraints:
+   * - Font variant must be embedded in the PDF xref (no system font injection)
+   * - No synthetic bold (no Tr mode manipulation)
+   * - Only the first occurrence of originalText is targeted
+   * - Document is left unmodified when the variant is absent
+   */
+  setTextRunStyle(request: SetTextRunStyleRequest): AsyncEngineResult<SetTextRunStyleResult>;
 }

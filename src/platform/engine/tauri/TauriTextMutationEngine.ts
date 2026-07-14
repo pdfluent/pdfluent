@@ -1,40 +1,47 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 /**
- * TauriTextMutationEngine — Phase 4 Batch 2
+ * TauriTextMutationEngine — Phase 4 Batch 2 + Track G (G5/G6)
  *
- * Tauri IPC implementation of the TextMutationEngine interface.
+ * Tauri IPC implementation of TextMutationEngineWithFormatting.
  *
  * Bridges the TypeScript text mutation contract to the Rust backend via
- * the `replace_text_span` Tauri command. The Rust command performs the
- * actual content stream mutation using lopdf.
+ * three Tauri commands:
  *
- * IPC contract (Tauri command: "replace_text_span"):
- *   Request:  { request: { page_index, original_text, replacement_text } }
- *   Response: { replaced: bool, reason: string | null }
- *   Error:    Rust returns Err(String) → caught and wrapped as EngineResult failure
+ *   replace_text_span  — parser-backed PDF text replacement via pdf-manip
+ *   format_text_span   — font size + color write via pdf-text-format (G5)
+ *   set_text_run_style — bold/italic via font substitution via pdf-manip (G6)
  *
- * Field name mapping (camelCase TypeScript → snake_case Rust/serde):
- *   pageIndex       → page_index
- *   originalText    → original_text
- *   replacementText → replacement_text
+ * IPC contract (field name mapping camelCase TypeScript → snake_case Rust/serde):
+ *   replace:  { page_index, original_text, replacement_text }
+ *   format:   { page_index, original_text, font_size?, color? }
+ *   style:    { page_index, original_text, bold?, italic? }
+ *
+ * Native-only note:
+ *   PDFluent is a Tauri desktop app. Text writes are handled by Rust commands;
+ *   browser/dev harnesses receive typed unsupported results and never mutate
+ *   real PDF bytes.
  */
 
 import { invoke } from '@tauri-apps/api/core';
 import type { AsyncEngineResult } from '../../../core/engine/types';
 import type {
-  TextMutationEngine,
+  TextMutationEngineWithFormatting,
   ReplaceTextSpanRequest,
   ReplaceTextSpanResult,
+  FormatTextSpanRequest,
+  FormatTextSpanResult,
+  SetTextRunStyleRequest,
+  SetTextRunStyleResult,
 } from '../../../core/engine/TextMutationEngine';
 
 // ---------------------------------------------------------------------------
-// Rust backend response shape (snake_case from serde)
+// Rust backend request/response shapes (snake_case from serde)
 // ---------------------------------------------------------------------------
 
 interface TauriReplaceTextSpanRequest {
@@ -48,25 +55,57 @@ interface TauriReplaceTextSpanResult {
   reason: string | null;
 }
 
+// G5 — format_text_span
+
+interface TauriFormatTextSpanRequest {
+  page_index: number;
+  original_text: string;
+  font_size: number | null;
+  color: [number, number, number] | null;
+}
+
+interface TauriFormatTextSpanResult {
+  formatted: boolean;
+  reason: string | null;
+}
+
+// G6 — set_text_run_style
+
+interface TauriSetTextRunStyleRequest {
+  page_index: number;
+  original_text: string;
+  bold: boolean | null;
+  italic: boolean | null;
+}
+
+interface TauriSetTextRunStyleResult {
+  styled: boolean;
+  reason: string | null;
+}
+
 // ---------------------------------------------------------------------------
 // Implementation
 // ---------------------------------------------------------------------------
 
 /**
- * Tauri-backed implementation of TextMutationEngine.
+ * Tauri-backed implementation of TextMutationEngineWithFormatting.
  *
- * Calls the Rust `replace_text_span` command, which:
- *   1. Locates the page content streams via lopdf
- *   2. Searches for the `(original_text) Tj` pattern
- *   3. Replaces it with `(replacement_text_padded) Tj`
- *   4. Calls sync_after_mutation() to keep the render view consistent
+ * replaceTextSpan:
+ *   Uses pdf_manip::text_replace to parse page content streams, decode Tj/TJ
+ *   runs through the page font map, and write the exact replacement text.
  *
- * Phase 4 Rust-side constraints (mirroring textMutationSupport.ts):
- *   - Only simple `Tj` text show operators (not `TJ` arrays, not hex strings)
- *   - Replacement padded to original length with trailing spaces
- *   - First occurrence only
+ * formatTextSpan — Track G5:
+ *   Uses pdf-text-format::format_text_run via extract_page_text_runs match.
+ *   Injects q/rg/Tf … Q/Tf operators for state-isolated size + color changes.
+ *
+ * setTextRunStyle — Track G6:
+ *   Uses pdf-manip::text_style::set_text_run_style.
+ *   Swaps the Tf font reference to the bold/italic variant in the xref.
+ *   Returns { styled: false, reason: 'font-variant-not-embedded' } when absent.
  */
-export class TauriTextMutationEngine implements TextMutationEngine {
+export class TauriTextMutationEngine implements TextMutationEngineWithFormatting {
+  // ---- Parser-backed text replacement ----
+
   async replaceTextSpan(request: ReplaceTextSpanRequest): AsyncEngineResult<ReplaceTextSpanResult> {
     const tauriRequest: TauriReplaceTextSpanRequest = {
       page_index: request.pageIndex,
@@ -91,6 +130,62 @@ export class TauriTextMutationEngine implements TextMutationEngine {
       };
     }
   }
+
+  // ---- Track G5 — font size / color format ----
+
+  async formatTextSpan(request: FormatTextSpanRequest): AsyncEngineResult<FormatTextSpanResult> {
+    const tauriRequest: TauriFormatTextSpanRequest = {
+      page_index: request.pageIndex,
+      original_text: request.originalText,
+      font_size: request.formatting.fontSize ?? null,
+      color: request.formatting.color ?? null,
+    };
+    try {
+      const result = await invoke<TauriFormatTextSpanResult>('format_text_span', {
+        request: tauriRequest,
+      });
+      return {
+        success: true,
+        value: {
+          formatted: result.formatted,
+          reason: result.reason,
+        },
+      };
+    } catch (e) {
+      return {
+        success: false,
+        error: { code: 'internal-error', message: String(e) },
+      };
+    }
+  }
+
+  // ---- Track G6 — bold / italic font substitution ----
+
+  async setTextRunStyle(request: SetTextRunStyleRequest): AsyncEngineResult<SetTextRunStyleResult> {
+    const tauriRequest: TauriSetTextRunStyleRequest = {
+      page_index: request.pageIndex,
+      original_text: request.originalText,
+      bold: request.style.bold ?? null,
+      italic: request.style.italic ?? null,
+    };
+    try {
+      const result = await invoke<TauriSetTextRunStyleResult>('set_text_run_style', {
+        request: tauriRequest,
+      });
+      return {
+        success: true,
+        value: {
+          styled: result.styled,
+          reason: result.reason,
+        },
+      };
+    } catch (e) {
+      return {
+        success: false,
+        error: { code: 'internal-error', message: String(e) },
+      };
+    }
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -100,6 +195,7 @@ export class TauriTextMutationEngine implements TextMutationEngine {
 /**
  * Singleton instance for use by the viewer layer.
  * Created lazily so it does not require Tauri availability at module load time.
+ * Returns the full TextMutationEngineWithFormatting interface (G5 + G6 included).
  */
 let _instance: TauriTextMutationEngine | null = null;
 

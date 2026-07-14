@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 import { readFileSync } from 'node:fs';
@@ -24,6 +24,7 @@ const viewerAppSource = [
   '../src/viewer/hooks/useTextInteraction.ts',
   '../src/viewer/hooks/useKeyboardShortcuts.ts',
   '../src/viewer/ViewerApp.tsx',
+  '../src/viewer/v3/EditorV3Shell.tsx',
   '../src/viewer/WelcomeSection.tsx',
 ].map(p => readFileSync(new URL(p, import.meta.url), 'utf8')).join('\n\n');
 
@@ -145,15 +146,31 @@ describe('left rail toggle — keyboard shortcut', () => {
 // ---------------------------------------------------------------------------
 
 describe('left rail toggle — conditional render', () => {
-  it('conditionally renders LeftNavRail based on leftRailOpen', () => {
-    expect(viewerAppSource).toContain('{leftRailOpen && (');
+  it('renders the V3 floating tool rail when a document is open', () => {
+    expect(viewerAppSource).toContain('<EditorV3ToolRail');
+    expect(viewerAppSource).toContain("pageCount > 0 && mode !== 'organize'");
   });
 
-  it('LeftNavRail is inside the conditional', () => {
-    const condStart = viewerAppSource.indexOf('{leftRailOpen && (');
-    const condEnd   = viewerAppSource.indexOf(')}', condStart);
-    const condBlock = viewerAppSource.slice(condStart, condEnd);
-    expect(condBlock).toContain('<LeftNavRail');
+  it('renders the V3 thumbnails drawer for page navigation', () => {
+    expect(viewerAppSource).toContain('<V3Thumbnails');
+  });
+
+  it('thumbnails drawer stays closed on the welcome screen (no document)', () => {
+    // The drawer and its layout offset are gated on a loaded document, so the
+    // empty "Pagina's" rail never shows next to the welcome screen.
+    expect(viewerAppSource).toContain('open={pageCount > 0 && thumbsOpen}');
+    expect(viewerAppSource).toContain("'--thumbs-offset': pageCount > 0 && thumbsOpen ? '75px' : '0px'");
+    expect(viewerAppSource).not.toContain('open={thumbsOpen}');
+  });
+
+  it('closing a document does not overwrite the persisted thumbs preference', () => {
+    // setThumbsOpen(false) on close would persist `false` and break
+    // open-by-default for the next document; the render gate handles hiding.
+    const closeEffect = viewerAppSource.slice(
+      viewerAppSource.indexOf('prevPageCountRef'),
+      viewerAppSource.indexOf('}, [pageCount])'),
+    );
+    expect(closeEffect).not.toContain('setThumbsOpen');
   });
 });
 
@@ -184,8 +201,8 @@ describe('left rail toggle — command palette', () => {
 // ---------------------------------------------------------------------------
 
 describe('left rail toggle — no regressions', () => {
-  it('LeftNavRail component is still imported', () => {
-    expect(viewerAppSource).toContain("import { LeftNavRail }");
+  it('V3 shell owns the navigation chrome', () => {
+    expect(viewerAppSource).toContain("import { EditorV3Shell } from './v3/EditorV3Shell'");
   });
 
   it('zoom controls still present', () => {

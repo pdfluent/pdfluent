@@ -1,14 +1,15 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { XIcon } from 'lucide-react';
 import { LanguageSwitcher } from './LanguageSwitcher';
+import { useFocusTrap } from '../hooks/useFocusTrap';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -69,7 +70,7 @@ const SHORTCUT_GROUP_KEYS: ShortcutGroupKeys[] = [
     titleKey: 'shortcuts.view',
     shortcuts: [
       { keys: 'F11 / ⌘⇧F',         descriptionKey: 'shortcuts.toggleFullscreen' },
-      { keys: '1 – 7',             descriptionKey: 'shortcuts.switchMode' },
+      { keys: '1 – 8',             descriptionKey: 'shortcuts.switchMode' },
     ],
   },
   {
@@ -105,6 +106,8 @@ export function ShortcutSheet({ isOpen, onClose }: ShortcutSheetProps) {
   // Stable ref so the Escape listener always calls the latest onClose
   const onCloseRef = useRef(onClose);
   useEffect(() => { onCloseRef.current = onClose; });
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(dialogRef, isOpen);
 
   // Close on Escape
   useEffect(() => {
@@ -120,67 +123,64 @@ export function ShortcutSheet({ isOpen, onClose }: ShortcutSheetProps) {
 
   return (
     <>
-      {/* Backdrop */}
+      {/* Backdrop — shares the cmdpalette backdrop styling. */}
       <div
-        className="fixed inset-0 bg-black/30 z-40"
+        className="cmdpalette-backdrop"
         onClick={onClose}
         aria-hidden="true"
       />
 
-      {/* Sheet */}
+      {/* Sheet — centered floating panel with the same chrome as the
+          command palette, since both serve discovery surfaces. */}
       <div
+        ref={dialogRef}
         role="dialog"
+        aria-modal="true"
         aria-labelledby="shortcut-sheet-title"
         data-testid="shortcut-sheet"
-        className="fixed left-1/2 top-[10vh] -translate-x-1/2 w-full max-w-md bg-background border border-border rounded-xl shadow-2xl z-50 overflow-hidden"
+        className="shortcutsheet"
       >
-        {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-border">
-          <h2 id="shortcut-sheet-title" className="text-sm font-semibold text-foreground">
+        <header className="shortcutsheet-header">
+          <h2 id="shortcut-sheet-title" className="shortcutsheet-title">
             {t('shortcuts.title')}
           </h2>
           <button
+            type="button"
             onClick={onClose}
             aria-label={t('shortcuts.closeAriaLabel')}
             data-testid="shortcut-sheet-close"
-            className="p-0.5 text-muted-foreground hover:text-foreground rounded transition-colors"
+            className="settings-dialog-close"
           >
-            <XIcon className="w-4 h-4" />
+            <XIcon aria-hidden="true" />
           </button>
-        </div>
+        </header>
 
-        {/* Body */}
-        <div className="overflow-y-auto max-h-[75vh] px-4 py-3 flex flex-col gap-4">
-          {SHORTCUT_GROUP_KEYS.map(group => (
-            <div key={group.titleKey}>
-              <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground mb-1.5">
-                {t(group.titleKey)}
-              </p>
-              <div className="flex flex-col gap-0.5">
-                {group.shortcuts.map(row => (
+        <div className="shortcutsheet-body">
+          {SHORTCUT_GROUP_KEYS.map((group) => (
+            <section key={group.titleKey} className="shortcutsheet-group">
+              <p className="shortcutsheet-group-title">{t(group.titleKey)}</p>
+              <div className="shortcutsheet-rows">
+                {group.shortcuts.map((row) => (
                   <div
                     key={row.keys}
-                    className="flex items-center justify-between gap-4 py-0.5"
+                    className="shortcutsheet-row"
                     data-testid="shortcut-row"
                   >
-                    <kbd className="text-[10px] font-mono font-medium text-foreground bg-muted px-1.5 py-0.5 rounded border border-border shrink-0 whitespace-nowrap">
-                      {row.keys}
-                    </kbd>
-                    <span className="text-[11px] text-muted-foreground text-right">
+                    <kbd className="shortcutsheet-kbd">{row.keys}</kbd>
+                    <span className="shortcutsheet-description">
                       {t(row.descriptionKey)}
                     </span>
                   </div>
                 ))}
               </div>
-            </div>
+            </section>
           ))}
         </div>
 
-        {/* Footer — language switcher */}
-        <div className="flex items-center justify-between px-4 py-2 border-t border-border">
-          <span className="text-[10px] text-muted-foreground">Language / Taal</span>
+        <footer className="shortcutsheet-footer">
+          <span>Language / Taal</span>
           <LanguageSwitcher />
-        </div>
+        </footer>
       </div>
     </>
   );

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <!--
+      Mac App Store (MAS) entitlements — DISTINCT from Entitlements.plist (direct
+      DMG / Developer ID). Used only by the MAS build via tauri.mas.conf.json.
+
+      App Sandbox is required for the App Store. `application-identifier` and
+      `team-identifier` must match the provisioning profile (Team 58Z6SVW7CN,
+      bundle id com.pdfluent.app).
+
+      NOTE — no Hardened Runtime cs.* exceptions here (allow-jit,
+      allow-unsigned-executable-memory, disable-library-validation). On macOS a
+      WKWebView runs JavaScript in the separate system WebContent process, which
+      carries its own JIT entitlements — the app process does not need them, and
+      App Store review rejects these exceptions without strong justification.
+
+      `files.user-selected.read-write` = the powerbox grant for every file the
+      user opens/saves/exports. `bookmarks.app-scope` lets recent files reopen
+      across launches via the security-scoped bookmarks in crates/macos-secure.
+      `network.client` covers optional network features (OCR model download).
+    -->
+    <key>com.apple.security.app-sandbox</key>
+    <true/>
+    <key>com.apple.application-identifier</key>
+    <string>58Z6SVW7CN.com.pdfluent.app</string>
+    <key>com.apple.developer.team-identifier</key>
+    <string>58Z6SVW7CN</string>
+    <key>com.apple.security.files.user-selected.read-write</key>
+    <true/>
+    <key>com.apple.security.files.bookmarks.app-scope</key>
+    <true/>
+    <key>com.apple.security.network.client</key>
+    <true/>
+</dict>
+</plist>

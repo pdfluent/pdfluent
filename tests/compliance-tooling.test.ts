@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: LicenseRef-PDFluent-Proprietary
 // Copyright (c) 2026 PDFluent Contributors
 
 import { readFileSync } from "node:fs";
@@ -12,7 +12,7 @@ const workflowSource = readFileSync(
   new URL("../.github/workflows/ci.yml", import.meta.url),
   "utf8",
 );
-const appSource = readFileSync(new URL("../src/App.tsx", import.meta.url), "utf8");
+const appSource = readFileSync(new URL("../src/legacy/App.tsx", import.meta.url), "utf8");
 
 describe("compliance and OCR hardening tooling", () => {
   it("defines compliance generation and gate scripts in package.json", () => {

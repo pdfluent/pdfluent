@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 import { readFileSync } from 'node:fs';
@@ -39,12 +39,12 @@ const effectBody = viewerAppSource.slice(effectStart, effectEnd);
 describe('ViewerApp — arrow page nav: key mappings', () => {
   it('handles ArrowRight → next page', () => {
     expect(effectBody).toContain("case 'ArrowRight'");
-    expect(effectBody).toContain('Math.min(pageCount - 1, i + 1)');
+    expect(effectBody).toContain('Math.min(pageCount - 1, pageIndexRef.current + 1)');
   });
 
   it('handles ArrowLeft → previous page', () => {
     expect(effectBody).toContain("case 'ArrowLeft'");
-    expect(effectBody).toContain('Math.max(0, i - 1)');
+    expect(effectBody).toContain('Math.max(0, pageIndexRef.current - 1)');
   });
 
   it('handles ArrowDown → next page (same branch as ArrowRight)', () => {
@@ -65,12 +65,12 @@ describe('ViewerApp — arrow page nav: key mappings', () => {
 
   it('handles Home → first page', () => {
     expect(effectBody).toContain("case 'Home'");
-    expect(effectBody).toContain('setPageIndex(0)');
+    expect(effectBody).toContain('navigatePage(0)');
   });
 
   it('handles End → last page', () => {
     expect(effectBody).toContain("case 'End'");
-    expect(effectBody).toContain('setPageIndex(pageCount - 1)');
+    expect(effectBody).toContain('navigatePage(pageCount - 1)');
   });
 });
 
@@ -150,8 +150,8 @@ describe('ViewerApp — arrow page nav: listener lifecycle', () => {
     expect(effectBody).toContain("window.removeEventListener('keydown', handlePageNav)");
   });
 
-  it('useEffect depends on pageCount', () => {
-    expect(effectBody).toContain('}, [pageCount])');
+  it('useEffect depends on pageCount and navigatePage', () => {
+    expect(effectBody).toContain('}, [pageCount, navigatePage, editingTextTargetId])');
   });
 });
 

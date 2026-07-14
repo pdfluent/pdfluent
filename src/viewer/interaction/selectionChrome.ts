@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 /**
@@ -202,28 +202,29 @@ function textBlockChrome(state: InteractionState): ChromeRectAttrs {
   switch (state) {
     case 'hover':
       return {
-        strokeColor: 'rgb(148, 163, 184)',  // slate-400
+        strokeColor: 'rgb(99, 132, 255)',   // blue-400 ish
         strokeWidth: 1,
-        strokeOpacity: 0.4,
-        strokeDasharray: '2 2',
-        fillColor: 'transparent',
-        fillOpacity: 0,
+        strokeOpacity: 0.35,
+        strokeDasharray: '3 2',
+        fillColor: 'rgb(219, 234, 254)',    // blue-100
+        fillOpacity: 0.06,
         rx: 1,
       };
     case 'selected':
       return {
-        strokeColor: 'rgb(59, 130, 246)',
-        strokeWidth: 1.5,
-        strokeOpacity: 0.8,
+        strokeColor: 'rgb(37, 99, 235)',    // blue-600
+        strokeWidth: 2,
+        strokeOpacity: 1,
         fillColor: 'rgb(219, 234, 254)',
         fillOpacity: 0.15,
         rx: 1,
       };
     case 'editing':
       return {
-        strokeColor: 'rgb(5, 150, 105)',
-        strokeWidth: 2,
-        strokeOpacity: 1,
+        strokeColor: 'rgba(37, 99, 235, 0.45)',
+        strokeWidth: 1,
+        strokeOpacity: 0.8,
+        strokeDasharray: '3 2',
         fillColor: 'transparent',
         fillOpacity: 0,
         rx: 1,

@@ -8,7 +8,8 @@ Fast, private PDF editing. Free for personal use.
 
 ## Platform Detection
 Auto-detect OS and show the primary download button for that platform.
-Fallback: show all three options.
+Fallback: show both options (macOS, Windows). The shipped desktop release is
+**macOS + Windows only** — Linux is out of scope for the published download.
 
 ## Download Buttons
 
@@ -22,10 +23,8 @@ Fallback: show all three options.
 - Alt: "Microsoft Store" → MS Store link
 - Requirements: Windows 10 or later (x64)
 
-### Linux
-- Primary: "Download for Linux" → .AppImage (x64)
-- Alt: ".deb package" → .deb download
-- Requirements: Ubuntu 20.04+, Debian 11+, Fedora 35+, or compatible
+> Linux is out of scope for the published desktop release (Windows + macOS only).
+> Linux source support remains in the tree, but no Linux download is shipped.
 
 ## Version Info
 Current version: 0.1.0
@@ -35,8 +34,7 @@ Release notes: link to GitHub releases
 ## Download URLs (GitHub Releases)
 - macOS: https://github.com/pdfluent/pdfluent/releases/latest/download/PDFluent_universal.dmg
 - Windows: https://github.com/pdfluent/pdfluent/releases/latest/download/PDFluent_x64-setup.msi
-- Linux AppImage: https://github.com/pdfluent/pdfluent/releases/latest/download/PDFluent_amd64.AppImage
-- Linux deb: https://github.com/pdfluent/pdfluent/releases/latest/download/PDFluent_amd64.deb
+  (Linux is out of scope for the published release — no Linux download.)
 
 ## Key Points (below download)
 1. **100% Local** — Your PDFs never leave your device
@@ -48,6 +46,5 @@ Release notes: link to GitHub releases
 |----------|---------|-------------|
 | macOS    | 10.15 Catalina | 13 Ventura+ |
 | Windows  | 10 (x64) | 11 |
-| Linux    | Ubuntu 20.04 / GTK 3 | Ubuntu 22.04+ |
 | RAM      | 4 GB | 8 GB+ |
 | Disk     | 100 MB | 200 MB |

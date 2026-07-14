@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: LicenseRef-PDFluent-Proprietary
 // Copyright (c) 2026 PDFluent Contributors
 
 import { readFileSync } from "node:fs";
@@ -28,32 +28,34 @@ describe("viewer native source lifecycle", () => {
     expect(viewerSource).not.toContain("key={nativePdfSrc}");
   });
 
-  it("keeps native single-view rendering active across edit/search overlays", () => {
+  it("uses native single-view rendering only for pure reading", () => {
     expect(
       shouldUseNativeSingleViewer("single", "none", false, false),
     ).toBe(true);
     expect(
       shouldUseNativeSingleViewer("single", "highlight", false, false),
-    ).toBe(true);
+    ).toBe(false);
     expect(
       shouldUseNativeSingleViewer("single", "pen", false, false),
-    ).toBe(true);
+    ).toBe(false);
     expect(
       shouldUseNativeSingleViewer("single", "none", true, false),
-    ).toBe(true);
+    ).toBe(false);
     expect(
       shouldUseNativeSingleViewer("single", "none", false, true),
-    ).toBe(true);
+    ).toBe(false);
     expect(viewerSource).toContain("export function shouldUseNativeSingleViewer(");
-    expect(viewerSource).toContain("return viewMode === \"single\";");
+    expect(viewerSource).toContain('viewMode === "single"');
+    expect(viewerSource).toContain('annotationTool === "none"');
+    expect(viewerSource).toContain("!textEditorEnabled");
+    expect(viewerSource).toContain("!hasSearchHighlights");
     expect(viewerSource).toContain(
       "const prefersNativeSingleViewer = shouldUseNativeSingleViewer(",
     );
     expect(viewerSource).toContain(
-      "const isNativeSingleViewer = prefersNativeSingleViewer && !nativeViewerUnavailable;",
+      "prefersNativeSingleViewer && !nativeViewerUnavailable && NATIVE_PDF_SUPPORTED",
     );
-    expect(viewerSource).not.toContain("!isNativeSingleViewer &&");
-    expect(viewerSource).toContain("const showNativeSinglePage = isNativeSingleViewer");
+    expect(viewerSource).toContain("const showRasterPageImage = renderedPage && !isNativeSingleViewer;");
     expect(viewerSource).toContain("className=\"viewer-page-native-iframe\"");
   });
 

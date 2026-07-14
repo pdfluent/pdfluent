@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 /**
@@ -13,24 +13,22 @@
  * "can the user enter edit mode?" — this module answers "can we safely persist
  * a text change to the PDF structure?"
  *
- * Phase 4 MVP writable class ("writable_digital_text"):
+ * Parser-backed writable class ("writable_digital_text"):
  *   - Source is 'digital' (not OCR)
  *   - Exactly one line with exactly one span (single font run)
  *   - Text content is not empty
- *   - Replacement text is equal-or-shorter (no reflow required)
  *
- * Explicit encoding assumptions (Phase 4):
- *   - We assume WinAnsi or MacRoman encoding for single-span Latin text.
- *   - We do NOT inspect the actual PDF encoding object in this phase.
- *     CID fonts, custom encodings, and Identity-H/V are treated as unknown.
- *   - If the Rust mutation backend encounters an unsupported encoding,
- *     it rejects the write with a specific error rather than corrupting the file.
+ * Explicit encoding behaviour:
+ *   - The Rust backend builds a page FontMap and uses the pdf-manip parser to
+ *     decode Tj/TJ text through ToUnicode/CMap data where available.
+ *   - If a replacement cannot be safely encoded into the matched font or a safe
+ *     fallback, the backend rejects with a specific reason rather than
+ *     corrupting the document.
  *
  * Explicit non-goals (deferred to later phases):
  *   - Multi-span paragraphs: different font runs, complex kerning, spacing
  *   - Multi-line paragraphs: reflow and line spacing recalculation
  *   - Arbitrary font substitution: requires font metrics and layout engine
- *   - Longer replacement text: potential overflow and reflow
  *   - OCR text mutation: overlay write is a separate, unrelated pipeline
  *   - Protected / encrypted document detection: delegated to Rust layer
  *
@@ -104,22 +102,16 @@ export type MutationSupportReason =
 export interface MutationConstraints {
   /**
    * Maximum character count of the replacement text.
-   * Set to the original text length to prevent reflow in Phase 4.
-   * Null means no explicit limit (unused in Phase 4 MVP).
-   *
-   * Rationale: PDF text operators encode character positions and advance
-   * widths relative to the original glyph sequence. A longer replacement
-   * would overflow the original slot, causing visual corruption.
+   * Null means no explicit UI-side length limit. The parser-backed native
+   * writer owns final encoding/layout safety and returns a typed rejection if
+   * the content stream cannot be rewritten without corruption.
    */
   readonly maxLength: number | null;
   /**
    * Assumed encoding class for this target.
    *
-   * Phase 4 assumption: all single-span digital text is treated as
-   * standard Latin encoding (WinAnsi or MacRoman). This assumption holds
-   * for the majority of western-language PDFs. Non-Latin text (CJK, Arabic,
-   * Hebrew) or specially-encoded fonts may use CID or custom encodings —
-   * the Rust backend will reject those gracefully without file corruption.
+   * Parser-backed path: TypeScript does not infer PDF font encoding. The Rust
+   * writer builds the actual page font map and rejects unsupported encodings.
    */
   readonly assumedEncoding: 'standard-latin' | 'unknown';
   /**
@@ -228,19 +220,15 @@ export function getMutationSupport(target: TextParagraphTarget): TextMutationSup
     return unsupported('non_writable_digital_text', 'multi-span-unsupported');
   }
 
-  const span = line.spans[0]!;
-
-  // Single-span, single-line digital text — Phase 4 MVP writable target
+  // Single-span, single-line digital text — parser-backed writable target.
   return {
     supportClass: 'writable_digital_text',
     reasonCode: 'single-span-digital',
     label: SUPPORT_LABELS['writable_digital_text'],
     writable: true,
     constraints: {
-      // Replacement must not exceed original length to prevent reflow
-      maxLength: span.text.length,
-      // Phase 4 assumption: standard Latin encoding
-      assumedEncoding: 'standard-latin',
+      maxLength: null,
+      assumedEncoding: 'unknown',
     },
   };
 }
@@ -285,17 +273,19 @@ export function validateReplacement(
     };
   }
 
-  // Length constraint: replacement must not exceed original (+ optional bbox tolerance)
+  // Length constraint: replacement must not exceed original + expansionChars.
+  // Note: if expansionChars is not specified, it defaults to 0 (strict Phase 4 regression behavior).
+  const expansion = constraints.expansionChars ?? 0;
   const effectiveMax = constraints.maxLength !== null
-    ? constraints.maxLength + (constraints.expansionChars ?? 0)
+    ? constraints.maxLength + expansion
     : null;
   if (effectiveMax !== null && replacementText.length > effectiveMax) {
     return {
       valid: false,
       reasonCode: 'replacement-too-long',
       message:
-        `Vervangende tekst (${replacementText.length} tekens) is langer dan het origineel ` +
-        `(${constraints.maxLength} tekens). Gebruik kortere tekst om opmaakproblemen te voorkomen.`,
+        `Vervangende tekst (${replacementText.length} tekens) is te lang (maximaal ${effectiveMax} tekens). ` +
+        `Verkort de tekst om overlap in het document te voorkomen.`,
     };
   }
 
@@ -342,7 +332,8 @@ export function isNonWritableDigital(target: TextParagraphTarget): boolean {
  *   - Target is not a writable single-span target
  *
  * This value can be passed as `expansionChars` in MutationConstraints to
- * enable safe capability expansion beyond the strict Phase 4 equal-or-shorter rule.
+ * derive a legacy maxLength expansion when a caller supplies explicit length
+ * constraints. The parser-backed desktop path uses `maxLength: null`.
  */
 export function computeBboxExpansionChars(target: TextParagraphTarget): number {
   if (target.lines.length !== 1) return 0;

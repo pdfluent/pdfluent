@@ -1,8 +1,8 @@
 // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 //
-// This software is proprietary and confidential.
-// Free for personal, non-commercial use.
-// Commercial use requires a valid license.
+// This software is proprietary. The PDFluent application is free to use,
+// including for commercial purposes. Redistribution, or extraction or reuse
+// of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
 import { invoke } from '@tauri-apps/api/core';
@@ -26,6 +26,21 @@ interface TauriDocumentInfo {
   title: string | null;
   author: string | null;
   form_type: string;
+  xfa_detected: boolean;
+  xfa_notice: string | null;
+  active_content?: TauriActiveContentInfo | null;
+}
+
+interface TauriActiveContentInfo {
+  has_active_content: boolean;
+  has_javascript: boolean;
+  has_open_action: boolean;
+  has_additional_actions: boolean;
+  has_launch_actions: boolean;
+  has_submit_form: boolean;
+  has_uri_actions: boolean;
+  has_xfa: boolean;
+  flags: string[];
 }
 
 interface TauriOutlineItem {
@@ -73,6 +88,21 @@ function documentInfoToPdfDocument(info: TauriDocumentInfo, fileName: string): P
       title: info.title ?? fileName,
       ...(info.author != null ? { author: info.author } : {}),
     },
+    xfaDetected: info.xfa_detected,
+    xfaNotice: info.xfa_notice,
+    activeContent: info.active_content
+      ? {
+          hasActiveContent: info.active_content.has_active_content,
+          hasJavascript: info.active_content.has_javascript,
+          hasOpenAction: info.active_content.has_open_action,
+          hasAdditionalActions: info.active_content.has_additional_actions,
+          hasLaunchActions: info.active_content.has_launch_actions,
+          hasSubmitForm: info.active_content.has_submit_form,
+          hasUriActions: info.active_content.has_uri_actions,
+          hasXfa: info.active_content.has_xfa,
+          flags: info.active_content.flags,
+        }
+      : null,
   };
 }
 
