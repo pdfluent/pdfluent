@@ -26,6 +26,11 @@ npm install
 npm run tauri dev
 ```
 
+The PDF engine is the PDFluent SDK, linked via Cargo path dependencies (see
+`src-tauri/Cargo.toml`). The SDK workspace is licensed separately and isn't
+included in this repository, so a full build requires access to it. See
+[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for how the pieces fit together.
+
 ## Code style
 
 - Rust: follow `cargo clippy` suggestions
@@ -37,10 +42,14 @@ npm run tauri dev
 - Keep PRs focused on a single change
 - Include tests where applicable
 - Update documentation if you change user-facing behavior
-- All source files must include the SPDX license header:
+- All source files must include the license header:
   ```
-  // SPDX-License-Identifier: LicenseRef-PDFluent-Proprietary
   // Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
+  //
+  // This software is proprietary. The PDFluent application is free to use,
+  // including for commercial purposes. Redistribution, or extraction or reuse
+  // of its components (including the embedded PDF engine), requires a licence.
+  // See https://pdfluent.com/license for terms.
   ```
 
 ## Reporting bugs
@@ -60,7 +69,7 @@ If you are new to the codebase, start with issues labeled **good first issue**.
 
 ## License
 
-PDFluent is proprietary software and is not an open-source project; see
-[LICENSE.md](LICENSE.md) for the End-User License Agreement. Contributions are
-accepted only under a separate written agreement — please contact
+PDFluent is source-available, proprietary software, not an open-source project.
+See [LICENSE.md](LICENSE.md) for the End-User License Agreement. Contributions
+are accepted only under a separate written agreement. Contact
 license@pdfluent.com before submitting a contribution.
