@@ -54,7 +54,7 @@ Under the hood it uses a pure-Rust PDF engine, so it starts fast and stays light
 
 ## Search terms (up to 7)
 
-`pdf editor`, `edit pdf`, `pdf to word`, `pdf converter`, `sign pdf`, `pdf ocr`,
+`pdf editor`, `edit pdf`, `convert pdf`, `pdf converter`, `sign pdf`, `pdf ocr`,
 `offline pdf`
 
 ## Copyright

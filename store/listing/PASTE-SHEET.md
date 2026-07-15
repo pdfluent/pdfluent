@@ -67,7 +67,7 @@ Runs fully offline. No account, no upload, no tracking
 ```
 pdf editor
 edit pdf
-pdf to word
+convert pdf
 pdf converter
 sign pdf
 pdf ocr
