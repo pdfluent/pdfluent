@@ -26,7 +26,7 @@ jobs:
         run: npm run typecheck
 
       - name: Run core module tests with coverage
-        run: npx vitest run src/core/__tests__ --coverage --reporter=verbose
+        run: npx vitest run src/core/__tests__ --reporter=verbose
 
       - name: Upload test coverage
         if: always()
