@@ -15,4 +15,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          # The whole history: the second check walks every object, and a
+          # shallow clone would walk a fraction of them and pass.
+          fetch-depth: 0
       - run: python3 scripts/ci/every_document_has_a_source.py
+      # And: is anything back that was withdrawn once? The check above sees a
+      # file arriving in the working tree. It does not see
+      # `git checkout <old-sha> -- <path>`, which brings content back under any
+      # name -- and the next person adds it to SOURCES.md in good faith, because
+      # nothing tells them it was taken out.
+      - run: python3 scripts/ci/no_withdrawn_blobs.py
