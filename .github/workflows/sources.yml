@@ -1,0 +1,18 @@
+name: Sources
+
+# Every document and font in this repository has a stated origin.
+#
+# This repository is public, so a file committed here is published to anyone.
+# On 2026-08-27 a third-party government form was found here, added months
+# earlier as a test fixture; the question of whether we may redistribute it had
+# never been asked. This job asks it at commit time instead.
+on:
+  push:
+  pull_request:
+
+jobs:
+  sources:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 scripts/ci/every_document_has_a_source.py
