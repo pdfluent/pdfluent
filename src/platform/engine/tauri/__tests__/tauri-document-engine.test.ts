@@ -152,7 +152,7 @@ describe('TauriDocumentEngine — loadDocument mapping', () => {
     it('maps xfa_detected:true to xfaDetected:true on the document', async () => {
       mockedInvoke.mockResolvedValue(XFA_DOCUMENT_INFO);
 
-      const result = await engine.loadDocument('/Users/x/Desktop/imm5257e_test.pdf');
+      const result = await engine.loadDocument('/Users/x/Desktop/dynamic-xfa-form.pdf');
 
       expect(result.success).toBe(true);
       if (!result.success) return;
@@ -162,7 +162,7 @@ describe('TauriDocumentEngine — loadDocument mapping', () => {
     it('maps xfa_notice and uses render-doc page count (3)', async () => {
       mockedInvoke.mockResolvedValue(XFA_DOCUMENT_INFO);
 
-      const result = await engine.loadDocument('/Users/x/Desktop/imm5257e_test.pdf');
+      const result = await engine.loadDocument('/Users/x/Desktop/dynamic-xfa-form.pdf');
 
       expect(result.success).toBe(true);
       if (!result.success) return;
@@ -173,7 +173,7 @@ describe('TauriDocumentEngine — loadDocument mapping', () => {
     it('maps active_content snake_case to camelCase', async () => {
       mockedInvoke.mockResolvedValue(XFA_DOCUMENT_INFO);
 
-      const result = await engine.loadDocument('/Users/x/Desktop/imm5257e_test.pdf');
+      const result = await engine.loadDocument('/Users/x/Desktop/dynamic-xfa-form.pdf');
 
       expect(result.success).toBe(true);
       if (!result.success) return;

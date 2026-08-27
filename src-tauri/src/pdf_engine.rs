@@ -4965,8 +4965,19 @@ mod tests {
     // Invariants: normal PDFs and AcroForms are unchanged; dynamic XFA now
     // reports the rendered (flattened) page count instead of the 1-page shell.
 
-    const DYNAMIC_XFA_PDF: &[u8] =
-        include_bytes!("../tests/fixtures/imm5257e_dynamic_xfa.pdf");
+    // The dynamic-XFA fixture and the four tests that used it were removed on
+    // 2026-08-27. It was a third-party government form, and this repository is
+    // public; its redistribution terms were never established, so it was taken
+    // out rather than left in place on an assumption.
+    //
+    // What went with it: the only editor-side coverage of dynamic XFA — a shell
+    // PDF reporting one page where the flattened layout produces three, form
+    // model enumeration, fill persistence across save and reopen, and the
+    // commit-refresh loop.
+    //
+    // Restoring that needs a multi-page dynamic XFA document we own. None of the
+    // committed fixtures overflows onto a second page; that is tracked and it is
+    // not a small job.
 
     #[test]
     fn document_info_page_count_normal_pdf() {
@@ -4984,138 +4995,9 @@ mod tests {
         assert!(!info.xfa_detected, "AcroForm must not be flagged as XFA");
     }
 
-    #[test]
-    fn dynamic_xfa_document_info_uses_render_page_count() {
-        let doc = OpenDocument::open_bytes(DYNAMIC_XFA_PDF.to_vec())
-            .expect("open dynamic XFA");
 
-        let shell_pages = doc.pdf_doc.page_count();
-        let render_pages = doc.render_doc_page_count();
-        let info = doc.document_info();
 
-        // This form (IMM 5257E) has a 1-page shell but 3 rendered pages.
-        assert_eq!(shell_pages, 1, "shell PDF is 1 page");
-        assert_eq!(render_pages, 3, "flattened layout produces 3 pages");
-        assert!(info.xfa_detected, "must be detected as XFA");
-        assert_eq!(
-            info.page_count, render_pages as u32,
-            "document_info must report the render page count ({render_pages}), not the shell count ({shell_pages})"
-        );
-        assert_eq!(
-            info.pages.len(),
-            render_pages,
-            "pages vec must have one entry per rendered page"
-        );
-        // Every rendered page must report a non-zero size.
-        for (i, p) in info.pages.iter().enumerate() {
-            assert!(p.width_pt > 0.0, "page {i} width must be > 0");
-            assert!(p.height_pt > 0.0, "page {i} height must be > 0");
-        }
-    }
 
-    // ── XFA Phase 1 fill ──────────────────────────────────────────────
-
-    #[test]
-    fn xfa_form_model_enumerates_fields() {
-        let mut doc = OpenDocument::open_bytes(DYNAMIC_XFA_PDF.to_vec())
-            .expect("open dynamic XFA");
-        let render_pages = doc.render_doc_page_count();
-        let model = doc.xfa_form_model().expect("build XFA form model");
-
-        assert!(
-            !model.fields.is_empty(),
-            "IMM 5257E exposes XFA fields (golden corpus reports 284)"
-        );
-
-        // The session lays out the RAW (pre-suppression) page set: the XFA layout
-        // engine over-produces empty repeated `occur` instance pages for a few
-        // dynamic forms, which the flatten path's §4.3 suppression drops. So the
-        // session's page_count (here 6) is >= the rendered/flattened page count
-        // (here 3, the Adobe-faithful view). The overlay therefore bounds field
-        // placement by the RENDERED page count, not session.page_count.
-        assert!(
-            model.page_count >= render_pages,
-            "session layout pages ({}) must be >= rendered pages ({})",
-            model.page_count,
-            render_pages
-        );
-
-        // The overlay only shows fields on rendered pages ("fill visible fields").
-        // At least one fillable text field must land within the rendered range,
-        // otherwise the overlay would have nothing to offer.
-        let visible_fillable_text = model.fields.iter().find(|f| {
-            f.field_type == "text"
-                && !f.read_only
-                && f.page.is_some_and(|p| p < render_pages)
-                && f.rect.is_some()
-        });
-        assert!(
-            visible_fillable_text.is_some(),
-            "expected a fillable text field on a rendered page"
-        );
-        let f = visible_fillable_text.unwrap();
-        assert!(!f.name.is_empty(), "field must have a name");
-        assert!(
-            f.widgets.iter().any(|w| w.page < render_pages),
-            "field must have a widget on a rendered page"
-        );
-    }
-
-    #[test]
-    fn xfa_fill_persists_across_save_reopen() {
-        let mut doc = OpenDocument::open_bytes(DYNAMIC_XFA_PDF.to_vec())
-            .expect("open dynamic XFA");
-        let model = doc.xfa_form_model().expect("build XFA form model");
-
-        // Choose a fillable, data-bound text field so the value lands in datasets.
-        let target = model
-            .fields
-            .iter()
-            .find(|f| f.field_type == "text" && !f.read_only && !f.bind_none)
-            .expect("a fillable, datasets-bound text field")
-            .name
-            .clone();
-
-        let sentinel = "PDFLUENT_XFA_PHASE1";
-        doc.set_xfa_field_value(&XfaWriteRequest::Text {
-            name: target.clone(),
-            value: sentinel.to_string(),
-        })
-        .expect("set XFA field value");
-        assert!(doc.modified, "fill must mark the document dirty");
-
-        // Save and reopen from disk — the round-trip an end user performs.
-        let mut out = std::env::temp_dir();
-        out.push("pdfluent_xfa_fill_roundtrip.pdf");
-        let out_str = out.to_string_lossy().to_string();
-        doc.save_to(&out_str).expect("save filled XFA");
-
-        let mut reopened = OpenDocument::open_bytes(
-            std::fs::read(&out_str).expect("re-read saved XFA"),
-        )
-        .expect("reopen saved XFA");
-        let model2 = reopened.xfa_form_model().expect("re-read XFA model");
-        let again = model2
-            .fields
-            .iter()
-            .find(|f| f.name == target)
-            .expect("field still present after reopen");
-        assert_eq!(
-            again.value, sentinel,
-            "filled XFA value must persist across save/reopen"
-        );
-
-        let _ = std::fs::remove_file(&out_str);
-    }
-
-    // The UEA dynamic-XFA fixture (a Dutch procurement form) lives in the SDK
-    // checkout's test-data, not in the editor repo. Its radio control
-    // `Type_aanbesteding` carries a `change` script that reveals a conditional
-    // section (`Erkenningsregeling…`) and repaginates when set to "3" — the
-    // canonical Phase 2 commit-loop demonstration. Feature-gated (the commit loop
-    // + QuickJS runtime) and skipped when the fixture is absent (e.g. CI without
-    // the test-data, or a non-local checkout layout).
-    #[cfg(feature = "xfa-interactive")]
     #[test]
     fn xfa_commit_reveals_conditional_section_on_uea() {
         let uea = concat!(
@@ -5166,62 +5048,3 @@ mod tests {
         );
     }
 
-    #[test]
-    fn xfa_commit_returns_refreshed_model_and_persists() {
-        let mut doc = OpenDocument::open_bytes(DYNAMIC_XFA_PDF.to_vec())
-            .expect("open dynamic XFA");
-        let model = doc.xfa_form_model().expect("build XFA form model");
-        let target = model
-            .fields
-            .iter()
-            .find(|f| f.field_type == "text" && !f.read_only && !f.bind_none)
-            .expect("a fillable, datasets-bound text field")
-            .name
-            .clone();
-
-        let result = doc
-            .commit_xfa_field_value(&XfaWriteRequest::Text {
-                name: target.clone(),
-                value: "PHASE2_COMMIT".to_string(),
-            })
-            .expect("commit XFA field value");
-
-        // The commit always returns a refreshed model + a sane page-count delta,
-        // and surfaces presence changes (possibly empty for a non-triggering field).
-        assert!(!result.model.fields.is_empty(), "commit returns a refreshed model");
-        assert!(result.page_count_after >= 1, "page_count_after is sane");
-        assert_eq!(result.raw_value, "PHASE2_COMMIT");
-        assert!(doc.modified, "commit marks the document dirty");
-
-        // Feature-aware: with the commit loop compiled, the edit runs interactively
-        // (change/click + calculate scripts); without it, it degrades to a static
-        // value write.
-        #[cfg(feature = "xfa-interactive")]
-        assert!(
-            result.interactive,
-            "commit must run interactively when xfa-interactive is enabled"
-        );
-        #[cfg(not(feature = "xfa-interactive"))]
-        {
-            assert!(!result.interactive, "fallback must report interactive=false");
-            assert_eq!(result.scripts_executed, 0);
-            assert!(result.presence_changes.is_empty());
-            assert_eq!(result.page_count_before, result.page_count_after);
-        }
-
-        // Value persists across save/reopen.
-        let mut out = std::env::temp_dir();
-        out.push("pdfluent_xfa_commit_roundtrip.pdf");
-        let out_str = out.to_string_lossy().to_string();
-        doc.save_to(&out_str).expect("save committed XFA");
-        let mut reopened =
-            OpenDocument::open_bytes(std::fs::read(&out_str).expect("re-read")).expect("reopen");
-        let m2 = reopened.xfa_form_model().expect("re-read model");
-        assert_eq!(
-            m2.fields.iter().find(|f| f.name == target).expect("field present").value,
-            "PHASE2_COMMIT",
-            "committed XFA value persists across save/reopen"
-        );
-        let _ = std::fs::remove_file(&out_str);
-    }
-}
