@@ -43,7 +43,7 @@ describe('V3 desktop interaction regressions', () => {
 
   it('asks for confirmation before opening detected external links', () => {
     expect(extractFirstExternalLink('linkedin.com/in/jasperdewinter')?.href).toBe('https://linkedin.com/in/jasperdewinter');
-    expect(extractFirstExternalLink('mail jasper@jasperdewinter.nl')).toBeNull();
+    expect(extractFirstExternalLink('mail someone@example.com')).toBeNull();
     expect(viewerAppSource).toContain("i18n.t('externalLink.title')");
     expect(viewerAppSource).toContain("await ask(message");
     expect(viewerAppSource).toContain("await invoke('open_external_url'");
