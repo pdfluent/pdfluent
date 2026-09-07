@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: LicenseRef-PDFluent-Proprietary
-// Copyright (c) 2026 PDFluent Contributors
+// Copyright (c) 2026 Innovation Trigger B.V.
 
 import { describe, expect, it } from "vitest";
 import {

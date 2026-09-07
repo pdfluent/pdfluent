@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: LicenseRef-PDFluent-Proprietary
-// Copyright (c) 2026 PDFluent Contributors
+// Copyright (c) 2026 Innovation Trigger B.V.
 
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
@@ -16,9 +16,9 @@ describe("toolbar recent files", () => {
     expect(toolbarSource).toContain("onClearRecentFiles: () => void;");
   });
 
-  it("accepts recent-file props in the component destructuring", () => {
-    expect(toolbarSource).toContain("recentFiles: _recentFiles,");
-    expect(toolbarSource).toContain("onOpenRecentFile: _onOpenRecentFile,");
-    expect(toolbarSource).toContain("onClearRecentFiles: _onClearRecentFiles,");
+  it("accepts the complete typed props object without requiring unused aliases", () => {
+    expect(toolbarSource).toContain(
+      "export function Toolbar(props: ToolbarProps)",
+    );
   });
 });

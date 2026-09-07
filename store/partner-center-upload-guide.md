@@ -69,9 +69,9 @@ This is the **App package** step for a Win32 app:
 1. Choose **"I'll provide my own installer (.exe or .msi)"** (the Win32 / "bring
    your own installer" option).
 2. **Installer URL / upload:**
-   `https://pdfluent.com/releases/1.0.0-beta.20/PDFluent_1.0.0-beta.20_x64_en-US.msi`
+   `https://pdfluent.com/releases/1.0.0-beta.21/PDFluent_1.0.0-beta.21_x64_en-US.msi`
    (offline, Authenticode-signed; the Store does not re-sign it).
-   SHA-256: `8DAA08BE555FBF60B1D4AC68E1700A606CC1EE65E5E115F77168740E0885FFD8`
+   SHA-256: `F6262AC4EF35920F0B6D2992DD9BF4701A21751309A85B1E938533AF10364F12`
 3. **Silent install parameters** (if asked): `/quiet /norestart`
 4. **Silent uninstall** (if asked): `msiexec /x {ProductCode} /quiet` — or let the
    Store use Add/Remove Programs (the MSI registers "PDFluent v1.0.0").

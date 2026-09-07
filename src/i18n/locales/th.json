@@ -112,7 +112,11 @@
     "prevField": "ฟิลด์ก่อนหน้า",
     "nextField": "ฟิลด์ถัดไป",
     "allTools": "เครื่องมือทั้งหมด",
-    "contextualBar": "แถบเครื่องมือโหมด"
+    "contextualBar": "แถบเครื่องมือโหมด",
+    "pdfa": "PDF/A",
+    "metadata": "Document properties",
+    "invoice": "E-invoice",
+    "bookmarks": "Bookmarks"
   },
   "topbar": {
     "openPdf": "เปิด PDF",
@@ -282,7 +286,27 @@
     "clearSelection": "ล้างการเลือก",
     "combine": "รวมไฟล์",
     "splitRange": "แยกตามช่วง",
-    "splitRangeHint": "เลือกหน้าก่อน"
+    "splitRangeHint": "เลือกหน้าก่อน",
+    "moveLeft": "Move selected page left",
+    "moveRight": "Move selected page right",
+    "moveLeftShort": "Left",
+    "moveRightShort": "Right",
+    "rotateLeft": "Rotate left",
+    "rotateRight": "Rotate right",
+    "rotateLeftShort": "Left",
+    "rotateRightShort": "Right",
+    "addingPdf": "Adding PDF…",
+    "pdfAdded": "PDF added",
+    "combiningFiles": "Combining {{count}} file(s)…",
+    "filesCombined": "{{count}} file(s) combined",
+    "insertingPdf": "Inserting PDF before page {{page}}…",
+    "pdfInserted": "PDF inserted",
+    "exportingPages": "Exporting {{count}} page(s)…",
+    "selectionExported": "Selection exported to {{name}}",
+    "splittingPages": "Splitting into individual pages…",
+    "pagesSaved": "{{count}} pages saved",
+    "splittingRanges": "Splitting {{count}} range(s)…",
+    "filesSaved": "{{count}} file(s) saved"
   },
   "unsavedChanges": {
     "title": "การเปลี่ยนแปลงที่ยังไม่ได้บันทึก",
@@ -302,7 +326,14 @@
     "dragDropHint": "หรือลาก PDF มาวางที่นี่",
     "lede": "อ่าน แก้ไข แปลง กรอกและลงนาม — ทั้งหมดบนอุปกรณ์ของคุณ",
     "privacyPromise": "Local-first · เอกสารไม่เคยออกจากอุปกรณ์นี้",
-    "dropPdfHere": "วาง PDF ที่นี่"
+    "dropPdfHere": "วาง PDF ที่นี่",
+    "v3Subtitle": "Open a PDF to read, edit, convert or sign it locally.",
+    "openFileAria": "Choose a PDF file to open",
+    "clearRecent": "Clear recent",
+    "recentShort": "Recent",
+    "removeRecentAria": "Remove {{name}}",
+    "backToDocument": "Back to document",
+    "loadingDocument": "Loading document…"
   },
   "settings": {
     "language": "ภาษา",
@@ -324,7 +355,10 @@
     "themeLabel": "ธีม",
     "ocrDefaults": "การตั้งค่า OCR เริ่มต้น",
     "ocrLanguageLabel": "ภาษาเริ่มต้น (ISO-639-2)",
-    "ocrLanguagePlaceholder": "เช่น eng, nld, deu"
+    "ocrLanguagePlaceholder": "เช่น eng, nld, deu",
+    "updates": "Updates",
+    "automaticUpdateCheck": "Check for a new version at startup",
+    "automaticUpdateCheckHint": "PDFluent asks pdfluent.com whether a newer version exists, a few seconds after it starts. Nothing from your documents is sent. Turn this off and the app never checks on its own — \"Check for updates\" still works whenever you ask for it."
   },
   "errors": {
     "loadFailed": "โหลดเอกสารล้มเหลว",
@@ -465,7 +499,13 @@
     "dismiss": "ปิด",
     "watermarkDone": "เพิ่มลายน้ำแล้ว",
     "watermarkFailed": "เพิ่มลายน้ำล้มเหลว",
-    "watermarkRunning": "กำลังเพิ่มลายน้ำ…"
+    "watermarkRunning": "กำลังเพิ่มลายน้ำ…",
+    "pdfaRunning": "Converting to PDF/A…",
+    "pdfaDone": "PDF/A written",
+    "pdfaFailed": "PDF/A conversion failed",
+    "metadataRunning": "Saving properties…",
+    "metadataDone": "Properties saved",
+    "metadataFailed": "Could not save properties"
   },
   "panels": {
     "search": "ค้นหา",
@@ -837,7 +877,10 @@
     "detected": "เอกสารนี้ใช้ XFA forms การแสดงผลอาจไม่สมบูรณ์ — การรองรับ XFA เป็นเวอร์ชันทดลอง",
     "flatten": "แบน XFA",
     "flattenDone": "XFA แบนแล้ว ส่งออก PDF เพื่อดาวน์โหลดเวอร์ชันสถิต",
-    "flattenFailed": "การแบน XFA ล้มเหลว"
+    "flattenFailed": "การแบน XFA ล้มเหลว",
+    "convertToStandard": "Convert to standard PDF",
+    "convertedToStandard": "XFA converted to standard PDF",
+    "convertFailed": "Conversion failed: {{message}}"
   },
   "security": {
     "activeContentBadge": "ถูกบล็อก",
@@ -870,7 +913,11 @@
     "dismiss": "ปิด",
     "installing": "กำลังติดตั้ง…",
     "checkFailed": "การตรวจสอบการอัปเดตล้มเหลว",
-    "upToDate": "คุณใช้เวอร์ชันล่าสุดอยู่แล้ว"
+    "upToDate": "คุณใช้เวอร์ชันล่าสุดอยู่แล้ว",
+    "installed": "Update installed",
+    "restartNow": "Restart now",
+    "restartUnsaved": "Save your changes before restarting.",
+    "restartManual": "If it doesn't restart automatically, quit and reopen PDFluent to finish."
   },
   "telemetry": {
     "addNoteLabel": "ต้องการเพิ่มเติมอะไรไหม? (ไม่บังคับ)",
@@ -1049,18 +1096,7 @@
       "initials": "ตัวย่อชื่อ",
       "initialsPlaceholder": "เช่น AB",
       "defaultInitials": "AB",
-      "clickToPlaceInitials": "คลิกหน้าเพื่อวางตัวย่อชื่อ",
-      "invite": "เชิญเพื่อลงนาม",
-      "inviteIntro": "ส่งคำขอลงนามอิเล็กทรอนิกส์ไปยังผู้รับ พวกเขาจะได้รับอีเมลพร้อมลิงก์เพื่อลงนามเอกสารในเครื่อง",
-      "recipientName": "ชื่อผู้รับ",
-      "recipientNamePlaceholder": "ชื่อผู้รับ…",
-      "email": "ที่อยู่อีเมล",
-      "emailPlaceholder": "name@example.com",
-      "message": "ข้อความ (ไม่บังคับ)",
-      "messagePlaceholder": "สวัสดี คุณช่วยลงนามในเอกสารนี้ได้ไหม",
-      "send": "ส่ง",
-      "emailRequired": "ต้องมีที่อยู่อีเมล",
-      "inviteSent": "ส่งคำเชิญไปยัง {{email}} แล้ว"
+      "clickToPlaceInitials": "คลิกหน้าเพื่อวางตัวย่อชื่อ"
     },
     "overlay": {
       "signaturePlaced": "วางลายเซ็นแล้ว",
@@ -1093,22 +1129,14 @@
       "addText": "เพิ่มข้อความ",
       "fillAndSign": "กรอกและลงนาม",
       "more": "เครื่องมือเพิ่มเติม",
-      "formatting": "การจัดรูปแบบ",
       "strikeText": "ขีดลบข้อความ",
       "underlineText": "ขีดเส้นใต้ข้อความ",
-      "insertTextBox": "แทรกกล่องข้อความ",
-      "stampsAndInsert": "แสตมป์และการแทรก",
-      "stamps": "แสตมป์",
-      "insertDate": "แทรกวันที่",
-      "addAttachment": "เพิ่มไฟล์แนบ",
-      "ruler": "ไม้บรรทัด"
+      "addAttachment": "เพิ่มไฟล์แนบ"
     },
     "railToasts": {
       "commentMode": "โหมดหมายเหตุใช้งานอยู่ เลือกข้อความและเลือกหมายเหตุ หรือใช้รายการหมายเหตุเพื่อเพิ่มหมายเหตุ",
       "strikeout": "ขีดลบใช้งานอยู่ — เลือกข้อความเพื่อใช้",
-      "underline": "ขีดเส้นใต้ใช้งานอยู่ — เลือกข้อความเพื่อใช้",
-      "textboxOpened": "เปิดเครื่องมือกล่องข้อความแล้ว",
-      "stampsInAllTools": "แสตมป์มีอยู่ในเครื่องมือทั้งหมด"
+      "underline": "ขีดเส้นใต้ใช้งานอยู่ — เลือกข้อความเพื่อใช้"
     },
     "tools": {
       "lede": "เลือกเครื่องมือเพื่อเริ่มต้น ทุกอย่างทำงานในเครื่องบนอุปกรณ์นี้",
@@ -1143,7 +1171,11 @@
       "moreAttachments_plural": "+{{count}} ไฟล์แนบเพิ่มเติม",
       "layers": "{{count}} เลเยอร์",
       "manageLayers": "จัดการเลเยอร์",
-      "layersVisible": "{{count}} เลเยอร์ที่มองเห็นได้"
+      "layersVisible": "{{count}} เลเยอร์ที่มองเห็นได้",
+      "archiveAndData": "Archiving and data",
+      "pdfaSub": "Check or convert for long-term archiving",
+      "invoiceSub": "Read the ZUGFeRD/Factur-X invoice inside",
+      "metadataSub": "Title and author of this document"
     },
     "edit": {
       "lede": "คลิกข้อความในเอกสารเพื่อแก้ไขในบรรทัด แถบจัดรูปแบบจะปรากฏด้านบนการเลือก",
@@ -1186,17 +1218,31 @@
       "ocrRunning": "OCR ทำงานในเครื่อง…"
     },
     "esign": {
-      "lede": "ลงนามในเอกสารอย่างรวดเร็วและปลอดภัย และแชร์กับผู้อื่นเพื่อลงนาม",
-      "localSigned": "ลงนามในเครื่อง — ไม่มีอะไรออกจากอุปกรณ์นี้",
-      "padesCompliant": "ลายเซ็นดิจิทัล PAdES ที่สอดคล้อง",
+      "lede": "Sign with a certificate of your own, and check the signatures a document already carries. Both happen on this device.",
       "fillAndSign": "กรอกเอกสารของคุณและลงนาม",
       "addSignature": "เพิ่มลายเซ็น",
       "addInitials": "เพิ่มตัวย่อชื่อ",
-      "invite": "เชิญเพื่อลงนาม",
       "placementModeSignature": "โหมดการวาง: ลายเซ็น",
       "placementModeInitials": "โหมดการวาง: ตัวย่อชื่อ",
       "clickToPlaceSignature": "คลิกที่ใดก็ได้บนหน้าเพื่อวางลายเซ็นของคุณ",
-      "clickToPlaceInitials": "คลิกที่ใดก็ได้บนหน้าเพื่อวางตัวย่อชื่อของคุณ"
+      "clickToPlaceInitials": "คลิกที่ใดก็ได้บนหน้าเพื่อวางตัวย่อชื่อของคุณ",
+      "verifySection": "Signatures",
+      "verify": "Check signatures",
+      "desktopOnly": "Available in the desktop app",
+      "unsigned": "This document carries no signatures.",
+      "signSection": "Sign with a certificate",
+      "padesLevel": "Produces a PAdES B-B signature: your certificate over the whole file, no timestamp server involved.",
+      "certificate": "Certificate (.p12 or .pfx)",
+      "certificateNone": "No certificate chosen",
+      "chooseCertificate": "Choose certificate",
+      "certificatePassword": "Certificate password",
+      "reason": "Reason (optional)",
+      "reasonPlaceholder": "Why you are signing",
+      "sign": "Sign and save a copy",
+      "signing": "Signing…",
+      "signNeedsCertificate": "Choose a certificate and enter its password first.",
+      "signSaved": "Signed copy saved as {{name}}",
+      "signFailed": "Signing failed: {{message}}"
     },
     "protect": {
       "lede": "ป้องกันเอกสาร PDF ของคุณด้วยรหัสผ่านที่เข้มแข็งทางการเข้ารหัสลับ การเปลี่ยนแปลงจะใช้ในเครื่องได้ทันที",
@@ -1300,7 +1346,77 @@
     },
     "thumbnails": {
       "pages": "หน้า",
-      "pageAlt": "หน้า {{page}}"
+      "pageAlt": "หน้า {{page}}",
+      "bookmarks": "Bookmarks"
+    },
+    "pdfa": {
+      "lede": "PDF/A is the archival form of PDF: fonts embedded, colours defined, nothing that depends on the outside world.",
+      "section": "Conformance",
+      "level": "Level",
+      "validate": "Check this document",
+      "convert": "Save as PDF/A…",
+      "desktopOnly": "Available in the desktop app",
+      "compliant": "Conforms to {{level}}",
+      "notCompliant": "Does not conform: {{errors}} errors, {{warnings}} warnings",
+      "moreIssues": "{{count}} more"
+    },
+    "metadata": {
+      "lede": "The title and author stored inside the file, which is what other readers and search show.",
+      "section": "Properties",
+      "title": "Title",
+      "author": "Author",
+      "apply": "Save properties",
+      "desktopOnly": "Available in the desktop app"
+    },
+    "invoice": {
+      "lede": "A ZUGFeRD or Factur-X invoice travels as XML inside the PDF. This reads it and checks it against EN 16931.",
+      "section": "Embedded invoice",
+      "read": "Read invoice",
+      "desktopOnly": "Available in the desktop app",
+      "none": "This document carries no e-invoice.",
+      "number": "Number: {{number}}",
+      "issued": "Issued: {{date}}",
+      "seller": "Seller: {{name}}",
+      "buyer": "Buyer: {{name}}",
+      "total": "Total: {{total}} {{currency}}",
+      "lines": "Line items: {{count}}",
+      "valid": "Valid against {{profile}}",
+      "invalid": "Not valid: {{errors}} errors, {{warnings}} warnings"
     }
+  },
+  "about": {
+    "section": "About",
+    "app": "App",
+    "version": "Version",
+    "privacy": "Privacy",
+    "privacyValue": "All processing happens locally",
+    "website": "Website"
+  },
+  "reviewSummary": {
+    "title": "Review summary",
+    "generatedAt": "Generated on",
+    "comments": "Comments",
+    "noComments": "No comments.",
+    "replies": "Replies:",
+    "empty": "empty",
+    "redactions": "Redactions",
+    "noRedactions": "No redactions.",
+    "noIssues": "No issues.",
+    "metadataChanges": "Metadata changes",
+    "noMetadataChanges": "No changes.",
+    "changedBy": "by",
+    "on": "on"
+  },
+  "externalLink": {
+    "askMessage": "This PDF wants to open an external link:\n\n{{label}}\n\nURL:\n{{href}}\n\nDo you want to continue?",
+    "title": "Open external link?",
+    "openLink": "Open link",
+    "dialogBody": "This PDF wants to open an external website. Check the URL before continuing."
+  },
+  "linkChoice": {
+    "title": "Open link in your browser?",
+    "body": "This document wants to open an external website. Are you opening it from a trusted source?",
+    "alwaysAllow": "Always allow",
+    "openOnce": "Open once"
   }
 }

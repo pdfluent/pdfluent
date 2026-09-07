@@ -405,38 +405,40 @@ export function createDefaultMetadata(): DocumentMetadata {
  * Extract metadata from PDF info dictionary
  */
 export function extractFromInfoDict(infoDict: Record<string, unknown>): Partial<DocumentMetadata> {
-  const result: Partial<DocumentMetadata> = {};
-  const mutableResult: any = result;
+  type MutableMetadata = {
+    -readonly [Key in keyof DocumentMetadata]?: DocumentMetadata[Key];
+  };
+  const result: MutableMetadata = {};
 
   if (typeof infoDict.Title === 'string') {
-    mutableResult.title = infoDict.Title;
+    result.title = infoDict.Title;
   }
   if (typeof infoDict.Author === 'string') {
-    mutableResult.author = infoDict.Author;
+    result.author = infoDict.Author;
   }
   if (typeof infoDict.Subject === 'string') {
-    mutableResult.subject = infoDict.Subject;
+    result.subject = infoDict.Subject;
   }
   if (typeof infoDict.Keywords === 'string') {
-    mutableResult.keywords = infoDict.Keywords.split(',').map(k => k.trim());
+    result.keywords = infoDict.Keywords.split(',').map(k => k.trim());
   }
   if (typeof infoDict.Creator === 'string') {
-    mutableResult.creator = infoDict.Creator;
+    result.creator = infoDict.Creator;
   }
   if (typeof infoDict.Producer === 'string') {
-    mutableResult.producer = infoDict.Producer;
+    result.producer = infoDict.Producer;
   }
 
   // Parse dates (PDF dates are in format: D:YYYYMMDDHHmmSSOHH'mm')
   if (typeof infoDict.CreationDate === 'string') {
-    mutableResult.creationDate =parsePdfDate(infoDict.CreationDate);
+    result.creationDate = parsePdfDate(infoDict.CreationDate);
   }
   if (typeof infoDict.ModDate === 'string') {
-    mutableResult.modificationDate = parsePdfDate(infoDict.ModDate);
+    result.modificationDate = parsePdfDate(infoDict.ModDate);
   }
 
   if (typeof infoDict.Trapped === 'string') {
-    mutableResult.trapped = infoDict.Trapped.toLowerCase() === 'true';
+    result.trapped = infoDict.Trapped.toLowerCase() === 'true';
   }
 
   return result;

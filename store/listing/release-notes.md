@@ -6,17 +6,21 @@ Customer-facing copy — reviewed against the Humanizer guidelines.
 
 # Store "What's new" copy
 
-## For this submission (1.0.0-beta.20)
+This is the **What's new in this version** field of an Update submission. Write
+what changed for the person reading it. The version number is already on the page.
 
-First release on the Microsoft Store. PDFluent edits text directly in PDFs,
-converts to Word, Excel, and PowerPoint, and signs documents locally. Everything
-runs on your PC.
+## Live on the Store now (1.0.0-beta.21)
 
-This build fixes two things from the last version: editing white text on a
-coloured page now shows the text while you type, and exporting to Word opens
-cleanly with its images intact.
+Editing white text on a coloured page now shows the text while you type, and
+exporting to Word opens cleanly with its images intact. Everything still runs on
+your own PC.
 
 ## Short variant (if a tighter field is needed)
 
-First Store release. Edit PDF text, convert to Office formats, OCR, and sign
-locally. Fixes white-text editing and Word export. Runs entirely on your device.
+Fixes white-text editing and Word export. Runs entirely on your device.
+
+## For the next submission
+
+Replace both blocks above before submitting. If nothing user-visible changed,
+say what did change and why it matters (a fix, a speed-up, a new format), not
+"minor improvements".

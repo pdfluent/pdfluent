@@ -12,13 +12,21 @@ import { useTranslation } from 'react-i18next';
 import type { ViewerMode } from '../types';
 import { TOOLS_BY_MODE, MODE_LABELS } from '../tools/toolDefinitions';
 import type { ToolDefinition } from '../tools/toolDefinitions';
-import { getWiredTools } from './ModeToolbar';
+import { getWiredTools } from '../tools/wiredTools';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 
 interface AllToolsPanelProps {
   isOpen: boolean;
   onClose: () => void;
   onModeSelect: (mode: ViewerMode) => void;
+  /**
+   * Open the right-hand panel a tile names, when it names one.
+   *
+   * A tile used to do nothing but switch mode, so "PDF/A" left the user on the
+   * convert panel and "Watermark" on the protect panel -- close enough to read
+   * as wired, and never the tool the tile is named after.
+   */
+  onOpenPanel?: (panel: string) => void;
 }
 
 type ToolTab = 'alle' | 'bewerken' | 'converteren' | 'ondertekenen';
@@ -42,7 +50,7 @@ const MODES: ViewerMode[] = ['read', 'review', 'edit', 'sign', 'organize', 'form
 
 const isTauri = isTauriRuntime();
 
-export function AllToolsPanel({ isOpen, onClose, onModeSelect }: AllToolsPanelProps) {
+export function AllToolsPanel({ isOpen, onClose, onModeSelect, onOpenPanel }: AllToolsPanelProps) {
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<ToolTab>('alle');
   const wiredTools = getWiredTools(isTauri);
@@ -119,9 +127,11 @@ export function AllToolsPanel({ isOpen, onClose, onModeSelect }: AllToolsPanelPr
           <nav className="py-2" aria-label="Tools">
             {MODES.filter((m) => visibleModes.includes(m)).map((modeId) => {
               const allTools: ToolDefinition[] = TOOLS_BY_MODE[modeId].flat();
-              // In browser-test mode hide tools that aren't available; skip the whole
-              // section if no tools remain after filtering.
-              const tools = isTauri ? allTools : allTools.filter(t => wiredTools.has(t.label));
+              // A tile is shown only when the register proves that something in
+              // this shell performs its tool. Greying the rest out was the older
+              // answer and it invited the click anyway, off a list that had been
+              // wrong for months; a tool the app cannot do is simply not offered.
+              const tools = allTools.filter(t => wiredTools.has(t.label));
               if (tools.length === 0) return null;
               return (
                 <div key={modeId}>
@@ -132,26 +142,22 @@ export function AllToolsPanel({ isOpen, onClose, onModeSelect }: AllToolsPanelPr
                   </div>
                   {tools.map((tool, idx) => {
                     const Icon = tool.icon;
-                    const isWired = wiredTools.has(tool.label);
                     return (
                       <button
                         key={`${modeId}-${idx}`}
-                        onClick={() => { onModeSelect(modeId); onClose(); }}
-                        disabled={!isWired}
-                        className={`w-full flex items-center gap-4 px-5 py-3 text-left transition-colors group ${
-                          isWired
-                            ? 'hover:bg-muted/60'
-                            : 'opacity-40 cursor-default'
-                        }`}
+                        data-testid={`all-tools-${tool.label}`}
+                        onClick={() => {
+                          if (tool.opensPanel !== undefined) onOpenPanel?.(tool.opensPanel);
+                          else onModeSelect(modeId);
+                          onClose();
+                        }}
+                        className="w-full flex items-center gap-4 px-5 py-3 text-left transition-colors group hover:bg-muted/60"
                       >
                         <div className={`shrink-0 ${tool.color ?? 'text-muted-foreground'}`}>
                           <Icon className="w-5 h-5" />
                         </div>
                         <span className="text-sm text-foreground group-hover:text-foreground font-medium">
                           {t(tool.label)}
-                          {!isWired && (
-                            <span className="ml-2 text-xs text-muted-foreground">({t('common.notYetAvailable')})</span>
-                          )}
                         </span>
                       </button>
                     );

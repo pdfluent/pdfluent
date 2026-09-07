@@ -28,6 +28,13 @@ export interface AppSettings {
   /** Default ISO-639-2/T language code used when starting OCR (e.g. "nld"). */
   ocrDefaultLanguage: string;
   /**
+   * Whether the app checks for a newer version shortly after start. Default
+   * ON. Turning it off stops the automatic check only — the manual
+   * "Check for updates" command keeps working, so the user can still ask.
+   * Read once, at startup: that is when the check would run.
+   */
+  automaticUpdateCheckEnabled: boolean;
+  /**
    * Telemetry consent (opt-in, default OFF). When false the app never sends a
    * crash or feedback report — it works 100% offline regardless. See the
    * crash-reporting plan §1.
@@ -51,6 +58,7 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
   autosaveEnabled: true,
   themePreference: 'system',
   ocrDefaultLanguage: 'nld',
+  automaticUpdateCheckEnabled: true,
   crashReportingEnabled: false,
   crashReportAutoSend: false,
   crashReportConsentAsked: false,
@@ -62,6 +70,11 @@ export const SETTINGS_STORAGE_KEY = 'pdfluent.app.settings';
 /**
  * Load settings from localStorage, merging with defaults so that any newly
  * introduced settings keys are always present even for existing users.
+ *
+ * The merge order matters on upgrade: a stored blob written by an older
+ * version has no key for a setting added later, so the default fills in and
+ * the setting does not silently flip to `false`. A stored `false` still wins
+ * over a `true` default, because the spread of `parsed` comes last.
  */
 export function loadAppSettings(): AppSettings {
   try {

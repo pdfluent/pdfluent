@@ -112,7 +112,11 @@
     "prevField": "Předchozí pole",
     "nextField": "Další pole",
     "allTools": "Všechny nástroje",
-    "contextualBar": "Panel nástrojů režimu"
+    "contextualBar": "Panel nástrojů režimu",
+    "pdfa": "PDF/A",
+    "metadata": "Document properties",
+    "invoice": "E-invoice",
+    "bookmarks": "Bookmarks"
   },
   "topbar": {
     "openPdf": "Otevřít PDF",
@@ -282,7 +286,27 @@
     "clearSelection": "Zrušit výběr",
     "combine": "Kombinovat soubory",
     "splitRange": "Rozdělit podle rozsahu",
-    "splitRangeHint": "Nejprve vyberte stránky"
+    "splitRangeHint": "Nejprve vyberte stránky",
+    "moveLeft": "Move selected page left",
+    "moveRight": "Move selected page right",
+    "moveLeftShort": "Left",
+    "moveRightShort": "Right",
+    "rotateLeft": "Rotate left",
+    "rotateRight": "Rotate right",
+    "rotateLeftShort": "Left",
+    "rotateRightShort": "Right",
+    "addingPdf": "Adding PDF…",
+    "pdfAdded": "PDF added",
+    "combiningFiles": "Combining {{count}} file(s)…",
+    "filesCombined": "{{count}} file(s) combined",
+    "insertingPdf": "Inserting PDF before page {{page}}…",
+    "pdfInserted": "PDF inserted",
+    "exportingPages": "Exporting {{count}} page(s)…",
+    "selectionExported": "Selection exported to {{name}}",
+    "splittingPages": "Splitting into individual pages…",
+    "pagesSaved": "{{count}} pages saved",
+    "splittingRanges": "Splitting {{count}} range(s)…",
+    "filesSaved": "{{count}} file(s) saved"
   },
   "unsavedChanges": {
     "title": "Neuložené změny",
@@ -302,7 +326,14 @@
     "dragDropHint": "nebo přetáhněte PDF sem",
     "lede": "Čtěte, upravujte, převádějte, vyplňujte a podepisujte — vše na vašem zařízení.",
     "privacyPromise": "Lokálně · dokumenty nikdy neopustí toto zařízení",
-    "dropPdfHere": "Přetáhněte PDF sem"
+    "dropPdfHere": "Přetáhněte PDF sem",
+    "v3Subtitle": "Open a PDF to read, edit, convert or sign it locally.",
+    "openFileAria": "Choose a PDF file to open",
+    "clearRecent": "Clear recent",
+    "recentShort": "Recent",
+    "removeRecentAria": "Remove {{name}}",
+    "backToDocument": "Back to document",
+    "loadingDocument": "Loading document…"
   },
   "settings": {
     "language": "Jazyk",
@@ -324,7 +355,10 @@
     "themeLabel": "Motiv",
     "ocrDefaults": "Výchozí nastavení OCR",
     "ocrLanguageLabel": "Výchozí jazyk (ISO-639-2)",
-    "ocrLanguagePlaceholder": "např. eng, nld, deu"
+    "ocrLanguagePlaceholder": "např. eng, nld, deu",
+    "updates": "Updates",
+    "automaticUpdateCheck": "Check for a new version at startup",
+    "automaticUpdateCheckHint": "PDFluent asks pdfluent.com whether a newer version exists, a few seconds after it starts. Nothing from your documents is sent. Turn this off and the app never checks on its own — \"Check for updates\" still works whenever you ask for it."
   },
   "errors": {
     "loadFailed": "Načtení dokumentu selhalo",
@@ -465,7 +499,13 @@
     "dismiss": "Zavřít",
     "watermarkDone": "Vodoznak přidán",
     "watermarkFailed": "Vodoznak selhal",
-    "watermarkRunning": "Přidávání vodoznaku…"
+    "watermarkRunning": "Přidávání vodoznaku…",
+    "pdfaRunning": "Converting to PDF/A…",
+    "pdfaDone": "PDF/A written",
+    "pdfaFailed": "PDF/A conversion failed",
+    "metadataRunning": "Saving properties…",
+    "metadataDone": "Properties saved",
+    "metadataFailed": "Could not save properties"
   },
   "panels": {
     "search": "Hledat",
@@ -837,7 +877,10 @@
     "detected": "Tento dokument používá XFA formuláře. Vykreslení může být neúplné — podpora XFA je experimentální.",
     "flatten": "Sloučit XFA",
     "flattenDone": "XFA sloučeno. Exportujte PDF pro stažení statické verze.",
-    "flattenFailed": "Sloučení XFA selhalo"
+    "flattenFailed": "Sloučení XFA selhalo",
+    "convertToStandard": "Convert to standard PDF",
+    "convertedToStandard": "XFA converted to standard PDF",
+    "convertFailed": "Conversion failed: {{message}}"
   },
   "security": {
     "activeContentBadge": "Blokováno",
@@ -870,7 +913,11 @@
     "dismiss": "Zavřít",
     "installing": "Instalace…",
     "checkFailed": "Kontrola aktualizací selhala",
-    "upToDate": "Používáte nejnovější verzi"
+    "upToDate": "Používáte nejnovější verzi",
+    "installed": "Update installed",
+    "restartNow": "Restart now",
+    "restartUnsaved": "Save your changes before restarting.",
+    "restartManual": "If it doesn't restart automatically, quit and reopen PDFluent to finish."
   },
   "telemetry": {
     "addNoteLabel": "Chcete něco dodat? (volitelné)",
@@ -1049,18 +1096,7 @@
       "initials": "Iniciály",
       "initialsPlaceholder": "např. AB",
       "defaultInitials": "AB",
-      "clickToPlaceInitials": "Kliknutím na stránku umístěte iniciály.",
-      "invite": "Pozvat k podepsání",
-      "inviteIntro": "Pošlete žádost o elektronický podpis příjemci. Obdrží e-mail s odkazem pro podepsání dokumentu místně.",
-      "recipientName": "Jméno příjemce",
-      "recipientNamePlaceholder": "Jméno příjemce…",
-      "email": "E-mailová adresa",
-      "emailPlaceholder": "jmeno@priklad.cz",
-      "message": "Zpráva (volitelně)",
-      "messagePlaceholder": "Ahoj, mohl bys prosím podepsat tento dokument?",
-      "send": "Poslat",
-      "emailRequired": "E-mailová adresa je povinná.",
-      "inviteSent": "Pozvánka poslána na {{email}}!"
+      "clickToPlaceInitials": "Kliknutím na stránku umístěte iniciály."
     },
     "overlay": {
       "signaturePlaced": "Podpis umístěn!",
@@ -1093,22 +1129,14 @@
       "addText": "Přidat text",
       "fillAndSign": "Vyplnit a podepsat",
       "more": "Další nástroje",
-      "formatting": "Formátování",
       "strikeText": "Přeškrtnutí textu",
       "underlineText": "Podtržení textu",
-      "insertTextBox": "Vložit textové pole",
-      "stampsAndInsert": "Razítka a vkládání",
-      "stamps": "Razítka",
-      "insertDate": "Vložit datum",
-      "addAttachment": "Přidat přílohu",
-      "ruler": "Pravítko"
+      "addAttachment": "Přidat přílohu"
     },
     "railToasts": {
       "commentMode": "Režim poznámky je aktivní. Vyberte text a zvolte Poznámka, nebo pomocí seznamu poznámek přidejte poznámku.",
       "strikeout": "Přeškrtnutí je aktivní — vyberte text pro aplikaci.",
-      "underline": "Podtržení je aktivní — vyberte text pro aplikaci.",
-      "textboxOpened": "Nástroj textového pole otevřen.",
-      "stampsInAllTools": "Razítka jsou ve všech nástrojích."
+      "underline": "Podtržení je aktivní — vyberte text pro aplikaci."
     },
     "tools": {
       "lede": "Vyberte nástroj, abyste mohli začít. Vše běží místně na tomto zařízení.",
@@ -1143,7 +1171,11 @@
       "moreAttachments_plural": "+{{count}} dalších příloh",
       "layers": "{{count}} vrstev",
       "manageLayers": "Spravovat vrstvy",
-      "layersVisible": "{{count}} vrstev viditelných."
+      "layersVisible": "{{count}} vrstev viditelných.",
+      "archiveAndData": "Archiving and data",
+      "pdfaSub": "Check or convert for long-term archiving",
+      "invoiceSub": "Read the ZUGFeRD/Factur-X invoice inside",
+      "metadataSub": "Title and author of this document"
     },
     "edit": {
       "lede": "Kliknutím na text v dokumentu jej upravte vložením. Lišta formátování se zobrazí přímo nad výběrem.",
@@ -1186,17 +1218,31 @@
       "ocrRunning": "OCR běží místně…"
     },
     "esign": {
-      "lede": "Podepisujte dokumenty rychle a bezpečně a snadno je sdílejte s ostatními k podepsání.",
-      "localSigned": "Místně podepsáno — nic neopouští toto zařízení",
-      "padesCompliant": "Digitální podpis kompatibilní s PAdES",
+      "lede": "Sign with a certificate of your own, and check the signatures a document already carries. Both happen on this device.",
       "fillAndSign": "Vyplňte své dokumenty a podepište je",
       "addSignature": "Přidat podpis",
       "addInitials": "Přidat iniciály",
-      "invite": "Pozvat k podepsání",
       "placementModeSignature": "Režim umístění: Podpis",
       "placementModeInitials": "Režim umístění: Iniciály",
       "clickToPlaceSignature": "Kliknutím kamkoliv na stránku umístěte svůj podpis.",
-      "clickToPlaceInitials": "Kliknutím kamkoliv na stránku umístěte své iniciály."
+      "clickToPlaceInitials": "Kliknutím kamkoliv na stránku umístěte své iniciály.",
+      "verifySection": "Signatures",
+      "verify": "Check signatures",
+      "desktopOnly": "Available in the desktop app",
+      "unsigned": "This document carries no signatures.",
+      "signSection": "Sign with a certificate",
+      "padesLevel": "Produces a PAdES B-B signature: your certificate over the whole file, no timestamp server involved.",
+      "certificate": "Certificate (.p12 or .pfx)",
+      "certificateNone": "No certificate chosen",
+      "chooseCertificate": "Choose certificate",
+      "certificatePassword": "Certificate password",
+      "reason": "Reason (optional)",
+      "reasonPlaceholder": "Why you are signing",
+      "sign": "Sign and save a copy",
+      "signing": "Signing…",
+      "signNeedsCertificate": "Choose a certificate and enter its password first.",
+      "signSaved": "Signed copy saved as {{name}}",
+      "signFailed": "Signing failed: {{message}}"
     },
     "protect": {
       "lede": "Chraňte svůj dokument PDF silnými kryptografickými hesly. Změny se aplikují místně hned.",
@@ -1300,7 +1346,77 @@
     },
     "thumbnails": {
       "pages": "Stránky",
-      "pageAlt": "Stránka {{page}}"
+      "pageAlt": "Stránka {{page}}",
+      "bookmarks": "Bookmarks"
+    },
+    "pdfa": {
+      "lede": "PDF/A is the archival form of PDF: fonts embedded, colours defined, nothing that depends on the outside world.",
+      "section": "Conformance",
+      "level": "Level",
+      "validate": "Check this document",
+      "convert": "Save as PDF/A…",
+      "desktopOnly": "Available in the desktop app",
+      "compliant": "Conforms to {{level}}",
+      "notCompliant": "Does not conform: {{errors}} errors, {{warnings}} warnings",
+      "moreIssues": "{{count}} more"
+    },
+    "metadata": {
+      "lede": "The title and author stored inside the file, which is what other readers and search show.",
+      "section": "Properties",
+      "title": "Title",
+      "author": "Author",
+      "apply": "Save properties",
+      "desktopOnly": "Available in the desktop app"
+    },
+    "invoice": {
+      "lede": "A ZUGFeRD or Factur-X invoice travels as XML inside the PDF. This reads it and checks it against EN 16931.",
+      "section": "Embedded invoice",
+      "read": "Read invoice",
+      "desktopOnly": "Available in the desktop app",
+      "none": "This document carries no e-invoice.",
+      "number": "Number: {{number}}",
+      "issued": "Issued: {{date}}",
+      "seller": "Seller: {{name}}",
+      "buyer": "Buyer: {{name}}",
+      "total": "Total: {{total}} {{currency}}",
+      "lines": "Line items: {{count}}",
+      "valid": "Valid against {{profile}}",
+      "invalid": "Not valid: {{errors}} errors, {{warnings}} warnings"
     }
+  },
+  "about": {
+    "section": "About",
+    "app": "App",
+    "version": "Version",
+    "privacy": "Privacy",
+    "privacyValue": "All processing happens locally",
+    "website": "Website"
+  },
+  "reviewSummary": {
+    "title": "Review summary",
+    "generatedAt": "Generated on",
+    "comments": "Comments",
+    "noComments": "No comments.",
+    "replies": "Replies:",
+    "empty": "empty",
+    "redactions": "Redactions",
+    "noRedactions": "No redactions.",
+    "noIssues": "No issues.",
+    "metadataChanges": "Metadata changes",
+    "noMetadataChanges": "No changes.",
+    "changedBy": "by",
+    "on": "on"
+  },
+  "externalLink": {
+    "askMessage": "This PDF wants to open an external link:\n\n{{label}}\n\nURL:\n{{href}}\n\nDo you want to continue?",
+    "title": "Open external link?",
+    "openLink": "Open link",
+    "dialogBody": "This PDF wants to open an external website. Check the URL before continuing."
+  },
+  "linkChoice": {
+    "title": "Open link in your browser?",
+    "body": "This document wants to open an external website. Are you opening it from a trusted source?",
+    "alwaysAllow": "Always allow",
+    "openOnce": "Open once"
   }
 }

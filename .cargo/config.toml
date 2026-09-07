@@ -1,0 +1,15 @@
+# Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
+#
+# This software is proprietary. The PDFluent application is free to use,
+# including for commercial purposes. Redistribution, or extraction or reuse
+# of its components (including the embedded PDF engine), requires a licence.
+# See https://pdfluent.com/license for terms.
+
+[net]
+# The PDFluent engine is a private repository pinned by revision in
+# src-tauri/Cargo.toml. Cargo's built-in git client cannot use a credential
+# helper, so it fails to authenticate and reports the revision as "not found",
+# which reads like a bad pin rather than a missing credential. Shelling out to
+# the git CLI uses whatever credentials the machine already has — the developer's
+# helper locally, the `insteadOf` rewrite to the engine mirror in CI.
+git-fetch-with-cli = true

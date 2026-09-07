@@ -494,11 +494,11 @@ function groupLinesIntoParagraphs(
 
     if (!shouldSplit) {
       // 2. Bold/Italic stijl-verandering
-      const prevIsBold = prev.spans.some(sp => (sp as any).isBold === true || (sp as any).fontName?.toLowerCase().includes('bold'));
-      const currIsBold = curr.spans.some(sp => (sp as any).isBold === true || (sp as any).fontName?.toLowerCase().includes('bold'));
+      const prevIsBold = prev.spans.some(sp => sp.isBold === true || sp.fontName?.toLowerCase().includes('bold'));
+      const currIsBold = curr.spans.some(sp => sp.isBold === true || sp.fontName?.toLowerCase().includes('bold'));
 
-      const prevIsItalic = prev.spans.some(sp => (sp as any).isItalic === true || (sp as any).fontName?.toLowerCase().includes('italic'));
-      const currIsItalic = curr.spans.some(sp => (sp as any).isItalic === true || (sp as any).fontName?.toLowerCase().includes('italic'));
+      const prevIsItalic = prev.spans.some(sp => sp.isItalic === true || sp.fontName?.toLowerCase().includes('italic'));
+      const currIsItalic = curr.spans.some(sp => sp.isItalic === true || sp.fontName?.toLowerCase().includes('italic'));
 
       if (prevIsBold !== currIsBold || prevIsItalic !== currIsItalic) {
         shouldSplit = true;
@@ -664,8 +664,8 @@ function mergeContiguousSpansInLine(spans: ReadonlyArray<TextSpanTarget>): TextS
     const sameFont = cleanFontName(current.fontName) === cleanFontName(next.fontName);
     const sameSize = Math.abs(current.fontSize - next.fontSize) < 0.5;
     const sameColor = colorsEqual(current.color, next.color);
-    const sameBold = (current as any).isBold === (next as any).isBold;
-    const sameItalic = (current as any).isItalic === (next as any).isItalic;
+    const sameBold = current.isBold === next.isBold;
+    const sameItalic = current.isItalic === next.isItalic;
 
     // 2. Check if close horizontally
     const gap = next.rect.x - (current.rect.x + current.rect.width);

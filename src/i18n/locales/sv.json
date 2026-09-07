@@ -112,7 +112,11 @@
     "prevField": "Föregående fält",
     "nextField": "Nästa fält",
     "allTools": "Alla verktyg",
-    "contextualBar": "Lägesverktygsfält"
+    "contextualBar": "Lägesverktygsfält",
+    "pdfa": "PDF/A",
+    "metadata": "Document properties",
+    "invoice": "E-invoice",
+    "bookmarks": "Bookmarks"
   },
   "topbar": {
     "openPdf": "Öppna PDF",
@@ -282,7 +286,27 @@
     "clearSelection": "Rensa markering",
     "combine": "Kombinera filer",
     "splitRange": "Dela efter intervall",
-    "splitRangeHint": "Välj sidor först"
+    "splitRangeHint": "Välj sidor först",
+    "moveLeft": "Move selected page left",
+    "moveRight": "Move selected page right",
+    "moveLeftShort": "Left",
+    "moveRightShort": "Right",
+    "rotateLeft": "Rotate left",
+    "rotateRight": "Rotate right",
+    "rotateLeftShort": "Left",
+    "rotateRightShort": "Right",
+    "addingPdf": "Adding PDF…",
+    "pdfAdded": "PDF added",
+    "combiningFiles": "Combining {{count}} file(s)…",
+    "filesCombined": "{{count}} file(s) combined",
+    "insertingPdf": "Inserting PDF before page {{page}}…",
+    "pdfInserted": "PDF inserted",
+    "exportingPages": "Exporting {{count}} page(s)…",
+    "selectionExported": "Selection exported to {{name}}",
+    "splittingPages": "Splitting into individual pages…",
+    "pagesSaved": "{{count}} pages saved",
+    "splittingRanges": "Splitting {{count}} range(s)…",
+    "filesSaved": "{{count}} file(s) saved"
   },
   "unsavedChanges": {
     "title": "Osparade ändringar",
@@ -302,7 +326,14 @@
     "dragDropHint": "eller dra en PDF hit",
     "lede": "Läs, redigera, konvertera, fyll i och signera — helt på din enhet.",
     "privacyPromise": "Lokal-först · dokument lämnar aldrig den här enheten",
-    "dropPdfHere": "Släpp PDF här"
+    "dropPdfHere": "Släpp PDF här",
+    "v3Subtitle": "Open a PDF to read, edit, convert or sign it locally.",
+    "openFileAria": "Choose a PDF file to open",
+    "clearRecent": "Clear recent",
+    "recentShort": "Recent",
+    "removeRecentAria": "Remove {{name}}",
+    "backToDocument": "Back to document",
+    "loadingDocument": "Loading document…"
   },
   "settings": {
     "language": "Språk",
@@ -324,7 +355,10 @@
     "themeLabel": "Tema",
     "ocrDefaults": "OCR-standardinställningar",
     "ocrLanguageLabel": "Standardspråk (ISO-639-2)",
-    "ocrLanguagePlaceholder": "t.ex. eng, nld, deu"
+    "ocrLanguagePlaceholder": "t.ex. eng, nld, deu",
+    "updates": "Updates",
+    "automaticUpdateCheck": "Check for a new version at startup",
+    "automaticUpdateCheckHint": "PDFluent asks pdfluent.com whether a newer version exists, a few seconds after it starts. Nothing from your documents is sent. Turn this off and the app never checks on its own — \"Check for updates\" still works whenever you ask for it."
   },
   "errors": {
     "loadFailed": "Dokumentet kunde inte laddas",
@@ -465,7 +499,13 @@
     "dismiss": "Stäng",
     "watermarkDone": "Vattenstämpel tillagd",
     "watermarkFailed": "Vattenstämpel misslyckades",
-    "watermarkRunning": "Lägger till vattenstämpel…"
+    "watermarkRunning": "Lägger till vattenstämpel…",
+    "pdfaRunning": "Converting to PDF/A…",
+    "pdfaDone": "PDF/A written",
+    "pdfaFailed": "PDF/A conversion failed",
+    "metadataRunning": "Saving properties…",
+    "metadataDone": "Properties saved",
+    "metadataFailed": "Could not save properties"
   },
   "panels": {
     "search": "Sök",
@@ -837,7 +877,10 @@
     "detected": "Det här dokumentet använder XFA-formulär. Rendering kan vara ofullständig — XFA-stöd är experimentellt.",
     "flatten": "Tillplatta XFA",
     "flattenDone": "XFA tillplattat. Exportera PDF:en för att ladda ner den statiska versionen.",
-    "flattenFailed": "Tillplatning av XFA misslyckades"
+    "flattenFailed": "Tillplatning av XFA misslyckades",
+    "convertToStandard": "Convert to standard PDF",
+    "convertedToStandard": "XFA converted to standard PDF",
+    "convertFailed": "Conversion failed: {{message}}"
   },
   "security": {
     "activeContentBadge": "Blockerat",
@@ -870,7 +913,11 @@
     "dismiss": "Stäng",
     "installing": "Installerar…",
     "checkFailed": "Uppdateringskontroll misslyckades",
-    "upToDate": "Du använder den senaste versionen"
+    "upToDate": "Du använder den senaste versionen",
+    "installed": "Update installed",
+    "restartNow": "Restart now",
+    "restartUnsaved": "Save your changes before restarting.",
+    "restartManual": "If it doesn't restart automatically, quit and reopen PDFluent to finish."
   },
   "telemetry": {
     "addNoteLabel": "Vill du lägga till något? (valfritt)",
@@ -1049,18 +1096,7 @@
       "initials": "Initialer",
       "initialsPlaceholder": "t.ex. AB",
       "defaultInitials": "AB",
-      "clickToPlaceInitials": "Klicka på sidan för att placera initialerna.",
-      "invite": "Bjud in för att signera",
-      "inviteIntro": "Skicka en e-signeringsbegäran till mottagaren. De får ett e-postmeddelande med en länk för att signera dokumentet lokalt.",
-      "recipientName": "Mottagarnamn",
-      "recipientNamePlaceholder": "Mottagarnamn…",
-      "email": "E-postadress",
-      "emailPlaceholder": "namn@exempel.com",
-      "message": "Meddelande (valfritt)",
-      "messagePlaceholder": "Hej, kan du signera det här dokumentet?",
-      "send": "Skicka",
-      "emailRequired": "E-postadress krävs.",
-      "inviteSent": "Inbjudan skickad till {{email}}!"
+      "clickToPlaceInitials": "Klicka på sidan för att placera initialerna."
     },
     "overlay": {
       "signaturePlaced": "Signatur placerad!",
@@ -1093,22 +1129,14 @@
       "addText": "Lägg till text",
       "fillAndSign": "Fyll och signera",
       "more": "Fler verktyg",
-      "formatting": "Formatering",
       "strikeText": "Genomstrykning",
       "underlineText": "Understruken text",
-      "insertTextBox": "Infoga textfält",
-      "stampsAndInsert": "Frimärken och infogning",
-      "stamps": "Frimärken",
-      "insertDate": "Infoga datum",
-      "addAttachment": "Lägg till bifogad fil",
-      "ruler": "Linjal"
+      "addAttachment": "Lägg till bifogad fil"
     },
     "railToasts": {
       "commentMode": "Anteckningsläge aktiverat. Välj text och välj Anteckning, eller använd kommentarlistan för att lägga till en anteckning.",
       "strikeout": "Genomstrykning aktiv — välj text för att tillämpa.",
-      "underline": "Understruken aktiv — välj text för att tillämpa.",
-      "textboxOpened": "Textfältsverktyget öppnades.",
-      "stampsInAllTools": "Frimärken finns i Alla verktyg."
+      "underline": "Understruken aktiv — välj text för att tillämpa."
     },
     "tools": {
       "lede": "Välj ett verktyg för att komma igång. Allt körs lokalt på denna enhet.",
@@ -1143,7 +1171,11 @@
       "moreAttachments_plural": "+{{count}} fler bifogade filer",
       "layers": "{{count}} lager",
       "manageLayers": "Hantera lager",
-      "layersVisible": "{{count}} lager synliga."
+      "layersVisible": "{{count}} lager synliga.",
+      "archiveAndData": "Archiving and data",
+      "pdfaSub": "Check or convert for long-term archiving",
+      "invoiceSub": "Read the ZUGFeRD/Factur-X invoice inside",
+      "metadataSub": "Title and author of this document"
     },
     "edit": {
       "lede": "Klicka på text i dokumentet för att redigera inline. Formatteringsfältet visas precis ovanför markeringen.",
@@ -1186,17 +1218,31 @@
       "ocrRunning": "OCR körs lokalt…"
     },
     "esign": {
-      "lede": "Signera dokument snabbt och säkert, och dela dem enkelt med andra för signering.",
-      "localSigned": "Lokalt signerat — ingenting lämnar denna enhet",
-      "padesCompliant": "PAdES-kompatibel digital signatur",
+      "lede": "Sign with a certificate of your own, and check the signatures a document already carries. Both happen on this device.",
       "fillAndSign": "Fyll i dina dokument och signera",
       "addSignature": "Lägg till signatur",
       "addInitials": "Lägg till initialer",
-      "invite": "Bjud in för att signera",
       "placementModeSignature": "Placeringsläge: Signatur",
       "placementModeInitials": "Placeringsläge: Initialer",
       "clickToPlaceSignature": "Klicka var som helst på sidan för att placera din signatur.",
-      "clickToPlaceInitials": "Klicka var som helst på sidan för att placera dina initialer."
+      "clickToPlaceInitials": "Klicka var som helst på sidan för att placera dina initialer.",
+      "verifySection": "Signatures",
+      "verify": "Check signatures",
+      "desktopOnly": "Available in the desktop app",
+      "unsigned": "This document carries no signatures.",
+      "signSection": "Sign with a certificate",
+      "padesLevel": "Produces a PAdES B-B signature: your certificate over the whole file, no timestamp server involved.",
+      "certificate": "Certificate (.p12 or .pfx)",
+      "certificateNone": "No certificate chosen",
+      "chooseCertificate": "Choose certificate",
+      "certificatePassword": "Certificate password",
+      "reason": "Reason (optional)",
+      "reasonPlaceholder": "Why you are signing",
+      "sign": "Sign and save a copy",
+      "signing": "Signing…",
+      "signNeedsCertificate": "Choose a certificate and enter its password first.",
+      "signSaved": "Signed copy saved as {{name}}",
+      "signFailed": "Signing failed: {{message}}"
     },
     "protect": {
       "lede": "Skydda ditt PDF-dokument med starka kryptografiska lösenord. Ändringar tillämpas lokalt omedelbar.",
@@ -1300,7 +1346,77 @@
     },
     "thumbnails": {
       "pages": "Sidor",
-      "pageAlt": "Sida {{page}}"
+      "pageAlt": "Sida {{page}}",
+      "bookmarks": "Bookmarks"
+    },
+    "pdfa": {
+      "lede": "PDF/A is the archival form of PDF: fonts embedded, colours defined, nothing that depends on the outside world.",
+      "section": "Conformance",
+      "level": "Level",
+      "validate": "Check this document",
+      "convert": "Save as PDF/A…",
+      "desktopOnly": "Available in the desktop app",
+      "compliant": "Conforms to {{level}}",
+      "notCompliant": "Does not conform: {{errors}} errors, {{warnings}} warnings",
+      "moreIssues": "{{count}} more"
+    },
+    "metadata": {
+      "lede": "The title and author stored inside the file, which is what other readers and search show.",
+      "section": "Properties",
+      "title": "Title",
+      "author": "Author",
+      "apply": "Save properties",
+      "desktopOnly": "Available in the desktop app"
+    },
+    "invoice": {
+      "lede": "A ZUGFeRD or Factur-X invoice travels as XML inside the PDF. This reads it and checks it against EN 16931.",
+      "section": "Embedded invoice",
+      "read": "Read invoice",
+      "desktopOnly": "Available in the desktop app",
+      "none": "This document carries no e-invoice.",
+      "number": "Number: {{number}}",
+      "issued": "Issued: {{date}}",
+      "seller": "Seller: {{name}}",
+      "buyer": "Buyer: {{name}}",
+      "total": "Total: {{total}} {{currency}}",
+      "lines": "Line items: {{count}}",
+      "valid": "Valid against {{profile}}",
+      "invalid": "Not valid: {{errors}} errors, {{warnings}} warnings"
     }
+  },
+  "about": {
+    "section": "About",
+    "app": "App",
+    "version": "Version",
+    "privacy": "Privacy",
+    "privacyValue": "All processing happens locally",
+    "website": "Website"
+  },
+  "reviewSummary": {
+    "title": "Review summary",
+    "generatedAt": "Generated on",
+    "comments": "Comments",
+    "noComments": "No comments.",
+    "replies": "Replies:",
+    "empty": "empty",
+    "redactions": "Redactions",
+    "noRedactions": "No redactions.",
+    "noIssues": "No issues.",
+    "metadataChanges": "Metadata changes",
+    "noMetadataChanges": "No changes.",
+    "changedBy": "by",
+    "on": "on"
+  },
+  "externalLink": {
+    "askMessage": "This PDF wants to open an external link:\n\n{{label}}\n\nURL:\n{{href}}\n\nDo you want to continue?",
+    "title": "Open external link?",
+    "openLink": "Open link",
+    "dialogBody": "This PDF wants to open an external website. Check the URL before continuing."
+  },
+  "linkChoice": {
+    "title": "Open link in your browser?",
+    "body": "This document wants to open an external website. Are you opening it from a trusted source?",
+    "alwaysAllow": "Always allow",
+    "openOnce": "Open once"
   }
 }

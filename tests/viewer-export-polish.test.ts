@@ -85,7 +85,7 @@ describe('sanitiseTitle', () => {
     const fnStart = source.indexOf('export function sanitiseTitle');
     const fnEnd = source.indexOf('\nexport function ', fnStart + 1);
     const body = source.slice(fnStart, fnEnd);
-    expect(body).toContain("replace(/[^a-zA-Z0-9_\\-]/g, '_')");
+    expect(body).toContain("replace(/[^a-zA-Z0-9_-]/g, '_')");
   });
 
   it('collapses consecutive underscores', () => {

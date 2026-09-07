@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: LicenseRef-PDFluent-Proprietary
-// Copyright (c) 2026 PDFluent Contributors
+// Copyright (c) 2026 Innovation Trigger B.V.
 
 import { spawnSync } from "node:child_process";
 import {
@@ -23,6 +23,10 @@ const modelManifestPath = path.join(
   "ocr-models.manifest.json",
 );
 const overridesPath = path.join(workspaceRoot, "compliance-overrides.json");
+
+// Sources that could not be inventoried in this run; recorded in the summary
+// so a partial report cannot pass for a complete one.
+const skippedSources = [];
 
 const allowedLicensePatterns = [
   "MIT",
@@ -63,12 +67,25 @@ function inferLicenseByPackageName(source, name) {
   return "";
 }
 
+// Paths in the report must read the same on every machine: relative inside the
+// workspace and its sibling tree, "~"-relative under the home directory (which
+// is where Cargo puts the pinned engine checkout, under ~/.cargo/git).
+function presentPath(filePath) {
+  if (typeof filePath !== "string" || !path.isAbsolute(filePath)) return filePath;
+  const relative = path.relative(workspaceRoot, filePath);
+  const levelsUp = relative.split(path.sep).filter((segment) => segment === "..").length;
+  if (levelsUp <= 2) return relative;
+  const home = os.homedir();
+  if (filePath.startsWith(`${home}${path.sep}`)) return `~${filePath.slice(home.length)}`;
+  return filePath;
+}
+
 function evaluateLicensePolicy(licenseExpression, source, name) {
-  if (source === "internal") {
+  const normalized = normalizeLicenseExpression(licenseExpression);
+  if (source === "internal" || normalized === "LicenseRef-PDFluent-Proprietary") {
     return { licenseStatus: "known", policyStatus: "internal" };
   }
 
-  const normalized = normalizeLicenseExpression(licenseExpression);
   if (!normalized) {
     return { licenseStatus: "unknown", policyStatus: "needs-review" };
   }
@@ -82,6 +99,11 @@ function evaluateLicensePolicy(licenseExpression, source, name) {
   );
 
   if (hasAllowedPattern && hasBlockedPattern) {
+    // "MIT OR GPL-3.0" leaves the choice to us; "Apache-2.0 AND LGPL-3.0"
+    // does not — every conjunct applies, so the copyleft part governs.
+    if (/\bAND\b/.test(upper)) {
+      return { licenseStatus: "known", policyStatus: "blocked" };
+    }
     return { licenseStatus: "known", policyStatus: "needs-review" };
   }
 
@@ -118,8 +140,14 @@ function gatherNpmEntries() {
   const directDependencies = new Set([
     ...Object.keys(packageJson.dependencies ?? {}),
     ...Object.keys(packageJson.devDependencies ?? {}),
+    ...Object.keys(packageJson.optionalDependencies ?? {}),
   ]);
 
+  // Every lock entry is listed, optional ones included. Optional transitive
+  // packages are how native binaries reach the tree (sharp → @img/sharp-libvips-*,
+  // esbuild → @esbuild/*): they are absent from node_modules on every platform
+  // but their own, yet they ship with the build made on that platform. Skipping
+  // them is how an LGPL-3.0 libvips binary went unlisted for three months.
   const lockPackages = packageLock.packages ?? {};
   const entries = [];
   const dedupeMap = new Map();
@@ -127,9 +155,6 @@ function gatherNpmEntries() {
     if (!lockPath.includes("node_modules/")) continue;
     const dependencyName = String(lockPath.split("node_modules/").pop() ?? "");
     if (!dependencyName || typeof lockEntry !== "object" || lockEntry === null) {
-      continue;
-    }
-    if (lockEntry.optional === true && !directDependencies.has(dependencyName)) {
       continue;
     }
 
@@ -172,12 +197,20 @@ function gatherNpmEntries() {
         repository = modulePackageJson.repository.url;
       }
     }
+    // A package that is not installed here (other OS/CPU) still has its
+    // licence recorded in the lock file; that record is what npm resolved.
+    if (license.length === 0 && typeof lockEntry.license === "string") {
+      license = lockEntry.license;
+    }
 
     const entry = {
       source: "npm",
       name: dependencyName,
       version,
       direct: directDependencies.has(dependencyName),
+      // "dev" is tooling only; "runtime" can end up in the shipped bundle.
+      scope: lockEntry.dev === true ? "dev" : "runtime",
+      optional: lockEntry.optional === true || lockEntry.devOptional === true,
       license,
       repository,
       homepage,
@@ -214,18 +247,29 @@ function gatherCargoEntries() {
       maxBuffer: 64 * 1024 * 1024,
     },
   );
+  // Loud, not silent: a report without the cargo section reads as complete
+  // to anyone who does not count the rows.
+  const skipCargo = (reason) => {
+    skippedSources.push({ source: "cargo", reason });
+    console.error(
+      `SKIPPED (not a pass): cargo section omitted — cargo metadata failed:\n${reason}`,
+    );
+    return [];
+  };
+  // A spawn failure (cargo not on PATH) leaves stdout/stderr undefined and
+  // status null; it is the same skip, not a crash.
+  if (metadataResult.error) {
+    return skipCargo(String(metadataResult.error.message ?? metadataResult.error));
+  }
+  const stderr = typeof metadataResult.stderr === "string" ? metadataResult.stderr.trim() : "";
+  if (metadataResult.status !== 0) {
+    return skipCargo(stderr.length > 0 ? stderr : `cargo exited with status ${metadataResult.status}`);
+  }
   let metadata;
   try {
     metadata = JSON.parse(metadataResult.stdout);
   } catch (error) {
-    console.warn(
-      "[generate-third-party] cargo metadata parse failed:",
-      String(error),
-    );
-    if (metadataResult.stderr.trim().length > 0) {
-      console.warn(metadataResult.stderr);
-    }
-    return [];
+    return skipCargo(stderr.length > 0 ? stderr : String(error));
   }
   const workspaceMembers = new Set(metadata.workspace_members ?? []);
   const rootWorkspacePath = path.join(workspaceRoot, "src-tauri");
@@ -443,6 +487,7 @@ function enrichEntries(entries) {
     return {
       ...entry,
       license: effectiveLicense,
+      licenseFilePath: presentPath(entry.licenseFilePath),
       licenseStatus: policy.licenseStatus,
       policyStatus: policy.policyStatus,
       policyReason: override?.reason ?? null,
@@ -462,6 +507,7 @@ function buildSummary(entries) {
     totalDependencies: entries.length,
     bySource: sourceSummary,
     byPolicyStatus: policySummary,
+    skippedSources: skippedSources.map((skipped) => skipped.source),
   };
 }
 
@@ -500,7 +546,11 @@ Generator: \`scripts/generate-third-party.mjs\`
 ## Summary
 
 - Total dependencies/assets: ${summary.totalDependencies}
-- Policy status: ${JSON.stringify(summary.byPolicyStatus)}
+- Policy status: ${JSON.stringify(summary.byPolicyStatus)}${
+    summary.skippedSources.length > 0
+      ? `\n- INCOMPLETE — sources not inventoried in this run: ${summary.skippedSources.join(", ")}`
+      : ""
+  }
 
 ${sections}
 `;
@@ -516,14 +566,14 @@ function writeAttributionsMarkdown(entries) {
   const modelEntries = entries.filter((entry) => entry.source === "model-asset");
   const bundledNotices = bundledEntries
     .map((entry) => {
-      const fullPath = entry.licenseFilePath;
+      const fullPath = path.resolve(workspaceRoot, entry.licenseFilePath);
       let content = "";
-      if (typeof fullPath === "string" && existsSync(fullPath)) {
+      if (existsSync(fullPath)) {
         content = readFileSync(fullPath, "utf8").trim();
       }
       return `## ${entry.name}
 
-Source file: \`${fullPath}\`
+Source file: \`${entry.licenseFilePath}\`
 
 \`\`\`
 ${content}

@@ -55,7 +55,7 @@ const LANGUAGE_MARKERS: Record<Exclude<TextLanguageCode, 'unknown'>, ReadonlySet
 export function normalizeExtractedText(text: string): string {
   return repairPdfTextArtifacts(text)
     .replace(/\u00ad/g, '')
-    .replace(/\u0000/g, '')
+    .split('\u0000').join('')
     .replace(/[ \t\f\v]+/g, ' ')
     .replace(/\s+([,.;:!?])/g, '$1')
     .replace(/([([{])\s+/g, '$1')

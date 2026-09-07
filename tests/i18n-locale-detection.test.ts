@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: LicenseRef-PDFluent-Proprietary
-// Copyright (c) 2026 PDFluent Contributors
+// Copyright (c) 2026 Innovation Trigger B.V.
 //
 // Verifies OS/browser-locale detection (item 2 of the v2 smoke pass): a Dutch
 // macOS resolves to nl, regional tags map sensibly, and unsupported locales

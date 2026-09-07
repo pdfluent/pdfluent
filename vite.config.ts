@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: LicenseRef-PDFluent-Proprietary
-// Copyright (c) 2026 PDFluent Contributors
+// Copyright (c) 2026 Innovation Trigger B.V.
 
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
@@ -21,9 +21,6 @@ export default defineConfig({
   },
   worker: {
     format: "es",
-  },
-  optimizeDeps: {
-    exclude: ["@huggingface/transformers"],
   },
   server: {
     port: 1420,

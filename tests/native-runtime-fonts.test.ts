@@ -78,9 +78,10 @@ describe('Liberation font bundle', () => {
   });
 
   it('keeps fonts as app resources, not SDK source files', () => {
-    expect(fontDir.pathname).toContain('/pdfluent-v3/src-tauri/resources/fonts/');
-    expect(new URL('../src-tauri/resources/fonts/liberation-2.1.5/LICENSE', import.meta.url).pathname)
-      .toContain('/pdfluent-v3/');
-    expect(root.pathname).toContain('/PDFluent/pdfluent-v3/');
+    const license = new URL('../src-tauri/resources/fonts/liberation-2.1.5/LICENSE', import.meta.url);
+    expect(fontDir.href.startsWith(root.href)).toBe(true);
+    expect(license.href.startsWith(root.href)).toBe(true);
+    expect(fontDir.pathname).toContain('/src-tauri/resources/fonts/');
+    expect(fontDir.pathname).not.toContain('/XFA/');
   });
 });

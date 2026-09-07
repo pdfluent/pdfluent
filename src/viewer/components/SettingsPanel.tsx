@@ -216,6 +216,32 @@ export function SettingsPanel({
             />
           </section>
 
+          {/* ── Updates (default ON, and switchable — see LICENSE.md §4) ──── */}
+          <section className="settings-section">
+            <h3 className="settings-section-title">
+              {t('settings.updates')}
+            </h3>
+            <label
+              className="settings-toggle-row"
+              htmlFor="settings-auto-update-toggle"
+            >
+              <input
+                id="settings-auto-update-toggle"
+                data-testid="settings-auto-update-toggle"
+                type="checkbox"
+                checked={settings.automaticUpdateCheckEnabled}
+                onChange={(e) => {
+                  handleChange('automaticUpdateCheckEnabled', e.target.checked);
+                }}
+                className="settings-checkbox"
+              />
+              <span>{t('settings.automaticUpdateCheck')}</span>
+            </label>
+            <p className="settings-help-text">
+              {t('settings.automaticUpdateCheckHint')}
+            </p>
+          </section>
+
           {/* ── Crash & error reports (opt-in, default OFF) ───────────────── */}
           <section className="settings-section">
             <h3 className="settings-section-title">

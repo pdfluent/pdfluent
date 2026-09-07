@@ -226,7 +226,7 @@ export function useXfaFormModel(
 
         // Surface what the commit loop revealed/hid (debug output, task §3).
         if (result.presenceChanges.length > 0 || result.pageCountBefore !== result.pageCountAfter) {
-          // eslint-disable-next-line no-console
+
           console.info(
             `[PDFluent] XFA commit "${name}": interactive=${result.interactive} ` +
               `scripts=${result.scriptsExecuted} pages ${result.pageCountBefore}→${result.pageCountAfter} ` +

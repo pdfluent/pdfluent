@@ -80,7 +80,7 @@ export function useFormFields(
     } else {
       await handleSaveAs();
     }
-  }, [pdfDoc, engine, currentFilePath, clearDirty, handleSaveAs]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [pdfDoc, engine, currentFilePath, clearDirty, handleSaveAs]);
 
   // Navigate to a form field by index: jump to its page and record it as active.
   const handleFieldNav = useCallback((idx: number) => {

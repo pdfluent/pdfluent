@@ -112,7 +112,11 @@
     "prevField": "Previous field",
     "nextField": "Next field",
     "allTools": "All tools",
-    "contextualBar": "Mode toolbar"
+    "contextualBar": "Mode toolbar",
+    "pdfa": "PDF/A",
+    "metadata": "Document properties",
+    "invoice": "E-invoice",
+    "bookmarks": "Bookmarks"
   },
   "topbar": {
     "openPdf": "Open PDF",
@@ -351,7 +355,10 @@
     "themeLabel": "Theme",
     "ocrDefaults": "OCR defaults",
     "ocrLanguageLabel": "Default language (ISO-639-2)",
-    "ocrLanguagePlaceholder": "e.g. eng, nld, deu"
+    "ocrLanguagePlaceholder": "e.g. eng, nld, deu",
+    "updates": "Updates",
+    "automaticUpdateCheck": "Check for a new version at startup",
+    "automaticUpdateCheckHint": "PDFluent asks pdfluent.com whether a newer version exists, a few seconds after it starts. Nothing from your documents is sent. Turn this off and the app never checks on its own — \"Check for updates\" still works whenever you ask for it."
   },
   "about": {
     "section": "About",
@@ -515,7 +522,13 @@
     "signRunning": "Signing document…",
     "signDone": "Document signed",
     "signFailed": "Signing failed",
-    "dismiss": "Dismiss"
+    "dismiss": "Dismiss",
+    "pdfaRunning": "Converting to PDF/A…",
+    "pdfaDone": "PDF/A written",
+    "pdfaFailed": "PDF/A conversion failed",
+    "metadataRunning": "Saving properties…",
+    "metadataDone": "Properties saved",
+    "metadataFailed": "Could not save properties"
   },
   "panels": {
     "search": "Search",
@@ -1118,18 +1131,7 @@
       "initials": "Initials",
       "initialsPlaceholder": "e.g. AB",
       "defaultInitials": "AB",
-      "clickToPlaceInitials": "Click the page to place the initials.",
-      "invite": "Invite to sign",
-      "inviteIntro": "Send an e-sign request to the recipient. They get an email with a link to sign the document locally.",
-      "recipientName": "Recipient name",
-      "recipientNamePlaceholder": "Recipient name…",
-      "email": "Email address",
-      "emailPlaceholder": "name@example.com",
-      "message": "Message (optional)",
-      "messagePlaceholder": "Hi, could you sign this document?",
-      "send": "Send",
-      "emailRequired": "Email address is required.",
-      "inviteSent": "Invitation sent to {{email}}!"
+      "clickToPlaceInitials": "Click the page to place the initials."
     },
     "overlay": {
       "signaturePlaced": "Signature placed!",
@@ -1162,22 +1164,14 @@
       "addText": "Add text",
       "fillAndSign": "Fill & sign",
       "more": "More tools",
-      "formatting": "Formatting",
       "strikeText": "Strike through text",
       "underlineText": "Underline text",
-      "insertTextBox": "Insert text box",
-      "stampsAndInsert": "Stamps & insert",
-      "stamps": "Stamps",
-      "insertDate": "Insert date",
-      "addAttachment": "Add attachment",
-      "ruler": "Ruler"
+      "addAttachment": "Add attachment"
     },
     "railToasts": {
       "commentMode": "Note mode active. Select text and choose Note, or use the comments list to add a note.",
       "strikeout": "Strikethrough active — select text to apply.",
-      "underline": "Underline active — select text to apply.",
-      "textboxOpened": "Text box tool opened.",
-      "stampsInAllTools": "Stamps are in All tools."
+      "underline": "Underline active — select text to apply."
     },
     "tools": {
       "lede": "Choose a tool to get started. Everything runs locally on this device.",
@@ -1212,7 +1206,11 @@
       "moreAttachments_plural": "+{{count}} more attachments",
       "layers": "{{count}} layers",
       "manageLayers": "Manage layers",
-      "layersVisible": "{{count}} layers visible."
+      "layersVisible": "{{count}} layers visible.",
+      "archiveAndData": "Archiving and data",
+      "pdfaSub": "Check or convert for long-term archiving",
+      "invoiceSub": "Read the ZUGFeRD/Factur-X invoice inside",
+      "metadataSub": "Title and author of this document"
     },
     "edit": {
       "lede": "Click text in the document to edit inline. The formatting bar appears right above the selection.",
@@ -1255,17 +1253,31 @@
       "ocrRunning": "OCR running locally…"
     },
     "esign": {
-      "lede": "Sign documents quickly and securely, and share them easily with others to sign.",
-      "localSigned": "Locally signed — nothing leaves this device",
-      "padesCompliant": "PAdES-compliant digital signature",
+      "lede": "Sign with a certificate of your own, and check the signatures a document already carries. Both happen on this device.",
+      "signSection": "Sign with a certificate",
+      "padesLevel": "Produces a PAdES B-B signature: your certificate over the whole file, no timestamp server involved.",
+      "certificate": "Certificate (.p12 or .pfx)",
+      "certificateNone": "No certificate chosen",
+      "chooseCertificate": "Choose certificate",
+      "certificatePassword": "Certificate password",
+      "reason": "Reason (optional)",
+      "reasonPlaceholder": "Why you are signing",
+      "sign": "Sign and save a copy",
+      "signing": "Signing…",
+      "signNeedsCertificate": "Choose a certificate and enter its password first.",
+      "signSaved": "Signed copy saved as {{name}}",
+      "signFailed": "Signing failed: {{message}}",
       "fillAndSign": "Fill in your documents and sign",
       "addSignature": "Add signature",
       "addInitials": "Add initials",
-      "invite": "Invite to sign",
       "placementModeSignature": "Placement mode: Signature",
       "placementModeInitials": "Placement mode: Initials",
       "clickToPlaceSignature": "Click anywhere on the page to place your signature.",
-      "clickToPlaceInitials": "Click anywhere on the page to place your initials."
+      "clickToPlaceInitials": "Click anywhere on the page to place your initials.",
+      "verifySection": "Signatures",
+      "verify": "Check signatures",
+      "desktopOnly": "Available in the desktop app",
+      "unsigned": "This document carries no signatures."
     },
     "protect": {
       "lede": "Protect your PDF document with strong cryptographic passwords. Changes are applied locally right away.",
@@ -1369,7 +1381,42 @@
     },
     "thumbnails": {
       "pages": "Pages",
-      "pageAlt": "Page {{page}}"
+      "pageAlt": "Page {{page}}",
+      "bookmarks": "Bookmarks"
+    },
+    "pdfa": {
+      "lede": "PDF/A is the archival form of PDF: fonts embedded, colours defined, nothing that depends on the outside world.",
+      "section": "Conformance",
+      "level": "Level",
+      "validate": "Check this document",
+      "convert": "Save as PDF/A…",
+      "desktopOnly": "Available in the desktop app",
+      "compliant": "Conforms to {{level}}",
+      "notCompliant": "Does not conform: {{errors}} errors, {{warnings}} warnings",
+      "moreIssues": "{{count}} more"
+    },
+    "metadata": {
+      "lede": "The title and author stored inside the file, which is what other readers and search show.",
+      "section": "Properties",
+      "title": "Title",
+      "author": "Author",
+      "apply": "Save properties",
+      "desktopOnly": "Available in the desktop app"
+    },
+    "invoice": {
+      "lede": "A ZUGFeRD or Factur-X invoice travels as XML inside the PDF. This reads it and checks it against EN 16931.",
+      "section": "Embedded invoice",
+      "read": "Read invoice",
+      "desktopOnly": "Available in the desktop app",
+      "none": "This document carries no e-invoice.",
+      "number": "Number: {{number}}",
+      "issued": "Issued: {{date}}",
+      "seller": "Seller: {{name}}",
+      "buyer": "Buyer: {{name}}",
+      "total": "Total: {{total}} {{currency}}",
+      "lines": "Line items: {{count}}",
+      "valid": "Valid against {{profile}}",
+      "invalid": "Not valid: {{errors}} errors, {{warnings}} warnings"
     }
   }
 }

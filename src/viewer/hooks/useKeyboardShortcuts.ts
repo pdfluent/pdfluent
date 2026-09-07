@@ -88,7 +88,7 @@ export function useKeyboardShortcuts({
   const navigatePage = useCallback((next: number) => {
     setPageIndex(next);
     scrollToPage?.(next);
-  }, [setPageIndex, scrollToPage]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [setPageIndex, scrollToPage]);
 
   // ⌘C / Ctrl+C copy handler — copies selected text to clipboard
   useEffect(() => {

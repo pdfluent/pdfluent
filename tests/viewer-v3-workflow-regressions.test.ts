@@ -85,7 +85,12 @@ describe('V3 native menu and licensing workflow', () => {
 
 describe('V3 XFA and active-content workflow', () => {
   it('uses the native XFA feature and exposes a real flatten command', () => {
-    expect(cargoTomlSource).toContain('pdf-engine = { path = "../../../XFA/crates/pdf-engine", features = ["xfa", "serde"] }');
+    // The engine is a pinned git revision, not a neighbouring checkout; the
+    // pin itself is guarded by tests/sdk-pin-guard.test.ts. What matters here
+    // is that the XFA feature stays switched on.
+    expect(cargoTomlSource).toMatch(
+      /^pdf-engine = \{ git = "[^"]+", rev = "[0-9a-f]{40}", features = \["xfa", "serde"\] \}$/m,
+    );
     expect(rustPdfEngineSource).toContain('pub fn flatten_xfa(&mut self)');
     expect(rustPdfEngineSource).toContain('pdf_engine::xfa::flatten');
     expect(rustLibSource).toContain('fn flatten_xfa');

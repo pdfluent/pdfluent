@@ -6,9 +6,6 @@
 // See https://pdfluent.com/license for terms.
 import React from "react";
 import ReactDOM from "react-dom/client";
-// LEGACY V1 shell — only used when ?legacy URL param is set.
-// Do not add imports from src/legacy/ for V3 features.
-import { App } from "./legacy/App";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { CrashReporter } from "./components/telemetry/CrashReporter";
 import { ViewerApp } from "./viewer/ViewerApp";
@@ -37,11 +34,23 @@ import "./i18n";
 import "./viewer/performance/performanceTelemetry";
 
 // ViewerApp (V3 shell) is the product — the Acrobat-style Tauri editor.
-// The legacy App shell (src/legacy/App.tsx + src/legacy/components/) stays
-// reachable via ?legacy until its remaining unique features are verified
-// ported and it can be retired. The ?v2 param does nothing — it is a no-op
-// used in some stale e2e tests. The only runtime switch is ?legacy.
-const useLegacy = new URLSearchParams(window.location.search).has('legacy');
+//
+// The legacy V1 shell (src/legacy/App.tsx, 9,081 lines) is a DEVELOPMENT-ONLY
+// escape hatch, kept until its two remaining unique features (multi-file merge,
+// PDF/A UI) are confirmed present in V3. `import.meta.env.DEV` is replaced by
+// the literal `false` in a production build, so Rollup drops this branch and the
+// module it imports: what shipped as 9,081 reachable-by-URL lines is not in the
+// released bundle at all, and `?legacy` renders the product shell there.
+// Proven on the bundle, not on this comment, by
+// scripts/ci/legacy-shell-fenced.mjs. Do not turn this back into a top-level
+// import, and do not add imports from src/legacy/ for V3 features.
+//
+// The ?v2 param does nothing — it is a no-op used in some stale e2e tests.
+const LegacyApp = import.meta.env.DEV
+  ? React.lazy(() => import("./legacy/App").then((m) => ({ default: m.App })))
+  : null;
+const useLegacy =
+  LegacyApp !== null && new URLSearchParams(window.location.search).has('legacy');
 
 // Liveness ping for the Rust startup watchdog: this must be the earliest
 // possible invoke. If the WebContent process is suspended before timers run
@@ -58,7 +67,13 @@ ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
         communicate through the module-level crash channel. */}
     <CrashReporter />
     <ErrorBoundary>
-      {useLegacy ? <App /> : <ViewerApp />}
+      {useLegacy && LegacyApp ? (
+        <React.Suspense fallback={null}>
+          <LegacyApp />
+        </React.Suspense>
+      ) : (
+        <ViewerApp />
+      )}
     </ErrorBoundary>
   </React.StrictMode>,
 );

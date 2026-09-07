@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: LicenseRef-PDFluent-Proprietary
-// Copyright (c) 2026 PDFluent Contributors
+// Copyright (c) 2026 Innovation Trigger B.V.
 
 import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
@@ -45,6 +45,19 @@ function printEntriesWithLimit(title, entries, reason, limit = 30) {
       `- ... and ${entries.length - preview.length} more. See compliance-report.json for full details.`,
     );
   }
+}
+
+// A report that skipped a source (cargo metadata failed, say) is not a
+// report of the shipped tree; it must not pass, whatever its rows say.
+const skippedSources = Array.isArray(report.summary?.skippedSources)
+  ? report.summary.skippedSources.map((value) => String(value))
+  : [];
+if (skippedSources.length > 0) {
+  console.error(
+    `Incomplete compliance report: not inventoried in this run: ${skippedSources.join(", ")}. ` +
+      "Regenerate with the missing toolchain present; a partial report cannot pass.",
+  );
+  process.exit(2);
 }
 
 if (legacyEntries) {

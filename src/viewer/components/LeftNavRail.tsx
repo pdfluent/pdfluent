@@ -610,7 +610,7 @@ function FormatPanel({
         // Color
         const color = style.color;
         setActiveColor(color);
-      } catch (e) {
+      } catch {
         // Safe fallback
       }
     }

@@ -66,7 +66,7 @@ export function useSearch(
     }
     setSearchResults(results);
     setActiveSearchResultIdx(results.length > 0 ? 0 : -1);
-  }, [pdfDoc, engine, pageCount]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [pdfDoc, engine, pageCount]);
 
   /** Advance to the next search result (wraps around). */
   const nextSearchResult = useCallback(() => {
@@ -91,7 +91,7 @@ export function useSearch(
   useEffect(() => {
     clearSearch();
     setIsSearchOpen(false);
-  }, [pdfDoc?.id, clearSearch]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [pdfDoc?.id, clearSearch]);
 
   // Search result rects for the current page — passed to AnnotationOverlay as yellow highlights.
   // Also compute the local index of the active result within the current-page results.

@@ -3,67 +3,61 @@ Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 See https://pdfluent.com/license for terms.
 -->
 
-# Owner brief — what only Jasper can do
+# Owner brief — Microsoft Store
 
-The technical work is done: a signed, hosted, validated Win32 MSI candidate; six
-1920×1080 screenshots from the real app; a 300×300 logo; full listing copy,
-privacy/compliance, system requirements, reviewer notes, release notes; and a
-field-by-field Partner Center guide. Everything is committed under `store/`.
+The Store account, the submission and the certification are done. PDFluent has
+been live since 2026-07-27 at
+<https://apps.microsoft.com/detail/XPDBXJ6XRLFQK2>, free, all markets, published
+by *PDFluent - Innovation Trigger BV*, installing the signed `1.0.0-beta.21` MSI
+from our own domain.
 
-There is **no technical blocker.** What remains needs your account access or a
-business decision.
+Partner Center is no longer a gate. What is left needs your account access, and
+the first item is a correctness problem rather than a nicety.
 
-## 1. Partner Center access (the gate)
-- Register/confirm a **Microsoft Partner Center** account in the **Windows & Xbox**
-  program. A **company** account verified as **Innovation Trigger B.V.** is needed
-  to publish under that name (the installer is signed `CN=Innovation Trigger B.V.`).
-  One-time fee (~US$99 company). I could not draft the live submission without it.
+## 1. The live description is out of date (needs a listing update)
 
-## 2. Decisions only you can make
-- **Entity / publisher name:** the signing cert and these docs use
-  **Innovation Trigger B.V.** Some older source headers used the bare product name
-  as the entity (now normalized to Innovation Trigger B.V.). The Partner Center
-  publisher name must match the entity that signs the MSI, so unless you
-  deliberately re-sign under a different verified entity, use **Innovation Trigger B.V.**
-- **Version to ship:** the validated candidate is **1.0.0-beta.20** (rebuilt 12 juli
-  2026 — beta.18/19 still bundled the old in-app licensing UI, now fully removed;
-  the editor is free for everyone including commercial use, see `LICENSE.md`). It
-  is fully submittable, but decide whether to launch the Store with this beta or
-  wait for a stable 1.0.0. (If you cut a stable build, re-run
-  `store/scripts/validate-store-candidate.sh <ver>` and update the package URL in
-  the upload guide. Nothing else changes.)
-- **Screenshot language:** the six raw captures are **Dutch** (the box's OS
-  locale). For an English (en-US) listing, re-capture in English (same harness, an
-  English-locale Windows session) or publish a Dutch (nl-NL) listing. See
-  `store/screenshots/screenshot-brief.md`.
-- **Pricing / markets:** the guide assumes **Free**, **all markets**, **Public**.
-  Confirm or change.
+The description on the Store page still describes the paid-app model that was
+abolished on 2026-07-11: it tells a reader that business use needs a paid seat.
+`LICENSE.md` says the opposite, the website says the opposite, and the app has no
+licence UI left. Anyone comparing the Store page with the product is reading a
+promise we withdrew.
 
-## 3. Exact values to provide during submission
-- **Reserved product name** → the **Store ID / Product ID** Partner Center issues
-  (paste it back into your notes).
-- **Support contact** for the Properties step: `https://pdfluent.com/support`
-  (live; links to `hello@pdfluent.com`). Already valid — no action needed.
-- **Crypto export self-classification:** confirm PDFluent uses only standard
-  cryptography (it does: PAdES/CMS signing, PDF encryption) and qualifies for the
-  mass-market exemption.
+The corrected text is ready in [`listing/PASTE-SHEET.md`](listing/PASTE-SHEET.md)
+(Description block). This is a **Store listing update, not a package update**: no
+new build, no new MSI, no re-validation. Partner Center → PDFluent → Update →
+Store listing → paste → Submit.
 
-## 4. Values already filled in for you (no action unless you disagree)
-- Privacy policy URL: `https://pdfluent.com/privacy` (live)
-- Website: `https://pdfluent.com`
-- Package URL: `https://pdfluent.com/releases/1.0.0-beta.20/PDFluent_1.0.0-beta.20_x64_en-US.msi`
-  (SHA-256 `8DAA08BE555FBF60B1D4AC68E1700A606CC1EE65E5E115F77168740E0885FFD8`)
+## 2. The next release needs a Store submission
+
+New version means a new **Update** submission with a new package URL. The loop is
+written out in [`update-runbook.md`](update-runbook.md) and referenced from
+`RELEASE.md` step 5, so it is now part of cutting a release rather than something
+to remember.
+
+## 3. winget — waiting on a moderator, nothing to do
+
+`microsoft/winget-pkgs` PR #430389 (`InnovationTrigger.PDFluent 1.0.0-beta.21`)
+has the CLA signed and validation completed; it is queued for a moderator. The
+manifests match the live MSI URL and hash. No action until it merges or a
+moderator asks for a change.
+
+## 4. Chocolatey — not started, and not urgent
+
+Nothing exists. Worth doing once there is a stable `1.0.0` rather than a beta
+package name that would need renaming.
+
+## 5. Screenshots
+
+The Store currently shows the set from the designer (3840×2160, exported
+2026-08-20), listed in [`listing/PASTE-SHEET.md`](listing/PASTE-SHEET.md). The
+older raw captures under `screenshots/` are kept for provenance only and are
+marked as historical. Re-upload only if the UI in them changes.
+
+## Values that are already correct on the listing
+
+- Privacy policy: `https://pdfluent.com/privacy` · Website: `https://pdfluent.com`
+- Support contact: `https://pdfluent.com/support`
+- Additional licence terms: `https://pdfluent.com/license`
 - Category: Productivity · Architecture: x64 · Min OS: Windows 10 1809
-- Age rating: everyone/3+ (IARC answers provided)
+- Age rating: PEGI 3 / everyone · Price: Free · Markets: all
 - Data collection: none by default (opt-in diagnostics only)
-
-## 5. The final click
-- Follow `store/partner-center-upload-guide.md` top to bottom, paste the copy +
-  upload the screenshots and logo, then **Review**.
-- **Do not press "Submit to the Store" until you've decided to go.** I did not
-  draft or submit anything live (no Partner Center access, and per instruction).
-
-## Optional, non-blocking
-- Run WACK on the box for a deeper certification report (`store/build-validation-pipeline.md` §3).
-- Commission branded screenshots + an optional 16:9 hero from the design briefs.
-- Re-capture screenshots in English if you go en-US.

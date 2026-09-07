@@ -162,7 +162,8 @@ export function computeResizeRect(
  * Returns { rect, clamped } where clamped=true if any dimension was adjusted.
  */
 export function clampRectToMinSize(rect: LayoutRect): { rect: LayoutRect; clamped: boolean } {
-  let { x, y, width, height } = rect;
+  const { x, y } = rect;
+  let { width, height } = rect;
   let clamped = false;
 
   if (width < MIN_OBJECT_SIZE) {

@@ -6,6 +6,7 @@
 // See https://pdfluent.com/license for terms.
 
 import { check } from "@tauri-apps/plugin-updater";
+import { loadAppSettings } from "../viewer/state/appSettings";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -100,6 +101,25 @@ export function scheduleStartupUpdateCheck(
   }, STARTUP_CHECK_DELAY_MS);
 
   return () => clearTimeout(timer);
+}
+
+/**
+ * Schedule the automatic startup check, unless the user turned it off.
+ *
+ * Returns `undefined` when the setting is off — nothing was scheduled, so
+ * there is nothing to cancel. This is the only gate on the automatic check;
+ * the manual "Check for updates" command calls `checkAndInstallUpdate`
+ * directly and is deliberately not affected by the setting.
+ *
+ * The setting is read here rather than passed in so that every caller gets
+ * the same answer, and so a caller cannot schedule the check by forgetting
+ * to look.
+ */
+export function scheduleStartupUpdateCheckIfEnabled(
+  callbacks: UpdateCallbacks,
+): (() => void) | undefined {
+  if (!loadAppSettings().automaticUpdateCheckEnabled) return undefined;
+  return scheduleStartupUpdateCheck(callbacks);
 }
 
 // ---------------------------------------------------------------------------

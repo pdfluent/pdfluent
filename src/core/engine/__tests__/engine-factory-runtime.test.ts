@@ -77,11 +77,13 @@ describe('EngineFactory Runtime Integration', () => {
         // If we get here, engine was created successfully
         expect(engine).toBeDefined();
         expect(typeof engine.shutdown).toBe('function');
-      } catch (error: any) {
+      } catch (error: unknown) {
         // If engine creation fails, it should be a clean error
         // Acceptable errors in test environment:
         // - Tauri runtime not available (test environment)
         // - No engine factory registered (fallback scenario)
+        expect(error).toBeInstanceOf(Error);
+        if (!(error instanceof Error)) throw error;
         expect([
           'Tauri runtime not available',
           'No engine factory registered for runtime: tauri'

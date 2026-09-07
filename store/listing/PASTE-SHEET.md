@@ -7,12 +7,16 @@ Partner Center field. Only ONE language listing (English) is required to launch.
 
 # Partner Center — Store listing paste sheet (English, en-US)
 
-On the **Manage Store listing** page:
+The listing is live (Store ID `XPDBXJ6XRLFQK2`). These blocks are what the English
+listing **should** say; paste the ones that changed on
+Partner Center → PDFluent → **Update** → *Store listing*, then Submit. See
+[`../update-runbook.md`](../update-runbook.md) for when each field needs touching.
 
-1. Click **Add languages** → add **English (United States)** → open that row.
-2. Fill the fields below (copy-paste). Then upload the images. Then **Save**.
+> The **Description** block below has not been pasted into Partner Center yet. The
+> live description still carries the abolished paid-app grant — see
+> [`../OWNER-BRIEF.md`](../OWNER-BRIEF.md) §1.
 
-You do NOT need a listing per language — one English listing is enough.
+One English listing is enough; a listing per language is not required.
 
 ---
 
@@ -29,7 +33,7 @@ Everything else is one click away in the tools panel: compress a heavy file, reo
 
 Sign documents on your own machine. PDFluent produces a PAdES digital signature locally. It does not send your file to a signing service.
 
-This is the point of PDFluent. Your contracts, IDs, and financial documents never leave your computer, because the app makes no network request to do any of the work above. It can optionally check for an update, and that is the extent of it.
+This is the point of PDFluent. Your contracts, IDs, and financial documents never leave your computer, because the app makes no network request to do any of the work above. It can check for an update, and it can send a crash or feedback report if you switch reporting on. Both are off the document path and reporting is off until you enable it.
 
 The interface is available in 27 languages and follows your Windows display language.
 
@@ -47,7 +51,7 @@ A PDF editor that runs entirely on your PC. Edit text, convert to Word or Excel,
 ## What's new in this version  (field: "What's new in this version")
 
 ```
-First release on the Microsoft Store. PDFluent edits text directly in PDFs, converts to Word, Excel and PowerPoint, runs OCR, and signs documents locally — everything on your PC, no account, no upload. The interface is available in 27 languages and follows your Windows display language.
+Editing white text on a coloured page now shows the text while you type, and exporting to Word opens cleanly with its images intact. PDFluent still does the rest on your own PC: edit text in the PDF, convert to Word, Excel and PowerPoint, run OCR, and sign documents locally. No account, no upload. The interface follows your Windows display language.
 ```
 
 ## Product features  (field: "Product features" — add each as a separate bullet, max 20, ≤200 chars each)
@@ -91,14 +95,20 @@ https://pdfluent.com/license
 ## Images to upload (in the Store listing page)
 
 **Screenshots** (Screenshots section — upload in this order; drag to reorder):
-1. `store/screenshots/en/final/03-edit.png` — Edit text directly in the PDF
-2. `store/screenshots/en/final/04-convert.png` — Convert to Word, Excel, PowerPoint, image or PDF/A
-3. `store/screenshots/en/final/05-tools.png` — Every tool in one place
-4. `store/screenshots/en/final/06-sign.png` — Sign locally; nothing leaves your PC
-5. `store/screenshots/en/final/02-reading.png` — Fast, faithful reading with thumbnails
-6. `store/screenshots/en/final/01-welcome.png` — Open any PDF; everything runs locally
+Source: the designer's set, exported from Figma on 2026-08-20 at 3840×2160 and
+kept outside this repository with the other brand assets. That set is what the
+live listing shows. The older raw captures under `../screenshots/en/final/`
+must not be uploaded again: one of them shows an "Invite to sign" button that
+was removed from the app in `993990d`. See `../BLOCKER-screenshots.md`.
 
-(Captions optional; see `store/screenshots/en/SCREENSHOTS.md`.)
+1. `01.png` — The free private PDF editor (free, private, Rust, no account)
+2. `02.png` — Convert PDFs without compromise (Word, images)
+3. `03.png` — Sign PDFs in seconds (digital signatures, offline)
+4. `04.png` — Open any PDF instantly (large documents included)
+5. `05.png` — Everything you need in one PDF editor
+6. `06.png` — Read PDFs without distractions
+
+Captions are optional; the headline on each image already carries the message.
 
 **Store logos:**
 - 1:1 Box art (required) → `store/assets/store-logo-1080.png` (1080×1080)
@@ -108,6 +118,9 @@ https://pdfluent.com/license
 
 ## Then
 - **Save** the listing.
-- Reviewer notes are on the **Properties/Submission options** step (from `store/listing/reviewer-instructions.md`).
+- Reviewer notes are on the **Properties/Submission options** step (from
+  [`reviewer-instructions.md`](reviewer-instructions.md)).
 - **Review** (top-right) to catch any missing required field.
-- Click **Submit to the Store** only when you are ready — nothing is submitted for you.
+- **Submit** — the listing is live, so this is an Update submission and goes
+  through certification again. Track it to "In the Store", then refresh
+  `../live-listing.json` with `../scripts/check-live-listing.sh`.

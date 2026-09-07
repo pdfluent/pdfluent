@@ -171,12 +171,16 @@ export class DefaultRuntimeRegistry implements RuntimeRegistry {
       if ('OffscreenCanvas' in window) webAPIs.push('OffscreenCanvas');
     }
 
+    const performanceWithMemory = typeof performance === 'undefined'
+      ? undefined
+      : performance as Performance & { memory?: { totalJSHeapSize?: number } };
+
     return {
       platform: tauriAvailable ? 'desktop' : 'web',
       userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : undefined,
       tauriAvailable,
       webAPIs,
-      availableMemory: (performance as any)?.memory?.totalJSHeapSize
+      availableMemory: performanceWithMemory?.memory?.totalJSHeapSize
     };
   }
 

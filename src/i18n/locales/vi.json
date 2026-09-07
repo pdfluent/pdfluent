@@ -112,7 +112,11 @@
     "prevField": "Trường trước",
     "nextField": "Trường tiếp theo",
     "allTools": "Tất cả công cụ",
-    "contextualBar": "Thanh công cụ chế độ"
+    "contextualBar": "Thanh công cụ chế độ",
+    "pdfa": "PDF/A",
+    "metadata": "Document properties",
+    "invoice": "E-invoice",
+    "bookmarks": "Bookmarks"
   },
   "topbar": {
     "openPdf": "Mở PDF",
@@ -282,7 +286,27 @@
     "clearSelection": "Xóa vùng chọn",
     "combine": "Gộp tệp",
     "splitRange": "Tách theo phạm vi",
-    "splitRangeHint": "Chọn các trang trước"
+    "splitRangeHint": "Chọn các trang trước",
+    "moveLeft": "Move selected page left",
+    "moveRight": "Move selected page right",
+    "moveLeftShort": "Left",
+    "moveRightShort": "Right",
+    "rotateLeft": "Rotate left",
+    "rotateRight": "Rotate right",
+    "rotateLeftShort": "Left",
+    "rotateRightShort": "Right",
+    "addingPdf": "Adding PDF…",
+    "pdfAdded": "PDF added",
+    "combiningFiles": "Combining {{count}} file(s)…",
+    "filesCombined": "{{count}} file(s) combined",
+    "insertingPdf": "Inserting PDF before page {{page}}…",
+    "pdfInserted": "PDF inserted",
+    "exportingPages": "Exporting {{count}} page(s)…",
+    "selectionExported": "Selection exported to {{name}}",
+    "splittingPages": "Splitting into individual pages…",
+    "pagesSaved": "{{count}} pages saved",
+    "splittingRanges": "Splitting {{count}} range(s)…",
+    "filesSaved": "{{count}} file(s) saved"
   },
   "unsavedChanges": {
     "title": "Thay đổi chưa lưu",
@@ -302,7 +326,14 @@
     "dragDropHint": "hoặc kéo PDF vào đây",
     "lede": "Đọc, chỉnh sửa, chuyển đổi, điền và ký — hoàn toàn trên thiết bị của bạn.",
     "privacyPromise": "Local-first · tài liệu không bao giờ rời khỏi thiết bị này",
-    "dropPdfHere": "Thả PDF vào đây"
+    "dropPdfHere": "Thả PDF vào đây",
+    "v3Subtitle": "Open a PDF to read, edit, convert or sign it locally.",
+    "openFileAria": "Choose a PDF file to open",
+    "clearRecent": "Clear recent",
+    "recentShort": "Recent",
+    "removeRecentAria": "Remove {{name}}",
+    "backToDocument": "Back to document",
+    "loadingDocument": "Loading document…"
   },
   "settings": {
     "language": "Ngôn ngữ",
@@ -324,7 +355,10 @@
     "themeLabel": "Giao diện",
     "ocrDefaults": "Mặc định OCR",
     "ocrLanguageLabel": "Ngôn ngữ mặc định (ISO-639-2)",
-    "ocrLanguagePlaceholder": "vd. eng, nld, deu"
+    "ocrLanguagePlaceholder": "vd. eng, nld, deu",
+    "updates": "Updates",
+    "automaticUpdateCheck": "Check for a new version at startup",
+    "automaticUpdateCheckHint": "PDFluent asks pdfluent.com whether a newer version exists, a few seconds after it starts. Nothing from your documents is sent. Turn this off and the app never checks on its own — \"Check for updates\" still works whenever you ask for it."
   },
   "errors": {
     "loadFailed": "Tải tài liệu thất bại",
@@ -465,7 +499,13 @@
     "dismiss": "Bỏ qua",
     "watermarkDone": "Đã thêm hình mờ",
     "watermarkFailed": "Thêm hình mờ thất bại",
-    "watermarkRunning": "Đang thêm hình mờ…"
+    "watermarkRunning": "Đang thêm hình mờ…",
+    "pdfaRunning": "Converting to PDF/A…",
+    "pdfaDone": "PDF/A written",
+    "pdfaFailed": "PDF/A conversion failed",
+    "metadataRunning": "Saving properties…",
+    "metadataDone": "Properties saved",
+    "metadataFailed": "Could not save properties"
   },
   "panels": {
     "search": "Tìm kiếm",
@@ -837,7 +877,10 @@
     "detected": "Tài liệu này dùng XFA forms. Hiển thị có thể không đầy đủ — hỗ trợ XFA đang thử nghiệm.",
     "flatten": "Làm phẳng XFA",
     "flattenDone": "XFA đã được làm phẳng. Xuất PDF để tải về phiên bản tĩnh.",
-    "flattenFailed": "Làm phẳng XFA thất bại"
+    "flattenFailed": "Làm phẳng XFA thất bại",
+    "convertToStandard": "Convert to standard PDF",
+    "convertedToStandard": "XFA converted to standard PDF",
+    "convertFailed": "Conversion failed: {{message}}"
   },
   "security": {
     "activeContentBadge": "Đã chặn",
@@ -870,7 +913,11 @@
     "dismiss": "Bỏ qua",
     "installing": "Đang cài đặt…",
     "checkFailed": "Kiểm tra cập nhật thất bại",
-    "upToDate": "Bạn đang dùng phiên bản mới nhất"
+    "upToDate": "Bạn đang dùng phiên bản mới nhất",
+    "installed": "Update installed",
+    "restartNow": "Restart now",
+    "restartUnsaved": "Save your changes before restarting.",
+    "restartManual": "If it doesn't restart automatically, quit and reopen PDFluent to finish."
   },
   "telemetry": {
     "addNoteLabel": "Bạn muốn thêm gì không? (tùy chọn)",
@@ -1049,18 +1096,7 @@
       "initials": "Chữ viết tắt",
       "initialsPlaceholder": "ví dụ: AB",
       "defaultInitials": "AB",
-      "clickToPlaceInitials": "Nhấp vào trang để đặt chữ viết tắt.",
-      "invite": "Mời ký",
-      "inviteIntro": "Gửi yêu cầu ký điện tử cho người nhận. Họ nhận được email với liên kết để ký tài liệu cục bộ.",
-      "recipientName": "Tên người nhận",
-      "recipientNamePlaceholder": "Tên người nhận…",
-      "email": "Địa chỉ email",
-      "emailPlaceholder": "ten@example.com",
-      "message": "Tin nhắn (tùy chọn)",
-      "messagePlaceholder": "Xin hãy ký tài liệu này.",
-      "send": "Gửi",
-      "emailRequired": "Địa chỉ email là bắt buộc.",
-      "inviteSent": "Lời mời đã gửi tới {{email}}!"
+      "clickToPlaceInitials": "Nhấp vào trang để đặt chữ viết tắt."
     },
     "overlay": {
       "signaturePlaced": "Chữ ký đã đặt!",
@@ -1093,22 +1129,14 @@
       "addText": "Thêm văn bản",
       "fillAndSign": "Điền & ký",
       "more": "Công cụ khác",
-      "formatting": "Định dạng",
       "strikeText": "Gạch ngang văn bản",
       "underlineText": "Gạch chân văn bản",
-      "insertTextBox": "Chèn hộp văn bản",
-      "stampsAndInsert": "Dấu & chèn",
-      "stamps": "Dấu",
-      "insertDate": "Chèn ngày",
-      "addAttachment": "Thêm tệp đính kèm",
-      "ruler": "Thước"
+      "addAttachment": "Thêm tệp đính kèm"
     },
     "railToasts": {
       "commentMode": "Chế độ ghi chú hoạt động. Chọn văn bản và chọn Ghi chú, hoặc sử dụng danh sách bình luận để thêm ghi chú.",
       "strikeout": "Gạch ngang hoạt động — chọn văn bản để áp dụng.",
-      "underline": "Gạch chân hoạt động — chọn văn bản để áp dụng.",
-      "textboxOpened": "Công cụ hộp văn bản đã mở.",
-      "stampsInAllTools": "Dấu nằm trong Tất cả công cụ."
+      "underline": "Gạch chân hoạt động — chọn văn bản để áp dụng."
     },
     "tools": {
       "lede": "Chọn công cụ để bắt đầu. Mọi thứ chạy cục bộ trên thiết bị này.",
@@ -1143,7 +1171,11 @@
       "moreAttachments_plural": "+{{count}} tệp đính kèm khác",
       "layers": "{{count}} lớp",
       "manageLayers": "Quản lý lớp",
-      "layersVisible": "{{count}} lớp hiển thị."
+      "layersVisible": "{{count}} lớp hiển thị.",
+      "archiveAndData": "Archiving and data",
+      "pdfaSub": "Check or convert for long-term archiving",
+      "invoiceSub": "Read the ZUGFeRD/Factur-X invoice inside",
+      "metadataSub": "Title and author of this document"
     },
     "edit": {
       "lede": "Nhấp vào văn bản trong tài liệu để chỉnh sửa nội tuyến. Thanh định dạng xuất hiện ngay phía trên lựa chọn.",
@@ -1186,17 +1218,31 @@
       "ocrRunning": "OCR chạy cục bộ…"
     },
     "esign": {
-      "lede": "Ký tài liệu nhanh chóng và an toàn, và dễ dàng chia sẻ với người khác để ký.",
-      "localSigned": "Ký cục bộ — không có gì rời khỏi thiết bị này",
-      "padesCompliant": "Chữ ký kỹ thuật số tuân thủ PAdES",
+      "lede": "Sign with a certificate of your own, and check the signatures a document already carries. Both happen on this device.",
       "fillAndSign": "Điền tài liệu và ký",
       "addSignature": "Thêm chữ ký",
       "addInitials": "Thêm chữ viết tắt",
-      "invite": "Mời ký",
       "placementModeSignature": "Chế độ đặt: Chữ ký",
       "placementModeInitials": "Chế độ đặt: Chữ viết tắt",
       "clickToPlaceSignature": "Nhấp ở bất kỳ đâu trên trang để đặt chữ ký của bạn.",
-      "clickToPlaceInitials": "Nhấp ở bất kỳ đâu trên trang để đặt chữ viết tắt của bạn."
+      "clickToPlaceInitials": "Nhấp ở bất kỳ đâu trên trang để đặt chữ viết tắt của bạn.",
+      "verifySection": "Signatures",
+      "verify": "Check signatures",
+      "desktopOnly": "Available in the desktop app",
+      "unsigned": "This document carries no signatures.",
+      "signSection": "Sign with a certificate",
+      "padesLevel": "Produces a PAdES B-B signature: your certificate over the whole file, no timestamp server involved.",
+      "certificate": "Certificate (.p12 or .pfx)",
+      "certificateNone": "No certificate chosen",
+      "chooseCertificate": "Choose certificate",
+      "certificatePassword": "Certificate password",
+      "reason": "Reason (optional)",
+      "reasonPlaceholder": "Why you are signing",
+      "sign": "Sign and save a copy",
+      "signing": "Signing…",
+      "signNeedsCertificate": "Choose a certificate and enter its password first.",
+      "signSaved": "Signed copy saved as {{name}}",
+      "signFailed": "Signing failed: {{message}}"
     },
     "protect": {
       "lede": "Bảo vệ tài liệu PDF của bạn bằng mật khẩu mã hóa mạnh. Thay đổi được áp dụng cục bộ ngay lập tức.",
@@ -1300,7 +1346,77 @@
     },
     "thumbnails": {
       "pages": "Trang",
-      "pageAlt": "Trang {{page}}"
+      "pageAlt": "Trang {{page}}",
+      "bookmarks": "Bookmarks"
+    },
+    "pdfa": {
+      "lede": "PDF/A is the archival form of PDF: fonts embedded, colours defined, nothing that depends on the outside world.",
+      "section": "Conformance",
+      "level": "Level",
+      "validate": "Check this document",
+      "convert": "Save as PDF/A…",
+      "desktopOnly": "Available in the desktop app",
+      "compliant": "Conforms to {{level}}",
+      "notCompliant": "Does not conform: {{errors}} errors, {{warnings}} warnings",
+      "moreIssues": "{{count}} more"
+    },
+    "metadata": {
+      "lede": "The title and author stored inside the file, which is what other readers and search show.",
+      "section": "Properties",
+      "title": "Title",
+      "author": "Author",
+      "apply": "Save properties",
+      "desktopOnly": "Available in the desktop app"
+    },
+    "invoice": {
+      "lede": "A ZUGFeRD or Factur-X invoice travels as XML inside the PDF. This reads it and checks it against EN 16931.",
+      "section": "Embedded invoice",
+      "read": "Read invoice",
+      "desktopOnly": "Available in the desktop app",
+      "none": "This document carries no e-invoice.",
+      "number": "Number: {{number}}",
+      "issued": "Issued: {{date}}",
+      "seller": "Seller: {{name}}",
+      "buyer": "Buyer: {{name}}",
+      "total": "Total: {{total}} {{currency}}",
+      "lines": "Line items: {{count}}",
+      "valid": "Valid against {{profile}}",
+      "invalid": "Not valid: {{errors}} errors, {{warnings}} warnings"
     }
+  },
+  "about": {
+    "section": "About",
+    "app": "App",
+    "version": "Version",
+    "privacy": "Privacy",
+    "privacyValue": "All processing happens locally",
+    "website": "Website"
+  },
+  "reviewSummary": {
+    "title": "Review summary",
+    "generatedAt": "Generated on",
+    "comments": "Comments",
+    "noComments": "No comments.",
+    "replies": "Replies:",
+    "empty": "empty",
+    "redactions": "Redactions",
+    "noRedactions": "No redactions.",
+    "noIssues": "No issues.",
+    "metadataChanges": "Metadata changes",
+    "noMetadataChanges": "No changes.",
+    "changedBy": "by",
+    "on": "on"
+  },
+  "externalLink": {
+    "askMessage": "This PDF wants to open an external link:\n\n{{label}}\n\nURL:\n{{href}}\n\nDo you want to continue?",
+    "title": "Open external link?",
+    "openLink": "Open link",
+    "dialogBody": "This PDF wants to open an external website. Check the URL before continuing."
+  },
+  "linkChoice": {
+    "title": "Open link in your browser?",
+    "body": "This document wants to open an external website. Are you opening it from a trusted source?",
+    "alwaysAllow": "Always allow",
+    "openOnce": "Open once"
   }
 }

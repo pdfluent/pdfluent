@@ -112,7 +112,11 @@
     "prevField": "上一个字段",
     "nextField": "下一个字段",
     "allTools": "所有工具",
-    "contextualBar": "模式工具栏"
+    "contextualBar": "模式工具栏",
+    "pdfa": "PDF/A",
+    "metadata": "Document properties",
+    "invoice": "E-invoice",
+    "bookmarks": "Bookmarks"
   },
   "topbar": {
     "openPdf": "打开 PDF",
@@ -282,7 +286,27 @@
     "clearSelection": "清除选择",
     "combine": "合并文件",
     "splitRange": "按范围拆分",
-    "splitRangeHint": "先选择页面"
+    "splitRangeHint": "先选择页面",
+    "moveLeft": "Move selected page left",
+    "moveRight": "Move selected page right",
+    "moveLeftShort": "Left",
+    "moveRightShort": "Right",
+    "rotateLeft": "Rotate left",
+    "rotateRight": "Rotate right",
+    "rotateLeftShort": "Left",
+    "rotateRightShort": "Right",
+    "addingPdf": "Adding PDF…",
+    "pdfAdded": "PDF added",
+    "combiningFiles": "Combining {{count}} file(s)…",
+    "filesCombined": "{{count}} file(s) combined",
+    "insertingPdf": "Inserting PDF before page {{page}}…",
+    "pdfInserted": "PDF inserted",
+    "exportingPages": "Exporting {{count}} page(s)…",
+    "selectionExported": "Selection exported to {{name}}",
+    "splittingPages": "Splitting into individual pages…",
+    "pagesSaved": "{{count}} pages saved",
+    "splittingRanges": "Splitting {{count}} range(s)…",
+    "filesSaved": "{{count}} file(s) saved"
   },
   "unsavedChanges": {
     "title": "未保存的更改",
@@ -302,7 +326,14 @@
     "dragDropHint": "或将 PDF 拖放到此处",
     "lede": "阅读、编辑、转换、填写并签署 — 完全在您的设备上完成。",
     "privacyPromise": "本地优先 · 文档永不离开此设备",
-    "dropPdfHere": "将 PDF 拖放到此处"
+    "dropPdfHere": "将 PDF 拖放到此处",
+    "v3Subtitle": "Open a PDF to read, edit, convert or sign it locally.",
+    "openFileAria": "Choose a PDF file to open",
+    "clearRecent": "Clear recent",
+    "recentShort": "Recent",
+    "removeRecentAria": "Remove {{name}}",
+    "backToDocument": "Back to document",
+    "loadingDocument": "Loading document…"
   },
   "settings": {
     "language": "语言",
@@ -324,7 +355,10 @@
     "themeLabel": "主题",
     "ocrDefaults": "OCR 默认值",
     "ocrLanguageLabel": "默认语言 (ISO-639-2)",
-    "ocrLanguagePlaceholder": "例如：eng、nld、deu"
+    "ocrLanguagePlaceholder": "例如：eng、nld、deu",
+    "updates": "Updates",
+    "automaticUpdateCheck": "Check for a new version at startup",
+    "automaticUpdateCheckHint": "PDFluent asks pdfluent.com whether a newer version exists, a few seconds after it starts. Nothing from your documents is sent. Turn this off and the app never checks on its own — \"Check for updates\" still works whenever you ask for it."
   },
   "errors": {
     "loadFailed": "文档加载失败",
@@ -465,7 +499,13 @@
     "dismiss": "关闭",
     "watermarkDone": "水印已添加",
     "watermarkFailed": "水印添加失败",
-    "watermarkRunning": "正在添加水印…"
+    "watermarkRunning": "正在添加水印…",
+    "pdfaRunning": "Converting to PDF/A…",
+    "pdfaDone": "PDF/A written",
+    "pdfaFailed": "PDF/A conversion failed",
+    "metadataRunning": "Saving properties…",
+    "metadataDone": "Properties saved",
+    "metadataFailed": "Could not save properties"
   },
   "panels": {
     "search": "搜索",
@@ -837,7 +877,10 @@
     "detected": "此文档使用 XFA 表单。渲染可能不完整 — XFA 支持是实验性的。",
     "flatten": "平铺 XFA",
     "flattenDone": "XFA 已平铺。导出 PDF 以下载静态版本。",
-    "flattenFailed": "平铺 XFA 失败"
+    "flattenFailed": "平铺 XFA 失败",
+    "convertToStandard": "Convert to standard PDF",
+    "convertedToStandard": "XFA converted to standard PDF",
+    "convertFailed": "Conversion failed: {{message}}"
   },
   "security": {
     "activeContentBadge": "已阻止",
@@ -870,7 +913,11 @@
     "dismiss": "关闭",
     "installing": "安装中…",
     "checkFailed": "更新检查失败",
-    "upToDate": "您使用的是最新版本"
+    "upToDate": "您使用的是最新版本",
+    "installed": "Update installed",
+    "restartNow": "Restart now",
+    "restartUnsaved": "Save your changes before restarting.",
+    "restartManual": "If it doesn't restart automatically, quit and reopen PDFluent to finish."
   },
   "telemetry": {
     "addNoteLabel": "想要添加什么吗？（可选）",
@@ -1049,18 +1096,7 @@
       "initials": "首字母缩写",
       "initialsPlaceholder": "例如 AB",
       "defaultInitials": "AB",
-      "clickToPlaceInitials": "单击页面以放置首字母缩写。",
-      "invite": "邀请签署",
-      "inviteIntro": "将电子签名请求发送给收件人。他们会收到一封电子邮件，其中包含在本地签署文档的链接。",
-      "recipientName": "收件人名称",
-      "recipientNamePlaceholder": "收件人名称…",
-      "email": "电子邮件地址",
-      "emailPlaceholder": "name@example.com",
-      "message": "消息（可选）",
-      "messagePlaceholder": "嗨，你能签署这份文件吗？",
-      "send": "发送",
-      "emailRequired": "电子邮件地址为必需。",
-      "inviteSent": "邀请已发送至 {{email}}！"
+      "clickToPlaceInitials": "单击页面以放置首字母缩写。"
     },
     "overlay": {
       "signaturePlaced": "签名已放置！",
@@ -1093,22 +1129,14 @@
       "addText": "添加文本",
       "fillAndSign": "填写并签署",
       "more": "更多工具",
-      "formatting": "格式",
       "strikeText": "删除线文本",
       "underlineText": "下划线文本",
-      "insertTextBox": "插入文本框",
-      "stampsAndInsert": "印章和插入",
-      "stamps": "印章",
-      "insertDate": "插入日期",
-      "addAttachment": "添加附件",
-      "ruler": "标尺"
+      "addAttachment": "添加附件"
     },
     "railToasts": {
       "commentMode": "注释模式已启用。选择文本并选择「注释」，或使用注释列表添加注释。",
       "strikeout": "删除线已启用 — 选择文本以应用。",
-      "underline": "下划线已启用 — 选择文本以应用。",
-      "textboxOpened": "文本框工具已打开。",
-      "stampsInAllTools": "所有工具中都有印章。"
+      "underline": "下划线已启用 — 选择文本以应用。"
     },
     "tools": {
       "lede": "选择一个工具以开始。所有操作都在本设备上本地进行。",
@@ -1143,7 +1171,11 @@
       "moreAttachments_plural": "+{{count}} 个更多附件",
       "layers": "{{count}} 个图层",
       "manageLayers": "管理图层",
-      "layersVisible": "{{count}} 个图层可见。"
+      "layersVisible": "{{count}} 个图层可见。",
+      "archiveAndData": "Archiving and data",
+      "pdfaSub": "Check or convert for long-term archiving",
+      "invoiceSub": "Read the ZUGFeRD/Factur-X invoice inside",
+      "metadataSub": "Title and author of this document"
     },
     "edit": {
       "lede": "单击文档中的文本进行内联编辑。格式栏显示在选定内容的正上方。",
@@ -1186,17 +1218,31 @@
       "ocrRunning": "OCR 在本地运行中…"
     },
     "esign": {
-      "lede": "快速安全地签署文档，并轻松与他人分享以供签署。",
-      "localSigned": "本地签署 — 无内容离开本设备",
-      "padesCompliant": "PAdES 兼容的数字签名",
+      "lede": "Sign with a certificate of your own, and check the signatures a document already carries. Both happen on this device.",
       "fillAndSign": "填写您的文档并签署",
       "addSignature": "添加签名",
       "addInitials": "添加首字母缩写",
-      "invite": "邀请签署",
       "placementModeSignature": "放置模式：签名",
       "placementModeInitials": "放置模式：首字母缩写",
       "clickToPlaceSignature": "在页面上的任何位置单击以放置您的签名。",
-      "clickToPlaceInitials": "在页面上的任何位置单击以放置您的首字母缩写。"
+      "clickToPlaceInitials": "在页面上的任何位置单击以放置您的首字母缩写。",
+      "verifySection": "Signatures",
+      "verify": "Check signatures",
+      "desktopOnly": "Available in the desktop app",
+      "unsigned": "This document carries no signatures.",
+      "signSection": "Sign with a certificate",
+      "padesLevel": "Produces a PAdES B-B signature: your certificate over the whole file, no timestamp server involved.",
+      "certificate": "Certificate (.p12 or .pfx)",
+      "certificateNone": "No certificate chosen",
+      "chooseCertificate": "Choose certificate",
+      "certificatePassword": "Certificate password",
+      "reason": "Reason (optional)",
+      "reasonPlaceholder": "Why you are signing",
+      "sign": "Sign and save a copy",
+      "signing": "Signing…",
+      "signNeedsCertificate": "Choose a certificate and enter its password first.",
+      "signSaved": "Signed copy saved as {{name}}",
+      "signFailed": "Signing failed: {{message}}"
     },
     "protect": {
       "lede": "使用强加密密码保护您的 PDF 文档。更改立即在本地应用。",
@@ -1300,7 +1346,77 @@
     },
     "thumbnails": {
       "pages": "页面",
-      "pageAlt": "第 {{page}} 页"
+      "pageAlt": "第 {{page}} 页",
+      "bookmarks": "Bookmarks"
+    },
+    "pdfa": {
+      "lede": "PDF/A is the archival form of PDF: fonts embedded, colours defined, nothing that depends on the outside world.",
+      "section": "Conformance",
+      "level": "Level",
+      "validate": "Check this document",
+      "convert": "Save as PDF/A…",
+      "desktopOnly": "Available in the desktop app",
+      "compliant": "Conforms to {{level}}",
+      "notCompliant": "Does not conform: {{errors}} errors, {{warnings}} warnings",
+      "moreIssues": "{{count}} more"
+    },
+    "metadata": {
+      "lede": "The title and author stored inside the file, which is what other readers and search show.",
+      "section": "Properties",
+      "title": "Title",
+      "author": "Author",
+      "apply": "Save properties",
+      "desktopOnly": "Available in the desktop app"
+    },
+    "invoice": {
+      "lede": "A ZUGFeRD or Factur-X invoice travels as XML inside the PDF. This reads it and checks it against EN 16931.",
+      "section": "Embedded invoice",
+      "read": "Read invoice",
+      "desktopOnly": "Available in the desktop app",
+      "none": "This document carries no e-invoice.",
+      "number": "Number: {{number}}",
+      "issued": "Issued: {{date}}",
+      "seller": "Seller: {{name}}",
+      "buyer": "Buyer: {{name}}",
+      "total": "Total: {{total}} {{currency}}",
+      "lines": "Line items: {{count}}",
+      "valid": "Valid against {{profile}}",
+      "invalid": "Not valid: {{errors}} errors, {{warnings}} warnings"
     }
+  },
+  "about": {
+    "section": "About",
+    "app": "App",
+    "version": "Version",
+    "privacy": "Privacy",
+    "privacyValue": "All processing happens locally",
+    "website": "Website"
+  },
+  "reviewSummary": {
+    "title": "Review summary",
+    "generatedAt": "Generated on",
+    "comments": "Comments",
+    "noComments": "No comments.",
+    "replies": "Replies:",
+    "empty": "empty",
+    "redactions": "Redactions",
+    "noRedactions": "No redactions.",
+    "noIssues": "No issues.",
+    "metadataChanges": "Metadata changes",
+    "noMetadataChanges": "No changes.",
+    "changedBy": "by",
+    "on": "on"
+  },
+  "externalLink": {
+    "askMessage": "This PDF wants to open an external link:\n\n{{label}}\n\nURL:\n{{href}}\n\nDo you want to continue?",
+    "title": "Open external link?",
+    "openLink": "Open link",
+    "dialogBody": "This PDF wants to open an external website. Check the URL before continuing."
+  },
+  "linkChoice": {
+    "title": "Open link in your browser?",
+    "body": "This document wants to open an external website. Are you opening it from a trusted source?",
+    "alwaysAllow": "Always allow",
+    "openOnce": "Open once"
   }
 }

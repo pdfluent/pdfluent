@@ -156,7 +156,7 @@ interface ToolbarProps {
   onManageESignTemplates: () => void;
   onShowESignStatus: () => void;
   onConfigureTeamBackend: () => void;
-  onManageLicensesAndPolicies: () => void;
+  onManagePolicies: () => void;
   onRunStorageSyncEngine: () => void;
   onManageIntegrations: () => void;
   onConfigureApiProduct: () => void;
@@ -234,9 +234,6 @@ export function Toolbar(props: ToolbarProps) {
     onRedo,
     canUndo,
     canRedo,
-    recentFiles: _recentFiles,
-    onOpenRecentFile: _onOpenRecentFile,
-    onClearRecentFiles: _onClearRecentFiles,
     sidebarVisible,
     onToggleSidebar,
     filePath,
@@ -274,7 +271,6 @@ export function Toolbar(props: ToolbarProps) {
     onSplitPdf,
     onMergePdfs,
     onSignDocument,
-    onCheckForUpdates: _onCheckForUpdates,
     onExportEncryptedCopy,
     onImportEncryptedCopy,
     onAddImage,
@@ -307,7 +303,7 @@ export function Toolbar(props: ToolbarProps) {
     onShowESignStatus,
     onConfigureTeamBackend,
     onConfigureSso,
-    onManageLicensesAndPolicies,
+    onManagePolicies,
     onRunBatchProcessing,
     onRunStorageSyncEngine,
     onManageIntegrations,
@@ -341,7 +337,6 @@ export function Toolbar(props: ToolbarProps) {
     onFindReplacePage,
     onFindReplaceDocument,
     onAddFormField,
-    onOpenSettings: _onOpenSettings,
   } = props;
 
   const fileName = filePath ? filePath.split("/").pop() : null;
@@ -1141,10 +1136,10 @@ export function Toolbar(props: ToolbarProps) {
             <button
               type="button"
               className="toolbar-dropdown-item"
-              onClick={onManageLicensesAndPolicies}
+              onClick={onManagePolicies}
               disabled={isProcessing}
             >
-              Licenses & policies
+              Policies
             </button>
             <button
               type="button"

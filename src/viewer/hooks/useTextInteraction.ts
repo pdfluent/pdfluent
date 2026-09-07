@@ -258,7 +258,7 @@ export function useTextInteraction(
     setDraftBold(null);
     setDraftItalic(null);
     draftRangeFormatEditsRef.current = [];
-  }, [mode, activeAnnotationTool, editingTextTargetId, pageIndex, onExternalLinkClick]);
+  }, [mode, activeAnnotationTool, onExternalLinkClick]);
 
   const handleEditEntry = useCallback((target: TextParagraphTarget) => {
     const editability = getEditability(target, mode, activeAnnotationTool);

@@ -67,3 +67,6 @@ latest.json
 
 # Mac App Store provisioning profile (per-developer, not committed)
 *.provisionprofile
+
+# Production bundle built by scripts/ci/legacy-shell-fenced.mjs; never a source of truth.
+dist-legacy-guard/

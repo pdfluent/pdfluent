@@ -2,14 +2,13 @@ PDFluent — Proprietary Software License
 
 Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 
-PDFluent is proprietary and confidential software. It is free to install and use
-for any lawful purpose, including commercial and business use. Extracting or
-reusing its components (including the embedded PDF engine) outside the
-application, or operating it as an automated document-processing service,
-requires a separate license — see https://pdfluent.com for SDK licensing.
-
-This is NOT open-source software. No rights are granted under any open-source or
-copyleft license.
+PDFluent is proprietary software. Its source is published in this repository,
+which does not make it open source: no rights are granted under any open-source
+or copyleft license. It is free to install and use for any lawful purpose,
+including commercial and business use. Extracting or reusing its components
+(including the embedded PDF engine) outside the application, or operating it as
+an automated document-processing service, requires a separate license — see
+https://pdfluent.com for SDK licensing.
 
 The full End-User License Agreement (EULA) that governs your use of PDFluent is
 in LICENSE.md in this repository and at https://pdfluent.com/license. In case of

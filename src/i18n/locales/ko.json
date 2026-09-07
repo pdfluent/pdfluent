@@ -112,7 +112,11 @@
     "prevField": "이전 필드",
     "nextField": "다음 필드",
     "allTools": "모든 도구",
-    "contextualBar": "모드 도구모음"
+    "contextualBar": "모드 도구모음",
+    "pdfa": "PDF/A",
+    "metadata": "Document properties",
+    "invoice": "E-invoice",
+    "bookmarks": "Bookmarks"
   },
   "topbar": {
     "openPdf": "PDF 열기",
@@ -282,7 +286,27 @@
     "clearSelection": "선택 해제",
     "combine": "파일 합치기",
     "splitRange": "범위로 나누기",
-    "splitRangeHint": "먼저 페이지를 선택하세요"
+    "splitRangeHint": "먼저 페이지를 선택하세요",
+    "moveLeft": "Move selected page left",
+    "moveRight": "Move selected page right",
+    "moveLeftShort": "Left",
+    "moveRightShort": "Right",
+    "rotateLeft": "Rotate left",
+    "rotateRight": "Rotate right",
+    "rotateLeftShort": "Left",
+    "rotateRightShort": "Right",
+    "addingPdf": "Adding PDF…",
+    "pdfAdded": "PDF added",
+    "combiningFiles": "Combining {{count}} file(s)…",
+    "filesCombined": "{{count}} file(s) combined",
+    "insertingPdf": "Inserting PDF before page {{page}}…",
+    "pdfInserted": "PDF inserted",
+    "exportingPages": "Exporting {{count}} page(s)…",
+    "selectionExported": "Selection exported to {{name}}",
+    "splittingPages": "Splitting into individual pages…",
+    "pagesSaved": "{{count}} pages saved",
+    "splittingRanges": "Splitting {{count}} range(s)…",
+    "filesSaved": "{{count}} file(s) saved"
   },
   "unsavedChanges": {
     "title": "저장되지 않은 변경 사항",
@@ -302,7 +326,14 @@
     "dragDropHint": "또는 PDF를 여기에 드래그",
     "lede": "읽기, 편집, 변환, 작성 및 서명 — 완전히 기기에서.",
     "privacyPromise": "로컬 우선 · 문서가 기기를 벗어나지 않음",
-    "dropPdfHere": "여기에 PDF를 놓으세요"
+    "dropPdfHere": "여기에 PDF를 놓으세요",
+    "v3Subtitle": "Open a PDF to read, edit, convert or sign it locally.",
+    "openFileAria": "Choose a PDF file to open",
+    "clearRecent": "Clear recent",
+    "recentShort": "Recent",
+    "removeRecentAria": "Remove {{name}}",
+    "backToDocument": "Back to document",
+    "loadingDocument": "Loading document…"
   },
   "settings": {
     "language": "언어",
@@ -324,7 +355,10 @@
     "themeLabel": "테마",
     "ocrDefaults": "OCR 기본값",
     "ocrLanguageLabel": "기본 언어 (ISO-639-2)",
-    "ocrLanguagePlaceholder": "예: eng, nld, deu"
+    "ocrLanguagePlaceholder": "예: eng, nld, deu",
+    "updates": "Updates",
+    "automaticUpdateCheck": "Check for a new version at startup",
+    "automaticUpdateCheckHint": "PDFluent asks pdfluent.com whether a newer version exists, a few seconds after it starts. Nothing from your documents is sent. Turn this off and the app never checks on its own — \"Check for updates\" still works whenever you ask for it."
   },
   "errors": {
     "loadFailed": "문서 로드 실패",
@@ -465,7 +499,13 @@
     "dismiss": "닫기",
     "watermarkDone": "워터마크가 추가되었습니다",
     "watermarkFailed": "워터마크 추가 실패",
-    "watermarkRunning": "워터마크 추가 중…"
+    "watermarkRunning": "워터마크 추가 중…",
+    "pdfaRunning": "Converting to PDF/A…",
+    "pdfaDone": "PDF/A written",
+    "pdfaFailed": "PDF/A conversion failed",
+    "metadataRunning": "Saving properties…",
+    "metadataDone": "Properties saved",
+    "metadataFailed": "Could not save properties"
   },
   "panels": {
     "search": "검색",
@@ -837,7 +877,10 @@
     "detected": "이 문서는 XFA 양식을 사용합니다. 렌더링이 불완전할 수 있습니다 — XFA 지원은 실험적입니다.",
     "flatten": "XFA 평탄화",
     "flattenDone": "XFA 평탄화됨. PDF를 내보내 정적 버전을 다운로드하세요.",
-    "flattenFailed": "XFA 평탄화 실패"
+    "flattenFailed": "XFA 평탄화 실패",
+    "convertToStandard": "Convert to standard PDF",
+    "convertedToStandard": "XFA converted to standard PDF",
+    "convertFailed": "Conversion failed: {{message}}"
   },
   "security": {
     "activeContentBadge": "차단됨",
@@ -870,7 +913,11 @@
     "dismiss": "닫기",
     "installing": "설치 중…",
     "checkFailed": "업데이트 확인 실패",
-    "upToDate": "최신 버전을 사용 중입니다"
+    "upToDate": "최신 버전을 사용 중입니다",
+    "installed": "Update installed",
+    "restartNow": "Restart now",
+    "restartUnsaved": "Save your changes before restarting.",
+    "restartManual": "If it doesn't restart automatically, quit and reopen PDFluent to finish."
   },
   "telemetry": {
     "addNoteLabel": "추가할 내용이 있나요? (선택 사항)",
@@ -1049,18 +1096,7 @@
       "initials": "이니셜",
       "initialsPlaceholder": "예) AB",
       "defaultInitials": "AB",
-      "clickToPlaceInitials": "페이지를 클릭하여 이니셜을 배치하세요.",
-      "invite": "서명 초대",
-      "inviteIntro": "수신자에게 전자서명 요청을 보내세요. 수신자는 로컬에서 문서에 서명할 수 있는 링크가 포함된 이메일을 받게 됩니다.",
-      "recipientName": "수신자 이름",
-      "recipientNamePlaceholder": "수신자 이름…",
-      "email": "이메일 주소",
-      "emailPlaceholder": "name@example.com",
-      "message": "메시지 (선택사항)",
-      "messagePlaceholder": "안녕하세요, 이 문서에 서명해 주시겠어요?",
-      "send": "전송",
-      "emailRequired": "이메일 주소는 필수입니다.",
-      "inviteSent": "{{email}}로 초대가 전송되었습니다!"
+      "clickToPlaceInitials": "페이지를 클릭하여 이니셜을 배치하세요."
     },
     "overlay": {
       "signaturePlaced": "서명이 배치되었습니다!",
@@ -1093,22 +1129,14 @@
       "addText": "텍스트 추가",
       "fillAndSign": "작성 및 서명",
       "more": "더 많은 도구",
-      "formatting": "서식",
       "strikeText": "텍스트 취소선",
       "underlineText": "텍스트 밑줄",
-      "insertTextBox": "텍스트 상자 삽입",
-      "stampsAndInsert": "스탬프 및 삽입",
-      "stamps": "스탬프",
-      "insertDate": "날짜 삽입",
-      "addAttachment": "첨부 파일 추가",
-      "ruler": "자"
+      "addAttachment": "첨부 파일 추가"
     },
     "railToasts": {
       "commentMode": "노트 모드 활성화. 텍스트를 선택하고 노트를 선택하거나 댓글 목록을 사용하여 노트를 추가하세요.",
       "strikeout": "취소선 활성화 — 텍스트를 선택하여 적용하세요.",
-      "underline": "밑줄 활성화 — 텍스트를 선택하여 적용하세요.",
-      "textboxOpened": "텍스트 상자 도구가 열렸습니다.",
-      "stampsInAllTools": "스탬프는 모든 도구에 있습니다."
+      "underline": "밑줄 활성화 — 텍스트를 선택하여 적용하세요."
     },
     "tools": {
       "lede": "시작할 도구를 선택하세요. 모든 것이 이 기기에서 로컬로 실행됩니다.",
@@ -1143,7 +1171,11 @@
       "moreAttachments_plural": "+{{count}}개 첨부 파일",
       "layers": "{{count}}개 레이어",
       "manageLayers": "레이어 관리",
-      "layersVisible": "{{count}}개 레이어가 표시됩니다."
+      "layersVisible": "{{count}}개 레이어가 표시됩니다.",
+      "archiveAndData": "Archiving and data",
+      "pdfaSub": "Check or convert for long-term archiving",
+      "invoiceSub": "Read the ZUGFeRD/Factur-X invoice inside",
+      "metadataSub": "Title and author of this document"
     },
     "edit": {
       "lede": "문서의 텍스트를 클릭하여 인라인으로 편집하세요. 서식 지정 표시줄이 선택 항목 바로 위에 나타납니다.",
@@ -1186,17 +1218,31 @@
       "ocrRunning": "OCR을 로컬에서 실행 중…"
     },
     "esign": {
-      "lede": "문서에 빠르고 안전하게 서명하고 다른 사람과 쉽게 공유하여 서명받으세요.",
-      "localSigned": "로컬에서 서명됨 — 이 기기를 벗어나지 않음",
-      "padesCompliant": "PAdES 준수 디지털 서명",
+      "lede": "Sign with a certificate of your own, and check the signatures a document already carries. Both happen on this device.",
       "fillAndSign": "문서를 작성하고 서명하세요",
       "addSignature": "서명 추가",
       "addInitials": "이니셜 추가",
-      "invite": "서명 초대",
       "placementModeSignature": "배치 모드: 서명",
       "placementModeInitials": "배치 모드: 이니셜",
       "clickToPlaceSignature": "페이지의 아무 곳이나 클릭하여 서명을 배치하세요.",
-      "clickToPlaceInitials": "페이지의 아무 곳이나 클릭하여 이니셜을 배치하세요."
+      "clickToPlaceInitials": "페이지의 아무 곳이나 클릭하여 이니셜을 배치하세요.",
+      "verifySection": "Signatures",
+      "verify": "Check signatures",
+      "desktopOnly": "Available in the desktop app",
+      "unsigned": "This document carries no signatures.",
+      "signSection": "Sign with a certificate",
+      "padesLevel": "Produces a PAdES B-B signature: your certificate over the whole file, no timestamp server involved.",
+      "certificate": "Certificate (.p12 or .pfx)",
+      "certificateNone": "No certificate chosen",
+      "chooseCertificate": "Choose certificate",
+      "certificatePassword": "Certificate password",
+      "reason": "Reason (optional)",
+      "reasonPlaceholder": "Why you are signing",
+      "sign": "Sign and save a copy",
+      "signing": "Signing…",
+      "signNeedsCertificate": "Choose a certificate and enter its password first.",
+      "signSaved": "Signed copy saved as {{name}}",
+      "signFailed": "Signing failed: {{message}}"
     },
     "protect": {
       "lede": "강력한 암호화 비밀번호로 PDF 문서를 보호하세요. 변경 사항은 로컬에서 즉시 적용됩니다.",
@@ -1300,7 +1346,77 @@
     },
     "thumbnails": {
       "pages": "페이지",
-      "pageAlt": "{{page}}페이지"
+      "pageAlt": "{{page}}페이지",
+      "bookmarks": "Bookmarks"
+    },
+    "pdfa": {
+      "lede": "PDF/A is the archival form of PDF: fonts embedded, colours defined, nothing that depends on the outside world.",
+      "section": "Conformance",
+      "level": "Level",
+      "validate": "Check this document",
+      "convert": "Save as PDF/A…",
+      "desktopOnly": "Available in the desktop app",
+      "compliant": "Conforms to {{level}}",
+      "notCompliant": "Does not conform: {{errors}} errors, {{warnings}} warnings",
+      "moreIssues": "{{count}} more"
+    },
+    "metadata": {
+      "lede": "The title and author stored inside the file, which is what other readers and search show.",
+      "section": "Properties",
+      "title": "Title",
+      "author": "Author",
+      "apply": "Save properties",
+      "desktopOnly": "Available in the desktop app"
+    },
+    "invoice": {
+      "lede": "A ZUGFeRD or Factur-X invoice travels as XML inside the PDF. This reads it and checks it against EN 16931.",
+      "section": "Embedded invoice",
+      "read": "Read invoice",
+      "desktopOnly": "Available in the desktop app",
+      "none": "This document carries no e-invoice.",
+      "number": "Number: {{number}}",
+      "issued": "Issued: {{date}}",
+      "seller": "Seller: {{name}}",
+      "buyer": "Buyer: {{name}}",
+      "total": "Total: {{total}} {{currency}}",
+      "lines": "Line items: {{count}}",
+      "valid": "Valid against {{profile}}",
+      "invalid": "Not valid: {{errors}} errors, {{warnings}} warnings"
     }
+  },
+  "about": {
+    "section": "About",
+    "app": "App",
+    "version": "Version",
+    "privacy": "Privacy",
+    "privacyValue": "All processing happens locally",
+    "website": "Website"
+  },
+  "reviewSummary": {
+    "title": "Review summary",
+    "generatedAt": "Generated on",
+    "comments": "Comments",
+    "noComments": "No comments.",
+    "replies": "Replies:",
+    "empty": "empty",
+    "redactions": "Redactions",
+    "noRedactions": "No redactions.",
+    "noIssues": "No issues.",
+    "metadataChanges": "Metadata changes",
+    "noMetadataChanges": "No changes.",
+    "changedBy": "by",
+    "on": "on"
+  },
+  "externalLink": {
+    "askMessage": "This PDF wants to open an external link:\n\n{{label}}\n\nURL:\n{{href}}\n\nDo you want to continue?",
+    "title": "Open external link?",
+    "openLink": "Open link",
+    "dialogBody": "This PDF wants to open an external website. Check the URL before continuing."
+  },
+  "linkChoice": {
+    "title": "Open link in your browser?",
+    "body": "This document wants to open an external website. Are you opening it from a trusted source?",
+    "alwaysAllow": "Always allow",
+    "openOnce": "Open once"
   }
 }

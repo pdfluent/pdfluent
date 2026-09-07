@@ -20,7 +20,9 @@ describe('Runtime Adapter Architecture Integration', () => {
         runtime: 'browser-test' as const,
         priority: 1,
         isAvailable: () => true,
-        createEngine: async () => ({}) as any,
+        createEngine: async () => {
+          throw new Error('Engine creation is not exercised in this test');
+        },
         getMetadata: () => ({
           name: 'Test Adapter',
           version: '1.0.0',
@@ -54,7 +56,9 @@ describe('Runtime Adapter Architecture Integration', () => {
         runtime: 'tauri' as const,
         priority: 100,
         isAvailable: () => false,
-        createEngine: async () => ({}) as any,
+        createEngine: async () => {
+          throw new Error('Unavailable adapter must not create an engine');
+        },
         getMetadata: () => ({
           name: 'Unavailable Adapter',
           version: '1.0.0',

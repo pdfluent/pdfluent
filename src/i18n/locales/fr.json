@@ -112,7 +112,11 @@
     "prevField": "Champ précédent",
     "nextField": "Champ suivant",
     "allTools": "Tous les outils",
-    "contextualBar": "Barre d'outils du mode"
+    "contextualBar": "Barre d'outils du mode",
+    "pdfa": "PDF/A",
+    "metadata": "Document properties",
+    "invoice": "E-invoice",
+    "bookmarks": "Bookmarks"
   },
   "topbar": {
     "openPdf": "Ouvrir PDF",
@@ -282,7 +286,27 @@
     "clearSelection": "Effacer la sélection",
     "combine": "Combiner les fichiers",
     "splitRange": "Diviser par plage",
-    "splitRangeHint": "Sélectionnez d'abord les pages"
+    "splitRangeHint": "Sélectionnez d'abord les pages",
+    "moveLeft": "Move selected page left",
+    "moveRight": "Move selected page right",
+    "moveLeftShort": "Left",
+    "moveRightShort": "Right",
+    "rotateLeft": "Rotate left",
+    "rotateRight": "Rotate right",
+    "rotateLeftShort": "Left",
+    "rotateRightShort": "Right",
+    "addingPdf": "Adding PDF…",
+    "pdfAdded": "PDF added",
+    "combiningFiles": "Combining {{count}} file(s)…",
+    "filesCombined": "{{count}} file(s) combined",
+    "insertingPdf": "Inserting PDF before page {{page}}…",
+    "pdfInserted": "PDF inserted",
+    "exportingPages": "Exporting {{count}} page(s)…",
+    "selectionExported": "Selection exported to {{name}}",
+    "splittingPages": "Splitting into individual pages…",
+    "pagesSaved": "{{count}} pages saved",
+    "splittingRanges": "Splitting {{count}} range(s)…",
+    "filesSaved": "{{count}} file(s) saved"
   },
   "unsavedChanges": {
     "title": "Modifications non enregistrées",
@@ -302,7 +326,14 @@
     "dragDropHint": "ou glissez un PDF ici",
     "lede": "Lire, modifier, convertir, remplir et signer — entièrement sur votre appareil.",
     "privacyPromise": "Stockage local · les documents ne quittent jamais cet appareil",
-    "dropPdfHere": "Déposer le PDF ici"
+    "dropPdfHere": "Déposer le PDF ici",
+    "v3Subtitle": "Open a PDF to read, edit, convert or sign it locally.",
+    "openFileAria": "Choose a PDF file to open",
+    "clearRecent": "Clear recent",
+    "recentShort": "Recent",
+    "removeRecentAria": "Remove {{name}}",
+    "backToDocument": "Back to document",
+    "loadingDocument": "Loading document…"
   },
   "settings": {
     "language": "Langue",
@@ -324,7 +355,10 @@
     "themeLabel": "Thème",
     "ocrDefaults": "Paramètres par défaut OCR",
     "ocrLanguageLabel": "Langue par défaut (ISO-639-2)",
-    "ocrLanguagePlaceholder": "p.ex. eng, nld, deu"
+    "ocrLanguagePlaceholder": "p.ex. eng, nld, deu",
+    "updates": "Updates",
+    "automaticUpdateCheck": "Check for a new version at startup",
+    "automaticUpdateCheckHint": "PDFluent asks pdfluent.com whether a newer version exists, a few seconds after it starts. Nothing from your documents is sent. Turn this off and the app never checks on its own — \"Check for updates\" still works whenever you ask for it."
   },
   "errors": {
     "loadFailed": "Échec du chargement du document",
@@ -465,7 +499,13 @@
     "dismiss": "Fermer",
     "watermarkDone": "Filigrane ajouté",
     "watermarkFailed": "Échec du filigrane",
-    "watermarkRunning": "Ajout du filigrane…"
+    "watermarkRunning": "Ajout du filigrane…",
+    "pdfaRunning": "Converting to PDF/A…",
+    "pdfaDone": "PDF/A written",
+    "pdfaFailed": "PDF/A conversion failed",
+    "metadataRunning": "Saving properties…",
+    "metadataDone": "Properties saved",
+    "metadataFailed": "Could not save properties"
   },
   "panels": {
     "search": "Rechercher",
@@ -837,7 +877,10 @@
     "detected": "Ce document utilise des formulaires XFA. Le rendu peut être incomplet — le support XFA est expérimental.",
     "flatten": "Aplatir XFA",
     "flattenDone": "XFA aplati. Exportez le PDF pour télécharger la version statique.",
-    "flattenFailed": "Aplatissement XFA échoué"
+    "flattenFailed": "Aplatissement XFA échoué",
+    "convertToStandard": "Convert to standard PDF",
+    "convertedToStandard": "XFA converted to standard PDF",
+    "convertFailed": "Conversion failed: {{message}}"
   },
   "security": {
     "activeContentBadge": "Bloqué",
@@ -870,7 +913,11 @@
     "dismiss": "Fermer",
     "installing": "Installation en cours…",
     "checkFailed": "La vérification de la mise à jour a échoué",
-    "upToDate": "Vous utilisez la dernière version"
+    "upToDate": "Vous utilisez la dernière version",
+    "installed": "Update installed",
+    "restartNow": "Restart now",
+    "restartUnsaved": "Save your changes before restarting.",
+    "restartManual": "If it doesn't restart automatically, quit and reopen PDFluent to finish."
   },
   "telemetry": {
     "addNoteLabel": "Voulez-vous ajouter quelque chose ? (facultatif)",
@@ -1049,18 +1096,7 @@
       "initials": "Initiales",
       "initialsPlaceholder": "par ex. AB",
       "defaultInitials": "AB",
-      "clickToPlaceInitials": "Cliquez sur la page pour placer les initiales.",
-      "invite": "Inviter à signer",
-      "inviteIntro": "Envoyez une demande de signature électronique au destinataire. Il recevra un e-mail avec un lien pour signer le document localement.",
-      "recipientName": "Nom du destinataire",
-      "recipientNamePlaceholder": "Nom du destinataire…",
-      "email": "Adresse e-mail",
-      "emailPlaceholder": "nom@exemple.com",
-      "message": "Message (optionnel)",
-      "messagePlaceholder": "Bonjour, pouviez-vous signer ce document ?",
-      "send": "Envoyer",
-      "emailRequired": "L'adresse e-mail est requise.",
-      "inviteSent": "Invitation envoyée à {{email}} !"
+      "clickToPlaceInitials": "Cliquez sur la page pour placer les initiales."
     },
     "overlay": {
       "signaturePlaced": "Signature placée !",
@@ -1093,22 +1129,14 @@
       "addText": "Ajouter du texte",
       "fillAndSign": "Remplir et signer",
       "more": "Plus d'outils",
-      "formatting": "Mise en forme",
       "strikeText": "Barrer le texte",
       "underlineText": "Souligner le texte",
-      "insertTextBox": "Insérer une zone de texte",
-      "stampsAndInsert": "Tampons et insertion",
-      "stamps": "Tampons",
-      "insertDate": "Insérer la date",
-      "addAttachment": "Ajouter une pièce jointe",
-      "ruler": "Règle"
+      "addAttachment": "Ajouter une pièce jointe"
     },
     "railToasts": {
       "commentMode": "Mode note actif. Sélectionnez du texte et choisissez Note, ou utilisez la liste des commentaires pour ajouter une note.",
       "strikeout": "Barrure active — sélectionnez du texte pour appliquer.",
-      "underline": "Soulignement actif — sélectionnez du texte pour appliquer.",
-      "textboxOpened": "Outil zone de texte ouvert.",
-      "stampsInAllTools": "Les tampons se trouvent dans Tous les outils."
+      "underline": "Soulignement actif — sélectionnez du texte pour appliquer."
     },
     "tools": {
       "lede": "Choisissez un outil pour commencer. Tout s'exécute localement sur cet appareil.",
@@ -1143,7 +1171,11 @@
       "moreAttachments_plural": "+{{count}} pièces jointes supplémentaires",
       "layers": "{{count}} calques",
       "manageLayers": "Gérer les calques",
-      "layersVisible": "{{count}} calques visibles."
+      "layersVisible": "{{count}} calques visibles.",
+      "archiveAndData": "Archiving and data",
+      "pdfaSub": "Check or convert for long-term archiving",
+      "invoiceSub": "Read the ZUGFeRD/Factur-X invoice inside",
+      "metadataSub": "Title and author of this document"
     },
     "edit": {
       "lede": "Cliquez sur le texte du document pour modifier en ligne. La barre de mise en forme apparaît juste au-dessus de la sélection.",
@@ -1186,17 +1218,31 @@
       "ocrRunning": "OCR en cours localement…"
     },
     "esign": {
-      "lede": "Signez des documents rapidement et en toute sécurité, et partagez-les facilement avec d'autres pour qu'ils les signent.",
-      "localSigned": "Signé localement — rien ne quitte cet appareil",
-      "padesCompliant": "Signature numérique conforme PAdES",
+      "lede": "Sign with a certificate of your own, and check the signatures a document already carries. Both happen on this device.",
       "fillAndSign": "Remplissez vos documents et signez",
       "addSignature": "Ajouter une signature",
       "addInitials": "Ajouter les initiales",
-      "invite": "Inviter à signer",
       "placementModeSignature": "Mode de placement : Signature",
       "placementModeInitials": "Mode de placement : Initiales",
       "clickToPlaceSignature": "Cliquez n'importe où sur la page pour placer votre signature.",
-      "clickToPlaceInitials": "Cliquez n'importe où sur la page pour placer vos initiales."
+      "clickToPlaceInitials": "Cliquez n'importe où sur la page pour placer vos initiales.",
+      "verifySection": "Signatures",
+      "verify": "Check signatures",
+      "desktopOnly": "Available in the desktop app",
+      "unsigned": "This document carries no signatures.",
+      "signSection": "Sign with a certificate",
+      "padesLevel": "Produces a PAdES B-B signature: your certificate over the whole file, no timestamp server involved.",
+      "certificate": "Certificate (.p12 or .pfx)",
+      "certificateNone": "No certificate chosen",
+      "chooseCertificate": "Choose certificate",
+      "certificatePassword": "Certificate password",
+      "reason": "Reason (optional)",
+      "reasonPlaceholder": "Why you are signing",
+      "sign": "Sign and save a copy",
+      "signing": "Signing…",
+      "signNeedsCertificate": "Choose a certificate and enter its password first.",
+      "signSaved": "Signed copy saved as {{name}}",
+      "signFailed": "Signing failed: {{message}}"
     },
     "protect": {
       "lede": "Protégez votre document PDF avec des mots de passe cryptographiques robustes. Les modifications sont appliquées localement immédiatement.",
@@ -1300,7 +1346,77 @@
     },
     "thumbnails": {
       "pages": "Pages",
-      "pageAlt": "Page {{page}}"
+      "pageAlt": "Page {{page}}",
+      "bookmarks": "Bookmarks"
+    },
+    "pdfa": {
+      "lede": "PDF/A is the archival form of PDF: fonts embedded, colours defined, nothing that depends on the outside world.",
+      "section": "Conformance",
+      "level": "Level",
+      "validate": "Check this document",
+      "convert": "Save as PDF/A…",
+      "desktopOnly": "Available in the desktop app",
+      "compliant": "Conforms to {{level}}",
+      "notCompliant": "Does not conform: {{errors}} errors, {{warnings}} warnings",
+      "moreIssues": "{{count}} more"
+    },
+    "metadata": {
+      "lede": "The title and author stored inside the file, which is what other readers and search show.",
+      "section": "Properties",
+      "title": "Title",
+      "author": "Author",
+      "apply": "Save properties",
+      "desktopOnly": "Available in the desktop app"
+    },
+    "invoice": {
+      "lede": "A ZUGFeRD or Factur-X invoice travels as XML inside the PDF. This reads it and checks it against EN 16931.",
+      "section": "Embedded invoice",
+      "read": "Read invoice",
+      "desktopOnly": "Available in the desktop app",
+      "none": "This document carries no e-invoice.",
+      "number": "Number: {{number}}",
+      "issued": "Issued: {{date}}",
+      "seller": "Seller: {{name}}",
+      "buyer": "Buyer: {{name}}",
+      "total": "Total: {{total}} {{currency}}",
+      "lines": "Line items: {{count}}",
+      "valid": "Valid against {{profile}}",
+      "invalid": "Not valid: {{errors}} errors, {{warnings}} warnings"
     }
+  },
+  "about": {
+    "section": "About",
+    "app": "App",
+    "version": "Version",
+    "privacy": "Privacy",
+    "privacyValue": "All processing happens locally",
+    "website": "Website"
+  },
+  "reviewSummary": {
+    "title": "Review summary",
+    "generatedAt": "Generated on",
+    "comments": "Comments",
+    "noComments": "No comments.",
+    "replies": "Replies:",
+    "empty": "empty",
+    "redactions": "Redactions",
+    "noRedactions": "No redactions.",
+    "noIssues": "No issues.",
+    "metadataChanges": "Metadata changes",
+    "noMetadataChanges": "No changes.",
+    "changedBy": "by",
+    "on": "on"
+  },
+  "externalLink": {
+    "askMessage": "This PDF wants to open an external link:\n\n{{label}}\n\nURL:\n{{href}}\n\nDo you want to continue?",
+    "title": "Open external link?",
+    "openLink": "Open link",
+    "dialogBody": "This PDF wants to open an external website. Check the URL before continuing."
+  },
+  "linkChoice": {
+    "title": "Open link in your browser?",
+    "body": "This document wants to open an external website. Are you opening it from a trusted source?",
+    "alwaysAllow": "Always allow",
+    "openOnce": "Open once"
   }
 }

@@ -122,7 +122,7 @@ export class InteractionDebugLogger {
       this._log.shift();
     }
     this._log.push(record);
-    // eslint-disable-next-line no-console
+
     console.debug(`[interaction] ${kind}`, payload);
   }
 }

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: LicenseRef-PDFluent-Proprietary
-// Copyright (c) 2026 PDFluent Contributors
+// Copyright (c) 2026 Innovation Trigger B.V.
 
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
@@ -74,6 +74,15 @@ describe("tauri capabilities", () => {
     expect(assetProtocol?.enable).toBe(true);
     expect((assetProtocol?.scope ?? []).length).toBeGreaterThan(0);
     expect(csp).toContain("frame-src");
+    // connect-src is an explicit allow-list: every remote origin the webview may
+    // talk to is named here, so a host cannot linger after its feature is gone
+    // (the Transformers.js model hosts outlived their summariser by three months).
+    const connectSrc = /connect-src[^;]*/.exec(csp)?.[0] ?? "";
+    const remoteOrigins = connectSrc
+      .split(/\s+/)
+      .filter((token) => /^(https?|wss?):\/\//.test(token))
+      .filter((token) => !/\/\/([\w.-]*localhost|127\.0\.0\.1)(:|$)/.test(token));
+    expect(remoteOrigins).toEqual(["https://report.pdfluent.com"]);
     const resources = config.bundle?.resources;
     const resourceSources = Array.isArray(resources)
       ? resources

@@ -77,7 +77,7 @@ export function useDocument(engine: PdfEngine | null): UseDocumentResult {
     setPageCount(countResult.success ? countResult.value : loaded.pages.length);
     setIsDirty(false);
     setLoading(false);
-  }, [engine]);
+  }, [engine, doc]);
 
   const closeDocument = useCallback((): void => {
     if (!engine || !doc) return;

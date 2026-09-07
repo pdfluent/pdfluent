@@ -20,6 +20,7 @@ import {
   hasFormFields,
   isEncrypted,
 } from '../document';
+import type { PdfDocument } from '../document';
 
 describe('Document Model', () => {
   describe('createEmptyDocument', () => {
@@ -59,7 +60,7 @@ describe('Document Model', () => {
   });
 
   describe('Document Operations', () => {
-    let document: any;
+    let document: PdfDocument;
 
     beforeEach(() => {
       document = createEmptyDocument('test.pdf');

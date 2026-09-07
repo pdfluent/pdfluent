@@ -10,6 +10,7 @@ import { useTranslation } from 'react-i18next';
 import type { ViewerMode } from '../types';
 import type { Annotation, FormField } from '../../core/document';
 import { TOOLS_BY_MODE, type ToolDefinition } from '../tools/toolDefinitions';
+import { getWiredTools } from '../tools/wiredTools';
 import { useTaskQueueContext } from '../context/TaskQueueContext';
 import { ChevronLeftIcon, ChevronRightIcon, PlusIcon, PrinterIcon, HighlighterIcon, UnderlineIcon, StrikethroughIcon, SquareIcon, EraserIcon, Undo2Icon, Redo2Icon } from 'lucide-react';
 import { TextEditFormatBar } from './TextEditFormatBar';
@@ -18,48 +19,19 @@ import { TextEditFormatBar } from './TextEditFormatBar';
 // Annotation tool types
 // ---------------------------------------------------------------------------
 
-export type AnnotationTool = 'highlight' | 'underline' | 'strikeout' | 'rectangle' | 'redaction' | null;
+export type AnnotationTool = 'highlight' | 'underline' | 'strikeout' | 'rectangle' | 'ink' | 'redaction' | null;
 
 // ---------------------------------------------------------------------------
 // Wired tools (i18n keys)
 // ---------------------------------------------------------------------------
 
-/**
- * Tool label i18n keys that are fully wired in this release.
- * All other tools render as disabled placeholders.
- *
- * This is runtime-dependent: Tauri supports native PDF operations; browser-test
- * only exposes lightweight UI/mock actions.
- */
-export function getWiredTools(isTauri: boolean): ReadonlySet<string> {
-  const base = new Set([
-    // Read mode — works in both runtimes
-    'toolbar.select',      // pure JS cursor/text-selection, no Tauri needed
-    'toolbar.pan',         // pure JS scroll interaction, no Tauri needed
-    'toolbar.zoomIn',
-    'toolbar.zoomOut',
-    'toolbar.fullscreen',
-    'toolbar.searchText',
-    // Convert mode — export current PDF as download in browser-test via mock bytes.
-    'toolbar.exportPdf',
-  ]);
-  if (isTauri) {
-    // Organize — native page manipulation
-    base.add('toolbar.deletePage');
-    base.add('toolbar.rotateLeft');
-    base.add('toolbar.rotateRight');
-    // Convert — OCR is Tauri-only (PaddleOCR native)
-    base.add('toolbar.ocrScan');
-    // Protect — redaction is Tauri-only
-    base.add('toolbar.redact');
-  }
-  return base;
-}
+// The set of tiles that may be shown is derived from the UI register; see
+// ../tools/wiredTools. It used to be spelled out here by hand and was wrong in
+// both directions for months.
+export { getWiredTools } from '../tools/wiredTools';
 
 /** @deprecated Use {@link getWiredTools} instead. */
-export const WIRED_TOOLS = getWiredTools(
-  isTauriRuntime()
-);
+export const WIRED_TOOLS = getWiredTools(isTauriRuntime());
 
 // ---------------------------------------------------------------------------
 // Props

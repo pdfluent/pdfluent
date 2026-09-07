@@ -40,8 +40,9 @@ export function useTaskQueue(): UseTaskQueueResult {
 
   // Clean up all timers on unmount
   useEffect(() => {
+    const activeTimers = timers.current;
     return () => {
-      for (const t of timers.current.values()) clearTimeout(t);
+      for (const t of activeTimers.values()) clearTimeout(t);
     };
   }, []);
 

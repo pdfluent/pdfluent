@@ -1,0 +1,26 @@
+{
+  "$comment": [
+    "Which commit the binaries people are downloading were built from.",
+    "",
+    "There is no tag for this release and there will not be one: 1.0.0-beta.21 is a",
+    "version string that says 'final' and 'not final' in the same breath, and the",
+    "decision on 2026-09-07 was to stop making it worse. The next editor release is",
+    "1.0.0, tagged v1.0.0, once the quality gates it claims are actually green.",
+    "",
+    "That leaves a shipped binary whose source has to be nameable some other way, so",
+    "it is named here, with the evidence, and scripts/ci/repo-truth.mjs checks that",
+    "the commit is on the release branch and that the public repository carries it."
+  ],
+  "version": "1.0.0-beta.21",
+  "commit": "596c911598ec787eea7c111ae9b7621da549ad6e",
+  "artifacts": [
+    "PDFluent_1.0.0-beta.21_universal.dmg (notarised, stapled, on pdfluent.com)",
+    "PDFluent_1.0.0-beta.21_x64_en-US.msi (Authenticode-signed; the Microsoft Store listing serves this installer)"
+  ],
+  "evidence": [
+    "package.json first reads 1.0.0-beta.21 at 596c911 (2026-07-24 14:03 +0200); the commit after it on the branch is 461fedf (2026-07-24 18:41 +0200).",
+    "The universal DMG was written 2026-07-24 14:44, between those two, and its Info.plist reads CFBundleShortVersionString and CFBundleVersion 1.0.0-beta.21.",
+    "461fedf changes five files under store/ and nothing a build reads, so either commit yields the same binary."
+  ],
+  "recorded": "2026-09-07"
+}

@@ -1,0 +1,48 @@
+{
+  "$comment": [
+    "What of this repository is published to the public editor repository, and what",
+    "is not. Read scripts/ci/public-tree.mjs and docs/REPO_TRUTH.md before editing.",
+    "",
+    "A path is published unless `internal` claims it. `public_only` names the files",
+    "that exist only on the public side -- its own CI guards and its own README",
+    "material -- so a publication carries them forward instead of deleting them.",
+    "",
+    "Every entry carries the reason it is here. An entry without one is a path",
+    "somebody hid, and the difference between hiding and publishing is the whole",
+    "point of this file."
+  ],
+  "internal": [
+    { "path": ".claude", "why": "Editor-agent configuration for this machine; says nothing about the product." },
+    { "path": ".gitlab-ci.yml", "why": "The release pipeline: runner tags, CI variable names, signing-key handling. The public workflows README states why the pipeline is not published." },
+    { "path": ".github/workflows/ci.yml", "why": "Checks out a private repository with a token, so it fails for everyone who is not us -- removed at publication with that reason on the record." },
+    { "path": ".github/workflows/release.yml", "why": "Signs and publishes builds. A workflow file is editable in a pull request, so a secret it can reach is a secret that has left the building." },
+    { "path": "AGENTS.md", "why": "Instructions to coding agents working on this checkout, not documentation of the product." },
+    { "path": "RELEASE.md", "why": "Release procedure for our machines: hosts, keys, manual steps." },
+    { "path": "EDITOR_ACROBAT_PARITY_ROADMAP.md", "why": "Internal planning: what we have not built yet and in which order." },
+    { "path": "GRATIS_EDITOR_IMPLEMENTATIEPLAN.md", "why": "Internal planning, and in Dutch; the public repository is English." },
+    { "path": "WORKFLOW_READINESS_MATRIX.md", "why": "Internal readiness scoring of unshipped work." },
+    { "path": "docs/APP_100_PERCENT_READINESS.md", "why": "Internal readiness scoring." },
+    { "path": "docs/GA_UPDATE_READINESS.md", "why": "Internal readiness scoring." },
+    { "path": "docs/RELEASE_RUNBOOK_GA.md", "why": "Release runbook: hosts, keys, accounts." },
+    { "path": "docs/ci-updater-signing-path.md", "why": "Where the updater signing key lives and how it reaches a build." },
+    { "path": "docs/launch-plan.md", "why": "Internal launch planning." },
+    { "path": "docs/archive", "why": "Superseded internal reports and benchmark runs -- 66 files describing work in progress, several naming SDK-internal contracts." },
+    { "path": "docs/rc-validation", "why": "Release-candidate validation notes for pipelines that are not published." },
+    { "path": "scripts/setup-windows-buildhost.ps1", "why": "Sets up our Windows build machine; it is a map of that machine." }
+  ],
+  "public_only": [
+    { "path": "SOURCES.md", "why": "The public repository's record of where every document and font came from; every_document_has_a_source.py enforces it there." },
+    { "path": "docs/download-page.md", "why": "Copy for the public download page, maintained on the public side." },
+    { "path": "docs/screenshots", "why": "Screenshots for the public README." },
+    { "path": ".github/workflows/README.md", "why": "States which workflows were removed at publication and why." },
+    { "path": ".github/workflows/commit-identity.yml", "why": "Public-side guard: no personal address in a new commit." },
+    { "path": ".github/workflows/sources.yml", "why": "Public-side guard: every document and font has a stated source." },
+    { "path": "scripts/ci/commits_use_the_noreply_alias.py", "why": "Public-side guard: no personal address in a new commit there." },
+    { "path": "scripts/ci/every_document_has_a_source.py", "why": "Public-side guard: every document and font names where it came from." },
+    { "path": "scripts/ci/fixture_env.py", "why": "Helper the public-side guards import." },
+    { "path": "scripts/ci/no_personal_address_in_the_tree.py", "why": "Public-side guard: no personal address anywhere in the published tree." },
+    { "path": "scripts/ci/no_withdrawn_blobs.py", "why": "Public-side guard: content withdrawn once does not come back." },
+    { "path": "scripts/ci/test_commits_use_the_noreply_alias.py", "why": "Test for a public-side guard." },
+    { "path": "scripts/ci/test_no_personal_address_in_the_tree.py", "why": "Test for a public-side guard." }
+  ]
+}

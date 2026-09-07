@@ -34,7 +34,7 @@ export function buildTimestampSuffix(date: Date = new Date()): string {
 export function sanitiseTitle(title: string): string {
   return title
     .trim()
-    .replace(/[^a-zA-Z0-9_\-]/g, '_')
+    .replace(/[^a-zA-Z0-9_-]/g, '_')
     .replace(/_+/g, '_')
     .replace(/^_|_$/g, '')
     .slice(0, 60) || 'document';

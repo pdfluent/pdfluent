@@ -5,6 +5,13 @@ See https://pdfluent.com/license for terms.
 
 # Screenshot brief
 
+> **Historical record.** These six raw 1920×1080 captures came from the installed
+> `1.0.0-beta.18` candidate and are **not** what the Store shows. The live listing
+> uses the designer's 3840×2160 set of 2026-08-20, listed in
+> `../listing/PASTE-SHEET.md`. Kept for provenance and for the caption/ordering
+> reasoning below.
+
+
 Six **raw 1920×1080 PNG** captures taken from the **actual installed Windows
 candidate** (`PDFluent_1.0.0-beta.18_x64_en-US.msi`, Windows 11). They meet the
 Microsoft Store desktop screenshot spec (≥1366×768, PNG, <50 MB) and are ready

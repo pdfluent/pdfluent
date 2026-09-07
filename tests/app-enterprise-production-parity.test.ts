@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: LicenseRef-PDFluent-Proprietary
-// Copyright (c) 2026 PDFluent Contributors
+// Copyright (c) 2026 Innovation Trigger B.V.
 
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
@@ -11,16 +11,15 @@ const toolbarSource = readFileSync(
 );
 
 describe("enterprise production parity actions", () => {
-  it("implements backend/identity/licensing/sync/integration/api workflows", () => {
+  it("implements backend/identity/policy/sync/integration/api workflows", () => {
     expect(appSource).toContain("const configureTeamBackendProduction = useCallback(async () => {");
-    expect(appSource).toContain("const manageLicensesAndPolicies = useCallback(async () => {");
+    expect(appSource).toContain("const managePolicies = useCallback(async () => {");
     expect(appSource).toContain("const runStorageSyncEngine = useCallback(async () => {");
     expect(appSource).toContain("const manageIntegrationConnections = useCallback(async () => {");
     expect(appSource).toContain("const configureApiProductization = useCallback(async () => {");
     expect(appSource).toContain("const exportTamperAuditSiem = useCallback(async () => {");
     expect(appSource).toContain("configureTeamBackend(previous");
     expect(appSource).toContain("createSsoAuthSession(configured)");
-    expect(appSource).toContain("issueLicenseSeat(previous");
     expect(appSource).toContain("evaluatePolicyEnforcement(previous");
     expect(appSource).toContain("recordSyncConflict(previous");
     expect(appSource).toContain("rotateKeyManagementKey(previous)");
@@ -31,13 +30,13 @@ describe("enterprise production parity actions", () => {
 
   it("surfaces enterprise production controls in toolbar advanced menu", () => {
     expect(toolbarSource).toContain("onConfigureTeamBackend: () => void;");
-    expect(toolbarSource).toContain("onManageLicensesAndPolicies: () => void;");
+    expect(toolbarSource).toContain("onManagePolicies: () => void;");
     expect(toolbarSource).toContain("onRunStorageSyncEngine: () => void;");
     expect(toolbarSource).toContain("onManageIntegrations: () => void;");
     expect(toolbarSource).toContain("onConfigureApiProduct: () => void;");
     expect(toolbarSource).toContain("onExportSiemAudit: () => void;");
     expect(toolbarSource).toContain("Team backend");
-    expect(toolbarSource).toContain("Licenses & policies");
+    expect(toolbarSource).toContain("Policies");
     expect(toolbarSource).toContain("Batch queue engine");
     expect(toolbarSource).toContain("Storage sync engine");
     expect(toolbarSource).toContain("Integrations");

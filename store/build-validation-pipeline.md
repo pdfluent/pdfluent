@@ -16,7 +16,7 @@ it for Store certification.
 # On the LAN Windows box (Win 11, MSVC + WiX), from the editor checkout:
 #   - loads .env (TRUSTED_SIGNING_PROFILE + AZURE_* for Azure Trusted Signing,
 #     TAURI_SIGNING_PRIVATE_KEY for the updater sig)
-npm run release:windows -- 1.0.0-beta.20      # or: scripts/release-windows.ps1 1.0.0-beta.20
+npm run release:windows -- 1.0.0-beta.21      # or: scripts/release-windows.ps1 1.0.0-beta.21
 ```
 
 `scripts/release-windows.ps1` already enforces, in order:
@@ -37,13 +37,13 @@ is the **existing website release path; it is unchanged**.
 ## 2. Validate (the Store certification gate)
 
 ```
-store/scripts/validate-store-candidate.sh 1.0.0-beta.20
+store/scripts/validate-store-candidate.sh 1.0.0-beta.21
 #   add  WIN_BUILD_HOST=user@winbox  to also run the on-Windows checks over SSH
 ```
 
 It verifies, and fails non-zero on any miss:
 
-| Check | Requirement | Result on 1.0.0-beta.20 |
+| Check | Requirement | Result on 1.0.0-beta.21 |
 |---|---|---|
 | Installer hosted + live | Win32 Store needs a self-hosted `.msi`/`.exe` URL | ✅ HTTP 200 |
 | SHA-256 recorded | provenance | ✅ `D0B5348E…` |

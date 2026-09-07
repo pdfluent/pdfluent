@@ -145,7 +145,6 @@ import {
   evaluatePolicyEnforcement,
   exportTamperAuditAsSiemJsonl,
   getPendingESignRequests,
-  issueLicenseSeat,
   loadEnterpriseSettings,
   managedRegions,
   markBatchQueueItemResult,
@@ -155,7 +154,6 @@ import {
   recordTeamBackendSync,
   removeEnterpriseUser,
   resolveSyncConflict,
-  revokeLicenseSeat,
   revokeApiKey,
   rotateKeyManagementKey,
   saveEnterpriseSettings,
@@ -173,7 +171,6 @@ import type {
   EnterpriseRole,
   EnterpriseSettings,
   IntegrationProvider,
-  LicenseTier,
 } from "../lib/enterprise";
 import {
   appendAuditEntry,
@@ -5225,9 +5222,9 @@ export function App() {
     updateEnterpriseSettings,
   ]);
 
-  const manageLicensesAndPolicies = useCallback(async () => {
+  const managePolicies = useCallback(async () => {
     const action = await promptDialog(
-      "License/policy action (issue | revoke | evaluate | toggle-server | list):",
+      "Policy action (evaluate | toggle-server | list):",
       "list",
     );
     if (!action) return;
@@ -5236,11 +5233,9 @@ export function App() {
     if (normalizedAction === "list") {
       const summary = [
         `Server-side policy enforcement: ${enterpriseSettings.enforcePoliciesServerSide ? "enabled" : "disabled"}`,
-        `Seats total: ${enterpriseSettings.licenseSeats.length}`,
-        `Active seats: ${enterpriseSettings.licenseSeats.filter((seat) => seat.status === "active").length}`,
         `Recent policy decisions: ${enterpriseSettings.policyDecisions.length}`,
       ].join("\n");
-      await alertDialog(`License & policy status\n\n${summary}`);
+      await alertDialog(`Policy status\n\n${summary}`);
       return;
     }
 
@@ -5256,52 +5251,8 @@ export function App() {
         ...previous,
         enforcePoliciesServerSide: next,
       }));
-      recordAudit("license_policy_toggle_server", "success", { enabled: next });
-      appendTamperAudit("license_policy_toggle_server", "success", { enabled: next });
-      return;
-    }
-
-    if (normalizedAction === "issue") {
-      const email = await promptDialog("Seat email:", "");
-      if (!email || email.trim().length === 0) return;
-      const tierInput = await promptDialog("Seat tier (pro | business | enterprise):", "enterprise");
-      if (!tierInput) return;
-      const tier: LicenseTier =
-        tierInput.trim().toLowerCase() === "pro"
-          ? "pro"
-          : tierInput.trim().toLowerCase() === "business"
-            ? "business"
-            : "enterprise";
-      updateEnterpriseSettings((previous) => issueLicenseSeat(previous, email.trim(), tier));
-      recordAudit("license_issue_seat", "success", { email: email.trim(), tier });
-      appendTamperAudit("license_issue_seat", "success", { email: email.trim(), tier });
-      return;
-    }
-
-    if (normalizedAction === "revoke") {
-      if (enterpriseSettings.licenseSeats.length === 0) {
-        await alertDialog("No license seats to revoke.");
-        return;
-      }
-      const choice = await promptDialog(
-        `Seat number to revoke:\n${enterpriseSettings.licenseSeats
-          .map((seat, index) => `${index + 1}. ${seat.email} (${seat.status})`)
-          .join("\n")}`,
-        "1",
-      );
-      if (!choice) return;
-      const selectedIndex = Math.max(
-        0,
-        Math.min(
-          enterpriseSettings.licenseSeats.length - 1,
-          Math.round(parseNumberInput(choice, 1)) - 1,
-        ),
-      );
-      const target = enterpriseSettings.licenseSeats[selectedIndex];
-      if (!target) return;
-      updateEnterpriseSettings((previous) => revokeLicenseSeat(previous, target.id));
-      recordAudit("license_revoke_seat", "warning", { seatId: target.id });
-      appendTamperAudit("license_revoke_seat", "warning", { seatId: target.id });
+      recordAudit("policy_toggle_server", "success", { enabled: next });
+      appendTamperAudit("policy_toggle_server", "success", { enabled: next });
       return;
     }
 
@@ -5329,12 +5280,12 @@ export function App() {
       await alertDialog(
         `Policy decision: ${decisionAllowed ? "ALLOWED" : "BLOCKED"}\nReason: ${decisionReason}`,
       );
-      recordAudit("license_policy_evaluate", decisionAllowed ? "success" : "warning", {
+      recordAudit("policy_evaluate", decisionAllowed ? "success" : "warning", {
         externalShare,
         offlineExport,
       });
       appendTamperAudit(
-        "license_policy_evaluate",
+        "policy_evaluate",
         decisionAllowed ? "success" : "warning",
         { externalShare, offlineExport, decisionAllowed, decisionReason },
       );
@@ -5343,7 +5294,6 @@ export function App() {
     alertDialog,
     appendTamperAudit,
     enterpriseSettings.enforcePoliciesServerSide,
-    enterpriseSettings.licenseSeats,
     enterpriseSettings.policyDecisions.length,
     promptDialog,
     recordAudit,
@@ -7583,8 +7533,8 @@ export function App() {
         onConfigureTeamBackend={() => {
           void configureTeamBackendProduction();
         }}
-        onManageLicensesAndPolicies={() => {
-          void manageLicensesAndPolicies();
+        onManagePolicies={() => {
+          void managePolicies();
         }}
         onRunStorageSyncEngine={() => {
           void runStorageSyncEngine();

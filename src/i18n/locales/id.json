@@ -112,7 +112,11 @@
     "prevField": "Bidang sebelumnya",
     "nextField": "Bidang berikutnya",
     "allTools": "Semua alat",
-    "contextualBar": "Bilah alat mode"
+    "contextualBar": "Bilah alat mode",
+    "pdfa": "PDF/A",
+    "metadata": "Document properties",
+    "invoice": "E-invoice",
+    "bookmarks": "Bookmarks"
   },
   "topbar": {
     "openPdf": "Buka PDF",
@@ -282,7 +286,27 @@
     "clearSelection": "Hapus pilihan",
     "combine": "Gabungkan file",
     "splitRange": "Pisah berdasarkan rentang",
-    "splitRangeHint": "Pilih halaman terlebih dahulu"
+    "splitRangeHint": "Pilih halaman terlebih dahulu",
+    "moveLeft": "Move selected page left",
+    "moveRight": "Move selected page right",
+    "moveLeftShort": "Left",
+    "moveRightShort": "Right",
+    "rotateLeft": "Rotate left",
+    "rotateRight": "Rotate right",
+    "rotateLeftShort": "Left",
+    "rotateRightShort": "Right",
+    "addingPdf": "Adding PDF…",
+    "pdfAdded": "PDF added",
+    "combiningFiles": "Combining {{count}} file(s)…",
+    "filesCombined": "{{count}} file(s) combined",
+    "insertingPdf": "Inserting PDF before page {{page}}…",
+    "pdfInserted": "PDF inserted",
+    "exportingPages": "Exporting {{count}} page(s)…",
+    "selectionExported": "Selection exported to {{name}}",
+    "splittingPages": "Splitting into individual pages…",
+    "pagesSaved": "{{count}} pages saved",
+    "splittingRanges": "Splitting {{count}} range(s)…",
+    "filesSaved": "{{count}} file(s) saved"
   },
   "unsavedChanges": {
     "title": "Perubahan belum disimpan",
@@ -302,7 +326,14 @@
     "dragDropHint": "atau seret PDF ke sini",
     "lede": "Baca, edit, konversi, isi dan tanda tangan — sepenuhnya di perangkat Anda.",
     "privacyPromise": "Local-first · dokumen tidak pernah meninggalkan perangkat ini",
-    "dropPdfHere": "Jatuhkan PDF di sini"
+    "dropPdfHere": "Jatuhkan PDF di sini",
+    "v3Subtitle": "Open a PDF to read, edit, convert or sign it locally.",
+    "openFileAria": "Choose a PDF file to open",
+    "clearRecent": "Clear recent",
+    "recentShort": "Recent",
+    "removeRecentAria": "Remove {{name}}",
+    "backToDocument": "Back to document",
+    "loadingDocument": "Loading document…"
   },
   "settings": {
     "language": "Bahasa",
@@ -324,7 +355,10 @@
     "themeLabel": "Tema",
     "ocrDefaults": "Default OCR",
     "ocrLanguageLabel": "Bahasa default (ISO-639-2)",
-    "ocrLanguagePlaceholder": "mis. eng, nld, deu"
+    "ocrLanguagePlaceholder": "mis. eng, nld, deu",
+    "updates": "Updates",
+    "automaticUpdateCheck": "Check for a new version at startup",
+    "automaticUpdateCheckHint": "PDFluent asks pdfluent.com whether a newer version exists, a few seconds after it starts. Nothing from your documents is sent. Turn this off and the app never checks on its own — \"Check for updates\" still works whenever you ask for it."
   },
   "errors": {
     "loadFailed": "Dokumen gagal dimuat",
@@ -465,7 +499,13 @@
     "dismiss": "Tutup",
     "watermarkDone": "Tanda air ditambahkan",
     "watermarkFailed": "Gagal menambahkan tanda air",
-    "watermarkRunning": "Menambahkan tanda air…"
+    "watermarkRunning": "Menambahkan tanda air…",
+    "pdfaRunning": "Converting to PDF/A…",
+    "pdfaDone": "PDF/A written",
+    "pdfaFailed": "PDF/A conversion failed",
+    "metadataRunning": "Saving properties…",
+    "metadataDone": "Properties saved",
+    "metadataFailed": "Could not save properties"
   },
   "panels": {
     "search": "Cari",
@@ -837,7 +877,10 @@
     "detected": "Dokumen ini menggunakan XFA forms. Rendering mungkin tidak lengkap — dukungan XFA masih eksperimental.",
     "flatten": "Ratakan XFA",
     "flattenDone": "XFA diratakan. Ekspor PDF untuk mengunduh versi statis.",
-    "flattenFailed": "Meratakan XFA gagal"
+    "flattenFailed": "Meratakan XFA gagal",
+    "convertToStandard": "Convert to standard PDF",
+    "convertedToStandard": "XFA converted to standard PDF",
+    "convertFailed": "Conversion failed: {{message}}"
   },
   "security": {
     "activeContentBadge": "Diblokir",
@@ -870,7 +913,11 @@
     "dismiss": "Tutup",
     "installing": "Menginstal…",
     "checkFailed": "Pemeriksaan pembaruan gagal",
-    "upToDate": "Anda menggunakan versi terbaru"
+    "upToDate": "Anda menggunakan versi terbaru",
+    "installed": "Update installed",
+    "restartNow": "Restart now",
+    "restartUnsaved": "Save your changes before restarting.",
+    "restartManual": "If it doesn't restart automatically, quit and reopen PDFluent to finish."
   },
   "telemetry": {
     "addNoteLabel": "Ingin menambahkan sesuatu? (opsional)",
@@ -1049,18 +1096,7 @@
       "initials": "Inisial",
       "initialsPlaceholder": "mis. AB",
       "defaultInitials": "AB",
-      "clickToPlaceInitials": "Klik halaman untuk menempatkan inisial.",
-      "invite": "Undang untuk menandatangani",
-      "inviteIntro": "Kirimkan permintaan e-sign ke penerima. Mereka mendapatkan email dengan tautan untuk menandatangani dokumen secara lokal.",
-      "recipientName": "Nama penerima",
-      "recipientNamePlaceholder": "Nama penerima…",
-      "email": "Alamat email",
-      "emailPlaceholder": "nama@contoh.com",
-      "message": "Pesan (opsional)",
-      "messagePlaceholder": "Hai, bisa Anda menandatangani dokumen ini?",
-      "send": "Kirim",
-      "emailRequired": "Alamat email diperlukan.",
-      "inviteSent": "Undangan dikirim ke {{email}}!"
+      "clickToPlaceInitials": "Klik halaman untuk menempatkan inisial."
     },
     "overlay": {
       "signaturePlaced": "Tanda tangan ditempatkan!",
@@ -1093,22 +1129,14 @@
       "addText": "Tambah teks",
       "fillAndSign": "Isi & tandatangani",
       "more": "Alat lainnya",
-      "formatting": "Pemformatan",
       "strikeText": "Coret teks",
       "underlineText": "Garis bawahi teks",
-      "insertTextBox": "Sisipkan kotak teks",
-      "stampsAndInsert": "Stempel & sisipkan",
-      "stamps": "Stempel",
-      "insertDate": "Sisipkan tanggal",
-      "addAttachment": "Tambah lampiran",
-      "ruler": "Penggaris"
+      "addAttachment": "Tambah lampiran"
     },
     "railToasts": {
       "commentMode": "Mode catatan aktif. Pilih teks dan pilih Catatan, atau gunakan daftar komentar untuk menambah catatan.",
       "strikeout": "Coretan aktif — pilih teks untuk diterapkan.",
-      "underline": "Garis bawah aktif — pilih teks untuk diterapkan.",
-      "textboxOpened": "Alat kotak teks dibuka.",
-      "stampsInAllTools": "Stempel ada di Semua alat."
+      "underline": "Garis bawah aktif — pilih teks untuk diterapkan."
     },
     "tools": {
       "lede": "Pilih alat untuk memulai. Semuanya berjalan secara lokal di perangkat ini.",
@@ -1143,7 +1171,11 @@
       "moreAttachments_plural": "+{{count}} lampiran lainnya",
       "layers": "{{count}} lapisan",
       "manageLayers": "Kelola lapisan",
-      "layersVisible": "{{count}} lapisan terlihat."
+      "layersVisible": "{{count}} lapisan terlihat.",
+      "archiveAndData": "Archiving and data",
+      "pdfaSub": "Check or convert for long-term archiving",
+      "invoiceSub": "Read the ZUGFeRD/Factur-X invoice inside",
+      "metadataSub": "Title and author of this document"
     },
     "edit": {
       "lede": "Klik teks dalam dokumen untuk mengedit sebaris. Bilah pemformatan muncul tepat di atas pilihan.",
@@ -1186,17 +1218,31 @@
       "ocrRunning": "OCR berjalan secara lokal…"
     },
     "esign": {
-      "lede": "Tandatangani dokumen dengan cepat dan aman, dan bagikan dengan mudah kepada orang lain untuk ditandatangani.",
-      "localSigned": "Ditandatangani secara lokal — tidak ada yang meninggalkan perangkat ini",
-      "padesCompliant": "Tanda tangan digital yang sesuai dengan PAdES",
+      "lede": "Sign with a certificate of your own, and check the signatures a document already carries. Both happen on this device.",
       "fillAndSign": "Isi dokumen Anda dan tandatangani",
       "addSignature": "Tambah tanda tangan",
       "addInitials": "Tambah inisial",
-      "invite": "Undang untuk menandatangani",
       "placementModeSignature": "Mode penempatan: Tanda tangan",
       "placementModeInitials": "Mode penempatan: Inisial",
       "clickToPlaceSignature": "Klik di mana saja di halaman untuk menempatkan tanda tangan Anda.",
-      "clickToPlaceInitials": "Klik di mana saja di halaman untuk menempatkan inisial Anda."
+      "clickToPlaceInitials": "Klik di mana saja di halaman untuk menempatkan inisial Anda.",
+      "verifySection": "Signatures",
+      "verify": "Check signatures",
+      "desktopOnly": "Available in the desktop app",
+      "unsigned": "This document carries no signatures.",
+      "signSection": "Sign with a certificate",
+      "padesLevel": "Produces a PAdES B-B signature: your certificate over the whole file, no timestamp server involved.",
+      "certificate": "Certificate (.p12 or .pfx)",
+      "certificateNone": "No certificate chosen",
+      "chooseCertificate": "Choose certificate",
+      "certificatePassword": "Certificate password",
+      "reason": "Reason (optional)",
+      "reasonPlaceholder": "Why you are signing",
+      "sign": "Sign and save a copy",
+      "signing": "Signing…",
+      "signNeedsCertificate": "Choose a certificate and enter its password first.",
+      "signSaved": "Signed copy saved as {{name}}",
+      "signFailed": "Signing failed: {{message}}"
     },
     "protect": {
       "lede": "Lindungi dokumen PDF Anda dengan kata sandi kriptografi yang kuat. Perubahan diterapkan secara lokal segera.",
@@ -1300,7 +1346,77 @@
     },
     "thumbnails": {
       "pages": "Halaman",
-      "pageAlt": "Halaman {{page}}"
+      "pageAlt": "Halaman {{page}}",
+      "bookmarks": "Bookmarks"
+    },
+    "pdfa": {
+      "lede": "PDF/A is the archival form of PDF: fonts embedded, colours defined, nothing that depends on the outside world.",
+      "section": "Conformance",
+      "level": "Level",
+      "validate": "Check this document",
+      "convert": "Save as PDF/A…",
+      "desktopOnly": "Available in the desktop app",
+      "compliant": "Conforms to {{level}}",
+      "notCompliant": "Does not conform: {{errors}} errors, {{warnings}} warnings",
+      "moreIssues": "{{count}} more"
+    },
+    "metadata": {
+      "lede": "The title and author stored inside the file, which is what other readers and search show.",
+      "section": "Properties",
+      "title": "Title",
+      "author": "Author",
+      "apply": "Save properties",
+      "desktopOnly": "Available in the desktop app"
+    },
+    "invoice": {
+      "lede": "A ZUGFeRD or Factur-X invoice travels as XML inside the PDF. This reads it and checks it against EN 16931.",
+      "section": "Embedded invoice",
+      "read": "Read invoice",
+      "desktopOnly": "Available in the desktop app",
+      "none": "This document carries no e-invoice.",
+      "number": "Number: {{number}}",
+      "issued": "Issued: {{date}}",
+      "seller": "Seller: {{name}}",
+      "buyer": "Buyer: {{name}}",
+      "total": "Total: {{total}} {{currency}}",
+      "lines": "Line items: {{count}}",
+      "valid": "Valid against {{profile}}",
+      "invalid": "Not valid: {{errors}} errors, {{warnings}} warnings"
     }
+  },
+  "about": {
+    "section": "About",
+    "app": "App",
+    "version": "Version",
+    "privacy": "Privacy",
+    "privacyValue": "All processing happens locally",
+    "website": "Website"
+  },
+  "reviewSummary": {
+    "title": "Review summary",
+    "generatedAt": "Generated on",
+    "comments": "Comments",
+    "noComments": "No comments.",
+    "replies": "Replies:",
+    "empty": "empty",
+    "redactions": "Redactions",
+    "noRedactions": "No redactions.",
+    "noIssues": "No issues.",
+    "metadataChanges": "Metadata changes",
+    "noMetadataChanges": "No changes.",
+    "changedBy": "by",
+    "on": "on"
+  },
+  "externalLink": {
+    "askMessage": "This PDF wants to open an external link:\n\n{{label}}\n\nURL:\n{{href}}\n\nDo you want to continue?",
+    "title": "Open external link?",
+    "openLink": "Open link",
+    "dialogBody": "This PDF wants to open an external website. Check the URL before continuing."
+  },
+  "linkChoice": {
+    "title": "Open link in your browser?",
+    "body": "This document wants to open an external website. Are you opening it from a trusted source?",
+    "alwaysAllow": "Always allow",
+    "openOnce": "Open once"
   }
 }

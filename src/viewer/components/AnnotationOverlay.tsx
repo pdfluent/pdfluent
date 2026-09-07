@@ -37,6 +37,8 @@ interface AnnotationOverlayProps {
   selectedAnnotationId?: string | null;
   /** Draft rectangle for the rectangle annotation tool — in PDF coords, shown as a preview outline. */
   draftRect?: { x: number; y: number; width: number; height: number } | null;
+  /** Draft stroke for the freehand ink tool — PDF-space points, drawn as it is made. */
+  draftInk?: Array<[number, number]> | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -54,6 +56,7 @@ export const AnnotationOverlay = memo(function AnnotationOverlay({
   activeSearchHighlightIdx = -1,
   selectedAnnotationId = null,
   draftRect = null,
+  draftInk = null,
 }: AnnotationOverlayProps) {
   const [hoveredMarkId, setHoveredMarkId] = useState<string | null>(null);
 
@@ -274,6 +277,18 @@ export const AnnotationOverlay = memo(function AnnotationOverlay({
           strokeWidth="1.5"
           strokeDasharray="4 3"
           rx="2"
+        />
+      )}
+      {/* Draft stroke preview — the freehand path as it is being drawn */}
+      {draftInk && draftInk.length > 1 && (
+        <polyline
+          data-testid="annotation-draft-ink"
+          points={draftInk.map(([x, y]) => `${x * zoom},${(pageHeightPt - y) * zoom}`).join(' ')}
+          fill="none"
+          stroke="rgba(59, 130, 246, 0.9)"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
         />
       )}
     </svg>

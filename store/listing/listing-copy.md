@@ -35,7 +35,9 @@ locally. It does not send your file to a signing service.
 
 This is the point of PDFluent. Your contracts, IDs, and financial documents never
 leave your computer, because the app makes no network request to do any of the
-work above. It can optionally check for an update, and that is the extent of it.
+work above. It can check for an update, and it can send a crash or feedback
+report if you switch reporting on. Both are off the document path and reporting
+is off until you enable it.
 
 PDFluent is completely free, including for business use. No account, no
 subscription, no licence file.

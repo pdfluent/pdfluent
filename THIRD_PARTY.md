@@ -1,12 +1,12 @@
 # THIRD_PARTY
 
-Generated: 2026-06-15T07:36:37.050Z
+Generated: 2026-09-02T14:22:04.948Z
 Generator: `scripts/generate-third-party.mjs`
 
 ## Summary
 
-- Total dependencies/assets: 1054
-- Policy status: {"allowed":1024,"needs-review":29,"internal":1}
+- Total dependencies/assets: 1145
+- Policy status: {"allowed":1108,"needs-review":35,"internal":2}
 
 ## cargo
 
@@ -44,6 +44,7 @@ Generator: `scripts/generate-third-party.mjs`
 | bitstream-io | 4.10.0 | MIT/Apache-2.0 | allowed | no |
 | block-buffer | 0.10.4 | MIT OR Apache-2.0 | allowed | no |
 | block-padding | 0.3.3 | MIT OR Apache-2.0 | allowed | no |
+| block2 | 0.5.1 | MIT | allowed | no |
 | block2 | 0.6.2 | MIT | allowed | no |
 | brotli | 8.0.2 | BSD-3-Clause AND MIT | allowed | no |
 | brotli-decompressor | 5.0.0 | BSD-3-Clause/MIT | allowed | no |
@@ -159,7 +160,7 @@ Generator: `scripts/generate-third-party.mjs`
 | foreign-types-macros | 0.2.3 | MIT/Apache-2.0 | allowed | no |
 | foreign-types-shared | 0.3.1 | MIT/Apache-2.0 | allowed | no |
 | form_urlencoded | 1.2.2 | MIT OR Apache-2.0 | allowed | no |
-| formcalc-interpreter | 1.0.0-beta.14 | See license file | needs-review | no |
+| formcalc-interpreter | 1.0.0-beta.17 | See license file | needs-review | no |
 | futures-channel | 0.3.32 | MIT OR Apache-2.0 | allowed | no |
 | futures-core | 0.3.32 | MIT OR Apache-2.0 | allowed | no |
 | futures-executor | 0.3.32 | MIT OR Apache-2.0 | allowed | no |
@@ -302,6 +303,8 @@ Generator: `scripts/generate-third-party.mjs`
 | num-iter | 0.1.45 | MIT OR Apache-2.0 | allowed | no |
 | num-rational | 0.4.2 | MIT OR Apache-2.0 | allowed | no |
 | num-traits | 0.2.19 | MIT OR Apache-2.0 | allowed | no |
+| objc-sys | 0.3.5 | MIT | allowed | no |
+| objc2 | 0.5.2 | MIT | allowed | no |
 | objc2 | 0.6.4 | MIT | allowed | no |
 | objc2-app-kit | 0.3.2 | Zlib OR Apache-2.0 OR MIT | allowed | no |
 | objc2-cloud-kit | 0.3.2 | Zlib OR Apache-2.0 OR MIT | allowed | no |
@@ -313,6 +316,7 @@ Generator: `scripts/generate-third-party.mjs`
 | objc2-core-text | 0.3.2 | Zlib OR Apache-2.0 OR MIT | allowed | no |
 | objc2-encode | 4.1.0 | MIT | allowed | no |
 | objc2-exception-helper | 0.1.1 | Zlib OR Apache-2.0 OR MIT | allowed | no |
+| objc2-foundation | 0.2.2 | MIT | allowed | no |
 | objc2-foundation | 0.3.2 | MIT | allowed | no |
 | objc2-io-surface | 0.3.2 | Zlib OR Apache-2.0 OR MIT | allowed | no |
 | objc2-osa-kit | 0.3.2 | Zlib OR Apache-2.0 OR MIT | allowed | no |
@@ -337,30 +341,32 @@ Generator: `scripts/generate-third-party.mjs`
 | paste | 1.0.15 | MIT OR Apache-2.0 | allowed | no |
 | pastey | 0.1.1 | MIT OR Apache-2.0 | allowed | no |
 | pathdiff | 0.2.3 | MIT/Apache-2.0 | allowed | no |
-| pdf-annot | 1.0.0-beta.14 | See license file | needs-review | no |
-| pdf-compliance | 1.0.0-beta.14 | See license file | needs-review | no |
-| pdf-docx | 1.0.0-beta.14 | See license file | needs-review | no |
-| pdf-engine | 1.0.0-beta.14 | See license file | needs-review | no |
-| pdf-font | 1.0.0-beta.4 | Apache-2.0 OR MIT | allowed | no |
-| pdf-interpret | 0.5.6 | Apache-2.0 OR MIT | allowed | no |
-| pdf-invoice | 1.0.0-beta.14 | See license file | needs-review | no |
-| pdf-manip | 1.0.0-beta.14 | See license file | needs-review | no |
-| pdf-pptx | 1.0.0-beta.14 | See license file | needs-review | no |
-| pdf-redact | 1.0.0-beta.14 | See license file | needs-review | no |
-| pdf-render | 1.0.0-beta.14 | Apache-2.0 OR MIT | allowed | no |
-| pdf-syntax | 0.5.4 | Apache-2.0 OR MIT | allowed | no |
-| pdf-text-format | 1.0.0-beta.14 | See license file | needs-review | no |
-| pdf-xfa | 1.0.0-beta.14 | See license file | needs-review | no |
-| pdf-xlsx | 1.0.0-beta.14 | See license file | needs-review | no |
-| pdfluent | 1.0.0-beta.14 | See license file | needs-review | no |
+| pdf-annot | 1.0.0-beta.17 | See license file | needs-review | no |
+| pdf-compliance | 1.0.0-beta.17 | See license file | needs-review | no |
+| pdf-docx | 1.0.0-beta.17 | See license file | needs-review | no |
+| pdf-engine | 1.0.0-beta.17 | See license file | needs-review | no |
+| pdf-font | 1.0.0-beta.5 | Apache-2.0 OR MIT | allowed | no |
+| pdf-interpret | 0.5.7 | Apache-2.0 OR MIT | allowed | no |
+| pdf-invoice | 1.0.0-beta.17 | See license file | needs-review | no |
+| pdf-manip | 1.0.0-beta.17 | See license file | needs-review | no |
+| pdf-pptx | 1.0.0-beta.17 | See license file | needs-review | no |
+| pdf-redact | 1.0.0-beta.17 | See license file | needs-review | no |
+| pdf-render | 1.0.0-beta.17 | Apache-2.0 OR MIT | allowed | no |
+| pdf-standard-fonts | 1.0.0-beta.17 | See license file | needs-review | no |
+| pdf-syntax | 0.5.6 | Apache-2.0 OR MIT | allowed | no |
+| pdf-text-format | 1.0.0-beta.17 | See license file | needs-review | no |
+| pdf-xfa | 1.0.0-beta.17 | See license file | needs-review | no |
+| pdf-xlsx | 1.0.0-beta.17 | See license file | needs-review | no |
+| pdfluent | 1.0.0-beta.17.3 | See license file | needs-review | no |
 | pdfluent-ccitt | 0.2.2 | Apache-2.0 OR MIT | allowed | no |
 | pdfluent-cff | 0.2.0 | MIT OR Apache-2.0 | allowed | no |
-| pdfluent-extract | 1.0.0-beta.14 | See license file | needs-review | no |
-| pdfluent-forms | 1.0.0-beta.14 | See license file | needs-review | no |
+| pdfluent-extract | 1.0.0-beta.17 | See license file | needs-review | no |
+| pdfluent-forms | 1.0.0-beta.17 | See license file | needs-review | no |
 | pdfluent-jbig2 | 0.2.3 | Apache-2.0 OR MIT | allowed | no |
 | pdfluent-jpeg2000 | 0.3.5 | Apache-2.0 OR MIT | allowed | no |
 | pdfluent-lopdf | 0.39.4 | MIT | allowed | no |
-| pdfluent-sign | 1.0.0-beta.14 | See license file | needs-review | no |
+| pdfluent-macos-secure | 0.1.0 | LicenseRef-PDFluent-Proprietary | internal | no |
+| pdfluent-sign | 1.0.0-beta.17 | See license file | needs-review | no |
 | peniko | 0.6.0 | Apache-2.0 OR MIT | allowed | no |
 | percent-encoding | 2.3.2 | MIT OR Apache-2.0 | allowed | no |
 | phf | 0.13.1 | MIT | allowed | no |
@@ -519,6 +525,7 @@ Generator: `scripts/generate-third-party.mjs`
 | tauri-plugin | 2.6.1 | Apache-2.0 OR MIT | allowed | no |
 | tauri-plugin-dialog | 2.7.1 | Apache-2.0 OR MIT | allowed | no |
 | tauri-plugin-fs | 2.5.1 | Apache-2.0 OR MIT | allowed | no |
+| tauri-plugin-process | 2.3.1 | Apache-2.0 OR MIT | allowed | no |
 | tauri-plugin-shell | 2.3.5 | Apache-2.0 OR MIT | allowed | no |
 | tauri-plugin-updater | 2.10.1 | Apache-2.0 OR MIT | allowed | no |
 | tauri-runtime | 2.11.1 | Apache-2.0 OR MIT | allowed | no |
@@ -690,11 +697,11 @@ Generator: `scripts/generate-third-party.mjs`
 | x11 | 2.21.0 | MIT | allowed | no |
 | x11-dl | 2.21.0 | MIT | allowed | no |
 | xattr | 1.6.1 | MIT OR Apache-2.0 | allowed | no |
-| xfa-dom-resolver | 1.0.0-beta.14 | See license file | needs-review | no |
-| xfa-js-sandboxed | 1.0.0-beta.14 | See license file | needs-review | no |
-| xfa-json | 1.0.0-beta.14 | See license file | needs-review | no |
-| xfa-layout-engine | 1.0.0-beta.14 | See license file | needs-review | no |
-| xfa-license | 1.0.0-beta.14 | See license file | needs-review | no |
+| xfa-dom-resolver | 1.0.0-beta.17 | See license file | needs-review | no |
+| xfa-js-sandboxed | 1.0.0-beta.17 | See license file | needs-review | no |
+| xfa-json | 1.0.0-beta.17 | See license file | needs-review | no |
+| xfa-layout-engine | 1.0.0-beta.17 | See license file | needs-review | no |
+| xfa-license | 1.0.0-beta.17 | See license file | needs-review | no |
 | xmp-writer | 0.3.3 | MIT OR Apache-2.0 | allowed | no |
 | y4m | 0.8.0 | MIT | allowed | no |
 | yasna | 0.5.2 | MIT OR Apache-2.0 | allowed | no |
@@ -722,13 +729,14 @@ Generator: `scripts/generate-third-party.mjs`
 
 | Name | Version | License | Policy | Direct |
 |---|---:|---|---|---:|
-| pdfluent-desktop | 1.0.0-beta.6 | LicenseRef-PDFluent-Proprietary | internal | no |
+| pdfluent-desktop | 1.0.0-beta.21 | LicenseRef-PDFluent-Proprietary | internal | no |
 
 ## npm
 
 | Name | Version | License | Policy | Direct |
 |---|---:|---|---|---:|
 | @alloc/quick-lru | 5.2.0 | MIT | allowed | no |
+| @ampproject/remapping | 2.3.0 | Apache-2.0 | allowed | no |
 | @babel/code-frame | 7.29.0 | MIT | allowed | no |
 | @babel/compat-data | 7.29.0 | MIT | allowed | no |
 | @babel/core | 7.29.0 | MIT | allowed | no |
@@ -749,6 +757,56 @@ Generator: `scripts/generate-third-party.mjs`
 | @babel/template | 7.28.6 | MIT | allowed | no |
 | @babel/traverse | 7.29.0 | MIT | allowed | no |
 | @babel/types | 7.29.0 | MIT | allowed | no |
+| @bcoe/v8-coverage | 0.2.3 | MIT | allowed | no |
+| @esbuild/aix-ppc64 | 0.25.12 | MIT | allowed | no |
+| @esbuild/aix-ppc64 | 0.21.5 | MIT | allowed | no |
+| @esbuild/android-arm | 0.25.12 | MIT | allowed | no |
+| @esbuild/android-arm | 0.21.5 | MIT | allowed | no |
+| @esbuild/android-arm64 | 0.25.12 | MIT | allowed | no |
+| @esbuild/android-arm64 | 0.21.5 | MIT | allowed | no |
+| @esbuild/android-x64 | 0.25.12 | MIT | allowed | no |
+| @esbuild/android-x64 | 0.21.5 | MIT | allowed | no |
+| @esbuild/darwin-arm64 | 0.25.12 | MIT | allowed | no |
+| @esbuild/darwin-arm64 | 0.21.5 | MIT | allowed | no |
+| @esbuild/darwin-x64 | 0.25.12 | MIT | allowed | no |
+| @esbuild/darwin-x64 | 0.21.5 | MIT | allowed | no |
+| @esbuild/freebsd-arm64 | 0.25.12 | MIT | allowed | no |
+| @esbuild/freebsd-arm64 | 0.21.5 | MIT | allowed | no |
+| @esbuild/freebsd-x64 | 0.25.12 | MIT | allowed | no |
+| @esbuild/freebsd-x64 | 0.21.5 | MIT | allowed | no |
+| @esbuild/linux-arm | 0.25.12 | MIT | allowed | no |
+| @esbuild/linux-arm | 0.21.5 | MIT | allowed | no |
+| @esbuild/linux-arm64 | 0.25.12 | MIT | allowed | no |
+| @esbuild/linux-arm64 | 0.21.5 | MIT | allowed | no |
+| @esbuild/linux-ia32 | 0.25.12 | MIT | allowed | no |
+| @esbuild/linux-ia32 | 0.21.5 | MIT | allowed | no |
+| @esbuild/linux-loong64 | 0.25.12 | MIT | allowed | no |
+| @esbuild/linux-loong64 | 0.21.5 | MIT | allowed | no |
+| @esbuild/linux-mips64el | 0.25.12 | MIT | allowed | no |
+| @esbuild/linux-mips64el | 0.21.5 | MIT | allowed | no |
+| @esbuild/linux-ppc64 | 0.25.12 | MIT | allowed | no |
+| @esbuild/linux-ppc64 | 0.21.5 | MIT | allowed | no |
+| @esbuild/linux-riscv64 | 0.25.12 | MIT | allowed | no |
+| @esbuild/linux-riscv64 | 0.21.5 | MIT | allowed | no |
+| @esbuild/linux-s390x | 0.25.12 | MIT | allowed | no |
+| @esbuild/linux-s390x | 0.21.5 | MIT | allowed | no |
+| @esbuild/linux-x64 | 0.25.12 | MIT | allowed | no |
+| @esbuild/linux-x64 | 0.21.5 | MIT | allowed | no |
+| @esbuild/netbsd-arm64 | 0.25.12 | MIT | allowed | no |
+| @esbuild/netbsd-x64 | 0.25.12 | MIT | allowed | no |
+| @esbuild/netbsd-x64 | 0.21.5 | MIT | allowed | no |
+| @esbuild/openbsd-arm64 | 0.25.12 | MIT | allowed | no |
+| @esbuild/openbsd-x64 | 0.25.12 | MIT | allowed | no |
+| @esbuild/openbsd-x64 | 0.21.5 | MIT | allowed | no |
+| @esbuild/openharmony-arm64 | 0.25.12 | MIT | allowed | no |
+| @esbuild/sunos-x64 | 0.25.12 | MIT | allowed | no |
+| @esbuild/sunos-x64 | 0.21.5 | MIT | allowed | no |
+| @esbuild/win32-arm64 | 0.25.12 | MIT | allowed | no |
+| @esbuild/win32-arm64 | 0.21.5 | MIT | allowed | no |
+| @esbuild/win32-ia32 | 0.25.12 | MIT | allowed | no |
+| @esbuild/win32-ia32 | 0.21.5 | MIT | allowed | no |
+| @esbuild/win32-x64 | 0.25.12 | MIT | allowed | no |
+| @esbuild/win32-x64 | 0.21.5 | MIT | allowed | no |
 | @eslint-community/eslint-utils | 4.9.1 | MIT | allowed | no |
 | @eslint-community/regexpp | 4.12.2 | MIT | allowed | no |
 | @eslint/config-array | 0.21.1 | Apache-2.0 | allowed | no |
@@ -758,14 +816,12 @@ Generator: `scripts/generate-third-party.mjs`
 | @eslint/js | 9.39.3 | MIT | allowed | yes |
 | @eslint/object-schema | 2.1.7 | Apache-2.0 | allowed | no |
 | @eslint/plugin-kit | 0.4.1 | Apache-2.0 | allowed | no |
-| @huggingface/jinja | 0.5.9 | MIT | allowed | no |
-| @huggingface/tokenizers | 0.1.3 | Apache-2.0 | allowed | no |
-| @huggingface/transformers | 4.2.0 | Apache-2.0 | allowed | yes |
 | @humanfs/core | 0.19.1 | Apache-2.0 | allowed | no |
 | @humanfs/node | 0.16.7 | Apache-2.0 | allowed | no |
 | @humanwhocodes/module-importer | 1.0.1 | Apache-2.0 | allowed | no |
 | @humanwhocodes/retry | 0.4.3 | Apache-2.0 | allowed | no |
-| @img/colour | 1.1.0 | MIT | allowed | no |
+| @isaacs/cliui | 8.0.2 | ISC | allowed | no |
+| @istanbuljs/schema | 0.1.6 | MIT | allowed | no |
 | @jridgewell/gen-mapping | 0.3.13 | MIT | allowed | no |
 | @jridgewell/remapping | 2.3.5 | MIT | allowed | no |
 | @jridgewell/resolve-uri | 3.1.2 | MIT | allowed | no |
@@ -778,23 +834,51 @@ Generator: `scripts/generate-third-party.mjs`
 | @nodelib/fs.scandir | 2.1.5 | MIT | allowed | no |
 | @nodelib/fs.stat | 2.0.5 | MIT | allowed | no |
 | @nodelib/fs.walk | 1.2.8 | MIT | allowed | no |
+| @pkgjs/parseargs | 0.11.0 | MIT | allowed | no |
 | @playwright/test | 1.58.2 | Apache-2.0 | allowed | yes |
-| @protobufjs/aspromise | 1.1.2 | BSD-3-Clause | allowed | no |
-| @protobufjs/base64 | 1.1.2 | BSD-3-Clause | allowed | no |
-| @protobufjs/codegen | 2.0.5 | BSD-3-Clause | allowed | no |
-| @protobufjs/eventemitter | 1.1.1 | BSD-3-Clause | allowed | no |
-| @protobufjs/fetch | 1.1.1 | BSD-3-Clause | allowed | no |
-| @protobufjs/float | 1.0.2 | BSD-3-Clause | allowed | no |
-| @protobufjs/inquire | 1.1.2 | BSD-3-Clause | allowed | no |
-| @protobufjs/path | 1.1.2 | BSD-3-Clause | allowed | no |
-| @protobufjs/pool | 1.1.0 | BSD-3-Clause | allowed | no |
-| @protobufjs/utf8 | 1.1.1 | BSD-3-Clause | allowed | no |
 | @rolldown/pluginutils | 1.0.0-beta.27 | MIT | allowed | no |
+| @rollup/rollup-android-arm-eabi | 4.59.0 | MIT | allowed | no |
+| @rollup/rollup-android-arm64 | 4.59.0 | MIT | allowed | no |
+| @rollup/rollup-darwin-arm64 | 4.59.0 | MIT | allowed | no |
+| @rollup/rollup-darwin-x64 | 4.59.0 | MIT | allowed | no |
+| @rollup/rollup-freebsd-arm64 | 4.59.0 | MIT | allowed | no |
+| @rollup/rollup-freebsd-x64 | 4.59.0 | MIT | allowed | no |
+| @rollup/rollup-linux-arm-gnueabihf | 4.59.0 | MIT | allowed | no |
+| @rollup/rollup-linux-arm-musleabihf | 4.59.0 | MIT | allowed | no |
+| @rollup/rollup-linux-arm64-gnu | 4.59.0 | MIT | allowed | no |
+| @rollup/rollup-linux-arm64-musl | 4.59.0 | MIT | allowed | no |
+| @rollup/rollup-linux-loong64-gnu | 4.59.0 | MIT | allowed | no |
+| @rollup/rollup-linux-loong64-musl | 4.59.0 | MIT | allowed | no |
+| @rollup/rollup-linux-ppc64-gnu | 4.59.0 | MIT | allowed | no |
+| @rollup/rollup-linux-ppc64-musl | 4.59.0 | MIT | allowed | no |
+| @rollup/rollup-linux-riscv64-gnu | 4.59.0 | MIT | allowed | no |
+| @rollup/rollup-linux-riscv64-musl | 4.59.0 | MIT | allowed | no |
+| @rollup/rollup-linux-s390x-gnu | 4.59.0 | MIT | allowed | no |
+| @rollup/rollup-linux-x64-gnu | 4.59.0 | MIT | allowed | no |
+| @rollup/rollup-linux-x64-musl | 4.59.0 | MIT | allowed | no |
+| @rollup/rollup-openbsd-x64 | 4.59.0 | MIT | allowed | no |
+| @rollup/rollup-openharmony-arm64 | 4.59.0 | MIT | allowed | no |
+| @rollup/rollup-win32-arm64-msvc | 4.59.0 | MIT | allowed | no |
+| @rollup/rollup-win32-ia32-msvc | 4.59.0 | MIT | allowed | no |
+| @rollup/rollup-win32-x64-gnu | 4.59.0 | MIT | allowed | no |
+| @rollup/rollup-win32-x64-msvc | 4.59.0 | MIT | allowed | no |
 | @scure/base | 2.0.0 | MIT | allowed | no |
 | @tauri-apps/api | 2.11.0 | Apache-2.0 OR MIT | allowed | yes |
 | @tauri-apps/cli | 2.10.0 | Apache-2.0 OR MIT | allowed | yes |
+| @tauri-apps/cli-darwin-arm64 | 2.10.0 | Apache-2.0 OR MIT | allowed | no |
+| @tauri-apps/cli-darwin-x64 | 2.10.0 | Apache-2.0 OR MIT | allowed | no |
+| @tauri-apps/cli-linux-arm-gnueabihf | 2.10.0 | Apache-2.0 OR MIT | allowed | no |
+| @tauri-apps/cli-linux-arm64-gnu | 2.10.0 | Apache-2.0 OR MIT | allowed | no |
+| @tauri-apps/cli-linux-arm64-musl | 2.10.0 | Apache-2.0 OR MIT | allowed | no |
+| @tauri-apps/cli-linux-riscv64-gnu | 2.10.0 | Apache-2.0 OR MIT | allowed | no |
+| @tauri-apps/cli-linux-x64-gnu | 2.10.0 | Apache-2.0 OR MIT | allowed | no |
+| @tauri-apps/cli-linux-x64-musl | 2.10.0 | Apache-2.0 OR MIT | allowed | no |
+| @tauri-apps/cli-win32-arm64-msvc | 2.10.0 | Apache-2.0 OR MIT | allowed | no |
+| @tauri-apps/cli-win32-ia32-msvc | 2.10.0 | Apache-2.0 OR MIT | allowed | no |
+| @tauri-apps/cli-win32-x64-msvc | 2.10.0 | Apache-2.0 OR MIT | allowed | no |
 | @tauri-apps/plugin-dialog | 2.7.1 | MIT OR Apache-2.0 | allowed | yes |
 | @tauri-apps/plugin-fs | 2.5.1 | MIT OR Apache-2.0 | allowed | yes |
+| @tauri-apps/plugin-process | 2.3.1 | MIT OR Apache-2.0 | allowed | yes |
 | @tauri-apps/plugin-updater | 2.10.0 | MIT OR Apache-2.0 | allowed | yes |
 | @types/babel__core | 7.20.5 | MIT | allowed | no |
 | @types/babel__generator | 7.27.0 | MIT | allowed | no |
@@ -816,6 +900,7 @@ Generator: `scripts/generate-third-party.mjs`
 | @typescript-eslint/utils | 8.56.1 | MIT | allowed | no |
 | @typescript-eslint/visitor-keys | 8.56.1 | MIT | allowed | no |
 | @vitejs/plugin-react | 4.7.0 | MIT | allowed | yes |
+| @vitest/coverage-v8 | 2.1.9 | MIT | allowed | yes |
 | @vitest/expect | 2.1.9 | MIT | allowed | no |
 | @vitest/mocker | 2.1.9 | MIT | allowed | no |
 | @vitest/pretty-format | 2.1.9 | MIT | allowed | no |
@@ -825,9 +910,11 @@ Generator: `scripts/generate-third-party.mjs`
 | @vitest/utils | 2.1.9 | MIT | allowed | no |
 | acorn | 8.16.0 | MIT | allowed | no |
 | acorn-jsx | 5.3.2 | MIT | allowed | no |
-| adm-zip | 0.5.17 | MIT | allowed | no |
 | ajv | 6.14.0 | MIT | allowed | no |
+| ansi-regex | 6.3.0 | MIT | allowed | no |
+| ansi-regex | 5.0.1 | MIT | allowed | no |
 | ansi-styles | 4.3.0 | MIT | allowed | no |
+| ansi-styles | 6.2.3 | MIT | allowed | no |
 | any-promise | 1.3.0 | MIT | allowed | no |
 | anymatch | 3.1.3 | ISC | allowed | no |
 | arg | 5.0.2 | MIT | allowed | no |
@@ -839,9 +926,10 @@ Generator: `scripts/generate-third-party.mjs`
 | balanced-match | 1.0.2 | MIT | allowed | no |
 | baseline-browser-mapping | 2.10.0 | Apache-2.0 | allowed | no |
 | binary-extensions | 2.3.0 | MIT | allowed | no |
-| boolean | 3.2.0 | MIT | allowed | no |
 | brace-expansion | 5.0.4 | MIT | allowed | no |
 | brace-expansion | 1.1.12 | MIT | allowed | no |
+| brace-expansion | 2.1.4 | MIT | allowed | no |
+| brace-expansion | 5.0.9 | MIT | allowed | no |
 | braces | 3.0.3 | MIT | allowed | no |
 | browserslist | 4.28.1 | MIT | allowed | no |
 | bytestreamjs | 2.0.1 | BSD-3-Clause | allowed | no |
@@ -865,17 +953,13 @@ Generator: `scripts/generate-third-party.mjs`
 | debug | 4.4.3 | MIT | allowed | no |
 | deep-eql | 5.0.2 | MIT | allowed | no |
 | deep-is | 0.1.4 | MIT | allowed | no |
-| define-data-property | 1.1.4 | MIT | allowed | no |
-| define-properties | 1.2.1 | MIT | allowed | no |
-| detect-libc | 2.1.2 | Apache-2.0 | allowed | no |
-| detect-node | 2.1.0 | MIT | allowed | no |
 | didyoumean | 1.2.2 | Apache-2.0 | allowed | no |
 | dlv | 1.1.3 | MIT | allowed | no |
+| eastasianwidth | 0.2.0 | MIT | allowed | no |
 | electron-to-chromium | 1.5.302 | ISC | allowed | no |
-| es-define-property | 1.0.1 | MIT | allowed | no |
-| es-errors | 1.3.0 | MIT | allowed | no |
+| emoji-regex | 9.2.2 | MIT | allowed | no |
+| emoji-regex | 8.0.0 | MIT | allowed | no |
 | es-module-lexer | 1.7.0 | MIT | allowed | no |
-| es6-error | 4.1.1 | MIT | allowed | no |
 | esbuild | 0.25.12 | MIT | allowed | no |
 | esbuild | 0.21.5 | MIT | allowed | no |
 | escalade | 3.2.0 | MIT | allowed | no |
@@ -903,21 +987,20 @@ Generator: `scripts/generate-third-party.mjs`
 | fill-range | 7.1.1 | MIT | allowed | no |
 | find-up | 5.0.0 | MIT | allowed | no |
 | flat-cache | 4.0.1 | MIT | allowed | no |
-| flatbuffers | 25.9.23 | Apache-2.0 | allowed | no |
 | flatted | 3.3.4 | ISC | allowed | no |
+| foreground-child | 3.3.1 | ISC | allowed | no |
 | fraction.js | 5.3.4 | MIT | allowed | no |
+| fsevents | 2.3.3 | MIT | allowed | no |
+| fsevents | 2.3.2 | MIT | allowed | no |
 | function-bind | 1.1.2 | MIT | allowed | no |
 | gensync | 1.0.0-beta.2 | MIT | allowed | no |
+| glob | 10.5.0 | ISC | allowed | no |
 | glob-parent | 5.1.2 | ISC | allowed | no |
 | glob-parent | 6.0.2 | ISC | allowed | no |
-| global-agent | 3.0.0 | BSD-3-Clause | allowed | no |
 | globals | 14.0.0 | MIT | allowed | no |
-| globalthis | 1.0.4 | MIT | allowed | no |
-| gopd | 1.2.0 | MIT | allowed | no |
-| guid-typescript | 1.0.9 | ISC | allowed | no |
 | has-flag | 4.0.0 | MIT | allowed | no |
-| has-property-descriptors | 1.0.2 | MIT | allowed | no |
 | hasown | 2.0.2 | MIT | allowed | no |
+| html-escaper | 2.0.2 | MIT | allowed | no |
 | html-parse-stringify | 3.0.1 | MIT | allowed | no |
 | i18next | 25.8.18 | MIT | allowed | yes |
 | ignore | 7.0.5 | MIT | allowed | no |
@@ -929,10 +1012,16 @@ Generator: `scripts/generate-third-party.mjs`
 | is-binary-path | 2.1.0 | MIT | allowed | no |
 | is-core-module | 2.16.1 | MIT | allowed | no |
 | is-extglob | 2.1.1 | MIT | allowed | no |
+| is-fullwidth-code-point | 3.0.0 | MIT | allowed | no |
 | is-glob | 4.0.3 | MIT | allowed | no |
 | is-number | 7.0.0 | MIT | allowed | no |
 | isarray | 1.0.0 | MIT | allowed | no |
 | isexe | 2.0.0 | ISC | allowed | no |
+| istanbul-lib-coverage | 3.2.2 | BSD-3-Clause | allowed | no |
+| istanbul-lib-report | 3.0.1 | BSD-3-Clause | allowed | no |
+| istanbul-lib-source-maps | 5.0.6 | BSD-3-Clause | allowed | no |
+| istanbul-reports | 3.2.0 | BSD-3-Clause | allowed | no |
+| jackspeak | 3.4.3 | BlueOak-1.0.0 | needs-review | no |
 | jiti | 1.21.7 | MIT | allowed | no |
 | js-tokens | 4.0.0 | MIT | allowed | no |
 | js-yaml | 4.1.1 | MIT | allowed | no |
@@ -940,7 +1029,6 @@ Generator: `scripts/generate-third-party.mjs`
 | json-buffer | 3.0.1 | MIT | allowed | no |
 | json-schema-traverse | 0.4.1 | MIT | allowed | no |
 | json-stable-stringify-without-jsonify | 1.0.1 | MIT | allowed | no |
-| json-stringify-safe | 5.0.1 | ISC | allowed | no |
 | json5 | 2.2.3 | MIT | allowed | no |
 | jszip | 3.10.1 | (MIT OR GPL-3.0-or-later) | needs-review | yes |
 | keyv | 4.5.4 | MIT | allowed | no |
@@ -950,17 +1038,21 @@ Generator: `scripts/generate-third-party.mjs`
 | lines-and-columns | 1.2.4 | MIT | allowed | no |
 | locate-path | 6.0.0 | MIT | allowed | no |
 | lodash.merge | 4.6.2 | MIT | allowed | no |
-| long | 5.3.2 | Apache-2.0 | allowed | no |
 | loupe | 3.2.1 | MIT | allowed | no |
 | lru-cache | 11.2.6 | BlueOak-1.0.0 | needs-review | no |
 | lru-cache | 5.1.1 | ISC | allowed | no |
+| lru-cache | 10.4.3 | ISC | allowed | no |
 | lucide-react | 0.522.0 | ISC | allowed | yes |
 | magic-string | 0.30.21 | MIT | allowed | no |
-| matcher | 3.0.0 | MIT | allowed | no |
+| magicast | 0.3.5 | MIT | allowed | no |
+| make-dir | 4.0.0 | MIT | allowed | no |
 | merge2 | 1.4.1 | MIT | allowed | no |
 | micromatch | 4.0.8 | MIT | allowed | no |
 | minimatch | 10.2.4 | BlueOak-1.0.0 | needs-review | no |
+| minimatch | 9.0.9 | ISC | allowed | no |
 | minimatch | 3.1.5 | ISC | allowed | no |
+| minimatch | 10.2.6 | BlueOak-1.0.0 | needs-review | no |
+| minipass | 7.1.3 | BlueOak-1.0.0 | needs-review | no |
 | ms | 2.1.3 | MIT | allowed | no |
 | mz | 2.7.0 | MIT | allowed | no |
 | nanoid | 3.3.11 | MIT | allowed | no |
@@ -969,20 +1061,17 @@ Generator: `scripts/generate-third-party.mjs`
 | normalize-path | 3.0.0 | MIT | allowed | no |
 | object-assign | 4.1.1 | MIT | allowed | no |
 | object-hash | 3.0.0 | MIT | allowed | no |
-| object-keys | 1.1.1 | MIT | allowed | no |
-| onnxruntime-common | 1.24.3 | MIT | allowed | no |
-| onnxruntime-common | 1.24.0-dev.20251116-b39e144322 | MIT | allowed | no |
-| onnxruntime-node | 1.24.3 | MIT | allowed | no |
-| onnxruntime-web | 1.26.0-dev.20260416-b7804b056c | MIT | allowed | no |
 | optionator | 0.9.4 | MIT | allowed | no |
 | p-limit | 3.1.0 | MIT | allowed | no |
 | p-locate | 5.0.0 | MIT | allowed | no |
+| package-json-from-dist | 1.0.1 | BlueOak-1.0.0 | needs-review | no |
 | pako | 1.0.11 | (MIT AND Zlib) | allowed | no |
 | pako | 2.1.0 | (MIT AND Zlib) | allowed | no |
 | parent-module | 1.0.1 | MIT | allowed | no |
 | path-exists | 4.0.0 | MIT | allowed | no |
 | path-key | 3.1.1 | MIT | allowed | no |
 | path-parse | 1.0.7 | MIT | allowed | no |
+| path-scurry | 1.11.1 | BlueOak-1.0.0 | needs-review | no |
 | pathe | 1.1.2 | MIT | allowed | no |
 | pathval | 2.0.1 | MIT | allowed | no |
 | picocolors | 1.1.1 | ISC | allowed | no |
@@ -991,7 +1080,6 @@ Generator: `scripts/generate-third-party.mjs`
 | pify | 2.3.0 | MIT | allowed | no |
 | pirates | 4.0.7 | MIT | allowed | no |
 | pkijs | 3.3.3 | BSD-3-Clause | allowed | no |
-| platform | 1.3.6 | MIT | allowed | no |
 | playwright | 1.58.2 | Apache-2.0 | allowed | no |
 | playwright-core | 1.58.2 | Apache-2.0 | allowed | no |
 | postcss | 8.5.8 | MIT | allowed | yes |
@@ -1003,7 +1091,6 @@ Generator: `scripts/generate-third-party.mjs`
 | postcss-value-parser | 4.2.0 | MIT | allowed | no |
 | prelude-ls | 1.2.1 | MIT | allowed | no |
 | process-nextick-args | 2.0.1 | MIT | allowed | no |
-| protobufjs | 7.6.2 | BSD-3-Clause | allowed | no |
 | punycode | 2.3.1 | MIT | allowed | no |
 | pvtsutils | 1.3.6 | MIT | allowed | no |
 | pvutils | 1.1.5 | MIT | allowed | no |
@@ -1018,31 +1105,34 @@ Generator: `scripts/generate-third-party.mjs`
 | resolve | 1.22.11 | MIT | allowed | no |
 | resolve-from | 4.0.0 | MIT | allowed | no |
 | reusify | 1.1.0 | MIT | allowed | no |
-| roarr | 2.15.4 | BSD-3-Clause | allowed | no |
 | rollup | 4.59.0 | MIT | allowed | no |
 | run-parallel | 1.2.0 | MIT | allowed | no |
 | safe-buffer | 5.1.2 | MIT | allowed | no |
 | scheduler | 0.27.0 | MIT | allowed | no |
 | semver | 7.7.4 | ISC | allowed | no |
-| semver | 7.8.2 | ISC | allowed | no |
+| semver | 7.8.5 | ISC | allowed | no |
 | semver | 6.3.1 | ISC | allowed | no |
-| semver-compare | 1.0.0 | MIT | allowed | no |
-| serialize-error | 7.0.1 | MIT | allowed | no |
 | setimmediate | 1.0.5 | MIT | allowed | no |
-| sharp | 0.34.5 | Apache-2.0 | allowed | no |
 | shebang-command | 2.0.0 | MIT | allowed | no |
 | shebang-regex | 3.0.0 | MIT | allowed | no |
 | siginfo | 2.0.0 | ISC | allowed | no |
+| signal-exit | 4.1.0 | ISC | allowed | no |
 | source-map-js | 1.2.1 | BSD-3-Clause | allowed | no |
-| sprintf-js | 1.1.3 | BSD-3-Clause | allowed | no |
 | stackback | 0.0.2 | MIT | allowed | no |
 | std-env | 3.10.0 | MIT | allowed | no |
 | string_decoder | 1.1.1 | MIT | allowed | no |
+| string-width | 5.1.2 | MIT | allowed | no |
+| string-width | 4.2.3 | MIT | allowed | no |
+| string-width-cjs | 4.2.3 | MIT | allowed | no |
+| strip-ansi | 6.0.1 | MIT | allowed | no |
+| strip-ansi | 7.2.0 | MIT | allowed | no |
+| strip-ansi-cjs | 6.0.1 | MIT | allowed | no |
 | strip-json-comments | 3.1.1 | MIT | allowed | no |
 | sucrase | 3.35.1 | MIT | allowed | no |
 | supports-color | 7.2.0 | MIT | allowed | no |
 | supports-preserve-symlinks-flag | 1.0.0 | MIT | allowed | no |
 | tailwindcss | 3.4.17 | MIT | allowed | yes |
+| test-exclude | 7.0.2 | ISC | allowed | no |
 | thenify | 3.3.1 | MIT | allowed | no |
 | thenify-all | 1.6.0 | MIT | allowed | no |
 | tinybench | 2.9.0 | MIT | allowed | no |
@@ -1056,7 +1146,6 @@ Generator: `scripts/generate-third-party.mjs`
 | ts-interface-checker | 0.1.13 | Apache-2.0 | allowed | no |
 | tslib | 2.8.1 | 0BSD | allowed | no |
 | type-check | 0.4.0 | MIT | allowed | no |
-| type-fest | 0.13.1 | (MIT OR CC0-1.0) | allowed | no |
 | typescript | 5.9.3 | Apache-2.0 | allowed | yes |
 | typescript-eslint | 8.56.1 | MIT | allowed | yes |
 | undici-types | 7.24.6 | MIT | allowed | no |
@@ -1072,6 +1161,8 @@ Generator: `scripts/generate-third-party.mjs`
 | which | 2.0.2 | ISC | allowed | no |
 | why-is-node-running | 2.3.0 | MIT | allowed | no |
 | word-wrap | 1.2.5 | MIT | allowed | no |
+| wrap-ansi | 8.1.0 | MIT | allowed | no |
+| wrap-ansi-cjs | 7.0.0 | MIT | allowed | no |
 | yallist | 3.1.1 | ISC | allowed | no |
 | yaml | 2.8.2 | ISC | allowed | no |
 | yocto-queue | 0.1.0 | MIT | allowed | no |

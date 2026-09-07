@@ -203,13 +203,14 @@ describe('BrowserTestRuntimeAdapter — honest operation details', () => {
 
 describe('AllToolsPanel — no fake clickability', () => {
   it('does not present all tools as clickable', () => {
-    // Code extracts: const isWired = wiredTools.has(tool.label); disabled={!isWired}
-    expect(allToolsPanelSource).toContain('wiredTools.has(tool.label)');
-    expect(allToolsPanelSource).toContain('disabled={!isWired}');
+    expect(allToolsPanelSource).toContain('allTools.filter(t => wiredTools.has(t.label))');
   });
 
-  it('shows visual distinction for unwired tools', () => {
-    expect(allToolsPanelSource).toContain('opacity-40');
-    expect(allToolsPanelSource).toContain('cursor-default');
+  it('offers no tool this shell cannot perform', () => {
+    // The panel used to render every tile and grey the unproven ones out. A
+    // greyed-out tile is still a promise, and the list behind it was wrong in
+    // both directions; unproven tools are now simply not there.
+    expect(allToolsPanelSource).not.toContain('disabled={!isWired}');
+    expect(allToolsPanelSource).not.toContain('opacity-40');
   });
 });

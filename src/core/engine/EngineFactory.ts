@@ -615,11 +615,11 @@ export class DefaultEngineFactory implements EngineFactory {
   }
 
   async getFeatureMatrix(): Promise<Record<Runtime, { features: Record<string, boolean>; limitations: string[]; performance: { documentLoading: number; pageRendering: number; textSearch: number } }>> {
-    return {} as any;
+    throw new Error('Feature matrix is not implemented');
   }
 
   async benchmarkEngines(): Promise<Record<Runtime, { initializationTime: number; documentLoadTime: number; pageRenderTime: number; textSearchTime: number; memoryUsage: number; score: number }>> {
-    return {} as any;
+    throw new Error('Engine benchmarking is not implemented');
   }
 
   async compareEngineOutputs(): Promise<{ consistent: boolean; differences: Array<{ engine: Runtime; output: unknown; differences?: Record<string, unknown> }> }> {

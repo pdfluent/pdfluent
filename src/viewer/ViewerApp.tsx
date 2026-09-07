@@ -14,7 +14,9 @@ import type { DocumentEvent } from './state/documentEvents';
 import type { AppError } from './state/errorCenter';
 import { clearError } from './state/errorCenter';
 import i18n from '../i18n';
-import { scheduleStartupUpdateCheck, checkAndInstallUpdate, checkForUpdate, relaunchApp } from '../lib/updater';
+import { scheduleStartupUpdateCheckIfEnabled, checkAndInstallUpdate, checkForUpdate, relaunchApp } from '../lib/updater';
+import { loadAppSettings, saveAppSettings } from './state/appSettings';
+import type { AppSettings } from './state/appSettings';
 
 import { useEngine } from './hooks/useEngine';
 import { useDocument } from './hooks/useDocument';
@@ -50,6 +52,7 @@ const AllToolsPanel = lazy(() => import('./components/AllToolsPanel').then(m => 
 const ExportDialog = lazy(() => import('./components/ExportDialog').then(m => ({ default: m.ExportDialog })));
 const UpdateBanner = lazy(() => import('./components/UpdateBanner').then(m => ({ default: m.UpdateBanner })));
 const ShortcutSheet = lazy(() => import('./components/ShortcutSheet').then(m => ({ default: m.ShortcutSheet })));
+const SettingsPanel = lazy(() => import('./components/SettingsPanel').then(m => ({ default: m.SettingsPanel })));
 const GoToPageDialog = lazy(() => import('./components/GoToPageDialog').then(m => ({ default: m.GoToPageDialog })));
 const UnsavedChangesDialog = lazy(() => import('./components/UnsavedChangesDialog').then(m => ({ default: m.UnsavedChangesDialog })));
 import { TaskQueueProvider } from './context/TaskQueueContext';
@@ -139,6 +142,16 @@ export function ViewerApp() {
   } = useSidebarState();
   const [initialExportFormat, setInitialExportFormat] = useState<ExportFormat>('pdf');
 
+  // Application settings. The dialog is the surface LICENSE.md §4 points at for
+  // switching the automatic update check off, so it has to be reachable —
+  // it opens from the command palette ("Settings").
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [appSettings, setAppSettings] = useState<AppSettings>(() => loadAppSettings());
+  const handleSettingsChange = useCallback((next: AppSettings) => {
+    setAppSettings(next);
+    saveAppSettings(next);
+  }, []);
+
   const renderFallback = useRenderTelemetry();
 
   const [documentVersion, setDocumentVersion] = useState(0);
@@ -182,6 +195,8 @@ export function ViewerApp() {
     scrollToPage(clamped);
   }, [pageCount, scrollToPage]); // eslint-disable-line react-hooks/exhaustive-deps
   const [outline, setOutline] = useState<OutlineNode[]>([]);
+  // A panel an All-tools tile asked for; the v3 shell opens it and clears it.
+  const [requestedPanel, setRequestedPanel] = useState<string | null>(null);
   const [pageLabels, setPageLabels] = useState<string[]>([]);
   const [textSpans, setTextSpans] = useState<TextSpan[]>([]);
   // Reviewer name — persisted to localStorage so it survives page reloads
@@ -214,11 +229,16 @@ export function ViewerApp() {
     return () => clearTimeout(timer);
   }, [updateCheckNotice]);
 
-  // Schedule a silent startup update check (5 s delay, non-blocking).
+  // Schedule a silent startup update check (5 s delay, non-blocking), unless
+  // the user switched the automatic check off in Settings — that setting is
+  // what LICENSE.md 4 promises, and it is read here.
   // The Mac App Store build never self-checks — the App Store delivers updates.
+  // Deps stay empty on purpose: this is the *startup* check, so the setting is
+  // read once, at startup. The manual "Check for updates" command below is
+  // never gated on it.
   useEffect(() => {
     if (!isTauri || __IS_MAS_BUILD__) return;
-    return scheduleStartupUpdateCheck({
+    return scheduleStartupUpdateCheckIfEnabled({
       onUpdateAvailable: async (version) => {
         setUpdateVersion(version);
         setUpdateAvailable(true);
@@ -352,12 +372,7 @@ export function ViewerApp() {
   }, []);
 
   // Centralised hover tracking across all interactive surfaces.
-  const {
-    hoveredTarget,
-    onEnter: _onHoverEnter,
-    onLeave: _onHoverLeave,
-    clearHover: _clearHover,
-  } = useHoverController();
+  const { hoveredTarget } = useHoverController();
 
   // Derived filename — passed to useDocumentLifecycle for tab/window title.
   const fileName = metadata?.title?.trim() || pdfDoc?.fileName || null;
@@ -563,6 +578,7 @@ export function ViewerApp() {
     handleTextSelection,
     createTextMarkupFromSelection,
     handleRectDraw,
+    handleInkDraw,
     handleRedactionDraw,
     handleDeleteSelectedAnnotation,
     handleUpdateAnnotationColor,
@@ -582,7 +598,17 @@ export function ViewerApp() {
   const handleReorderPages = useCallback(async (newOrder: number[]) => {
     await handleReorderPagesRaw(newOrder);
     setDocumentVersion(v => v + 1);
-  }, [handleReorderPagesRaw]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [handleReorderPagesRaw]);
+
+  // Rust mutations publish a fresh immutable render snapshot in-place. Bump
+  // the revision so canvases, thumbnails, and text models consume that
+  // snapshot; reloading currentFilePath here would replace it with the older
+  // on-disk document before the user has saved.
+  const handleRequestedPanelHandled = useCallback(() => { setRequestedPanel(null); }, []);
+
+  const handleDocumentMutated = useCallback(() => {
+    setDocumentVersion(v => v + 1);
+  }, []);
 
   // Stable ref so handleDeleteCurrentPage (used early in useKeyboardShortcuts) can
   // call handlePageMutation without a forward-reference TS error.
@@ -594,7 +620,7 @@ export function ViewerApp() {
     if (selectedAnnotationId !== null) return;
     const newCount = await handleDeletePageRaw(pageIndex);
     if (newCount !== null) handlePageMutationRef.current?.(newCount);
-  }, [pageCount, pageIndex, selectedAnnotationId, handleDeletePageRaw]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [pageCount, pageIndex, selectedAnnotationId, handleDeletePageRaw]);
 
   // Derive interaction state for the currently selected annotation.
   const annotationInteractionState = useMemo(
@@ -1021,6 +1047,7 @@ export function ViewerApp() {
     recentFiles,
     handleLoadDocument,
     onCheckForUpdates: handleCheckForUpdates,
+    setSettingsOpen,
   });
 
 
@@ -1282,11 +1309,9 @@ export function ViewerApp() {
           onProtectDocument={() => { setMode('protect'); setAllToolsOpen(false); }}
           onWatermark={() => { setMode('protect'); setAllToolsOpen(false); }}
           onCheckForUpdates={handleCheckForUpdates}
-          onDocumentMutated={() => {
-            if (currentFilePath) {
-              void handleLoadDocument(currentFilePath);
-            }
-          }}
+          onDocumentMutated={handleDocumentMutated}
+          requestedPanel={requestedPanel}
+          onRequestedPanelHandled={handleRequestedPanelHandled}
           onAuthorChange={handleAuthorChange}
           onReorderPages={handleReorderPages}
           onTtsBoundary={(ci, cl) => { setTtsCharIndex(ci < 0 ? -1 : ci); void cl; }}
@@ -1472,6 +1497,7 @@ export function ViewerApp() {
                           activeAnnotationTool={activeAnnotationTool}
                           onTextSelection={isCurrentPage ? handleTextSelection : undefined}
                           onRectDraw={isCurrentPage ? handleRectDraw : undefined}
+                          onInkDraw={isCurrentPage ? handleInkDraw : undefined}
                           onRedactionDraw={isCurrentPage ? handleRedactionDraw : undefined}
                           textStructure={isCurrentPage ? pageTextStructure : null}
                           textInteractionActive={isCurrentPage && textInteractionActive}
@@ -1699,6 +1725,7 @@ export function ViewerApp() {
             isOpen={allToolsOpen}
             onClose={() => { setAllToolsOpen(false); }}
             onModeSelect={setMode}
+            onOpenPanel={setRequestedPanel}
           />
         </Suspense>
       )}
@@ -1712,6 +1739,18 @@ export function ViewerApp() {
             commands={commands}
             recentIds={recentCmdIds}
             onRun={handleCommandRun}
+          />
+        </Suspense>
+      )}
+
+      {/* ── Settings dialog ────────────────────────────────────────────────── */}
+      {settingsOpen && (
+        <Suspense fallback={null}>
+          <SettingsPanel
+            isOpen={settingsOpen}
+            onClose={() => { setSettingsOpen(false); }}
+            settings={appSettings}
+            onSettingsChange={handleSettingsChange}
           />
         </Suspense>
       )}

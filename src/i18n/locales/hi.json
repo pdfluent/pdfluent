@@ -112,7 +112,11 @@
     "prevField": "पिछला फ़ील्ड",
     "nextField": "अगला फ़ील्ड",
     "allTools": "सभी टूल",
-    "contextualBar": "मोड टूलबार"
+    "contextualBar": "मोड टूलबार",
+    "pdfa": "PDF/A",
+    "metadata": "Document properties",
+    "invoice": "E-invoice",
+    "bookmarks": "Bookmarks"
   },
   "topbar": {
     "openPdf": "PDF खोलें",
@@ -282,7 +286,27 @@
     "clearSelection": "चयन साफ़ करें",
     "combine": "फ़ाइलें संयोजित करें",
     "splitRange": "सीमा के अनुसार विभाजित करें",
-    "splitRangeHint": "पहले पृष्ठ चुनें"
+    "splitRangeHint": "पहले पृष्ठ चुनें",
+    "moveLeft": "Move selected page left",
+    "moveRight": "Move selected page right",
+    "moveLeftShort": "Left",
+    "moveRightShort": "Right",
+    "rotateLeft": "Rotate left",
+    "rotateRight": "Rotate right",
+    "rotateLeftShort": "Left",
+    "rotateRightShort": "Right",
+    "addingPdf": "Adding PDF…",
+    "pdfAdded": "PDF added",
+    "combiningFiles": "Combining {{count}} file(s)…",
+    "filesCombined": "{{count}} file(s) combined",
+    "insertingPdf": "Inserting PDF before page {{page}}…",
+    "pdfInserted": "PDF inserted",
+    "exportingPages": "Exporting {{count}} page(s)…",
+    "selectionExported": "Selection exported to {{name}}",
+    "splittingPages": "Splitting into individual pages…",
+    "pagesSaved": "{{count}} pages saved",
+    "splittingRanges": "Splitting {{count}} range(s)…",
+    "filesSaved": "{{count}} file(s) saved"
   },
   "unsavedChanges": {
     "title": "असहेजे बदलाव",
@@ -302,7 +326,14 @@
     "dragDropHint": "या यहाँ PDF खींचें",
     "lede": "पढ़ें, संपादित करें, रूपांतरित करें, भरें और हस्ताक्षर करें — पूरी तरह आपके डिवाइस पर।",
     "privacyPromise": "Local-first · दस्तावेज़ इस डिवाइस से कभी नहीं जाते",
-    "dropPdfHere": "PDF यहाँ छोड़ें"
+    "dropPdfHere": "PDF यहाँ छोड़ें",
+    "v3Subtitle": "Open a PDF to read, edit, convert or sign it locally.",
+    "openFileAria": "Choose a PDF file to open",
+    "clearRecent": "Clear recent",
+    "recentShort": "Recent",
+    "removeRecentAria": "Remove {{name}}",
+    "backToDocument": "Back to document",
+    "loadingDocument": "Loading document…"
   },
   "settings": {
     "language": "भाषा",
@@ -324,7 +355,10 @@
     "themeLabel": "थीम",
     "ocrDefaults": "OCR डिफ़ॉल्ट",
     "ocrLanguageLabel": "डिफ़ॉल्ट भाषा (ISO-639-2)",
-    "ocrLanguagePlaceholder": "उदा. eng, nld, deu"
+    "ocrLanguagePlaceholder": "उदा. eng, nld, deu",
+    "updates": "Updates",
+    "automaticUpdateCheck": "Check for a new version at startup",
+    "automaticUpdateCheckHint": "PDFluent asks pdfluent.com whether a newer version exists, a few seconds after it starts. Nothing from your documents is sent. Turn this off and the app never checks on its own — \"Check for updates\" still works whenever you ask for it."
   },
   "errors": {
     "loadFailed": "दस्तावेज़ लोड विफल",
@@ -465,7 +499,13 @@
     "dismiss": "बंद करें",
     "watermarkDone": "वॉटरमार्क जोड़ा गया",
     "watermarkFailed": "वॉटरमार्क जोड़ने में विफल",
-    "watermarkRunning": "वॉटरमार्क जोड़ा जा रहा है…"
+    "watermarkRunning": "वॉटरमार्क जोड़ा जा रहा है…",
+    "pdfaRunning": "Converting to PDF/A…",
+    "pdfaDone": "PDF/A written",
+    "pdfaFailed": "PDF/A conversion failed",
+    "metadataRunning": "Saving properties…",
+    "metadataDone": "Properties saved",
+    "metadataFailed": "Could not save properties"
   },
   "panels": {
     "search": "खोजें",
@@ -837,7 +877,10 @@
     "detected": "यह दस्तावेज़ XFA forms उपयोग करता है। रेंडरिंग अपूर्ण हो सकती है — XFA समर्थन प्रायोगिक है।",
     "flatten": "XFA समतल करें",
     "flattenDone": "XFA समतल हुआ। स्थिर संस्करण डाउनलोड करने के लिए PDF निर्यात करें।",
-    "flattenFailed": "XFA समतल करना विफल"
+    "flattenFailed": "XFA समतल करना विफल",
+    "convertToStandard": "Convert to standard PDF",
+    "convertedToStandard": "XFA converted to standard PDF",
+    "convertFailed": "Conversion failed: {{message}}"
   },
   "security": {
     "activeContentBadge": "अवरुद्ध",
@@ -870,7 +913,11 @@
     "dismiss": "बंद करें",
     "installing": "इंस्टॉल हो रहा है…",
     "checkFailed": "अपडेट जाँच विफल",
-    "upToDate": "आप नवीनतम संस्करण का उपयोग कर रहे हैं"
+    "upToDate": "आप नवीनतम संस्करण का उपयोग कर रहे हैं",
+    "installed": "Update installed",
+    "restartNow": "Restart now",
+    "restartUnsaved": "Save your changes before restarting.",
+    "restartManual": "If it doesn't restart automatically, quit and reopen PDFluent to finish."
   },
   "telemetry": {
     "addNoteLabel": "कुछ जोड़ना चाहते हैं? (वैकल्पिक)",
@@ -1049,18 +1096,7 @@
       "initials": "प्रारंभिक",
       "initialsPlaceholder": "उदा. AB",
       "defaultInitials": "AB",
-      "clickToPlaceInitials": "प्रारंभिक रखने के लिए पृष्ठ पर क्लिक करें।",
-      "invite": "हस्ताक्षर के लिए आमंत्रण",
-      "inviteIntro": "प्राप्तकर्ता को ई-साइन अनुरोध भेजें। उन्हें दस्तावेज़ को स्थानीय रूप से साइन करने के लिए एक लिंक के साथ एक ईमेल मिलता है।",
-      "recipientName": "प्राप्तकर्ता का नाम",
-      "recipientNamePlaceholder": "प्राप्तकर्ता का नाम…",
-      "email": "ईमेल पता",
-      "emailPlaceholder": "name@example.com",
-      "message": "संदेश (वैकल्पिक)",
-      "messagePlaceholder": "नमस्ते, क्या आप इस दस्तावेज़ पर हस्ताक्षर कर सकते हैं?",
-      "send": "भेजें",
-      "emailRequired": "ईमेल पता आवश्यक है।",
-      "inviteSent": "{{email}} को आमंत्रण भेजा गया!"
+      "clickToPlaceInitials": "प्रारंभिक रखने के लिए पृष्ठ पर क्लिक करें।"
     },
     "overlay": {
       "signaturePlaced": "हस्ताक्षर रखा गया!",
@@ -1093,22 +1129,14 @@
       "addText": "पाठ जोड़ें",
       "fillAndSign": "भरें और साइन करें",
       "more": "अधिक टूल्स",
-      "formatting": "स्वरूपण",
       "strikeText": "पाठ को स्ट्राइक करें",
       "underlineText": "पाठ को रेखांकित करें",
-      "insertTextBox": "पाठ बॉक्स सम्मिलित करें",
-      "stampsAndInsert": "स्टैम्प्स और सम्मिलित करें",
-      "stamps": "स्टैम्प्स",
-      "insertDate": "दिनांक सम्मिलित करें",
-      "addAttachment": "संलग्नक जोड़ें",
-      "ruler": "रूलर"
+      "addAttachment": "संलग्नक जोड़ें"
     },
     "railToasts": {
       "commentMode": "नोट मोड सक्रिय है। पाठ चुनें और नोट चुनें, या नोट्स सूची का उपयोग करके नोट जोड़ें।",
       "strikeout": "स्ट्राइकथ्रू सक्रिय है — लागू करने के लिए पाठ चुनें।",
-      "underline": "रेखांकन सक्रिय है — लागू करने के लिए पाठ चुनें।",
-      "textboxOpened": "पाठ बॉक्स टूल खोला गया।",
-      "stampsInAllTools": "स्टैम्प्स सभी टूल्स में हैं।"
+      "underline": "रेखांकन सक्रिय है — लागू करने के लिए पाठ चुनें।"
     },
     "tools": {
       "lede": "शुरुआत करने के लिए एक टूल चुनें। सब कुछ इस डिवाइस पर स्थानीय रूप से चलता है।",
@@ -1143,7 +1171,11 @@
       "moreAttachments_plural": "+{{count}} अधिक संलग्नक",
       "layers": "{{count}} परतें",
       "manageLayers": "परतों को प्रबंधित करें",
-      "layersVisible": "{{count}} परतें दृश्यमान।"
+      "layersVisible": "{{count}} परतें दृश्यमान।",
+      "archiveAndData": "Archiving and data",
+      "pdfaSub": "Check or convert for long-term archiving",
+      "invoiceSub": "Read the ZUGFeRD/Factur-X invoice inside",
+      "metadataSub": "Title and author of this document"
     },
     "edit": {
       "lede": "दस्तावेज़ में पाठ पर क्लिक करके इनलाइन संपादित करें। स्वरूपण बार चयन के ऊपर दिखाई देता है।",
@@ -1186,17 +1218,31 @@
       "ocrRunning": "OCR स्थानीय रूप से चल रहा है…"
     },
     "esign": {
-      "lede": "दस्तावेजों पर हस्ताक्षर करें और उन्हें आसानी से दूसरों के साथ साझा करें।",
-      "localSigned": "स्थानीय रूप से हस्ताक्षरित — कुछ भी इस डिवाइस से नहीं जाता",
-      "padesCompliant": "PAdES-अनुरूप डिजिटल हस्ताक्षर",
+      "lede": "Sign with a certificate of your own, and check the signatures a document already carries. Both happen on this device.",
       "fillAndSign": "अपने दस्तावेजों को भरें और हस्ताक्षर करें",
       "addSignature": "हस्ताक्षर जोड़ें",
       "addInitials": "प्रारंभिक जोड़ें",
-      "invite": "हस्ताक्षर के लिए आमंत्रण",
       "placementModeSignature": "प्लेसमेंट मोड: हस्ताक्षर",
       "placementModeInitials": "प्लेसमेंट मोड: प्रारंभिक",
       "clickToPlaceSignature": "अपना हस्ताक्षर रखने के लिए पृष्ठ पर कहीं भी क्लिक करें।",
-      "clickToPlaceInitials": "अपने प्रारंभिक रखने के लिए पृष्ठ पर कहीं भी क्लिक करें।"
+      "clickToPlaceInitials": "अपने प्रारंभिक रखने के लिए पृष्ठ पर कहीं भी क्लिक करें।",
+      "verifySection": "Signatures",
+      "verify": "Check signatures",
+      "desktopOnly": "Available in the desktop app",
+      "unsigned": "This document carries no signatures.",
+      "signSection": "Sign with a certificate",
+      "padesLevel": "Produces a PAdES B-B signature: your certificate over the whole file, no timestamp server involved.",
+      "certificate": "Certificate (.p12 or .pfx)",
+      "certificateNone": "No certificate chosen",
+      "chooseCertificate": "Choose certificate",
+      "certificatePassword": "Certificate password",
+      "reason": "Reason (optional)",
+      "reasonPlaceholder": "Why you are signing",
+      "sign": "Sign and save a copy",
+      "signing": "Signing…",
+      "signNeedsCertificate": "Choose a certificate and enter its password first.",
+      "signSaved": "Signed copy saved as {{name}}",
+      "signFailed": "Signing failed: {{message}}"
     },
     "protect": {
       "lede": "मजबूत क्रिप्टोग्राफिक पासवर्ड के साथ अपने PDF दस्तावेज़ को सुरक्षित करें। परिवर्तन तुरंत स्थानीय रूप से लागू किए जाते हैं।",
@@ -1300,7 +1346,77 @@
     },
     "thumbnails": {
       "pages": "पृष्ठ",
-      "pageAlt": "पृष्ठ {{page}}"
+      "pageAlt": "पृष्ठ {{page}}",
+      "bookmarks": "Bookmarks"
+    },
+    "pdfa": {
+      "lede": "PDF/A is the archival form of PDF: fonts embedded, colours defined, nothing that depends on the outside world.",
+      "section": "Conformance",
+      "level": "Level",
+      "validate": "Check this document",
+      "convert": "Save as PDF/A…",
+      "desktopOnly": "Available in the desktop app",
+      "compliant": "Conforms to {{level}}",
+      "notCompliant": "Does not conform: {{errors}} errors, {{warnings}} warnings",
+      "moreIssues": "{{count}} more"
+    },
+    "metadata": {
+      "lede": "The title and author stored inside the file, which is what other readers and search show.",
+      "section": "Properties",
+      "title": "Title",
+      "author": "Author",
+      "apply": "Save properties",
+      "desktopOnly": "Available in the desktop app"
+    },
+    "invoice": {
+      "lede": "A ZUGFeRD or Factur-X invoice travels as XML inside the PDF. This reads it and checks it against EN 16931.",
+      "section": "Embedded invoice",
+      "read": "Read invoice",
+      "desktopOnly": "Available in the desktop app",
+      "none": "This document carries no e-invoice.",
+      "number": "Number: {{number}}",
+      "issued": "Issued: {{date}}",
+      "seller": "Seller: {{name}}",
+      "buyer": "Buyer: {{name}}",
+      "total": "Total: {{total}} {{currency}}",
+      "lines": "Line items: {{count}}",
+      "valid": "Valid against {{profile}}",
+      "invalid": "Not valid: {{errors}} errors, {{warnings}} warnings"
     }
+  },
+  "about": {
+    "section": "About",
+    "app": "App",
+    "version": "Version",
+    "privacy": "Privacy",
+    "privacyValue": "All processing happens locally",
+    "website": "Website"
+  },
+  "reviewSummary": {
+    "title": "Review summary",
+    "generatedAt": "Generated on",
+    "comments": "Comments",
+    "noComments": "No comments.",
+    "replies": "Replies:",
+    "empty": "empty",
+    "redactions": "Redactions",
+    "noRedactions": "No redactions.",
+    "noIssues": "No issues.",
+    "metadataChanges": "Metadata changes",
+    "noMetadataChanges": "No changes.",
+    "changedBy": "by",
+    "on": "on"
+  },
+  "externalLink": {
+    "askMessage": "This PDF wants to open an external link:\n\n{{label}}\n\nURL:\n{{href}}\n\nDo you want to continue?",
+    "title": "Open external link?",
+    "openLink": "Open link",
+    "dialogBody": "This PDF wants to open an external website. Check the URL before continuing."
+  },
+  "linkChoice": {
+    "title": "Open link in your browser?",
+    "body": "This document wants to open an external website. Are you opening it from a trusted source?",
+    "alwaysAllow": "Always allow",
+    "openOnce": "Open once"
   }
 }

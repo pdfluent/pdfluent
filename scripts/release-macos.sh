@@ -26,8 +26,8 @@
 #
 # Requirements:
 #   - macOS + Xcode Command Line Tools, Rust, Node, npm.
-#   - The XFA Rust SDK checked out at ../../XFA  (path deps in
-#     src-tauri/Cargo.toml resolve to ../../../XFA/crates/*).
+#   - Network access on the first build: the PDFluent engine is a pinned git
+#     revision in src-tauri/Cargo.toml, which Cargo fetches itself.
 #   - wrangler authenticated with access to the `pdfluent-releases` R2 bucket:
 #       npx wrangler whoami        # OAuth, or set CLOUDFLARE_API_TOKEN
 #

@@ -168,7 +168,7 @@ mod tests {
     #[test]
     fn adapter_has_xfa_form_false_for_minimal_pdf() {
         let bytes = minimal_pdf_bytes();
-        assert_eq!(has_xfa_form(&bytes).unwrap(), false);
+        assert!(!has_xfa_form(&bytes).unwrap());
     }
 
     #[test]

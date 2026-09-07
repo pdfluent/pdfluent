@@ -1,10 +1,16 @@
-name: Core Module Tests
+name: Tests
 
+# Manual only. `origin` of this repository is a private tracker, where every
+# minute of a hosted `ubuntu-*`/`macos-*`/`windows-*` runner is billed; the
+# gates that matter run on our own runner through .gitlab-ci.yml. Re-adding a
+# `push:`, `pull_request:` or `schedule:` trigger here fails
+# scripts/ci/no-hosted-ci-on-auto-triggers.mjs, which the GitLab pipeline runs
+# on every push.
+# The gates this workflow used to carry (typecheck, eslint, vitest, the
+# licensing and terminology drift-guards) run on every push to main and every
+# release branch in .gitlab-ci.yml's quality-gates-fast.
 on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+  workflow_dispatch:
 
 jobs:
   test:
@@ -25,8 +31,23 @@ jobs:
       - name: Run TypeScript type checking
         run: npm run typecheck
 
-      - name: Run core module tests with coverage
-        run: npx vitest run src/core/__tests__ --reporter=verbose
+      # Run first and on its own so a licensing regression is named in the log
+      # rather than buried in 6,500 other results. It also has to be a separate
+      # step from the suite below: this gate covers the published EULA, README
+      # and store copy, and must not be able to fail quietly.
+      - name: Run licensing claims drift-guard
+        run: npx vitest run tests/licensing-claims-guard.test.ts --reporter=verbose
+
+      # Same reason, same shape: the third-party notice generator must list
+      # optional platform packages. It skipped them, and an LGPL-3.0 libvips
+      # binary sat in the npm tree unlisted for three months.
+      - name: Run third-party notice generator gate
+        run: npx vitest run tests/compliance-generator-optional-deps.test.ts --reporter=verbose
+
+      # The whole suite, not just src/core/__tests__. The narrow path excluded
+      # tests/ entirely — 342 files that existed and nothing ran. Costs ~13s.
+      - name: Run test suite with coverage
+        run: npx vitest run --coverage --reporter=verbose
 
       - name: Upload test coverage
         if: always()
@@ -36,7 +57,7 @@ jobs:
           path: coverage/
 
       - name: Generate test report
-        run: npx vitest run src/core/__tests__ --reporter=junit
+        run: npx vitest run --reporter=junit
         continue-on-error: true
 
       - name: Upload test results

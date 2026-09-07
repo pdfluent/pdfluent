@@ -27,6 +27,7 @@ interface UseCommandsProps {
   recentFiles: string[];
   handleLoadDocument: (source: string | ArrayBuffer) => Promise<void>;
   onCheckForUpdates: () => void;
+  setSettingsOpen: (v: boolean) => void;
 }
 
 export function useCommands({
@@ -46,6 +47,7 @@ export function useCommands({
   recentFiles,
   handleLoadDocument,
   onCheckForUpdates,
+  setSettingsOpen,
 }: UseCommandsProps): Command[] {
   const { t } = useTranslation();
   return useMemo(() => {
@@ -115,6 +117,8 @@ export function useCommands({
       // ── App ───────────────────────────────────────────────────────────────
       { id: 'check-for-updates', label: t('commands.checkForUpdates'), keywords: ['update', 'check', 'version', 'upgrade'],
         action: () => { onCheckForUpdates(); } },
+      { id: 'open-settings', label: t('settings.title'), keywords: ['settings', 'preferences', 'options', 'update', 'privacy', 'crash'],
+        action: () => { setSettingsOpen(true); } },
       // ── Recent files ──────────────────────────────────────────────────────
       ...recentFiles.map((path, i) => {
         const name = path.split(/[/\\]/).pop() ?? path;
@@ -127,5 +131,5 @@ export function useCommands({
       }),
     ];
     return commands;
-  }, [t, pageCount, isDirty, setPageIndex, setZoom, handleSaveAs, setExportOpen, setLeftRailOpen, setShortcutSheetOpen, setMode, closeDocument, setCurrentFilePath, setUnsavedDialogOpen, pendingActionRef, recentFiles, handleLoadDocument, onCheckForUpdates]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [t, pageCount, isDirty, setPageIndex, setZoom, handleSaveAs, setExportOpen, setLeftRailOpen, setShortcutSheetOpen, setMode, closeDocument, setCurrentFilePath, setUnsavedDialogOpen, pendingActionRef, recentFiles, handleLoadDocument, onCheckForUpdates, setSettingsOpen]);
 }

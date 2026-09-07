@@ -26,16 +26,18 @@ You may **not**:
 - Offer the Application's functionality to third parties as a service (hosted, bureau, or API), or operate the Application by automated means as a document-processing backend. For programmatic PDF processing, license the PDFluent SDK.
 - Remove, alter, or obscure any proprietary notices, labels, or marks on the Application.
 - Use the Application to develop a competing product or service.
-- Circumvent or attempt to circumvent any license enforcement, activation, or copy protection mechanisms in the Application.
 
 Nothing in this section restricts your ordinary use of the Application to open, edit, convert, sign, or otherwise process your own documents, including at scale and in a business context, provided you do so through the Application's own user interface rather than by automation or by extracting its Components.
 
 ## 4. Data Privacy
 
-PDFluent is designed as a local-first application. **All PDF processing happens entirely on your device.** The Application does not transmit, upload, or share your documents or their contents with any server, cloud service, or third party. No account or internet connection is required to use the Application.
+PDFluent is designed as a local-first application. **All PDF processing happens entirely on your device.** The Application does not transmit, upload, or share your documents or their contents with any server, cloud service, or third party. No account is required, and every document feature works with no internet connection at all.
 
-The only network requests the Application may make are:
-- Checking for application updates (can be disabled).
+The Application makes three kinds of outbound request. None of them carries any part of a document you open:
+
+- **Update check.** The Application asks pdfluent.com whether a newer version exists. It does this shortly after start, and again whenever you choose "Check for updates". The check at start can be disabled in Settings; with it off, the Application never checks on its own, and "Check for updates" still works whenever you ask for it. If the request fails, the Application carries on as normal.
+- **Crash and feedback reports.** Off by default. If you turn reporting on in Settings, the Application may send a report to report.pdfluent.com containing the application version, your operating system and its version, your interface language, the text you wrote, and — for a crash — a stack trace with file paths and other identifying detail stripped out. While reporting is off, nothing is sent.
+- **Opening a link.** When you click a link in the Application, it hands the address to your own browser. The Application does not fetch the page itself.
 
 ## 5. Intellectual Property
 

@@ -2,7 +2,7 @@
   "name": "pdfluent",
   "private": true,
   "license": "SEE LICENSE IN LICENSE.md",
-  "version": "1.0.0-beta.20",
+  "version": "1.0.0-beta.21",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -17,15 +17,14 @@
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:smoke": "playwright test tests/e2e/smoke-shell.spec.ts",
+    "test:native-smoke": "cargo test --manifest-path src-tauri/Cargo.toml --lib op_render_page_and_thumbnail_produce_image_bytes && playwright test tests/e2e/smoke-shell.spec.ts",
     "typecheck": "tsc --noEmit",
     "ocr:manifest": "node scripts/generate-ocr-model-manifest.mjs",
     "compliance:generate": "node scripts/generate-third-party.mjs",
     "compliance:check": "node scripts/check-licenses.mjs",
-    "compliance": "npm run compliance:generate && npm run compliance:check",
-    "wasm:check-artifacts": "node scripts/check-wasm-artifacts.mjs"
+    "compliance": "npm run compliance:generate && npm run compliance:check"
   },
   "dependencies": {
-    "@huggingface/transformers": "^4.2.0",
     "@libpdf/core": "^0.2.10",
     "@tauri-apps/api": "^2.11.0",
     "@tauri-apps/plugin-dialog": "^2.7.1",
@@ -46,6 +45,7 @@
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "@vitejs/plugin-react": "^4.3.0",
+    "@vitest/coverage-v8": "^2.1.9",
     "autoprefixer": "^10.4.27",
     "eslint": "^9.39.3",
     "eslint-plugin-react-hooks": "^5.2.0",

@@ -7,6 +7,7 @@
 
 import { readFileSync } from 'node:fs';
 import { describe, it, expect } from 'vitest';
+import { getWiredTools } from '../src/viewer/tools/wiredTools';
 
 const engineSource = readFileSync(
   new URL('../src-tauri/src/pdf_engine.rs', import.meta.url),
@@ -161,16 +162,10 @@ describe('ModeToolbar — handleRotatePageRight', () => {
 
 describe('ModeToolbar — getWiredTools includes rotation for Tauri', () => {
   it('Links roteren is in getWiredTools Tauri branch', () => {
-    const fnStart = toolbarSource.indexOf('export function getWiredTools');
-    const fnEnd = toolbarSource.indexOf('return base;', fnStart) + 12;
-    const fnBlock = toolbarSource.slice(fnStart, fnEnd);
-    expect(fnBlock).toContain("'toolbar.rotateLeft'");
+    expect(getWiredTools(true).has('toolbar.rotateLeft')).toBe(true);
   });
 
   it('Rechts roteren is in getWiredTools Tauri branch', () => {
-    const fnStart = toolbarSource.indexOf('export function getWiredTools');
-    const fnEnd = toolbarSource.indexOf('return base;', fnStart) + 12;
-    const fnBlock = toolbarSource.slice(fnStart, fnEnd);
-    expect(fnBlock).toContain("'toolbar.rotateRight'");
+    expect(getWiredTools(true).has('toolbar.rotateRight')).toBe(true);
   });
 });

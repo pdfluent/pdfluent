@@ -125,7 +125,7 @@ export function useAnnotations(
     if (annotResult.success) {
       setAllAnnotations(annotResult.value);
     }
-  }, [pdfDoc, engine]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [pdfDoc, engine]);
 
   // Reset to page 0 and populate derived document data when a new document is loaded.
   useEffect(() => {
@@ -418,7 +418,7 @@ export function useAnnotations(
       documentIssues,
     );
     setRevisionSnapshots(prev => [...prev, snapshot]);
-  }, [allAnnotations, reviewStatuses, commentReplies, documentIssues]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [allAnnotations, reviewStatuses, commentReplies, documentIssues]);
   void handleCaptureSnapshot; // will be wired to revision snapshot UI
 
   // Compare two snapshots and download the diff as Markdown.
@@ -435,7 +435,7 @@ export function useAnnotations(
     a.download = 'revision-diff.md';
     a.click();
     URL.revokeObjectURL(url);
-  }, [revisionSnapshots]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [revisionSnapshots]);
   void handleCompareSnapshots; // will be wired to revision compare UI
 
   // Export a formal audit report to a downloadable Markdown file.
@@ -612,6 +612,27 @@ export function useAnnotations(
     } catch { /* silent */ }
   }, [pdfDoc, pageIndex, refetchComments, markDirty, annotationAppearance]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Create a freehand ink annotation from a stroke drawn on the canvas.
+  //
+  // The backend takes a list of paths so one annotation can hold several
+  // strokes; the canvas commits one stroke at a time, which is what makes each
+  // stroke individually undoable.
+  const handleInkDraw = useCallback(async (path: Array<[number, number]>) => {
+    if (!pdfDoc || !isTauri) return;
+    if (docLoadingRef.current) return;
+    try {
+      const { invoke } = await import('@tauri-apps/api/core');
+      await invoke('add_ink_annotation', {
+        pageIndex,
+        paths: [path],
+        color: annotationAppearance.color,
+        width: annotationAppearance.strokeWidth,
+      });
+      await refetchComments();
+      markDirty();
+    } catch { /* silent — task queue surfaces errors */ }
+  }, [pdfDoc, pageIndex, refetchComments, markDirty, annotationAppearance]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // Create a redaction annotation from a rect.
   const handleRedactionDraw = useCallback(async (
     rect: { x: number; y: number; width: number; height: number }
@@ -640,7 +661,7 @@ export function useAnnotations(
         await refetchComments();
       }
     });
-  }, [pdfDoc, engine, refetchComments]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [pdfDoc, engine, refetchComments]);
 
   // Keyboard shortcut: Delete / Backspace → delete the selected markup annotation.
   useEffect(() => {
@@ -664,7 +685,7 @@ export function useAnnotations(
       await refetchComments();
       markDirty();
     } catch { /* silent */ }
-  }, [pdfDoc, refetchComments, markDirty]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [pdfDoc, refetchComments, markDirty]);
 
   // Permanently apply all pending redaction annotations.
   const handleApplyRedactions = useCallback(async () => {
@@ -690,7 +711,7 @@ export function useAnnotations(
       markDirty();
       return { matchesFound: result.matches_found, areasRedacted: result.areas_redacted };
     } catch { return null; }
-  }, [pdfDoc, refetchComments, markDirty]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [pdfDoc, refetchComments, markDirty]);
 
   // Strip document metadata (author, title, etc.) permanently.
   const handleRedactMetadata = useCallback(async (): Promise<boolean> => {
@@ -701,7 +722,7 @@ export function useAnnotations(
       markDirty();
       return true;
     } catch { return false; }
-  }, [pdfDoc, markDirty]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [pdfDoc, markDirty]);
 
   // Click an annotation marker on the canvas → select it.
   const handleAnnotationClick = useCallback((annotationId: string) => {
@@ -724,7 +745,7 @@ export function useAnnotations(
       await invoke('reorder_pages', { newOrder });
       markDirty();
     } catch { /* silent */ }
-  }, [pdfDoc, markDirty]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [pdfDoc, markDirty]);
 
   // Delete a single page by index; returns the new page count or null on failure.
   const handleDeletePage = useCallback(async (pageIndex: number): Promise<number | null> => {
@@ -734,7 +755,7 @@ export function useAnnotations(
       const result = await invoke<{ page_count: number }>('delete_pages', { pageIndices: [pageIndex] });
       return result.page_count;
     } catch { return null; }
-  }, [pdfDoc]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [pdfDoc]);
 
   return {
     allAnnotations,
@@ -775,6 +796,7 @@ export function useAnnotations(
     handleTextSelection,
     createTextMarkupFromSelection,
     handleRectDraw,
+    handleInkDraw,
     handleRedactionDraw,
     handleDeleteSelectedAnnotation,
     handleUpdateAnnotationColor,

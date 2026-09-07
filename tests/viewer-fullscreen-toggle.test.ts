@@ -7,6 +7,7 @@
 
 import { readFileSync } from 'node:fs';
 import { describe, it, expect } from 'vitest';
+import { getWiredTools } from '../src/viewer/tools/wiredTools';
 
 const toolbarSource = readFileSync(
   new URL('../src/viewer/components/ModeToolbar.tsx', import.meta.url),
@@ -28,10 +29,7 @@ describe('ModeToolbar — full screen: getWiredTools entry', () => {
   });
 
   it("'Volledig scherm' is inside the getWiredTools function body", () => {
-    const fnStart = toolbarSource.indexOf('export function getWiredTools');
-    const fnEnd = toolbarSource.indexOf('return base;', fnStart) + 12;
-    const fnBlock = toolbarSource.slice(fnStart, fnEnd);
-    expect(fnBlock).toContain("'toolbar.fullscreen'");
+    expect(getWiredTools(true).has('toolbar.fullscreen')).toBe(true);
   });
 });
 
@@ -72,21 +70,15 @@ describe('ModeToolbar — full screen: handleToolAction case', () => {
 
 describe('ModeToolbar — full screen: no regressions', () => {
   it("'Inzoomen' is still in getWiredTools", () => {
-    const fnStart = toolbarSource.indexOf('export function getWiredTools');
-    const fnEnd = toolbarSource.indexOf('return base;', fnStart) + 12;
-    expect(toolbarSource.slice(fnStart, fnEnd)).toContain("'toolbar.zoomIn'");
+    expect(getWiredTools(true).has('toolbar.zoomIn')).toBe(true);
   });
 
   it("'Uitzoomen' is still in getWiredTools", () => {
-    const fnStart = toolbarSource.indexOf('export function getWiredTools');
-    const fnEnd = toolbarSource.indexOf('return base;', fnStart) + 12;
-    expect(toolbarSource.slice(fnStart, fnEnd)).toContain("'toolbar.zoomOut'");
+    expect(getWiredTools(true).has('toolbar.zoomOut')).toBe(true);
   });
 
   it("'Zoek tekst' is still in getWiredTools", () => {
-    const fnStart = toolbarSource.indexOf('export function getWiredTools');
-    const fnEnd = toolbarSource.indexOf('return base;', fnStart) + 12;
-    expect(toolbarSource.slice(fnStart, fnEnd)).toContain("'toolbar.searchText'");
+    expect(getWiredTools(true).has('toolbar.searchText')).toBe(true);
   });
 
   it('zoom in/out cases still dispatch', () => {

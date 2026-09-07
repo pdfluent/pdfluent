@@ -104,7 +104,7 @@ export function CommandPalette({ isOpen, onClose, commands, recentIds = [], onRu
       return () => { window.removeEventListener('keydown', handleKey); };
     }
     return undefined;
-  }, [isOpen, onClose]);
+  }, [isOpen, onClose, onRun]);
 
   if (!isOpen) return null;
 

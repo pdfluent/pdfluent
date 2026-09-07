@@ -12,6 +12,15 @@ function notImpl<T>(msg: string): AsyncEngineResult<T> {
   return Promise.resolve({ success: false, error: { code: 'not-implemented' as const, message: msg } });
 }
 
+type MutablePdfDocument = Omit<PdfDocument, 'annotations' | 'isModified'> & {
+  annotations: Annotation[];
+  isModified: boolean;
+};
+
+function mutableDocument(document: PdfDocument): MutablePdfDocument {
+  return document as MutablePdfDocument;
+}
+
 export class MockAnnotationEngine {
   // Async mutations
 
@@ -39,8 +48,9 @@ export class MockAnnotationEngine {
 
     const mutableAnnotations = [...document.annotations];
     mutableAnnotations.push(annotation);
-    (document as any).annotations = mutableAnnotations;
-    (document as any).isModified = true;
+    const mutable = mutableDocument(document);
+    mutable.annotations = mutableAnnotations;
+    mutable.isModified = true;
 
     return Promise.resolve({ success: true, value: annotation });
   }
@@ -51,16 +61,18 @@ export class MockAnnotationEngine {
     updates: Partial<Annotation>
   ): AsyncEngineResult<Annotation> {
     const index = document.annotations.findIndex(a => a.id === annotationId);
-    if (index >= 0) {
+    const existing = document.annotations[index];
+    if (index >= 0 && existing) {
       const updated: Annotation = {
-        ...document.annotations[index],
+        ...existing,
         ...updates,
         modifiedAt: new Date()
-      } as any;
+      };
       const mutableAnnotations = [...document.annotations];
       mutableAnnotations[index] = updated;
-      (document as any).annotations = mutableAnnotations;
-      (document as any).isModified = true;
+      const mutable = mutableDocument(document);
+      mutable.annotations = mutableAnnotations;
+      mutable.isModified = true;
       return Promise.resolve({ success: true, value: updated });
     }
     return Promise.resolve({ success: false, error: { code: 'document-not-loaded', message: 'Annotation not found' } });
@@ -71,8 +83,9 @@ export class MockAnnotationEngine {
     if (index >= 0) {
       const mutableAnnotations = [...document.annotations];
       mutableAnnotations.splice(index, 1);
-      (document as any).annotations = mutableAnnotations;
-      (document as any).isModified = true;
+      const mutable = mutableDocument(document);
+      mutable.annotations = mutableAnnotations;
+      mutable.isModified = true;
       return Promise.resolve({ success: true, value: undefined });
     }
     return Promise.resolve({ success: false, error: { code: 'document-not-loaded', message: 'Annotation not found' } });
@@ -91,8 +104,9 @@ export class MockAnnotationEngine {
     }
 
     if (removed) {
-      (document as any).annotations = mutableAnnotations;
-      (document as any).isModified = true;
+      const mutable = mutableDocument(document);
+      mutable.annotations = mutableAnnotations;
+      mutable.isModified = true;
     }
 
     return Promise.resolve({ success: true, value: undefined });

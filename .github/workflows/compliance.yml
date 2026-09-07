@@ -2,10 +2,14 @@
 
 name: Compliance
 
+# Manual only. `origin` of this repository is a private tracker, where every
+# minute of a hosted `ubuntu-*`/`macos-*`/`windows-*` runner is billed; the
+# gates that matter run on our own runner through .gitlab-ci.yml. Re-adding a
+# `push:`, `pull_request:` or `schedule:` trigger here fails
+# scripts/ci/no-hosted-ci-on-auto-triggers.mjs, which the GitLab pipeline runs
+# on every push.
 on:
-  pull_request:
-  push:
-    branches: [main]
+  workflow_dispatch:
 
 jobs:
   third-party:

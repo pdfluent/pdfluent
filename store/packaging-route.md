@@ -37,7 +37,7 @@ download and Store.
 - The installer must be `.exe` or `.msi` — ✅ WiX `.msi`.
 - It must be an **offline** installer (no downloads during setup) — ✅ self-contained.
 - We must **Authenticode-sign it ourselves** (the Store does not re-sign EXE/MSI) — ✅ Azure Trusted Signing, `CN=Innovation Trigger B.V.`, verified Valid.
-- We must **host** the installer and provide its URL — ✅ `https://pdfluent.com/releases/1.0.0-beta.18/PDFluent_1.0.0-beta.18_x64_en-US.msi` (Cloudflare R2 behind pdfluent.com).
+- We must **host** the installer and provide its URL — ✅ `https://pdfluent.com/releases/1.0.0-beta.21/PDFluent_1.0.0-beta.21_x64_en-US.msi` (Cloudflare R2 behind pdfluent.com).
 - A privacy policy URL is required — ✅ `https://pdfluent.com/privacy`.
 
 ## If MSIX is ever wanted (future, not now)

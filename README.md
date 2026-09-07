@@ -2,16 +2,7 @@
 
 PDFluent is a free, source-available PDF editor for macOS and Windows. It edits, converts, redacts, and signs PDFs entirely on your device, with no account, no upload, and no subscription.
 
-[**Download for macOS**](https://pdfluent.com/download/) · [**Download for Windows**](https://pdfluent.com/download/) · [Source-available license](LICENSE.md) · [PDFluent SDK](#built-on-the-pdfluent-sdk)
-
-macOS 11 or later (universal, Intel and Apple Silicon) · Windows 10 or 11 (64-bit) · no account, no subscription
-
-![Edit text directly in the PDF, convert, sign — all on your own machine](docs/screenshots/01.png)
-
-|  |  |
-|---|---|
-| ![Convert to Word, Excel, PowerPoint or PDF/A, offline](docs/screenshots/02.png) | ![Digital signatures with PAdES, no cloud service](docs/screenshots/03.png) |
-| ![Open large documents without waiting](docs/screenshots/04.png) | ![Every tool in one workspace](docs/screenshots/05.png) |
+[**Download for macOS and Windows**](https://pdfluent.com/download) · [Source-available license](LICENSE.md) · [PDFluent SDK](#built-on-the-pdfluent-sdk)
 
 ## Why PDFluent
 
@@ -19,7 +10,7 @@ Most PDF editors either cost money every month or run your documents through som
 
 ## Status
 
-Release candidate for the non-XFA feature set on macOS and Windows: viewing, AcroForm filling (text, checkbox, radio, combo/list, comb), annotations, page management, merge/split, digital signatures, and conversions. XFA documents can be viewed and converted or flattened to a standard PDF. Dynamic XFA interactive fill is still experimental and not part of this release.
+Public beta on macOS and Windows. Complete for the non-XFA feature set: viewing, AcroForm filling (text, checkbox, radio, combo/list, comb), annotations, page management, merge/split, digital signatures, conversions, and OCR. XFA documents can be viewed and converted or flattened to a standard PDF. Dynamic XFA interactive fill is still experimental and not part of this release.
 
 ## Features
 
@@ -29,6 +20,7 @@ Release candidate for the non-XFA feature set on macOS and Windows: viewing, Acr
 - Annotations: highlight, underline, strikeout, comments, shapes, freehand
 - Merge, split, reorder, rotate, compress, and watermark pages
 - Digital signatures (PAdES / PKCS#12)
+- OCR for scanned documents
 - PDF/A conversion
 - View and flatten XFA forms (interactive XFA fill is experimental)
 
@@ -96,8 +88,7 @@ See the table above, or the longer writeup at [pdfluent.com/vs-adobe-acrobat](ht
 - [x] Annotations (highlight, underline, strikeout, comment, shapes, freehand)
 - [x] Form filling (AcroForms: text, checkbox, radio, combo/list, comb, multi-select, link trust)
 - [x] Digital signatures (PAdES / PKCS#12)
-- [x] Conversions (DOCX/XLSX/PPTX, PDF/A)
-- [ ] OCR — the engine is wired up, but it calls out to a Python PaddleOCR bridge that the installer does not ship. Native macOS Vision and Windows OCR are the planned route
+- [x] Conversions (DOCX/XLSX/PPTX, PDF/A) and OCR
 - [x] XFA: view + convert/flatten to standard PDF (interactive XFA fill is experimental, not shipped)
 - [ ] Storage integration (BYOS, managed storage)
 

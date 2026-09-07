@@ -112,7 +112,11 @@
     "prevField": "Edellinen kenttä",
     "nextField": "Seuraava kenttä",
     "allTools": "Kaikki työkalut",
-    "contextualBar": "Tilatyökalupalkki"
+    "contextualBar": "Tilatyökalupalkki",
+    "pdfa": "PDF/A",
+    "metadata": "Document properties",
+    "invoice": "E-invoice",
+    "bookmarks": "Bookmarks"
   },
   "topbar": {
     "openPdf": "Avaa PDF",
@@ -282,7 +286,27 @@
     "clearSelection": "Tyhjennä valinta",
     "combine": "Yhdistä tiedostot",
     "splitRange": "Jaa alueen mukaan",
-    "splitRangeHint": "Valitse sivut ensin"
+    "splitRangeHint": "Valitse sivut ensin",
+    "moveLeft": "Move selected page left",
+    "moveRight": "Move selected page right",
+    "moveLeftShort": "Left",
+    "moveRightShort": "Right",
+    "rotateLeft": "Rotate left",
+    "rotateRight": "Rotate right",
+    "rotateLeftShort": "Left",
+    "rotateRightShort": "Right",
+    "addingPdf": "Adding PDF…",
+    "pdfAdded": "PDF added",
+    "combiningFiles": "Combining {{count}} file(s)…",
+    "filesCombined": "{{count}} file(s) combined",
+    "insertingPdf": "Inserting PDF before page {{page}}…",
+    "pdfInserted": "PDF inserted",
+    "exportingPages": "Exporting {{count}} page(s)…",
+    "selectionExported": "Selection exported to {{name}}",
+    "splittingPages": "Splitting into individual pages…",
+    "pagesSaved": "{{count}} pages saved",
+    "splittingRanges": "Splitting {{count}} range(s)…",
+    "filesSaved": "{{count}} file(s) saved"
   },
   "unsavedChanges": {
     "title": "Tallentamattomat muutokset",
@@ -302,7 +326,14 @@
     "dragDropHint": "tai vedä PDF tähän",
     "lede": "Lue, muokkaa, muunna, täytä ja allekirjoita — kokonaan omalla laitteellasi.",
     "privacyPromise": "Paikallinen ensin · asiakirjat eivät koskaan poistu tältä laitteelta",
-    "dropPdfHere": "Pudota PDF tähän"
+    "dropPdfHere": "Pudota PDF tähän",
+    "v3Subtitle": "Open a PDF to read, edit, convert or sign it locally.",
+    "openFileAria": "Choose a PDF file to open",
+    "clearRecent": "Clear recent",
+    "recentShort": "Recent",
+    "removeRecentAria": "Remove {{name}}",
+    "backToDocument": "Back to document",
+    "loadingDocument": "Loading document…"
   },
   "settings": {
     "language": "Kieli",
@@ -324,7 +355,10 @@
     "themeLabel": "Teema",
     "ocrDefaults": "OCR-oletusasetukset",
     "ocrLanguageLabel": "Oletuskieli (ISO-639-2)",
-    "ocrLanguagePlaceholder": "esim. eng, nld, deu"
+    "ocrLanguagePlaceholder": "esim. eng, nld, deu",
+    "updates": "Updates",
+    "automaticUpdateCheck": "Check for a new version at startup",
+    "automaticUpdateCheckHint": "PDFluent asks pdfluent.com whether a newer version exists, a few seconds after it starts. Nothing from your documents is sent. Turn this off and the app never checks on its own — \"Check for updates\" still works whenever you ask for it."
   },
   "errors": {
     "loadFailed": "Asiakirjan lataaminen epäonnistui",
@@ -465,7 +499,13 @@
     "dismiss": "Sulje",
     "watermarkDone": "Vesileima lisätty",
     "watermarkFailed": "Vesileiman lisäys epäonnistui",
-    "watermarkRunning": "Lisätään vesileimaa…"
+    "watermarkRunning": "Lisätään vesileimaa…",
+    "pdfaRunning": "Converting to PDF/A…",
+    "pdfaDone": "PDF/A written",
+    "pdfaFailed": "PDF/A conversion failed",
+    "metadataRunning": "Saving properties…",
+    "metadataDone": "Properties saved",
+    "metadataFailed": "Could not save properties"
   },
   "panels": {
     "search": "Hae",
@@ -837,7 +877,10 @@
     "detected": "Tämä asiakirja käyttää XFA-lomakkeita. Renderöinti voi olla puutteellista — XFA-tuki on kokeellinen.",
     "flatten": "Litistä XFA",
     "flattenDone": "XFA litistetty. Vie PDF ladataksesi staattisen version.",
-    "flattenFailed": "XFA:n litistäminen epäonnistui"
+    "flattenFailed": "XFA:n litistäminen epäonnistui",
+    "convertToStandard": "Convert to standard PDF",
+    "convertedToStandard": "XFA converted to standard PDF",
+    "convertFailed": "Conversion failed: {{message}}"
   },
   "security": {
     "activeContentBadge": "Estetty",
@@ -870,7 +913,11 @@
     "dismiss": "Sulje",
     "installing": "Asennetaan…",
     "checkFailed": "Päivitysten tarkistus epäonnistui",
-    "upToDate": "Käytät uusinta versiota"
+    "upToDate": "Käytät uusinta versiota",
+    "installed": "Update installed",
+    "restartNow": "Restart now",
+    "restartUnsaved": "Save your changes before restarting.",
+    "restartManual": "If it doesn't restart automatically, quit and reopen PDFluent to finish."
   },
   "telemetry": {
     "addNoteLabel": "Haluatko lisätä jotain? (valinnainen)",
@@ -1049,18 +1096,7 @@
       "initials": "Nimikirjaimet",
       "initialsPlaceholder": "esim. JL",
       "defaultInitials": "JL",
-      "clickToPlaceInitials": "Napsauta sivua nimikirjainten sijoittamiseksi.",
-      "invite": "Kutsu allekirjoittamaan",
-      "inviteIntro": "Lähetä sähköisen allekirjoituksen pyyntö vastaanottajalle. He saavat sähköpostiin linkin asiakirjan allekirjoittamiseksi paikallisesti.",
-      "recipientName": "Vastaanottajan nimi",
-      "recipientNamePlaceholder": "Vastaanottajan nimi…",
-      "email": "Sähköpostiosoite",
-      "emailPlaceholder": "nimi@esimerkki.com",
-      "message": "Viesti (valinnainen)",
-      "messagePlaceholder": "Hei, voisitko allekirjoittaa tämän asiakirjan?",
-      "send": "Lähetä",
-      "emailRequired": "Sähköpostiosoite on pakollinen.",
-      "inviteSent": "Kutsu lähetetty osoitteeseen {{email}}!"
+      "clickToPlaceInitials": "Napsauta sivua nimikirjainten sijoittamiseksi."
     },
     "overlay": {
       "signaturePlaced": "Allekirjoitus sijoitettu!",
@@ -1093,22 +1129,14 @@
       "addText": "Lisää teksti",
       "fillAndSign": "Täytä ja allekirjoita",
       "more": "Lisää työkaluja",
-      "formatting": "Muotoilu",
       "strikeText": "Yliviivaa teksti",
       "underlineText": "Alleviivaa teksti",
-      "insertTextBox": "Lisää tekstiruutu",
-      "stampsAndInsert": "Leimat ja lisäykset",
-      "stamps": "Leimat",
-      "insertDate": "Lisää päiväys",
-      "addAttachment": "Lisää liite",
-      "ruler": "Viivain"
+      "addAttachment": "Lisää liite"
     },
     "railToasts": {
       "commentMode": "Merkintätila aktiivinen. Valitse teksti ja valitse Merkintä, tai käytä merkintäluetteloa merkinnän lisäämiseksi.",
       "strikeout": "Yliviivaus aktiivinen — valitse teksti soveltaaksesi.",
-      "underline": "Alleviivaus aktiivinen — valitse teksti soveltaaksesi.",
-      "textboxOpened": "Tekstiruututyökalu avattu.",
-      "stampsInAllTools": "Leimat ovat kaikissa työkaluissa."
+      "underline": "Alleviivaus aktiivinen — valitse teksti soveltaaksesi."
     },
     "tools": {
       "lede": "Valitse työkalu aloittaksesi. Kaikki toimii paikallisesti tällä laitteella.",
@@ -1143,7 +1171,11 @@
       "moreAttachments_plural": "+{{count}} lisää liitteitä",
       "layers": "{{count}} tasoa",
       "manageLayers": "Hallitse tasoja",
-      "layersVisible": "{{count}} tasoa näkyvissä."
+      "layersVisible": "{{count}} tasoa näkyvissä.",
+      "archiveAndData": "Archiving and data",
+      "pdfaSub": "Check or convert for long-term archiving",
+      "invoiceSub": "Read the ZUGFeRD/Factur-X invoice inside",
+      "metadataSub": "Title and author of this document"
     },
     "edit": {
       "lede": "Napsauta tekstiä asiakirjassa muokataksesi sitä paikan päällä. Muotoilupalkki tulee näkyviin valinnan yläpuolelle.",
@@ -1186,17 +1218,31 @@
       "ocrRunning": "OCR käynnissä paikallisesti…"
     },
     "esign": {
-      "lede": "Allekirjoita asiakirjat nopeasti ja turvallisesti sekä jaa ne helposti muille allekirjoitettavaksi.",
-      "localSigned": "Allekirjoitettu paikallisesti — mitään ei poistuu tältä laitteelta",
-      "padesCompliant": "PAdES-yhteensopiva digitaalinen allekirjoitus",
+      "lede": "Sign with a certificate of your own, and check the signatures a document already carries. Both happen on this device.",
       "fillAndSign": "Täytä asiakirjasi ja allekirjoita",
       "addSignature": "Lisää allekirjoitus",
       "addInitials": "Lisää nimikirjaimet",
-      "invite": "Kutsu allekirjoittamaan",
       "placementModeSignature": "Sijoitustila: Allekirjoitus",
       "placementModeInitials": "Sijoitustila: Nimikirjaimet",
       "clickToPlaceSignature": "Napsauta missä tahansa sivulla allekirjoituksesi sijoittamiseksi.",
-      "clickToPlaceInitials": "Napsauta missä tahansa sivulla nimikirjaimesi sijoittamiseksi."
+      "clickToPlaceInitials": "Napsauta missä tahansa sivulla nimikirjaimesi sijoittamiseksi.",
+      "verifySection": "Signatures",
+      "verify": "Check signatures",
+      "desktopOnly": "Available in the desktop app",
+      "unsigned": "This document carries no signatures.",
+      "signSection": "Sign with a certificate",
+      "padesLevel": "Produces a PAdES B-B signature: your certificate over the whole file, no timestamp server involved.",
+      "certificate": "Certificate (.p12 or .pfx)",
+      "certificateNone": "No certificate chosen",
+      "chooseCertificate": "Choose certificate",
+      "certificatePassword": "Certificate password",
+      "reason": "Reason (optional)",
+      "reasonPlaceholder": "Why you are signing",
+      "sign": "Sign and save a copy",
+      "signing": "Signing…",
+      "signNeedsCertificate": "Choose a certificate and enter its password first.",
+      "signSaved": "Signed copy saved as {{name}}",
+      "signFailed": "Signing failed: {{message}}"
     },
     "protect": {
       "lede": "Suojaa PDF-asiakirjasi vahvoilla salasanoilla. Muutokset otetaan käyttöön paikallisesti heti.",
@@ -1300,7 +1346,77 @@
     },
     "thumbnails": {
       "pages": "Sivut",
-      "pageAlt": "Sivu {{page}}"
+      "pageAlt": "Sivu {{page}}",
+      "bookmarks": "Bookmarks"
+    },
+    "pdfa": {
+      "lede": "PDF/A is the archival form of PDF: fonts embedded, colours defined, nothing that depends on the outside world.",
+      "section": "Conformance",
+      "level": "Level",
+      "validate": "Check this document",
+      "convert": "Save as PDF/A…",
+      "desktopOnly": "Available in the desktop app",
+      "compliant": "Conforms to {{level}}",
+      "notCompliant": "Does not conform: {{errors}} errors, {{warnings}} warnings",
+      "moreIssues": "{{count}} more"
+    },
+    "metadata": {
+      "lede": "The title and author stored inside the file, which is what other readers and search show.",
+      "section": "Properties",
+      "title": "Title",
+      "author": "Author",
+      "apply": "Save properties",
+      "desktopOnly": "Available in the desktop app"
+    },
+    "invoice": {
+      "lede": "A ZUGFeRD or Factur-X invoice travels as XML inside the PDF. This reads it and checks it against EN 16931.",
+      "section": "Embedded invoice",
+      "read": "Read invoice",
+      "desktopOnly": "Available in the desktop app",
+      "none": "This document carries no e-invoice.",
+      "number": "Number: {{number}}",
+      "issued": "Issued: {{date}}",
+      "seller": "Seller: {{name}}",
+      "buyer": "Buyer: {{name}}",
+      "total": "Total: {{total}} {{currency}}",
+      "lines": "Line items: {{count}}",
+      "valid": "Valid against {{profile}}",
+      "invalid": "Not valid: {{errors}} errors, {{warnings}} warnings"
     }
+  },
+  "about": {
+    "section": "About",
+    "app": "App",
+    "version": "Version",
+    "privacy": "Privacy",
+    "privacyValue": "All processing happens locally",
+    "website": "Website"
+  },
+  "reviewSummary": {
+    "title": "Review summary",
+    "generatedAt": "Generated on",
+    "comments": "Comments",
+    "noComments": "No comments.",
+    "replies": "Replies:",
+    "empty": "empty",
+    "redactions": "Redactions",
+    "noRedactions": "No redactions.",
+    "noIssues": "No issues.",
+    "metadataChanges": "Metadata changes",
+    "noMetadataChanges": "No changes.",
+    "changedBy": "by",
+    "on": "on"
+  },
+  "externalLink": {
+    "askMessage": "This PDF wants to open an external link:\n\n{{label}}\n\nURL:\n{{href}}\n\nDo you want to continue?",
+    "title": "Open external link?",
+    "openLink": "Open link",
+    "dialogBody": "This PDF wants to open an external website. Check the URL before continuing."
+  },
+  "linkChoice": {
+    "title": "Open link in your browser?",
+    "body": "This document wants to open an external website. Are you opening it from a trusted source?",
+    "alwaysAllow": "Always allow",
+    "openOnce": "Open once"
   }
 }

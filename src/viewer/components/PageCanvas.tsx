@@ -41,7 +41,7 @@ interface PageCanvasProps {
   /** ID of the currently selected annotation — rendered with a distinct outline. */
   selectedAnnotationId?: string | null;
   /** The active annotation tool: drives cursor style and interaction mode. */
-  activeAnnotationTool?: 'highlight' | 'underline' | 'strikeout' | 'rectangle' | 'redaction' | null;
+  activeAnnotationTool?: 'highlight' | 'underline' | 'strikeout' | 'rectangle' | 'ink' | 'redaction' | null;
   /** Called when text is selected with a text-markup tool active.
    *  Rects are in PDF coordinate space. */
   onTextSelection?: (rects: Array<{ x: number; y: number; width: number; height: number }>) => void;
@@ -51,6 +51,9 @@ interface PageCanvasProps {
   /** Called when the user finishes drawing a redaction rectangle.
    *  Rect is in PDF coordinate space. */
   onRedactionDraw?: (rect: { x: number; y: number; width: number; height: number }) => void;
+  /** Called when the user finishes a freehand stroke with the ink tool.
+   *  Points are in PDF coordinate space. */
+  onInkDraw?: (path: Array<[number, number]>) => void;
   /** Grouped text structure for the current page (from textGrouping). */
   textStructure?: PageTextStructure | null;
   /** Whether text hover/selection affordances should be active. */
@@ -105,6 +108,7 @@ export const PageCanvas = memo(function PageCanvas({
   onTextSelection,
   onRectDraw,
   onRedactionDraw,
+  onInkDraw,
   textStructure = null,
   textInteractionActive = false,
   selectedTextTarget = null,
@@ -133,6 +137,8 @@ export const PageCanvas = memo(function PageCanvas({
 
   // Rectangle draw state — start/current positions in DOM (SVG) space
   const [dragStart, setDragStart] = useState<{ x: number; y: number } | null>(null);
+  // The freehand stroke being drawn, in PDF coordinates; null when not drawing.
+  const [inkPath, setInkPath] = useState<Array<[number, number]> | null>(null);
   const [dragCurrent, setDragCurrent] = useState<{ x: number; y: number } | null>(null);
 
   // Backup ref for canvas-masking (prevents text ghosting in inline editor)
@@ -232,7 +238,7 @@ export const PageCanvas = memo(function PageCanvas({
               }
             }
           }
-        } catch (e) {
+        } catch {
           // Ignore sample point out of bounds or failing
         }
       });
@@ -243,7 +249,7 @@ export const PageCanvas = memo(function PageCanvas({
     } catch (e) {
       console.warn('[PDFuent] Direct canvas masking failed:', e);
     }
-  }, [editingParagraphBounds, loading, zoom, pageWidthPt, pageHeightPt]);
+  }, [canvasRef, editingParagraphBounds, loading, zoom, pageWidthPt, pageHeightPt]);
 
   // Build a normalized PDF rect from two DOM corner points
   function makePdfRect(ax: number, ay: number, bx: number, by: number) {
@@ -259,7 +265,18 @@ export const PageCanvas = memo(function PageCanvas({
     return { x, y, width, height };
   }
 
+  /** A DOM point on the page, in PDF coordinates (origin bottom-left, points). */
+  function toPdfPoint(domX: number, domY: number): [number, number] {
+    return [domX / zoom, pageHeightPt - domY / zoom];
+  }
+
   function handlePageMouseDown(e: React.MouseEvent<HTMLDivElement>) {
+    if (activeAnnotationTool === 'ink') {
+      e.preventDefault();
+      const inkBounds = e.currentTarget.getBoundingClientRect();
+      setInkPath([toPdfPoint(e.clientX - inkBounds.left, e.clientY - inkBounds.top)]);
+      return;
+    }
     if (activeAnnotationTool !== 'rectangle' && activeAnnotationTool !== 'redaction') return;
     // Prevent text selection while drawing rectangle (but not for redaction, which can coexist with text)
     if (activeAnnotationTool === 'rectangle') e.preventDefault();
@@ -323,6 +340,12 @@ export const PageCanvas = memo(function PageCanvas({
       const domY = e.clientY - bounds.top;
       setHoveredTextTarget(hitTestText(domX, domY, textStructure, pageHeightPt, zoom));
     }
+    if (activeAnnotationTool === 'ink') {
+      if (inkPath === null) return;
+      const inkBounds = e.currentTarget.getBoundingClientRect();
+      setInkPath([...inkPath, toPdfPoint(e.clientX - inkBounds.left, e.clientY - inkBounds.top)]);
+      return;
+    }
     if (!dragStart || (activeAnnotationTool !== 'rectangle' && activeAnnotationTool !== 'redaction')) return;
     const bounds = e.currentTarget.getBoundingClientRect();
     setDragCurrent({
@@ -342,6 +365,14 @@ export const PageCanvas = memo(function PageCanvas({
     if (textInteractionActive && !activeAnnotationTool && target && !hasTextSelection) {
       setHoveredTextTarget(clickTarget);
       onTextTargetSelect?.(!isEditMode && selectedTextTarget?.id === target.id ? null : target);
+      return;
+    }
+    if (activeAnnotationTool === 'ink') {
+      const path = inkPath;
+      setInkPath(null);
+      // A click without movement is not a stroke; two points is the minimum a
+      // /Ink annotation can carry without collapsing to nothing on the page.
+      if (path !== null && path.length > 1) onInkDraw?.(path);
       return;
     }
     if (!dragStart || (activeAnnotationTool !== 'rectangle' && activeAnnotationTool !== 'redaction')) return;
@@ -395,6 +426,7 @@ export const PageCanvas = memo(function PageCanvas({
       case 'redaction':
         return 'text';
       case 'rectangle':
+      case 'ink':
         return 'crosshair';
       default:
         return undefined;
@@ -521,6 +553,7 @@ export const PageCanvas = memo(function PageCanvas({
             activeSearchHighlightIdx={activeSearchHighlightIdx}
             selectedAnnotationId={selectedAnnotationId}
             draftRect={draftRect}
+            draftInk={inkPath}
           />
         </div>
         {ocrWords && ocrWords.length > 0 && (

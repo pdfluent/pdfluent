@@ -125,18 +125,6 @@ export interface SsoAuthSession {
   completedAt: string | null;
 }
 
-export type LicenseTier = "pro" | "business" | "enterprise";
-
-export interface LicenseSeat {
-  id: string;
-  email: string;
-  tier: LicenseTier;
-  assignedUserId: string | null;
-  status: "active" | "revoked" | "expired";
-  issuedAt: string;
-  revokedAt: string | null;
-}
-
 export interface PolicyEnforcementResult {
   allowed: boolean;
   reason: string;
@@ -239,7 +227,6 @@ export interface EnterpriseSettings {
   policies: EnterprisePolicies;
   enforcePoliciesServerSide: boolean;
   policyDecisions: PolicyEnforcementResult[];
-  licenseSeats: LicenseSeat[];
   sso: EnterpriseSsoConfig;
   ssoSessions: SsoAuthSession[];
   branding: EnterpriseBranding;
@@ -319,7 +306,6 @@ function defaultSettings(): EnterpriseSettings {
     },
     enforcePoliciesServerSide: false,
     policyDecisions: [],
-    licenseSeats: [],
     sso: {
       enabled: false,
       provider: "oidc",
@@ -844,41 +830,6 @@ export function completeSsoAuthSession(
             completedAt: now,
           }
         : session,
-    ),
-  };
-}
-
-export function issueLicenseSeat(
-  settings: EnterpriseSettings,
-  email: string,
-  tier: LicenseTier,
-): EnterpriseSettings {
-  const seat: LicenseSeat = {
-    id: createId("seat"),
-    email: email.trim(),
-    tier,
-    assignedUserId: null,
-    status: "active",
-    issuedAt: new Date().toISOString(),
-    revokedAt: null,
-  };
-  return {
-    ...settings,
-    licenseSeats: [...settings.licenseSeats, seat].slice(-1000),
-  };
-}
-
-export function revokeLicenseSeat(
-  settings: EnterpriseSettings,
-  seatId: string,
-): EnterpriseSettings {
-  const now = new Date().toISOString();
-  return {
-    ...settings,
-    licenseSeats: settings.licenseSeats.map((seat) =>
-      seat.id === seatId
-        ? { ...seat, status: "revoked", revokedAt: now }
-        : seat,
     ),
   };
 }

@@ -5,6 +5,11 @@ See https://pdfluent.com/license for terms.
 
 # English Store screenshots — blocker report (RESOLVED)
 
+> **Historical record.** The English-screenshot blocker described here was
+> resolved; PDFluent is live on the Store with the designer's set. Kept for the
+> reasoning, not as a current instruction.
+
+
 > **RESOLVED 2026-06-22.** The shipped v3 editor was fully internationalized
 > (EditorV3Shell, ViewerApp, OrganizeGrid, Settings, reviewSummary → react-i18next,
 > complete en+nl), a `noHardcodedDutch` guard test was added, a new Authenticode-signed

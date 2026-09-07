@@ -43,9 +43,11 @@ const useDocumentSource = readFileSync(
 // ---------------------------------------------------------------------------
 
 describe('ModeToolbar — getWiredTools', () => {
-  it('exports getWiredTools as a function returning ReadonlySet', () => {
-    expect(toolbarSource).toContain('export function getWiredTools');
-    expect(toolbarSource).toContain('ReadonlySet<string>');
+  it('re-exports the derived set instead of spelling one out', () => {
+    // The list used to live here as twelve string literals and was wrong in
+    // both directions for months; it is now generated from the UI register.
+    expect(toolbarSource).toContain("export { getWiredTools } from '../tools/wiredTools'");
+    expect(toolbarSource).not.toContain('base.add(');
   });
 
   it('includes all three read mode tools', () => {

@@ -1,6 +1,6 @@
 [package]
 name = "pdfluent-desktop"
-version = "1.0.0-beta.20"
+version = "1.0.0-beta.21"
 description = "Privacy-first desktop PDF editor powered by the XFA Rust SDK"
 authors = ["Innovation Trigger B.V."]
 license = "LicenseRef-PDFluent-Proprietary"
@@ -31,26 +31,40 @@ flate2 = "1"
 # Isolated crate so this main crate keeps `#![forbid(unsafe_code)]`.
 pdfluent-macos-secure = { path = "crates/macos-secure" }
 
-# XFA Rust SDK crates
-pdf-engine = { path = "../../../XFA/crates/pdf-engine", features = ["xfa", "serde"] }
-pdf-forms = { package = "pdfluent-forms", path = "../../../XFA/crates/pdf-forms" }
-pdf-annot = { path = "../../../XFA/crates/pdf-annot", features = ["write"] }
-pdf-sign = { package = "pdfluent-sign", path = "../../../XFA/crates/pdf-sign" }
-pdf-manip = { path = "../../../XFA/crates/pdf-manip", features = ["image-insert", "font-subset", "pdfa-convert"] }
-pdf-text-format = { path = "../../../XFA/crates/pdf-text-format" }
-pdf-compliance = { path = "../../../XFA/crates/pdf-compliance" }
-pdf-extract = { package = "pdfluent-extract", path = "../../../XFA/crates/pdf-extract" }
-pdf-redact = { path = "../../../XFA/crates/pdf-redact" }
-pdf-docx = { path = "../../../XFA/crates/pdf-docx" }
-pdf-xlsx = { path = "../../../XFA/crates/pdf-xlsx" }
-pdf-pptx = { path = "../../../XFA/crates/pdf-pptx" }
-pdf-invoice = { path = "../../../XFA/crates/pdf-invoice" }
-xfa-license = { path = "../../../XFA/crates/xfa-license" }
-lopdf = { package = "pdfluent-lopdf", path = "../../../XFA/crates/lopdf" }
-pdf-syntax = { path = "../../../XFA/crates/pdf-syntax" }
+# PDFluent SDK (engine) — every crate at one pinned revision.
+#
+# A pin, not a path: until 2026-09-07 these were 19 path dependencies into a
+# checkout next to this repository, so the editor built against whatever branch
+# that working copy happened to be on and CI cloned a third state. The revision
+# below is on `pdfluent/engine` master and carries the removal of the free-tier
+# PDF/A stamp (`f9ae3a1d7`); `src/pdfa_export_guard.rs` proves the export comes
+# out unmarked.
+#
+# Move them together, never one at a time — `tests/sdk-pin-guard.test.ts` fails
+# if the revisions drift apart or a path dependency comes back. Moving the pin
+# also means checking the engine's GitLab mirror carries the revision: the CI
+# runner reaches the engine through it (see the `insteadOf` line in
+# `.gitlab-ci.yml`), so a commit that only GitHub has builds here and nowhere
+# else. Engine master is fast-forward only, so the mirror catches up on its
+# own; a tag pipeline cut before it does will fail on the fetch.
+pdf-engine = { git = "https://github.com/pdfluent/engine", rev = "e8b80ac4317152fccbfc2ad876dd89058a85cb6e", features = ["xfa", "serde"] }
+pdf-forms = { package = "pdfluent-forms", git = "https://github.com/pdfluent/engine", rev = "e8b80ac4317152fccbfc2ad876dd89058a85cb6e" }
+pdf-annot = { git = "https://github.com/pdfluent/engine", rev = "e8b80ac4317152fccbfc2ad876dd89058a85cb6e", features = ["write"] }
+pdf-sign = { package = "pdfluent-sign", git = "https://github.com/pdfluent/engine", rev = "e8b80ac4317152fccbfc2ad876dd89058a85cb6e" }
+pdf-manip = { git = "https://github.com/pdfluent/engine", rev = "e8b80ac4317152fccbfc2ad876dd89058a85cb6e", features = ["image-insert", "font-subset", "pdfa-convert"] }
+pdf-text-format = { git = "https://github.com/pdfluent/engine", rev = "e8b80ac4317152fccbfc2ad876dd89058a85cb6e" }
+pdf-compliance = { git = "https://github.com/pdfluent/engine", rev = "e8b80ac4317152fccbfc2ad876dd89058a85cb6e" }
+pdf-extract = { package = "pdfluent-extract", git = "https://github.com/pdfluent/engine", rev = "e8b80ac4317152fccbfc2ad876dd89058a85cb6e" }
+pdf-redact = { git = "https://github.com/pdfluent/engine", rev = "e8b80ac4317152fccbfc2ad876dd89058a85cb6e" }
+pdf-docx = { git = "https://github.com/pdfluent/engine", rev = "e8b80ac4317152fccbfc2ad876dd89058a85cb6e" }
+pdf-xlsx = { git = "https://github.com/pdfluent/engine", rev = "e8b80ac4317152fccbfc2ad876dd89058a85cb6e" }
+pdf-pptx = { git = "https://github.com/pdfluent/engine", rev = "e8b80ac4317152fccbfc2ad876dd89058a85cb6e" }
+pdf-invoice = { git = "https://github.com/pdfluent/engine", rev = "e8b80ac4317152fccbfc2ad876dd89058a85cb6e" }
+lopdf = { package = "pdfluent-lopdf", git = "https://github.com/pdfluent/engine", rev = "e8b80ac4317152fccbfc2ad876dd89058a85cb6e" }
+pdf-syntax = { git = "https://github.com/pdfluent/engine", rev = "e8b80ac4317152fccbfc2ad876dd89058a85cb6e" }
 
 # PDFluent public SDK facade (Phase 2 migration boundary)
-pdfluent = { path = "../../../XFA/crates/pdfluent" }
+pdfluent = { git = "https://github.com/pdfluent/engine", rev = "e8b80ac4317152fccbfc2ad876dd89058a85cb6e" }
 
 [target."cfg(not(any(target_os = \"android\", target_os = \"ios\")))".dependencies]
 # Optional so the Mac App Store build can drop them (see the `updater` feature).
@@ -65,14 +79,17 @@ custom-protocol = ["tauri/custom-protocol"]
 # Store build omits it with `--no-default-features --features custom-protocol`
 # (App Store delivers updates; Apple forbids app self-updating).
 updater = ["dep:tauri-plugin-updater", "dep:tauri-plugin-process"]
-# XFA Phase 2 interactive commit loop. Enabling this compiles the SDK's
+# XFA Phase 2 interactive commit loop. Enabling this compiles the engine's
 # sandboxed QuickJS runtime (pdf-engine/xfa-js-sandboxed) and routes XFA field
 # commits through `XfaSession::commit_value` (change/click + calculate scripts →
-# re-layout → presence changes). NOT default: it requires an SDK build that
-# includes the Phase 2 commit loop (xfa/sdk-phase2-commit-loop @ 5e8a74ee2+).
-# Without it the editor falls back to the Phase 1 static value write
-# (`set_value`), which compiles against any XFA-capable SDK. Enable locally with
-# `--features xfa-interactive`.
+# re-layout → presence changes).
+#
+# It does NOT build against the pinned revision: `commit_value` lives only on
+# the engine branch `xfa/sdk-phase2-commit-loop` and has never been merged to
+# master. Landing it there is pdfluent/pdfluent-internal#406; until that is
+# done and the pin has moved past it, this feature cannot be turned on and the
+# editor uses the Phase 1 static value write (`set_value`), which compiles
+# against any XFA-capable revision.
 xfa-interactive = ["pdf-engine/xfa-js-sandboxed"]
 
 # Render hot loops (vello_cpu rasteriser, PDF interpreter) benefit from

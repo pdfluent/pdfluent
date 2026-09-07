@@ -7,6 +7,7 @@
 
 import { readFileSync } from 'node:fs';
 import { describe, it, expect } from 'vitest';
+import { getWiredTools } from '../src/viewer/tools/wiredTools';
 
 const modeToolbarSource = readFileSync(
   new URL('../src/viewer/components/ModeToolbar.tsx', import.meta.url),
@@ -34,10 +35,7 @@ const viewerAppSource = [
 
 describe('ModeToolbar — OCR scan wiring', () => {
   it('includes toolbar.ocrScan in getWiredTools Tauri branch', () => {
-    const fnStart = modeToolbarSource.indexOf('export function getWiredTools');
-    const fnEnd = modeToolbarSource.indexOf('return base;', fnStart) + 12;
-    const fnBlock = modeToolbarSource.slice(fnStart, fnEnd);
-    expect(fnBlock).toContain("'toolbar.ocrScan'");
+    expect(getWiredTools(true).has('toolbar.ocrScan')).toBe(true);
   });
 
   it('accepts onOcrScan prop', () => {
@@ -56,10 +54,7 @@ describe('ModeToolbar — OCR scan wiring', () => {
 
 describe('ModeToolbar — protect mode redaction toggle', () => {
   it('includes toolbar.redact in getWiredTools Tauri branch', () => {
-    const fnStart = modeToolbarSource.indexOf('export function getWiredTools');
-    const fnEnd = modeToolbarSource.indexOf('return base;', fnStart) + 12;
-    const fnBlock = modeToolbarSource.slice(fnStart, fnEnd);
-    expect(fnBlock).toContain("'toolbar.redact'");
+    expect(getWiredTools(true).has('toolbar.redact')).toBe(true);
   });
 
   it('renders redaction toggle button when mode is protect (Tauri only)', () => {

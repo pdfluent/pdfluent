@@ -7,9 +7,10 @@
 // of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
-mod licensing;
 mod ocr;
 mod pdf_engine;
+#[cfg(test)]
+mod pdfa_export_guard;
 mod sdk_facade;
 mod security;
 mod telemetry;
@@ -206,6 +207,15 @@ struct NativeTtsResult {
 
 const WEBSITE_URL: &str = "https://pdfluent.com";
 const LICENSE_URL: &str = "https://pdfluent.com/license";
+
+/// The published Microsoft Store listing. This is copy for the About dialog, not
+/// a link the app opens: `telemetry::open_external_url` refuses every host but
+/// pdfluent.com, deliberately, so a Help item pointing here would fail silently.
+/// It is in the About box because a Store install and a direct download are the
+/// same binary, and a user reporting a problem needs to be able to say which one
+/// they have.
+const MICROSOFT_STORE_ID: &str = "XPDBXJ6XRLFQK2";
+const MICROSOFT_STORE_URL: &str = "https://apps.microsoft.com/detail/XPDBXJ6XRLFQK2";
 
 /// Path of a PDF the OS asked us to open (Finder double-click / "Open With" /
 /// file association / command-line arg) before the webview was ready. The
@@ -570,6 +580,9 @@ fn macos_voice_quality_score(voice_name: &str, language_base: &str) -> i32 {
         .unwrap_or(0)
 }
 
+// Only macos_voice_for_language calls this; without the gate the Linux build
+// fails clippy's -D warnings on dead code.
+#[cfg(target_os = "macos")]
 fn normalize_language(language: &str) -> String {
     language.trim().replace('-', "_").to_lowercase()
 }
@@ -1912,6 +1925,13 @@ fn build_menu(handle: &tauri::AppHandle) -> Result<Menu<tauri::Wry>, String> {
              SDK and third-party open-source components are listed in THIRD_PARTY.md and THIRD_PARTY_ATTRIBUTIONS.md. \
              See Help > Open Source Notices for third-party licenses, and Help > License & Terms \
              (https://pdfluent.com/license) for the End-User License Agreement.",
+        ))
+        .comments(Some(
+            format!(
+                "Also published on the Microsoft Store as {MICROSOFT_STORE_ID} ({MICROSOFT_STORE_URL}). \
+                 Store and direct-download installs are the same build and update themselves the same way.",
+            )
+            .as_str(),
         ))
         .website(Some(WEBSITE_URL))
         .website_label(Some("pdfluent.com"))

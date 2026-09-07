@@ -68,32 +68,20 @@ describe('ExportDialog — runtime format gating', () => {
 // ---------------------------------------------------------------------------
 
 describe('AllToolsPanel — wired tools gating', () => {
-  it('imports getWiredTools from ModeToolbar', () => {
-    expect(allToolsPanelSource).toContain("import { getWiredTools } from './ModeToolbar'");
+  it('takes the tile set from the UI register, not from a list in the toolbar', () => {
+    expect(allToolsPanelSource).toContain("import { getWiredTools } from '../tools/wiredTools'");
   });
 
-  it('checks wiredTools.has(tool.label) to determine enabled state', () => {
-    expect(allToolsPanelSource).toContain('wiredTools.has(tool.label)');
+  it('renders only the tiles the register proves', () => {
+    expect(allToolsPanelSource).toContain('allTools.filter(t => wiredTools.has(t.label))');
   });
 
-  it('disables unwired tools with disabled prop', () => {
-    // Code extracts: const isWired = wiredTools.has(tool.label); disabled={!isWired}
-    expect(allToolsPanelSource).toContain('wiredTools.has(tool.label)');
-    expect(allToolsPanelSource).toContain('disabled={!isWired}');
-  });
-
-  it('reduces opacity for unwired tools', () => {
-    expect(allToolsPanelSource).toContain('opacity-40');
-  });
-
-  it('uses cursor-default for unwired tools', () => {
-    // v2: unwired state surfaces via disabled attribute + opacity utility
-    // rather than the cursor-default Tailwind utility.
-    expect(allToolsPanelSource).toMatch(/cursor-default|disabled=\{!isWired\}/);
-  });
-
-  it('shows not-yet-available label for unwired tools', () => {
-    expect(allToolsPanelSource).toContain("t('common.notYetAvailable')");
+  it('no longer offers an unproven tool as a disabled row', () => {
+    // Greying a tool out still invited the click, and the list behind the grey
+    // was wrong in both directions. A tool this shell cannot perform is now
+    // absent from the panel; docs/UI_REGISTER.md says which ones and why.
+    expect(allToolsPanelSource).not.toContain('disabled={!isWired}');
+    expect(allToolsPanelSource).not.toContain("t('common.notYetAvailable')");
   });
 });
 
@@ -102,9 +90,8 @@ describe('AllToolsPanel — wired tools gating', () => {
 // ---------------------------------------------------------------------------
 
 describe('ModeToolbar — wired tools consistency', () => {
-  it('exports getWiredTools as a function returning ReadonlySet', () => {
-    expect(modeToolbarSource).toContain('export function getWiredTools');
-    expect(modeToolbarSource).toContain('ReadonlySet<string>');
+  it('re-exports the derived set instead of defining one', () => {
+    expect(modeToolbarSource).toContain("export { getWiredTools } from '../tools/wiredTools'");
   });
 
   it('checks wired.has to determine enabled state', () => {

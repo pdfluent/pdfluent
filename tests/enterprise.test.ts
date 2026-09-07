@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: LicenseRef-PDFluent-Proprietary
-// Copyright (c) 2026 PDFluent Contributors
+// Copyright (c) 2026 Innovation Trigger B.V.
 
 import { beforeEach, describe, expect, it } from "vitest";
 import {
@@ -22,7 +22,6 @@ import {
   evaluatePolicyEnforcement,
   exportTamperAuditAsSiemJsonl,
   getPendingESignRequests,
-  issueLicenseSeat,
   loadEnterpriseSettings,
   markBatchQueueItemResult,
   markIntegrationSynced,
@@ -31,7 +30,6 @@ import {
   removeEnterpriseUser,
   resolveSyncConflict,
   rotateKeyManagementKey,
-  revokeLicenseSeat,
   revokeApiKey,
   setActiveStorageProfile,
   updateESignRequestStatus,
@@ -196,16 +194,11 @@ describe("enterprise settings", () => {
     );
     expect(completed.ssoSessions[0]?.status).toBe("completed");
 
-    const withSeat = issueLicenseSeat(completed, "owner@pdfluent.com", "enterprise");
-    expect(withSeat.licenseSeats).toHaveLength(1);
-    const revokedSeat = revokeLicenseSeat(withSeat, withSeat.licenseSeats[0]?.id ?? "");
-    expect(revokedSeat.licenseSeats[0]?.status).toBe("revoked");
-
     const policyEval = evaluatePolicyEnforcement(
       {
-        ...revokedSeat,
+        ...completed,
         policies: {
-          ...revokedSeat.policies,
+          ...completed.policies,
           allowExternalSharing: false,
         },
       },

@@ -1,0 +1,24 @@
+{
+  "_comment": [
+    "What is actually live on the Microsoft Store. Read from the listing itself,",
+    "not from a submission draft. Refresh with store/scripts/check-live-listing.sh",
+    "and update checkedAt in the same commit; tests/store-listing-truth.test.ts",
+    "holds the dossier, the in-app About copy and RELEASE.md against this file."
+  ],
+  "storeId": "XPDBXJ6XRLFQK2",
+  "storeUrl": "https://apps.microsoft.com/detail/XPDBXJ6XRLFQK2",
+  "publisherDisplayName": "PDFluent - Innovation Trigger BV",
+  "developerName": "Innovation Trigger B.V.",
+  "publisherId": "94857970",
+  "listingVersion": "1.0.0",
+  "installerVersion": "1.0.0-beta.21",
+  "installerUrl": "https://pdfluent.com/releases/1.0.0-beta.21/PDFluent_1.0.0-beta.21_x64_en-US.msi",
+  "installerSha256": "f6262ac4ef35920f0b6d2992dd9bf4701a21751309a85b1e938533af10364f12",
+  "productCode": "{aee448fb-9ac3-4519-956e-60b7a232cda8}",
+  "packageType": "WPM",
+  "packageLastUpdateUtc": "2026-07-27T12:54:30Z",
+  "price": "Free",
+  "category": "Productivity",
+  "additionalLicenseTerms": "https://pdfluent.com/license",
+  "checkedAt": "2026-09-07"
+}

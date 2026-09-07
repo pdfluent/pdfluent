@@ -2344,6 +2344,18 @@ impl OpenDocument {
     // ── Digital signature operations ─────────────────────────────────
 
     /// Sign the PDF with a PKCS#12 certificate.
+    ///
+    /// This produces PAdES B-B: the certificate over the whole file, with no
+    /// timestamp token. The Sign panel names that level rather than the word
+    /// "compliant", which is what it used to say over nothing at all.
+    ///
+    /// B-T and the profiles above it need `SignOptions::timestamp_token` (a
+    /// DER-encoded RFC 3161 token) and a TSA the engine does not fetch itself:
+    /// there is no HTTP client in the signing path, by design (CLAIMS B09).
+    /// Until those profiles are reachable from the pinned engine revision the
+    /// options stay at their defaults on purpose -- the SDK refuses a profile
+    /// it cannot produce instead of quietly downgrading to B-B, and the UI
+    /// must not offer one either. See pdfluent-internal#362, #405.
     pub fn sign(
         &mut self,
         cert_path: &str,
@@ -4215,70 +4227,123 @@ fn parse_pdfa_level(level: &str) -> Result<PdfALevel, String> {
 mod tests {
     use super::*;
 
+    /// Release gate for the post-commit render corruption reported on
+    /// 2026-06-11. It uses the bundled digital-text fixture and exercises the
+    /// complete edit → render → save-as → reopen route in one process.
     #[test]
-    fn open_document_info_does_not_panic() {
-        // Basic sanity: module compiles and types are accessible
-        assert!(true);
-    }
-
-    /// Pure-Rust reproduction harness for the post-commit render pollution
-    /// observed live on 2026-06-11: after a text replacement is committed in
-    /// one document, the SAME process can stop rasterising that text run when
-    /// the clean file is re-opened — no frontend involved. Run on demand:
-    ///
-    ///   PDFLUENT_REPRO_PDF=/path/to/digital-text.pdf \
-    ///   PDFLUENT_REPRO_TEXT="PROFESSIONAL EXPERIENCE" \
-    ///   cargo test --lib post_commit_render_pollution -- --ignored --nocapture
-    ///
-    /// Passing = clean-file renders are byte-identical before and after an
-    /// unrelated edit in another document (no pollution on this engine build).
-    #[test]
-    #[ignore]
     fn post_commit_render_pollution_repro() {
-        let Ok(path) = std::env::var("PDFLUENT_REPRO_PDF") else {
-            eprintln!("set PDFLUENT_REPRO_PDF to run this repro");
-            return;
-        };
-        let needle = std::env::var("PDFLUENT_REPRO_TEXT")
-            .unwrap_or_else(|_| "PROFESSIONAL EXPERIENCE".to_string());
-        // Same-length replacement (swap the last char for 'Z') to stay inside
-        // the beta-safe replace constraints.
-        let mut replacement = needle.clone();
-        replacement.pop();
-        replacement.push('Z');
+        let needle = "Hello";
+        // H and N have the same advance in the fixture font. This makes every
+        // subsequent glyph an explicitly unmodified render region.
+        let replacement = "Nello";
 
-        // 1. Baseline render of the clean file.
-        let clean1 = OpenDocument::open(&path).expect("open clean #1");
+        // 1. Establish a clean baseline.
+        let clean1 = sample_doc();
         let base = clean1.render_page(0, 2.0).expect("render clean #1");
+        let untouched_page_base = clean1
+            .render_page(1, 2.0)
+            .expect("render untouched page #2");
         drop(clean1);
 
-        // 2. Same process: commit a text replacement in a scratch copy and
-        //    render it (mirrors the app's commit → re-render sequence).
-        let tmp = std::env::temp_dir().join("pdfluent-render-pollution-copy.pdf");
-        std::fs::copy(&path, &tmp).expect("copy fixture");
-        let mut edited =
-            OpenDocument::open(tmp.to_str().unwrap()).expect("open scratch copy");
-        edited
-            .replace_text_span(0, &needle, &replacement)
+        // 2. Commit and render the in-memory document, then save-as.
+        let mut edited = sample_doc();
+        let result = edited
+            .replace_text_span(0, needle, replacement)
             .expect("replace_text_span");
-        let _ = edited.render_page(0, 2.0).expect("render edited copy");
-        drop(edited);
+        assert!(
+            result.replaced,
+            "fixture text must be replaced: {:?}",
+            result.reason
+        );
+        let edited_live = edited.render_page(0, 2.0).expect("render edited copy");
+        let tmp = op_tmp("render_pollution_edited.pdf");
         let _ = std::fs::remove_file(&tmp);
+        edited
+            .save_to(tmp.to_str().unwrap())
+            .expect("save edited copy");
+        drop(edited);
 
-        // 3. Re-open the CLEAN file in the same process and render again.
-        let clean2 = OpenDocument::open(&path).expect("open clean #2");
+        // 3. Reopen the save-as result. The live and reopened render must be
+        // exactly the same, and the replacement must remain extractable.
+        let reopened = OpenDocument::open(tmp.to_str().unwrap()).expect("reopen edited copy");
+        let edited_reopened = reopened
+            .render_page(0, 2.0)
+            .expect("render reopened edited copy");
+        let untouched_page_after = reopened
+            .render_page(1, 2.0)
+            .expect("render untouched page #2 after edit");
+        assert_eq!(
+            edited_live.data_base64, edited_reopened.data_base64,
+            "live edited render differs from save/reopen render"
+        );
+        assert!(
+            reopened
+                .extract_page_text(0)
+                .expect("extract reopened text")
+                .contains(replacement),
+            "replacement disappeared after save/reopen"
+        );
+        assert_eq!(
+            untouched_page_base.data_base64, untouched_page_after.data_base64,
+            "an untouched page changed after editing page 1"
+        );
+
+        // The fixture stores the complete top line in one text-showing
+        // operator, so that operator is the edited canvas region. Every pixel
+        // outside its deliberately generous 325×50pt mask must stay identical.
+        let base_png = general_purpose::STANDARD
+            .decode(&base.data_base64)
+            .expect("decode clean render");
+        let edited_png = general_purpose::STANDARD
+            .decode(&edited_reopened.data_base64)
+            .expect("decode edited render");
+        let base_pixels = image::load_from_memory(&base_png)
+            .expect("decode clean PNG")
+            .to_rgba8();
+        let edited_pixels = image::load_from_memory(&edited_png)
+            .expect("decode edited PNG")
+            .to_rgba8();
+        assert_eq!(base_pixels.dimensions(), edited_pixels.dimensions());
+
+        let mut changed_inside_mask = 0_u32;
+        let mut changed_outside_mask = 0_u32;
+        let mut changed_bounds = (u32::MAX, u32::MAX, 0_u32, 0_u32);
+        for (x, y, clean_pixel) in base_pixels.enumerate_pixels() {
+            let edited_pixel = edited_pixels.get_pixel(x, y);
+            if clean_pixel != edited_pixel {
+                changed_bounds.0 = changed_bounds.0.min(x);
+                changed_bounds.1 = changed_bounds.1.min(y);
+                changed_bounds.2 = changed_bounds.2.max(x);
+                changed_bounds.3 = changed_bounds.3.max(y);
+                if x <= 650 && y <= 100 {
+                    changed_inside_mask += 1;
+                } else {
+                    changed_outside_mask += 1;
+                }
+            }
+        }
+        assert_eq!(
+            changed_outside_mask, 0,
+            "unmodified pixels changed; full diff bounds: {changed_bounds:?}"
+        );
+        assert!(
+            changed_inside_mask > 0,
+            "edit did not change any rendered pixels"
+        );
+
+        // 4. Reopen the untouched fixture after the unrelated commit. This
+        // catches process-wide font/glyph/display-list/resource pollution.
+        let clean2 = sample_doc();
         let after = clean2.render_page(0, 2.0).expect("render clean #2");
 
         assert_eq!((base.width, base.height), (after.width, after.height));
-        let identical = base.data_base64 == after.data_base64;
-        eprintln!(
-            "clean-vs-clean render identical after unrelated commit: {identical}"
-        );
-        assert!(
-            identical,
+        assert_eq!(
+            base.data_base64, after.data_base64,
             "render of the CLEAN file changed after an edit in another document \
              — render-state pollution reproduced without any frontend involvement"
         );
+
+        let _ = std::fs::remove_file(&tmp);
     }
 
     #[test]
@@ -4965,19 +5030,21 @@ mod tests {
     // Invariants: normal PDFs and AcroForms are unchanged; dynamic XFA now
     // reports the rendered (flattened) page count instead of the 1-page shell.
 
-    // The dynamic-XFA fixture and the four tests that used it were removed on
-    // 2026-08-27. It was a third-party government form, and this repository is
-    // public; its redistribution terms were never established, so it was taken
-    // out rather than left in place on an assumption.
-    //
-    // What went with it: the only editor-side coverage of dynamic XFA — a shell
-    // PDF reporting one page where the flattened layout produces three, form
-    // model enumeration, fill persistence across save and reopen, and the
-    // commit-refresh loop.
-    //
-    // Restoring that needs a multi-page dynamic XFA document we own. None of the
-    // committed fixtures overflows onto a second page; that is tracked and it is
-    // not a small job.
+    // A fixture we generate ourselves (#259). It replaced a third-party
+    // immigration form whose redistribution terms were never established; that
+    // file is gone, and `include_bytes!` resolves at build time, so these four
+    // tests went with it. The replacement is built by
+    // `crates/xfa-test-runner/examples/generate_xfa_layout_fixtures.rs` in the
+    // engine repository, which also asserts there that the shell stays one page
+    // and the layout keeps flattening to three -- the property this file
+    // depends on and cannot see.
+    const DYNAMIC_XFA_PDF: &[u8] =
+        include_bytes!("../tests/fixtures/xl_31_dynamic_multipage_overflow.pdf");
+
+    /// The fixture's field count. Pinned rather than `!is_empty()`: a model that
+    /// enumerated one field of fifty would satisfy "not empty" while leaving the
+    /// overlay with nothing to place on pages two and three.
+    const XFA_FIELD_COUNT: usize = 50;
 
     #[test]
     fn document_info_page_count_normal_pdf() {
@@ -4995,9 +5062,142 @@ mod tests {
         assert!(!info.xfa_detected, "AcroForm must not be flagged as XFA");
     }
 
+    #[test]
+    fn dynamic_xfa_document_info_uses_render_page_count() {
+        let doc = OpenDocument::open_bytes(DYNAMIC_XFA_PDF.to_vec())
+            .expect("open dynamic XFA");
 
+        let shell_pages = doc.pdf_doc.page_count();
+        let render_pages = doc.render_doc_page_count();
+        let info = doc.document_info();
 
+        // The fixture is a 1-page shell whose 50 fields lay out over 3 pages.
+        assert_eq!(shell_pages, 1, "shell PDF is 1 page");
+        assert_eq!(render_pages, 3, "flattened layout produces 3 pages");
+        assert!(info.xfa_detected, "must be detected as XFA");
+        assert_eq!(
+            info.page_count, render_pages as u32,
+            "document_info must report the render page count ({render_pages}), not the shell count ({shell_pages})"
+        );
+        assert_eq!(
+            info.pages.len(),
+            render_pages,
+            "pages vec must have one entry per rendered page"
+        );
+        // Every rendered page must report a non-zero size.
+        for (i, p) in info.pages.iter().enumerate() {
+            assert!(p.width_pt > 0.0, "page {i} width must be > 0");
+            assert!(p.height_pt > 0.0, "page {i} height must be > 0");
+        }
+    }
 
+    // ── XFA Phase 1 fill ──────────────────────────────────────────────
+
+    #[test]
+    fn xfa_form_model_enumerates_fields() {
+        let mut doc = OpenDocument::open_bytes(DYNAMIC_XFA_PDF.to_vec())
+            .expect("open dynamic XFA");
+        let render_pages = doc.render_doc_page_count();
+        let model = doc.xfa_form_model().expect("build XFA form model");
+
+        assert_eq!(
+            model.fields.len(),
+            XFA_FIELD_COUNT,
+            "the fixture declares {XFA_FIELD_COUNT} data-bound fields; the model \
+             must enumerate all of them"
+        );
+
+        // The session lays out the RAW (pre-suppression) page set: the XFA layout
+        // engine over-produces empty repeated `occur` instance pages for some
+        // dynamic forms, which the flatten path's Sec. 4.3 suppression drops. So
+        // the session's page_count is >= the rendered/flattened page count, and
+        // the overlay bounds field placement by the RENDERED count rather than
+        // session.page_count. On this fixture the two agree (3 and 3, measured):
+        // nothing is suppressed, so it pins the bound and not the gap. A form
+        // that does over-produce is what the inequality is there for.
+        assert!(
+            model.page_count >= render_pages,
+            "session layout pages ({}) must be >= rendered pages ({})",
+            model.page_count,
+            render_pages
+        );
+
+        // The overlay only shows fields on rendered pages ("fill visible fields").
+        // At least one fillable text field must land within the rendered range,
+        // otherwise the overlay would have nothing to offer.
+        let visible_fillable_text = model.fields.iter().find(|f| {
+            f.field_type == "text"
+                && !f.read_only
+                && f.page.is_some_and(|p| p < render_pages)
+                && f.rect.is_some()
+        });
+        assert!(
+            visible_fillable_text.is_some(),
+            "expected a fillable text field on a rendered page"
+        );
+        let f = visible_fillable_text.unwrap();
+        assert!(!f.name.is_empty(), "field must have a name");
+        assert!(
+            f.widgets.iter().any(|w| w.page < render_pages),
+            "field must have a widget on a rendered page"
+        );
+    }
+
+    #[test]
+    fn xfa_fill_persists_across_save_reopen() {
+        let mut doc = OpenDocument::open_bytes(DYNAMIC_XFA_PDF.to_vec())
+            .expect("open dynamic XFA");
+        let model = doc.xfa_form_model().expect("build XFA form model");
+
+        // Choose a fillable, data-bound text field so the value lands in datasets.
+        let target = model
+            .fields
+            .iter()
+            .find(|f| f.field_type == "text" && !f.read_only && !f.bind_none)
+            .expect("a fillable, datasets-bound text field")
+            .name
+            .clone();
+
+        let sentinel = "PDFLUENT_XFA_PHASE1";
+        doc.set_xfa_field_value(&XfaWriteRequest::Text {
+            name: target.clone(),
+            value: sentinel.to_string(),
+        })
+        .expect("set XFA field value");
+        assert!(doc.modified, "fill must mark the document dirty");
+
+        // Save and reopen from disk — the round-trip an end user performs.
+        let mut out = std::env::temp_dir();
+        out.push("pdfluent_xfa_fill_roundtrip.pdf");
+        let out_str = out.to_string_lossy().to_string();
+        doc.save_to(&out_str).expect("save filled XFA");
+
+        let mut reopened = OpenDocument::open_bytes(
+            std::fs::read(&out_str).expect("re-read saved XFA"),
+        )
+        .expect("reopen saved XFA");
+        let model2 = reopened.xfa_form_model().expect("re-read XFA model");
+        let again = model2
+            .fields
+            .iter()
+            .find(|f| f.name == target)
+            .expect("field still present after reopen");
+        assert_eq!(
+            again.value, sentinel,
+            "filled XFA value must persist across save/reopen"
+        );
+
+        let _ = std::fs::remove_file(&out_str);
+    }
+
+    // The UEA dynamic-XFA fixture (a Dutch procurement form) lives in the SDK
+    // checkout's test-data, not in the editor repo. Its radio control
+    // `Type_aanbesteding` carries a `change` script that reveals a conditional
+    // section (`Erkenningsregeling…`) and repaginates when set to "3" — the
+    // canonical Phase 2 commit-loop demonstration. Feature-gated (the commit loop
+    // + QuickJS runtime) and skipped when the fixture is absent (e.g. CI without
+    // the test-data, or a non-local checkout layout).
+    #[cfg(feature = "xfa-interactive")]
     #[test]
     fn xfa_commit_reveals_conditional_section_on_uea() {
         let uea = concat!(
@@ -5048,3 +5248,175 @@ mod tests {
         );
     }
 
+    #[test]
+    fn xfa_commit_returns_refreshed_model_and_persists() {
+        let mut doc = OpenDocument::open_bytes(DYNAMIC_XFA_PDF.to_vec())
+            .expect("open dynamic XFA");
+        let model = doc.xfa_form_model().expect("build XFA form model");
+        let target = model
+            .fields
+            .iter()
+            .find(|f| f.field_type == "text" && !f.read_only && !f.bind_none)
+            .expect("a fillable, datasets-bound text field")
+            .name
+            .clone();
+
+        let result = doc
+            .commit_xfa_field_value(&XfaWriteRequest::Text {
+                name: target.clone(),
+                value: "PHASE2_COMMIT".to_string(),
+            })
+            .expect("commit XFA field value");
+
+        // The commit always returns a refreshed model + a sane page-count delta,
+        // and surfaces presence changes (possibly empty for a non-triggering field).
+        assert!(!result.model.fields.is_empty(), "commit returns a refreshed model");
+        assert!(result.page_count_after >= 1, "page_count_after is sane");
+        assert_eq!(result.raw_value, "PHASE2_COMMIT");
+        assert!(doc.modified, "commit marks the document dirty");
+
+        // Feature-aware: with the commit loop compiled, the edit runs interactively
+        // (change/click + calculate scripts); without it, it degrades to a static
+        // value write.
+        #[cfg(feature = "xfa-interactive")]
+        assert!(
+            result.interactive,
+            "commit must run interactively when xfa-interactive is enabled"
+        );
+        #[cfg(not(feature = "xfa-interactive"))]
+        {
+            assert!(!result.interactive, "fallback must report interactive=false");
+            assert_eq!(result.scripts_executed, 0);
+            assert!(result.presence_changes.is_empty());
+            assert_eq!(result.page_count_before, result.page_count_after);
+        }
+
+        // Value persists across save/reopen.
+        let mut out = std::env::temp_dir();
+        out.push("pdfluent_xfa_commit_roundtrip.pdf");
+        let out_str = out.to_string_lossy().to_string();
+        doc.save_to(&out_str).expect("save committed XFA");
+        let mut reopened =
+            OpenDocument::open_bytes(std::fs::read(&out_str).expect("re-read")).expect("reopen");
+        let m2 = reopened.xfa_form_model().expect("re-read model");
+        assert_eq!(
+            m2.fields.iter().find(|f| f.name == target).expect("field present").value,
+            "PHASE2_COMMIT",
+            "committed XFA value persists across save/reopen"
+        );
+        let _ = std::fs::remove_file(&out_str);
+    }
+
+    // === Digital signature: the Sign panel's backend, end to end ===
+    //
+    // The v3 Sign panel calls `sign_pdf` with a PKCS#12 file, a password, a
+    // reason and an output path; the panel showed "PAdES-compliant digital
+    // signature" for months over a control that drew a picture instead. These
+    // two tests are what that claim rests on: a real certificate signs a real
+    // document, the signed file is read back from disk, and the signature in
+    // it verifies.
+    //
+    // The certificate is a throwaway self-signed RSA-2048 pair generated for
+    // this repository, valid to 2126, and it signs nothing outside the test:
+    //
+    //   openssl req -x509 -newkey rsa:2048 -keyout k.pem -out c.pem \
+    //     -days 36500 -nodes -subj "/CN=PDFluent Test Signer/O=PDFluent Test"
+    //   openssl pkcs12 -export -inkey k.pem -in c.pem -out signer-test.p12 \
+    //     -passout pass:pdfluent-test -name "PDFluent Test Signer" \
+    //     -keypbe PBE-SHA1-3DES -certpbe PBE-SHA1-3DES -macalg sha1
+    //
+    // The three legacy algorithm flags are not decoration: the `p12` crate the
+    // SDK parses with does not read OpenSSL 3's AES-256-CBC/PBKDF2 default.
+
+    const TEST_P12: &[u8] = include_bytes!("../tests/fixtures/signer-test.p12");
+    const TEST_P12_PASSWORD: &str = "pdfluent-test";
+
+    fn test_certificate_path() -> std::path::PathBuf {
+        let path = op_tmp("signer-test.p12");
+        std::fs::write(&path, TEST_P12).expect("write test certificate");
+        path
+    }
+
+    #[test]
+    fn op_sign_with_certificate_verifies_after_reopen() {
+        let mut doc = sample_doc();
+        let pages_before = doc.document_info().page_count;
+        assert!(
+            doc.verify_signatures().is_empty(),
+            "the fixture must start out unsigned, or this test proves nothing"
+        );
+
+        let cert = test_certificate_path();
+        let out = op_tmp("op_sign_two_pages.pdf");
+        let _ = std::fs::remove_file(&out);
+
+        doc.sign(
+            cert.to_str().unwrap(),
+            TEST_P12_PASSWORD,
+            "I approve this document",
+            out.to_str().unwrap(),
+        )
+        .expect("sign the document");
+
+        // 1. The live document is the signed one: the panel re-checks straight
+        //    after signing and must not show the pre-signature state.
+        let live = doc.verify_signatures();
+        assert_eq!(live.len(), 1, "signing must add exactly one signature");
+        assert!(
+            live[0].valid,
+            "the signature just made does not verify: {}",
+            live[0].status
+        );
+
+        // 2. So is the file the user keeps.
+        let reopened = OpenDocument::open(out.to_str().unwrap()).expect("reopen the signed file");
+        let after = reopened.verify_signatures();
+        assert_eq!(after.len(), 1, "the saved file must carry the signature");
+        assert!(
+            after[0].valid,
+            "the signature in the saved file does not verify: {}",
+            after[0].status
+        );
+        assert_eq!(
+            after[0].signer.as_deref(),
+            Some("PDFluent Test Signer"),
+            "the panel shows this string as the signer"
+        );
+        assert_eq!(
+            reopened.document_info().page_count,
+            pages_before,
+            "signing must not change the document it signs"
+        );
+
+        let _ = std::fs::remove_file(&out);
+    }
+
+    #[test]
+    fn op_sign_with_the_wrong_password_fails_and_writes_nothing() {
+        let mut doc = sample_doc();
+        let cert = test_certificate_path();
+        let out = op_tmp("op_sign_wrong_password.pdf");
+        let _ = std::fs::remove_file(&out);
+
+        let err = doc
+            .sign(
+                cert.to_str().unwrap(),
+                "not-the-password",
+                "",
+                out.to_str().unwrap(),
+            )
+            .expect_err("a wrong certificate password must fail");
+        assert!(
+            err.contains("PKCS#12"),
+            "the message must name the certificate as the problem, got: {err}"
+        );
+        assert!(
+            !out.exists(),
+            "a failed signature must not leave a file the user could mistake for a signed one"
+        );
+        assert!(
+            doc.verify_signatures().is_empty(),
+            "a failed signature must leave the open document alone"
+        );
+    }
+}

@@ -144,8 +144,11 @@ describe('ViewerApp — auto-update wiring', () => {
     expect(viewerAppSource).toContain('if (!isTauri) return');
   });
 
-  it('returns cleanup from startup check useEffect', () => {
-    expect(viewerAppSource).toContain('return scheduleStartupUpdateCheck(');
+  it('returns cleanup from startup check useEffect, through the setting gate', () => {
+    // The startup check is switchable off (LICENSE.md §4), so ViewerApp goes
+    // through scheduleStartupUpdateCheckIfEnabled. Both directions of that gate
+    // are asserted in tests/startup-update-check-gate.test.ts.
+    expect(viewerAppSource).toContain('return scheduleStartupUpdateCheckIfEnabled(');
   });
 
   it('startup check does not auto-install (returns false)', () => {

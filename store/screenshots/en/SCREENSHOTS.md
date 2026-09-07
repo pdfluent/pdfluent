@@ -5,6 +5,13 @@ See https://pdfluent.com/license for terms.
 
 # English Microsoft Store screenshots — final raw set
 
+> **Historical record.** This English raw set came from the `1.0.0-beta.18`
+> candidate and has been superseded on the live listing by the designer's
+> 3840×2160 set of 2026-08-20 (see `../../listing/PASTE-SHEET.md`). One capture
+> here still shows an "Invite to sign" button that was removed from the app, which
+> is why the set must not be uploaded again. Kept for provenance.
+
+
 Six raw **1920×1080 PNG** captures from the actual installed, Authenticode-signed
 Windows candidate (`PDFluent_1.0.0-beta.18_x64_en-US.msi`, localized build), with the
 full UI forced to **English** and a **neutral demo PDF** ("Project Proposal", a

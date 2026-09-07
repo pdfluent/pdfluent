@@ -112,7 +112,11 @@
     "prevField": "前のフィールド",
     "nextField": "次のフィールド",
     "allTools": "すべてのツール",
-    "contextualBar": "モードツールバー"
+    "contextualBar": "モードツールバー",
+    "pdfa": "PDF/A",
+    "metadata": "Document properties",
+    "invoice": "E-invoice",
+    "bookmarks": "Bookmarks"
   },
   "topbar": {
     "openPdf": "PDFを開く",
@@ -282,7 +286,27 @@
     "clearSelection": "選択をクリア",
     "combine": "ファイルを結合",
     "splitRange": "範囲で分割",
-    "splitRangeHint": "最初にページを選択"
+    "splitRangeHint": "最初にページを選択",
+    "moveLeft": "Move selected page left",
+    "moveRight": "Move selected page right",
+    "moveLeftShort": "Left",
+    "moveRightShort": "Right",
+    "rotateLeft": "Rotate left",
+    "rotateRight": "Rotate right",
+    "rotateLeftShort": "Left",
+    "rotateRightShort": "Right",
+    "addingPdf": "Adding PDF…",
+    "pdfAdded": "PDF added",
+    "combiningFiles": "Combining {{count}} file(s)…",
+    "filesCombined": "{{count}} file(s) combined",
+    "insertingPdf": "Inserting PDF before page {{page}}…",
+    "pdfInserted": "PDF inserted",
+    "exportingPages": "Exporting {{count}} page(s)…",
+    "selectionExported": "Selection exported to {{name}}",
+    "splittingPages": "Splitting into individual pages…",
+    "pagesSaved": "{{count}} pages saved",
+    "splittingRanges": "Splitting {{count}} range(s)…",
+    "filesSaved": "{{count}} file(s) saved"
   },
   "unsavedChanges": {
     "title": "未保存の変更",
@@ -302,7 +326,14 @@
     "dragDropHint": "または PDF をここにドラッグ",
     "lede": "読み取り、編集、変換、入力、署名 — すべてデバイス上で。",
     "privacyPromise": "プライバシー第一 · ドキュメントはこのデバイスを離れません",
-    "dropPdfHere": "PDF をここにドロップ"
+    "dropPdfHere": "PDF をここにドロップ",
+    "v3Subtitle": "Open a PDF to read, edit, convert or sign it locally.",
+    "openFileAria": "Choose a PDF file to open",
+    "clearRecent": "Clear recent",
+    "recentShort": "Recent",
+    "removeRecentAria": "Remove {{name}}",
+    "backToDocument": "Back to document",
+    "loadingDocument": "Loading document…"
   },
   "settings": {
     "language": "言語",
@@ -324,7 +355,10 @@
     "themeLabel": "テーマ",
     "ocrDefaults": "OCR デフォルト",
     "ocrLanguageLabel": "デフォルト言語 (ISO-639-2)",
-    "ocrLanguagePlaceholder": "例: eng, nld, deu"
+    "ocrLanguagePlaceholder": "例: eng, nld, deu",
+    "updates": "Updates",
+    "automaticUpdateCheck": "Check for a new version at startup",
+    "automaticUpdateCheckHint": "PDFluent asks pdfluent.com whether a newer version exists, a few seconds after it starts. Nothing from your documents is sent. Turn this off and the app never checks on its own — \"Check for updates\" still works whenever you ask for it."
   },
   "errors": {
     "loadFailed": "ドキュメント読み込み失敗",
@@ -465,7 +499,13 @@
     "dismiss": "閉じる",
     "watermarkDone": "透かしを追加しました",
     "watermarkFailed": "透かしの追加に失敗しました",
-    "watermarkRunning": "透かしを追加中…"
+    "watermarkRunning": "透かしを追加中…",
+    "pdfaRunning": "Converting to PDF/A…",
+    "pdfaDone": "PDF/A written",
+    "pdfaFailed": "PDF/A conversion failed",
+    "metadataRunning": "Saving properties…",
+    "metadataDone": "Properties saved",
+    "metadataFailed": "Could not save properties"
   },
   "panels": {
     "search": "検索",
@@ -837,7 +877,10 @@
     "detected": "このドキュメントは XFA フォームを使用しています。レンダリングが不完全な可能性があります — XFA サポートは実験的です。",
     "flatten": "XFA フラット化",
     "flattenDone": "XFA フラット化。PDF をエクスポートして静的バージョンをダウンロードしてください。",
-    "flattenFailed": "XFA フラット化失敗"
+    "flattenFailed": "XFA フラット化失敗",
+    "convertToStandard": "Convert to standard PDF",
+    "convertedToStandard": "XFA converted to standard PDF",
+    "convertFailed": "Conversion failed: {{message}}"
   },
   "security": {
     "activeContentBadge": "ブロック済み",
@@ -870,7 +913,11 @@
     "dismiss": "閉じる",
     "installing": "インストール中…",
     "checkFailed": "更新確認失敗",
-    "upToDate": "最新バージョンを使用しています"
+    "upToDate": "最新バージョンを使用しています",
+    "installed": "Update installed",
+    "restartNow": "Restart now",
+    "restartUnsaved": "Save your changes before restarting.",
+    "restartManual": "If it doesn't restart automatically, quit and reopen PDFluent to finish."
   },
   "telemetry": {
     "addNoteLabel": "何か追加しますか？ (任意)",
@@ -1049,18 +1096,7 @@
       "initials": "頭文字",
       "initialsPlaceholder": "例：AB",
       "defaultInitials": "AB",
-      "clickToPlaceInitials": "ページをクリックして頭文字を配置します。",
-      "invite": "署名に招待",
-      "inviteIntro": "受信者に e サイン要求を送信します。受信者はドキュメントをローカルで署名するためのリンク付きメールを受け取ります。",
-      "recipientName": "受信者名",
-      "recipientNamePlaceholder": "受信者名…",
-      "email": "メールアドレス",
-      "emailPlaceholder": "name@example.com",
-      "message": "メッセージ（オプション）",
-      "messagePlaceholder": "このドキュメントに署名してもらえますか？",
-      "send": "送信",
-      "emailRequired": "メールアドレスは必須です。",
-      "inviteSent": "招待を {{email}} に送信しました！"
+      "clickToPlaceInitials": "ページをクリックして頭文字を配置します。"
     },
     "overlay": {
       "signaturePlaced": "署名が配置されました！",
@@ -1093,22 +1129,14 @@
       "addText": "テキストを追加",
       "fillAndSign": "記入と署名",
       "more": "その他のツール",
-      "formatting": "フォーマット",
       "strikeText": "テキストに取り消し線",
       "underlineText": "テキストに下線",
-      "insertTextBox": "テキストボックスを挿入",
-      "stampsAndInsert": "スタンプと挿入",
-      "stamps": "スタンプ",
-      "insertDate": "日付を挿入",
-      "addAttachment": "添付ファイルを追加",
-      "ruler": "ルーラー"
+      "addAttachment": "添付ファイルを追加"
     },
     "railToasts": {
       "commentMode": "ノートモードがアクティブです。テキストを選択してノートを選択するか、コメントリストを使用してノートを追加してください。",
       "strikeout": "取り消し線がアクティブです — テキストを選択して適用してください。",
-      "underline": "下線がアクティブです — テキストを選択して適用してください。",
-      "textboxOpened": "テキストボックスツールが開きました。",
-      "stampsInAllTools": "スタンプはすべてのツールにあります。"
+      "underline": "下線がアクティブです — テキストを選択して適用してください。"
     },
     "tools": {
       "lede": "ツールを選択して開始してください。すべてはこのデバイス上でローカルに実行されます。",
@@ -1143,7 +1171,11 @@
       "moreAttachments_plural": "さらに {{count}} 件の添付ファイル",
       "layers": "{{count}} 件のレイヤー",
       "manageLayers": "レイヤーを管理",
-      "layersVisible": "{{count}} 件のレイヤーが表示されています。"
+      "layersVisible": "{{count}} 件のレイヤーが表示されています。",
+      "archiveAndData": "Archiving and data",
+      "pdfaSub": "Check or convert for long-term archiving",
+      "invoiceSub": "Read the ZUGFeRD/Factur-X invoice inside",
+      "metadataSub": "Title and author of this document"
     },
     "edit": {
       "lede": "ドキュメント内のテキストをクリックしてインライン編集してください。フォーマットバーは選択の直上に表示されます。",
@@ -1186,17 +1218,31 @@
       "ocrRunning": "OCR をローカルで実行中…"
     },
     "esign": {
-      "lede": "ドキュメントに素早く安全に署名し、他の人と簡単に共有して署名してもらってください。",
-      "localSigned": "ローカルで署名 — このデバイスから何も外に出ません",
-      "padesCompliant": "PAdES 準拠デジタル署名",
+      "lede": "Sign with a certificate of your own, and check the signatures a document already carries. Both happen on this device.",
       "fillAndSign": "ドキュメントに記入して署名",
       "addSignature": "署名を追加",
       "addInitials": "頭文字を追加",
-      "invite": "署名に招待",
       "placementModeSignature": "配置モード：署名",
       "placementModeInitials": "配置モード：頭文字",
       "clickToPlaceSignature": "ページの任意の場所をクリックして署名を配置してください。",
-      "clickToPlaceInitials": "ページの任意の場所をクリックして頭文字を配置してください。"
+      "clickToPlaceInitials": "ページの任意の場所をクリックして頭文字を配置してください。",
+      "verifySection": "Signatures",
+      "verify": "Check signatures",
+      "desktopOnly": "Available in the desktop app",
+      "unsigned": "This document carries no signatures.",
+      "signSection": "Sign with a certificate",
+      "padesLevel": "Produces a PAdES B-B signature: your certificate over the whole file, no timestamp server involved.",
+      "certificate": "Certificate (.p12 or .pfx)",
+      "certificateNone": "No certificate chosen",
+      "chooseCertificate": "Choose certificate",
+      "certificatePassword": "Certificate password",
+      "reason": "Reason (optional)",
+      "reasonPlaceholder": "Why you are signing",
+      "sign": "Sign and save a copy",
+      "signing": "Signing…",
+      "signNeedsCertificate": "Choose a certificate and enter its password first.",
+      "signSaved": "Signed copy saved as {{name}}",
+      "signFailed": "Signing failed: {{message}}"
     },
     "protect": {
       "lede": "強力な暗号化パスワードで PDF ドキュメントを保護します。変更はローカルでは直ちに適用されます。",
@@ -1300,7 +1346,77 @@
     },
     "thumbnails": {
       "pages": "ページ",
-      "pageAlt": "ページ {{page}}"
+      "pageAlt": "ページ {{page}}",
+      "bookmarks": "Bookmarks"
+    },
+    "pdfa": {
+      "lede": "PDF/A is the archival form of PDF: fonts embedded, colours defined, nothing that depends on the outside world.",
+      "section": "Conformance",
+      "level": "Level",
+      "validate": "Check this document",
+      "convert": "Save as PDF/A…",
+      "desktopOnly": "Available in the desktop app",
+      "compliant": "Conforms to {{level}}",
+      "notCompliant": "Does not conform: {{errors}} errors, {{warnings}} warnings",
+      "moreIssues": "{{count}} more"
+    },
+    "metadata": {
+      "lede": "The title and author stored inside the file, which is what other readers and search show.",
+      "section": "Properties",
+      "title": "Title",
+      "author": "Author",
+      "apply": "Save properties",
+      "desktopOnly": "Available in the desktop app"
+    },
+    "invoice": {
+      "lede": "A ZUGFeRD or Factur-X invoice travels as XML inside the PDF. This reads it and checks it against EN 16931.",
+      "section": "Embedded invoice",
+      "read": "Read invoice",
+      "desktopOnly": "Available in the desktop app",
+      "none": "This document carries no e-invoice.",
+      "number": "Number: {{number}}",
+      "issued": "Issued: {{date}}",
+      "seller": "Seller: {{name}}",
+      "buyer": "Buyer: {{name}}",
+      "total": "Total: {{total}} {{currency}}",
+      "lines": "Line items: {{count}}",
+      "valid": "Valid against {{profile}}",
+      "invalid": "Not valid: {{errors}} errors, {{warnings}} warnings"
     }
+  },
+  "about": {
+    "section": "About",
+    "app": "App",
+    "version": "Version",
+    "privacy": "Privacy",
+    "privacyValue": "All processing happens locally",
+    "website": "Website"
+  },
+  "reviewSummary": {
+    "title": "Review summary",
+    "generatedAt": "Generated on",
+    "comments": "Comments",
+    "noComments": "No comments.",
+    "replies": "Replies:",
+    "empty": "empty",
+    "redactions": "Redactions",
+    "noRedactions": "No redactions.",
+    "noIssues": "No issues.",
+    "metadataChanges": "Metadata changes",
+    "noMetadataChanges": "No changes.",
+    "changedBy": "by",
+    "on": "on"
+  },
+  "externalLink": {
+    "askMessage": "This PDF wants to open an external link:\n\n{{label}}\n\nURL:\n{{href}}\n\nDo you want to continue?",
+    "title": "Open external link?",
+    "openLink": "Open link",
+    "dialogBody": "This PDF wants to open an external website. Check the URL before continuing."
+  },
+  "linkChoice": {
+    "title": "Open link in your browser?",
+    "body": "This document wants to open an external website. Are you opening it from a trusted source?",
+    "alwaysAllow": "Always allow",
+    "openOnce": "Open once"
   }
 }

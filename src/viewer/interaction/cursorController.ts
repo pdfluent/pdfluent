@@ -69,6 +69,7 @@ export type AnnotationToolName =
   | 'underline'
   | 'strikeout'
   | 'rectangle'
+  | 'ink'
   | 'redaction'
   | 'freehand'
   | 'stamp'
@@ -86,6 +87,7 @@ export function getCursorForTool(tool: AnnotationToolName): ViewerCursor {
     case 'strikeout':
       return 'text';
     case 'rectangle':
+    case 'ink':
       return 'crosshair';
     case 'redaction':
       return 'crosshair';

@@ -72,6 +72,19 @@ const FORBIDDEN: { label: string; re: RegExp }[] = [
   { label: 'old "commercial use requires a license" claim', re: /commercial use requires/i },
   { label: 'old per-seat licence model', re: /per-seat licen[cs]e/i },
   { label: 'old JetBrains-style licence comparison', re: /jetbrains[- ]style|jetbrains.{0,10}\blicen[cs]e\b/i },
+  // A sixth phrasing of the removed paid-app model, found in docs/download-page.md
+  // on 2026-08-31. The five patterns above were each written against a phrasing
+  // that was in the tree at the time, so none of them caught it.
+  { label: 'old free-for-personal / paid-for-business split',
+    re: /free for personal use|commercial licen[cs]e for business/i },
+  // #225: the editor is source-available, never open source. The tagline
+  // pattern above only catches the exact phrase "open-source PDF editor".
+  { label: 'editor called open source', re: /PDFluent is (an? )?open[- ]source/i },
+  // The entity is Innovation Trigger B.V. (settled 2026-08-18). "PDFluent
+  // Contributors" is not it, and proprietary software has no contributor pool
+  // to hold the copyright. The entity pattern above only catches a B.V./BV suffix.
+  { label: 'stale "PDFluent Contributors" copyright holder',
+    re: /Copyright \(c\)[^\n]*PDFluent Contributors/i },
 ];
 
 function walk(dir: string, out: string[]): void {
