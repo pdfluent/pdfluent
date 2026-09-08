@@ -8,6 +8,7 @@
 import { useState, useCallback } from 'react';
 import type { PdfEngine } from '../../core/engine/PdfEngine';
 import type { PdfDocument } from '../../core/document';
+import { perfMark } from '../performance/perfMarks';
 import type { DocumentMetadata } from '../../core/document/metadata';
 
 interface UseDocumentResult {
@@ -51,6 +52,7 @@ export function useDocument(engine: PdfEngine | null): UseDocumentResult {
 
   const loadDocument = useCallback(async (source: string | ArrayBuffer): Promise<void> => {
     if (!engine) return;
+    perfMark('load_start', { source: typeof source === 'string' ? 'path' : 'bytes' });
 
     // Close the current document before opening a replacement so both
     // MockDocumentEngine and TauriDocumentEngine follow the same lifecycle.
@@ -72,6 +74,7 @@ export function useDocument(engine: PdfEngine | null): UseDocumentResult {
     const metaResult = engine.document.getMetadata(loaded);
     const countResult = engine.document.getPageCount(loaded);
 
+    perfMark('doc_ready');
     setDoc(loaded);
     setMetadata(metaResult.success ? metaResult.value : null);
     setPageCount(countResult.success ? countResult.value : loaded.pages.length);

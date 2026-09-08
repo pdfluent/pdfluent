@@ -75,6 +75,16 @@ const MAX_MEDIAN_SIZE_RATIO: f64 = 1.25;
 /// the phrase `tests/editor-ui-terminology-guard.test.ts` forbids.
 const STAMP_NEEDLE: &[u8] = concat!("Free", " Tier").as_bytes();
 
+/// The conformance judge: on PATH by default, `PDFLUENT_VERAPDF` overrides the
+/// path so a runner can pin an exact install.
+fn verapdf() -> String {
+    std::env::var("PDFLUENT_VERAPDF").unwrap_or_else(|_| "verapdf".to_string())
+}
+
+/// The version the recorded numbers came from. Named so a verdict that changes
+/// because the validator changed is not read as a change in the converter.
+const VERAPDF_VERSION: &str = "1.28.2";
+
 fn golden_dir() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/golden")
 }
@@ -176,7 +186,10 @@ struct Row {
     bytes_in: u64,
     bytes_out: u64,
     size_ratio: f64,
+    /// veraPDF's verdict: the judge.
     compliant: bool,
+    /// `pdf-compliance`'s verdict, reported beside it rather than instead of it.
+    engine_compliant: bool,
     error_count: usize,
     warning_count: usize,
     report_warnings: usize,
@@ -188,10 +201,28 @@ struct Row {
     note: String,
 }
 
-const HEADER: &str = "name\tlevel\tconverts\tpages_in\tpages_out\twords_in\twords_out\tretention\tbytes_in\tbytes_out\tsize_ratio\tcompliant\terror_count\twarning_count\treport_warnings\tstamped_pages\tfirst_error\tnote";
-const COLUMNS: usize = 18;
+const HEADER: &str = "name\tplatform\tlevel\tconverts\tpages_in\tpages_out\twords_in\twords_out\tretention\tbytes_in\tbytes_out\tsize_ratio\tcompliant\tengine_compliant\terror_count\twarning_count\treport_warnings\tstamped_pages\tfirst_error\tnote";
+const COLUMNS: usize = 20;
 
-fn read_baseline() -> BTreeMap<String, Row> {
+/// Which machine these numbers came from, spelled as `quality/axes/*.tsv` and
+/// the run files spell it.
+///
+/// PDF/A output is not platform-independent: font substitution picks whatever
+/// the host has, so the same document embeds different fonts and lands on a
+/// different size on macOS than on the CI runner. One blessed number for both
+/// was a gate that had to be wrong somewhere — it was red on Linux from the day
+/// the runner first ran it, for a difference nobody had measured.
+fn platform() -> &'static str {
+    if cfg!(target_os = "macos") {
+        "darwin"
+    } else if cfg!(target_os = "windows") {
+        "windows"
+    } else {
+        "linux"
+    }
+}
+
+fn read_baseline() -> BTreeMap<(String, String), Row> {
     let path = baseline_path();
     let raw = match fs::read_to_string(&path) {
         Ok(raw) => raw,
@@ -202,6 +233,12 @@ fn read_baseline() -> BTreeMap<String, Row> {
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => String::new(),
         Err(e) => panic!("read {}: {e}", path.display()),
     };
+    parse_baseline(&raw)
+}
+
+/// Rows keyed by document *and* platform. Keying by name alone silently kept
+/// whichever platform came last in the file.
+fn parse_baseline(raw: &str) -> BTreeMap<(String, String), Row> {
     let mut rows = BTreeMap::new();
     for line in raw.lines() {
         if line.starts_with('#') || line.trim().is_empty() || line.starts_with("name\t") {
@@ -210,34 +247,60 @@ fn read_baseline() -> BTreeMap<String, Row> {
         let f: Vec<&str> = line.split('\t').collect();
         assert_eq!(f.len(), COLUMNS, "malformed baseline row: {line}");
         rows.insert(
-            f[0].to_string(),
+            (f[0].to_string(), f[1].to_string()),
             Row {
-                level: f[1].to_string(),
-                converts: f[2].parse().expect("converts"),
-                pages_in: f[3].parse().expect("pages_in"),
-                pages_out: f[4].parse().expect("pages_out"),
-                words_in: f[5].parse().expect("words_in"),
-                words_out: f[6].parse().expect("words_out"),
-                retention: f[7].parse().expect("retention"),
-                bytes_in: f[8].parse().expect("bytes_in"),
-                bytes_out: f[9].parse().expect("bytes_out"),
-                size_ratio: f[10].parse().expect("size_ratio"),
-                compliant: f[11].parse().expect("compliant"),
-                error_count: f[12].parse().expect("error_count"),
-                warning_count: f[13].parse().expect("warning_count"),
-                report_warnings: f[14].parse().expect("report_warnings"),
-                stamped_pages: f[15].parse().expect("stamped_pages"),
-                first_error: f[16].to_string(),
-                note: f[17].to_string(),
+                level: f[2].to_string(),
+                converts: f[3].parse().expect("converts"),
+                pages_in: f[4].parse().expect("pages_in"),
+                pages_out: f[5].parse().expect("pages_out"),
+                words_in: f[6].parse().expect("words_in"),
+                words_out: f[7].parse().expect("words_out"),
+                retention: f[8].parse().expect("retention"),
+                bytes_in: f[9].parse().expect("bytes_in"),
+                bytes_out: f[10].parse().expect("bytes_out"),
+                size_ratio: f[11].parse().expect("size_ratio"),
+                compliant: f[12].parse().expect("compliant"),
+                engine_compliant: f[13].parse().expect("engine_compliant"),
+                error_count: f[14].parse().expect("error_count"),
+                warning_count: f[15].parse().expect("warning_count"),
+                report_warnings: f[16].parse().expect("report_warnings"),
+                stamped_pages: f[17].parse().expect("stamped_pages"),
+                first_error: f[18].to_string(),
+                note: f[19].to_string(),
             },
         );
     }
     rows
 }
 
-fn format_row(name: &str, row: &Row) -> String {
+/// The file a bless writes: this platform's freshly measured rows, plus every
+/// row belonging to a platform that did not run. A bless on one machine that
+/// deleted another machine's numbers would turn a per-platform baseline back
+/// into a single-platform one, one run at a time.
+fn merge_for_bless(
+    existing: &BTreeMap<(String, String), Row>,
+    measured: &[(String, Row)],
+    platform: &str,
+) -> Vec<String> {
+    let mut all: BTreeMap<(String, String), &Row> = existing
+        .iter()
+        .filter(|((_, p), _)| p != platform)
+        .map(|(key, row)| (key.clone(), row))
+        .collect();
+    for (name, row) in measured {
+        all.insert((name.clone(), platform.to_string()), row);
+    }
+    let mut lines = vec![HEADER.to_string()];
+    lines.extend(
+        all.into_iter()
+            .map(|((name, platform), row)| format_row(&name, &platform, row)),
+    );
+    lines
+}
+
+fn format_row(name: &str, platform: &str, row: &Row) -> String {
     format!(
-        "{name}\t{}\t{}\t{}\t{}\t{}\t{}\t{:.4}\t{}\t{}\t{:.4}\t{}\t{}\t{}\t{}\t{}\t{}\t{}",
+        "{name}\t{platform}\t{}\t{}\t{}\t{}\t{}\t{}\t{:.4}\t{}\t{}\t{:.4}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}",
         row.level,
         row.converts,
         row.pages_in,
@@ -249,6 +312,7 @@ fn format_row(name: &str, row: &Row) -> String {
         row.bytes_out,
         row.size_ratio,
         row.compliant,
+        row.engine_compliant,
         row.error_count,
         row.warning_count,
         row.report_warnings,
@@ -256,6 +320,62 @@ fn format_row(name: &str, row: &Row) -> String {
         row.first_error,
         row.note
     )
+}
+
+/// veraPDF's verdict on one converted file.
+///
+/// The judge, and deliberately not `pdf-compliance`: on this corpus the two
+/// disagree on every single document. Our own validator rejects a compressed
+/// XMP metadata stream at 6.6.2.1 — a rule ISO 19005-1 states and 19005-2
+/// relaxed — so it calls 0 of 17 conforming where veraPDF calls all 17
+/// conforming (#458). Reporting our own verdict as the truth would mean
+/// shipping a "does not conform" banner to users about files that do.
+/// `pdf-compliance` keeps its own column so the disagreement stays visible
+/// rather than being replaced by the answer we prefer.
+///
+/// A missing veraPDF is not a pass. The gate says so and fails: a conformance
+/// number that quietly becomes "we did not check" is the failure mode this
+/// whole file exists to prevent.
+fn verapdf_conforms(path: &Path, name: &str, failures: &mut Vec<String>) -> bool {
+    let tool = verapdf();
+    let output = match std::process::Command::new(&tool)
+        .args(["-f", LEVEL, "--format", "text"])
+        .arg(path)
+        .output()
+    {
+        Ok(output) => output,
+        Err(e) => {
+            eprintln!(
+                "SKIPPED (not a pass): {tool} could not be run ({e}), so conformance was \
+                 not measured for {name}. Install veraPDF {VERAPDF_VERSION} or put it on PATH."
+            );
+            failures.push(format!(
+                "{name}: conformance was not measured — {tool} could not be run ({e})"
+            ));
+            return false;
+        }
+    };
+    let verdict = String::from_utf8_lossy(&output.stdout);
+    let first = verdict.lines().next().unwrap_or("").trim().to_string();
+    if let Some(rest) = first.strip_prefix("PASS") {
+        let _ = rest;
+        return true;
+    }
+    if first.starts_with("FAIL") {
+        return false;
+    }
+    // Neither verdict. Some other failure — a JVM that will not start, a file
+    // veraPDF cannot open — and treating it as "not conforming" would file a
+    // tooling problem as a product regression.
+    eprintln!(
+        "SKIPPED (not a pass): {tool} gave no PASS/FAIL for {name}: {first:?} \
+         (stderr: {})",
+        String::from_utf8_lossy(&output.stderr).trim()
+    );
+    failures.push(format!(
+        "{name}: conformance was not measured — {tool} answered {first:?}"
+    ));
+    false
 }
 
 /// Convert one document and check everything that holds for any document,
@@ -285,6 +405,7 @@ fn convert_and_check(path: &Path, note: &str, failures: &mut Vec<String>) -> Row
                 bytes_out: 0,
                 size_ratio: 0.0,
                 compliant: false,
+                engine_compliant: false,
                 error_count: 0,
                 warning_count: 0,
                 report_warnings: 0,
@@ -329,6 +450,7 @@ fn convert_and_check(path: &Path, note: &str, failures: &mut Vec<String>) -> Row
                 bytes_out,
                 size_ratio: bytes_out as f64 / bytes_in.max(1) as f64,
                 compliant: false,
+                engine_compliant: false,
                 error_count: 0,
                 warning_count: 0,
                 report_warnings: outcome.report.warnings.len(),
@@ -376,7 +498,8 @@ fn convert_and_check(path: &Path, note: &str, failures: &mut Vec<String>) -> Row
         bytes_in,
         bytes_out,
         size_ratio: bytes_out as f64 / bytes_in.max(1) as f64,
-        compliant: outcome.validation.compliant,
+        compliant: verapdf_conforms(&out, &name, failures),
+        engine_compliant: outcome.validation.compliant,
         error_count: outcome.validation.error_count,
         warning_count: outcome.validation.warning_count,
         report_warnings: outcome.report.warnings.len(),
@@ -398,6 +521,7 @@ fn golden_corpus_and_pdfa_baseline_describe_the_same_documents() {
     }
     let files = corpus(&golden_dir());
     let baseline = read_baseline();
+    let platform = platform();
     assert!(
         files.len() >= 17,
         "golden corpus shrank to {} documents",
@@ -405,15 +529,18 @@ fn golden_corpus_and_pdfa_baseline_describe_the_same_documents() {
     );
     for path in &files {
         assert!(
-            baseline.contains_key(&name_of(path)),
-            "{} has no PDF/A baseline row — run with PDFLUENT_GOLDEN_BLESS=1 and read the diff",
+            baseline.contains_key(&(name_of(path), platform.to_string())),
+            "{} has no PDF/A baseline row for {platform} — run with PDFLUENT_GOLDEN_BLESS=1 \
+             on this platform and commit the result as a measurement",
             name_of(path)
         );
     }
-    for name in baseline.keys() {
+    // Rows of other platforms are none of this platform's business, but a row
+    // for a document that no longer exists is stale on every platform.
+    for (name, row_platform) in baseline.keys() {
         assert!(
             files.iter().any(|p| name_of(p) == *name),
-            "PDF/A baseline row {name} has no document"
+            "PDF/A baseline row {name} ({row_platform}) has no document"
         );
     }
 }
@@ -423,23 +550,26 @@ fn golden_corpus_converts_to_pdfa_2b() {
     let files = corpus(&golden_dir());
     let baseline = read_baseline();
     let bless = std::env::var("PDFLUENT_GOLDEN_BLESS").is_ok();
-    let mut blessed: Vec<String> = vec![HEADER.to_string()];
+    let platform = platform();
+    let mut blessed: Vec<(String, Row)> = Vec::new();
     let mut failures: Vec<String> = Vec::new();
     let mut ratios: Vec<f64> = Vec::new();
 
     for path in &files {
         let name = name_of(path);
-        let previous = baseline.get(&name);
+        let previous = baseline.get(&(name.clone(), platform.to_string()));
         let note = previous.map_or("-", |r| r.note.as_str());
         let now = convert_and_check(path, note, &mut failures);
         ratios.push(now.size_ratio);
 
         if bless {
-            blessed.push(format_row(&name, &now));
+            blessed.push((name, now));
             continue;
         }
 
-        let was = previous.unwrap_or_else(|| panic!("{name}: no PDF/A baseline row"));
+        let was = previous.unwrap_or_else(|| {
+            panic!("{name}: no PDF/A baseline row for {platform}")
+        });
         if now.converts != was.converts {
             failures.push(format!(
                 "{name}: converts {} → {}",
@@ -506,9 +636,11 @@ fn golden_corpus_converts_to_pdfa_2b() {
     }
 
     if bless {
-        fs::write(baseline_path(), format!("{}\n", blessed.join("\n"))).expect("write baseline");
+        let lines = merge_for_bless(&baseline, &blessed, platform);
+        fs::write(baseline_path(), format!("{}\n", lines.join("\n"))).expect("write baseline");
         eprintln!(
-            "SKIPPED (not a pass): PDFLUENT_GOLDEN_BLESS was set, so the baseline was rewritten instead of checked"
+            "SKIPPED (not a pass): PDFLUENT_GOLDEN_BLESS was set, so the {platform} rows were \
+             rewritten instead of checked"
         );
         return;
     }
@@ -527,7 +659,10 @@ fn golden_corpus_converts_to_pdfa_2b() {
         for path in &files {
             let name = name_of(path);
             let mut ignored = Vec::new();
-            eprintln!("{}", format_row(&name, &convert_and_check(path, "-", &mut ignored)));
+            eprintln!(
+                "{}",
+                format_row(&name, platform, &convert_and_check(path, "-", &mut ignored))
+            );
         }
     }
     assert!(
@@ -560,11 +695,101 @@ fn local_corpus_converts_to_pdfa() {
     eprintln!("local corpus PDF/A:\n{HEADER}");
     for file in &files {
         let row = convert_and_check(file, "-", &mut failures);
-        eprintln!("{}", format_row(&name_of(file), &row));
+        eprintln!("{}", format_row(&name_of(file), platform(), &row));
     }
     assert!(
         failures.is_empty(),
         "the local corpus broke a PDF/A invariant:\n  {}",
         failures.join("\n  ")
     );
+}
+
+// ---------------------------------------------------------------------------
+// The platform column itself. These need no PDF: they are about the file the
+// gate reads and writes, which is where the cross-platform bug lived.
+// ---------------------------------------------------------------------------
+
+/// Two rows for the same document from two machines, as the file carries them.
+fn two_platform_sample() -> String {
+    let darwin = "doc-a\tdarwin\t2b\ttrue\t1\t1\t50\t50\t1.0000\t1000\t2000\t2.0000\ttrue\tfalse\t1\t0\t1\t0\t6.6.2.1\tblessed on the laptop";
+    let linux = "doc-a\tlinux\t2b\ttrue\t1\t1\t50\t50\t1.0000\t1000\t3000\t3.0000\ttrue\tfalse\t1\t0\t1\t0\t6.6.2.1\tblessed on the runner";
+    format!("{HEADER}\n{darwin}\n{linux}\n")
+}
+
+#[test]
+fn a_baseline_holds_one_row_per_document_per_platform() {
+    let rows = parse_baseline(&two_platform_sample());
+    assert_eq!(
+        rows.len(),
+        2,
+        "keying by document alone keeps whichever platform came last in the file"
+    );
+    let darwin = rows
+        .get(&("doc-a".to_string(), "darwin".to_string()))
+        .expect("darwin row");
+    let linux = rows
+        .get(&("doc-a".to_string(), "linux".to_string()))
+        .expect("linux row");
+    assert_eq!(darwin.bytes_out, 2000);
+    assert_eq!(linux.bytes_out, 3000);
+    assert!((linux.size_ratio - 3.0).abs() < 1e-9);
+}
+
+#[test]
+fn blessing_one_platform_leaves_the_other_platforms_numbers_alone() {
+    let existing = parse_baseline(&two_platform_sample());
+    let measured = vec![(
+        "doc-a".to_string(),
+        Row {
+            level: "2b".to_string(),
+            converts: true,
+            pages_in: 1,
+            pages_out: 1,
+            words_in: 50,
+            words_out: 50,
+            retention: 1.0,
+            bytes_in: 1000,
+            bytes_out: 2500,
+            size_ratio: 2.5,
+            compliant: true,
+            engine_compliant: false,
+            error_count: 1,
+            warning_count: 0,
+            report_warnings: 1,
+            stamped_pages: 0,
+            first_error: "6.6.2.1".to_string(),
+            note: "re-measured on the runner".to_string(),
+        },
+    )];
+
+    let written = merge_for_bless(&existing, &measured, "linux");
+    let reparsed = parse_baseline(&written.join("\n"));
+
+    assert_eq!(
+        reparsed
+            .get(&("doc-a".to_string(), "darwin".to_string()))
+            .expect("the darwin row must survive a linux bless")
+            .bytes_out,
+        2000,
+        "a bless on one machine must not overwrite another machine's numbers"
+    );
+    assert_eq!(
+        reparsed
+            .get(&("doc-a".to_string(), "linux".to_string()))
+            .expect("linux row")
+            .bytes_out,
+        2500,
+        "the platform that ran must be updated"
+    );
+    assert_eq!(written[0], HEADER, "the header stays the first line");
+}
+
+#[test]
+fn the_platform_is_named_the_way_the_axis_files_name_it() {
+    // `quality/axes/*.tsv` and the run files use these three spellings; a
+    // baseline that said "macos" would be a second vocabulary for one fact.
+    assert!(matches!(platform(), "darwin" | "linux" | "windows"));
+    if cfg!(target_os = "macos") {
+        assert_eq!(platform(), "darwin");
+    }
 }

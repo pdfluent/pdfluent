@@ -197,6 +197,21 @@ driver_s4_probes() {
   echo $? > "${WORK}/probes/updater_payload.rc"
 }
 
+# The UI walk has no way in on this platform.
+#
+# Driving the interface from outside needs a debuggable web view, and a release
+# build does not ship one: the `devtools` feature is off, so WKWebView is not
+# inspectable and there is no protocol to attach to. The product has no headless
+# mode and no automation surface either, and adding one to reach this step would
+# ship an automation surface to every user in order to test it.
+#
+# So the walk is not done here, and every registered control gets a SKIPPED row
+# with this reason rather than no row at all. The report is INCOMPLETE and says
+# why, which is the honest state until the platform gets a way in.
+driver_ui_walk() {
+  UI_WALK_GAP="a release build ships no inspectable web view, so there is no way in to drive the interface of the installed application from outside"
+}
+
 driver_gaps() {
   [ -x "${REPO_ROOT}/scripts/quality/offline-runtime-check.sh" ] || \
     printf 'S3|offline:denied|offline|scripts/quality/offline-runtime-check.sh is not in this checkout, so no run with the network denied was made\n'

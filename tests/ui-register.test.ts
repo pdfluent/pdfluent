@@ -20,11 +20,14 @@
  */
 
 import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 import {
   buildIndex,
   buildRegister,
+  codeTokens,
+  findProof,
   gate,
   keyIsHandled,
   liveSurfaces,
@@ -38,6 +41,7 @@ import {
   resolveEffects,
   runnableText,
   shortcutLiterals,
+  stripComments,
   switchCases,
   wiredTiles,
   GENERATED_TS_PATH,
@@ -291,6 +295,179 @@ describe('a skipped test is not proof', () => {
     // it as proof that the export button was wired.
     expect(SPEC).toContain('export-btn');
     expect(runnable).not.toContain('export-btn');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Prose is not proof
+// ---------------------------------------------------------------------------
+
+/**
+ * The register once read a doc comment as evidence that a control works.
+ *
+ * A shortcut was proven by two fragments -- the key character and the word
+ * `key` -- found anywhere in a test file. `tests/declared-skips.test.ts` has
+ * `title: 's'` in a fixture and, for one afternoon in September 2026, the word
+ * "keys" in a doc comment, and that was enough to list it as the proof of
+ * Cmd+S. Rewording the comment removed the row, which is the whole problem: the
+ * answer depended on prose.
+ *
+ * What the walker reads now is what the test runs. Comments are blanked. A
+ * string counts where it is evaluated -- an argument of a call, or inside an
+ * object or array that is itself an argument -- and a table the test loops over
+ * counts too, because those rows are the test's input. A sample document held
+ * in a template is text, whoever reads it.
+ *
+ * The fixtures below are module-scope arrays of lines on purpose: under that
+ * same rule they are data, so this file cannot become proof of what it names.
+ */
+describe('prose and data are not proof', () => {
+  const SHORTCUT = { kind: 'shortcut', id: 'demo (F13)', literals: ['F13'] };
+  const TILE = { kind: 'tile', id: 'toolbar.demoTile', commands: [] };
+  const BUTTON = { kind: 'button', id: 'demo-btn', commands: [] };
+  const proofOf = (a: unknown, source: string) =>
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    findProof(a as any, new Map([['tests/demo.test.ts', source]]));
+
+  const IN_A_COMMENT = [
+    "import { expect, it } from 'vitest';",
+    '',
+    "it('renders the shell', () => {",
+    '  expect(shellSource).toContain(',
+    "    // the key handler answers case 'F13' here -- see the shortcut sheet",
+    "    'ShellRoot',",
+    '  );',
+    '});',
+  ].join('\n');
+
+  const IN_A_FIXTURE = [
+    "import { expect, it } from 'vitest';",
+    '',
+    "it('lints a sample handler', () => {",
+    '  const SAMPLE = [',
+    '    "case \'F13\':",',
+    "    'setMode(read);',",
+    '  ];',
+    '  for (const line of SAMPLE) expect(lint(line)).toHaveLength(0);',
+    '});',
+  ].join('\n');
+
+  const IN_A_TYPE_AND_A_TABLE = [
+    "import { expect, it } from 'vitest';",
+    '',
+    "type DemoKey = 'F13' | 'Escape';",
+    '',
+    "it('renders a heading per key', () => {",
+    '  const HEADINGS: Record<DemoKey, string> = {',
+    "    'F13': 'Advertised keyboard shortcuts',",
+    "    'Escape': 'Close',",
+    '  };',
+    '  expect(Object.keys(HEADINGS)).toHaveLength(2);',
+    '});',
+  ].join('\n');
+
+  const IN_AN_ASSERTION = [
+    "import { expect, it } from 'vitest';",
+    '',
+    "it('sends the demo key to the handler', () => {",
+    '  expect(effectBody).toContain("case \'F13\'");',
+    '});',
+  ].join('\n');
+
+  const A_BARE_CHARACTER = [
+    "import { expect, it } from 'vitest';",
+    '',
+    "it('mentions the character somewhere in the block', () => {",
+    '  expect(effectBody).toContain("\'F13\'");',
+    '});',
+  ].join('\n');
+
+  const A_TABLE_IT_LOOPS_OVER = [
+    "import { expect, it } from 'vitest';",
+    '',
+    'const UNIVERSAL = [',
+    "  'toolbar.demoTile',",
+    "  'toolbar.other',",
+    '];',
+    '',
+    "it('offers every universal tile', () => {",
+    '  for (const tile of UNIVERSAL) expect(offered.has(tile)).toBe(true);',
+    '});',
+  ].join('\n');
+
+  const A_SAMPLE_SPEC_IN_A_TEMPLATE = [
+    "import { expect, it } from 'vitest';",
+    '',
+    'const SPEC_FIXTURE = `',
+    'test("exports", async ({ page }) => {',
+    '  await page.locator(\'[data-testid="demo-btn"]\').click();',
+    '});',
+    '`;',
+    '',
+    "it('reports the unchecked click in the fixture', () => {",
+    '  expect(lint(SPEC_FIXTURE)).toHaveLength(1);',
+    '});',
+  ].join('\n');
+
+  it('reads nothing from a comment', () => {
+    expect(IN_A_COMMENT).toContain(String.raw`case 'F13'`);
+    expect(proofOf(SHORTCUT, IN_A_COMMENT)).toHaveLength(0);
+  });
+
+  it('reads nothing from a sample handler a test carries as data', () => {
+    expect(proofOf(SHORTCUT, IN_A_FIXTURE)).toHaveLength(0);
+  });
+
+  it('reads nothing from a type or a lookup table', () => {
+    expect(proofOf(SHORTCUT, IN_A_TYPE_AND_A_TABLE)).toHaveLength(0);
+  });
+
+  it('reads nothing from a bare key character, which names no binding', () => {
+    expect(proofOf(SHORTCUT, A_BARE_CHARACTER)).toHaveLength(0);
+  });
+
+  it('still reads an assertion about the key handler', () => {
+    expect(proofOf(SHORTCUT, IN_AN_ASSERTION)).toHaveLength(1);
+  });
+
+  it('still reads the table of ids a test loops over', () => {
+    expect(proofOf(TILE, A_TABLE_IT_LOOPS_OVER)).toHaveLength(1);
+  });
+
+  it('reads nothing from a sample spec a lint test holds in a template', () => {
+    // This one is not hypothetical: the fixture in
+    // tests/no-silent-failures-lint.test.ts names the export button, and
+    // reading it would have made `button:export-btn` wired -- the one control
+    // recorded as untested because its only test never runs.
+    expect(proofOf(BUTTON, A_SAMPLE_SPEC_IN_A_TEMPLATE)).toHaveLength(0);
+  });
+
+  it('gives the same answer when a comment is reworded', () => {
+    // The reproduction from pdfluent-internal#459, against the real file: this
+    // one has `title: 's'` in a fixture, and on 2026-09-08 a doc comment in it
+    // used the word "keys". That was accepted as the proof of Cmd+S, and
+    // rewording the comment took the row away again.
+    const file = readFileSync(join(REPO, 'tests/declared-skips.test.ts'), 'utf8');
+    const reworded = `// the reporter keys its suites by title\n${file}`;
+    const save = { kind: 'shortcut', id: 'save (⌘S / Ctrl+S)', literals: ['s'] };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const seen = new Map([['tests/declared-skips.test.ts', reworded]]);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    expect(findProof(save as any, seen)).toHaveLength(0);
+  });
+
+  it('blanks a comment character for character, so offsets still line up', () => {
+    const stripped = stripComments(IN_A_COMMENT);
+    expect(stripped).toHaveLength(IN_A_COMMENT.length);
+    expect(stripped.split('\n')).toHaveLength(IN_A_COMMENT.split('\n').length);
+    expect(stripped).toContain("toContain(");
+    expect(stripped).not.toContain('shortcut sheet');
+  });
+
+  it('leaves a division and a regular expression alone', () => {
+    const source = ['const half = total / 2;', 'const rx = /a\\/b/;'].join('\n');
+    expect(stripComments(source)).toBe(source);
+    expect(codeTokens(source)).toBe(source);
   });
 });
 

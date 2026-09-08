@@ -158,15 +158,18 @@ describe('editor UI terminology guard', () => {
 
   it('is wired into a pipeline that a branch push actually starts', () => {
     // The point of the previous rounds of this work was a guard that existed
-    // and ran nowhere: the GitHub workflow fires on a remote this repository
-    // does not push to, and the GitLab pipeline used to run on tags and merge
-    // requests only. The editor lands on release/ga-readiness by push.
-    const ci = readFileSync(join(ROOT, '.gitlab-ci.yml'), 'utf8');
-    expect(ci).toContain("$CI_COMMIT_BRANCH =~ /^(main|release\\/)/");
-    const fastJob = ci.slice(ci.indexOf('quality-gates-fast:'), ci.indexOf('quality-gates:'));
-    expect(fastJob).toContain('$CI_COMMIT_BRANCH =~ /^(main|release\\/)/');
-    // Unfiltered: a path argument here would drop the guards again.
-    expect(fastJob).toContain('npx vitest run\n');
+    // and ran nowhere: the pipeline used to run on tags and merge requests
+    // only. The editor lands on release/ga-readiness by push, so that is the
+    // trigger the guard has to sit behind.
+    const ci = readFileSync(join(ROOT, '.github/workflows/quality.yml'), 'utf8');
+    expect(ci).toMatch(/^on:\n {2}push:\n {4}branches:\n {6}- main\n {6}- "release\/\*\*"\n {2}pull_request:$/m);
+    const fastJob = ci.slice(ci.indexOf('  quality-gates-fast:'), ci.indexOf('  repo-truth:'));
+    // Unfiltered: a path argument here would drop the guards again. Flags are
+    // fine (worker caps, reporters); a path is not, and that is the difference
+    // this checks rather than pinning the whole command line.
+    const vitest = /^ +- run: npx vitest run(.*)$/m.exec(fastJob);
+    expect(vitest, 'the fast gate no longer runs the suite').not.toBeNull();
+    expect(vitest![1].split(/\s+/).filter(Boolean).every(arg => arg.startsWith('-'))).toBe(true);
   });
 
   it('keeps the licence-seat model out of the frontend', () => {

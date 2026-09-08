@@ -38,7 +38,7 @@ export function foldVerdict(steps, { couldNotRun = false } = {}) {
   return VERDICTS.PASS;
 }
 
-const STEP_ORDER = ["S0", "S1", "S2", "S3", "S4"];
+const STEP_ORDER = ["S0", "S1", "S2", "S3", "S4", "S5"];
 
 export function buildReport(meta, rawSteps) {
   // Rows are appended as they are judged, and the gaps a platform declares come

@@ -68,4 +68,14 @@ if (manifest && !problems.length) {
 }
 
 if (problems.length) bail(`the golden set does not match its baseline:\n  · ${problems.join("\n  · ")}`);
-process.stdout.write(JSON.stringify({ count: rows.length, verified_by: verifiedBy }));
+// With --with-version the first line is package.json's version and the second
+// is the golden summary. One node start instead of two: the preflight needed
+// both facts and paid a full interpreter boot for each, thirteen times over in
+// the suite's own cases.
+const summary = JSON.stringify({ count: rows.length, verified_by: verifiedBy });
+if (process.argv.includes("--with-version")) {
+  const version = JSON.parse(readFileSync(path.join(root, "package.json"), "utf8")).version;
+  process.stdout.write(`${version}\n${summary}`);
+} else {
+  process.stdout.write(summary);
+}

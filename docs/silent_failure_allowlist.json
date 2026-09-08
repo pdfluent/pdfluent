@@ -111,7 +111,7 @@
     {
       "file": "src-tauri/src/lib.rs",
       "kind": "discarded-result",
-      "code": "let _ = writeln!(f, \"[{ts}] {msg}\");",
+      "code": "let _ = writeln!(f, \"[{secs}.{millis:03}] {msg}\");",
       "count": 1,
       "reason": "writing to the app log itself. Logging is what runs when something has already gone wrong, so it must not become the next thing that goes wrong."
     },
@@ -877,6 +877,20 @@
       "code": "test.skip(true, 'v3-arch-gap: Protect is not exposed as a mode tab in browser-test; ModeSwitcher BROWSER_TEST_TABS only includes Read/Edit/Convert/Sign — rewrite needed');",
       "count": 1,
       "reason": "browser-test exposes only Read/Edit/Convert/Sign as mode tabs, so the test cannot reach Protect. Same coverage note as the Organize case."
+    },
+    {
+      "file": "src-tauri/src/lib.rs",
+      "kind": "unwrap-or-default",
+      "code": ".unwrap_or_default();",
+      "count": 1,
+      "reason": "the wall clock read for a log timestamp. A clock before the Unix epoch gives a zero stamp; refusing to log the line instead would lose the message the stamp was for."
+    },
+    {
+      "file": "src-tauri/src/perf.rs",
+      "kind": "discarded-result",
+      "code": "let _ = T0.set(Instant::now());",
+      "count": 1,
+      "reason": "OnceLock::set fails only when the clock was already started, which is exactly the outcome wanted: the first call wins so a second run() cannot move the origin under a session that is already being measured."
     }
   ]
 }

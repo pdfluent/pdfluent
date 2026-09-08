@@ -72,7 +72,7 @@ if (legacyEntries) {
   }
 
   console.log(
-    `License check passed (${legacyEntries.length} entries, generated ${report.generatedAt || "unknown"}).`,
+    `License check passed (${legacyEntries.length} entries).`,
   );
   process.exit(0);
 }
@@ -130,7 +130,7 @@ if (externalItems) {
   }
 
   console.log(
-    `License check passed (${externalItems.length} entries, generated ${report.generatedAt || "external-report"}).`,
+    `License check passed (${externalItems.length} entries).`,
   );
   process.exit(0);
 }

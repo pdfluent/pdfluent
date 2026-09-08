@@ -138,6 +138,7 @@ export class TauriTextMutationEngine implements TextMutationEngineWithFormatting
           fontSubstituted: result.font_substituted,
           fitApplied: result.fit_applied,
           signaturesPresent: result.signatures_present,
+          usageRightsInvalidated: result.usage_rights_invalidated,
           tagsAffected: result.tags_affected,
           diagnostics: result.diagnostics,
         },

@@ -56,6 +56,28 @@ export function announceXfaStaticWrite(): AppError {
   });
 }
 
+/**
+ * The edit landed and took the document's Reader enablement with it.
+ *
+ * A `/Perms /UR3` signature grants features to whoever opens the file — filling
+ * in and saving a form, commenting — rather than attesting to its content, so
+ * the writer edits over it on purpose; refusing would make every Reader-enabled
+ * form read-only. What it cannot do is keep it: the edit moves bytes the
+ * signature's `/ByteRange` covers. Acrobat warns and proceeds, and so do we.
+ *
+ * A warning, not an error: the change the user asked for is in the document.
+ * Once per document, because the rights are only there to lose once.
+ */
+export function announceUsageRightsInvalidated(): AppError {
+  return reportFallback({
+    source: 'replace_text_span',
+    title: i18n.t('fallbacks.usageRightsInvalidatedTitle'),
+    message: i18n.t('fallbacks.usageRightsInvalidatedMessage'),
+    code: 'USAGE_RIGHTS_INVALIDATED',
+    taxonomy: 'validation_failure.signature_invalid',
+  });
+}
+
 /** A capability this build was compiled without, named rather than implied. */
 export function announceFeatureUnavailable(feature: string, detail: string): AppError {
   return reportFallback({

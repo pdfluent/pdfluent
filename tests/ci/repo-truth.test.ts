@@ -40,12 +40,17 @@ afterAll(() => rmSync(scratch, { recursive: true, force: true }));
  * entry into a fresh index. The second shape passed alone and failed inside the
  * full suite, dropping half the entries: spawnSync's stdin does not reliably
  * carry a thousand lines while three hundred other test files are running.
+ *
+ * `alsoDrop` removes published paths as well, which is how a case builds a
+ * public side that differs from what it claims instead of hoping some commit
+ * in the recent past differs from this one.
  */
-function fakePublic(ref: string, message: string): string {
+function fakePublic(ref: string, message: string, alsoDrop: string[] = []): string {
   const index = join(scratch, `index-${Math.random().toString(36).slice(2)}`);
   const withIndex = { cwd: root, encoding: "utf8" as const, env: { ...process.env, GIT_INDEX_FILE: index } };
   const all = git(["ls-tree", "-r", "--name-only", ref]).split("\n").filter(Boolean);
-  const drop = all.filter((p) => !publishedPaths.has(p));
+  const extra = new Set(alsoDrop);
+  const drop = all.filter((p) => !publishedPaths.has(p) || extra.has(p));
   execFileSync("git", ["read-tree", ref], withIndex);
   execFileSync("git", ["update-index", "--force-remove", "--stdin"], { ...withIndex, input: drop.join("\n") + "\n" });
   const tree = execFileSync("git", ["write-tree"], withIndex).trim();
@@ -79,7 +84,16 @@ describe("what people can read is what they run", () => {
 
   it("fails when the public side carries a different tree than it claims", () => {
     const head = git(["rev-parse", "HEAD"]);
-    const r = guard(fakePublic("HEAD~3", `Publish\n\nPublished-from: ${head}\n`));
+    // The difference is made here rather than borrowed from history. This case
+    // used to publish the tree of HEAD~3 while claiming HEAD, which only differs
+    // if one of those three commits happened to touch a published file. Three
+    // internal-only commits in a row -- a baseline measurement and a CI change,
+    // both under paths PUBLIC_TREE calls internal -- left the two trees
+    // identical, so the guard correctly reported no mismatch and the case went
+    // red for having nothing to detect.
+    const dropped = [...publishedPaths].sort()[0];
+    expect(dropped, "no published paths, so this case would assert nothing").toBeTruthy();
+    const r = guard(fakePublic("HEAD", `Publish\n\nPublished-from: ${head}\n`, [dropped]));
     expect(r.status).toBe(1);
     expect(r.out).toContain("does not carry what it claims");
   });

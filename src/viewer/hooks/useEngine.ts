@@ -8,6 +8,7 @@
 import { useEffect, useState } from 'react';
 import { runtimeAdapterFactory } from '../../platform/runtime/RuntimeAdapterFactory';
 import type { PdfEngine } from '../../core/engine/PdfEngine';
+import { perfMark } from '../performance/perfMarks';
 
 interface UseEngineResult {
   engine: PdfEngine | null;
@@ -55,6 +56,7 @@ export function useEngine(): UseEngineResult {
         clearTimeout(watchdog);
 
         if (initResult.success) {
+          perfMark('engine_ready');
           setEngine(e);
           setTimedOut(false);
         } else {

@@ -5,13 +5,25 @@
 // of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
-const ci = readFileSync(join(ROOT, ".gitlab-ci.yml"), "utf8");
+
+// The runner is a shell executor, and everything a job does to the machine
+// outlives the job unless it is scoped. Read the whole pipeline, not one file:
+// the credential rewrite lives in the composite action and the jobs that use it
+// live in the workflows.
+const WORKFLOWS = join(ROOT, ".github/workflows");
+const sources = [
+  ...readdirSync(WORKFLOWS)
+    .filter((name) => name.endsWith(".yml"))
+    .map((name) => join(WORKFLOWS, name)),
+  join(ROOT, ".github/actions/sdk-pin/action.yml"),
+];
+const ci = sources.map((file) => readFileSync(file, "utf8")).join("\n");
 
 /** Configuration lines, with comments and blank lines removed. */
 function statements(): string[] {
@@ -37,15 +49,17 @@ describe("the runner keeps nothing a job leaves behind", () => {
   });
 
   it("scopes every scratch path under /tmp to the job", () => {
-    // Two Rust jobs run at once on this runner. A shared /tmp/engine-pin-check
-    // meant one job's `rm -rf` deleted the directory the other was fetching
-    // into, and the failure it produced said "the revision is not on the
-    // mirror" — a true-sounding lie about a different machine.
+    // A shared /tmp/engine-pin-check meant one job's `rm -rf` deleted the
+    // directory another was fetching into, and the failure it produced said
+    // "the revision is not on the mirror" — a true-sounding lie about a
+    // different machine. One runner makes the jobs serial today; a second one
+    // is a `svc.sh install` away, and this is what keeps that from being a
+    // discovery.
     const offenders = statements()
       .filter((line) => line.includes("/tmp/"))
       .filter((line) => {
         const paths = line.match(/\/tmp\/[A-Za-z0-9_.${}/-]*/g) ?? [];
-        return paths.some((path) => !path.includes("${CI_JOB_ID}") && !path.includes("$CI_JOB_ID"));
+        return paths.some((path) => !/GITHUB_RUN_ID|GITHUB_JOB|CI_JOB_ID/.test(path));
       });
     expect(
       offenders,

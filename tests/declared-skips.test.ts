@@ -138,7 +138,7 @@ describe('what fails the job', () => {
 
 describe('this checkout', () => {
   it('runs the checker in the Playwright job, on a report the job writes', () => {
-    const ci = readFileSync(new URL('../.gitlab-ci.yml', import.meta.url), 'utf8');
+    const ci = readFileSync(new URL('../.github/workflows/quality.yml', import.meta.url), 'utf8');
     expect(ci).toContain('PLAYWRIGHT_JSON_OUTPUT_NAME=playwright-report.json');
     expect(ci).toContain('node scripts/quality/declared-skips.mjs playwright-report.json');
   });

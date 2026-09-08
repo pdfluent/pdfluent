@@ -69,14 +69,61 @@ treating the CI project as the only place the trunk lives:
   notes repository, not this one: the landing script drives this repository from
   outside it.)
 - **`scripts/ci/remotes-agree.mjs` runs in `quality-gates-fast` on the trunk** and
-  asks whether the commit CI is testing is contained in the primary's trunk.
-  Behind is red; ahead is fine. It is the half that notices when something else
-  writes GitLab anyway — a push by hand, a landing finished manually, this
-  script edited back.
+  asks whether the commit CI is testing is contained in the *other* copy.
+  Behind is red; ahead is fine. Which copy that is depends on where the gate
+  runs: it lived on GitLab and asked about GitHub, and since #465 it runs on
+  GitHub and asks about the GitLab backup — pointed at the host it runs on it
+  would be asking whether a commit is where it obviously is. It reads the backup
+  with a deploy token that can do nothing but read that one repository, and it
+  redacts every URL it prints, because a token in a job log has left the
+  building. It is the half that notices when something writes one copy and not
+  the other: a push by hand, a landing finished manually, this script edited
+  back.
+
+Between them those two cover different failures, and it is worth being precise
+about which. The landing script is what makes both copies happen, and it checks
+its own work by reading each push back — but a script that has been edited,
+bypassed or run from an older checkout cannot report on itself, and that is what
+the gate above is for. The gate in turn only sees what reaches CI, so a push
+that never triggers a pipeline is invisible to it; the nightly GitHub-to-GitLab
+mirror and its `STATUS.md` are the backstop for that, one night later.
 - **`pdfluent-editor` is deliberately NOT on the nightly mirror's list.** The
   mirror force-pushes GitHub's state, which on the CI project would overwrite an
   in-flight landing. `pdfluent-internal` is on the list, so once the trunk is on
   GitHub the GitLab copy is refreshed from it anyway.
+
+### The tags
+
+All 45 tags are on the primary as of 2026-09-08, and every one of them is an
+annotated tag whose tagger is the `@users.noreply.github.com` alias. That is not
+tidiness. GitHub refuses a ref whose tip would publish a private address
+(`GH007`) and judges the **tip**, not the history — which is why the trunk goes
+through on a tip written with the alias while 300 of its commits carry a
+personal one, and why `rc30` did not:
+
+    ! [remote rejected] rc30 -> rc30 (push declined due to email privacy restrictions)
+
+44 of the 45 were lightweight tags. A lightweight tag has no tagger, so GitHub
+judges the commit it points at, and every tag older than the switch to the alias
+points at a commit with a personal address. An annotated tag carries its own
+tagger and is accepted on the strength of that, even on an old commit — measured
+before the work, not assumed. So each tag was re-made at **the same commit**,
+with the alias as tagger and the tag's date taken from that commit rather than
+from the day of the repair:
+
+    GIT_COMMITTER_DATE="$(git log -1 --format=%cI "$name^{commit}")" \
+      git -c user.email=<alias> tag -a -f -m "<what it is>" "$name" "$name^{commit}"
+
+`scripts/ci/tags-are-pushable.mjs` refuses a tag that is not one of those, in the
+fast gate, so a new release tag cannot repeat it. **The repair is never to switch
+off the account setting that blocks the push.** That setting is the only thing
+standing between a personal address and a repository we mean to keep clean;
+turning it off publishes every address that follows.
+
+**GitLab keeps its lightweight tags.** Re-pointing them there would rewrite what
+a release was built from for no gain, so the two remotes agree on every tag's
+target commit and disagree on the object type of 44 of them. Written down here
+rather than discovered later.
 
 **Tags do not travel with a landing.** The first version of this pushed the
 branch with `--follow-tags`, which also offers every annotated tag reachable
@@ -87,9 +134,8 @@ the branch arrived, one tag from June was rejected, `git push` exited non-zero,
 and a landing that had in fact landed reported `github-push-failed` and skipped
 GitLab. So a landing pushes the branch and nothing else, and
 `scripts/cos/tests/editor_land_remotes.sh` holds a case against a remote that
-takes branches and refuses tags. Getting the existing tags onto the primary is a
-separate job: they have to be re-made with the no-reply alias first, the same
-rule `scripts/ci/publish-public-snapshot.mjs` already applies to commits.
+takes branches and refuses tags. Getting the existing tags onto the primary was
+its own job, done on 2026-09-08 and written up above.
 
 The runner has a GitLab token and no GitHub credential — which is a large part
 of how this happened — so the guard reads the primary through a **read-only
@@ -196,7 +242,8 @@ tree rule, the one that does gate publication, is built into
 | `scripts/ci/public-tree.mjs` | a manifest entry without a reason, or one that matches no file any more |
 | `scripts/ci/internal-terms.mjs` | commercial statements, customer and partner names, and our own machines and key stores, in a message or in a published file. Technique goes through: `password` is a feature here and `Adobe` is a fact about the world |
 | `scripts/ci/legacy-shell-fenced.mjs` | a production bundle containing the retired V1 shell |
-| `scripts/ci/remotes-agree.mjs` | a trunk commit that reached CI without reaching the primary remote, and a run that could not read the primary at all |
+| `scripts/ci/remotes-agree.mjs` | a trunk commit that reached CI without reaching the other copy of the trunk, and a run that could not read that copy at all |
+| `scripts/ci/tags-are-pushable.mjs` | a tag the primary would refuse: a lightweight one, or an annotated one made with a personal address |
 | `scripts/ci/publish-public-snapshot.mjs` | building a snapshot git would sign with a personal address. The public side has that rule too, in its own CI — but there it runs after the push, with the address already published |
 
 ## The binaries were judged before they were published

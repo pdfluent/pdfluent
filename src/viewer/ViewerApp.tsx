@@ -22,6 +22,8 @@ import type { AppSettings } from './state/appSettings';
 import { useEngine } from './hooks/useEngine';
 import { useDocument } from './hooks/useDocument';
 import { useThumbnails } from './hooks/useThumbnails';
+import type { DocumentRevision } from './state/documentRevision';
+import { EMPTY_REVISION, bumpAll, bumpPages, pageRevision } from './state/documentRevision';
 import { useRecentFiles } from './hooks/useRecentFiles';
 import { useModeManager } from './hooks/useModeManager';
 import { useZoomControls } from './hooks/useZoomControls';
@@ -155,13 +157,18 @@ export function ViewerApp() {
 
   const renderFallback = useRenderTelemetry();
 
-  const [documentVersion, setDocumentVersion] = useState(0);
+  // What changed, not "something changed". A text commit names its page, so
+  // one edit no longer re-renders and re-thumbnails the whole document.
+  const [revision, setRevision] = useState<DocumentRevision>(EMPTY_REVISION);
+  const [contentRevision, setContentRevision] = useState(0);
+  const documentVersion = revision.all;
+  const bumpDocument = useCallback(() => { setRevision(r => bumpAll(r)); }, []);
   const [currentFilePath, setCurrentFilePath] = useState<string | null>(null);
 
   // TTS word highlight: charIndex in readAloudText, -1 = not active
   const [ttsCharIndex, setTtsCharIndex] = useState(-1);
   const { pageIndex, setPageIndex } = usePageNavigation(pageCount, currentFilePath);
-  const { thumbnails } = useThumbnails(engine, pdfDoc, pageCount, documentVersion, pageIndex);
+  const { thumbnails } = useThumbnails(engine, pdfDoc, pageCount, revision, pageIndex);
 
   // Smart initial loading: expand render window progressively so the first page
   // appears as fast as possible. Window starts at INITIAL_RADIUS, then expands
@@ -483,7 +490,7 @@ export function ViewerApp() {
   // XFA fill model (Phase 2 interactive commit loop) — only for dynamic XFA docs.
   const xfaForm = useXfaFormModel(
     pdfDoc, markDirty, setPageIndex, pushUndo,
-    () => setDocumentVersion(v => v + 1),
+    bumpDocument,
   );
   const [highlightFields, setHighlightFields] = useState(true);
   // Capability-based link trust: null = ask on first use; true = auto-open
@@ -603,11 +610,12 @@ export function ViewerApp() {
     setOutline, setFormFields, setActiveFieldIdx, documentEventLog,
   );
 
-  // Wrap raw reorder to also bump documentVersion so thumbnails regenerate.
+  // Wrap raw reorder to also bump the revision so thumbnails regenerate.
+  // Document-wide: after a reorder no page is where it was.
   const handleReorderPages = useCallback(async (newOrder: number[]) => {
     await handleReorderPagesRaw(newOrder);
-    setDocumentVersion(v => v + 1);
-  }, [handleReorderPagesRaw]);
+    bumpDocument();
+  }, [handleReorderPagesRaw, bumpDocument]);
 
   // Rust mutations publish a fresh immutable render snapshot in-place. Bump
   // the revision so canvases, thumbnails, and text models consume that
@@ -615,9 +623,21 @@ export function ViewerApp() {
   // on-disk document before the user has saved.
   const handleRequestedPanelHandled = useCallback(() => { setRequestedPanel(null); }, []);
 
-  const handleDocumentMutated = useCallback(() => {
-    setDocumentVersion(v => v + 1);
+  // `pages` names the pages a mutation touched. A text commit passes its one
+  // page; anything that cannot name its pages falls back to document-wide,
+  // which is the old behaviour and still correct, only slower.
+  const handleDocumentMutated = useCallback((pages?: number[]) => {
+    setRevision(r => (pages && pages.length > 0 ? bumpPages(r, pages) : bumpAll(r)));
+    // A flat count of content changes, separate from the per-page render
+    // revision above: the Sign panel does not care which page moved, only that
+    // the bytes a signature covers no longer are what they were.
+    setContentRevision(n => n + 1);
   }, []);
+
+  // Per document, not per session. Keyed on the document object rather than its
+  // path: a "Save as" gives the same document a new path and has not undone
+  // anything that was done to it.
+  useEffect(() => { setContentRevision(0); }, [pdfDoc]);
 
   // Stable ref so handleDeleteCurrentPage (used early in useKeyboardShortcuts) can
   // call handlePageMutation without a forward-reference TS error.
@@ -674,8 +694,9 @@ export function ViewerApp() {
     authorName,
     setDocumentEventLog,
     setAppErrors,
-    () => { setDocumentVersion(v => v + 1); },
+    handleDocumentMutated,
     handleExternalLinkClick,
+    pdfDoc,
   );
 
   // Derived text for Text-to-Speech (Voorlezen), sorted in logical block/column reading order
@@ -777,7 +798,10 @@ export function ViewerApp() {
       }
     });
     return () => { cancelled = true; };
-  }, [pageIndex, pdfDoc?.id, documentVersion]); // eslint-disable-line react-hooks/exhaustive-deps
+    // Keyed on this page's own revision: an edit on another page cannot change
+    // the spans here, and re-extracting them cost a backend interpret of the
+    // page for nothing.
+  }, [pageIndex, pdfDoc?.id, pageRevision(revision, pageIndex)]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Load page labels when a new document is opened.
   useEffect(() => {
@@ -1070,12 +1094,12 @@ export function ViewerApp() {
     } else {
       setPageIndex(prev => Math.min(prev, Math.max(0, newPageCount - 1)));
     }
-    setDocumentVersion(v => v + 1);
+    bumpDocument();
     markDirty();
     setDocumentEventLog(prev => appendEvent(prev, makeDocumentEvent(
       'page_mutated', authorName, navigateTo ?? -1, '', i18n.t('events.pageMutated')
     )));
-  }, [updatePageCount, authorName, markDirty]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [updatePageCount, authorName, markDirty, bumpDocument]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Wire the ref so handleDeleteCurrentPage (declared earlier) can call handlePageMutation.
   handlePageMutationRef.current = handlePageMutation;
@@ -1087,7 +1111,7 @@ export function ViewerApp() {
     const result = await engine.transform.flattenXfa(pdfDoc);
     if (result.success) {
       replaceDocument(result.value, true);
-      setDocumentVersion(v => v + 1);
+      bumpDocument();
       setPageIndex(0);
       setDocumentEventLog(prev => appendEvent(prev, makeDocumentEvent(
         'page_mutated', authorName || 'User', -1, '', i18n.t('xfa.convertedToStandard')
@@ -1321,6 +1345,7 @@ export function ViewerApp() {
           onWatermark={() => { setMode('protect'); setAllToolsOpen(false); }}
           onCheckForUpdates={handleCheckForUpdates}
           onDocumentMutated={handleDocumentMutated}
+          contentRevision={contentRevision}
           requestedPanel={requestedPanel}
           onRequestedPanelHandled={handleRequestedPanelHandled}
           onAuthorChange={handleAuthorChange}
@@ -1532,7 +1557,7 @@ export function ViewerApp() {
                           onSelectionComment={isCurrentPage ? handleAddComment : undefined}
                           isEditMode={mode === 'edit'}
                           renderFallback={renderFallback}
-                          renderRevision={documentVersion}
+                          renderRevision={pageRevision(revision, i)}
                           ttsHighlightSpanIndex={isCurrentPage ? ttsHighlightSpanIndex : -1}
                         />
                         {isCurrentPage && mode !== 'edit' && shouldShowContextBar(mode, selectedTextTarget) && selectedTextTarget && !editingTextTargetId && (

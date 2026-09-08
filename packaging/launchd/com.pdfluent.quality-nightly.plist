@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
+
+  This software is proprietary. The PDFluent application is free to use,
+  including for commercial purposes. Redistribution, or extraction or reuse
+  of its components (including the embedded PDF engine), requires a licence.
+  See https://pdfluent.com/license for terms.
+
+  The nightly release-suite run.
+
+  Installed by scripts/quality/install-nightly.sh, which fills in the paths — a
+  launch agent takes absolute paths and this file is checked in, so it ships
+  placeholders rather than one machine's home directory. The checkout it points
+  at is the nightly's own, outside the folders the privacy system gates and
+  outside anybody's working tree, which is why --refresh may reset it.
+
+  PATH is set here, system tools first, on purpose. A launch agent inherits
+  almost nothing, and an agent that takes whatever a login shell put first ran a
+  different python under Rosetta than the terminal did, which is why an earlier
+  agent on this machine stopped running for weeks without anybody noticing.
+-->
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.pdfluent.quality-nightly</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/bash</string>
+    <string>-lc</string>
+    <string>__CHECKOUT__/scripts/quality/nightly_suite.sh --refresh</string>
+  </array>
+
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>PATH</key>
+    <string>/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin:/opt/homebrew/bin</string>
+    <key>PDFLUENT_NIGHTLY_ARTEFACTS</key>
+    <string>__ARTEFACTS__</string>
+    <key>PDFLUENT_NIGHTLY_OWNED_CHECKOUT</key>
+    <string>1</string>
+  </dict>
+
+  <key>WorkingDirectory</key>
+  <string>__CHECKOUT__</string>
+
+  <key>StartCalendarInterval</key>
+  <dict>
+    <key>Hour</key>
+    <integer>3</integer>
+    <key>Minute</key>
+    <integer>15</integer>
+  </dict>
+
+  <key>StandardOutPath</key>
+  <string>__LOGDIR__/quality-nightly.out.log</string>
+  <key>StandardErrorPath</key>
+  <string>__LOGDIR__/quality-nightly.err.log</string>
+
+  <key>RunAtLoad</key>
+  <false/>
+</dict>
+</plist>

@@ -10,6 +10,7 @@ import type { RefObject } from 'react';
 import type { PdfEngine } from '../../core/engine/PdfEngine';
 import type { PdfDocument } from '../../core/document';
 import { type RenderFallbackHandle, recordFallback } from './useRenderTelemetry';
+import { notifyCanvasPainted } from '../performance/perfMarks';
 
 // ---------------------------------------------------------------------------
 // Interactive render-scale cap — the native engine rasterizes PDF vectors into
@@ -317,6 +318,7 @@ export function useRenderedCanvas(
       renderedScaleRef.current = scale;
       renderedKeyRef.current = cacheKey;
       setHasRendered(true);
+      notifyCanvasPainted(document.id, pageIndex);
       return;
     }
 
@@ -353,6 +355,7 @@ export function useRenderedCanvas(
           renderedScaleRef.current = scale;
           renderedKeyRef.current = cacheKey;
           setHasRendered(true);
+          notifyCanvasPainted(document.id, pageIndex);
         })
         .catch((err: unknown) => {
           if (gen !== genRef.current) return; // stale — fallback not needed
@@ -401,6 +404,7 @@ export function useRenderedCanvas(
           renderedScaleRef.current = sc;
           renderedKeyRef.current = cacheKey;
           setHasRendered(true);
+          notifyCanvasPainted(doc.id, idx);
         } else {
           // Any failure falls through to slow path
           void renderSlow(eng, doc, idx, cvs, sc, genId);
@@ -452,6 +456,7 @@ export function useRenderedCanvas(
       renderedScaleRef.current = sc;
       renderedKeyRef.current = cacheKey;
       setHasRendered(true);
+      notifyCanvasPainted(doc.id, idx);
 
       // Prefetch neighbouring pages in priority order: ±1 first, then ±2…±5.
       // All scheduled as idle callbacks; registration order determines priority.
@@ -523,6 +528,7 @@ export function useRenderedCanvas(
       renderedScaleRef.current = scale;
       renderedKeyRef.current = cacheKey;
       setHasRendered(true);
+      notifyCanvasPainted(doc.id, idx);
     }
 
   }, [engine, document, pageIndex, renderScale, pageWidthPt, pageHeightPt, fallbackHandle, isVisible, renderRevision]);

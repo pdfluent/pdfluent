@@ -240,22 +240,24 @@ describe('ViewerApp — ModeToolbar wiring', () => {
     expect(viewerAppSource).toContain('onPageMutation={handlePageMutation}');
   });
 
-  it('tracks documentVersion state', () => {
+  it('tracks a document revision', () => {
     expect(viewerAppSource).toContain('documentVersion');
-    expect(viewerAppSource).toContain('setDocumentVersion');
+    expect(viewerAppSource).toContain('const [revision, setRevision] = useState<DocumentRevision>');
   });
 
-  it('passes documentVersion as key or renderRevision to PageCanvas', () => {
-    // v2: documentVersion is passed as `renderRevision` prop to
-    // PageCanvas (more explicit than a remount-via-key). PageCanvas
-    // uses it to invalidate cached rasters.
-    expect(viewerAppSource).toMatch(/(?:`\$\{documentVersion\}|renderRevision=\{documentVersion\})/);
+  it('passes the page\'s own revision as renderRevision to PageCanvas', () => {
+    // #402: this used to be the document-wide counter, which is part of the
+    // bitmap cache key — so an edit on one page re-rendered every mounted
+    // page. PageCanvas now invalidates per page.
+    expect(viewerAppSource).toContain('renderRevision={pageRevision(revision, i)}');
   });
 
-  it('handlePageMutation clamps pageIndex and increments documentVersion', () => {
+  it('handlePageMutation clamps pageIndex and bumps the whole document', () => {
+    // A page mutation adds, removes or reorders pages, so no page is where it
+    // was: document-wide is the correct scope here, unlike a text commit.
     expect(viewerAppSource).toContain('handlePageMutation');
     expect(viewerAppSource).toContain('Math.min(prev, Math.max(0, newPageCount - 1))');
-    expect(viewerAppSource).toContain('setDocumentVersion(v => v + 1)');
+    expect(viewerAppSource).toContain('bumpDocument();');
   });
 });
 

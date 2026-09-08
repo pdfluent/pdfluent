@@ -71,22 +71,43 @@ export WORK REPO_ROOT ARTEFACT PLATFORM COMMIT MACHINE EXPECT_UPDATER WATCHDOG S
 . "${SUITE_DIR}/drivers/${PLATFORM}.sh" 2>/dev/null || {
   echo "✘ no driver for platform ${PLATFORM} (${SUITE_DIR}/drivers/${PLATFORM}.sh)" >&2; exit 2; }
 
-judge() { node "${SUITE_DIR}/judge.mjs" --work "${WORK}" --checks "$1"; }
+# Judgement is queued, not spawned.
+#
+# The suite is shell and judgement is node, so every `judge` used to start an
+# interpreter: ten node starts for a fake run that only reads files, which is
+# where its 8.9 s went -- a bare `node -e ""` costs about half a second of CPU
+# here, and the suite's own cases run it fifteen times over. These append a line
+# and the flush before `render` judges the lot in one process.
+#
+# What a row says does not change. judge.mjs's JUDGES table already carries each
+# check's step, so a row's step comes from the check rather than from which
+# subshell was alive when it was written, and the queue keeps the order the run
+# produced. Nothing between here and `render` reads a judgement: every step runs
+# as `( ... ) || true` and the suite's exit code comes from the renderer.
+QUEUE="${WORK}/judge-queue.tsv"; : > "${QUEUE}"
+export QUEUE
+
+# Tabs and newlines are the only characters that could break a queue line, and
+# they carry no meaning in any of these fields.
+_flat() { printf '%s' "$1" | tr '\t\n' '  '; }
+
+judge() { printf 'J\t%s\n' "$(_flat "$1")" >> "${QUEUE}"; }
 
 # A step with nothing to run says so in the report, not only on stderr. A skip
 # that leaves no row is indistinguishable from a step that passed, which is the
-# failure mode this whole file is arranged against.
+# failure mode this whole file is arranged against. The stderr line stays here,
+# at the moment the gap is found; the row is written at the flush.
 skip_row() { # skip_row <step> <id> <capability> <reason>
-  node -e '
-    const fs = require("node:fs");
-    const [work, step, id, capability, reason] = process.argv.slice(1);
-    fs.appendFileSync(work + "/steps.ndjson", JSON.stringify({
-      step, id, capability, status: "SKIPPED", ms: 0, numbers: {}, reason, evidence: [],
-    }) + "\n");
-  ' "${WORK}" "$1" "$2" "$3" "$4"
+  printf 'S\t%s\t%s\t%s\t%s\n' "$(_flat "$1")" "$(_flat "$2")" "$(_flat "$3")" "$(_flat "$4")" >> "${QUEUE}"
   echo "SKIPPED (not a pass): $2 — $4" >&2
 }
-export -f judge skip_row 2>/dev/null || true
+
+flush_judgements() {
+  [ -s "${QUEUE}" ] || return 0
+  node "${SUITE_DIR}/judge.mjs" --work "${WORK}" --queue "${QUEUE}" || true
+  : > "${QUEUE}"
+}
+export -f judge skip_row _flat 2>/dev/null || true
 
 render() {
   node "${SUITE_DIR}/report.mjs" --work "${WORK}" --out "${REPORT_DIR}"
@@ -118,12 +139,13 @@ emit_gaps() {
   done <<< "$(driver_gaps)"
 }
 
-for s in s1_identity s2_launch s3_offline s4_updater; do
+for s in s1_identity s2_launch s3_offline s4_updater s5_ui_walk; do
   # Each step in its own subshell: a step that dies takes its own rows with it,
   # not the run.
   ( . "${SUITE_DIR}/steps/${s}.sh"; "step_${s%%_*}" ) || true
 done
 emit_gaps
 
+flush_judgements
 render
 exit $?

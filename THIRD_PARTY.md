@@ -1,19 +1,18 @@
 # THIRD_PARTY
 
-Generated: 2026-09-02T14:22:04.948Z
 Generator: `scripts/generate-third-party.mjs`
 
 ## Summary
 
-- Total dependencies/assets: 1145
-- Policy status: {"allowed":1108,"needs-review":35,"internal":2}
+- Total dependencies/assets: 1156
+- Policy status: {"allowed":1120,"internal":23,"needs-review":13}
 
 ## cargo
 
 | Name | Version | License | Policy | Direct |
 |---|---:|---|---|---:|
 | adler2 | 2.0.1 | 0BSD OR MIT OR Apache-2.0 | allowed | no |
-| aes | 0.8.4 | MIT OR Apache-2.0 | allowed | no |
+| aes | 0.9.3 | MIT OR Apache-2.0 | allowed | no |
 | aho-corasick | 1.1.4 | Unlicense OR MIT | allowed | no |
 | aligned | 0.4.3 | MIT OR Apache-2.0 | allowed | no |
 | aligned-vec | 0.6.4 | MIT | allowed | no |
@@ -40,10 +39,12 @@ Generator: `scripts/generate-third-party.mjs`
 | bit-set | 0.8.0 | Apache-2.0 OR MIT | allowed | no |
 | bit-vec | 0.8.0 | Apache-2.0 OR MIT | allowed | no |
 | bitflags | 1.3.2 | MIT/Apache-2.0 | allowed | no |
-| bitflags | 2.11.1 | MIT OR Apache-2.0 | allowed | no |
+| bitflags | 2.13.1 | MIT OR Apache-2.0 | allowed | no |
 | bitstream-io | 4.10.0 | MIT/Apache-2.0 | allowed | no |
 | block-buffer | 0.10.4 | MIT OR Apache-2.0 | allowed | no |
+| block-buffer | 0.12.1 | MIT OR Apache-2.0 | allowed | no |
 | block-padding | 0.3.3 | MIT OR Apache-2.0 | allowed | no |
+| block-padding | 0.4.2 | MIT OR Apache-2.0 | allowed | no |
 | block2 | 0.5.1 | MIT | allowed | no |
 | block2 | 0.6.2 | MIT | allowed | no |
 | brotli | 8.0.2 | BSD-3-Clause AND MIT | allowed | no |
@@ -51,7 +52,6 @@ Generator: `scripts/generate-third-party.mjs`
 | bs58 | 0.5.1 | MIT/Apache-2.0 | allowed | no |
 | built | 0.8.0 | MIT | allowed | no |
 | bumpalo | 3.20.2 | MIT OR Apache-2.0 | allowed | no |
-| bytecount | 0.6.9 | Apache-2.0/MIT | allowed | no |
 | bytemuck | 1.25.0 | Zlib OR Apache-2.0 OR MIT | allowed | no |
 | bytemuck_derive | 1.10.2 | Zlib OR Apache-2.0 OR MIT | allowed | no |
 | byteorder | 1.5.0 | Unlicense OR MIT | allowed | no |
@@ -64,24 +64,30 @@ Generator: `scripts/generate-third-party.mjs`
 | cargo_toml | 0.22.3 | Apache-2.0 OR MIT | allowed | no |
 | cargo-platform | 0.1.9 | MIT OR Apache-2.0 | allowed | no |
 | cbc | 0.1.2 | MIT OR Apache-2.0 | allowed | no |
+| cbc | 0.2.1 | MIT OR Apache-2.0 | allowed | no |
 | cc | 1.2.62 | MIT OR Apache-2.0 | allowed | no |
 | cesu8 | 1.1.0 | Apache-2.0/MIT | allowed | no |
 | cfb | 0.7.3 | MIT | allowed | no |
 | cfg-expr | 0.15.8 | MIT OR Apache-2.0 | allowed | no |
 | cfg-if | 1.0.4 | MIT OR Apache-2.0 | allowed | no |
+| chacha20 | 0.10.2 | MIT OR Apache-2.0 | allowed | no |
 | chrono | 0.4.44 | MIT OR Apache-2.0 | allowed | no |
 | cipher | 0.4.4 | MIT OR Apache-2.0 | allowed | no |
+| cipher | 0.5.2 | MIT OR Apache-2.0 | allowed | no |
 | color | 0.3.3 | Apache-2.0 OR MIT | allowed | no |
 | color_quant | 1.1.0 | MIT | allowed | no |
 | combine | 4.6.7 | MIT | allowed | no |
 | const-oid | 0.9.6 | Apache-2.0 OR MIT | allowed | no |
+| const-oid | 0.10.2 | Apache-2.0 OR MIT | allowed | no |
 | convert_case | 0.6.0 | MIT | allowed | no |
 | cookie | 0.18.1 | MIT OR Apache-2.0 | allowed | no |
 | core-foundation | 0.10.1 | MIT OR Apache-2.0 | allowed | no |
 | core-foundation-sys | 0.8.7 | MIT OR Apache-2.0 | allowed | no |
 | core-graphics | 0.25.0 | MIT OR Apache-2.0 | allowed | no |
 | core-graphics-types | 0.2.0 | MIT OR Apache-2.0 | allowed | no |
+| cpubits | 0.1.1 | MIT OR Apache-2.0 | allowed | no |
 | cpufeatures | 0.2.17 | MIT OR Apache-2.0 | allowed | no |
+| cpufeatures | 0.3.1 | MIT OR Apache-2.0 | allowed | no |
 | crc32fast | 1.5.0 | MIT OR Apache-2.0 | allowed | no |
 | crossbeam-channel | 0.5.15 | MIT OR Apache-2.0 | allowed | no |
 | crossbeam-deque | 0.8.6 | MIT OR Apache-2.0 | allowed | no |
@@ -90,12 +96,11 @@ Generator: `scripts/generate-third-party.mjs`
 | crunchy | 0.2.4 | MIT | allowed | no |
 | crypto-bigint | 0.5.5 | Apache-2.0 OR MIT | allowed | no |
 | crypto-common | 0.1.7 | MIT OR Apache-2.0 | allowed | no |
+| crypto-common | 0.2.2 | MIT OR Apache-2.0 | allowed | no |
 | cssparser | 0.36.0 | MPL-2.0 | allowed | no |
 | cssparser-macros | 0.6.1 | MPL-2.0 | allowed | no |
 | ctor | 0.8.0 | Apache-2.0 OR MIT | allowed | no |
 | ctor-proc-macro | 0.0.7 | Apache-2.0 OR MIT | allowed | no |
-| curve25519-dalek | 4.1.3 | BSD-3-Clause | allowed | no |
-| curve25519-dalek-derive | 0.1.1 | MIT/Apache-2.0 | allowed | no |
 | darling | 0.23.0 | MIT | allowed | no |
 | darling_core | 0.23.0 | MIT | allowed | no |
 | darling_macro | 0.23.0 | MIT | allowed | no |
@@ -107,6 +112,7 @@ Generator: `scripts/generate-third-party.mjs`
 | derive_more-impl | 2.1.1 | MIT | allowed | no |
 | des | 0.8.1 | MIT OR Apache-2.0 | allowed | no |
 | digest | 0.10.7 | MIT OR Apache-2.0 | allowed | no |
+| digest | 0.11.3 | MIT OR Apache-2.0 | allowed | no |
 | dirs | 5.0.1 | MIT OR Apache-2.0 | allowed | no |
 | dirs | 6.0.0 | MIT OR Apache-2.0 | allowed | no |
 | dirs-sys | 0.4.1 | MIT OR Apache-2.0 | allowed | no |
@@ -124,10 +130,8 @@ Generator: `scripts/generate-third-party.mjs`
 | dtor-proc-macro | 0.0.6 | Apache-2.0 OR MIT | allowed | no |
 | dunce | 1.0.5 | CC0-1.0 OR MIT-0 OR Apache-2.0 | allowed | no |
 | dyn-clone | 1.0.20 | MIT OR Apache-2.0 | allowed | no |
-| ecb | 0.1.2 | MIT | allowed | no |
+| ecb | 0.2.1 | MIT OR Apache-2.0 | allowed | no |
 | ecdsa | 0.16.9 | Apache-2.0 OR MIT | allowed | no |
-| ed25519 | 2.2.3 | Apache-2.0 OR MIT | allowed | no |
-| ed25519-dalek | 2.2.0 | BSD-3-Clause | allowed | no |
 | either | 1.15.0 | MIT OR Apache-2.0 | allowed | no |
 | elliptic-curve | 0.13.8 | Apache-2.0 OR MIT | allowed | no |
 | embed_plist | 1.2.2 | MIT OR Apache-2.0 | allowed | no |
@@ -145,8 +149,8 @@ Generator: `scripts/generate-third-party.mjs`
 | fax | 0.2.7 | MIT | allowed | no |
 | fdeflate | 0.3.7 | MIT OR Apache-2.0 | allowed | no |
 | fearless_simd | 0.3.0 | Apache-2.0 OR MIT | allowed | no |
+| fearless_simd | 0.6.0 | Apache-2.0 OR MIT | allowed | no |
 | ff | 0.13.1 | MIT/Apache-2.0 | allowed | no |
-| fiat-crypto | 0.2.9 | MIT OR Apache-2.0 OR BSD-1-Clause | allowed | no |
 | field-offset | 0.3.6 | MIT OR Apache-2.0 | allowed | no |
 | filetime | 0.2.29 | MIT/Apache-2.0 | allowed | no |
 | find-msvc-tools | 0.1.9 | MIT OR Apache-2.0 | allowed | no |
@@ -160,7 +164,7 @@ Generator: `scripts/generate-third-party.mjs`
 | foreign-types-macros | 0.2.3 | MIT/Apache-2.0 | allowed | no |
 | foreign-types-shared | 0.3.1 | MIT/Apache-2.0 | allowed | no |
 | form_urlencoded | 1.2.2 | MIT OR Apache-2.0 | allowed | no |
-| formcalc-interpreter | 1.0.0-beta.17 | See license file | needs-review | no |
+| formcalc-interpreter | 1.0.0 | AGPL-3.0-only OR LicenseRef-PDFluent-Commercial | internal | no |
 | futures-channel | 0.3.32 | MIT OR Apache-2.0 | allowed | no |
 | futures-core | 0.3.32 | MIT OR Apache-2.0 | allowed | no |
 | futures-executor | 0.3.32 | MIT OR Apache-2.0 | allowed | no |
@@ -207,6 +211,7 @@ Generator: `scripts/generate-third-party.mjs`
 | http-body-util | 0.1.3 | MIT | allowed | no |
 | http-range | 0.1.5 | MIT | allowed | no |
 | httparse | 1.10.1 | MIT OR Apache-2.0 | allowed | no |
+| hybrid-array | 0.4.14 | MIT OR Apache-2.0 | allowed | no |
 | hyper | 1.9.0 | MIT | allowed | no |
 | hyper-rustls | 0.27.9 | Apache-2.0 OR ISC OR MIT | allowed | no |
 | hyper-util | 0.1.20 | MIT | allowed | no |
@@ -231,6 +236,7 @@ Generator: `scripts/generate-third-party.mjs`
 | indexmap | 2.14.0 | Apache-2.0 OR MIT | allowed | no |
 | infer | 0.19.0 | MIT | allowed | no |
 | inout | 0.1.4 | MIT OR Apache-2.0 | allowed | no |
+| inout | 0.2.2 | MIT OR Apache-2.0 | allowed | no |
 | interpolate_name | 0.2.4 | MIT | allowed | no |
 | ipnet | 2.12.0 | MIT OR Apache-2.0 | allowed | no |
 | is-docker | 0.2.0 | MIT | allowed | no |
@@ -276,7 +282,7 @@ Generator: `scripts/generate-third-party.mjs`
 | loop9 | 0.1.5 | MIT | allowed | no |
 | markup5ever | 0.38.0 | MIT OR Apache-2.0 | allowed | no |
 | maybe-rayon | 0.1.1 | MIT | allowed | no |
-| md-5 | 0.10.6 | MIT OR Apache-2.0 | allowed | no |
+| md-5 | 0.11.0 | MIT OR Apache-2.0 | allowed | no |
 | memchr | 2.8.0 | Unlicense OR MIT | allowed | no |
 | memoffset | 0.9.1 | MIT | allowed | no |
 | mime | 0.3.17 | MIT OR Apache-2.0 | allowed | no |
@@ -291,7 +297,6 @@ Generator: `scripts/generate-third-party.mjs`
 | new_debug_unreachable | 1.0.6 | MIT | allowed | no |
 | no_std_io2 | 0.9.4 | Apache-2.0 OR MIT | allowed | no |
 | nom | 8.0.0 | MIT | allowed | no |
-| nom_locate | 5.0.0 | MIT | allowed | no |
 | noop_proc_macro | 0.3.0 | MIT | allowed | no |
 | num_enum | 0.7.6 | BSD-3-Clause OR MIT OR Apache-2.0 | allowed | no |
 | num_enum_derive | 0.7.6 | BSD-3-Clause OR MIT OR Apache-2.0 | allowed | no |
@@ -341,32 +346,32 @@ Generator: `scripts/generate-third-party.mjs`
 | paste | 1.0.15 | MIT OR Apache-2.0 | allowed | no |
 | pastey | 0.1.1 | MIT OR Apache-2.0 | allowed | no |
 | pathdiff | 0.2.3 | MIT/Apache-2.0 | allowed | no |
-| pdf-annot | 1.0.0-beta.17 | See license file | needs-review | no |
-| pdf-compliance | 1.0.0-beta.17 | See license file | needs-review | no |
-| pdf-docx | 1.0.0-beta.17 | See license file | needs-review | no |
-| pdf-engine | 1.0.0-beta.17 | See license file | needs-review | no |
+| pdf-annot | 1.0.0 | AGPL-3.0-only OR LicenseRef-PDFluent-Commercial | internal | no |
+| pdf-compliance | 1.0.0 | AGPL-3.0-only OR LicenseRef-PDFluent-Commercial | internal | no |
+| pdf-docx | 1.0.0 | AGPL-3.0-only OR LicenseRef-PDFluent-Commercial | internal | no |
+| pdf-engine | 1.0.0 | AGPL-3.0-only OR LicenseRef-PDFluent-Commercial | internal | no |
 | pdf-font | 1.0.0-beta.5 | Apache-2.0 OR MIT | allowed | no |
-| pdf-interpret | 0.5.7 | Apache-2.0 OR MIT | allowed | no |
-| pdf-invoice | 1.0.0-beta.17 | See license file | needs-review | no |
-| pdf-manip | 1.0.0-beta.17 | See license file | needs-review | no |
-| pdf-pptx | 1.0.0-beta.17 | See license file | needs-review | no |
-| pdf-redact | 1.0.0-beta.17 | See license file | needs-review | no |
-| pdf-render | 1.0.0-beta.17 | Apache-2.0 OR MIT | allowed | no |
-| pdf-standard-fonts | 1.0.0-beta.17 | See license file | needs-review | no |
+| pdf-interpret | 0.5.8 | Apache-2.0 OR MIT | allowed | no |
+| pdf-invoice | 1.0.0 | AGPL-3.0-only OR LicenseRef-PDFluent-Commercial | internal | no |
+| pdf-manip | 1.0.0 | AGPL-3.0-only OR LicenseRef-PDFluent-Commercial | internal | no |
+| pdf-pptx | 1.0.0 | AGPL-3.0-only OR LicenseRef-PDFluent-Commercial | internal | no |
+| pdf-redact | 1.0.0 | AGPL-3.0-only OR LicenseRef-PDFluent-Commercial | internal | no |
+| pdf-render | 1.0.0 | Apache-2.0 OR MIT | allowed | no |
+| pdf-standard-fonts | 1.0.0 | AGPL-3.0-only OR LicenseRef-PDFluent-Commercial | internal | no |
 | pdf-syntax | 0.5.6 | Apache-2.0 OR MIT | allowed | no |
-| pdf-text-format | 1.0.0-beta.17 | See license file | needs-review | no |
-| pdf-xfa | 1.0.0-beta.17 | See license file | needs-review | no |
-| pdf-xlsx | 1.0.0-beta.17 | See license file | needs-review | no |
-| pdfluent | 1.0.0-beta.17.3 | See license file | needs-review | no |
+| pdf-text-format | 1.0.0 | AGPL-3.0-only OR LicenseRef-PDFluent-Commercial | internal | no |
+| pdf-xfa | 1.0.0 | AGPL-3.0-only OR LicenseRef-PDFluent-Commercial | internal | no |
+| pdf-xlsx | 1.0.0 | AGPL-3.0-only OR LicenseRef-PDFluent-Commercial | internal | no |
+| pdfluent | 1.0.0 | AGPL-3.0-only OR LicenseRef-PDFluent-Commercial | internal | no |
 | pdfluent-ccitt | 0.2.2 | Apache-2.0 OR MIT | allowed | no |
-| pdfluent-cff | 0.2.0 | MIT OR Apache-2.0 | allowed | no |
-| pdfluent-extract | 1.0.0-beta.17 | See license file | needs-review | no |
-| pdfluent-forms | 1.0.0-beta.17 | See license file | needs-review | no |
-| pdfluent-jbig2 | 0.2.3 | Apache-2.0 OR MIT | allowed | no |
-| pdfluent-jpeg2000 | 0.3.5 | Apache-2.0 OR MIT | allowed | no |
-| pdfluent-lopdf | 0.39.4 | MIT | allowed | no |
+| pdfluent-cff | 0.2.1 | MIT OR Apache-2.0 | allowed | no |
+| pdfluent-extract | 1.0.0 | AGPL-3.0-only OR LicenseRef-PDFluent-Commercial | internal | no |
+| pdfluent-forms | 1.0.0 | AGPL-3.0-only OR LicenseRef-PDFluent-Commercial | internal | no |
+| pdfluent-jbig2 | 0.3.0 | Apache-2.0 OR MIT | allowed | no |
+| pdfluent-jpeg2000 | 0.4.0 | Apache-2.0 OR MIT | allowed | no |
+| pdfluent-lopdf | 0.39.5 | MIT | allowed | no |
 | pdfluent-macos-secure | 0.1.0 | LicenseRef-PDFluent-Proprietary | internal | no |
-| pdfluent-sign | 1.0.0-beta.17 | See license file | needs-review | no |
+| pdfluent-sign | 1.0.0 | AGPL-3.0-only OR LicenseRef-PDFluent-Commercial | internal | no |
 | peniko | 0.6.0 | Apache-2.0 OR MIT | allowed | no |
 | percent-encoding | 2.3.2 | MIT OR Apache-2.0 | allowed | no |
 | phf | 0.13.1 | MIT | allowed | no |
@@ -408,10 +413,12 @@ Generator: `scripts/generate-third-party.mjs`
 | r-efi | 6.0.0 | MIT OR Apache-2.0 OR LGPL-2.1-or-later | needs-review | no |
 | rand | 0.8.6 | MIT OR Apache-2.0 | allowed | no |
 | rand | 0.9.4 | MIT OR Apache-2.0 | allowed | no |
+| rand | 0.10.2 | MIT OR Apache-2.0 | allowed | no |
 | rand_chacha | 0.3.1 | MIT OR Apache-2.0 | allowed | no |
 | rand_chacha | 0.9.0 | MIT OR Apache-2.0 | allowed | no |
 | rand_core | 0.6.4 | MIT OR Apache-2.0 | allowed | no |
 | rand_core | 0.9.5 | MIT OR Apache-2.0 | allowed | no |
+| rand_core | 0.10.1 | MIT OR Apache-2.0 | allowed | no |
 | rangemap | 1.7.1 | MIT/Apache-2.0 | allowed | no |
 | rav1e | 0.8.1 | BSD-2-Clause | allowed | no |
 | ravif | 0.13.0 | BSD-3-Clause | allowed | no |
@@ -480,6 +487,7 @@ Generator: `scripts/generate-third-party.mjs`
 | servo_arc | 0.4.3 | MIT OR Apache-2.0 | allowed | no |
 | sha1 | 0.10.6 | MIT OR Apache-2.0 | allowed | no |
 | sha2 | 0.10.9 | MIT OR Apache-2.0 | allowed | no |
+| sha2 | 0.11.0 | MIT OR Apache-2.0 | allowed | no |
 | shared_child | 1.1.1 | MIT | allowed | no |
 | shlex | 1.3.0 | MIT OR Apache-2.0 | allowed | no |
 | sigchld | 0.2.4 | MIT | allowed | no |
@@ -619,6 +627,7 @@ Generator: `scripts/generate-third-party.mjs`
 | webview2-com-macros | 0.8.1 | MIT | allowed | no |
 | webview2-com-sys | 0.38.2 | MIT | allowed | no |
 | weezl | 0.1.12 | MIT OR Apache-2.0 | allowed | no |
+| weezl | 0.2.1 | MIT OR Apache-2.0 | allowed | no |
 | winapi | 0.3.9 | MIT/Apache-2.0 | allowed | no |
 | winapi-i686-pc-windows-gnu | 0.4.0 | MIT/Apache-2.0 | allowed | no |
 | winapi-util | 0.1.11 | Unlicense OR MIT | allowed | no |
@@ -697,11 +706,10 @@ Generator: `scripts/generate-third-party.mjs`
 | x11 | 2.21.0 | MIT | allowed | no |
 | x11-dl | 2.21.0 | MIT | allowed | no |
 | xattr | 1.6.1 | MIT OR Apache-2.0 | allowed | no |
-| xfa-dom-resolver | 1.0.0-beta.17 | See license file | needs-review | no |
-| xfa-js-sandboxed | 1.0.0-beta.17 | See license file | needs-review | no |
-| xfa-json | 1.0.0-beta.17 | See license file | needs-review | no |
-| xfa-layout-engine | 1.0.0-beta.17 | See license file | needs-review | no |
-| xfa-license | 1.0.0-beta.17 | See license file | needs-review | no |
+| xfa-dom-resolver | 1.0.0 | AGPL-3.0-only OR LicenseRef-PDFluent-Commercial | internal | no |
+| xfa-js-sandboxed | 1.0.0 | AGPL-3.0-only OR LicenseRef-PDFluent-Commercial | internal | no |
+| xfa-json | 1.0.0 | AGPL-3.0-only OR LicenseRef-PDFluent-Commercial | internal | no |
+| xfa-layout-engine | 1.0.0 | AGPL-3.0-only OR LicenseRef-PDFluent-Commercial | internal | no |
 | xmp-writer | 0.3.3 | MIT OR Apache-2.0 | allowed | no |
 | y4m | 0.8.0 | MIT | allowed | no |
 | yasna | 0.5.2 | MIT OR Apache-2.0 | allowed | no |
@@ -737,6 +745,7 @@ Generator: `scripts/generate-third-party.mjs`
 |---|---:|---|---|---:|
 | @alloc/quick-lru | 5.2.0 | MIT | allowed | no |
 | @ampproject/remapping | 2.3.0 | Apache-2.0 | allowed | no |
+| @axe-core/playwright | 4.13.0 | MPL-2.0 | allowed | yes |
 | @babel/code-frame | 7.29.0 | MIT | allowed | no |
 | @babel/compat-data | 7.29.0 | MIT | allowed | no |
 | @babel/core | 7.29.0 | MIT | allowed | no |
@@ -922,6 +931,7 @@ Generator: `scripts/generate-third-party.mjs`
 | asn1js | 3.0.7 | BSD-3-Clause | allowed | no |
 | assertion-error | 2.0.1 | MIT | allowed | no |
 | autoprefixer | 10.4.27 | MIT | allowed | yes |
+| axe-core | 4.13.0 | MPL-2.0 | allowed | yes |
 | balanced-match | 4.0.4 | MIT | allowed | no |
 | balanced-match | 1.0.2 | MIT | allowed | no |
 | baseline-browser-mapping | 2.10.0 | Apache-2.0 | allowed | no |

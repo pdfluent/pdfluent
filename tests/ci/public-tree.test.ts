@@ -53,7 +53,7 @@ describe("what leaves this repository is declared", () => {
     expect(published.has("src/main.tsx")).toBe(true);
     expect(published.has("src-tauri/src/lib.rs")).toBe(true);
     expect(published.has("LICENSE.md")).toBe(true);
-    expect(published.has(".gitlab-ci.yml")).toBe(false);
+    expect(published.has(".github/workflows/quality.yml")).toBe(false);
     expect(published.has("AGENTS.md")).toBe(false);
     expect([...published].some((p) => p.startsWith("docs/archive/"))).toBe(false);
   });

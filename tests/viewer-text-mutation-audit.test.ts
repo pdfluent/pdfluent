@@ -243,23 +243,34 @@ describe('TimelinePanel — EVENT_LABELS covers text edit types', () => {
 // ViewerApp — text edit events emitted after mutation
 // ---------------------------------------------------------------------------
 
+/**
+ * The body of the text-commit callback, bounded by the code that opens and
+ * closes it rather than by a byte count.
+ *
+ * It used to be `slice(idx, idx + 12000)` from the first mention of
+ * `handleDraftCommit`. That number was widened once already, and on
+ * 2026-09-08 it silently stopped reaching the `page_mutated` emission it
+ * asserts: nothing about the commit path had changed, thirteen lines had been
+ * added above it. A window that has to be re-tuned every time the file grows
+ * is a test that reports on its own margin, not on the code.
+ */
+function textCommitBody(): string {
+  const start = viewerAppSrc.indexOf('const handleDraftCommit');
+  expect(start, 'the text commit callback is still there to assert on').toBeGreaterThan(-1);
+  const end = viewerAppSrc.indexOf('isCommittingRef.current = false;', start);
+  expect(end, 'and it still ends by clearing the in-flight flag').toBeGreaterThan(start);
+  return viewerAppSrc.slice(start, end);
+}
+
 describe('ViewerApp — page_mutated used for successful text edit', () => {
   it('handleDraftCommit emits page_mutated event on success', () => {
-    const idx = viewerAppSrc.indexOf('handleDraftCommit');
-    // v2: handleDraftCommit body grew significantly (debug logging,
-    // expanded error handling, validation/multi-occurrence logic).
-    // The markDirty/page_mutated/originalText calls sit ~9k chars in.
-    const block = viewerAppSrc.slice(idx, idx + 12000);
+    const block = textCommitBody();
     expect(block).toContain('page_mutated');
     expect(block).toContain('makeDocumentEvent');
   });
 
   it('handleDraftCommit includes original and replacement text in description', () => {
-    const idx = viewerAppSrc.indexOf('handleDraftCommit');
-    // v2: handleDraftCommit body grew significantly (debug logging,
-    // expanded error handling, validation/multi-occurrence logic).
-    // The markDirty/page_mutated/originalText calls sit ~9k chars in.
-    const block = viewerAppSrc.slice(idx, idx + 12000);
+    const block = textCommitBody();
     expect(block).toContain('originalText');
     expect(block).toContain('committedText');
   });

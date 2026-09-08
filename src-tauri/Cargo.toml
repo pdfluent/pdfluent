@@ -44,7 +44,7 @@ pdfluent-macos-secure = { path = "crates/macos-secure" }
 # if the revisions drift apart or a path dependency comes back. Moving the pin
 # also means checking the engine's GitLab mirror carries the revision: the CI
 # runner reaches the engine through it (see the `insteadOf` line in
-# `.gitlab-ci.yml`), so a commit that only GitHub has builds here and nowhere
+# `.github/actions/sdk-pin/action.yml`), so a commit that only GitHub has builds here and nowhere
 # else. Engine master is fast-forward only, so the mirror catches up on its
 # own; a tag pipeline cut before it does will fail on the fetch.
 pdf-engine = { git = "https://github.com/pdfluent/engine", rev = "e8b80ac4317152fccbfc2ad876dd89058a85cb6e", features = ["xfa", "serde"] }

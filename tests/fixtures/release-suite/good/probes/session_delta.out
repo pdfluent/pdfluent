@@ -1,4 +1,4 @@
-start 1789041600 1.0.0-beta.21
-clean_quit 1789041618 1.0.0-beta.21
-start 1789041640 1.0.0-beta.21
-clean_quit 1789041655 1.0.0-beta.21
+start 1789041600 __VERSION__
+clean_quit 1789041618 __VERSION__
+start 1789041640 __VERSION__
+clean_quit 1789041655 __VERSION__

@@ -18,8 +18,8 @@ const read = (p: string) => readFileSync(path.join(REPO_ROOT, p), "utf8");
 
 describe("the release pipeline calls the guard", () => {
   it("the release job checks the reports before the R2 loop", () => {
-    const ci = read(".gitlab-ci.yml");
-    const job = ci.slice(ci.indexOf("\nrelease:"), ci.indexOf("\npublish-updater:"));
+    const ci = read(".github/workflows/release.yml");
+    const job = ci.slice(ci.indexOf("\n  release:"), ci.indexOf("\n  publish-updater:"));
     expect(job).toContain("scripts/quality/require-report.mjs");
     const guardAt = job.indexOf("require-report.mjs");
     const uploadAt = job.indexOf("wrangler r2 object put");
@@ -29,15 +29,15 @@ describe("the release pipeline calls the guard", () => {
   });
 
   it("the release job has the ancestry it needs to judge", () => {
-    const ci = read(".gitlab-ci.yml");
-    const job = ci.slice(ci.indexOf("\nrelease:"), ci.indexOf("\npublish-updater:"));
-    expect(job).toMatch(/GIT_DEPTH:\s*0/);
+    const ci = read(".github/workflows/release.yml");
+    const job = ci.slice(ci.indexOf("\n  release:"), ci.indexOf("\n  publish-updater:"));
+    expect(job).toMatch(/fetch-depth:\s*0/);
   });
 
   it("the fast gate is not shallow, so the guard's own cases can run", () => {
-    const ci = read(".gitlab-ci.yml");
-    const job = ci.slice(ci.indexOf("\nquality-gates-fast:"), ci.indexOf("\n# ─── Repository truth"));
-    expect(job).toMatch(/GIT_DEPTH:\s*0/);
+    const ci = read(".github/workflows/quality.yml");
+    const job = ci.slice(ci.indexOf("\n  quality-gates-fast:"), ci.indexOf("\n  repo-truth:"));
+    expect(job).toMatch(/fetch-depth:\s*0/);
   });
 
   it("quality/ is internal until its numbers have CLAIMS IDs", () => {
@@ -89,6 +89,9 @@ describe("the committed reports are the ones the suite renders", () => {
       expect(text, `${f} names a private address`).not.toMatch(/\b192\.168\./);
       expect(text, `${f} names a host`).not.toMatch(/DESKTOP-/);
       expect(text, `${f} names a user path`).not.toMatch(/\/Users\//);
+      // The Windows lane writes paths too, and its home directories carry an
+      // account name: the first real run on the build host put one in a row.
+      expect(text, `${f} names a Windows user path`).not.toMatch(/C:\\+Users\\+/i);
     }
   });
 });

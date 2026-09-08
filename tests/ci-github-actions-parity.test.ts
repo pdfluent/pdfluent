@@ -62,11 +62,10 @@ function runsOn(job: Job): string[] {
 }
 
 // The gates that must run on a push to a release branch. Every name here is a
-// name a quality document already uses, so the list is also what keeps those
-// documents true across the move off GitLab (#465). Keeping the GitLab file as
-// the source of the list is deliberate: while both pipelines exist, a job added
-// there and forgotten here is exactly the drift this test is for.
-const GITLAB = readFileSync(join(ROOT, ".gitlab-ci.yml"), "utf8");
+// name a quality document already uses, and the list is what keeps those
+// documents true. It is written out rather than derived from the workflow: a
+// list read from the file it judges agrees with whatever that file says,
+// including with a gate someone deleted.
 const GATING_JOBS = [
   "quality-gates-fast",
   "repo-truth",
@@ -85,14 +84,6 @@ const GATING_JOBS = [
 
 describe("the GitHub pipeline carries the whole gate set", () => {
   const quality = jobsOf("quality.yml");
-
-  it("still names every gate the GitLab pipeline names", () => {
-    // If this fails after a job was added to .gitlab-ci.yml, the job is missing
-    // on the side that actually runs now.
-    for (const name of GATING_JOBS) {
-      expect(GITLAB, `${name} is not a job in .gitlab-ci.yml any more`).toContain(`\n${name}:\n`);
-    }
-  });
 
   for (const name of GATING_JOBS) {
     it(`runs ${name} on our own runner`, () => {
@@ -183,6 +174,122 @@ describe("the release train", () => {
   });
 });
 
+// Re-measuring a baseline is a deliberate act with a diff to read, not a step
+// that rides along with a gate. It has its own workflow so that dispatching the
+// gate cannot bless anything, and it hands the file back instead of committing
+// it.
+describe("the PDF/A baseline is re-measured where it is judged", () => {
+  const bless = jobsOf("golden-bless.yml").find((job) => job.name === "golden-pdfa-bless");
+
+  it("exists, on the runner that judges the baseline", () => {
+    expect(bless, "golden-pdfa-bless has no job in .github/workflows/golden-bless.yml").toBeDefined();
+    expect(runsOn(bless!)).toEqual(OUR_RUNNER);
+  });
+
+  it("measures with the bless flag and hands the file back", () => {
+    expect(bless!.body).toContain("PDFLUENT_GOLDEN_BLESS");
+    expect(bless!.body).toContain("--test golden_pdfa");
+    expect(bless!.body).toContain("src-tauri/tests/golden/pdfa-baseline.tsv");
+  });
+
+  // An empty column reads as "nothing moved", so a missing judge has to stop
+  // the job rather than produce a baseline of nothing.
+  it("refuses to measure without the tool that judges conformance", () => {
+    expect(bless!.body).toContain("verapdf --version");
+  });
+
+  // tauri::generate_context! reads ../dist at compile time and there is no gate
+  // job in front of this one to inherit a build from.
+  it("builds the frontend it compiles against", () => {
+    expect(bless!.body).toContain("npm ci");
+    expect(bless!.body).toContain("npm run build");
+  });
+
+  // A workflow that could fire on a push is a baseline that rewrites itself.
+  it("only ever runs because a person asked for it", () => {
+    const source = readFileSync(join(WORKFLOWS, "golden-bless.yml"), "utf8");
+    expect(source).toMatch(/^on:\n {2}workflow_dispatch:$/m);
+  });
+});
+
+// A measured run is evidence. quality:axes judged one on this runner on every
+// push for a day and kept none of them, which is why quality/axes/*.tsv still
+// had no linux rows at all: there was nothing to seed them from.
+describe("the axes job keeps the run it judged", () => {
+  const axes = jobsOf("quality.yml").find((job) => job.name === "quality:axes");
+
+  it("hands the run file back", () => {
+    expect(axes, "quality:axes has no job in .github/workflows/quality.yml").toBeDefined();
+    expect(axes!.body).toContain("actions/upload-artifact");
+    expect(axes!.body).toContain("path: quality/runs/");
+  });
+
+  // The judgement is the interesting case. A run that came back red is the one
+  // somebody has to read, and an upload that only happens after a green step
+  // is an upload that is never there when it is needed.
+  it("uploads the run even when the judgement was red", () => {
+    expect(axes!.body).toContain("if: ${{ !cancelled() }}");
+  });
+
+  // Same silent failure as the bless job: no class, no run file, an artifact
+  // step that warns, and a green job with nothing in it.
+  it("fails rather than upload an empty directory", () => {
+    expect(axes!.body).toContain("if-no-files-found: error");
+  });
+
+  // Judging is this job's work; blessing is a decision with a diff in front of
+  // the person making it. A --bless inside the gate writes a floor nobody read.
+  it("never blesses what it measured", () => {
+    // Comments stripped: a comment saying the job does not bless is not a
+    // bless, and this case is about the commands the runner executes.
+    const commands = axes!.body.split("\n").filter((line) => !/^\s*#/.test(line)).join("\n");
+    expect(commands).not.toContain("--bless");
+  });
+});
+
+// The four axes have a linux column only if a run file measured on the runner
+// comes back. quality:axes measures one on every push, judges it and throws it
+// away; seeding or re-seeding the column needs the file itself in a hand, and
+// this is the job that hands it over.
+describe("the axes baselines are re-measured where their linux column is judged", () => {
+  const bless = jobsOf("golden-bless.yml").find((job) => job.name === "golden-axes-bless");
+
+  it("exists, on the runner whose numbers the linux column holds", () => {
+    expect(bless, "golden-axes-bless has no job in .github/workflows/golden-bless.yml").toBeDefined();
+    expect(runsOn(bless!)).toEqual(OUR_RUNNER);
+  });
+
+  // golden_axes writes nothing at all when the class is unset — it prints
+  // SKIPPED and returns 0. A job without this line is green, empty and
+  // indistinguishable from a measurement.
+  it("names the machine class the linux rows are keyed on", () => {
+    expect(bless!.body).toContain("PDFLUENT_MACHINE_CLASS: runner-desktop-wsl-4core");
+  });
+
+  // A debug number is not a number, and a baseline seeded from one would judge
+  // every later release run as an improvement to be blessed.
+  it("measures under the release profile", () => {
+    expect(bless!.body).toMatch(/cargo test --release .*--test golden_axes/);
+  });
+
+  it("hands back the run file rather than a baseline it wrote itself", () => {
+    expect(bless!.body).toContain("quality/runs");
+    expect(bless!.body).not.toContain("ratchet.py --all --run");
+  });
+
+  // The way this job fails silently: no class, a crashed measurement, a moved
+  // path — all of them leave quality/runs empty, and upload-artifact's default
+  // is a warning nobody reads in a job that went green.
+  it("fails rather than upload an empty directory", () => {
+    expect(bless!.body).toContain("if-no-files-found: error");
+  });
+
+  it("builds the frontend it compiles against", () => {
+    expect(bless!.body).toContain("npm ci");
+    expect(bless!.body).toContain("npm run build");
+  });
+});
+
 describe("no secret is written into a workflow", () => {
   // The rule from #465: a workflow file is editable in a pull request, so a
   // secret spelled out in one has left the building. Values come from the
@@ -251,6 +358,13 @@ describe("the runner the workflows ask for is the runner we register", () => {
 
   // The registration token is short-lived, but an argument is visible in `ps`
   // to every user on the machine for as long as the command runs.
+  // Four cores, shared with the engine's runner and with hand-run measurements.
+  // A cargo that takes the machine makes every number measured beside it
+  // meaningless, and quality:axes is one of those numbers.
+  it("leaves the build host room to do anything else", () => {
+    expect(installer).toContain("CARGO_BUILD_JOBS=2");
+  });
+
   it("takes the registration token from the environment, never from a literal", () => {
     expect(installer).toContain('if [ -z "${GITHUB_RUNNER_TOKEN:-}" ]; then');
     expect(installer).not.toMatch(/--token\s+[A-Z0-9]{20,}/);

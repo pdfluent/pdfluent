@@ -1306,7 +1306,9 @@
       "signing": "Signing…",
       "signNeedsCertificate": "Choose a certificate and enter its password first.",
       "signSaved": "Signed copy saved as {{name}}",
-      "signFailed": "Signing failed: {{message}}"
+      "signFailed": "Signing failed: {{message}}",
+      "usageRights": "Reader enablement (usage rights)",
+      "usageRightsInvalidated": "Usage rights invalidated — this file was edited, so Adobe Reader no longer treats it as an enabled form."
     },
     "protect": {
       "lede": "Chraňte svůj dokument PDF silnými kryptografickými hesly. Změny se aplikují místně hned.",
@@ -1506,6 +1508,8 @@
     "ocrFailedMessage": "Text recognition stopped on page {{page}}: {{reason}}",
     "xfaStaticTitle": "Form filled without recalculation",
     "xfaStaticMessage": "This build writes XFA field values straight into the form. Field scripts do not run, so calculated totals and fields that appear or hide based on your answer stay as they are.",
-    "featureUnavailableTitle": "'{{feature}}' is not available in this build"
+    "featureUnavailableTitle": "'{{feature}}' is not available in this build",
+    "usageRightsInvalidatedTitle": "This document is no longer Reader-enabled",
+    "usageRightsInvalidatedMessage": "Your change was made. It also invalidated the usage-rights signature this PDF carried, which let Adobe Reader fill in and save the form. The text edit stands; the extended rights are gone and cannot be restored by undoing it."
   }
 }

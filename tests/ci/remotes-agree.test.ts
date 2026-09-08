@@ -21,6 +21,11 @@ import { afterAll, describe, expect, it } from "vitest";
 import { runToFile } from "./run";
 
 const root = resolve(__dirname, "../..");
+// The host the guard defaults to, read from the guard rather than typed here:
+// whichever copy CI runs on, the step must point somewhere else.
+const PRIMARY_URL_DEFAULT_HOST = new URL(
+  /PDFLUENT_PRIMARY_URL \|\| "([^"]+)"/.exec(readFileSync(resolve(root, "scripts/ci/remotes-agree.mjs"), "utf8"))![1],
+).host;
 const GUARD = resolve(root, "scripts/ci/remotes-agree.mjs");
 const TRUNK = "release/ga-readiness";
 
@@ -60,6 +65,8 @@ function runGuard(where: { local: string; primaryUrl: string }, env: Record<stri
   delete clean.CI_COMMIT_BRANCH;
   delete clean.CI_PIPELINE_SOURCE;
   delete clean.CI_COMMIT_SHA;
+  delete clean.PDFLUENT_AGREE_LABEL;
+  for (const k of Object.keys(clean)) if (k.startsWith("GITHUB_")) delete clean[k];
   const r = runToFile(process.execPath, [GUARD], {
     cwd: where.local,
     env: { ...clean, PDFLUENT_REPO_DIR: where.local, PDFLUENT_PRIMARY_URL: where.primaryUrl, ...env },
@@ -134,6 +141,43 @@ describe("the trunk exists on the primary too", () => {
     expect(output).toContain("not release/ga-readiness");
   });
 
+  // The gate moved hosts in #465. A guard that only knew GitLab's variable names
+  // would have read a GitHub run as "no branch at all" and enforced on every
+  // pull request and every side branch.
+  it("reads GitHub's branch and event names too", () => {
+    const s = scene(2, null);
+    const branch = runGuard(s, { GITHUB_REF_TYPE: "branch", GITHUB_REF_NAME: "release/some-experiment" });
+    expect(branch.status).toBe(0);
+    expect(branch.output).toContain("not release/ga-readiness");
+
+    const pr = runGuard(s, { GITHUB_EVENT_NAME: "pull_request" });
+    expect(pr.status).toBe(0);
+    expect(pr.output).toContain("pull request has not landed");
+
+    // And on the trunk itself it still judges rather than skipping.
+    const trunk = runGuard(s, { GITHUB_REF_TYPE: "branch", GITHUB_REF_NAME: "release/ga-readiness" });
+    expect(trunk.status).toBe(1);
+  });
+
+  it("never prints a credential that reached it in a URL", () => {
+    // Reaching the GitLab backup from the GitHub runner means a token in the
+    // URL, and every sentence this guard writes names the remote. Twelve
+    // characters of a token once reached a build log here; that is the whole
+    // reason this is a case and not a habit.
+    const s = scene(2, 1);
+    const withToken = `${s.primaryUrl.replace("file://", "file://oauth2:s3cr3t-token@")}`;
+    const { output } = runGuard({ ...s, primaryUrl: withToken });
+    expect(output).not.toContain("s3cr3t-token");
+    expect(output).toContain("//***@");
+  });
+
+  it("names the copy it read, so a red build does not misdescribe it", () => {
+    const s = scene(2, null);
+    const { output } = runGuard(s, { PDFLUENT_AGREE_LABEL: "backup (GitLab)" });
+    expect(output).toContain("the backup (GitLab) has no release/ga-readiness at all");
+    expect(output).not.toContain("the primary has no");
+  });
+
   it("names the same primary and the same variable as the document that explains it", () => {
     // Two facts in two files drift, and the one in prose is the one people
     // read. This keeps them the same or fails.
@@ -150,14 +194,26 @@ describe("the trunk exists on the primary too", () => {
   // inside an existing job rather than a job of its own, so nothing else would
   // notice it going missing.
   it("is a step in the fast gate, on our own runner", () => {
-    const ci = readFileSync(resolve(root, ".gitlab-ci.yml"), "utf8");
-    const fast = ci.slice(ci.indexOf("\nquality-gates-fast:"));
-    const job = fast.slice(0, fast.indexOf("\nrepo-truth:"));
+    const ci = readFileSync(resolve(root, ".github/workflows/quality.yml"), "utf8");
+    const fast = ci.slice(ci.indexOf("\n  quality-gates-fast:"));
+    const job = fast.slice(0, fast.indexOf("\n  repo-truth:"));
     expect(job).toContain("node scripts/ci/remotes-agree.mjs");
-    expect(job).toContain("pdfluent-editor-linux");
+    expect(job).toContain("self-hosted");
+    // It has to ask about the copy CI is not running on: the step overrides the
+    // remote, and the override is not the repository the runner is in. Pointed
+    // at its own host it would be asking whether the commit is where it
+    // obviously is — green, and about nothing.
+    //
+    // The address itself is deliberately not written here. This file is
+    // published; the workflow that carries the address is not, and a test that
+    // repeats it would carry our infrastructure out with it. What matters is
+    // the property, and the property is checkable without the name.
+    const step = job.slice(job.indexOf("PDFLUENT_AGREE_LABEL"), job.indexOf("node scripts/ci/remotes-agree.mjs"));
+    expect(step).toContain("PDFLUENT_PRIMARY_URL");
+    expect(step).not.toContain(PRIMARY_URL_DEFAULT_HOST);
     // Ancestry needs ancestry. In a shallow clone every containment question
-    // answers "no" for the wrong reason, and this one would report a primary
-    // that is behind when it is level.
-    expect(job).toContain("GIT_DEPTH: 0");
+    // answers "no" for the wrong reason, and this one would report a copy that
+    // is behind when it is level.
+    expect(job).toContain("fetch-depth: 0");
   });
 });

@@ -26,6 +26,8 @@ import { reportFallback } from '../../lib/commandBridge';
 import i18n from '../../i18n';
 import { toEditorTextSpan } from '../text/editorTextSpan';
 import { extractFirstExternalLink } from '../text/linkDetection';
+import { abandonCommitIfUnarmed, beginCommit, noteMutationAck } from '../performance/perfMarks';
+import { announceUsageRightsInvalidated } from '../state/fallbackNotices';
 
 function hexToRgb(hex: string): [number, number, number] {
   const cleanHex = hex.replace('#', '');
@@ -188,8 +190,15 @@ export function useTextInteraction(
   authorName: string,
   setDocumentEventLog: Dispatch<SetStateAction<DocumentEvent[]>>,
   setAppErrors: Dispatch<SetStateAction<AppError[]>>,
-  onDocumentMutated?: () => void,
+  /** Pages the mutation touched. A text commit changes exactly one page, and
+   *  saying so is what keeps the other 199 from re-rendering. */
+  onDocumentMutated?: (pages?: number[]) => void,
   onExternalLinkClick?: (href: string, label: string) => void | Promise<void>,
+  /** Identity of the open document — the object, not its path: a "Save as"
+   *  gives the same document a new path and has undone nothing. Only used to
+   *  reset what has already been said about it; a notice that fires once has to
+   *  know once per what. */
+  documentKey?: unknown,
 ) {
   const [selectedTextTargetId, setSelectedTextTargetId] = useState<string | null>(null);
   const [selectedTextTarget, setSelectedTextTarget] = useState<TextParagraphTarget | null>(null);
@@ -224,6 +233,14 @@ export function useTextInteraction(
     isStrikethrough: false,
   });
   const draftRangeFormatEditsRef = useRef<DraftRangeFormatEdit[]>([]);
+
+  // Whether this document has already been told that its Reader enablement is
+  // gone. The rights are lost on the first edit and stay lost, so repeating it
+  // on every keystroke would only teach the user to dismiss the banner.
+  const usageRightsAnnouncedRef = useRef(false);
+  useEffect(() => {
+    usageRightsAnnouncedRef.current = false;
+  }, [documentKey]);
 
   // Ref forwarded to TextInlineEditor so the format bar can call execCommand on the element
   const editorDivRef = useRef<HTMLDivElement | null>(null);
@@ -513,6 +530,7 @@ export function useTextInteraction(
     }
 
     isCommittingRef.current = true;
+    beginCommit(pageIndex);
 
     try {
       const mutationEngine = getCanonicalTextMutationEngine();
@@ -557,6 +575,14 @@ export function useTextInteraction(
               message: i18n.t('textMutation.fallback.fontSubstitutedMessage'),
               severity: 'warning',
             });
+          }
+          // The document was Reader-enabled and is not any more. The edit is
+          // what the user asked for, so it stands -- but the file just lost
+          // rights it will not get back, and until now the Sign panel went on
+          // showing the destroyed signature as if it still held (#466).
+          if (result.value.usageRightsInvalidated === true && !usageRightsAnnouncedRef.current) {
+            usageRightsAnnouncedRef.current = true;
+            announceUsageRightsInvalidated();
           }
           currentTextKey = committedText; // Update search key for subsequent style operations
         } else {
@@ -693,9 +719,10 @@ export function useTextInteraction(
       }
 
       if (mutationSuccess) {
+        noteMutationAck(pageIndex);
         setTextMutationRejection(null);
         markDirty();
-        onDocumentMutated?.();
+        onDocumentMutated?.([pageIndex]);
         setDocumentEventLog(prev => appendEvent(prev, makeDocumentEvent(
           'page_mutated',
           authorName,
@@ -715,6 +742,10 @@ export function useTextInteraction(
       setTextDraft('');
       draftRangeFormatEditsRef.current = [];
     } finally {
+      // Nothing changed, or the commit threw: there is no repaint to wait for,
+      // and leaving the intent parked would report the next unrelated render of
+      // this page as this commit's repaint.
+      abandonCommitIfUnarmed();
       isCommittingRef.current = false;
     }
   }, [

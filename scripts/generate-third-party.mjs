@@ -80,9 +80,29 @@ function presentPath(filePath) {
   return filePath;
 }
 
-function evaluateLicensePolicy(licenseExpression, source, name) {
+/**
+ * Our own code, offered to us under our own commercial licence.
+ *
+ * The engine crates are published as `AGPL-3.0-only OR
+ * LicenseRef-PDFluent-Commercial`. An OR leaves the choice to the taker and we
+ * are the same company on both sides, so the commercial half is the one that
+ * governs here and the AGPL half never applies. Read literally by the blocked
+ * patterns they are twenty AGPL dependencies, which is how the regenerated
+ * THIRD_PARTY.md came to say "blocked: 20" about crates we wrote.
+ *
+ * AND is a different thing entirely: every conjunct applies, so a commercial
+ * grant beside a copyleft one does not release us from the copyleft one. That
+ * case falls through to the ordinary rules below.
+ */
+const OURS_BY_CHOICE = /\bOR\b/i;
+const OUR_COMMERCIAL = "LicenseRef-PDFluent-Commercial";
+
+export function evaluateLicensePolicy(licenseExpression, source, name) {
   const normalized = normalizeLicenseExpression(licenseExpression);
   if (source === "internal" || normalized === "LicenseRef-PDFluent-Proprietary") {
+    return { licenseStatus: "known", policyStatus: "internal" };
+  }
+  if (normalized && normalized.includes(OUR_COMMERCIAL) && OURS_BY_CHOICE.test(normalized)) {
     return { licenseStatus: "known", policyStatus: "internal" };
   }
 
@@ -107,7 +127,11 @@ function evaluateLicensePolicy(licenseExpression, source, name) {
     return { licenseStatus: "known", policyStatus: "needs-review" };
   }
 
-  if (hasBlockedPattern && !(name === "pdfluent" && source === "cargo")) {
+  // The exception that used to live here named one crate, `pdfluent`, at a time
+  // when the engine was one crate. It has been split into twenty-one since, so
+  // the name matched nothing and the rule above -- which reads the licence
+  // rather than the name -- covers all of them.
+  if (hasBlockedPattern) {
     return { licenseStatus: "known", policyStatus: "blocked" };
   }
 
@@ -540,7 +564,6 @@ function writeThirdPartyMarkdown(entries, summary) {
 
   const markdown = `# THIRD_PARTY
 
-Generated: ${new Date().toISOString()}
 Generator: \`scripts/generate-third-party.mjs\`
 
 ## Summary
@@ -596,7 +619,6 @@ ${content}
 
   const markdown = `# THIRD_PARTY_ATTRIBUTIONS
 
-Generated: ${new Date().toISOString()}
 Generator: \`scripts/generate-third-party.mjs\`
 
 This file stores bundled notice texts and model-asset references.
@@ -609,7 +631,6 @@ ${sections}
 
 function writeComplianceReport(entries, summary) {
   const report = {
-    generatedAt: new Date().toISOString(),
     generatedBy: "scripts/generate-third-party.mjs",
     entries,
     summary,
@@ -647,4 +668,9 @@ function main() {
   );
 }
 
-main();
+// Only when it is the program. `evaluateLicensePolicy` is imported by
+// tests/licence-policy-dual-commercial.test.ts, and a module that regenerates
+// three files at import time turns reading one function into rewriting the
+// working tree — which is exactly what it did on every gate run between
+// d2993f7 and here.
+if (import.meta.url === `file://${process.argv[1]}`) main();

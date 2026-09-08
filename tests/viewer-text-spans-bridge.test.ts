@@ -186,10 +186,11 @@ describe('ViewerApp — text span fetch effect', () => {
     expect(effectBlock).toContain('!cancelled');
   });
 
-  it('depends on both pageIndex and pdfDoc.id to refetch on doc change', () => {
-    // v2: dependency array also includes documentVersion so page
-    // mutations trigger a re-fetch. Accept either old or new form.
-    expect(viewerAppSource).toMatch(/\[pageIndex, pdfDoc\?\.id(?:, documentVersion)?\]/);
+  it('refetches on a document change and on a change to this page only', () => {
+    // #402: the third dependency used to be the document-wide counter, so an
+    // edit anywhere re-extracted the spans of the page being looked at. It is
+    // now that page's own revision.
+    expect(viewerAppSource).toContain('[pageIndex, pdfDoc?.id, pageRevision(revision, pageIndex)]');
   });
 
   it('guards on pdfDoc and engine before invoking', () => {

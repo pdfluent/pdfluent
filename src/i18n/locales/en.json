@@ -1316,7 +1316,9 @@
       "verifySection": "Signatures",
       "verify": "Check signatures",
       "desktopOnly": "Available in the desktop app",
-      "unsigned": "This document carries no signatures."
+      "unsigned": "This document carries no signatures.",
+      "usageRights": "Reader enablement (usage rights)",
+      "usageRightsInvalidated": "Usage rights invalidated — this file was edited, so Adobe Reader no longer treats it as an enabled form."
     },
     "protect": {
       "lede": "Protect your PDF document with strong cryptographic passwords. Changes are applied locally right away.",
@@ -1478,6 +1480,8 @@
     "ocrFailedMessage": "Text recognition stopped on page {{page}}: {{reason}}",
     "xfaStaticTitle": "Form filled without recalculation",
     "xfaStaticMessage": "This build writes XFA field values straight into the form. Field scripts do not run, so calculated totals and fields that appear or hide based on your answer stay as they are.",
-    "featureUnavailableTitle": "'{{feature}}' is not available in this build"
+    "featureUnavailableTitle": "'{{feature}}' is not available in this build",
+    "usageRightsInvalidatedTitle": "This document is no longer Reader-enabled",
+    "usageRightsInvalidatedMessage": "Your change was made. It also invalidated the usage-rights signature this PDF carried, which let Adobe Reader fill in and save the form. The text edit stands; the extended rights are gone and cannot be restored by undoing it."
   }
 }

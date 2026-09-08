@@ -63,10 +63,11 @@ driver_open_document() {
 
 driver_s2_checks() {
   local out=""
-  for probe in alive session_delta crash_scan watchdog; do
+  for probe in applog_missing alive session_delta crash_scan watchdog; do
     if _fake_have "${probe}"; then
       _fake_stage "${probe}"
       case "${probe}" in
+        applog_missing) out="${out}${out:+,}applog" ;;
         alive) out="${out}${out:+,}alive" ;;
         session_delta) out="${out}${out:+,}clean_quit" ;;
         crash_scan) out="${out}${out:+,}no_crash" ;;
@@ -90,3 +91,9 @@ driver_s4_probes() {
   _fake_stage updater_sigs
   _fake_stage updater_payload
 }
+
+# The walk is one JSON file whatever produced it, so the fake driver answers it
+# the same way it answers every other probe: from a fixture. That is what lets
+# the coverage rule -- a registered control the walk never touched is a row, not
+# an absence -- be tested on a runner with no artefact and no window server.
+driver_ui_walk() { _fake_stage ui_walk; }

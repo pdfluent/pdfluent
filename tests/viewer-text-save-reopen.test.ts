@@ -203,20 +203,33 @@ describe('buildAuditReportMarkdown — page_mutated in output', () => {
 // ViewerApp — save pipeline wiring
 // ---------------------------------------------------------------------------
 
+/**
+ * The body of the text-commit callback, bounded by the code that opens and
+ * closes it rather than by a byte count.
+ *
+ * It used to be `slice(idx, idx + 12000)` from the first mention of
+ * `handleDraftCommit`. That number was widened once already, and on
+ * 2026-09-08 it silently stopped reaching the `page_mutated` emission it
+ * asserts: nothing about the commit path had changed, thirteen lines had been
+ * added above it. A window that has to be re-tuned every time the file grows
+ * is a test that reports on its own margin, not on the code.
+ */
+function textCommitBody(): string {
+  const start = viewerAppSrc.indexOf('const handleDraftCommit');
+  expect(start, 'the text commit callback is still there to assert on').toBeGreaterThan(-1);
+  const end = viewerAppSrc.indexOf('isCommittingRef.current = false;', start);
+  expect(end, 'and it still ends by clearing the in-flight flag').toBeGreaterThan(start);
+  return viewerAppSrc.slice(start, end);
+}
+
 describe('ViewerApp — save pipeline wiring after text mutation', () => {
   it('calls markDirty after successful replaceTextSpan', () => {
-    const idx = viewerAppSrc.indexOf('handleDraftCommit');
-    // v2: handleDraftCommit grew (debug logging, expanded error/validation
-    // handling, multi-occurrence logic). The markDirty call sits ~9k
-    // chars in — widen window to capture it.
-    const block = viewerAppSrc.slice(idx, idx + 12000);
+    const block = textCommitBody();
     expect(block).toContain('markDirty');
   });
 
   it('emits page_mutated event after successful replaceTextSpan', () => {
-    const idx = viewerAppSrc.indexOf('handleDraftCommit');
-    // v2: page_mutated emission sits ~9.3k chars into handleDraftCommit.
-    const block = viewerAppSrc.slice(idx, idx + 12000);
+    const block = textCommitBody();
     expect(block).toContain('page_mutated');
   });
 

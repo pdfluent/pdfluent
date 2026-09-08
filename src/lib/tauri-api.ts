@@ -474,6 +474,12 @@ export interface SignatureVerifyResult {
   timestamp: string | null;
   status: string;
   valid: boolean;
+  /**
+   * True for a Reader-enablement (`/Perms /UR3`) signature: it grants features
+   * rather than attesting to the content, and editing the document destroys it.
+   * False for an author signature, which #400 refuses to edit over.
+   */
+  usage_rights: boolean;
 }
 
 export async function signPdf(
@@ -912,7 +918,7 @@ export interface TextSpanInfo {
  * snake_case throughout, no renames. The Rust half is pinned by
  * `text_replace_result_wire_contract_is_stable`; the TypeScript half by
  * `TEXT_REPLACE_RESULT_WIRE_KEYS` in `src/lib/textSpanWireContract.ts`. All
- * eleven keys are always present — an absent decision and a decision of "no"
+ * twelve keys are always present — an absent decision and a decision of "no"
  * are different answers, so the writer sends `null` rather than nothing.
  */
 export interface TextReplaceResultWire {
@@ -932,6 +938,11 @@ export interface TextReplaceResultWire {
   fit_applied: string | null;
   /** Whether the document carries digital signatures. */
   signatures_present: boolean | null;
+  /**
+   * Whether this edit destroyed a Reader-enablement signature. Present on every
+   * applied edit; null on a refusal, which invalidated nothing.
+   */
+  usage_rights_invalidated: boolean | null;
   /** Whether the edited page participates in a structure tree. */
   tags_affected: boolean | null;
   /** Coded observations from the writer. */

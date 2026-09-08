@@ -29,6 +29,7 @@ import { compareSnapshots, formatSnapshotDiffMarkdown } from '../revisionCompare
 import i18n from '../../i18n';
 import { reportCommandFailure } from '../../lib/commandBridge';
 import { announceOcrUnavailable } from '../state/fallbackNotices';
+import { runWhenIdle, whenFirstPainted } from '../performance/perfMarks';
 
 const isTauri = isTauriRuntime();
 
@@ -183,13 +184,29 @@ export function useAnnotations(
     // Detect scanned pages: probe each page's extractable text length.
     // Pages with fewer than SCANNED_PAGE_TEXT_THRESHOLD characters are
     // considered scanned (no native text layer) and added to scannedPageIndices.
-    // Process in parallel batches of 8 for performance.
+    //
+    // This walks EVERY page. On a 209-page document it is 209 backend calls,
+    // and it used to start in the same React commit as the first page render,
+    // so it queued ahead of the one render the user is actually waiting for.
+    // Nothing on screen needs it before the first page is visible: it feeds the
+    // OCR offer and the scanned-page badge.
+    //
+    // So: wait for the first paint, then walk in idle time. The document stays
+    // fully usable while it runs, and a document whose first page never paints
+    // still gets probed (whenFirstPainted has a timeout) rather than silently
+    // losing the feature.
     const SCANNED_PAGE_TEXT_THRESHOLD = 12;
     const SCAN_BATCH_SIZE = 8;
+    let probeCancelled = false;
     void (async () => {
+      await whenFirstPainted(pdfDoc.id);
+      if (probeCancelled) return;
       const scanned = new Set<number>();
       const totalPages = pdfDoc.pages.length;
       for (let batch = 0; batch < totalPages; batch += SCAN_BATCH_SIZE) {
+        if (probeCancelled) return;
+        await new Promise<void>(resolve => { runWhenIdle(resolve); });
+        if (probeCancelled) return;
         const batchEnd = Math.min(batch + SCAN_BATCH_SIZE, totalPages);
         const promises = [];
         for (let p = batch; p < batchEnd; p++) {
@@ -204,8 +221,10 @@ export function useAnnotations(
         }
         await Promise.all(promises);
       }
-      setScannedPageIndices(scanned);
+      if (!probeCancelled) setScannedPageIndices(scanned);
     })();
+
+    return () => { probeCancelled = true; };
   }, [pdfDoc?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Reset activeAnnotationTool when switching away from review mode

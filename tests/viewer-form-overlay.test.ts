@@ -472,7 +472,7 @@ describe('XFA Phase 2 wire contract (commit result DTO)', () => {
     const start = viewerAppSource.indexOf('useXfaFormModel(');
     expect(start).toBeGreaterThan(-1);
     const el = viewerAppSource.slice(start, start + 200);
-    expect(el).toContain('setDocumentVersion(v => v + 1)');
+    expect(el).toContain('bumpDocument');
   });
 });
 

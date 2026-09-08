@@ -27,14 +27,40 @@ driver_check_tools() {
     echo "the build host did not answer over ssh" > "${WORK}/preflight-tools.err"
     return 1
   fi
-  printf '{"driver":"windows","powershell":"present"}'
+
+  # The build host is shared with the CI runner and the corpus (#427). Every
+  # number this lane produces is a wall-clock measurement of a cold application
+  # start, so a run taken while that machine is compiling does not measure the
+  # artefact -- and the 60 s open timeout turns a loaded box into FAIL rows
+  # about documents that are fine. A busy host is a reason not to run, said
+  # before the run rather than discovered in the report.
+  local load
+  load="$(driver_load1)"
+  if [ "${PDFLUENT_SUITE_IGNORE_HOST_LOAD:-0}" != "1" ] && [ -n "${load}" ] \
+     && [ "${load}" -ge "${PDFLUENT_SUITE_MAX_HOST_LOAD:-70}" ] 2>/dev/null; then
+    echo "the build host is ${load}% busy; other work is running there, and a timing taken beside it measures that work (set PDFLUENT_SUITE_IGNORE_HOST_LOAD=1 to run anyway)" \
+      > "${WORK}/preflight-tools.err"
+    return 1
+  fi
+
+  printf '{"driver":"windows","powershell":"present","host_load_percent":%s}' "${load:-null}"
 }
 
 driver_kill_leftovers() {
   ssh "${WIN_SSH[@]}" "${WIN_BUILD_HOST}" "powershell -NoProfile -Command \"Get-Process pdfluent-desktop -ErrorAction SilentlyContinue | Stop-Process -Force\"" >/dev/null 2>&1 || true
 }
 driver_os_string() { ssh "${WIN_SSH[@]}" "${WIN_BUILD_HOST}" "powershell -NoProfile -Command \"(Get-CimInstance Win32_OperatingSystem).Caption\"" 2>/dev/null | tr -d '\r'; }
-driver_load1() { ssh "${WIN_SSH[@]}" "${WIN_BUILD_HOST}" "powershell -NoProfile -Command \"(Get-CimInstance Win32_Processor | Measure-Object -Property LoadPercentage -Average).Average\"" 2>/dev/null | tr -d '\r'; }
+# Three samples over three seconds, averaged.
+#
+# A single LoadPercentage reading is instantaneous and this machine swings
+# between 40 and 100 while a build is running, so one sample lets a busy host
+# through and stops an idle one at random. What the gate wants to know is
+# whether work is running, and that is a short average rather than a moment.
+driver_load1() {
+  ssh "${WIN_SSH[@]}" "${WIN_BUILD_HOST}" \
+    "powershell -NoProfile -Command \"[math]::Round(((Get-Counter '\\Processor(_Total)\\% Processor Time' -SampleInterval 1 -MaxSamples 3).CounterSamples | Measure-Object -Property CookedValue -Average).Average)\"" \
+    2>/dev/null | tr -d '\r'
+}
 
 _win_documents() {
   local f out=""
@@ -56,10 +82,23 @@ _win_run_once() {
   ssh "${WIN_SSH[@]}" "${WIN_BUILD_HOST}" "powershell -NoProfile -Command \"New-Item -ItemType Directory -Force -Path '${REMOTE_WORK}' | Out-Null; Remove-Item -Recurse -Force '${REMOTE_WORK}/probes' -ErrorAction SilentlyContinue\"" >/dev/null 2>&1
   scp "${WIN_SSH[@]}" "${ARTEFACT}" "${WIN_BUILD_HOST}:${remote_msi}" >/dev/null 2>&1 || return 0
   scp "${WIN_SSH[@]}" "${SUITE_DIR}/drivers/windows.ps1" "${WIN_BUILD_HOST}:${REMOTE_WORK}/windows.ps1" >/dev/null 2>&1 || return 0
+
+  # The run carries what it needs instead of reading it off the build host.
+  #
+  # The golden documents and the allow-list used to be taken from the checkout
+  # on that machine, and that checkout is whatever somebody last built from: on
+  # 2026-09-08 it stood on a July commit with no golden directory at all, so the
+  # lane would have opened nothing, written no document probe, and reported one
+  # tidy "the application was not started" skip. Measuring less because another
+  # machine is behind is the failure this suite exists to catch, not one to
+  # inherit.
+  scp -r "${WIN_SSH[@]}" "${REPO_ROOT}/src-tauri/tests/golden" "${WIN_BUILD_HOST}:${REMOTE_WORK}/golden" >/dev/null 2>&1 || true
+  scp "${WIN_SSH[@]}" "${REPO_ROOT}/scripts/ci/offline-allowlist.mjs" "${WIN_BUILD_HOST}:${REMOTE_WORK}/offline-allowlist.mjs" >/dev/null 2>&1 || true
+
   local no_launch=""
   [ "${PDFLUENT_SUITE_NO_LAUNCH:-0}" = "1" ] && no_launch="-NoLaunch"
   ssh "${WIN_SSH[@]}" "${WIN_BUILD_HOST}" \
-    "powershell -NoProfile -ExecutionPolicy Bypass -File '${REMOTE_WORK}/windows.ps1' -Msi '${remote_msi}' -Work '${REMOTE_WORK}' -Checkout '${WIN_EDITOR_PATH}' -Documents '$(_win_documents)' ${no_launch}" \
+    "powershell -NoProfile -ExecutionPolicy Bypass -File '${REMOTE_WORK}/windows.ps1' -Msi '${remote_msi}' -Work '${REMOTE_WORK}' -Golden '${REMOTE_WORK}/golden' -Allowlist '${REMOTE_WORK}/offline-allowlist.mjs' -Documents '$(_win_documents)' ${no_launch}" \
     > "${WORK}/windows-run.log" 2>&1 || true
   scp -r "${WIN_SSH[@]}" "${WIN_BUILD_HOST}:${REMOTE_WORK}/probes/." "${WORK}/probes/" >/dev/null 2>&1 || true
   scp -r "${WIN_SSH[@]}" "${WIN_BUILD_HOST}:${REMOTE_WORK}/ms/." "${WORK}/ms/" >/dev/null 2>&1 || true
@@ -84,7 +123,8 @@ driver_documents() {
 driver_open_document() { :; }   # the remote run already opened every document
 driver_s2_checks() {
   local out=""
-  [ -e "${WORK}/probes/alive.rc" ] && out="alive"
+  [ -e "${WORK}/probes/applog_missing.rc" ] && out="applog"
+  [ -e "${WORK}/probes/alive.rc" ] && out="${out}${out:+,}alive"
   [ -e "${WORK}/probes/session_delta.out" ] && out="${out}${out:+,}clean_quit"
   [ -e "${WORK}/probes/crash_scan.out" ] && out="${out}${out:+,}no_crash"
   printf '%s' "${out}"
@@ -106,6 +146,14 @@ driver_s4_probes() {
   echo $? > "${WORK}/probes/updater_sigs.rc"
   node "${SUITE_DIR}/updater_payload.mjs" "${art}/windows" "${WORK}" > "${WORK}/probes/updater_payload.out" 2>&1
   echo $? > "${WORK}/probes/updater_payload.rc"
+}
+
+# The UI walk on the build host is not wired yet. WebView2 can be started with a
+# debugging port, so this platform does have a way in -- it has not been run
+# there, and a driver that has never run is exactly what this step exists to
+# stop being reported as coverage.
+driver_ui_walk() {
+  UI_WALK_GAP="the walk has not been run on the build-host lane yet, so no control was driven on this platform"
 }
 
 driver_gaps() {

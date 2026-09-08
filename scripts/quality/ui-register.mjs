@@ -891,6 +891,29 @@ export function testKind(text) {
   return 'unit';
 }
 
+/**
+ * What a test that exercises a key binding looks like, for one key.
+ *
+ * The probe used to be the key character and the word `key`, anywhere in the
+ * file. For save that is `'s'` and `key`, and a fixture reading `title: 's'`
+ * next to a doc comment about "keys" was accepted as the proof of Cmd+S. A
+ * one-character literal proves nothing on its own, so the probe now names the
+ * binding the way the handler writes it -- the same shapes `keyIsHandled`
+ * looks for in the source, plus the e2e keypress.
+ */
+export function keyBindingProbes(literal) {
+  const out = [];
+  for (const q of ["'", '"']) {
+    out.push([`case ${q}${literal}${q}`]);
+    out.push([`key === ${q}${literal}${q}`]);
+    out.push([`key !== ${q}${literal}${q}`]);
+    out.push([`${q}${literal}${q}:`]);
+    out.push([`addEventListener(${q}${literal}${q}`]);
+    out.push([`press(${q}${literal}${q}`]);
+  }
+  return out;
+}
+
 /** Literal groups; a test proves the affordance when it contains a whole group. */
 export function probesFor(a) {
   const withCommands = (groups) =>
@@ -904,9 +927,136 @@ export function probesFor(a) {
     case 'rail-panel': return withCommands([[`'${a.id}'`, 'LeftNavRail']]);
     case 'mode':       return withCommands([[`'${a.id}'`, 'ModeSwitcher']]);
     case 'button':     return withCommands([[`'${a.id}'`], [`"${a.id}"`]]);
-    case 'shortcut':   return withCommands((a.literals ?? []).map((l) => [`'${l}'`, 'key']));
+    case 'shortcut':   return withCommands((a.literals ?? []).flatMap(keyBindingProbes));
     default:           return [[`'${a.id}'`]];
   }
+}
+
+// ---------------------------------------------------------------------------
+// Code, and the text around it
+// ---------------------------------------------------------------------------
+
+/** After these, a `{` opens an object literal rather than a block. */
+const OBJECT_AFTER = new Set(['=', '(', ',', ':', '[', '?', '&', '|', '+', '!']);
+
+/** After these, a `/` opens a regular expression rather than dividing. */
+const REGEX_AFTER = new Set([
+  '', '(', ',', '=', ':', '[', '!', '&', '|', '?', '{', '}', ';', '+', '-', '*', '%', '<', '>', '~', '^',
+]);
+
+/** The end of the string or template starting at `from`. */
+function endOfQuoted(text, from) {
+  const quote = text[from];
+  let depth = 0;                                   // ${ } nesting inside a template
+  for (let i = from + 1; i < text.length; i++) {
+    const c = text[i];
+    if (c === '\\') { i++; continue; }
+    if (quote === '`') {
+      if (c === '$' && text[i + 1] === '{') { depth++; i++; continue; }
+      if (c === '}' && depth > 0) { depth--; continue; }
+      if (c === '`' && depth === 0) return i + 1;
+      continue;
+    }
+    if (c === quote) return i + 1;
+    if (c === '\n') return i;                      // an apostrophe in prose, not a string
+  }
+  return text.length;
+}
+
+/** The end of the regular expression starting at `from`. */
+function endOfRegex(text, from) {
+  let inClass = false;
+  for (let i = from + 1; i < text.length; i++) {
+    const c = text[i];
+    if (c === '\\') { i++; continue; }
+    if (c === '[') inClass = true;
+    else if (c === ']') inClass = false;
+    else if (c === '/' && !inClass) return i + 1;
+    else if (c === '\n') return from + 1;          // not a regular expression after all
+  }
+  return text.length;
+}
+
+/**
+ * One lexical pass over a test file, blanking character for character so
+ * offsets still line up.
+ *
+ * `blankData` decides what goes besides the comments: a string literal that is
+ * not evaluated where it stands. The bracket stack answers that -- a string is
+ * evaluated when the nearest enclosing bracket is a call's, directly or through
+ * object and array literals that are themselves arguments. A fixture inside a
+ * test body, a lookup table and a type union are not arguments; a string
+ * sitting in one of those is data the test carries, not a thing the test does.
+ */
+function lex(text, blankData) {
+  const out = text.split('');
+  const blank = (from, to) => {
+    for (let i = from; i < to; i++) if (out[i] !== '\n') out[i] = ' ';
+  };
+  const stack = [];
+  const evaluated = () => {
+    for (let k = stack.length - 1; k >= 0; k--) {
+      if (stack[k] === 'data') continue;
+      return stack[k] === 'call';
+    }
+    return false;                                  // module scope is not an argument
+  };
+
+  let prev = '';                                   // last significant character
+  let i = 0;
+  while (i < text.length) {
+    const c = text[i];
+    if (c === '/' && text[i + 1] === '/') {
+      const nl = text.indexOf('\n', i);
+      const stop = nl < 0 ? text.length : nl;
+      blank(i, stop); i = stop; continue;
+    }
+    if (c === '/' && text[i + 1] === '*') {
+      const at = text.indexOf('*/', i + 2);
+      const stop = at < 0 ? text.length : at + 2;
+      blank(i, stop); i = stop; continue;
+    }
+    if (c === '/' && REGEX_AFTER.has(prev)) {
+      i = endOfRegex(text, i); prev = '/'; continue;
+    }
+    if (c === "'" || c === '"' || c === '`') {
+      const stop = endOfQuoted(text, i);
+      if (blankData && !evaluated()) blank(i, stop);
+      i = stop; prev = 'x';                         // a string is a value, like a name
+      continue;
+    }
+    if (c === '(') stack.push('call');
+    else if (c === '[') stack.push('data');
+    else if (c === '{') stack.push(OBJECT_AFTER.has(prev) ? 'data' : 'block');
+    else if (c === ')' || c === ']' || c === '}') stack.pop();
+    if (!/\s/.test(c)) prev = c;
+    i++;
+  }
+  return { text: out.join('') };
+}
+
+/**
+ * Comments blanked out, character for character.
+ *
+ * The register listed `tests/declared-skips.test.ts` as the proof of Cmd+S
+ * because a doc comment there used the word "keys" while a fixture elsewhere in
+ * the file said `title: 's'`. Rewording the comment removed the row, which is
+ * the whole problem: an answer that moves when prose moves is not an answer.
+ */
+export function stripComments(text) {
+  return lex(text, false).text;
+}
+
+/**
+ * The same text with every string literal that is not evaluated where it stands
+ * blanked as well: what is left is what the test does.
+ *
+ * Used for the probes that are one or two characters wide, where a fixture, a
+ * type union or a lookup table three files away would otherwise answer for the
+ * keyboard.
+ */
+export function codeTokens(text) {
+  return lex(text, true).text;
 }
 
 /**
@@ -920,7 +1070,8 @@ export function probesFor(a) {
  * never run. A skip is a decision to ship without the test; it cannot also be
  * the evidence that shipping is safe.
  */
-export function runnableText(text) {
+export function runnableText(raw) {
+  const text = stripComments(raw);
   const blank = (s) => s.replace(/[^\n]/g, ' ');
   const spans = [];
 
@@ -1007,12 +1158,85 @@ function dropUnreachableHelpers(text, blank) {
   return out;
 }
 
+/**
+ * The tables a test reads, put back.
+ *
+ * A test collects ids in an array and loops over them -- `it.each(ENTRY_POINTS)`
+ * runs one case per row, `for (const key of universal)` asserts one id at a
+ * time -- and those rows are the test's input, not a description of it.
+ * Blanking them the way a fixture is blanked dropped five controls that a
+ * table-driven test does exercise.
+ *
+ * Two limits keep this from undoing the point. The literal has to be an array
+ * or an object: a template holding a sample source file is text, and the one in
+ * tests/no-silent-failures-lint.test.ts contains `data-testid="export-btn"`,
+ * which would otherwise become the proof of the one button already recorded as
+ * untested. And the name has to be read somewhere else in the file; data
+ * nothing touches is not evidence, for the same reason a helper only skipped
+ * tests call is not.
+ */
+function keepDataTables(runnable, coded) {
+  const out = coded.split('');
+  const decl = /\b(?:const|let|var)\s+([A-Za-z_$][\w$]*)\b/g;
+  let m;
+  while ((m = decl.exec(runnable))) {
+    const eq = runnable.indexOf('=', m.index + m[0].length);
+    if (eq < 0) continue;
+    const start = eq + 1 + /^\s*/.exec(runnable.slice(eq + 1))[0].length;
+    const open = runnable[start];
+    if (open !== '[' && open !== '{') continue;          // a template is text, not a table
+    const close = open === '[' ? ']' : '}';
+    let depth = 0;
+    let stop = -1;
+    for (let i = start; i < runnable.length; i++) {
+      if (runnable[i] === open) depth++;
+      else if (runnable[i] === close && --depth === 0) { stop = i; break; }
+    }
+    if (stop < 0) continue;
+    const elsewhere = runnable.slice(0, m.index) + runnable.slice(stop + 1);
+    if (!new RegExp(`\\b${m[1]}\\b`).test(elsewhere)) continue;
+    for (let k = start; k <= stop; k++) out[k] = runnable[k];
+  }
+  return out.join('');
+}
+
+/**
+ * What a test file offers as evidence: the parts that run, without the parts
+ * that are not code. Memoised because every affordance asks every test file.
+ */
+const EVIDENCE = new Map();
+function evidenceOf(text) {
+  let out = EVIDENCE.get(text);
+  if (out === undefined) {
+    const runnable = runnableText(text);
+    const coded = codeTokens(runnable);
+    out = { coded, tables: keepDataTables(runnable, coded) };
+    EVIDENCE.set(text, out);
+  }
+  return out;
+}
+
+/**
+ * Does this test name the affordance?
+ *
+ * Only what the test runs counts: comments are gone, and so is every string
+ * that sits where nothing evaluates it. Both halves were paying for themselves
+ * the day this was written -- a doc comment was the proof of Cmd+S, and a
+ * template fixture holding a sample spec was about to become the proof of the
+ * export button, the one control already recorded as untested.
+ *
+ * A shortcut is held to the narrower reading. Its literals are one character
+ * wide, so a lookup table a test happens to read -- `{ '1': 'heading' }`,
+ * `title: 's'` -- answers for the keyboard as convincingly as a key handler
+ * does, and it should not.
+ */
 export function findProof(a, tests) {
   const hits = [];
   for (const [file, text] of tests) {
-    const runnable = runnableText(text);
+    const evidence = evidenceOf(text);
+    const haystack = a.kind === 'shortcut' ? evidence.coded : evidence.tables;
     for (const group of probesFor(a)) {
-      if (group.every((lit) => runnable.includes(lit))) {
+      if (group.every((lit) => haystack.includes(lit))) {
         hits.push({ file, kind: testKind(text), job: ciJobFor(file) });
         break;
       }
@@ -1136,7 +1360,7 @@ export function wiredTiles(register) {
 // Rendering
 // ---------------------------------------------------------------------------
 
-const KIND_TITLE = {
+export const KIND_TITLE = {
   tile: 'All-tools tiles',
   panel: 'Right-hand panels',
   'mode-tab': 'Mode tabs',

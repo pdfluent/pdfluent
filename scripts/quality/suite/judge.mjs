@@ -24,8 +24,17 @@
 // colon and dashes turned into underscores.
 
 import { readFileSync, existsSync, appendFileSync, statSync } from "node:fs";
+import { walkTargets, judgeWalk } from "./ui_walk.mjs";
 import { createHash } from "node:crypto";
 import path from "node:path";
+
+// Windows PowerShell's `Set-Content -Encoding utf8` writes a byte order mark
+// first, and every judge that anchors a pattern to the start of a probe then
+// matches the mark instead of the text. The first real run on the build host
+// reported a correctly signed installer as "no RESULT line", for that reason
+// alone. Stripped here, once, rather than in each judge: the next tool to write
+// a probe on that platform will do the same thing.
+const withoutBom = (s) => (s.charCodeAt(0) === 0xfeff ? s.slice(1) : s);
 
 export function readProbe(work, name) {
   const outPath = path.join(work, "probes", `${name}.out`);
@@ -33,8 +42,8 @@ export function readProbe(work, name) {
   if (!existsSync(outPath) && !existsSync(rcPath)) return { missing: true, out: "", rc: null };
   return {
     missing: false,
-    out: existsSync(outPath) ? readFileSync(outPath, "utf8") : "",
-    rc: existsSync(rcPath) ? Number.parseInt(readFileSync(rcPath, "utf8").trim(), 10) : 0,
+    out: existsSync(outPath) ? withoutBom(readFileSync(outPath, "utf8")) : "",
+    rc: existsSync(rcPath) ? Number.parseInt(withoutBom(readFileSync(rcPath, "utf8")).trim(), 10) : 0,
   };
 }
 
@@ -69,9 +78,20 @@ export const JUDGES = {
       // The exact string, not the numeric core: 1.0.0 and 1.0.0-beta.21 are
       // different builds and a suite that cannot tell them apart certifies the
       // wrong bytes.
-      return got === meta.expected_version
-        ? pass({ bundle_version: got })
-        : fail(`bundle ${got} != package.json ${meta.expected_version}`, { bundle_version: got });
+      if (got === meta.expected_version) return pass({ bundle_version: got });
+      // Except in an MSI, where it cannot be. Windows Installer's
+      // ProductVersion is numeric and holds no prerelease tag, so Tauri names
+      // the installer by the numeric core; comparing the whole string there
+      // fails every prerelease build for a reason about the format rather than
+      // about the bytes. What it costs is checked, not waved through: the full
+      // string is asserted in S2 against what the running binary writes into
+      // its own session log, so a 1.0.0 installer claiming to be beta.21 is
+      // still caught -- by the binary, not by the package metadata.
+      const core = String(meta.expected_version).split("-")[0];
+      if (meta.platform === "windows" && got === core) {
+        return pass({ bundle_version: got, expected_version: meta.expected_version });
+      }
+      return fail(`bundle ${got} != package.json ${meta.expected_version}`, { bundle_version: got });
     },
   },
   bundle_id: {
@@ -145,9 +165,20 @@ export const JUDGES = {
   },
 
   // ── S2 launch, open, quit ──────────────────────────────────────────────────
+  // The suite watches the application's own log for the parse mark, so an
+  // application that writes no log at all cannot be judged on anything in S2.
+  // Said once, here, instead of as one 60-second timeout per document: the
+  // build host's July installer starts and opens its web view perfectly and
+  // predates the durable log entirely, and seventeen identical timeouts read as
+  // seventeen broken documents.
+  applog: {
+    step: "S2", capability: "open", probe: "applog_missing",
+    run: (p) => fail(`the installed application wrote no log file, so no parse mark could appear: ${firstLine(p.out) || "(no path reported)"}`),
+  },
   open: {
     step: "S2", capability: "open", probe: "wait_log",
     run: (p, meta, ctx) => {
+      if (p.rc === 125) return fail(firstLine(p.out) || "the run stopped before this document was opened");
       if (p.rc === 124) return fail(`timeout after ${meta.open_timeout_s} s, no "document parsed OK"`);
       if (!/document parsed OK/.test(p.out)) return fail(`no "document parsed OK" in the log delta (rc ${p.rc})`);
       return pass(ctx.numbers ?? {});
@@ -336,16 +367,67 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   }
   const work = String(args.work);
   const meta = JSON.parse(readFileSync(path.join(work, "meta.json"), "utf8"));
-  const checks = String(args.checks || "").split(",").map((s) => s.trim()).filter(Boolean);
   let worst = 0;
-  for (const spec of checks) {
-    const row = judgeOne(work, spec, meta);
+
+  // `announce` is false for a row the orchestrator has already announced on
+  // stderr at the moment it found the gap. Saying it twice is not louder, and a
+  // reader who sees one skip printed twice starts discounting the line.
+  const emit = (row, announce = true) => {
     appendFileSync(path.join(work, "steps.ndjson"), JSON.stringify(row) + "\n", "utf8");
     if (row.status === "FAIL") worst = Math.max(worst, 1);
     if (row.status === "SKIPPED") {
-      process.stderr.write(`SKIPPED (not a pass): ${row.id} — ${row.reason}\n`);
+      if (announce) process.stderr.write(`SKIPPED (not a pass): ${row.id} — ${row.reason}\n`);
       worst = Math.max(worst, 3);
     }
+  };
+  const judgeList = (list) => {
+    for (const spec of String(list).split(",").map((s) => s.trim()).filter(Boolean)) {
+      emit(judgeOne(work, spec, meta));
+    }
+  };
+
+  // Two ways in, one behaviour. `--checks` judges a list now; `--queue` reads a
+  // tab-separated file the orchestrator appended to as it went and judges the
+  // lot in one interpreter.
+  //
+  // The suite is shell, so every judgement used to cost a node start: ten per
+  // run, and the run itself does nothing but read files. On this machine a bare
+  // `node -e ""` is about half a second of CPU, so those starts WERE the runtime
+  // -- 8.9 s wall for a fake run that touches no tools, times fifteen runs in
+  // the suite's own cases. Deferring them changes when a row is written, not
+  // what it says: `JUDGES` already carries each check's step, so order comes
+  // from the queue rather than from which subshell was alive at the time.
+  if (args.queue) {
+    const file = String(args.queue);
+    const lines = existsSync(file) ? readFileSync(file, "utf8").split("\n").filter(Boolean) : [];
+    for (const line of lines) {
+      const [kind, ...rest] = line.split("\t");
+      if (kind === "J") judgeList(rest[0] ?? "");
+      else if (kind === "S") {
+        // A step with nothing to run says so in the report, not only on stderr.
+        // A skip that leaves no row is indistinguishable from a step that
+        // passed, which is what this whole file is arranged against.
+        const [step, id, capability, reason] = rest;
+        emit({ step, id, capability, status: "SKIPPED", ms: 0, numbers: {}, reason: reason ?? "", evidence: [] }, false);
+      } else if (kind === "W") {
+        // The UI walk expands here rather than in the orchestrator. The list of
+        // controls comes from the register, which is a file to parse, and the
+        // flush is already a node process: expanding it in shell would have
+        // cost an interpreter start per run for a list the judge has to read
+        // anyway.
+        const root = rest[0] ?? process.cwd();
+        const probe = readProbe(work, "ui_walk");
+        for (const r of judgeWalk(walkTargets(root), probe.out, {
+          missingProbe: probe.missing,
+          missingReason: rest[1] ?? "",
+        })) emit(r);
+      } else {
+        process.stderr.write(`judge: queue line neither J nor S: ${line.slice(0, 80)}\n`);
+        worst = Math.max(worst, 1);
+      }
+    }
+  } else {
+    judgeList(args.checks || "");
   }
   process.exit(worst);
 }

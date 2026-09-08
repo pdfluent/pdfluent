@@ -45,8 +45,16 @@ echo "tauri.conf.json trusts updater key: ${TRUSTED}"
 shopt -s nullglob
 SIGS=("${ART_DIR}"/*/*.sig "${ART_DIR}"/*.sig)
 if [ ${#SIGS[@]} -eq 0 ]; then
-  echo "(no .sig files under ${ART_DIR} — nothing to verify; trusted-key self-check passed)"
-  exit 0
+  # Nothing to verify is not "verified". This runs as step 1 of
+  # stage-latest-json.sh, immediately before a feed is built from those same
+  # files, so an exit 0 here says "the signatures are trusted" about a directory
+  # that has none -- the shape that let a green run mean nothing three times in
+  # this repository. The generator refuses a moment later today, which makes
+  # this a soft spot rather than a hole; it is still the wrong answer.
+  echo "SKIPPED (not a pass): no .sig files under ${ART_DIR} — nothing was verified." >&2
+  echo "  The trusted-key self-check passed, but that says nothing about artefacts that are not there." >&2
+  echo "  Build and sign first; the updater payloads land in artifacts/{macos,windows}/." >&2
+  exit 3
 fi
 
 fail=0

@@ -65,6 +65,7 @@ const SDK_TEXT_REPLACE_RESULT_WIRE_KEYS = [
   'font_substituted',
   'fit_applied',
   'signatures_present',
+  'usage_rights_invalidated',
   'tags_affected',
   'diagnostics',
 ];

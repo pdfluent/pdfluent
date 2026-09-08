@@ -15,12 +15,14 @@ const viewerAppSource = readFileSync(
 
 describe('ViewerApp — post-commit render lifecycle', () => {
   it('invalidates render consumers instead of reopening the stale disk file', () => {
-    expect(viewerAppSource).toContain('const handleDocumentMutated = useCallback(() => {');
+    expect(viewerAppSource).toContain('const handleDocumentMutated = useCallback((pages?: number[]) => {');
     expect(viewerAppSource).toContain('onDocumentMutated={handleDocumentMutated}');
 
     const callbackStart = viewerAppSource.indexOf('const handleDocumentMutated =');
     const callbackWiring = viewerAppSource.slice(callbackStart, callbackStart + 250);
-    expect(callbackWiring).toContain('setDocumentVersion(v => v + 1);');
+    // #402: still an invalidation rather than a reload, but scoped — a text
+    // commit names its page and only that page is refreshed.
+    expect(callbackWiring).toContain('pages && pages.length > 0 ? bumpPages(r, pages) : bumpAll(r)');
     expect(callbackWiring).not.toContain('handleLoadDocument');
     expect(callbackWiring).not.toContain('currentFilePath');
 

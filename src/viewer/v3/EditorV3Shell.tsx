@@ -216,6 +216,9 @@ interface EditorV3ShellProps {
     isStrikethrough: boolean;
   };
   onDocumentMutated?: () => void;
+  /** Counts content mutations. The Sign panel re-checks on it, because an edit
+   *  is exactly what turns a valid usage-rights signature into a dead one. */
+  contentRevision?: number;
 }
 
 const isTauri = isTauriRuntime();
@@ -325,6 +328,7 @@ export function EditorV3Shell(props: EditorV3ShellProps) {
     onRedactSearch,
     onAuthorChange,
     onDocumentMutated,
+    contentRevision,
     onReorderPages,
     onTtsBoundary,
   } = props;
@@ -869,6 +873,7 @@ export function EditorV3Shell(props: EditorV3ShellProps) {
             layerVisibility={layerVisibility}
             onShowToast={showToast}
             onDocumentMutated={onDocumentMutated}
+            contentRevision={contentRevision}
             onOpenSignModal={() => setShowSignModal(true)}
             onOpenInitialsModal={() => setShowInitialsModal(true)}
           />
@@ -1776,6 +1781,7 @@ function EditorV3Panel({
   layerVisibility,
   onShowToast,
   onDocumentMutated,
+  contentRevision = 0,
   isInsertingText: _isInsertingText,
   setIsInsertingText,
   isInsertingImage: _isInsertingImage,
@@ -1833,6 +1839,7 @@ function EditorV3Panel({
   layerVisibility: Map<string, boolean>;
   onShowToast: (message: string) => void;
   onDocumentMutated?: () => void;
+  contentRevision?: number;
 }) {
   const { t } = useTranslation();
   const { push, update } = useTaskQueueContext();
@@ -2352,7 +2359,7 @@ function EditorV3Panel({
               }}
             />
             <div className="panel-section-label">{t('editorV3.esign.verifySection')}</div>
-            <SignatureVerifyControls signedRevision={signedRevision} />
+            <SignatureVerifyControls signedRevision={signedRevision} contentRevision={contentRevision} />
             {LOCAL_OVERLAY_CONTROLS_ENABLED && (
               <>
                 <div className="panel-section-label">{t('editorV3.esign.fillAndSign')}</div>
@@ -3429,11 +3436,32 @@ function CertificateSignControls({
  * `verify_signatures` returns one entry per signature field with signer,
  * timestamp and verification status; an empty list means the file is unsigned.
  *
- * `signedRevision` moves when the panel above signs the document. The answer
- * on screen was true about the file as it was a moment ago, so it is re-asked
- * rather than left standing.
+ * Two kinds of entry come back and they do not mean the same thing. An author
+ * signature attests to the content, and the text writer refuses to edit over
+ * one (#400). A usage-rights signature (`/Perms /UR3`) grants Reader features
+ * instead, so the writer does edit over it — and destroys it doing so. Shown as
+ * one entry each, this panel reported extended rights the app had just broken
+ * (#466), so a usage-rights entry says what it is and, once the edit has landed,
+ * that the rights are gone.
+ *
+ * "Landed" is `contentRevision`, the app's own count of edits to this document,
+ * and not anything the validator says. `pdf-sign` cannot read the CMS in an
+ * Adobe `/UR3` signature at all (#469), so its verdict is the same sentence
+ * before and after the edit — false on a Reader-enabled file nobody has
+ * touched, and no different once the rights are actually gone. What the app can
+ * stand behind is what it did itself.
+ *
+ * `signedRevision` moves when the panel above signs the document, and
+ * `contentRevision` on every edit. The answer on screen was true about the file
+ * as it was a moment ago, so it is re-asked rather than left standing.
  */
-function SignatureVerifyControls({ signedRevision = 0 }: { signedRevision?: number }) {
+function SignatureVerifyControls({
+  signedRevision = 0,
+  contentRevision = 0,
+}: {
+  signedRevision?: number;
+  contentRevision?: number;
+}) {
   const { t } = useTranslation();
   const [busy, setBusy] = useState(false);
   const [checked, setChecked] = useState(false);
@@ -3462,6 +3490,15 @@ function SignatureVerifyControls({ signedRevision = 0 }: { signedRevision?: numb
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [signedRevision]);
 
+  // An edit is what invalidates a usage-rights signature, so a checked answer
+  // is stale the moment one lands. Only for an answer already on screen: the
+  // panel does not start asking the backend because someone typed.
+  useEffect(() => {
+    if (!checked) return;
+    void verifyDocumentSignatures();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [contentRevision]);
+
   return (
     <div className="flex flex-col gap-3">
       <button
@@ -3482,13 +3519,23 @@ function SignatureVerifyControls({ signedRevision = 0 }: { signedRevision?: numb
       )}
 
       {results.map((result, idx) => (
-        <div className="esign-card" key={`${result.field_name}-${idx}`}>
+        <div
+          className="esign-card"
+          key={`${result.field_name}-${idx}`}
+          data-testid={result.usage_rights ? 'usage-rights-entry' : 'signature-entry'}
+          data-usage-rights={result.usage_rights}
+          data-valid={result.valid}
+        >
           <div className="row">
             {result.valid ? <BadgeCheckIcon aria-hidden="true" /> : <InfoIcon aria-hidden="true" />}
-            {result.signer ?? result.field_name}
+            {result.usage_rights
+              ? t('editorV3.esign.usageRights')
+              : (result.signer ?? result.field_name)}
           </div>
           <div style={{ fontSize: 10, color: 'var(--text-secondary)', marginTop: 4 }}>
-            {result.status}{result.timestamp !== null ? ` — ${result.timestamp}` : ''}
+            {result.usage_rights && contentRevision > 0
+              ? t('editorV3.esign.usageRightsInvalidated')
+              : `${result.status}${result.timestamp !== null ? ` — ${result.timestamp}` : ''}`}
           </div>
         </div>
       ))}

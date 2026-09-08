@@ -56,8 +56,16 @@ describe('useThumbnails — page count override', () => {
     expect(thumbnailsSource).toContain('pageCount ?? document');
   });
 
-  it('adds effectiveCount and documentVersion to the useEffect dependency array', () => {
-    expect(thumbnailsSource).toContain('[engine, document, effectiveCount, documentVersion]');
+  it('regenerates the whole strip only on a document-wide change', () => {
+    // #402: the dependency is revision.all, not the whole revision. A
+    // page-scoped bump (a text commit) must not land here — regenerating 200
+    // thumbnails for one edited word is what this dependency used to do.
+    expect(thumbnailsSource).toContain('[engine, document, effectiveCount, revision.all]');
+  });
+
+  it('refreshes a single page from the revision instead of the whole strip', () => {
+    expect(thumbnailsSource).toContain('const changed = changedPages(previous, revision);');
+    expect(thumbnailsSource).toContain('if (stale) URL.revokeObjectURL(stale);');
   });
 
   it('guards against effectiveCount === 0 (not just document.pages.length === 0)', () => {
@@ -71,9 +79,9 @@ describe('useThumbnails — page count override', () => {
   });
 });
 
-describe('ViewerApp — passes pageCount and documentVersion to useThumbnails', () => {
-  it('passes pageCount, documentVersion and pageIndex to useThumbnails', () => {
-    expect(viewerAppSource).toContain('useThumbnails(engine, pdfDoc, pageCount, documentVersion, pageIndex)');
+describe('ViewerApp — passes pageCount and the revision to useThumbnails', () => {
+  it('passes pageCount, the document revision and pageIndex to useThumbnails', () => {
+    expect(viewerAppSource).toContain('useThumbnails(engine, pdfDoc, pageCount, revision, pageIndex)');
   });
 });
 

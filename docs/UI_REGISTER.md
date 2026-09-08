@@ -94,41 +94,41 @@ naming the affordance that performs its tool; the claim is checked, not believed
 
 | affordance | state | reaches | seen at | proven by |
 |---|---|---|---|---|
-| `compress` | `wired` | `compress_pdf` | `src/viewer/v3/EditorV3Shell.tsx:2413` | `tests/viewer-capability-entry-points.test.ts` (source-grep) · `tests/viewer-export-dialog.test.ts` (source-grep) · `tests/viewer-export-save-routing.test.ts` (source-grep) · +1 |
-| `convert` | `wired` | `frontend_log`, `get_ocr_status`, `render_page`, `run_paddle_ocr` | `src/viewer/v3/EditorV3Shell.tsx:2283` | `src/lib/__tests__/commandBridge.test.ts` (source-grep) · `src/platform/engine/tauri/__tests__/tauri-render-engine.test.ts` (unit) · `tests/viewer-capability-entry-points.test.ts` (source-grep) · +2 |
-| `edit` | `UNTESTED` | `onShowToast → showToast`, `onShowToast → onShowToast` | `src/viewer/v3/EditorV3Shell.tsx:2203` | — |
-| `esign` | `wired` | `sign_pdf`, `verify_signatures` | `src/viewer/v3/EditorV3Shell.tsx:2335` | `tests/viewer-capability-entry-points.test.ts` (source-grep) · `tests/viewer-signatures-ui.test.ts` (source-grep) · `tests/viewer-v3-sign-panel.test.ts` (source-grep) |
-| `invoice` | `wired` | `extract_invoice_data`, `validate_invoice` | `src/viewer/v3/EditorV3Shell.tsx:2553` | `tests/viewer-capability-entry-points.test.ts` (source-grep) |
-| `merge` | `wired` | `merge_pdfs` | `src/viewer/v3/EditorV3Shell.tsx:2492` | `tests/viewer-capability-entry-points.test.ts` (source-grep) |
-| `metadata` | `wired` | `set_metadata` | `src/viewer/v3/EditorV3Shell.tsx:2543` | `tests/viewer-capability-entry-points.test.ts` (source-grep) · `tests/viewer-metadata-editor.test.ts` (source-grep) |
-| `pdfa` | `wired` | `convert_to_pdfa`, `validate_pdfa` | `src/viewer/v3/EditorV3Shell.tsx:2533` | `src/viewer/state/__tests__/fallbackNotices.test.ts` (source-grep) · `tests/viewer-capability-entry-points.test.ts` (source-grep) |
-| `protect` | `wired` | `decrypt_pdf`, `encrypt_pdf` | `src/viewer/v3/EditorV3Shell.tsx:2388` | `tests/viewer-capability-entry-points.test.ts` (source-grep) · `tests/viewer-ocr-ui.test.ts` (source-grep) · `tests/viewer-right-context-panel.test.ts` (source-grep) · +1 |
-| `redact` | `UNTESTED` | `setRedactSearchQuery`, `handleTextRedactSearch` | `src/viewer/v3/EditorV3Shell.tsx:2563` | — |
-| `split` | `wired` | `split_into_pages`, `split_pdf` | `src/viewer/v3/EditorV3Shell.tsx:2441` | `tests/viewer-capability-entry-points.test.ts` (source-grep) · `tests/viewer-organize-assembly.test.ts` (source-grep) |
-| `tools` | `wired` | `add_attachment_dialog`, `get_ocr_status`, `list_attachments`, `remember_file_access`, `remove_attachment`, `render_page`, `run_paddle_ocr`, `save_attachment_dialog`, `save_pdf`, `save_pdf_as_dialog` | `src/viewer/v3/EditorV3Shell.tsx:2107` | `src/lib/__tests__/commandBridge.test.ts` (source-grep) · `src/platform/engine/tauri/__tests__/tauri-render-engine.test.ts` (unit) · `tests/viewer-capability-entry-points.test.ts` (source-grep) · +10 |
-| `watermark` | `wired` | `add_watermark` | `src/viewer/v3/EditorV3Shell.tsx:2405` | `tests/viewer-capability-entry-points.test.ts` (source-grep) |
+| `compress` | `wired` | `compress_pdf` | `src/viewer/v3/EditorV3Shell.tsx:2420` | `tests/viewer-capability-entry-points.test.ts` (source-grep) · `tests/viewer-export-dialog.test.ts` (source-grep) · `tests/viewer-export-save-routing.test.ts` (source-grep) · +1 |
+| `convert` | `wired` | `frontend_log`, `get_ocr_status`, `render_page`, `run_paddle_ocr` | `src/viewer/v3/EditorV3Shell.tsx:2290` | `src/lib/__tests__/commandBridge.test.ts` (source-grep) · `src/platform/engine/tauri/__tests__/tauri-render-engine.test.ts` (unit) · `tests/viewer-capability-entry-points.test.ts` (source-grep) · +2 |
+| `edit` | `UNTESTED` | `onShowToast → showToast`, `onShowToast → onShowToast` | `src/viewer/v3/EditorV3Shell.tsx:2210` | — |
+| `esign` | `wired` | `sign_pdf`, `verify_signatures` | `src/viewer/v3/EditorV3Shell.tsx:2342` | `tests/usage-rights-warning.test.ts` (source-grep) · `tests/viewer-capability-entry-points.test.ts` (source-grep) · `tests/viewer-signatures-ui.test.ts` (source-grep) · +1 |
+| `invoice` | `wired` | `extract_invoice_data`, `validate_invoice` | `src/viewer/v3/EditorV3Shell.tsx:2560` | `tests/viewer-capability-entry-points.test.ts` (source-grep) |
+| `merge` | `wired` | `merge_pdfs` | `src/viewer/v3/EditorV3Shell.tsx:2499` | `tests/viewer-capability-entry-points.test.ts` (source-grep) |
+| `metadata` | `wired` | `set_metadata` | `src/viewer/v3/EditorV3Shell.tsx:2550` | `tests/viewer-capability-entry-points.test.ts` (source-grep) · `tests/viewer-metadata-editor.test.ts` (source-grep) |
+| `pdfa` | `wired` | `convert_to_pdfa`, `validate_pdfa` | `src/viewer/v3/EditorV3Shell.tsx:2540` | `src/viewer/state/__tests__/fallbackNotices.test.ts` (source-grep) · `tests/viewer-capability-entry-points.test.ts` (source-grep) |
+| `protect` | `wired` | `decrypt_pdf`, `encrypt_pdf` | `src/viewer/v3/EditorV3Shell.tsx:2395` | `tests/viewer-capability-entry-points.test.ts` (source-grep) · `tests/viewer-ocr-ui.test.ts` (source-grep) · `tests/viewer-right-context-panel.test.ts` (source-grep) · +1 |
+| `redact` | `UNTESTED` | `setRedactSearchQuery`, `handleTextRedactSearch` | `src/viewer/v3/EditorV3Shell.tsx:2570` | — |
+| `split` | `wired` | `split_into_pages`, `split_pdf` | `src/viewer/v3/EditorV3Shell.tsx:2448` | `tests/viewer-capability-entry-points.test.ts` (source-grep) · `tests/viewer-organize-assembly.test.ts` (source-grep) |
+| `tools` | `wired` | `add_attachment_dialog`, `get_ocr_status`, `list_attachments`, `remember_file_access`, `remove_attachment`, `render_page`, `run_paddle_ocr`, `save_attachment_dialog`, `save_pdf`, `save_pdf_as_dialog` | `src/viewer/v3/EditorV3Shell.tsx:2114` | `src/lib/__tests__/commandBridge.test.ts` (source-grep) · `src/platform/engine/tauri/__tests__/tauri-render-engine.test.ts` (unit) · `tests/viewer-capability-entry-points.test.ts` (source-grep) · +9 |
+| `watermark` | `wired` | `add_watermark` | `src/viewer/v3/EditorV3Shell.tsx:2412` | `tests/viewer-capability-entry-points.test.ts` (source-grep) |
 
 ## Mode tabs
 
 | affordance | state | reaches | seen at | proven by |
 |---|---|---|---|---|
-| `convert` | `wired` | `onPanelToggle → togglePanel`, `togglePanel` | `src/viewer/v3/EditorV3Shell.tsx:1543` | `tests/viewer-capability-entry-points.test.ts` (source-grep) · `tests/viewer-ocr-ui.test.ts` (source-grep) |
-| `edit` | `UNTESTED` | `onPanelToggle → togglePanel`, `togglePanel` | `src/viewer/v3/EditorV3Shell.tsx:1543` | — |
-| `esign` | `wired` | `onPanelToggle → togglePanel`, `togglePanel` | `src/viewer/v3/EditorV3Shell.tsx:1543` | `tests/viewer-capability-entry-points.test.ts` (source-grep) · `tests/viewer-v3-sign-panel.test.ts` (source-grep) |
-| `tools` | `wired` | `onPanelToggle → togglePanel`, `togglePanel` | `src/viewer/v3/EditorV3Shell.tsx:1543` | `tests/viewer-v3-workflow-regressions.test.ts` (source-grep) |
+| `convert` | `wired` | `onPanelToggle → togglePanel`, `togglePanel` | `src/viewer/v3/EditorV3Shell.tsx:1548` | `tests/viewer-ocr-ui.test.ts` (source-grep) |
+| `edit` | `UNTESTED` | `onPanelToggle → togglePanel`, `togglePanel` | `src/viewer/v3/EditorV3Shell.tsx:1548` | — |
+| `esign` | `wired` | `onPanelToggle → togglePanel`, `togglePanel` | `src/viewer/v3/EditorV3Shell.tsx:1548` | `tests/usage-rights-warning.test.ts` (source-grep) · `tests/viewer-v3-sign-panel.test.ts` (source-grep) |
+| `tools` | `wired` | `onPanelToggle → togglePanel`, `togglePanel` | `src/viewer/v3/EditorV3Shell.tsx:1548` | `tests/viewer-v3-workflow-regressions.test.ts` (source-grep) |
 
 ## Left rail tools
 
 | affordance | state | reaches | seen at | proven by |
 |---|---|---|---|---|
-| `comment` | `UNTESTED` | `onAnnotationToolChange → setActiveAnnotationTool`, `onAnnotationToolChange → onAnnotationToolChange` | `src/viewer/v3/EditorV3Shell.tsx:2664` | — |
-| `draw` | `wired` | `setPassiveRailTool`, `onModeChange → inline` | `src/viewer/v3/EditorV3Shell.tsx:2666` | `tests/viewer-capability-entry-points.test.ts` (source-grep) |
-| `hand` | `UNTESTED` | `onAnnotationToolChange → setActiveAnnotationTool`, `onAnnotationToolChange → onAnnotationToolChange` | `src/viewer/v3/EditorV3Shell.tsx:2662` | — |
-| `highlight` | `UNTESTED` | `setPassiveRailTool`, `onModeChange → inline` | `src/viewer/v3/EditorV3Shell.tsx:2665` | — |
-| `more` | `UNTESTED` | `setMoreToolsOpen` | `src/viewer/v3/EditorV3Shell.tsx:2670` | — |
-| `select` | `UNTESTED` | `onAnnotationToolChange → setActiveAnnotationTool`, `onAnnotationToolChange → onAnnotationToolChange` | `src/viewer/v3/EditorV3Shell.tsx:2661` | — |
-| `sign` | `UNTESTED` | `setPassiveRailTool`, `onAnnotationToolChange → setActiveAnnotationTool` | `src/viewer/v3/EditorV3Shell.tsx:2668` | — |
-| `text` | `UNTESTED` | `setPassiveRailTool`, `onAnnotationToolChange → setActiveAnnotationTool` | `src/viewer/v3/EditorV3Shell.tsx:2667` | — |
+| `comment` | `UNTESTED` | `onAnnotationToolChange → setActiveAnnotationTool`, `onAnnotationToolChange → onAnnotationToolChange` | `src/viewer/v3/EditorV3Shell.tsx:2671` | — |
+| `draw` | `wired` | `setPassiveRailTool`, `onModeChange → inline` | `src/viewer/v3/EditorV3Shell.tsx:2673` | `tests/viewer-capability-entry-points.test.ts` (source-grep) |
+| `hand` | `UNTESTED` | `onAnnotationToolChange → setActiveAnnotationTool`, `onAnnotationToolChange → onAnnotationToolChange` | `src/viewer/v3/EditorV3Shell.tsx:2669` | — |
+| `highlight` | `UNTESTED` | `setPassiveRailTool`, `onModeChange → inline` | `src/viewer/v3/EditorV3Shell.tsx:2672` | — |
+| `more` | `UNTESTED` | `setMoreToolsOpen` | `src/viewer/v3/EditorV3Shell.tsx:2677` | — |
+| `select` | `UNTESTED` | `onAnnotationToolChange → setActiveAnnotationTool`, `onAnnotationToolChange → onAnnotationToolChange` | `src/viewer/v3/EditorV3Shell.tsx:2668` | — |
+| `sign` | `UNTESTED` | `setPassiveRailTool`, `onAnnotationToolChange → setActiveAnnotationTool` | `src/viewer/v3/EditorV3Shell.tsx:2675` | — |
+| `text` | `UNTESTED` | `setPassiveRailTool`, `onAnnotationToolChange → setActiveAnnotationTool` | `src/viewer/v3/EditorV3Shell.tsx:2674` | — |
 
 ## Command palette
 
@@ -165,18 +165,18 @@ naming the affordance that performs its tool; the claim is checked, not believed
 | affordance | state | reaches | seen at | proven by |
 |---|---|---|---|---|
 | `add-attachment-btn` | `UNREACHABLE` | `onAddAttachment → onAddAttachment` | `src/viewer/components/LeftNavRail.tsx:386` | — |
-| `annotation-tool-attachment` | `wired` | `add_attachment_dialog` | `src/viewer/v3/EditorV3Shell.tsx:2676` | `tests/viewer-capability-entry-points.test.ts` (source-grep) |
-| `annotation-tool-strikeout` | `wired` | `onMoreTool → handleMoreTool`, `handleMoreTool` | `src/viewer/v3/EditorV3Shell.tsx:2674` | `tests/viewer-annotation-toolbar.test.ts` (source-grep) · `tests/viewer-capability-entry-points.test.ts` (source-grep) |
-| `annotation-tool-underline` | `wired` | `onMoreTool → handleMoreTool`, `handleMoreTool` | `src/viewer/v3/EditorV3Shell.tsx:2675` | `tests/viewer-annotation-toolbar.test.ts` (source-grep) · `tests/viewer-capability-entry-points.test.ts` (source-grep) |
+| `annotation-tool-attachment` | `wired` | `add_attachment_dialog` | `src/viewer/v3/EditorV3Shell.tsx:2683` | `tests/viewer-capability-entry-points.test.ts` (source-grep) |
+| `annotation-tool-strikeout` | `wired` | `onMoreTool → handleMoreTool`, `handleMoreTool` | `src/viewer/v3/EditorV3Shell.tsx:2681` | `tests/viewer-annotation-toolbar.test.ts` (source-grep) · `tests/viewer-capability-entry-points.test.ts` (source-grep) |
+| `annotation-tool-underline` | `wired` | `onMoreTool → handleMoreTool`, `handleMoreTool` | `src/viewer/v3/EditorV3Shell.tsx:2682` | `tests/viewer-annotation-toolbar.test.ts` (source-grep) · `tests/viewer-capability-entry-points.test.ts` (source-grep) |
 | `batch-delete-btn` | `wired` | `delete_pages` | `src/viewer/components/OrganizeGrid.tsx:494` | `tests/viewer-mode-toolbar.test.ts` (source-grep) · `tests/viewer-organize-batch.test.ts` (source-grep) · `tests/viewer-organize-grid.test.ts` (source-grep) |
 | `batch-rotate-left-btn` | `wired` | `rotate_pages` | `src/viewer/components/OrganizeGrid.tsx:474` | `tests/viewer-organize-batch.test.ts` (source-grep) · `tests/viewer-organize-grid.test.ts` (source-grep) |
 | `batch-rotate-right-btn` | `wired` | `rotate_pages` | `src/viewer/components/OrganizeGrid.tsx:484` | `tests/viewer-organize-batch.test.ts` (source-grep) · `tests/viewer-organize-grid.test.ts` (source-grep) |
 | `clear-selection-btn` | `wired` | `clearSelection`, `setSelectedPages` | `src/viewer/components/OrganizeGrid.tsx:503` | `tests/viewer-organize-batch.test.ts` (source-grep) |
-| `convert-pdfa-btn` | `wired` | `convert_to_pdfa` | `src/viewer/v3/EditorV3Shell.tsx:3028` | `src/viewer/state/__tests__/fallbackNotices.test.ts` (source-grep) · `tests/viewer-capability-entry-points.test.ts` (source-grep) |
-| `export-btn` | `UNTESTED` | `onOpenExport → inline`, `onOpenExport → onOpenExport` | `src/viewer/v3/EditorV3Shell.tsx:1721` | — |
+| `convert-pdfa-btn` | `wired` | `convert_to_pdfa` | `src/viewer/v3/EditorV3Shell.tsx:3035` | `src/viewer/state/__tests__/fallbackNotices.test.ts` (source-grep) · `tests/viewer-capability-entry-points.test.ts` (source-grep) |
+| `export-btn` | `UNTESTED` | `onOpenExport → inline`, `onOpenExport → onOpenExport` | `src/viewer/v3/EditorV3Shell.tsx:1726` | — |
 | `extract-attachment-btn` | `UNREACHABLE` | `onExtractAttachment → onExtractAttachment` | `src/viewer/components/LeftNavRail.tsx:417` | — |
 | `field-row` | `UNREACHABLE` | `onPageSelect → onPageSelect` | `src/viewer/components/LeftNavRail.tsx:556` | `tests/viewer-fields-panel-navigation.test.ts` (source-grep) |
-| `floating-page-indicator` | `wired` | `onOpenGoToPage → inline`, `setGoToPageOpen` | `src/viewer/v3/EditorV3Shell.tsx:929` | `tests/e2e/sign-panel.spec.ts` (e2e) · `tests/e2e/visual-e2e-beta-blockers.spec.ts` (e2e) · `tests/viewer-floating-page-indicator.test.ts` (source-grep) · +5 |
+| `floating-page-indicator` | `wired` | `onOpenGoToPage → inline`, `setGoToPageOpen` | `src/viewer/v3/EditorV3Shell.tsx:934` | `tests/e2e/sign-panel.spec.ts` (e2e) · `tests/e2e/visual-e2e-beta-blockers.spec.ts` (e2e) · `tests/viewer-floating-page-indicator.test.ts` (source-grep) · +5 |
 | `layer-visibility-btn` | `UNREACHABLE` | `onToggleLayer → onToggleLayer` | `src/viewer/components/LeftNavRail.tsx:492` | — |
 | `nav-next-page-btn` | `UNREACHABLE` | `onNextPage` | `src/viewer/components/LeftNavRail.tsx:976` | `tests/viewer-sidebar-nav.test.ts` (source-grep) |
 | `nav-prev-page-btn` | `UNREACHABLE` | `onPrevPage` | `src/viewer/components/LeftNavRail.tsx:953` | `tests/viewer-sidebar-nav.test.ts` (source-grep) |
@@ -191,25 +191,25 @@ naming the affordance that performs its tool; the claim is checked, not believed
 | `organize-split-btn` | `wired` | `split_into_pages` | `src/viewer/components/OrganizeGrid.tsx:550` | `tests/viewer-organize-assembly.test.ts` (source-grep) |
 | `organize-split-range-btn` | `wired` | `split_pdf` | `src/viewer/components/OrganizeGrid.tsx:562` | `tests/viewer-capability-entry-points.test.ts` (source-grep) |
 | `outline-item` | `UNREACHABLE` | `setExpanded`, `onPageSelect → onPageSelect` | `src/viewer/components/LeftNavRail.tsx:235` | `tests/viewer-bookmarks-active-highlight.test.ts` (source-grep) · `tests/viewer-bookmarks-panel.test.ts` (source-grep) |
-| `read-aloud-btn` | `wired` | `native_tts_speak`, `native_tts_stop` | `src/viewer/v3/EditorV3Shell.tsx:1637` | `tests/viewer-capability-entry-points.test.ts` (source-grep) |
-| `redo-btn` | `wired` | `onRedo → inline`, `onRedo → onRedo` | `src/viewer/v3/EditorV3Shell.tsx:1624` | `tests/viewer-undo-engine.test.ts` (source-grep) |
+| `read-aloud-btn` | `wired` | `native_tts_speak`, `native_tts_stop` | `src/viewer/v3/EditorV3Shell.tsx:1642` | `tests/viewer-capability-entry-points.test.ts` (source-grep) |
+| `redo-btn` | `wired` | `onRedo → inline`, `onRedo → onRedo` | `src/viewer/v3/EditorV3Shell.tsx:1629` | `tests/viewer-undo-engine.test.ts` (source-grep) |
 | `remove-attachment-btn` | `UNREACHABLE` | `native file dialog`, `isTauriRuntime` | `src/viewer/components/LeftNavRail.tsx:425` | — |
-| `save-as-btn` | `wired` | `onSaveAs → handleRuntimeSaveAs`, `onSaveAs → onSaveAs` | `src/viewer/v3/EditorV3Shell.tsx:1722` | `tests/viewer-save-as.test.ts` (source-grep) |
-| `save-btn` | `wired` | `save_pdf` | `src/viewer/v3/EditorV3Shell.tsx:1641` | `src/lib/__tests__/commandBridge.test.ts` (source-grep) · `tests/viewer-export-dialog.test.ts` (source-grep) · `tests/viewer-export-save-routing.test.ts` (source-grep) · +6 |
-| `search-btn` | `UNTESTED` | `onOpenSearch → inline`, `onOpenSearch → onOpenSearch` | `src/viewer/v3/EditorV3Shell.tsx:1629` | — |
+| `save-as-btn` | `wired` | `onSaveAs → handleRuntimeSaveAs`, `onSaveAs → onSaveAs` | `src/viewer/v3/EditorV3Shell.tsx:1727` | `tests/viewer-save-as.test.ts` (source-grep) |
+| `save-btn` | `wired` | `save_pdf` | `src/viewer/v3/EditorV3Shell.tsx:1646` | `src/lib/__tests__/commandBridge.test.ts` (source-grep) · `tests/viewer-export-dialog.test.ts` (source-grep) · `tests/viewer-export-save-routing.test.ts` (source-grep) · +5 |
+| `search-btn` | `UNTESTED` | `onOpenSearch → inline`, `onOpenSearch → onOpenSearch` | `src/viewer/v3/EditorV3Shell.tsx:1634` | — |
 | `select-all-btn` | `wired` | `selectAll`, `setSelectedPages` | `src/viewer/components/OrganizeGrid.tsx:519` | `tests/viewer-organize-batch.test.ts` (source-grep) · `tests/viewer-organize-keyboard.test.ts` (source-grep) |
-| `sign-cert-pick` | `wired` | `chooseCertificate`, `native file dialog` | `src/viewer/v3/EditorV3Shell.tsx:3381` | `tests/e2e/sign-panel.spec.ts` (e2e) · `tests/viewer-v3-sign-panel.test.ts` (source-grep) |
-| `sign-with-certificate` | `wired` | `sign_pdf` | `src/viewer/v3/EditorV3Shell.tsx:3414` | `tests/e2e/sign-panel.spec.ts` (e2e) · `tests/viewer-signatures-ui.test.ts` (source-grep) · `tests/viewer-v3-sign-panel.test.ts` (source-grep) |
+| `sign-cert-pick` | `wired` | `chooseCertificate`, `native file dialog` | `src/viewer/v3/EditorV3Shell.tsx:3388` | `tests/e2e/sign-panel.spec.ts` (e2e) · `tests/viewer-v3-sign-panel.test.ts` (source-grep) |
+| `sign-with-certificate` | `wired` | `sign_pdf` | `src/viewer/v3/EditorV3Shell.tsx:3421` | `tests/e2e/sign-panel.spec.ts` (e2e) · `tests/viewer-signatures-ui.test.ts` (source-grep) · `tests/viewer-v3-sign-panel.test.ts` (source-grep) |
 | `text-left-bold-btn` | `UNREACHABLE` | `onFormatCommand → onFormatCommand` | `src/viewer/components/LeftNavRail.tsx:711` | — |
 | `text-left-italic-btn` | `UNREACHABLE` | `onFormatCommand → onFormatCommand` | `src/viewer/components/LeftNavRail.tsx:721` | — |
 | `text-left-underline-btn` | `UNREACHABLE` | `onFormatCommand → onFormatCommand` | `src/viewer/components/LeftNavRail.tsx:731` | — |
-| `undo-btn` | `wired` | `onUndo → inline`, `onUndo → onUndo` | `src/viewer/v3/EditorV3Shell.tsx:1621` | `tests/viewer-undo-engine.test.ts` (source-grep) |
-| `v3-outline-item` | `wired` | `onPageSelect → onNavigatePage`, `onNavigatePage → navigateToPage` | `src/viewer/v3/EditorV3Shell.tsx:2789` | `tests/viewer-capability-entry-points.test.ts` (source-grep) |
-| `validate-pdfa-btn` | `wired` | `validate_pdfa` | `src/viewer/v3/EditorV3Shell.tsx:3018` | `tests/viewer-capability-entry-points.test.ts` (source-grep) |
-| `zoom-fit-width-btn` | `wired` | `onZoomChange → setZoom`, `setZoom` | `src/viewer/v3/EditorV3Shell.tsx:971` | `tests/viewer-zoom-controls.test.ts` (source-grep) |
-| `zoom-in-btn` | `wired` | `onZoomChange → setZoom`, `setZoom` | `src/viewer/v3/EditorV3Shell.tsx:962` | `tests/viewer-mode-toolbar.test.ts` (source-grep) |
-| `zoom-out-btn` | `wired` | `onZoomChange → setZoom`, `setZoom` | `src/viewer/v3/EditorV3Shell.tsx:943` | `tests/viewer-mode-toolbar.test.ts` (source-grep) |
-| `zoom-reset-btn` | `wired` | `setZoomPresetsOpen` | `src/viewer/v3/EditorV3Shell.tsx:952` | `tests/viewer-floating-page-indicator.test.ts` (source-grep) · `tests/viewer-left-rail-toggle.test.ts` (source-grep) · `tests/viewer-organize-grid.test.ts` (source-grep) · +5 |
+| `undo-btn` | `wired` | `onUndo → inline`, `onUndo → onUndo` | `src/viewer/v3/EditorV3Shell.tsx:1626` | `tests/viewer-undo-engine.test.ts` (source-grep) |
+| `v3-outline-item` | `wired` | `onPageSelect → onNavigatePage`, `onNavigatePage → navigateToPage` | `src/viewer/v3/EditorV3Shell.tsx:2796` | `tests/viewer-capability-entry-points.test.ts` (source-grep) |
+| `validate-pdfa-btn` | `wired` | `validate_pdfa` | `src/viewer/v3/EditorV3Shell.tsx:3025` | `tests/viewer-capability-entry-points.test.ts` (source-grep) |
+| `zoom-fit-width-btn` | `wired` | `onZoomChange → setZoom`, `setZoom` | `src/viewer/v3/EditorV3Shell.tsx:976` | `tests/viewer-zoom-controls.test.ts` (source-grep) |
+| `zoom-in-btn` | `wired` | `onZoomChange → setZoom`, `setZoom` | `src/viewer/v3/EditorV3Shell.tsx:967` | `tests/viewer-mode-toolbar.test.ts` (source-grep) |
+| `zoom-out-btn` | `wired` | `onZoomChange → setZoom`, `setZoom` | `src/viewer/v3/EditorV3Shell.tsx:948` | `tests/viewer-mode-toolbar.test.ts` (source-grep) |
+| `zoom-reset-btn` | `wired` | `setZoomPresetsOpen` | `src/viewer/v3/EditorV3Shell.tsx:957` | `tests/viewer-floating-page-indicator.test.ts` (source-grep) · `tests/viewer-left-rail-toggle.test.ts` (source-grep) · `tests/viewer-organize-grid.test.ts` (source-grep) · +5 |
 
 ## Advertised keyboard shortcuts
 
@@ -224,9 +224,9 @@ naming the affordance that performs its tool; the claim is checked, not believed
 | `prevNextPage (← / →)` | `wired` | `keydown ArrowLeft, ArrowRight` | `src/viewer/components/ShortcutSheet.tsx:46` | `tests/viewer-arrow-page-nav.test.ts` (source-grep) · `tests/viewer-keyboard-nav.test.ts` (source-grep) · `tests/viewer-mode-keys.test.ts` (source-grep) · +3 |
 | `prevNextPage (PageUp / PageDown)` | `wired` | `keydown PageUp, PageDown` | `src/viewer/components/ShortcutSheet.tsx:47` | `tests/viewer-arrow-page-nav.test.ts` (source-grep) · `tests/viewer-keyboard-nav.test.ts` (source-grep) · `tests/viewer-page-navigation.test.ts` (source-grep) |
 | `save (⌘S / Ctrl+S)` | `wired` | `keydown s` | `src/viewer/components/ShortcutSheet.tsx:64` | `tests/viewer-export-shortcut.test.ts` (source-grep) · `tests/viewer-goto-page.test.ts` (source-grep) · `tests/viewer-page-input-enter.test.ts` (source-grep) · +3 |
-| `switchMode (1 – 8)` | `wired` | `keydown 1, 8` | `src/viewer/components/ShortcutSheet.tsx:73` | `tests/viewer-mode-keys.test.ts` (source-grep) · `tests/viewer-release-readiness.test.ts` (source-grep) · `tests/viewer-zoom-shortcuts.test.ts` (source-grep) |
+| `switchMode (1 – 8)` | `wired` | `keydown 1, 8` | `src/viewer/components/ShortcutSheet.tsx:73` | `tests/viewer-mode-keys.test.ts` (source-grep) · `tests/viewer-zoom-shortcuts.test.ts` (source-grep) |
 | `thisOverview (⌘? / Ctrl+?)` | `wired` | `keydown ?` | `src/viewer/components/ShortcutSheet.tsx:80` | `tests/viewer-release-readiness.test.ts` (source-grep) · `tests/viewer-shortcut-sheet.test.ts` (source-grep) |
-| `toggleFullscreen (F11 / ⌘⇧F)` | `wired` | `keydown F11, f` | `src/viewer/components/ShortcutSheet.tsx:72` | `tests/e2e/smoke-shell.spec.ts` (e2e) · `tests/viewer-fullscreen-shortcut.test.ts` (source-grep) · `tests/viewer-release-readiness.test.ts` (source-grep) · +1 |
+| `toggleFullscreen (F11 / ⌘⇧F)` | `wired` | `keydown F11, f` | `src/viewer/components/ShortcutSheet.tsx:72` | `tests/viewer-fullscreen-shortcut.test.ts` (source-grep) · `tests/viewer-release-readiness.test.ts` (source-grep) · `tests/viewer-search-shortcut.test.ts` (source-grep) |
 | `zoom100 (⌘0 / Ctrl+0)` | `wired` | `keydown 0` | `src/viewer/components/ShortcutSheet.tsx:57` | `tests/viewer-zoom-reset-click.test.ts` (source-grep) · `tests/viewer-zoom-shortcuts.test.ts` (source-grep) |
 | `zoomIn (⌘= / Ctrl+=)` | `wired` | `keydown =` | `src/viewer/components/ShortcutSheet.tsx:55` | `tests/viewer-goto-page.test.ts` (source-grep) · `tests/viewer-scroll-to-zoom.test.ts` (source-grep) · `tests/viewer-zoom-presets.test.ts` (source-grep) · +2 |
 | `zoomOut (⌘− / Ctrl+−)` | `wired` | `keydown -` | `src/viewer/components/ShortcutSheet.tsx:56` | `tests/viewer-zoom-shortcuts.test.ts` (source-grep) |

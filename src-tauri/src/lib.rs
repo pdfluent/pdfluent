@@ -9,6 +9,7 @@
 
 mod ocr;
 mod pdf_engine;
+mod perf;
 #[cfg(test)]
 mod pdfa_export_guard;
 mod sdk_facade;
@@ -173,6 +174,7 @@ fn frontend_log(message: String) {
 #[tauri::command]
 fn frontend_ready() {
     FRONTEND_READY.store(true, Ordering::SeqCst);
+    perf::mark("frontend_ready");
     eprintln!(
         "startup watchdog: frontend_ready ping received (recovery attempts so far: {})",
         RECOVERY_ATTEMPTS.load(Ordering::SeqCst)
@@ -703,6 +705,7 @@ fn native_tts_resume(state: State<AppState>) -> Result<(), String> {
 
 #[tauri::command]
 async fn open_pdf(state: State<'_, AppState>, path: String) -> Result<DocumentInfo, String> {
+    perf::mark("open_requested");
     applog(&format!("open_pdf: validating selected path (len {})", path.len()));
     let path = security::validate_pdf_input_path(&path)?;
     applog("open_pdf: path validated; parsing document on worker thread");
@@ -713,8 +716,12 @@ async fn open_pdf(state: State<'_, AppState>, path: String) -> Result<DocumentIn
     let doc = tauri::async_runtime::spawn_blocking(move || OpenDocument::open(&open_path))
         .await
         .map_err(|e| e.to_string())??;
+    // The text stays byte-identical: scripts/perf/measure-open.sh and the
+    // phase-1 measurements both grep for it.
     applog("open_pdf: document parsed OK");
+    perf::mark("parsed");
     let info = doc.document_info();
+    perf::mark("info_built");
 
     let mut current_path = state.current_path.lock().map_err(|e| e.to_string())?;
     *current_path = Some(path);
@@ -1036,12 +1043,20 @@ fn extract_page_text(state: State<AppState>, page_index: u32) -> Result<String, 
     state.with_document(|doc| sdk_facade::extract_page_text(&doc.raw_bytes, page_index))
 }
 
+/// Text spans for one page.
+///
+/// `async` is the point. This is the single most-called command at open — the
+/// scanned-page probe asks it once per page, so 209 times on a 209-page
+/// document — and as a sync command every one of those ran on the Tauri main
+/// thread. The main thread is also what delivers the IPC reply for the page
+/// render the user is waiting for and what services the window, so the probe
+/// was competing with first paint rather than merely running beside it.
 #[tauri::command]
-fn get_page_text_spans(
-    state: State<AppState>,
+async fn get_page_text_spans(
+    state: State<'_, AppState>,
     page_index: u32,
 ) -> Result<Vec<TextSpanInfo>, String> {
-    state.with_document(|doc| doc.extract_page_text_spans(page_index))
+    state.with_document_mut(|doc| doc.extract_page_text_spans(page_index))
 }
 
 /// Return annotations for a single page (if page_index is Some) or all pages (if None).
@@ -1615,6 +1630,10 @@ async fn replace_text_span(
             request.anchor,
         )
     })?;
+    perf::mark_with(
+        "mutation_done",
+        &format!("cmd=replace_text_span page={}", request.page_index),
+    );
     applog(&format!(
         "replace_text_span p{} occurrence {:?}/{:?} -> {} font={:?} substituted={:?}",
         request.page_index,
@@ -1651,9 +1670,15 @@ struct FormatTextSpanResult {
 
 /// Change the font size and/or fill color of a text run identified by its
 /// content. Returns `{ formatted: true }` on success or an Err string.
+///
+/// `async` for the same reason `replace_text_span` is: this decodes the page's
+/// content stream, rewrites it and re-serialises the whole document while
+/// holding the document mutex. On the main thread that is time the window
+/// cannot paint in — and it is the second half of the very commit whose
+/// repaint the user is waiting for.
 #[tauri::command]
-fn format_text_span(
-    state: State<AppState>,
+async fn format_text_span(
+    state: State<'_, AppState>,
     request: FormatTextSpanRequest,
 ) -> Result<FormatTextSpanResult, String> {
     let formatted = state.with_document_mut(|doc| {
@@ -1664,6 +1689,10 @@ fn format_text_span(
             request.color,
         )
     })?;
+    perf::mark_with(
+        "mutation_done",
+        &format!("cmd=format_text_span page={}", request.page_index),
+    );
     Ok(FormatTextSpanResult { formatted })
 }
 
@@ -1688,9 +1717,11 @@ struct SetTextRunStyleResult {
 /// Apply bold and/or italic to a text run by swapping its embedded font variant.
 /// Returns `Err("font-variant-not-embedded: …")` when the requested variant is
 /// absent from the document xref — no modification is made in that case.
+///
+/// `async`: see `format_text_span`.
 #[tauri::command]
-fn set_text_run_style(
-    state: State<AppState>,
+async fn set_text_run_style(
+    state: State<'_, AppState>,
     request: SetTextRunStyleRequest,
 ) -> Result<SetTextRunStyleResult, String> {
     let styled = state.with_document_mut(|doc| {
@@ -1701,6 +1732,10 @@ fn set_text_run_style(
             request.italic,
         )
     })?;
+    perf::mark_with(
+        "mutation_done",
+        &format!("cmd=set_text_run_style page={}", request.page_index),
+    );
     Ok(SetTextRunStyleResult { styled })
 }
 
@@ -2105,13 +2140,16 @@ fn session_log_path() -> Option<std::path::PathBuf> {
 pub fn applog(msg: &str) {
     eprintln!("{msg}");
     use std::io::Write;
-    let ts = std::time::SystemTime::now()
+    // Milliseconds, not seconds. Startup is 2.5 s end to end, so a
+    // whole-second timestamp put four or five interesting events on the same
+    // stamp and no ordering could be read out of the file at all.
+    let since_epoch = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
-        .map(|d| d.as_secs())
-        .unwrap_or(0);
+        .unwrap_or_default();
+    let (secs, millis) = (since_epoch.as_secs(), since_epoch.subsec_millis());
     if let Some(path) = app_log_file_path() {
         if let Ok(mut f) = std::fs::OpenOptions::new().create(true).append(true).open(path) {
-            let _ = writeln!(f, "[{ts}] {msg}");
+            let _ = writeln!(f, "[{secs}.{millis:03}] {msg}");
         }
     }
 }
@@ -2125,12 +2163,17 @@ pub fn applog(msg: &str) {
 pub const FRONTEND_FINGERPRINT: &str = env!("PDFLUENT_FRONTEND_FINGERPRINT");
 
 pub fn run() {
+    // First statement: everything measured is measured from here. Whatever
+    // happened before (dyld, LaunchServices) is outside these numbers, and
+    // scripts/perf/measure-open.sh prints that gap separately.
+    perf::start();
     applog(&format!(
         "PDFluent {} starting (pid {}) [frontend {}]",
         env!("CARGO_PKG_VERSION"),
         std::process::id(),
         FRONTEND_FINGERPRINT
     ));
+    perf::mark("starting");
 
     // Debug-only, env-gated security-scoped-bookmark self-test. Never compiled
     // into release builds. Runs the bookmark round-trip in a fresh process and
@@ -2227,7 +2270,17 @@ pub fn run() {
             }
 
             spawn_startup_watchdog(app.handle().clone());
+            perf::mark("setup_done");
             Ok(())
+        })
+        // The webview finished loading index.html. Between `setup_done` and
+        // this mark is window and WKWebView creation; between this mark and
+        // `frontend_ready` is parsing and evaluating the bundle. Those were
+        // the two largest unknowns in the 2.5 s.
+        .on_page_load(|_window, payload| {
+            if payload.event() == tauri::webview::PageLoadEvent::Finished {
+                perf::mark("page_loaded");
+            }
         })
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_shell::init())
@@ -2241,6 +2294,7 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             frontend_ready,
             frontend_log,
+            perf::perf_mark,
             open_pdf,
             pick_pdf_dialog,
             remember_file_access,

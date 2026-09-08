@@ -186,16 +186,23 @@ describe("every job in .github/workflows runs on our own runner", () => {
 });
 
 describe("the release branch is gated by more than a typecheck", () => {
-  const ci = readFileSync(join(ROOT, ".gitlab-ci.yml"), "utf8");
+  const ci = readFileSync(join(ROOT, ".github/workflows/quality.yml"), "utf8");
   const jobBody = (name: string) => {
-    const start = ci.indexOf(`\n${name}:\n`);
-    expect(start, `${name} is not a job in .gitlab-ci.yml`).toBeGreaterThan(-1);
-    const next = ci.indexOf("\n\n#", start + 1);
-    return ci.slice(start, next === -1 ? ci.length : next);
+    const start = ci.indexOf(`\n    name: ${name}\n`);
+    expect(start, `${name} is not a job in .github/workflows/quality.yml`).toBeGreaterThan(-1);
+    const next = ci.indexOf("\n  ", ci.indexOf("steps:", start));
+    const end = ci.indexOf("\n\n  # ", start);
+    return ci.slice(start, end === -1 ? (next === -1 ? ci.length : ci.length) : end);
   };
 
   // beta.21 shipped without any of these ever running: they were tag-only, and
-  // the last tag was beta.20 (2026-07-15).
+  // the last tag was beta.20 (2026-07-15). The trigger is asserted once, for
+  // the workflow that carries them all, rather than per job: on GitHub the jobs
+  // do not each carry a rule.
+  it("runs the whole gate set on a push to a release branch", () => {
+    expect(ci).toMatch(/^on:\n {2}push:\n {4}branches:\n {6}- main\n {6}- "release\/\*\*"\n {2}pull_request:$/m);
+  });
+
   for (const name of [
     "cargo-test",
     "clippy",
@@ -212,13 +219,14 @@ describe("the release branch is gated by more than a typecheck", () => {
     "quality:axes",
     "quality:offline-allowlist",
   ]) {
-    it(`runs ${name} on a push to a release branch`, () => {
+    it(`runs ${name} on our own runner, hard`, () => {
       const body = jobBody(name);
-      expect(body).toContain("$CI_COMMIT_BRANCH =~ /^(main|release\\/)/");
-      expect(body, `${name} is allow_failure — a soft gate is not a gate`).not.toContain(
-        "allow_failure: true",
+      expect(body, `${name} is continue-on-error — a soft gate is not a gate`).not.toContain(
+        "continue-on-error: true",
       );
-      expect(body, `${name} must run on our own runner`).toContain("pdfluent-editor-linux");
+      expect(body, `${name} must run on our own runner`).toContain(
+        "[self-hosted, linux, pdfluent-editor]",
+      );
     });
   }
 
@@ -247,7 +255,7 @@ describe("the release branch is gated by more than a typecheck", () => {
   });
 
   it("runs the hosted-minutes guard in the fast gate", () => {
-    const fast = ci.slice(ci.indexOf("quality-gates-fast:"), ci.indexOf("\ncargo-test:"));
+    const fast = ci.slice(ci.indexOf("  quality-gates-fast:"), ci.indexOf("\n  repo-truth:"));
     expect(fast).toContain("scripts/ci/no-hosted-ci-on-auto-triggers.mjs");
   });
 });

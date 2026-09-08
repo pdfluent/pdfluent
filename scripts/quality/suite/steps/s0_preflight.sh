@@ -12,8 +12,17 @@
 s0_die() { echo "✘ preflight: $*" >&2; return 1; }
 
 step_s0() {
-  local version expected_ver name
-  version="$(node -p "require('${REPO_ROOT}/package.json').version")" || return 1
+  local version expected_ver name facts golden_problem
+  # Two facts, one interpreter. The version and the golden-set check were a node
+  # start each, and a node start is about half a second of CPU on this machine
+  # -- worth nothing on a release evening and most of the runtime in the suite's
+  # own cases, which drive this file fifteen times.
+  facts="$(node "${SUITE_DIR}/golden_check.mjs" "${REPO_ROOT}" --with-version)" || {
+    s0_die "${facts}"; return 1; }
+  version="${facts%%
+*}"
+  golden_problem="${facts#*
+}"
 
   # 1. Machine class. A number measured on "the Mac" is comparable to nothing.
   [ -n "${MACHINE}" ] || { s0_die "no machine class: pass --machine or set PDFLUENT_MACHINE_CLASS (classes live in quality/MACHINES.toml)"; return 1; }
@@ -42,10 +51,8 @@ step_s0() {
       ;;
   esac
 
-  # 3. The golden documents are the ones the baseline was measured on.
-  local golden_problem
-  golden_problem="$(node "${SUITE_DIR}/golden_check.mjs" "${REPO_ROOT}")" || {
-    s0_die "${golden_problem}"; return 1; }
+  # 3. The golden documents are the ones the baseline was measured on -- read
+  #    above, with the version, in the same interpreter.
 
   # 4. Tools, and a machine with no leftover copy of the app running.
   local tools_json

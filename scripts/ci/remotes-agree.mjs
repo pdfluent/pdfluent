@@ -46,6 +46,12 @@ export const TRUNK_BRANCH = process.env.PDFLUENT_TRUNK_BRANCH || "release/ga-rea
 // read-only deploy key and the SSH URL below instead. Port 443 rather than 22:
 // the runner reaches github.com over HTTPS by definition and outbound 22 is the
 // port a network is most likely to have closed.
+// Which copy this run is checking. The interesting copy is always the one CI is
+// NOT running on: while the gate lived on GitLab it asked about GitHub, and now
+// that it runs on GitHub it asks about the GitLab backup. Same question, same
+// failure — a trunk with one copy — so the label travels with the URL rather
+// than being baked into the sentences below.
+export const REMOTE_LABEL = process.env.PDFLUENT_AGREE_LABEL || "primary";
 export const PRIMARY_URL = process.env.PDFLUENT_PRIMARY_URL || "https://github.com/pdfluent/pdfluent-internal.git";
 export const PRIMARY_SSH_URL = process.env.PDFLUENT_PRIMARY_SSH_URL || "ssh://git@ssh.github.com:443/pdfluent/pdfluent-internal.git";
 const PRIMARY_REF = "refs/remotes/pdfluent-primary/trunk";
@@ -54,6 +60,16 @@ const PRIMARY_REF = "refs/remotes/pdfluent-primary/trunk";
 // on that address. Published at https://api.github.com/meta; pinning it here
 // keeps `StrictHostKeyChecking=yes` usable in a container with no known_hosts.
 const GITHUB_HOST_KEY = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl";
+
+/**
+ * A URL fit to print.
+ *
+ * Reaching a private remote can mean a credential in the URL, and everything
+ * this script says about a remote names it. A token that reaches a job log has
+ * left the building: it happened here once already, twelve characters of it, in
+ * a Linux build log. Nothing prints a URL except through this.
+ */
+export const shown = (url) => String(url).replace(/\/\/[^@/]*@/, "//***@");
 
 function git(args, opts = {}) {
   // GIT_TERMINAL_PROMPT=0: without it a read of the primary with no credential
@@ -105,9 +121,9 @@ export function fetchPrimary({ url = PRIMARY_URL, sshUrl = PRIMARY_SSH_URL, keyB
       ? "the deploy key was refused or the address was unreachable"
       : "no credential: PDFLUENT_PRIMARY_SSH_KEY_B64 is not set, and the primary is private";
     throw new Error(
-      `remotes-agree: could not read ${branch} from ${where} — ${why}\n` +
+      `remotes-agree: could not read ${branch} from ${shown(where)} — ${why}\n` +
       `  (${String(e.message).split("\n")[0]})\n` +
-      "  Not a pass: the primary is the other half of this comparison.",
+      `  Not a pass: the ${REMOTE_LABEL} is the other half of this comparison.`,
     );
   } finally {
     if (ssh) rmSync(ssh.dir, { recursive: true, force: true });
@@ -115,28 +131,28 @@ export function fetchPrimary({ url = PRIMARY_URL, sshUrl = PRIMARY_SSH_URL, keyB
 }
 
 export function check({ commit, primary, branch = TRUNK_BRANCH }) {
-  const facts = [`commit under test  ${commit.slice(0, 7)}`, `primary            ${primary.url}`];
+  const facts = [`commit under test  ${commit.slice(0, 7)}`, `${REMOTE_LABEL.padEnd(18)} ${shown(primary.url)}`];
   const failures = [];
   if (!primary.commit) {
     failures.push(
-      `the primary has no ${branch} at all: the trunk exists only where CI runs.\n` +
+      `the ${REMOTE_LABEL} has no ${branch} at all: the trunk exists in one place.\n` +
       "  Push it — scripts/cos/editor_land.sh does this on every landing — and see docs/REPO_TRUTH.md.",
     );
     return { facts, failures };
   }
-  facts.push(`primary ${branch.padEnd(10)} ${primary.commit.slice(0, 7)}`);
+  facts.push(`${REMOTE_LABEL} ${branch.padEnd(10)} ${primary.commit.slice(0, 7)}`);
   let contained = false;
   try { git(["merge-base", "--is-ancestor", commit, primary.commit]); contained = true; } catch { contained = false; }
   if (contained) {
     const ahead = Number(git(["rev-list", "--count", `${commit}..${primary.commit}`]));
-    facts.push(`primary is         ${ahead === 0 ? "level with this commit" : `${ahead} commit(s) ahead`}`);
+    facts.push(`${REMOTE_LABEL} is${" ".repeat(Math.max(1, 16 - REMOTE_LABEL.length))}${ahead === 0 ? "level with this commit" : `${ahead} commit(s) ahead`}`);
     return { facts, failures };
   }
   let behind = "some";
   try { behind = git(["rev-list", "--count", `${primary.commit}..${commit}`]); } catch { /* unrelated histories */ }
   failures.push(
-    `the primary does not contain ${commit.slice(0, 7)}: it is ${behind} commit(s) behind ${branch}.\n` +
-    "  A landing reached CI without reaching the primary, so this history has one copy again.\n" +
+    `the ${REMOTE_LABEL} does not contain ${commit.slice(0, 7)}: it is ${behind} commit(s) behind ${branch}.\n` +
+    `  A landing reached CI without reaching the ${REMOTE_LABEL}, so this history has one copy again.\n` +
     "  Push the trunk to the primary; scripts/cos/editor_land.sh does it GitHub-first for a reason.",
   );
   return { facts, failures };
@@ -148,7 +164,11 @@ export function check({ commit, primary, branch = TRUNK_BRANCH }) {
 // a pass is how a check stops existing without anyone deciding it should.
 export function reasonToSkip(env = process.env) {
   if (env.CI_PIPELINE_SOURCE === "merge_request_event") return "a merge request has not landed on the trunk yet";
-  const branch = env.CI_COMMIT_BRANCH;
+  if (env.GITHUB_EVENT_NAME === "pull_request") return "a pull request has not landed on the trunk yet";
+  // GitLab names the branch CI_COMMIT_BRANCH and GitHub GITHUB_REF_NAME. Both
+  // are read: the gate moved hosts in #465 and a guard that only knew the old
+  // names would have started enforcing on every branch instead of the trunk.
+  const branch = env.CI_COMMIT_BRANCH || (env.GITHUB_REF_TYPE === "branch" ? env.GITHUB_REF_NAME : undefined);
   if (branch && branch !== TRUNK_BRANCH) return `this is ${branch}, not ${TRUNK_BRANCH}`;
   return null;
 }
@@ -163,7 +183,7 @@ function main(argv) {
   } catch (e) { console.error(`\n${e.message}\n`); return 1; }
   for (const f of result.facts) console.log(`  ${f}`);
   if (result.failures.length === 0) {
-    console.log("\nOK: the primary carries the commit CI is testing.");
+    console.log(`\nOK: the ${REMOTE_LABEL} carries the commit CI is testing.`);
     return 0;
   }
   console.error(`\nremotes-agree: ${result.failures.length} thing(s) are not true of this repository.\n`);

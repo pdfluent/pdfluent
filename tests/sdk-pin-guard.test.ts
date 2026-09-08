@@ -24,7 +24,10 @@ import { describe, it, expect } from 'vitest';
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
 const CARGO_TOML = readFileSync(join(ROOT, 'src-tauri/Cargo.toml'), 'utf8');
 const CARGO_LOCK = readFileSync(join(ROOT, 'src-tauri/Cargo.lock'), 'utf8');
-const GITLAB_CI = readFileSync(join(ROOT, '.gitlab-ci.yml'), 'utf8');
+// The pipeline, as two files: the workflow that declares the pinned revision
+// and the composite action every Rust job resolves it through.
+const CI_WORKFLOW = readFileSync(join(ROOT, '.github/workflows/quality.yml'), 'utf8');
+const SDK_PIN = readFileSync(join(ROOT, '.github/actions/sdk-pin/action.yml'), 'utf8');
 
 const ENGINE_GIT_URL = 'https://github.com/pdfluent/engine';
 
@@ -117,8 +120,10 @@ describe('SDK pin drift-guard', () => {
   it('does not clone the engine next to the checkout in CI', () => {
     // The clone was the third source of truth: a branch of its own, pinned
     // nowhere, that only tag pipelines ever exercised.
-    expect(GITLAB_CI).not.toContain('xfa/sdk-phase2-commit-loop');
-    expect(GITLAB_CI).not.toMatch(/git clone[^\n]*XFA/);
+    for (const source of [CI_WORKFLOW, SDK_PIN]) {
+      expect(source).not.toContain('xfa/sdk-phase2-commit-loop');
+      expect(source).not.toMatch(/git clone[^\n]*XFA/);
+    }
   });
 
   it('lets the CI runner reach the pinned revision through the engine mirror', () => {
@@ -131,17 +136,17 @@ describe('SDK pin drift-guard', () => {
     // VALUE: on a shell runner --global wrote the token-bearing URL into the
     // runner user's ~/.gitconfig and left it there. See
     // tests/ci-runner-hygiene.test.ts.
-    expect(GITLAB_CI).toMatch(/GIT_CONFIG_KEY_0="url\.[^"]*\.insteadOf"/);
-    expect(GITLAB_CI).toMatch(/GIT_CONFIG_VALUE_0="https:\/\/github\.com\/pdfluent\/engine"/);
-    // `stage:` is what separates a job from the variables block and the shared
-    // anchors, which mention cargo without ever running it.
-    const rustJobs = GITLAB_CI.split(/\n(?=[a-z][a-z0-9-]*:\n)/).filter(
-      job => /^\s{2}stage:/m.test(job) && /^\s+- (cargo|npm run tauri build)\b/m.test(job),
+    expect(SDK_PIN).toMatch(/GIT_CONFIG_KEY_0=url\.[^\n]*\.insteadOf/);
+    expect(SDK_PIN).toMatch(/GIT_CONFIG_VALUE_0=https:\/\/github\.com\/pdfluent\/engine/);
+    // A job is a key at indent 2 under `jobs:`; `runs-on` is what separates one
+    // from anything else at that depth.
+    const rustJobs = CI_WORKFLOW.split(/\n(?= {2}[a-z][a-z0-9-]*:\n)/).filter(
+      job => /^ {4}runs-on:/m.test(job) && /^\s+- run: cargo\b/m.test(job),
     );
     expect(rustJobs.length, 'no CI job compiles Rust any more').toBeGreaterThan(0);
     for (const job of rustJobs) {
       expect(job, `a Rust job cannot resolve the engine pin:\n${job.slice(0, 200)}`).toContain(
-        '*sdk-pin',
+        'uses: ./.github/actions/sdk-pin',
       );
     }
   });
@@ -150,18 +155,18 @@ describe('SDK pin drift-guard', () => {
     // Two files naming the same revision is a drift waiting to happen: CI needs
     // the value before cargo reads it, to report a lagging mirror as such.
     const rev = gitDependencies().find(d => d.git === ENGINE_GIT_URL)?.rev ?? '';
-    const ciRev = GITLAB_CI.match(/^\s*XFA_SDK_REV:\s*"([0-9a-f]{40})"/m)?.[1];
-    expect(ciRev, '.gitlab-ci.yml declares no XFA_SDK_REV').toBeDefined();
+    const ciRev = CI_WORKFLOW.match(/^\s*XFA_SDK_REV:\s*"?([0-9a-f]{40})"?/m)?.[1];
+    expect(ciRev, 'the quality workflow declares no XFA_SDK_REV').toBeDefined();
     expect(ciRev).toBe(rev);
     // And CI checks it too, so a Cargo.toml bumped on its own fails the job
     // rather than building a revision the mirror was never asked about.
-    expect(GITLAB_CI).toContain('is not the revision src-tauri/Cargo.toml pins');
+    expect(SDK_PIN).toContain('is not the revision src-tauri/Cargo.toml pins');
   });
 
   it('never prints part of the clone credential into a job log', () => {
     // A `${XFA_CLONE_TOKEN:0:12}` diagnostic put half a PAT in every Linux
     // build log, and job logs outlive the job. Length is diagnosis enough.
-    for (const line of GITLAB_CI.split('\n')) {
+    for (const line of `${CI_WORKFLOW}\n${SDK_PIN}`.split('\n')) {
       if (!/\becho\b/.test(line)) continue;
       expect(line, `a CI job echoes part of a credential:\n${line.trim()}`).not.toMatch(
         /\$\{[A-Z_]*(TOKEN|KEY|SECRET|PASSWORD)[A-Z_]*:\d/,

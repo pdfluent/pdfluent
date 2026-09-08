@@ -39,11 +39,12 @@ COLUMNS = [
 DOCS = {"doc-a": b"%PDF-a\n", "doc-b": b"%PDF-b\n"}
 
 
-def row(doc, *, completes="true", p50="100", p95="200", fidelity="100.0",
+def row(doc, *, platform="darwin", machine="dev-macbook-m1pro", completes="true",
+        p50="100", p95="200", fidelity="100.0",
         metric="retention_chars_pct", size="1.0", tol_speed_pct="-", tol_speed_ms="-",
         tol_fidelity="-", tol_size_pct="-", run_id="r1", why="-"):
     return "\t".join([
-        doc, "darwin", "dev-macbook-m1pro", completes, p50, p95, fidelity, metric,
+        doc, platform, machine, completes, p50, p95, fidelity, metric,
         size, tol_speed_pct, tol_speed_ms, tol_fidelity, tol_size_pct, run_id, why,
     ])
 
@@ -69,9 +70,16 @@ class Fixture:
         (golden / "MANIFEST.json").write_text(json.dumps({"set": "golden-17", "documents": documents}))
         calibrated = calibrated or date.today().isoformat()
         (self.root / "quality").mkdir()
+        # Two classes, on two platforms: a baseline holds a row per platform,
+        # and a bless of one of them must leave the other's numbers alone.
         (self.root / "quality" / "MACHINES.toml").write_text(
             "[dev-macbook-m1pro]\n"
             'platform = "darwin"\n'
+            f'calibrated_on = "{calibrated}"\n'
+            "calibration_valid_days = 180\n"
+            "\n"
+            "[runner-desktop-wsl-4core]\n"
+            'platform = "linux"\n'
             f'calibrated_on = "{calibrated}"\n'
             "calibration_valid_days = 180\n"
         )
@@ -85,12 +93,13 @@ class Fixture:
         )
         return path
 
-    def run_file(self, capability, docs):
-        path = self.root / "run.json"
+    def run_file(self, capability, docs, *, platform="darwin",
+                 machine="dev-macbook-m1pro", run_id="r2"):
+        path = self.root / f"run-{platform}.json"
         path.write_text(json.dumps({
-            "run_id": "r2",
-            "platform": "darwin",
-            "machine": "dev-macbook-m1pro",
+            "run_id": run_id,
+            "platform": platform,
+            "machine": machine,
             "set": "golden-17",
             "capabilities": {capability: docs},
         }))
@@ -247,6 +256,59 @@ class RatchetTest(unittest.TestCase):
         code, out = self.fixture.ratchet("--capability", "pdfa", "--run", str(run))
         self.assertEqual(code, 1, out)
         self.assertIn("may not grow at all", out)
+
+    def test_blessing_one_platform_leaves_the_other_platform_alone(self):
+        # A column is seeded per platform, one run at a time: the laptop is
+        # measured here and the runner on the runner. A bless that wrote only
+        # what it just measured would drop the other platform's floor, and the
+        # next run there would find no rows and report SKIPPED rather than red.
+        self.fixture.baseline("pdfa", [
+            row("doc-a", size="1.0"),
+            row("doc-b", size="1.0"),
+        ])
+        run = self.fixture.run_file(
+            "pdfa",
+            {"doc-a": measured(size=2.0), "doc-b": measured(size=2.0)},
+            platform="linux",
+            machine="runner-desktop-wsl-4core",
+            run_id="r-linux",
+        )
+        code, out = self.fixture.ratchet(
+            "--capability", "pdfa", "--run", str(run), "--bless", "--ticket", "451"
+        )
+        self.assertEqual(code, 0, out)
+
+        written = (self.fixture.root / "quality/axes/pdfa.tsv").read_text()
+        rows = [line.split("\t") for line in written.splitlines() if line.startswith("doc-")]
+        by_platform = {}
+        for fields in rows:
+            by_platform.setdefault(fields[1], {})[fields[0]] = fields
+        self.assertEqual(
+            sorted(by_platform), ["darwin", "linux"],
+            f"a bless on linux rewrote the platform list:\n{written}",
+        )
+        for doc in ("doc-a", "doc-b"):
+            self.assertEqual(by_platform["darwin"][doc][8], "1.0", written)
+            self.assertEqual(by_platform["darwin"][doc][13], "r1", written)
+            self.assertEqual(by_platform["linux"][doc][8], "2")
+            self.assertEqual(by_platform["linux"][doc][2], "runner-desktop-wsl-4core")
+
+    def test_a_platform_with_rows_is_still_judged_after_the_other_was_blessed(self):
+        # The other half of the same promise: the darwin rows that survived are
+        # a floor, not decoration, and a darwin run that got worse is red even
+        # though a linux bless has since rewritten the file.
+        self.fixture.baseline("pdfa", [
+            row("doc-a", size="1.0"),
+            row("doc-b", size="1.0"),
+            row("doc-a", platform="linux", machine="runner-desktop-wsl-4core", size="2.0"),
+            row("doc-b", platform="linux", machine="runner-desktop-wsl-4core", size="2.0"),
+        ])
+        run = self.fixture.run_file(
+            "pdfa", {"doc-a": measured(size=1.5), "doc-b": measured()}
+        )
+        code, out = self.fixture.ratchet("--capability", "pdfa", "--run", str(run))
+        self.assertEqual(code, 1, out)
+        self.assertIn("doc-a: size_ratio 1.0 -> 1.5", out)
 
     def test_a_document_that_stops_completing(self):
         code, out = self.judge({"doc-a": measured(completes=False), "doc-b": measured()})

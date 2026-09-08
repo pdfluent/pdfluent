@@ -215,9 +215,9 @@ describe('this checkout', () => {
   });
 
   it('is wired into CI on our own runner', () => {
-    const ci = readFileSync(join(REPO, '.gitlab-ci.yml'), 'utf8');
+    const ci = readFileSync(join(REPO, '.github/workflows/quality.yml'), 'utf8');
     expect(ci).toContain('no-silent-failures.mjs --check');
-    const job = ci.slice(ci.indexOf('quality:no-silent-failures'));
-    expect(job.slice(0, job.indexOf('script:'))).toContain('pdfluent-editor-linux');
+    const job = ci.slice(ci.indexOf('quality-no-silent-failures:'));
+    expect(job.slice(0, job.indexOf('steps:'))).toContain('self-hosted, linux, pdfluent-editor');
   });
 });

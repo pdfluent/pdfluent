@@ -121,6 +121,13 @@ export interface ReplaceTextSpanResult {
   readonly fitApplied?: string | null;
   /** Whether the document carries digital signatures. */
   readonly signaturesPresent?: boolean | null;
+  /**
+   * Whether this edit destroyed the document's Reader-enablement (`/Perms
+   * /UR3`) signature. True is not a failure — the edit landed — but it is a
+   * cost the user has to be told about, because nothing else on the page shows
+   * it. Null where no writer reported (a browser harness).
+   */
+  readonly usageRightsInvalidated?: boolean | null;
   /** Whether the edited page participates in a structure tree. */
   readonly tagsAffected?: boolean | null;
   /** Coded observations from the writer. */

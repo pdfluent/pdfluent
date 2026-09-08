@@ -630,6 +630,10 @@ pub struct TextReplaceResult {
     pub fit_applied: Option<String>,
     /// Whether the document carries digital signatures.
     pub signatures_present: Option<bool>,
+    /// Whether this edit destroyed a Reader-enablement (`/Perms /UR3`)
+    /// signature. Present on every applied edit, `None` on a refusal: nothing
+    /// was invalidated by an edit that did not happen.
+    pub usage_rights_invalidated: Option<bool>,
     /// Whether the edited page participates in a structure tree.
     pub tags_affected: Option<bool>,
     /// Coded observations from the writer (approximate metrics, dropped
@@ -683,7 +687,17 @@ impl TextReplaceResult {
     }
 
     /// A committed edit, described by the engine's report.
-    fn applied(report: &pdf_manip::text_edit::TextReplacementReport, index: usize, count: usize) -> Self {
+    ///
+    /// `usage_rights_invalidated` is a parameter rather than something the
+    /// caller patches on afterwards: it can only be read from the document
+    /// *before* the commit, and a field you can forget to set is a field that
+    /// will be missing on the one path that mattered.
+    fn applied(
+        report: &pdf_manip::text_edit::TextReplacementReport,
+        index: usize,
+        count: usize,
+        usage_rights_invalidated: bool,
+    ) -> Self {
         let first = report.results.first();
         Self {
             replaced: true,
@@ -695,6 +709,7 @@ impl TextReplaceResult {
             font_substituted: first.map(|r| r.font_substituted),
             fit_applied: first.map(|r| format!("{:?}", r.fit_applied).to_ascii_lowercase()),
             signatures_present: Some(report.signatures_present),
+            usage_rights_invalidated: Some(usage_rights_invalidated),
             tags_affected: first.map(|r| r.tags_affected),
             diagnostics: match first {
                 Some(result) => result
@@ -869,6 +884,71 @@ pub struct SignatureVerifyResult {
     pub timestamp: Option<String>,
     pub status: String,
     pub valid: bool,
+    /// True for a Reader-enablement (`/Perms /UR3`) signature: it grants
+    /// features rather than attesting to the content, and editing the document
+    /// destroys it. False for an author signature.
+    pub usage_rights: bool,
+}
+
+/// Walk an AcroForm `/Fields` array and collect every signature field that has
+/// a value, as `(fully qualified name, object id of its /V dictionary)`.
+///
+/// The name is assembled the way `pdf-sign` assembles it — a parent `/T` joined
+/// to a child `/T` with a dot — because lining these fields up with what
+/// `validate_signatures` reported is the only reason to collect them.
+fn collect_signature_fields(
+    doc: &lopdf::Document,
+    fields: &[Object],
+    parent: Option<&str>,
+    out: &mut Vec<(String, ObjectId)>,
+) {
+    for object in fields {
+        let dict = match object {
+            Object::Reference(id) => match doc.get_object(*id) {
+                Ok(Object::Dictionary(dict)) => dict,
+                _ => continue,
+            },
+            Object::Dictionary(dict) => dict,
+            _ => continue,
+        };
+
+        let partial = dict
+            .get(b"T")
+            .ok()
+            .and_then(|o| o.as_str().ok())
+            .map(|s| String::from_utf8_lossy(s).into_owned());
+        let name = match (parent, partial.as_deref()) {
+            (Some(parent), Some(child)) => format!("{parent}.{child}"),
+            (None, Some(child)) => child.to_string(),
+            (Some(parent), None) => parent.to_string(),
+            (None, None) => String::new(),
+        };
+
+        let is_signature = dict
+            .get(b"FT")
+            .ok()
+            .and_then(|o| o.as_name().ok())
+            .is_some_and(|kind| kind == b"Sig");
+        if is_signature {
+            if let Ok(Object::Reference(value)) = dict.get(b"V") {
+                out.push((name.clone(), *value));
+            }
+        }
+
+        if let Ok(kids) = dict.get(b"Kids") {
+            let kids = match kids {
+                Object::Array(kids) => Some(kids),
+                Object::Reference(id) => doc
+                    .get_object(*id)
+                    .ok()
+                    .and_then(|object| object.as_array().ok()),
+                _ => None,
+            };
+            if let Some(kids) = kids {
+                collect_signature_fields(doc, kids, Some(&name), out);
+            }
+        }
+    }
 }
 
 // ── PDF/A compliance types ───────────────────────────────────────────
@@ -984,6 +1064,54 @@ pub struct OpenDocument {
     pub raw_bytes: Vec<u8>,
     /// Whether the document has unsaved changes.
     pub modified: bool,
+    /// Content-stream text runs per page, valid until the next mutation.
+    runs_cache: PageCache<Vec<pdf_manip::text_run::TextRun>>,
+    /// Rendered text spans per page, valid until the next mutation.
+    spans_cache: PageCache<Vec<TextSpanInfo>>,
+}
+
+/// Per-page memo, thrown away whole on any mutation.
+///
+/// Locating a text run means decoding the page's content stream and walking it;
+/// extracting spans means interpreting the page through the rendering engine.
+/// Neither result was kept, so a commit that changed text, size and weight paid
+/// for three of them, and the viewer paid for another every time the page's
+/// spans were re-read after the edit.
+///
+/// Invalidation is all-or-nothing on purpose. A commit touches one page and
+/// re-extracting one page costs milliseconds; per-page invalidation would need
+/// every mutation in this file to report which pages it touched, and a mutation
+/// that forgot would serve stale text with no visible symptom.
+#[derive(Default)]
+struct PageCache<T> {
+    entries: std::collections::HashMap<u32, Arc<T>>,
+    #[cfg(test)]
+    hits: std::cell::Cell<u32>,
+    #[cfg(test)]
+    misses: std::cell::Cell<u32>,
+}
+
+impl<T> PageCache<T> {
+    fn get(&self, page: u32) -> Option<Arc<T>> {
+        let found = self.entries.get(&page).map(Arc::clone);
+        #[cfg(test)]
+        if found.is_some() {
+            self.hits.set(self.hits.get() + 1);
+        } else {
+            self.misses.set(self.misses.get() + 1);
+        }
+        found
+    }
+
+    fn put(&mut self, page: u32, value: T) -> Arc<T> {
+        let shared = Arc::new(value);
+        self.entries.insert(page, Arc::clone(&shared));
+        shared
+    }
+
+    fn clear(&mut self) {
+        self.entries.clear();
+    }
 }
 
 // Render snapshots cross thread boundaries (renders run off the state mutex).
@@ -1186,6 +1314,8 @@ impl OpenDocument {
             lopdf_doc,
             raw_bytes: bytes,
             modified: false,
+            runs_cache: PageCache::default(),
+            spans_cache: PageCache::default(),
         })
     }
 
@@ -1701,20 +1831,46 @@ impl OpenDocument {
     /// font exposes hmtx/CFF metrics; falls back to `font_size * 0.5 * char_count`
     /// (WidthSource::Estimate) otherwise.  G1/G2 metadata fields are populated
     /// from the same extraction pass — no extra SDK call required.
-    pub fn extract_page_text_spans(&self, page_index: u32) -> Result<Vec<TextSpanInfo>, String> {
+    ///
+    /// Memoised per page until the next mutation. This is the most-called
+    /// command at open — once per page — and the viewer asks again for the
+    /// current page after every commit and every time the reader navigates
+    /// back to it. Interpreting the page again for an unchanged page was the
+    /// whole cost.
+    pub fn extract_page_text_spans(&mut self, page_index: u32) -> Result<Vec<TextSpanInfo>, String> {
+        if let Some(cached) = self.spans_cache.get(page_index) {
+            return Ok((*cached).clone());
+        }
+
         let blocks = self
             .pdf_doc
             .extract_text_blocks(page_index as usize)
             .map_err(|e| format!("Failed to extract text spans from page {page_index}: {e}"))?;
 
-        let spans = blocks
+        let spans: Vec<TextSpanInfo> = blocks
             .into_iter()
             .flat_map(|block| block.spans.into_iter())
             .filter(|span| !span.text.trim().is_empty())
             .map(TextSpanInfo::from)
             .collect();
 
-        Ok(spans)
+        Ok((*self.spans_cache.put(page_index, spans)).clone())
+    }
+
+    /// Content-stream text runs for one page, memoised until the next mutation.
+    ///
+    /// A commit that changes size and weight looks the run up twice, and each
+    /// lookup decodes the page's content stream and walks it.
+    fn page_runs(
+        &mut self,
+        page_num: u32,
+    ) -> Result<Arc<Vec<pdf_manip::text_run::TextRun>>, String> {
+        if let Some(cached) = self.runs_cache.get(page_num) {
+            return Ok(cached);
+        }
+        let runs = pdf_manip::text_run::extract_page_text_runs(&self.lopdf_doc, page_num)
+            .map_err(|e| format!("Failed to extract text runs for page {}: {e}", page_num - 1))?;
+        Ok(self.runs_cache.put(page_num, runs))
     }
 
     pub fn search_text(&self, query: &str) -> Vec<u32> {
@@ -2773,13 +2929,108 @@ impl OpenDocument {
         self.render_doc = Self::make_render_doc(&self.pdf_doc);
         self.raw_bytes = signed_bytes;
         self.modified = false;
+        // Replaces both documents without going through sync_after_mutation.
+        self.invalidate_page_caches();
 
         Ok(())
     }
 
+    /// The catalog dictionary, for the few reads that need the raw structure
+    /// rather than the parsed document.
+    fn catalog(&self) -> Option<&Dictionary> {
+        let root = self
+            .lopdf_doc
+            .trailer
+            .get(b"Root")
+            .ok()?
+            .as_reference()
+            .ok()?;
+        self.lopdf_doc.get_object(root).ok()?.as_dict().ok()
+    }
+
+    /// The AcroForm `/Fields` array, resolved through a reference if that is
+    /// how the document stores it.
+    fn acroform_fields(&self) -> Option<&Vec<Object>> {
+        let acro_form = match self.catalog()?.get(b"AcroForm").ok()? {
+            Object::Dictionary(dict) => dict,
+            Object::Reference(id) => self.lopdf_doc.get_object(*id).ok()?.as_dict().ok()?,
+            _ => return None,
+        };
+        match acro_form.get(b"Fields").ok()? {
+            Object::Array(fields) => Some(fields),
+            Object::Reference(id) => self.lopdf_doc.get_object(*id).ok()?.as_array().ok(),
+            _ => None,
+        }
+    }
+
+    /// Object ids of the signature dictionaries the catalog's `/Perms` names as
+    /// usage rights: `/UR3`, and the `/UR` it replaced in PDF 1.6.
+    fn usage_rights_signature_ids(&self) -> HashSet<ObjectId> {
+        let mut ids = HashSet::new();
+        let Some(catalog) = self.catalog() else {
+            return ids;
+        };
+        let perms = match catalog.get(b"Perms") {
+            Ok(Object::Dictionary(dict)) => Some(dict),
+            Ok(Object::Reference(id)) => self
+                .lopdf_doc
+                .get_object(*id)
+                .ok()
+                .and_then(|o| o.as_dict().ok()),
+            _ => None,
+        };
+        let Some(perms) = perms else {
+            return ids;
+        };
+        for key in [b"UR3".as_ref(), b"UR".as_ref()] {
+            if let Ok(Object::Reference(id)) = perms.get(key) {
+                ids.insert(*id);
+            }
+        }
+        ids
+    }
+
+    /// Whether this document is Reader-enabled: it carries a usage-rights
+    /// signature, which any content edit destroys.
+    ///
+    /// Read before an edit, not after — the point of asking is to be able to
+    /// say what the edit is about to cost.
+    pub fn has_usage_rights_signature(&self) -> bool {
+        !self.usage_rights_signature_ids().is_empty()
+    }
+
     /// Verify all digital signatures in the document.
+    ///
+    /// Each result says which of the two promises it carries. `pdf-sign`
+    /// reports them identically, and the difference is most of what the Sign
+    /// panel can honestly say: an author signature attests to the content and
+    /// stops an edit (#400); a usage-rights signature grants Reader features and
+    /// is destroyed by one (#466). Showing the second as a green signature is
+    /// how the app came to report something it had just broken.
     pub fn verify_signatures(&self) -> Vec<SignatureVerifyResult> {
         let results = validate_signatures(self.pdf_doc.pdf());
+
+        let usage_rights_ids = self.usage_rights_signature_ids();
+        let mut signature_fields = Vec::new();
+        if let Some(fields) = self.acroform_fields() {
+            collect_signature_fields(&self.lopdf_doc, fields, None, &mut signature_fields);
+        }
+        let usage_rights_names: HashSet<&str> = signature_fields
+            .iter()
+            .filter(|(_, id)| usage_rights_ids.contains(id))
+            .map(|(name, _)| name.as_str())
+            .collect();
+        let author_names: HashSet<&str> = signature_fields
+            .iter()
+            .filter(|(_, id)| !usage_rights_ids.contains(id))
+            .map(|(name, _)| name.as_str())
+            .collect();
+        // A name the AcroForm never offered. `pdf-sign` falls back to scanning
+        // the objects when `/Fields` yields nothing — which is precisely the
+        // Reader-enabled shape, an empty `/Fields` beside a `/Perms /UR3` — and
+        // calls everything it finds that way `Signature1`. With no author field
+        // anywhere in the form, those are the usage rights.
+        let unnamed_are_usage_rights = !usage_rights_ids.is_empty() && author_names.is_empty();
 
         results
             .into_iter()
@@ -2789,6 +3040,13 @@ impl OpenDocument {
                     ValidationStatus::Invalid(reason) => (format!("invalid: {reason}"), false),
                     ValidationStatus::Unknown(reason) => (format!("unknown: {reason}"), false),
                 };
+                let usage_rights = if usage_rights_names.contains(r.field_name.as_str()) {
+                    true
+                } else if author_names.contains(r.field_name.as_str()) {
+                    false
+                } else {
+                    unnamed_are_usage_rights
+                };
 
                 SignatureVerifyResult {
                     field_name: r.field_name,
@@ -2796,6 +3054,7 @@ impl OpenDocument {
                     timestamp: r.timestamp,
                     status: status_str,
                     valid,
+                    usage_rights,
                 }
             })
             .collect()
@@ -3513,6 +3772,11 @@ impl OpenDocument {
             return Ok(TextReplaceResult::reason("no-content-stream"));
         }
 
+        // Read before the writer touches anything: after the commit the
+        // question "was this document Reader-enabled?" can no longer be asked
+        // of the document, only of what we remembered.
+        let usage_rights = self.has_usage_rights_signature();
+
         // Match ids never leave this call, so the revision only has to be
         // internally consistent within it. Hashing the document on every
         // keystroke would cost more than the edit itself; a real revision
@@ -3564,7 +3828,12 @@ impl OpenDocument {
                         .with_occurrence(index, count));
                 }
                 self.sync_after_mutation()?;
-                Ok(TextReplaceResult::applied(&report, index, count))
+                Ok(TextReplaceResult::applied(
+                    &report,
+                    index,
+                    count,
+                    usage_rights,
+                ))
             }
             Err(commit) => Ok(TextReplaceResult::refused(&commit.error)
                 .with_detail_from(&commit.results)
@@ -3590,17 +3859,14 @@ impl OpenDocument {
         font_size: Option<f32>,
         color: Option<[f32; 3]>,
     ) -> Result<bool, String> {
-        use pdf_manip::text_run::extract_page_text_runs;
         use pdf_text_format::{format_text_run, TextRunLocator};
 
         // pdf-manip pages are 1-based.
         let page_num = page_index + 1;
 
-        let runs = extract_page_text_runs(&self.lopdf_doc, page_num)
-            .map_err(|e| format!("Failed to extract text runs for page {page_index}: {e}"))?;
-
+        let runs = self.page_runs(page_num)?;
         let run = runs
-            .into_iter()
+            .iter()
             .find(|r| r.text == original_text)
             .ok_or_else(|| format!("Text run not found on page {page_index}: '{original_text}'"))?;
 
@@ -3631,18 +3897,16 @@ impl OpenDocument {
         bold: Option<bool>,
         italic: Option<bool>,
     ) -> Result<bool, String> {
-        use pdf_manip::text_run::extract_page_text_runs;
         use pdf_manip::text_style::set_text_run_style;
 
         let page_num = page_index + 1;
 
-        let runs = extract_page_text_runs(&self.lopdf_doc, page_num)
-            .map_err(|e| format!("Failed to extract text runs for page {page_index}: {e}"))?;
-
+        let runs = self.page_runs(page_num)?;
         let run = runs
-            .into_iter()
+            .iter()
             .find(|r| r.text == original_text)
-            .ok_or_else(|| format!("Text run not found on page {page_index}: '{original_text}'"))?;
+            .ok_or_else(|| format!("Text run not found on page {page_index}: '{original_text}'"))?
+            .clone();
 
         set_text_run_style(&mut self.lopdf_doc, page_num, &run, bold, italic)
             .map_err(|e| format!("{e}"))?;
@@ -3667,6 +3931,7 @@ impl OpenDocument {
     /// Re-parse the pdf-syntax document from the current lopdf state.
     /// Call this after mutations to keep the rendering view in sync.
     pub fn sync_after_mutation(&mut self) -> Result<(), String> {
+        self.invalidate_page_caches();
         let mut buf = Vec::new();
         self.lopdf_doc
             .save_to(&mut buf)
@@ -3679,6 +3944,15 @@ impl OpenDocument {
         self.raw_bytes = buf;
         self.modified = true;
         Ok(())
+    }
+
+    /// Drop every memoised page. Called from `sync_after_mutation`, which every
+    /// mutation in this file goes through, and from the two places that replace
+    /// the underlying documents without it. `page_caches_are_dropped_wherever_
+    /// the_document_is_replaced` keeps that list honest.
+    fn invalidate_page_caches(&mut self) {
+        self.runs_cache.clear();
+        self.spans_cache.clear();
     }
 
     // ── Document assembly ─────────────────────────────────────────────
@@ -5058,6 +5332,101 @@ mod tests {
     /// The occurrence the user pointed at is the one that changes. The legacy
     /// writer took the first match on the page, so editing the second line
     /// silently rewrote the first one.
+    /// The caches are only correct because every path that replaces the
+    /// underlying documents drops them. That list is not enforceable by the
+    /// type system and it grows: `sync_after_mutation`, the signing reload and
+    /// the XFA flatten are the three today. A fourth added without dropping the
+    /// caches would serve the text of the document as it was — no crash, no
+    /// failing assertion anywhere else, just stale words on screen.
+    #[test]
+    fn page_caches_are_dropped_wherever_the_document_is_replaced() {
+        let source = include_str!("pdf_engine.rs");
+        let mut current = String::from("<file scope>");
+        let mut offenders: Vec<String> = Vec::new();
+        let mut body = String::new();
+        let mut bodies: Vec<(String, String)> = Vec::new();
+        for line in source.lines() {
+            let trimmed = line.trim_start();
+            let is_fn_start = line.starts_with("    pub fn ") || line.starts_with("    fn ");
+            if is_fn_start {
+                bodies.push((current.clone(), std::mem::take(&mut body)));
+                current = trimmed.to_string();
+            }
+            body.push_str(line);
+            body.push('\n');
+        }
+        bodies.push((current, body));
+
+        for (signature, text) in bodies {
+            let replaces = text.contains("self.lopdf_doc = ")
+                || text.contains("self.pdf_doc = ")
+                || text.contains("*self = ");
+            if !replaces {
+                continue;
+            }
+            // `*self = <a freshly opened document>` carries empty caches with
+            // it, so it needs nothing further.
+            let handled = text.contains("sync_after_mutation")
+                || text.contains("invalidate_page_caches")
+                || text.contains("*self = ");
+            if !handled {
+                offenders.push(signature);
+            }
+        }
+        assert!(
+            offenders.is_empty(),
+            "these replace the document without dropping the per-page caches, so text runs and \
+             spans of the previous document stay live: {offenders:?}"
+        );
+    }
+
+    /// A second read of the same page must not interpret it again.
+    #[test]
+    fn page_text_is_extracted_once_until_something_changes() {
+        let mut doc = sample_doc();
+
+        let first = doc.extract_page_text_spans(0).expect("spans");
+        let second = doc.extract_page_text_spans(0).expect("spans again");
+        assert_eq!(first.len(), second.len());
+        assert_eq!(doc.spans_cache.misses.get(), 1, "the first read must miss");
+        assert_eq!(doc.spans_cache.hits.get(), 1, "the second read must hit");
+
+        // Runs are the other half: format and style each look one up, so a
+        // commit changing size and weight decoded the page's content stream
+        // twice.
+        let _ = doc.page_runs(1).expect("runs");
+        let _ = doc.page_runs(1).expect("runs again");
+        assert_eq!(doc.runs_cache.misses.get(), 1);
+        assert_eq!(doc.runs_cache.hits.get(), 1);
+    }
+
+    /// The failure that matters: a cache that outlives the edit. After a
+    /// mutation the next read has to see the new text, not the memo.
+    #[test]
+    fn a_mutation_drops_the_memoised_page() {
+        let mut doc = sample_doc();
+        let before = doc.extract_page_text_spans(0).expect("spans");
+        assert!(
+            before.iter().any(|span| span.text.contains("Hello")),
+            "fixture no longer contains the word this case edits"
+        );
+
+        let result = doc
+            .replace_text_span(0, "Hello", "Howdy", None)
+            .expect("replace");
+        assert!(result.replaced, "the fixture edit must apply: {result:?}");
+
+        let after = doc.extract_page_text_spans(0).expect("spans after the edit");
+        assert!(
+            after.iter().any(|span| span.text.contains("Howdy")),
+            "the page was served from the cache after it changed"
+        );
+        assert!(
+            !after.iter().any(|span| span.text.contains("Hello")),
+            "the old text is still being served"
+        );
+    }
+
     #[test]
     fn replace_text_span_replaces_only_the_anchored_occurrence() {
         let mut doc =
@@ -5282,6 +5651,7 @@ mod tests {
             font_substituted: Some(false),
             fit_applied: Some("exact".to_string()),
             signatures_present: Some(false),
+            usage_rights_invalidated: Some(false),
             tags_affected: Some(false),
             diagnostics: vec![TextReplaceDiagnostic {
                 code: "approximate-bbox".to_string(),
@@ -5306,6 +5676,7 @@ mod tests {
                 "replaced",
                 "signatures_present",
                 "tags_affected",
+                "usage_rights_invalidated",
             ]
         );
 
