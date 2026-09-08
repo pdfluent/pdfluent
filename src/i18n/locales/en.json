@@ -472,8 +472,22 @@
       "font-encoding-unsafe.explanation": "The font behind this text uses an encoding (CID, Identity-H/V) that makes a direct replacement unsafe. Only Latin-encoded fonts can be edited.",
       "glyph-risk-detected.tooltip": "Some characters may be missing from the font",
       "glyph-risk-detected.explanation": "The replacement contains characters the embedded font may not carry, which would leave empty boxes in the PDF. Stick to characters the original text already uses.",
+      "document-signed.tooltip": "Signed documents cannot be edited",
+      "document-signed.explanation": "This document carries a digital signature, and changing the text would make that signature invalid. Remove the signature first if the text has to change, then sign the document again.",
+      "permissions-denied.tooltip": "This document forbids changes",
+      "permissions-denied.explanation": "The document permissions do not allow its content to be modified. Open it with the owner password, or ask whoever produced it for a copy without that restriction.",
+      "tagged-text-conflict.tooltip": "Tagged text would disagree with what is shown",
+      "tagged-text-conflict.explanation": "This text is tagged for screen readers with wording of its own. Replacing the visible characters would leave the two saying different things, so the edit was refused.",
+      "unsupported-container.tooltip": "This text lives outside the page content",
+      "unsupported-container.explanation": "The text is drawn from a reusable object or from a stream this page shares with another one. Editing it there would change more than this page, so it is not editable in this version.",
+      "mixed-style-span.tooltip": "Selection spans more than one style",
+      "mixed-style-span.explanation": "The selected text uses more than one font or size, and the writer can only replace a stretch that is set in a single style. Select a smaller piece that looks the same throughout.",
       "internal-error.tooltip": "The edit could not be completed",
       "internal-error.explanation": "The PDF writer stopped with an unexpected error. Save the document and try again."
+    },
+    "fallback": {
+      "fontSubstitutedTitle": "A standard font wrote the new text",
+      "fontSubstitutedMessage": "The original font of this text has no glyph for one or more characters you typed, so Helvetica was used for the replacement. The text is correct; it may look slightly different from the rest of the line."
     }
   },
   "validation": {
@@ -1418,7 +1432,21 @@
       "desktopOnly": "Available in the desktop app",
       "compliant": "Conforms to {{level}}",
       "notCompliant": "Does not conform: {{errors}} errors, {{warnings}} warnings",
-      "moreIssues": "{{count}} more"
+      "moreIssues": "{{count}} more",
+      "report": {
+        "title": "What the conversion did",
+        "written": "Written to {{path}}",
+        "size": "{{out}} out of {{in}} ({{ratio}}×), in {{seconds}} s",
+        "pages": "{{count}} pages",
+        "fontsEmbedded": "{{embedded}} of {{found}} unembedded fonts embedded",
+        "fontsFailed": "Could not embed: {{fonts}}",
+        "removed": "Removed: {{count}} items that PDF/A does not allow",
+        "subset": "{{count}} font programs reduced, {{bytes}} kB saved",
+        "outputIntent": "Output intent added",
+        "unchangedDocument": "The open document was not changed.",
+        "warning": "{{message}}",
+        "moreWarnings": "{{count}} more"
+      }
     },
     "metadata": {
       "lede": "The title and author stored inside the file, which is what other readers and search show.",

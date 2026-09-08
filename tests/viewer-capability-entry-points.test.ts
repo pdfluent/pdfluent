@@ -127,6 +127,25 @@ describe('backend capabilities have an entry point in the shipped shell', () => 
       expect(shell, `nothing opens the ${panel} panel`).toContain(`onPanelChange('${panel}')`);
     }
   });
+
+  /**
+   * The Convert panel listed an "archive" row next to Word, Excel and
+   * PowerPoint, labelled PDF/A, and wired it to `onOpenExport('pdf')` — the
+   * ordinary "Save a copy" dialog. It wrote a plain PDF. A user who asked the
+   * shell for an archival copy got a copy, with nothing to say it was not one.
+   */
+  it("the Convert panel's archive row opens the PDF/A panel, not the plain export", () => {
+    const convert = sliceBalanced(shell, shell.indexOf("{panel === 'convert' && ("));
+    const archive = /\{[^{}]*editorV3\.convert\.archive[^{}]*\}/.exec(convert);
+    expect(archive, 'the Convert panel no longer offers an archive row').not.toBeNull();
+    expect(
+      archive?.[0],
+      'the archive row still routes through onOpenExport, which writes a plain PDF',
+    ).toContain("val: 'pdfa'");
+    expect(convert, 'the archive row does not open the PDF/A panel').toContain(
+      "onPanelChange('pdfa')",
+    );
+  });
 });
 
 describe('the outline has somewhere to be read', () => {

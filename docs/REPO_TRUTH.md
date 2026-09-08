@@ -32,6 +32,78 @@ There was simply nothing that compared them, and four and a half months went by.
   ancestor, so git cannot tell you and a version number is a claim, not a
   measurement.
 
+## Which remote is primary
+
+**GitHub is the primary remote for every PDFluent repository. GitLab holds the
+CI project and the nightly backup.** That was decided on 2026-08-25, and until
+2026-09-08 the editor's working trunk did not follow it (#455). Measured that
+morning with `git ls-remote`:
+
+| Remote | `release/ga-readiness` | `main` |
+|---|---|---|
+| `gitlab` (the CI project) | `140906d` — the trunk, and every phase-2 landing | `4a697af` |
+| `origin` (`pdfluent/pdfluent-internal`, private) | **absent** | `d5db1f0`, 2026-08-21 |
+| `pdfluent/pdfluent` (public) | n/a | snapshot `98e23d1` |
+
+So the only copy of the trunk, with every landing since 2026-08-21, was on
+GitLab. Lose that group and the public snapshot survives while the trunk
+history, the internal tests, the quality ratchets and the store material do not.
+The nightly mirror could not repair it either: it copies GitHub to GitLab, and
+there was nothing on GitHub to copy.
+
+The reason it drifted is real and still holds — the editor's CI runs on our own
+GitLab runner and zero hosted GitHub-Actions minutes is a standing rule, so the
+code has to be on GitLab to be built. The fix is not to move CI. It is to stop
+treating the CI project as the only place the trunk lives:
+
+- **`scripts/cos/editor_land.sh` pushes GitHub first, then GitLab.** A push that
+  reaches GitLab but not GitHub is a failed landing, not a partial one
+  (`LAND_EXIT=github-push-failed`), and the GitLab push is never attempted. CI
+  therefore never sees a commit the primary does not have.
+- **The reverse half — GitHub written, GitLab refused — leaves the commit landed**
+  (`LAND_EXIT=gitlab-push-failed`). That is the correct half to keep, and the
+  ancestry check at the top of a landing reads *both* remotes, so rebasing on
+  whichever is ahead carries the other forward on the next try instead of
+  wedging the queue. `scripts/cos/tests/editor_land_remotes.sh` holds all four
+  cases against throwaway repositories. (`scripts/cos/` is the operations
+  notes repository, not this one: the landing script drives this repository from
+  outside it.)
+- **`scripts/ci/remotes-agree.mjs` runs in `quality-gates-fast` on the trunk** and
+  asks whether the commit CI is testing is contained in the primary's trunk.
+  Behind is red; ahead is fine. It is the half that notices when something else
+  writes GitLab anyway — a push by hand, a landing finished manually, this
+  script edited back.
+- **`pdfluent-editor` is deliberately NOT on the nightly mirror's list.** The
+  mirror force-pushes GitHub's state, which on the CI project would overwrite an
+  in-flight landing. `pdfluent-internal` is on the list, so once the trunk is on
+  GitHub the GitLab copy is refreshed from it anyway.
+
+**Tags do not travel with a landing.** The first version of this pushed the
+branch with `--follow-tags`, which also offers every annotated tag reachable
+from it. This repository carries 45 tags, some tagged long enough ago to carry a
+personal address, and GitHub refuses those on the command line (`GH007: Your
+push would publish a private email address`). On 2026-09-08 that cost a landing:
+the branch arrived, one tag from June was rejected, `git push` exited non-zero,
+and a landing that had in fact landed reported `github-push-failed` and skipped
+GitLab. So a landing pushes the branch and nothing else, and
+`scripts/cos/tests/editor_land_remotes.sh` holds a case against a remote that
+takes branches and refuses tags. Getting the existing tags onto the primary is a
+separate job: they have to be re-made with the no-reply alias first, the same
+rule `scripts/ci/publish-public-snapshot.mjs` already applies to commits.
+
+The runner has a GitLab token and no GitHub credential — which is a large part
+of how this happened — so the guard reads the primary through a **read-only
+deploy key** for `pdfluent-internal`, held base64-encoded in the masked CI/CD
+variable `PDFLUENT_PRIMARY_SSH_KEY_B64` (base64 because a masked variable has to
+fit on one line, and an unmasked private key is a private key in every job log).
+It connects over `ssh.github.com:443` with GitHub's host key pinned in the
+script: outbound 22 is the port a network is most likely to have closed, and a
+key should not be offered to whatever answers on an unverified address.
+
+The guard cannot pass without reading the primary. A check that shrugs when it
+cannot reach the other side has not compared anything, and "nobody looked" is
+the exact state it exists to catch.
+
 ### Why a snapshot and not this branch's history
 
 Pushing the trunk onto the public repository looks like the honest option — the
@@ -124,6 +196,7 @@ tree rule, the one that does gate publication, is built into
 | `scripts/ci/public-tree.mjs` | a manifest entry without a reason, or one that matches no file any more |
 | `scripts/ci/internal-terms.mjs` | commercial statements, customer and partner names, and our own machines and key stores, in a message or in a published file. Technique goes through: `password` is a feature here and `Adobe` is a fact about the world |
 | `scripts/ci/legacy-shell-fenced.mjs` | a production bundle containing the retired V1 shell |
+| `scripts/ci/remotes-agree.mjs` | a trunk commit that reached CI without reaching the primary remote, and a run that could not read the primary at all |
 | `scripts/ci/publish-public-snapshot.mjs` | building a snapshot git would sign with a personal address. The public side has that rule too, in its own CI — but there it runs after the push, with the address already published |
 
 ## The binaries were judged before they were published

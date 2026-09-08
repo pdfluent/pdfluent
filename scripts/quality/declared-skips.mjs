@@ -24,12 +24,31 @@
  */
 
 import { readFileSync } from 'node:fs';
-import { dirname, resolve as resolvePath } from 'node:path';
+import { dirname, isAbsolute, relative, resolve as resolvePath, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { readAllowlist } from './no-silent-failures.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const REPO = resolvePath(HERE, '..', '..');
+
+/**
+ * One spelling for a spec file, on both sides of the comparison.
+ *
+ * Playwright writes `file` relative to its own `rootDir`, which is `testDir`
+ * -- so on the runner the report said `smoke-shell.spec.ts` while the
+ * allow-list said `tests/e2e/smoke-shell.spec.ts`, and the two never met. The
+ * job then failed twice over for opposite reasons: three skips nobody declared,
+ * and three declarations that never happened. The same three skips.
+ *
+ * `rootDir` comes out of the report itself, so a report written with any
+ * `testDir` lands on the same key as the allow-list. Absolute paths are the
+ * third spelling Playwright uses and they resolve the same way.
+ */
+export function repoRelative(file, rootDir, repo = REPO) {
+  if (!file) return '';
+  const absolute = isAbsolute(file) ? file : resolvePath(rootDir || repo, file);
+  return relative(repo, absolute).split(sep).join('/');
+}
 
 /**
  * Every spec in the JSON report, flattened out of the suite tree.
@@ -38,12 +57,13 @@ const REPO = resolvePath(HERE, '..', '..');
  * so it is left out of the trail: a title reads as `describe › test`, the way
  * it does in the report.
  */
-export function specsIn(report) {
+export function specsIn(report, repo = REPO) {
+  const root = report.config?.rootDir;
   const out = [];
   const walk = (suite, trail) => {
     for (const spec of suite.specs ?? []) {
       const status = spec.tests?.[0]?.results?.[0]?.status ?? spec.tests?.[0]?.status ?? 'unknown';
-      out.push({ file: spec.file ?? suite.file ?? '', title: [...trail, spec.title].join(' › '), status });
+      out.push({ file: repoRelative(spec.file ?? suite.file ?? '', root, repo), title: [...trail, spec.title].join(' › '), status });
     }
     for (const child of suite.suites ?? []) {
       walk(child, child.title ? [...trail, child.title] : trail);
@@ -58,7 +78,8 @@ export function declaredSkips(root = REPO) {
   const counts = new Map();
   for (const entry of readAllowlist(root)) {
     if (entry.kind !== 'skipped-test') continue;
-    counts.set(entry.file, (counts.get(entry.file) ?? 0) + (entry.count ?? 1));
+    const file = repoRelative(entry.file, root, root);
+    counts.set(file, (counts.get(file) ?? 0) + (entry.count ?? 1));
   }
   return counts;
 }

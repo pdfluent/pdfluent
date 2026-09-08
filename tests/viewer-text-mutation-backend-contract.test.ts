@@ -34,6 +34,10 @@ const tauriTextMutationEngineSrc = readFileSync(
   join(__dir, '../src/platform/engine/tauri/TauriTextMutationEngine.ts'),
   'utf8',
 );
+const tauriApiSrc = readFileSync(
+  join(__dir, '../src/lib/tauri-api.ts'),
+  'utf8',
+);
 const libRsSrc = readFileSync(
   join(__dir, '../src-tauri/src/lib.rs'),
   'utf8',
@@ -150,10 +154,14 @@ describe('TauriTextMutationEngine — IPC implementation', () => {
     expect(tauriTextMutationEngineSrc).toContain('internal-error');
   });
 
-  it('defines TauriReplaceTextSpanResult backend shape', () => {
-    expect(tauriTextMutationEngineSrc).toContain('TauriReplaceTextSpanResult');
-    expect(tauriTextMutationEngineSrc).toContain('replaced: boolean');
-    expect(tauriTextMutationEngineSrc).toContain('reason: string | null');
+  it('takes the backend shape from the shared wire contract', () => {
+    // The shape used to be redeclared here, so a rename in Rust broke the
+    // editor at runtime instead of at build time. It is now the contract type
+    // that `textSpanWireContract.ts` binds to the canonical key list.
+    expect(tauriTextMutationEngineSrc).toContain('TauriReplaceTextSpanResult = TextReplaceResultWire');
+    expect(tauriApiSrc).toContain('export interface TextReplaceResultWire');
+    expect(tauriApiSrc).toContain('replaced: boolean');
+    expect(tauriApiSrc).toContain('reason: string | null');
   });
 
   it('passes request as nested object (matches Rust struct deserialization)', () => {
@@ -223,19 +231,57 @@ describe('Rust pdf_engine.rs — OpenDocument::replace_text_span', () => {
     expect(pdfEngineRsSrc).toContain('pub reason: Option<String>');
   });
 
+  it('runs off the main thread', () => {
+    // A synchronous Tauri command runs on the main thread; this one parses a
+    // page and rebuilds a content stream while holding the document mutex.
+    expect(libRsSrc).toContain('async fn replace_text_span(');
+  });
+
   it('implements replace_text_span method on OpenDocument', () => {
     expect(pdfEngineRsSrc).toContain('pub fn replace_text_span(');
   });
 
-  it('delegates replacement to the parser-backed pdf-manip writer', () => {
+  it('replaces through a text_edit session, not the count-only wrapper', () => {
     const fn_block = pdfEngineRsSrc.slice(
       pdfEngineRsSrc.indexOf('pub fn replace_text_span('),
-      pdfEngineRsSrc.indexOf('pub fn replace_text_span(') + 2500,
+      pdfEngineRsSrc.indexOf('pub fn replace_text_span(') + 4000,
     );
-    expect(fn_block).toContain('pdf_manip::text_replace');
-    expect(fn_block).toContain('text_replace::replace_text');
-    expect(fn_block).toContain('FontMap::from_page');
+    // The session is what makes one occurrence addressable. The old wrapper
+    // returned a count and replaced everything it found on the page.
+    expect(fn_block).toContain('begin_text_edit');
+    expect(fn_block).toContain('find_text');
+    expect(fn_block).toContain('stage_replace');
+    expect(fn_block).toContain('session.commit()');
+    expect(fn_block).not.toContain('text_replace::replace_text');
     expect(fn_block).not.toContain('replacement-too-long');
+  });
+
+  it('states the four policies the editor commits under', () => {
+    const fn_block = pdfEngineRsSrc.slice(
+      pdfEngineRsSrc.indexOf('pub fn replace_text_span('),
+      pdfEngineRsSrc.indexOf('pub fn replace_text_span(') + 4000,
+    );
+    expect(fn_block).toContain('FontFallback::InjectStandard');
+    expect(fn_block).toContain('CommitPolicy::AllOrNothing');
+    expect(fn_block).toContain('SignaturePolicy::RejectSignedDocuments');
+    expect(fn_block).toContain('TaggedTextPolicy::Reject');
+  });
+
+  it('carries the writer report back over the wire', () => {
+    expect(pdfEngineRsSrc).toContain('pub occurrence_index: Option<u32>');
+    expect(pdfEngineRsSrc).toContain('pub occurrence_count: Option<u32>');
+    expect(pdfEngineRsSrc).toContain('pub font_substituted: Option<bool>');
+    expect(pdfEngineRsSrc).toContain('pub detail: Option<String>');
+    expect(tauriTextMutationEngineSrc).toContain('occurrenceIndex: result.occurrence_index');
+    expect(tauriTextMutationEngineSrc).toContain('fontSubstituted: result.font_substituted');
+  });
+
+  it('sends the selection rectangle as the anchor', () => {
+    expect(libRsSrc).toContain('anchor: Option<SpanAnchor>');
+    expect(tauriTextMutationEngineSrc).toContain('anchor: request.target.rect');
+    // No anchor must still mean the first occurrence: the golden gate and the
+    // two older regression tests call it that way.
+    expect(pdfEngineRsSrc).toContain('fn pick_occurrence(');
   });
 
   it('enforces empty-original-text guard', () => {

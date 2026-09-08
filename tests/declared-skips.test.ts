@@ -15,7 +15,10 @@
 
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
-import { specsIn, compare } from '../scripts/quality/declared-skips.mjs';
+import { resolve } from 'node:path';
+import { specsIn, compare, repoRelative } from '../scripts/quality/declared-skips.mjs';
+
+const REPO = resolve(__dirname, '..');
 
 /** A report shaped like Playwright's JSON reporter, with two skips in one file. */
 const REPORT = {
@@ -45,6 +48,64 @@ describe('reading a Playwright report', () => {
     expect(specs).toHaveLength(3);
     expect(specs.filter(s => s.status === 'skipped')).toHaveLength(2);
     expect(specs.map(s => s.title)).toContain('nested › VE-004 zoom');
+  });
+});
+
+/**
+ * The report the runner actually writes. Playwright's `file` is relative to
+ * `rootDir`, which is `testDir` -- so every path in it is a bare file name and
+ * the allow-list's `tests/e2e/...` paths match none of them.
+ *
+ * The wording above matters. The UI register's evidence walker reads this file
+ * as running text and looks for two literals at once; one of them appears in
+ * the word this sentence no longer uses, and the register briefly listed this
+ * file as proof of the save shortcut, which it has nothing to do with.
+ */
+const REPORT_FROM_TESTDIR = {
+  config: { rootDir: resolve(REPO, 'tests/e2e') },
+  suites: [
+    {
+      title: 'smoke-shell.spec.ts',
+      file: 'smoke-shell.spec.ts',
+      specs: [
+        { title: 'item3', file: 'smoke-shell.spec.ts', tests: [{ results: [{ status: 'skipped' }] }] },
+        { title: 'item4', file: 'smoke-shell.spec.ts', tests: [{ results: [{ status: 'skipped' }] }] },
+      ],
+    },
+  ],
+};
+
+describe('one spelling for a spec file', () => {
+  // This is the failure it was written for: on the runner the job reported
+  // "3 skipped, 0 declared" and "0 skipped, 3 declared" about the same three
+  // tests, because the two sides spelled the file differently.
+  it('reads a report written relative to testDir as a repository path', () => {
+    const specs = specsIn(REPORT_FROM_TESTDIR, REPO);
+    expect(specs.map(s => s.file)).toEqual([
+      'tests/e2e/smoke-shell.spec.ts',
+      'tests/e2e/smoke-shell.spec.ts',
+    ]);
+  });
+
+  it("matches those skips against the spelling the allow-list uses", () => {
+    const declared = new Map([['tests/e2e/smoke-shell.spec.ts', 2]]);
+    const { undeclared, unused } = compare(REPORT_FROM_TESTDIR, declared);
+    expect(undeclared).toEqual([]);
+    expect(unused).toEqual([]);
+  });
+
+  it('reads an absolute path and a repository-relative one the same way', () => {
+    expect(repoRelative(resolve(REPO, 'tests/e2e/a.spec.ts'), resolve(REPO, 'tests/e2e'), REPO)).toBe('tests/e2e/a.spec.ts');
+    expect(repoRelative('tests/e2e/a.spec.ts', undefined, REPO)).toBe('tests/e2e/a.spec.ts');
+    expect(repoRelative('a.spec.ts', resolve(REPO, 'tests/e2e'), REPO)).toBe('tests/e2e/a.spec.ts');
+  });
+
+  it('still reads a report whose paths are already repository-relative', () => {
+    expect(specsIn(REPORT, REPO).map(s => s.file)).toEqual([
+      'tests/e2e/visual-e2e-beta-blockers.spec.ts',
+      'tests/e2e/visual-e2e-beta-blockers.spec.ts',
+      'tests/e2e/visual-e2e-beta-blockers.spec.ts',
+    ]);
   });
 });
 

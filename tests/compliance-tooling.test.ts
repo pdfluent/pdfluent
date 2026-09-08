@@ -8,13 +8,13 @@ const packageJsonSource = readFileSync(
   new URL("../package.json", import.meta.url),
   "utf8",
 );
-const workflowSource = readFileSync(
-  new URL("../.github/workflows/ci.yml", import.meta.url),
+const complianceWorkflowSource = readFileSync(
+  new URL("../.github/workflows/compliance.yml", import.meta.url),
   "utf8",
 );
 const appSource = readFileSync(new URL("../src/legacy/App.tsx", import.meta.url), "utf8");
-const testsWorkflowSource = readFileSync(
-  new URL("../.github/workflows/core-tests.yml", import.meta.url),
+const qualityWorkflowSource = readFileSync(
+  new URL("../.github/workflows/quality.yml", import.meta.url),
   "utf8",
 );
 
@@ -25,15 +25,22 @@ describe("compliance and OCR hardening tooling", () => {
     expect(packageJsonSource).toContain("\"compliance:check\"");
   });
 
+  // The three steps moved from the retired ci.yml to compliance.yml with #465,
+  // which is where they already lived in duplicate. Manual, and the workflow
+  // says why: compliance:check exits 2 on this tree today.
   it("runs compliance gate in CI", () => {
-    expect(workflowSource).toContain("Generate OCR model manifest");
-    expect(workflowSource).toContain("Generate compliance inventory");
-    expect(workflowSource).toContain("Enforce license policy gate");
+    expect(complianceWorkflowSource).toContain("Generate OCR model manifest");
+    expect(complianceWorkflowSource).toContain("Generate compliance inventory");
+    expect(complianceWorkflowSource).toContain("Enforce license policy gate");
   });
 
-  it("runs the notice-generator gate as a named CI step", () => {
-    expect(testsWorkflowSource).toContain("Run third-party notice generator gate");
-    expect(testsWorkflowSource).toContain(
+  // This one is a push gate, and has to stay one: the notice generator skipped
+  // optional platform packages, and an LGPL-3.0 libvips binary sat in the npm
+  // tree unlisted for three months. It is named on its own so a regression is
+  // named in the log rather than buried in 6,500 other results.
+  it("runs the notice-generator gate as a named step on every push", () => {
+    expect(qualityWorkflowSource).toContain("Third-party notice generator gate");
+    expect(qualityWorkflowSource).toContain(
       "tests/compliance-generator-optional-deps.test.ts",
     );
   });

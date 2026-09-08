@@ -162,10 +162,15 @@ export type BackendRejectionCode =
   | 'encoding-not-supported'
   | 'font-encoding-unsafe'
   | 'glyph-risk-detected'
+  | 'document-signed'
+  | 'permissions-denied'
+  | 'tagged-text-conflict'
+  | 'unsupported-container'
+  | 'mixed-style-span'
   | 'internal-error';
 
 /**
- * The nine ways `replace_text_span` can decline, in the reader's language.
+ * The fourteen ways `replace_text_span` can decline, in the reader's language.
  *
  * These used to be Dutch string literals in this file. An English-speaking user
  * hitting a CID-encoded font got a sentence they could not read, which reaches
@@ -186,6 +191,8 @@ const ACTIONABLE_REJECTIONS = new Set<BackendRejectionCode>([
   'replacement-too-long',
   'glyph-risk-detected',
   'internal-error',
+  // A style span is the one refusal with an obvious next move: select less.
+  'mixed-style-span',
 ]);
 
 const KNOWN_REJECTION_CODES = new Set<BackendRejectionCode>([
@@ -197,6 +204,11 @@ const KNOWN_REJECTION_CODES = new Set<BackendRejectionCode>([
   'encoding-not-supported',
   'font-encoding-unsafe',
   'glyph-risk-detected',
+  'document-signed',
+  'permissions-denied',
+  'tagged-text-conflict',
+  'unsupported-container',
+  'mixed-style-span',
   'internal-error',
 ]);
 

@@ -22,6 +22,8 @@ import { getBackendRejectionMessage, getUnsupportedMessage } from '../text/textM
 import type { TextMutationRejection } from '../text/textMutationMessaging';
 import type { TextContextActionId } from '../components/TextContextBar';
 import { getCanonicalTextMutationEngine } from '../../platform/engine/canonicalTextMutationEngine';
+import { reportFallback } from '../../lib/commandBridge';
+import i18n from '../../i18n';
 import { toEditorTextSpan } from '../text/editorTextSpan';
 import { extractFirstExternalLink } from '../text/linkDetection';
 
@@ -537,7 +539,25 @@ export function useTextInteraction(
         if (result.success && result.value.replaced) {
           mutationSuccess = true;
           // markDirty
-          logMessages.push(`Tekst bewerkt: "${currentTextKey}" → "${committedText}"`);
+          const count = result.value.occurrenceCount ?? 0;
+          // Which one of several identical words changed is the whole point of
+          // the anchor; the event log is where a user checks it afterwards.
+          const occurrence = count > 1
+            ? ` (${(result.value.occurrenceIndex ?? 0) + 1}/${count})`
+            : '';
+          logMessages.push(`Tekst bewerkt: "${currentTextKey}" → "${committedText}"${occurrence}`);
+          // A replacement written in a stand-in font is a change to how the
+          // page looks. It succeeded, so it is not an error -- but it is not
+          // nothing either, and silence here is what #413 removed everywhere else.
+          if (result.value.fontSubstituted === true) {
+            reportFallback({
+              source: 'replace_text_span',
+              code: 'FONT_SUBSTITUTED',
+              title: i18n.t('textMutation.fallback.fontSubstitutedTitle'),
+              message: i18n.t('textMutation.fallback.fontSubstitutedMessage'),
+              severity: 'warning',
+            });
+          }
           currentTextKey = committedText; // Update search key for subsequent style operations
         } else {
           // Two different failures arrive here: a typed rejection from the
@@ -545,7 +565,9 @@ export function useTextInteraction(
           // engine error (free text). Both carry a reason; neither used to
           // survive the trip to the screen.
           const code = result.success ? (result.value.reason ?? 'text-not-found-in-content-stream') : 'internal-error';
-          const detail = result.success ? undefined : result.error.message;
+          // The writer's own sentence, whether it came back as a typed refusal
+          // or as a thrown error. It is the half that names the actual cause.
+          const detail = result.success ? (result.value.detail ?? undefined) : result.error.message;
           const message = getBackendRejectionMessage(code, detail);
           setTextMutationRejection({
             code,

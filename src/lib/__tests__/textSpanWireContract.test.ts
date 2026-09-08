@@ -9,6 +9,7 @@ import { describe, it, expect } from 'vitest';
 import {
   TEXT_SPAN_WIRE_KEYS,
   FONT_METRICS_WIRE_KEYS,
+  TEXT_REPLACE_RESULT_WIRE_KEYS,
 } from '../textSpanWireContract';
 
 /**
@@ -52,6 +53,22 @@ const SDK_TEXT_SPAN_WIRE_KEYS = [
 // Mirrors the serde keys of `pdf_engine::text::FontMetrics`.
 const SDK_FONT_METRICS_WIRE_KEYS = ['ascent', 'descent', 'capHeight', 'xHeight'];
 
+// Mirrors the serde keys of `pdf_engine::TextReplaceResult`. Rust half:
+// `text_replace_result_wire_contract_is_stable`.
+const SDK_TEXT_REPLACE_RESULT_WIRE_KEYS = [
+  'replaced',
+  'reason',
+  'detail',
+  'occurrence_index',
+  'occurrence_count',
+  'font_used',
+  'font_substituted',
+  'fit_applied',
+  'signatures_present',
+  'tags_affected',
+  'diagnostics',
+];
+
 describe('text-span wire contract', () => {
   it('TS TextSpanInfo model matches the SDK TextSpanInfo wire keys', () => {
     expect([...TEXT_SPAN_WIRE_KEYS].sort()).toEqual(
@@ -65,8 +82,17 @@ describe('text-span wire contract', () => {
     );
   });
 
+  it('TS TextReplaceResultWire model matches the backend wire keys', () => {
+    expect([...TEXT_REPLACE_RESULT_WIRE_KEYS].sort()).toEqual(
+      [...SDK_TEXT_REPLACE_RESULT_WIRE_KEYS].sort(),
+    );
+  });
+
   it('has no duplicate wire keys', () => {
     expect(new Set(TEXT_SPAN_WIRE_KEYS).size).toBe(TEXT_SPAN_WIRE_KEYS.length);
     expect(new Set(FONT_METRICS_WIRE_KEYS).size).toBe(FONT_METRICS_WIRE_KEYS.length);
+    expect(new Set(TEXT_REPLACE_RESULT_WIRE_KEYS).size).toBe(
+      TEXT_REPLACE_RESULT_WIRE_KEYS.length,
+    );
   });
 });

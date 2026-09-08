@@ -47,8 +47,9 @@ import type { AsyncEngineResult } from './types';
  * Field contract:
  *   pageIndex     — 0-based page index (matches TypeScript convention throughout)
  *   originalText  — The exact text currently in the PDF span.
- *                   Used as the search key. First occurrence in the content
- *                   stream is replaced. Must not be empty.
+ *                   Used as the search key. The occurrence nearest `target.rect`
+ *                   is replaced, or the first one when no rect is sent.
+ *                   Must not be empty.
  *   replacementText — The exact new text to write. The native parser-backed
  *                     writer owns encoding/layout safety and returns a typed
  *                     rejection when the replacement cannot be encoded safely.
@@ -61,9 +62,12 @@ export interface ReplaceTextSpanRequest {
   /** New text to write. */
   replacementText: string;
   /**
-   * Optional PDF-space target metadata for editor redraw fallbacks.
-   * Desktop engines can ignore this. It lets the UI redraw a precise
-   * word/segment when the extractor split a larger PDF text run for UX.
+   * PDF-space metadata about the span the user pointed at.
+   *
+   * `rect` is the anchor: when the page shows the same text more than once,
+   * it is the only thing that says which occurrence was edited. PDF user
+   * space, y up — the space `get_page_text_spans` reports in. Omitting it
+   * means "the first occurrence", which is what batch callers want.
    */
   target?: {
     rect: { x: number; y: number; width: number; height: number };
@@ -87,13 +91,40 @@ export interface ReplaceTextSpanRequest {
  *   'no-content-stream'                 — page has no content streams
  *   'empty-original-text'               — originalText was empty
  *   'page-not-found'                    — pageIndex out of range
- *   'encoding-not-supported'            — content stream encoding is unsupported
+ *   'encoding-not-supported'            — the replacement cannot be encoded in this font
+ *   'document-signed'                   — the document carries a digital signature
+ *   'permissions-denied'                — document permissions forbid content modification
+ *   'tagged-text-conflict'              — /ActualText covers the match and would disagree
+ *   'unsupported-container'             — the text lives in a form XObject or a shared stream
+ *   'mixed-style-span'                  — the match spans more than one font or size
+ *
+ * The report fields below are the writer's decisions. They are optional
+ * because a browser/dev harness has no writer to report any, not because a
+ * desktop commit may leave them out.
  */
 export interface ReplaceTextSpanResult {
   /** True when the content stream was mutated. */
   readonly replaced: boolean;
   /** Machine-readable reason when replaced is false. Null when replaced is true. */
   readonly reason: string | null;
+  /** The engine's own sentence, for the banner and a support bundle. */
+  readonly detail?: string | null;
+  /** 0-based position of the edited occurrence among the page's matches. */
+  readonly occurrenceIndex?: number | null;
+  /** How many occurrences of the searched text the page held. */
+  readonly occurrenceCount?: number | null;
+  /** Resource name of the font that wrote the replacement. */
+  readonly fontUsed?: string | null;
+  /** True when a standard font stood in for the original. Never silent. */
+  readonly fontSubstituted?: boolean | null;
+  /** Fit policy applied, lower-case (`"exact"`). */
+  readonly fitApplied?: string | null;
+  /** Whether the document carries digital signatures. */
+  readonly signaturesPresent?: boolean | null;
+  /** Whether the edited page participates in a structure tree. */
+  readonly tagsAffected?: boolean | null;
+  /** Coded observations from the writer. */
+  readonly diagnostics?: ReadonlyArray<{ code: string; message: string }>;
 }
 
 // ---------------------------------------------------------------------------

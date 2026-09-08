@@ -28,6 +28,12 @@ const BACKEND_CODES = [
   'encoding-not-supported',
   'font-encoding-unsafe',
   'glyph-risk-detected',
+  // The typed refusals the text_edit session can give (#400).
+  'document-signed',
+  'permissions-denied',
+  'tagged-text-conflict',
+  'unsupported-container',
+  'mixed-style-span',
   'internal-error',
 ];
 
@@ -64,6 +70,18 @@ describe('the rejection reaches the screen', () => {
     expect(editEntry.slice(0, 200)).toContain('setTextMutationRejection(null)');
     const success = hook.slice(hook.indexOf('if (mutationSuccess) {'));
     expect(success.slice(0, 200)).toContain('setTextMutationRejection(null)');
+  });
+
+  it('the banner is given the reason the writer typed, not only thrown errors', () => {
+    // Before #400 `detail` was set only when the command threw. A typed
+    // refusal therefore reached the screen as a class of problem with no
+    // instance: "the edit could not be completed", and nothing about which.
+    expect(hook).toContain('result.value.detail');
+  });
+
+  it('a substituted font is announced rather than absorbed', () => {
+    expect(hook).toContain("result.value.fontSubstituted === true");
+    expect(hook).toContain('FONT_SUBSTITUTED');
   });
 
   it('the shell renders it with the engine code beside the explanation', () => {

@@ -79,6 +79,7 @@ import type { TextParagraphTarget } from '../text/textInteractionModel';
 import type {
   InvoiceData,
   InvoiceValidationResult,
+  PdfAConvertResult,
   PdfAValidationResult,
   SignatureVerifyResult,
 } from '../../lib/tauri-api';
@@ -2282,18 +2283,28 @@ function EditorV3Panel({
         {panel === 'convert' && (
           <>
             <div className="panel-section-label">{t('editorV3.convert.exportPdfTo')}</div>
+            {/*
+              The archive row is not an export format. Its tile used to call
+              onOpenExport('pdf'), which is the ordinary "Save a copy" dialog:
+              it wrote a plain PDF and called it PDF/A. The row now opens the
+              PDF/A panel, which is the only thing in the shell that converts.
+              tests/viewer-capability-entry-points.test.ts holds it there.
+            */}
             {[
-              { name: 'Microsoft Word', ext: 'DOCX', val: 'docx' },
-              { name: 'Microsoft Excel', ext: 'XLSX', val: 'xlsx' },
-              { name: 'Microsoft PowerPoint', ext: 'PPTX', val: 'pptx' },
-              { name: t('editorV3.convert.image'), ext: 'JPG', val: 'jpeg' },
-              { name: t('editorV3.convert.archive'), ext: 'PDF/A-1b', val: 'pdf' }
+              { name: 'Microsoft Word', ext: 'DOCX', val: 'docx' as const },
+              { name: 'Microsoft Excel', ext: 'XLSX', val: 'xlsx' as const },
+              { name: 'Microsoft PowerPoint', ext: 'PPTX', val: 'pptx' as const },
+              { name: t('editorV3.convert.image'), ext: 'JPG', val: 'jpeg' as const },
+              { name: t('editorV3.convert.archive'), ext: 'PDF/A-2b', val: 'pdfa' as const }
             ].map((item, index) => {
               return (
                 <button
                   key={item.name}
                   className={index === 0 ? 'fmt sel' : 'fmt'}
-                  onClick={() => onOpenExport(item.val as ExportFormat)}
+                  onClick={() => {
+                    if (item.val === 'pdfa') onPanelChange('pdfa');
+                    else onOpenExport(item.val);
+                  }}
                 >
                   <span className="radio" />
                   <span className="nm">{item.name}</span>
@@ -2523,7 +2534,7 @@ function EditorV3Panel({
           <>
             <p className="panel-lede">{t('editorV3.pdfa.lede')}</p>
             <div className="panel-section-label">{t('editorV3.pdfa.section')}</div>
-            <PdfaControls onApplied={onDocumentMutated} />
+            <PdfaControls />
             <div className="divider" style={{ margin: '16px 0' }} />
             <button className="btn-ghost" onClick={() => onPanelChange('tools')}>{t('editorV3.common.backToTools')}</button>
           </>
@@ -2930,13 +2941,21 @@ function EncryptDecryptControls({ onApplied }: { onApplied?: () => void }) {
  * replace it. The conversion writes a new file rather than mutating the open
  * one: PDF/A conversion re-encodes fonts and colour spaces, and doing that in
  * place would lose the original with no way back.
+ *
+ * That promise is only true since the backend stopped running its own five-pass
+ * pipeline over the live document. It now hands a copy of the bytes to the SDK's
+ * conversion entry point and returns that pipeline's repair report, which the
+ * second card below shows: a conversion that embedded no fonts, dropped an
+ * attachment or tripled the file size says so instead of reporting a bare
+ * "conforms".
  */
-function PdfaControls({ onApplied }: { onApplied?: () => void }) {
+function PdfaControls() {
   const { t } = useTranslation();
   const { push, update } = useTaskQueueContext();
   const [level, setLevel] = useState('2b');
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<PdfAValidationResult | null>(null);
+  const [converted, setConverted] = useState<PdfAConvertResult | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   async function validatePdfaDocument(): Promise<void> {
@@ -2945,6 +2964,7 @@ function PdfaControls({ onApplied }: { onApplied?: () => void }) {
     setError(null);
     try {
       const { invokeCommand: invoke } = await import('../../lib/commandBridge');
+      setConverted(null);
       setResult(await invoke<PdfAValidationResult>('validate_pdfa'));
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
@@ -2963,12 +2983,13 @@ function PdfaControls({ onApplied }: { onApplied?: () => void }) {
     push({ id: taskId, label: t('tasks.pdfaRunning'), progress: null, status: 'running' });
     try {
       const { invokeCommand: invoke } = await import('../../lib/commandBridge');
-      const report = await invoke<PdfAValidationResult>('convert_to_pdfa', { level, outputPath: path });
-      setResult(report);
+      const outcome = await invoke<PdfAConvertResult>('convert_to_pdfa', { level, outputPath: path });
+      setResult(outcome.validation);
+      setConverted(outcome);
       update(taskId, { status: 'done', label: t('tasks.pdfaDone') });
-      onApplied?.();
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
+      setConverted(null);
       update(taskId, { status: 'error', label: t('tasks.pdfaFailed') });
     }
     setBusy(false);
@@ -2980,6 +3001,7 @@ function PdfaControls({ onApplied }: { onApplied?: () => void }) {
         <span className="panel-label">{t('editorV3.pdfa.level')}</span>
         <select
           className="panel-input"
+          data-testid="pdfa-level-select"
           value={level}
           onChange={e => { setLevel(e.target.value); }}
           aria-label={t('editorV3.pdfa.level')}
@@ -2993,6 +3015,7 @@ function PdfaControls({ onApplied }: { onApplied?: () => void }) {
 
       <button
         className="btn-ghost"
+        data-testid="validate-pdfa-btn"
         onClick={() => { void validatePdfaDocument(); }}
         disabled={busy || !isTauri}
       >
@@ -3002,6 +3025,7 @@ function PdfaControls({ onApplied }: { onApplied?: () => void }) {
 
       <button
         className="btn-primary accent"
+        data-testid="convert-pdfa-btn"
         onClick={() => { void convertToPdfaFile(); }}
         disabled={busy || !isTauri}
         style={{ height: 36 }}
@@ -3015,7 +3039,7 @@ function PdfaControls({ onApplied }: { onApplied?: () => void }) {
       )}
 
       {result !== null && (
-        <div className="esign-card" style={{ marginTop: 4 }}>
+        <div className="esign-card" data-testid="pdfa-status" style={{ marginTop: 4 }}>
           <div className="row">
             {result.compliant ? <BadgeCheckIcon aria-hidden="true" /> : <InfoIcon aria-hidden="true" />}
             {result.compliant
@@ -3034,7 +3058,82 @@ function PdfaControls({ onApplied }: { onApplied?: () => void }) {
           )}
         </div>
       )}
+
+      {converted !== null && (
+        <div className="esign-card" data-testid="pdfa-convert-report" style={{ marginTop: 4 }}>
+          <div className="row"><InfoIcon aria-hidden="true" />{t('editorV3.pdfa.report.title')}</div>
+          <PdfaReportLine text={t('editorV3.pdfa.report.written', { path: converted.output_path })} />
+          <PdfaReportLine
+            text={t('editorV3.pdfa.report.size', {
+              out: formatBytes(converted.output_bytes),
+              in: formatBytes(converted.input_bytes),
+              ratio: converted.size_ratio.toFixed(2),
+              seconds: (converted.elapsed_ms / 1000).toFixed(1),
+            })}
+          />
+          <PdfaReportLine text={t('editorV3.pdfa.report.pages', { count: converted.report.page_count })} />
+          <PdfaReportLine
+            text={t('editorV3.pdfa.report.fontsEmbedded', {
+              embedded: converted.report.fonts_embedded,
+              found: converted.report.fonts_non_embedded,
+            })}
+          />
+          {converted.report.fonts_failed.length > 0 && (
+            <PdfaReportLine
+              text={t('editorV3.pdfa.report.fontsFailed', {
+                fonts: converted.report.fonts_failed.slice(0, 3).join(', '),
+              })}
+            />
+          )}
+          {removedItemCount(converted) > 0 && (
+            <PdfaReportLine text={t('editorV3.pdfa.report.removed', { count: removedItemCount(converted) })} />
+          )}
+          {converted.report.programs_subsetted > 0 && (
+            <PdfaReportLine
+              text={t('editorV3.pdfa.report.subset', {
+                count: converted.report.programs_subsetted,
+                bytes: Math.round(converted.report.subset_bytes_saved / 1024),
+              })}
+            />
+          )}
+          {converted.report.output_intent_added && (
+            <PdfaReportLine text={t('editorV3.pdfa.report.outputIntent')} />
+          )}
+          {converted.report.warnings.slice(0, 5).map((warning, idx) => (
+            <PdfaReportLine key={`warning-${idx}`} text={t('editorV3.pdfa.report.warning', { message: warning })} />
+          ))}
+          {converted.report.warnings.length > 5 && (
+            <PdfaReportLine
+              text={t('editorV3.pdfa.report.moreWarnings', { count: converted.report.warnings.length - 5 })}
+            />
+          )}
+          <PdfaReportLine text={t('editorV3.pdfa.report.unchangedDocument')} />
+        </div>
+      )}
     </div>
+  );
+}
+
+function formatBytes(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function PdfaReportLine({ text }: { text: string }) {
+  return (
+    <div style={{ fontSize: 10, color: 'var(--text-secondary)', marginTop: 4 }}>{text}</div>
+  );
+}
+
+/** Everything the conversion took out of the document because PDF/A forbids it. */
+function removedItemCount(outcome: PdfAConvertResult): number {
+  const r = outcome.report;
+  return (
+    r.js_actions_removed +
+    r.embedded_files_removed +
+    r.file_attachment_annotations_removed +
+    r.long_string_fixes
   );
 }
 

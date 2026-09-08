@@ -5,14 +5,25 @@
 // of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 //
-// Guard: no GitHub-hosted runner may be started by an automatic trigger.
+// Guard: every job in .github/workflows runs on our own runner.
 //
 // `origin` of this repository is a private tracker. Every minute a hosted
 // `ubuntu-*`/`macos-*`/`windows-*` runner spends there is billed, and on
 // 2026-08-21 three such workflows fired on a push and failed, which is how the
-// cost was noticed at all. Releases and gates run on our own runner through
-// GitLab; whatever is left on GitHub must be started by a human
-// (`workflow_dispatch`) or run on `self-hosted`.
+// cost was noticed at all.
+//
+// Until 2026-09-08 the rule was narrower: hosted was allowed as long as a human
+// pressed the button (`workflow_dispatch`), because the gates that mattered ran
+// elsewhere and whatever was left on GitHub was a leftover. #465 moves the
+// pipeline here, onto a self-hosted runner on our own build host, so the
+// exemption has nothing left to protect: a dispatched hosted minute is billed
+// exactly like a pushed one, and a workflow that is hosted "for now" is the one
+// that quietly bills for a year. Every job must therefore carry
+// `runs-on: [self-hosted, ...]`.
+//
+// A job the guard cannot read is a violation, not a pass: no `runs-on` at all,
+// a `runs-on` it cannot resolve, and a reusable workflow from another
+// repository (whose runner travels with that file, which is not in this tree).
 //
 // Mirrors the engine repository's "no hosted Linux on automatic triggers" rule.
 //
@@ -20,18 +31,6 @@
 
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-
-// A trigger nobody has to type. `schedule` is here because a cron on a hosted
-// runner bills for as long as it is forgotten, which is the failure mode this
-// guard exists for.
-const AUTOMATIC_TRIGGERS = new Set([
-  "push",
-  "pull_request",
-  "pull_request_target",
-  "schedule",
-]);
-
-const HOSTED_LABEL = /^(ubuntu|macos|macOS|windows)[-.]/;
 
 /**
  * Drop block scalars (`run: |`) before any line-based reading: their bodies are
@@ -76,25 +75,41 @@ function parseInlineValues(raw) {
   return [value.replace(/^['"]|['"]$/g, "")];
 }
 
-/** Triggers declared in the top-level `on:` block. */
-function readTriggers(source) {
+/**
+ * The jobs of one workflow, each with the lines that belong to it. A job key
+ * sits at indent 2 under a top-level `jobs:`; anything else at column 0 ends
+ * the block. Line-based like the rest of this file, and for the same reason:
+ * the workflows carry shell that a permissive scan reads as configuration.
+ */
+function readJobs(source) {
   const lines = source.split("\n");
-  const triggers = new Set();
+  const jobs = [];
+  let inJobs = false;
+  let current = null;
+
+  const close = (until) => {
+    if (!current) return;
+    jobs.push({ name: current.name, body: lines.slice(current.from + 1, until).join("\n") });
+    current = null;
+  };
+
   for (let i = 0; i < lines.length; i += 1) {
-    const head = /^(?:["']?on["']?):(.*)$/.exec(lines[i]);
-    if (!head) continue;
-    for (const value of parseInlineValues(head[1])) triggers.add(value);
-    for (let j = i + 1; j < lines.length; j += 1) {
-      const line = lines[j];
-      if (line.trim() === "" || /^\s*#/.test(line)) continue;
-      const indent = line.search(/\S/);
-      if (indent === 0) break;
-      const child = /^\s+(?:- )?([A-Za-z_][\w-]*)\s*:?\s*$/.exec(line);
-      if (child && indent <= 4) triggers.add(child[1]);
+    const line = lines[i];
+    if (line.trim() === "" || /^\s*#/.test(line)) continue;
+    const indent = line.search(/\S/);
+    if (indent === 0) {
+      close(i);
+      inJobs = /^jobs\s*:\s*$/.test(line);
+      continue;
     }
-    break;
+    if (!inJobs || indent !== 2) continue;
+    close(i);
+    const key = /^\s{2}([A-Za-z_][\w-]*)\s*:\s*(?:#.*)?$/.exec(line);
+    if (key) current = { name: key[1], from: i };
   }
-  return triggers;
+  close(lines.length);
+
+  return jobs;
 }
 
 /** key -> values, for every `key: value` inside a `matrix:` block. */
@@ -148,21 +163,38 @@ function readRunnerLabels(source) {
   });
 }
 
-export function findHostedAutoTriggers(directory) {
+/**
+ * Every job that is not pinned to our own runner, with the reason. One entry
+ * per job: "the file has a hosted label somewhere" was enough while the rule
+ * was about a leftover workflow, and is useless when the file holds thirteen
+ * gates and one of them is wrong.
+ */
+export function findJobsOffOurRunner(directory) {
   const violations = [];
   const files = readdirSync(directory)
     .filter((name) => name.endsWith(".yml") || name.endsWith(".yaml"))
     .sort();
-  for (const name of files) {
-    const source = stripBlockScalars(readFileSync(join(directory, name), "utf8"));
-    const triggers = [...readTriggers(source)].filter((t) => AUTOMATIC_TRIGGERS.has(t));
-    if (triggers.length === 0) continue;
-    const labels = readRunnerLabels(source);
-    const hosted = labels.filter(
-      (label) => !/self-hosted/i.test(label) && (HOSTED_LABEL.test(label) || /^\$\{\{/.test(label)),
-    );
-    if (hosted.length > 0) {
-      violations.push({ file: name, triggers, hosted: [...new Set(hosted)] });
+  for (const file of files) {
+    const source = stripBlockScalars(readFileSync(join(directory, file), "utf8"));
+    for (const job of readJobs(source)) {
+      // A reusable workflow brings its own `runs-on`. One from this repository
+      // is scanned as its own file; one from anywhere else is not in this tree
+      // and cannot be judged, so it does not get the benefit of the doubt.
+      const reused = /^\s{4}uses\s*:\s*(\S+)/m.exec(job.body);
+      if (reused) {
+        if (!reused[1].startsWith("./")) {
+          violations.push({ file, job: job.name, reason: `reusable workflow ${reused[1]}` });
+        }
+        continue;
+      }
+      const labels = readRunnerLabels(job.body);
+      if (labels.length === 0) {
+        violations.push({ file, job: job.name, reason: "no runs-on" });
+        continue;
+      }
+      if (!labels.some((label) => /self-hosted/i.test(label))) {
+        violations.push({ file, job: job.name, reason: `runs-on ${[...new Set(labels)].join(", ")}` });
+      }
     }
   }
   return violations;
@@ -172,7 +204,7 @@ function main() {
   const directory = process.argv[2] ?? ".github/workflows";
   let violations;
   try {
-    violations = findHostedAutoTriggers(directory);
+    violations = findJobsOffOurRunner(directory);
   } catch (error) {
     console.error(`no-hosted-ci-on-auto-triggers: cannot read ${directory}: ${error.message}`);
     process.exit(2);
@@ -181,14 +213,12 @@ function main() {
     console.log(`no-hosted-ci-on-auto-triggers: OK (${directory})`);
     return;
   }
-  console.error("no-hosted-ci-on-auto-triggers: hosted runners on automatic triggers\n");
+  console.error("no-hosted-ci-on-auto-triggers: jobs that are not on our own runner\n");
   for (const violation of violations) {
-    console.error(
-      `  ${violation.file}: on ${violation.triggers.join(", ")} -> ${violation.hosted.join(", ")}`,
-    );
+    console.error(`  ${violation.file}: job ${violation.job}: ${violation.reason}`);
   }
   console.error(
-    "\nGate the workflow to workflow_dispatch, move it to a self-hosted runner, or delete it.",
+    "\nEvery job belongs on the self-hosted runner: runs-on: [self-hosted, linux, pdfluent-editor].",
   );
   process.exit(1);
 }

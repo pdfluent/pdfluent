@@ -150,6 +150,27 @@ describe('getBackendRejectionMessage — rejection code coverage', () => {
   it('returns valid message for internal-error', () => {
     expectValidMessage(getBackendRejectionMessage('internal-error'));
   });
+
+  // The typed refusals the text_edit session added (#400). Each one must read
+  // as its own reason; falling back to the internal-error text would tell the
+  // user their PDF broke when in fact it is signed, protected or tagged.
+  it.each([
+    'document-signed',
+    'permissions-denied',
+    'tagged-text-conflict',
+    'unsupported-container',
+    'mixed-style-span',
+  ])('%s is a reason of its own, not the internal-error text', (code) => {
+    const message = getBackendRejectionMessage(code);
+    expectValidMessage(message);
+    expect(message.tooltip).not.toBe(getBackendRejectionMessage('internal-error').tooltip);
+  });
+
+  it('says a smaller selection is worth trying, and does not pretend the others are', () => {
+    expect(getBackendRejectionMessage('mixed-style-span').actionable).toBe(true);
+    expect(getBackendRejectionMessage('document-signed').actionable).toBe(false);
+    expect(getBackendRejectionMessage('tagged-text-conflict').actionable).toBe(false);
+  });
 });
 
 // ---------------------------------------------------------------------------

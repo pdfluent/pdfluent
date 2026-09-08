@@ -125,7 +125,7 @@ fn pdfa_export_stamps_no_page_of_a_real_document() {
          to measure the export on a real document",
     );
 
-    let mut doc = OpenDocument::open(&path).expect("open the document to measure");
+    let doc = OpenDocument::open(&path).expect("open the document to measure");
     let out = std::env::temp_dir().join("pdfluent_pdfa_export_measure.pdf");
     let _ = std::fs::remove_file(&out);
     doc.convert_to_pdfa("2b", out.to_str().expect("temp path is UTF-8"))
@@ -147,7 +147,7 @@ fn pdfa_export_stamps_no_page() {
         "the fixture must start as three clean pages"
     );
 
-    let mut doc = OpenDocument::open_bytes(fixture).expect("open 3-page fixture");
+    let doc = OpenDocument::open_bytes(fixture).expect("open 3-page fixture");
     let out = std::env::temp_dir().join("pdfluent_pdfa_export_guard.pdf");
     let _ = std::fs::remove_file(&out);
     doc.convert_to_pdfa("2b", out.to_str().expect("temp path is UTF-8"))

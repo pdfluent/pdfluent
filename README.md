@@ -4,6 +4,8 @@ PDFluent is a free, source-available PDF editor for macOS and Windows. It edits,
 
 [**Download for macOS and Windows**](https://pdfluent.com/download) · [Source-available license](LICENSE.md) · [PDFluent SDK](#built-on-the-pdfluent-sdk)
 
+![The PDFluent all-tools panel: compress, organize, split, merge, redact, protect, watermark and export, all running locally](docs/media/store-5-all-tools-1440x900.png)
+
 ## Why PDFluent
 
 Most PDF editors either cost money every month or run your documents through someone else's server. PDFluent does neither. The app is built with [Tauri v2](https://tauri.app/) (Rust + React/TypeScript) on top of the PDFluent SDK, a pure-Rust PDF engine with no Pdfium, Poppler, MuPDF, or other C/C++ dependencies. Everything runs locally: opening, editing, and converting a PDF never leaves your machine unless you choose to send it somewhere.

@@ -512,11 +512,48 @@ export async function validatePdfa(): Promise<PdfAValidationResult> {
   return invoke<PdfAValidationResult>("validate_pdfa");
 }
 
+/**
+ * What the SDK's PDF/A pipeline repaired on the way through.
+ *
+ * A flattened view of `pdf_manip::pdfa::PdfAConvertReport` and its sub-reports.
+ * It says what was *attempted*, not whether the result conforms — that is what
+ * `validation` on {@link PdfAConvertResult} is for.
+ */
+export interface PdfAConvertReport {
+  page_count: number;
+  text_streams_repositioned: number;
+  output_intent_added: boolean;
+  page_tree_repaired: boolean;
+  fonts_inspected: number;
+  fonts_non_embedded: number;
+  fonts_embedded: number;
+  /** `"name: reason"` per font that could not be embedded. */
+  fonts_failed: string[];
+  encryption_removed: boolean;
+  js_actions_removed: number;
+  embedded_files_removed: number;
+  file_attachment_annotations_removed: number;
+  long_string_fixes: number;
+  programs_subsetted: number;
+  subset_bytes_saved: number;
+  warnings: string[];
+}
+
+export interface PdfAConvertResult {
+  validation: PdfAValidationResult;
+  report: PdfAConvertReport;
+  output_path: string;
+  input_bytes: number;
+  output_bytes: number;
+  size_ratio: number;
+  elapsed_ms: number;
+}
+
 export async function convertToPdfa(
   level: string,
   outputPath: string,
-): Promise<PdfAValidationResult> {
-  return invoke<PdfAValidationResult>("convert_to_pdfa", {
+): Promise<PdfAConvertResult> {
+  return invoke<PdfAConvertResult>("convert_to_pdfa", {
     level,
     outputPath,
   });
@@ -867,6 +904,38 @@ export interface TextSpanInfo {
   renderMode?: number;
   /** Vertical font metrics from the embedded font. Absent when unavailable. */
   fontMetrics?: FontMetricsInfo;
+}
+
+/**
+ * Wire shape of `pdf_engine::TextReplaceResult`, exactly as serde sends it.
+ *
+ * snake_case throughout, no renames. The Rust half is pinned by
+ * `text_replace_result_wire_contract_is_stable`; the TypeScript half by
+ * `TEXT_REPLACE_RESULT_WIRE_KEYS` in `src/lib/textSpanWireContract.ts`. All
+ * eleven keys are always present — an absent decision and a decision of "no"
+ * are different answers, so the writer sends `null` rather than nothing.
+ */
+export interface TextReplaceResultWire {
+  replaced: boolean;
+  reason: string | null;
+  /** The engine's own sentence. Present on every refusal. */
+  detail: string | null;
+  /** 0-based position of the edited occurrence among the page's matches. */
+  occurrence_index: number | null;
+  /** How many occurrences of the searched text the page held. */
+  occurrence_count: number | null;
+  /** Resource name of the font that wrote the replacement. */
+  font_used: string | null;
+  /** True when a standard font stood in for the original. Never silent. */
+  font_substituted: boolean | null;
+  /** Fit policy applied, lower-case (`"exact"`). */
+  fit_applied: string | null;
+  /** Whether the document carries digital signatures. */
+  signatures_present: boolean | null;
+  /** Whether the edited page participates in a structure tree. */
+  tags_affected: boolean | null;
+  /** Coded observations from the writer. */
+  diagnostics: Array<{ code: string; message: string }>;
 }
 
 /** Fetch positioned text spans for a single page (SDK extraction path). */

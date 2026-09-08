@@ -584,32 +584,209 @@ pub struct SearchRedactReport {
     pub metadata_cleaned: bool,
 }
 
-/// Result of a parser-backed text span replacement attempt.
-#[derive(Debug, Serialize, Clone)]
+/// Where on the page the user was pointing when the edit was made.
+///
+/// PDF user space, y up — the same space `get_page_text_spans` reports, so the
+/// selection rectangle the editor already holds can be sent unchanged. Used to
+/// pick between several occurrences of the same text on one page.
+#[derive(Debug, Clone, Copy, Deserialize)]
+pub struct SpanAnchor {
+    pub x: f64,
+    pub y: f64,
+    pub width: f64,
+    pub height: f64,
+}
+
+/// One coded observation the writer made about an edit.
+#[derive(Debug, Serialize, Clone, Default)]
+pub struct TextReplaceDiagnostic {
+    pub code: String,
+    pub message: String,
+}
+
+/// Result of a text span replacement attempt.
+///
+/// Everything the writer decided is on this struct, because a decision the user
+/// cannot see is one they cannot correct: which occurrence changed, which font
+/// wrote the replacement, whether a standard font had to stand in, and — when
+/// nothing changed — the typed reason plus the engine's own sentence.
+#[derive(Debug, Serialize, Clone, Default)]
 pub struct TextReplaceResult {
     /// True when the content stream was mutated.
     pub replaced: bool,
     /// Machine-readable reason when replaced is false.  Null when replaced is true.
     pub reason: Option<String>,
+    /// The engine's own message, verbatim. Present on every refusal.
+    pub detail: Option<String>,
+    /// 0-based position of the edited occurrence among the page's matches.
+    pub occurrence_index: Option<u32>,
+    /// How many occurrences the page held.
+    pub occurrence_count: Option<u32>,
+    /// Resource name of the font that wrote the replacement.
+    pub font_used: Option<String>,
+    /// Whether a fallback font stood in for the original. Never silent.
+    pub font_substituted: Option<bool>,
+    /// Fit policy that was applied, lower-case (`"exact"`).
+    pub fit_applied: Option<String>,
+    /// Whether the document carries digital signatures.
+    pub signatures_present: Option<bool>,
+    /// Whether the edited page participates in a structure tree.
+    pub tags_affected: Option<bool>,
+    /// Coded observations from the writer (approximate metrics, dropped
+    /// kerning, a flattened TJ array).
+    pub diagnostics: Vec<TextReplaceDiagnostic>,
 }
 
-fn classify_text_replace_error(message: &str) -> &'static str {
-    let lower = message.to_ascii_lowercase();
-    if lower.contains("page")
-        && (lower.contains("range") || lower.contains("out of bounds") || lower.contains("not found"))
-    {
-        return "page-not-found";
+impl TextReplaceResult {
+    /// A refusal the editor decided itself, before the engine was asked.
+    fn reason(code: &str) -> Self {
+        Self {
+            reason: Some(code.to_string()),
+            ..Default::default()
+        }
     }
-    if lower.contains("font")
-        || lower.contains("encoding")
-        || lower.contains("cmap")
-        || lower.contains("unicode")
-        || lower.contains("glyph")
-        || lower.contains("character")
-    {
-        return "encoding-not-supported";
+
+    /// A refusal from the text-edit engine, mapped to a code the UI has a
+    /// sentence for. The engine's own message always travels with it: the code
+    /// says what class of thing happened, the detail says which one.
+    fn refused(error: &pdf_manip::text_edit::TextEditError) -> Self {
+        use pdf_manip::text_edit::TextEditError as E;
+        let (code, signatures_present) = match error {
+            E::SignedDocumentRejected { .. } => ("document-signed", Some(true)),
+            E::PermissionsDenied => ("permissions-denied", None),
+            E::TaggedTextConflict { .. } => ("tagged-text-conflict", None),
+            E::UnsupportedContainer { .. } => ("unsupported-container", None),
+            E::UnsupportedStyleSpan { .. } => ("mixed-style-span", None),
+            E::EncodingFailed { .. } | E::FontFallbackDenied { .. } => {
+                ("encoding-not-supported", None)
+            }
+            E::InvalidQuery { .. } => ("empty-original-text", None),
+            _ => ("internal-error", None),
+        };
+        let detail = match error {
+            E::TaggedTextConflict {
+                visual_text,
+                actual_text,
+                ..
+            } => format!(
+                "{error}: the glyphs read {visual_text:?} while /ActualText says {actual_text:?}"
+            ),
+            other => other.to_string(),
+        };
+        Self {
+            replaced: false,
+            reason: Some(code.to_string()),
+            detail: Some(detail),
+            signatures_present,
+            ..Default::default()
+        }
     }
-    "internal-error"
+
+    /// A committed edit, described by the engine's report.
+    fn applied(report: &pdf_manip::text_edit::TextReplacementReport, index: usize, count: usize) -> Self {
+        let first = report.results.first();
+        Self {
+            replaced: true,
+            reason: None,
+            detail: None,
+            occurrence_index: Some(index as u32),
+            occurrence_count: Some(count as u32),
+            font_used: first.map(|r| r.font_used.clone()),
+            font_substituted: first.map(|r| r.font_substituted),
+            fit_applied: first.map(|r| format!("{:?}", r.fit_applied).to_ascii_lowercase()),
+            signatures_present: Some(report.signatures_present),
+            tags_affected: first.map(|r| r.tags_affected),
+            diagnostics: match first {
+                Some(result) => result
+                    .diagnostics
+                    .iter()
+                    .map(|d| TextReplaceDiagnostic {
+                        code: d.code.clone(),
+                        message: d.message.clone(),
+                    })
+                    .collect(),
+                // Unreachable: the caller checks `replacements_applied == 1`
+                // before building an applied result, so there is a result to
+                // read. Written out rather than `unwrap_or_default` so the
+                // swallowed-failure lint stays a signal.
+                None => Vec::new(),
+            },
+        }
+    }
+
+    fn with_occurrence(mut self, index: usize, count: usize) -> Self {
+        self.occurrence_index = Some(index as u32);
+        self.occurrence_count = Some(count as u32);
+        self
+    }
+
+    fn with_detail(mut self, detail: String) -> Self {
+        self.detail = Some(detail);
+        self
+    }
+
+    /// Prefer the per-edit failure sentence over the transaction-level one:
+    /// "commit failed" says less than the reason the edit itself gave.
+    fn with_detail_from(mut self, results: &[pdf_manip::text_edit::TextReplacementResult]) -> Self {
+        use pdf_manip::text_edit::ReplacementStatus;
+        if let Some(reason) = results.iter().find_map(|r| match &r.status {
+            ReplacementStatus::Failed { reason } => Some(reason.clone()),
+            ReplacementStatus::Applied => None,
+        }) {
+            self.detail = Some(reason);
+        }
+        self
+    }
+}
+
+/// Which of the page's matches the user meant.
+///
+/// Without an anchor: the first one, which is what the golden gate and the
+/// batch callers expect. With one: the match whose box overlaps it most, and
+/// otherwise the nearest centre — the engine's boxes are estimated from run
+/// metrics, so a zero overlap is a measurement artefact, not an answer.
+/// `TextQuery::region` is deliberately not used for this: filtering on a
+/// positive-area intersection would turn "possibly the wrong occurrence" into
+/// "text not found", which is the worse of the two answers.
+fn pick_occurrence(matches: &[pdf_manip::text_edit::TextMatch], anchor: Option<SpanAnchor>) -> usize {
+    let Some(anchor) = anchor else {
+        return 0;
+    };
+    let rect = [
+        anchor.x,
+        anchor.y,
+        anchor.x + anchor.width,
+        anchor.y + anchor.height,
+    ];
+    let mut best = 0usize;
+    let mut best_overlap = 0.0_f64;
+    for (index, found) in matches.iter().enumerate() {
+        let overlap = (found.bbox[2].min(rect[2]) - found.bbox[0].max(rect[0])).max(0.0)
+            * (found.bbox[3].min(rect[3]) - found.bbox[1].max(rect[1])).max(0.0);
+        if overlap > best_overlap {
+            best_overlap = overlap;
+            best = index;
+        }
+    }
+    if best_overlap > 0.0 {
+        return best;
+    }
+
+    let (cx, cy) = (
+        anchor.x + anchor.width / 2.0,
+        anchor.y + anchor.height / 2.0,
+    );
+    let mut best_distance = f64::MAX;
+    for (index, found) in matches.iter().enumerate() {
+        let mx = (found.bbox[0] + found.bbox[2]) / 2.0;
+        let my = (found.bbox[1] + found.bbox[3]) / 2.0;
+        let distance = (mx - cx).powi(2) + (my - cy).powi(2);
+        if distance < best_distance {
+            best_distance = distance;
+            best = index;
+        }
+    }
+    best
 }
 
 #[derive(Debug, Serialize, Clone)]
@@ -713,6 +890,85 @@ pub struct PdfAIssue {
     pub location: Option<String>,
 }
 
+/// What the SDK's PDF/A pipeline repaired on the way through, flattened for the
+/// wire.
+///
+/// The engine's `PdfAConvertReport` carries four nested sub-reports and derives
+/// no `Serialize`, so it cannot cross the IPC boundary as it stands. Flattening
+/// it here rather than asking the engine for serde keeps the editor out of the
+/// engine's API surface, and lets this side name the fields the panel actually
+/// shows.
+///
+/// A report describes attempted repairs. It is not a conformance verdict — that
+/// is `PdfAConvertResult::validation`.
+#[derive(Debug, Serialize, Clone)]
+pub struct PdfAConvertReportDto {
+    pub page_count: usize,
+    pub text_streams_repositioned: usize,
+    pub output_intent_added: bool,
+    pub page_tree_repaired: bool,
+    pub fonts_inspected: usize,
+    pub fonts_non_embedded: usize,
+    pub fonts_embedded: usize,
+    /// `"name: reason"` per font that could not be embedded.
+    pub fonts_failed: Vec<String>,
+    pub encryption_removed: bool,
+    pub js_actions_removed: usize,
+    pub embedded_files_removed: usize,
+    pub file_attachment_annotations_removed: usize,
+    pub long_string_fixes: usize,
+    pub programs_subsetted: usize,
+    pub subset_bytes_saved: usize,
+    /// Best-effort repairs the pipeline could not complete.
+    pub warnings: Vec<String>,
+}
+
+impl From<&pdf_manip::pdfa::PdfAConvertReport> for PdfAConvertReportDto {
+    fn from(report: &pdf_manip::pdfa::PdfAConvertReport) -> Self {
+        let fonts = report.fonts.as_ref();
+        Self {
+            page_count: report.page_count,
+            text_streams_repositioned: report.text_streams_repositioned,
+            output_intent_added: report.output_intent_added,
+            page_tree_repaired: report.page_tree_repaired,
+            // `fonts: None` means the font step failed outright, which the
+            // warnings already say. Zeroes here, never a silent omission.
+            fonts_inspected: fonts.map_or(0, |f| f.fonts_inspected),
+            fonts_non_embedded: fonts.map_or(0, |f| f.non_embedded_found),
+            fonts_embedded: fonts.map_or(0, |f| f.fonts_embedded),
+            fonts_failed: fonts.map_or_else(Vec::new, |f| {
+                f.failed
+                    .iter()
+                    .map(|(name, reason)| format!("{name}: {reason}"))
+                    .collect()
+            }),
+            encryption_removed: report.cleanup.encryption_removed,
+            js_actions_removed: report.cleanup.js_actions_removed,
+            embedded_files_removed: report.cleanup.embedded_files_removed,
+            file_attachment_annotations_removed: report
+                .cleanup
+                .file_attachment_annotations_removed,
+            long_string_fixes: report.cleanup.long_string_fixes,
+            programs_subsetted: report.subsets.programs_subsetted,
+            subset_bytes_saved: report.subsets.bytes_saved,
+            warnings: report.warnings.clone(),
+        }
+    }
+}
+
+/// The reply to "Save as PDF/A…": where the file went, what it cost, what the
+/// pipeline repaired, and whether the result conforms.
+#[derive(Debug, Serialize, Clone)]
+pub struct PdfAConvertResult {
+    pub validation: PdfAValidationResult,
+    pub report: PdfAConvertReportDto,
+    pub output_path: String,
+    pub input_bytes: u64,
+    pub output_bytes: u64,
+    pub size_ratio: f64,
+    pub elapsed_ms: u64,
+}
+
 /// Wraps a `pdf_engine::PdfDocument` and a `lopdf::Document` for mutation operations.
 pub struct OpenDocument {
     /// Read-only PDF handle for rendering, text extraction, compliance checking.
@@ -735,6 +991,120 @@ const _: () = {
     const fn assert_send_sync<T: Send + Sync>() {}
     assert_send_sync::<PdfDocument>();
 };
+
+/// The compliance verdict for one parsed document at one level, as the panel
+/// shows it. Shared by "Check this document" and by the conversion, which
+/// validates the bytes it wrote at the level that was asked for rather than the
+/// level the fresh XMP happens to declare.
+fn pdfa_validation_result(doc: &PdfDocument, level: PdfALevel) -> PdfAValidationResult {
+    let report: ComplianceReport = pdf_compliance::validate_pdfa(doc.pdf(), level);
+
+    PdfAValidationResult {
+        compliant: report.is_compliant(),
+        conformance_level: report
+            .pdfa_level
+            .map(|l| format!("PDF/A-{}{}", l.part(), l.conformance())),
+        error_count: report.error_count(),
+        warning_count: report.warning_count(),
+        issues: report
+            .issues
+            .iter()
+            .map(|issue| PdfAIssue {
+                rule: issue.rule.clone(),
+                severity: match issue.severity {
+                    Severity::Error => "error".to_string(),
+                    Severity::Warning => "warning".to_string(),
+                    Severity::Info => "info".to_string(),
+                },
+                message: issue.message.clone(),
+                location: issue.location.clone(),
+            })
+            .collect(),
+    }
+}
+
+/// The conformance the converter takes, for a level the editor accepts.
+///
+/// The engine's XMP writer covers parts 1 to 3. The five-pass route this
+/// replaced mapped everything else onto A2b without saying so, which meant a
+/// caller who asked for PDF/A-4 got an A2b file whose metadata claimed A2b and
+/// no indication that the request had been changed. Refusing is the honest
+/// answer; the panel offers 1b, 2b, 2u and 3b, so no reachable choice is lost.
+fn pdfa_conformance_for(level: PdfALevel) -> Result<pdf_manip::pdfa::PdfAConformance, String> {
+    use pdf_manip::pdfa::PdfAConformance;
+    match level {
+        PdfALevel::A1a => Ok(PdfAConformance::A1a),
+        PdfALevel::A1b => Ok(PdfAConformance::A1b),
+        PdfALevel::A2a => Ok(PdfAConformance::A2a),
+        PdfALevel::A2b => Ok(PdfAConformance::A2b),
+        PdfALevel::A2u => Ok(PdfAConformance::A2u),
+        PdfALevel::A3a => Ok(PdfAConformance::A3a),
+        PdfALevel::A3b => Ok(PdfAConformance::A3b),
+        PdfALevel::A3u => Ok(PdfAConformance::A3u),
+        _ => Err(
+            "PDF/A-4 is not supported by the converter; choose 1b, 2a, 2b, 2u, 3a, 3b or 3u"
+                .to_string(),
+        ),
+    }
+}
+
+/// Convert a (cloned) lopdf document to PDF/A and write it to `output_path`.
+///
+/// A free function, like the DOCX and XLSX exports, so the command can run it on
+/// a worker thread with nothing but a cloned document: conversions took up to
+/// 3.9 s on the route this replaced, and the UI thread must not hold the
+/// document mutex for that long. By value rather than by reference — unlike the
+/// DOCX export — because `save_to` writes the xref back into the document it
+/// serializes, and this conversion must never do that to the one the user has
+/// open.
+///
+/// The pipeline is `pdf_manip::pdfa::convert_bytes_with_report` — the same entry
+/// point the SDK's own bindings ship, roughly forty repair steps in an order
+/// that matters, and the route the published size and retention numbers were
+/// measured on. The editor used to run five of those steps by hand.
+pub fn convert_doc_to_pdfa(
+    mut doc: lopdf::Document,
+    level: &str,
+    output_path: &str,
+) -> Result<PdfAConvertResult, String> {
+    let pdfa_level = parse_pdfa_level(level)?;
+    let conformance = pdfa_conformance_for(pdfa_level)?;
+    let started = std::time::Instant::now();
+
+    // Serialized rather than read back from `raw_bytes`: this is the same route
+    // `sync_after_mutation` takes, so unsaved edits and XFA dataset writes are
+    // in the document that gets converted.
+    let mut input = Vec::new();
+    doc.save_to(&mut input)
+        .map_err(|e| format!("Failed to serialize document: {e}"))?;
+
+    let opts = pdf_manip::pdfa::PdfAConvertOptions {
+        conformance,
+        ..Default::default()
+    };
+    let (converted, report) = pdf_manip::pdfa::convert_bytes_with_report(&input, &opts)
+        .map_err(|e| format!("PDF/A conversion failed: {e}"))?;
+
+    std::fs::write(output_path, &converted)
+        .map_err(|e| format!("Failed to save PDF/A document: {e}"))?;
+
+    let input_bytes = input.len() as u64;
+    let output_bytes = converted.len() as u64;
+
+    // Validate what was written, not an in-memory document that resembles it.
+    let written = PdfDocument::open(converted)
+        .map_err(|e| format!("The PDF/A output could not be re-parsed: {e}"))?;
+
+    Ok(PdfAConvertResult {
+        validation: pdfa_validation_result(&written, pdfa_level),
+        report: PdfAConvertReportDto::from(&report),
+        output_path: output_path.to_string(),
+        input_bytes,
+        output_bytes,
+        size_ratio: output_bytes as f64 / input_bytes.max(1) as f64,
+        elapsed_ms: started.elapsed().as_millis() as u64,
+    })
+}
 
 /// Convert a (cloned) lopdf document to DOCX and write it to `output_path`.
 ///
@@ -2437,93 +2807,27 @@ impl OpenDocument {
     /// Detects the declared level from XMP metadata, or defaults to PDF/A-2b.
     pub fn validate_pdfa(&self) -> PdfAValidationResult {
         let pdf = self.pdf_doc.pdf();
-
-        // Try to detect the declared conformance level from XMP metadata.
         let level = pdf_compliance::detect_pdfa_level(pdf).unwrap_or(PdfALevel::A2b);
-
-        let report: ComplianceReport = pdf_compliance::validate_pdfa(pdf, level);
-
-        let conformance_level = report
-            .pdfa_level
-            .map(|l| format!("PDF/A-{}{}", l.part(), l.conformance()));
-
-        PdfAValidationResult {
-            compliant: report.is_compliant(),
-            conformance_level,
-            error_count: report.error_count(),
-            warning_count: report.warning_count(),
-            issues: report
-                .issues
-                .iter()
-                .map(|issue| PdfAIssue {
-                    rule: issue.rule.clone(),
-                    severity: match issue.severity {
-                        Severity::Error => "error".to_string(),
-                        Severity::Warning => "warning".to_string(),
-                        Severity::Info => "info".to_string(),
-                    },
-                    message: issue.message.clone(),
-                    location: issue.location.clone(),
-                })
-                .collect(),
-        }
+        pdfa_validation_result(&self.pdf_doc, level)
     }
 
-    /// Convert the document to PDF/A and save to output_path.
+    /// Convert the document to PDF/A and write it to `output_path`.
+    ///
+    /// A copy goes through the SDK's conversion pipeline; the open document is
+    /// not touched. It used to be: the five passes this replaced ran against
+    /// `self.lopdf_doc` in place and then called `sync_after_mutation`, so
+    /// "Save as PDF/A…" silently replaced what the user had open with the
+    /// archival rewrite, and a pass that failed half-way left them holding a
+    /// half-converted document with no way back.
+    ///
+    /// `&self` rather than `&mut self` is what makes that promise checkable by
+    /// the compiler instead of by a comment.
     pub fn convert_to_pdfa(
-        &mut self,
+        &self,
         level: &str,
         output_path: &str,
-    ) -> Result<PdfAValidationResult, String> {
-        let pdfa_level = parse_pdfa_level(level)?;
-        let is_pdfa1 = pdfa_level.part() == 1;
-
-        // Run PDF/A cleanup pipeline on the lopdf document.
-        let _cleanup_report =
-            pdf_manip::pdfa_cleanup::cleanup_for_pdfa(&mut self.lopdf_doc, is_pdfa1)
-                .map_err(|e| format!("PDF/A cleanup failed: {e}"))?;
-
-        // Embed fonts.
-        let _font_report = pdf_manip::pdfa_fonts::embed_fonts(&mut self.lopdf_doc)
-            .map_err(|e| format!("Font embedding failed: {e}"))?;
-
-        // Normalize color spaces and add OutputIntent.
-        let _color_report = pdf_manip::pdfa_colorspace::normalize_colorspaces(&mut self.lopdf_doc)
-            .map_err(|e| format!("Color space normalization failed: {e}"))?;
-
-        // Run supplementary fixups.
-        let _fixup_report = pdf_manip::pdfa_fixups::run_fixups(&mut self.lopdf_doc);
-
-        // Map PdfALevel to pdfa_xmp::PdfAConformance for XMP metadata.
-        let conformance = match pdfa_level {
-            PdfALevel::A1a => pdf_manip::pdfa_xmp::PdfAConformance::A1a,
-            PdfALevel::A1b => pdf_manip::pdfa_xmp::PdfAConformance::A1b,
-            PdfALevel::A2a => pdf_manip::pdfa_xmp::PdfAConformance::A2a,
-            PdfALevel::A2b => pdf_manip::pdfa_xmp::PdfAConformance::A2b,
-            PdfALevel::A2u => pdf_manip::pdfa_xmp::PdfAConformance::A2u,
-            PdfALevel::A3a => pdf_manip::pdfa_xmp::PdfAConformance::A3a,
-            PdfALevel::A3b => pdf_manip::pdfa_xmp::PdfAConformance::A3b,
-            PdfALevel::A3u => pdf_manip::pdfa_xmp::PdfAConformance::A3u,
-            // PDF/A-4 variants: fall back to A2b for XMP since pdfa_xmp
-            // only supports parts 1-3.
-            _ => pdf_manip::pdfa_xmp::PdfAConformance::A2b,
-        };
-
-        // Repair/generate XMP metadata with PDF/A identification.
-        let _xmp_report =
-            pdf_manip::pdfa_xmp::repair_xmp_metadata(&mut self.lopdf_doc, conformance, None)
-                .map_err(|e| format!("XMP metadata repair failed: {e}"))?;
-
-        // Save the converted document.
-        self.lopdf_doc
-            .save(output_path)
-            .map_err(|e| format!("Failed to save PDF/A document: {e}"))?;
-
-        // Sync internal state.
-        self.sync_after_mutation()?;
-
-        // Validate the result to report compliance status.
-        Ok(self.validate_pdfa())
+    ) -> Result<PdfAConvertResult, String> {
+        convert_doc_to_pdfa(self.clone_lopdf(), level, output_path)
     }
 
     // ── Encryption operations ────────────────────────────────────────
@@ -3168,79 +3472,103 @@ impl OpenDocument {
 
     // ── Text mutation ─────────────────────────────────────────────────
 
-    /// Replace text on a PDF page using the parser-backed pdf-manip writer.
+    /// Replace one occurrence of `original_text` on a page through the SDK's
+    /// `text_edit` session (find → stage → commit).
     ///
-    /// The writer parses page content streams, decodes text runs through the
-    /// page font map, handles Tj/TJ operators, and re-encodes replacement text
-    /// into the matched font or a safe fallback font where possible. Logical
-    /// no-op/rejection cases are returned as `replaced=false` with a stable
-    /// reason string; the document is synced only after a successful mutation.
+    /// The session is what makes the edit addressable: the page's occurrences
+    /// are enumerated, `anchor` picks the one the user was pointing at, and the
+    /// commit either applies that single edit or leaves the document untouched
+    /// and says why. The previous route counted replacements and could not tell
+    /// two occurrences of a word apart, so editing the second line rewrote the
+    /// first as well.
+    ///
+    /// Policy for the editor (see the ticket): `InjectStandard` font fallback,
+    /// which keeps today's hit rate but reports the substitution instead of
+    /// hiding it; `AllOrNothing`, because there is only ever one staged edit;
+    /// `RejectSignedDocuments`, because silently invalidating a signature is
+    /// not a service; `Reject` for `/ActualText`, the only policy there is.
     pub fn replace_text_span(
         &mut self,
         page_index: u32,
         original_text: &str,
         replacement_text: &str,
+        anchor: Option<SpanAnchor>,
     ) -> Result<TextReplaceResult, String> {
-        use pdf_manip::text_replace;
-        use pdf_manip::text_run::FontMap;
+        use pdf_manip::text_edit::{
+            begin_text_edit, CommitPolicy, DocumentRevision, FitPolicy, FontFallback,
+            ReplaceOptions, SignaturePolicy, TaggedTextPolicy, TextQuery,
+        };
 
         if original_text.is_empty() {
-            return Ok(TextReplaceResult {
-                replaced: false,
-                reason: Some("empty-original-text".to_string()),
-            });
+            return Ok(TextReplaceResult::reason("empty-original-text"));
         }
 
         // pdf-manip pages are 1-based while TypeScript page indexes are 0-based.
         let page_num = page_index + 1;
         let pages = self.lopdf_doc.get_pages();
         let Some(&page_id) = pages.get(&page_num) else {
-            return Ok(TextReplaceResult {
-                replaced: false,
-                reason: Some("page-not-found".to_string()),
-            });
+            return Ok(TextReplaceResult::reason("page-not-found"));
         };
-
-        let content_ids = self.lopdf_doc.get_page_contents(page_id);
-        if content_ids.is_empty() {
-            return Ok(TextReplaceResult {
-                replaced: false,
-                reason: Some("no-content-stream".to_string()),
-            });
+        if self.lopdf_doc.get_page_contents(page_id).is_empty() {
+            return Ok(TextReplaceResult::reason("no-content-stream"));
         }
 
-        let fonts = match FontMap::from_page(&self.lopdf_doc, page_num) {
-            Ok(fonts) => fonts,
-            Err(e) => {
-                return Ok(TextReplaceResult {
-                    replaced: false,
-                    reason: Some(classify_text_replace_error(&e.to_string()).to_string()),
-                });
-            }
+        // Match ids never leave this call, so the revision only has to be
+        // internally consistent within it. Hashing the document on every
+        // keystroke would cost more than the edit itself; a real revision
+        // belongs with the caching work in the performance story.
+        let revision = DocumentRevision::from_source_bytes(&[]);
+        let mut session = match begin_text_edit(&mut self.lopdf_doc, revision) {
+            Ok(session) => session,
+            Err(e) => return Ok(TextReplaceResult::refused(&e)),
         };
+        let matches =
+            match session.find_text(TextQuery::exact(original_text).pages(page_num..=page_num)) {
+                Ok(matches) => matches,
+                Err(e) => return Ok(TextReplaceResult::refused(&e)),
+            };
+        if matches.is_empty() {
+            return Ok(TextReplaceResult::reason("text-not-found-in-content-stream"));
+        }
 
-        match text_replace::replace_text(
-            &mut self.lopdf_doc,
-            page_num,
-            original_text,
-            replacement_text,
-            &fonts,
-        ) {
-            Ok(0) => Ok(TextReplaceResult {
-                replaced: false,
-                reason: Some("text-not-found-in-content-stream".to_string()),
-            }),
-            Ok(_) => {
+        let count = matches.len();
+        let index = pick_occurrence(&matches, anchor);
+        let target = matches[index].id.clone();
+        let options = ReplaceOptions {
+            fit: FitPolicy::Exact,
+            font_fallback: FontFallback::InjectStandard,
+            commit_policy: CommitPolicy::AllOrNothing,
+            signature_policy: SignaturePolicy::RejectSignedDocuments,
+            tagged_text_policy: TaggedTextPolicy::Reject,
+        };
+        if let Err(e) = session.stage_replace(&target, replacement_text, options) {
+            return Ok(TextReplaceResult::refused(&e).with_occurrence(index, count));
+        }
+
+        match session.commit() {
+            Ok(report) => {
+                // The engine promises `matches_found == applied + failed`. If
+                // that ever stops holding, the honest answer is an error, not a
+                // `replaced: true` covering an edit nobody can account for.
+                if report.replacements_applied != 1
+                    || report.matches_found
+                        != report.replacements_applied + report.replacements_failed
+                {
+                    return Ok(TextReplaceResult::reason("internal-error")
+                        .with_detail(format!(
+                            "the writer staged 1 edit and reported {} applied and {} failed out of {}",
+                            report.replacements_applied,
+                            report.replacements_failed,
+                            report.matches_found
+                        ))
+                        .with_occurrence(index, count));
+                }
                 self.sync_after_mutation()?;
-                Ok(TextReplaceResult {
-                    replaced: true,
-                    reason: None,
-                })
+                Ok(TextReplaceResult::applied(&report, index, count))
             }
-            Err(e) => Ok(TextReplaceResult {
-                replaced: false,
-                reason: Some(classify_text_replace_error(&e.to_string()).to_string()),
-            }),
+            Err(commit) => Ok(TextReplaceResult::refused(&commit.error)
+                .with_detail_from(&commit.results)
+                .with_occurrence(index, count)),
         }
     }
 
@@ -4206,11 +4534,20 @@ fn encode_rendered_page(
 fn parse_pdfa_level(level: &str) -> Result<PdfALevel, String> {
     let level = level.trim().to_lowercase();
     // Support formats: "1b", "2a", "2b", "3u", "a-1b", "a-2b", "pdf/a-2b", etc.
+    //
+    // Prefixes only. This used to end in `.replace("a", "")`, which strips the
+    // letter wherever it sits: "2a" reached the match as "2" and came back as
+    // PDF/A-2b, so the three accessible levels were unreachable and a caller
+    // asking for one was silently given the basic level instead. Longest
+    // prefix first, or "pdfa-2b" loses its separator to the "pdfa" arm.
     let normalized = level
-        .replace("pdf/a-", "")
-        .replace("pdfa-", "")
-        .replace("a-", "")
-        .replace("a", "");
+        .strip_prefix("pdf/a-")
+        .or_else(|| level.strip_prefix("pdfa-"))
+        .or_else(|| level.strip_prefix("pdf/a"))
+        .or_else(|| level.strip_prefix("pdfa"))
+        .or_else(|| level.strip_prefix("a-"))
+        .or_else(|| level.strip_prefix('a'))
+        .unwrap_or(level.as_str());
 
     // Now normalized should be like "1b", "2b", "3u", "4", etc.
     let trimmed = normalized.trim();
@@ -4257,7 +4594,7 @@ mod tests {
         // 2. Commit and render the in-memory document, then save-as.
         let mut edited = sample_doc();
         let result = edited
-            .replace_text_span(0, needle, replacement)
+            .replace_text_span(0, needle, replacement, None)
             .expect("replace_text_span");
         assert!(
             result.replaced,
@@ -4361,6 +4698,39 @@ mod tests {
         assert_eq!(parse_pdfa_level("PDF/A-1b").unwrap(), PdfALevel::A1b);
         assert_eq!(parse_pdfa_level("3u").unwrap(), PdfALevel::A3u);
         assert!(parse_pdfa_level("5z").is_err());
+    }
+
+    /// The accessible conformance levels have to survive being parsed.
+    ///
+    /// They did not: the prefix stripping ended in `.replace("a", "")`, which
+    /// does not care where in the string the letter sits, so `"2a"` arrived at
+    /// the match arm as `"2"` and came back as PDF/A-2b. The `"1a"`, `"2a"` and
+    /// `"3a"` arms were unreachable, and a caller asking for the accessible
+    /// level was silently given the basic one — no error, no warning, a
+    /// different document than the one requested.
+    #[test]
+    fn parse_pdfa_level_keeps_the_accessible_conformance() {
+        assert_eq!(parse_pdfa_level("1a").unwrap(), PdfALevel::A1a);
+        assert_eq!(parse_pdfa_level("2a").unwrap(), PdfALevel::A2a);
+        assert_eq!(parse_pdfa_level("3a").unwrap(), PdfALevel::A3a);
+        assert_eq!(parse_pdfa_level("PDF/A-2a").unwrap(), PdfALevel::A2a);
+        assert_eq!(parse_pdfa_level("pdfa-3a").unwrap(), PdfALevel::A3a);
+        assert_eq!(parse_pdfa_level("A-1a").unwrap(), PdfALevel::A1a);
+    }
+
+    /// The prefixes the doc comment promises, and nothing beyond them.
+    #[test]
+    fn parse_pdfa_level_accepts_the_documented_spellings() {
+        for spelling in ["2b", " 2B ", "a-2b", "A2b", "pdfa-2b", "pdf/a-2b", "pdf/a2b"] {
+            assert_eq!(
+                parse_pdfa_level(spelling).unwrap(),
+                PdfALevel::A2b,
+                "{spelling} did not parse as PDF/A-2b"
+            );
+        }
+        assert_eq!(parse_pdfa_level("4e").unwrap(), PdfALevel::A4e);
+        assert!(parse_pdfa_level("").is_err());
+        assert!(parse_pdfa_level("2z").is_err());
     }
 
     // === Toolbar operation backends ===
@@ -4476,7 +4846,7 @@ mod tests {
         assert!(before.contains("Hello"), "fixture should contain text to replace: {before:?}");
 
         let result = doc
-            .replace_text_span(0, "Hello", "Hello native vector editor")
+            .replace_text_span(0, "Hello", "Hello native vector editor", None)
             .expect("replace_text_span");
         assert!(result.replaced, "replacement failed: {:?}", result.reason);
 
@@ -4538,7 +4908,7 @@ mod tests {
             OpenDocument::open_bytes(multiline_fixture_bytes()).expect("open multiline fixture");
 
         let result = doc
-            .replace_text_span(0, "Some words to edit now.", "Some words to edit.")
+            .replace_text_span(0, "Some words to edit now.", "Some words to edit.", None)
             .expect("replace_text_span");
         assert!(result.replaced, "replacement failed: {:?}", result.reason);
 
@@ -4574,6 +4944,377 @@ mod tests {
             reopened_runs.last().map(|r| r.text.as_str()),
             Some("Third line stays.")
         );
+    }
+
+
+    /// In-memory page carrying the same word twice, on two lines, in one font.
+    /// Two occurrences are what makes an anchor necessary: a writer that always
+    /// takes "the first match" cannot be told which one the user clicked.
+    fn two_occurrence_fixture_bytes() -> Vec<u8> {
+        one_page_fixture(
+            b"BT /F1 12 Tf 72 720 Td (Lorem one) Tj 0 -30 Td (Lorem two) Tj ET",
+            None,
+        )
+    }
+
+    /// Same shape, but the font's encoding is an explicit /Differences table
+    /// covering only the characters the page already shows. Anything outside it
+    /// can only be written through an injected standard font — which is the
+    /// decision the result has to report instead of making it silently.
+    fn narrow_encoding_fixture_bytes() -> Vec<u8> {
+        use lopdf::{dictionary, Object};
+        let differences = Object::Array(vec![
+            32.into(),
+            Object::Name(b"space".to_vec()),
+            76.into(),
+            Object::Name(b"L".to_vec()),
+            101.into(),
+            Object::Name(b"e".to_vec()),
+            109.into(),
+            Object::Name(b"m".to_vec()),
+            110.into(),
+            Object::Name(b"n".to_vec()),
+            111.into(),
+            Object::Name(b"o".to_vec()),
+            114.into(),
+            Object::Name(b"r".to_vec()),
+            116.into(),
+            Object::Name(b"t".to_vec()),
+            119.into(),
+            Object::Name(b"w".to_vec()),
+        ]);
+        one_page_fixture(
+            b"BT /F1 12 Tf 72 720 Td (Lorem one) Tj 0 -30 Td (Lorem two) Tj ET",
+            Some(dictionary! {
+                "Type" => "Encoding",
+                "Differences" => differences,
+            }),
+        )
+    }
+
+    /// A page whose glyphs disagree with the `/ActualText` wrapped around them.
+    /// Rewriting the glyphs would leave the accessible text saying the old
+    /// thing, so the engine refuses and the editor has to say why.
+    fn actual_text_fixture_bytes() -> Vec<u8> {
+        one_page_fixture(
+            b"BT /F1 12 Tf 72 720 Td /Span <</ActualText (Lorem)>> BDC (L\xfarem) Tj EMC ET",
+            None,
+        )
+    }
+
+    /// One-page document with a single Type1 Helvetica resource named `F1`,
+    /// optionally carrying an explicit `/Encoding` dictionary.
+    fn one_page_fixture(content: &[u8], encoding: Option<lopdf::Dictionary>) -> Vec<u8> {
+        use lopdf::{dictionary, Document, Object, Stream};
+
+        let mut doc = Document::with_version("1.7");
+        let mut font = dictionary! {
+            "Type" => "Font",
+            "Subtype" => "Type1",
+            "BaseFont" => "Helvetica",
+        };
+        if let Some(enc) = encoding {
+            font.set("Encoding", Object::Dictionary(enc));
+        }
+        let font_id = doc.add_object(Object::Dictionary(font));
+        let resources = dictionary! {
+            "Font" => Object::Dictionary(dictionary! { "F1" => Object::Reference(font_id) }),
+        };
+        let content_id =
+            doc.add_object(Object::Stream(Stream::new(dictionary! {}, content.to_vec())));
+        let page_id = doc.add_object(Object::Dictionary(dictionary! {
+            "Type" => "Page",
+            "MediaBox" => vec![0.into(), 0.into(), 612.into(), 792.into()],
+            "Contents" => Object::Reference(content_id),
+            "Resources" => Object::Dictionary(resources),
+        }));
+        let pages_id = doc.add_object(Object::Dictionary(dictionary! {
+            "Type" => "Pages",
+            "Kids" => vec![Object::Reference(page_id)],
+            "Count" => 1_i64,
+        }));
+        if let Ok(Object::Dictionary(ref mut d)) = doc.get_object_mut(page_id) {
+            d.set("Parent", Object::Reference(pages_id));
+        }
+        let catalog_id = doc.add_object(Object::Dictionary(dictionary! {
+            "Type" => "Catalog",
+            "Pages" => Object::Reference(pages_id),
+        }));
+        doc.trailer.set("Root", Object::Reference(catalog_id));
+
+        let mut bytes = Vec::new();
+        doc.save_to(&mut bytes).expect("serialize fixture");
+        bytes
+    }
+
+    fn page_run_texts(doc: &OpenDocument) -> Vec<String> {
+        pdf_manip::text_run::extract_page_text_runs(&doc.lopdf_doc, 1)
+            .expect("extract runs")
+            .into_iter()
+            .map(|r| r.text)
+            .collect()
+    }
+
+    /// The occurrence the user pointed at is the one that changes. The legacy
+    /// writer took the first match on the page, so editing the second line
+    /// silently rewrote the first one.
+    #[test]
+    fn replace_text_span_replaces_only_the_anchored_occurrence() {
+        let mut doc =
+            OpenDocument::open_bytes(two_occurrence_fixture_bytes()).expect("open fixture");
+
+        let result = doc
+            .replace_text_span(
+                0,
+                "Lorem",
+                "Ipsum",
+                Some(SpanAnchor {
+                    x: 72.0,
+                    y: 690.0,
+                    width: 60.0,
+                    height: 12.0,
+                }),
+            )
+            .expect("replace_text_span");
+
+        assert!(result.replaced, "anchored replace failed: {result:?}");
+        assert_eq!(result.occurrence_index, Some(1), "wrong occurrence chosen");
+        assert_eq!(result.occurrence_count, Some(2));
+        assert_eq!(
+            page_run_texts(&doc),
+            vec!["Lorem one".to_string(), "Ipsum two".to_string()],
+            "the anchored occurrence must be the only one that changed"
+        );
+    }
+
+    /// No anchor means the first occurrence, which is what the golden gate and
+    /// the two older regression tests rely on.
+    #[test]
+    fn replace_text_span_without_anchor_takes_the_first_occurrence() {
+        let mut doc =
+            OpenDocument::open_bytes(two_occurrence_fixture_bytes()).expect("open fixture");
+
+        let result = doc
+            .replace_text_span(0, "Lorem", "Ipsum", None)
+            .expect("replace_text_span");
+
+        assert!(result.replaced, "unanchored replace failed: {result:?}");
+        assert_eq!(result.occurrence_index, Some(0));
+        assert_eq!(
+            page_run_texts(&doc),
+            vec!["Ipsum one".to_string(), "Lorem two".to_string()]
+        );
+    }
+
+    /// Whether the original font wrote the replacement, or a standard font
+    /// stood in for it, is a visible fact about the page. It used to be neither
+    /// reported nor knowable.
+    #[test]
+    fn replace_text_span_reports_font_decision() {
+        let mut kept =
+            OpenDocument::open_bytes(two_occurrence_fixture_bytes()).expect("open fixture");
+        let same_font = kept
+            .replace_text_span(0, "Lorem", "Ipsum", None)
+            .expect("replace_text_span");
+        assert!(same_font.replaced, "{same_font:?}");
+        assert_eq!(same_font.font_substituted, Some(false));
+        assert_eq!(same_font.font_used.as_deref(), Some("F1"));
+        assert_eq!(same_font.fit_applied.as_deref(), Some("exact"));
+
+        // The narrow /Differences encoding has no 'é', so writing one needs the
+        // injected Helvetica — allowed, but never silent.
+        let mut substituted =
+            OpenDocument::open_bytes(narrow_encoding_fixture_bytes()).expect("open fixture");
+        let fallback = substituted
+            .replace_text_span(0, "Lorem", "Lorém", None)
+            .expect("replace_text_span");
+        assert!(
+            fallback.replaced,
+            "InjectStandard must write the text, not refuse it: {fallback:?}"
+        );
+        assert_eq!(fallback.font_substituted, Some(true));
+        assert_ne!(
+            fallback.font_used.as_deref(),
+            Some("F1"),
+            "a substituted glyph run must name the font that actually wrote it"
+        );
+
+        // WinAnsi is the ceiling of the injected font: above U+00FF the honest
+        // answer is a refusal, not a box on the page.
+        let mut refused =
+            OpenDocument::open_bytes(narrow_encoding_fixture_bytes()).expect("open fixture");
+        let outside = refused
+            .replace_text_span(0, "Lorem", "Loreμ", None)
+            .expect("replace_text_span");
+        assert!(!outside.replaced);
+        assert_eq!(outside.reason.as_deref(), Some("encoding-not-supported"));
+    }
+
+    /// Editing a signed document invalidates the signature. The legacy wrapper
+    /// did it anyway and said nothing; now it is refused with a reason the
+    /// panel can print.
+    #[test]
+    fn replace_text_span_refuses_signed_document_with_typed_reason() {
+        let mut source = sample_doc();
+        let cert = test_certificate_path();
+        let out = op_tmp("text_edit_signed_source.pdf");
+        let _ = std::fs::remove_file(&out);
+        source
+            .sign(
+                cert.to_str().unwrap(),
+                TEST_P12_PASSWORD,
+                "I approve this document",
+                out.to_str().unwrap(),
+            )
+            .expect("sign the fixture");
+        drop(source);
+
+        let mut signed = OpenDocument::open(out.to_str().unwrap()).expect("reopen signed file");
+        assert_eq!(signed.verify_signatures().len(), 1, "fixture must be signed");
+        let before = signed.extract_page_text(0).expect("text before");
+
+        let result = signed
+            .replace_text_span(0, "Hello", "Nello", None)
+            .expect("replace_text_span");
+
+        assert!(!result.replaced, "a signed document must not be rewritten");
+        assert_eq!(result.reason.as_deref(), Some("document-signed"));
+        assert_eq!(result.signatures_present, Some(true));
+        assert!(
+            result
+                .detail
+                .as_deref()
+                .unwrap_or_default()
+                .contains("signed"),
+            "the engine's own sentence must reach the user: {:?}",
+            result.detail
+        );
+        assert_eq!(
+            signed.extract_page_text(0).expect("text after"),
+            before,
+            "a refused edit must leave the document alone"
+        );
+        let _ = std::fs::remove_file(&out);
+    }
+
+    /// `/ActualText` is what a screen reader reads. Rewriting the glyphs under
+    /// it would make the two disagree, so the edit is refused by name.
+    #[test]
+    fn replace_text_span_refuses_actual_text_conflict() {
+        let mut doc = OpenDocument::open_bytes(actual_text_fixture_bytes()).expect("open fixture");
+
+        let result = doc
+            .replace_text_span(0, "Lúrem", "Lorem", None)
+            .expect("replace_text_span");
+
+        assert!(!result.replaced, "{result:?}");
+        assert_eq!(result.reason.as_deref(), Some("tagged-text-conflict"));
+        assert!(
+            result
+                .detail
+                .as_deref()
+                .unwrap_or_default()
+                .contains("ActualText"),
+            "the detail must name the conflict: {:?}",
+            result.detail
+        );
+    }
+
+    /// The whole point, on real bytes: the word the user changed is in the
+    /// saved file, and the line that merely contains the same word is not.
+    #[test]
+    fn sample_text_edit_survives_save_and_reopen() {
+        const SAMPLE_TEXT_PDF: &[u8] = include_bytes!("../../tests/fixtures/sample-text.pdf");
+        let mut doc =
+            OpenDocument::open_bytes(SAMPLE_TEXT_PDF.to_vec()).expect("open sample-text.pdf");
+        assert_eq!(doc.page_count(), 3);
+
+        let result = doc
+            .replace_text_span(
+                0,
+                "Lorem ipsum visual E2E page one",
+                "Lorem ipsum visual E2E page uno",
+                Some(SpanAnchor {
+                    x: 72.0,
+                    y: 720.0,
+                    width: 340.0,
+                    height: 24.0,
+                }),
+            )
+            .expect("replace_text_span");
+        assert!(result.replaced, "{result:?}");
+
+        // Live document first: a commit that only shows up after a reload is
+        // the stale-render bug this route already had once.
+        let live = doc.extract_page_text(0).expect("live text");
+        assert!(live.contains("page uno"), "live extract is stale: {live:?}");
+
+        let out = op_tmp("sample_text_edit.pdf");
+        let _ = std::fs::remove_file(&out);
+        doc.save_to(out.to_str().unwrap()).expect("save");
+        let reopened = OpenDocument::open(out.to_str().unwrap()).expect("reopen");
+
+        assert_eq!(reopened.page_count(), 3, "the edit changed the page count");
+        let text = reopened.extract_page_text(0).expect("reopened text");
+        assert!(
+            text.contains("Lorem ipsum visual E2E page uno"),
+            "the edit did not survive the save: {text:?}"
+        );
+        assert!(
+            text.contains("Search target Lorem appears on this page."),
+            "the other line on the page was rewritten too: {text:?}"
+        );
+        let _ = std::fs::remove_file(&out);
+    }
+
+    /// The eleven keys the frontend reads. Renaming one here without renaming
+    /// it in `src/lib/textSpanWireContract.ts` breaks the editor silently, so
+    /// both halves are pinned.
+    #[test]
+    fn text_replace_result_wire_contract_is_stable() {
+        let result = TextReplaceResult {
+            replaced: true,
+            reason: None,
+            detail: Some("detail".to_string()),
+            occurrence_index: Some(0),
+            occurrence_count: Some(2),
+            font_used: Some("F1".to_string()),
+            font_substituted: Some(false),
+            fit_applied: Some("exact".to_string()),
+            signatures_present: Some(false),
+            tags_affected: Some(false),
+            diagnostics: vec![TextReplaceDiagnostic {
+                code: "approximate-bbox".to_string(),
+                message: "message".to_string(),
+            }],
+        };
+        let value = serde_json::to_value(&result).expect("serialize TextReplaceResult");
+        let object = value.as_object().expect("object");
+        let mut keys: Vec<&str> = object.keys().map(String::as_str).collect();
+        keys.sort_unstable();
+        assert_eq!(
+            keys,
+            vec![
+                "detail",
+                "diagnostics",
+                "fit_applied",
+                "font_substituted",
+                "font_used",
+                "occurrence_count",
+                "occurrence_index",
+                "reason",
+                "replaced",
+                "signatures_present",
+                "tags_affected",
+            ]
+        );
+
+        let diagnostic = object["diagnostics"][0]
+            .as_object()
+            .expect("diagnostic object");
+        let mut diagnostic_keys: Vec<&str> = diagnostic.keys().map(String::as_str).collect();
+        diagnostic_keys.sort_unstable();
+        assert_eq!(diagnostic_keys, vec!["code", "message"]);
     }
 
     #[test]
@@ -4750,6 +5491,141 @@ mod tests {
             keys, expected,
             "TextSpanInfo wire keys drifted from the editor/TS contract; update \
              src/lib/tauri-api.ts and src/lib/textSpanWireContract.ts together."
+        );
+    }
+
+    #[test]
+    fn pdfa_convert_result_wire_contract_is_stable() {
+        let result = PdfAConvertResult {
+            validation: PdfAValidationResult {
+                compliant: false,
+                conformance_level: Some("PDF/A-2b".to_string()),
+                error_count: 1,
+                warning_count: 2,
+                issues: vec![PdfAIssue {
+                    rule: "6.1.2".to_string(),
+                    severity: "error".to_string(),
+                    message: "no output intent".to_string(),
+                    location: Some("catalog".to_string()),
+                }],
+            },
+            report: PdfAConvertReportDto {
+                page_count: 3,
+                text_streams_repositioned: 1,
+                output_intent_added: true,
+                page_tree_repaired: false,
+                fonts_inspected: 4,
+                fonts_non_embedded: 2,
+                fonts_embedded: 2,
+                fonts_failed: vec!["Helvetica: no program".to_string()],
+                encryption_removed: false,
+                js_actions_removed: 1,
+                embedded_files_removed: 0,
+                file_attachment_annotations_removed: 0,
+                long_string_fixes: 0,
+                programs_subsetted: 1,
+                subset_bytes_saved: 512,
+                warnings: vec!["colour space kept".to_string()],
+            },
+            output_path: "/tmp/out.pdf".to_string(),
+            input_bytes: 100,
+            output_bytes: 120,
+            size_ratio: 1.2,
+            elapsed_ms: 42,
+        };
+
+        let value = serde_json::to_value(&result).expect("serialize PdfAConvertResult");
+        let object = value
+            .as_object()
+            .expect("PdfAConvertResult serialises to a JSON object");
+
+        let sorted = |v: &serde_json::Value| -> Vec<String> {
+            let mut keys: Vec<String> = v
+                .as_object()
+                .expect("nested DTO serialises to a JSON object")
+                .keys()
+                .cloned()
+                .collect();
+            keys.sort();
+            keys
+        };
+        let expect = |mut e: Vec<&str>| -> Vec<String> {
+            e.sort_unstable();
+            e.into_iter().map(str::to_string).collect()
+        };
+
+        let drift = "PDF/A conversion wire keys drifted from the editor/TS contract; update \
+             src/lib/tauri-api.ts and src/lib/pdfaWireContract.ts together.";
+
+        assert_eq!(
+            sorted(&value),
+            expect(vec![
+                "validation",
+                "report",
+                "output_path",
+                "input_bytes",
+                "output_bytes",
+                "size_ratio",
+                "elapsed_ms",
+            ]),
+            "{drift}"
+        );
+        assert_eq!(
+            sorted(&object["report"]),
+            expect(vec![
+                "page_count",
+                "text_streams_repositioned",
+                "output_intent_added",
+                "page_tree_repaired",
+                "fonts_inspected",
+                "fonts_non_embedded",
+                "fonts_embedded",
+                "fonts_failed",
+                "encryption_removed",
+                "js_actions_removed",
+                "embedded_files_removed",
+                "file_attachment_annotations_removed",
+                "long_string_fixes",
+                "programs_subsetted",
+                "subset_bytes_saved",
+                "warnings",
+            ]),
+            "{drift}"
+        );
+        assert_eq!(
+            sorted(&object["validation"]),
+            expect(vec![
+                "compliant",
+                "conformance_level",
+                "error_count",
+                "warning_count",
+                "issues",
+            ]),
+            "{drift}"
+        );
+        assert_eq!(
+            sorted(&object["validation"]["issues"][0]),
+            expect(vec!["rule", "severity", "message", "location"]),
+            "{drift}"
+        );
+    }
+
+    /// PDF/A-4 used to be accepted and quietly converted to A2b: `parse_pdfa_level`
+    /// takes "4", the conformance table has no part 4, and the fall-through arm
+    /// mapped it onto A2b. The file was A2b, its metadata said A2b, and nothing
+    /// told the caller their request had been changed.
+    #[test]
+    fn pdfa_conversion_refuses_a_level_it_cannot_write() {
+        for level in [PdfALevel::A4, PdfALevel::A4f, PdfALevel::A4e] {
+            let err = pdfa_conformance_for(level).expect_err("PDF/A-4 has no conformance to write");
+            assert!(
+                err.contains("PDF/A-4"),
+                "the refusal has to name the level: {err}"
+            );
+        }
+        assert_eq!(
+            pdfa_conformance_for(PdfALevel::A2u).expect("2u is writable"),
+            pdf_manip::pdfa::PdfAConformance::A2u
         );
     }
 

@@ -233,7 +233,7 @@ fn measure_text_edit(path: &Path, word: &str) -> Measured {
         let mut this_run = 0usize;
         for page in 0..doc.page_count() {
             while doc
-                .replace_text_span(page as u32, word, &replacement)
+                .replace_text_span(page as u32, word, &replacement, None)
                 .expect("replace_text_span")
                 .replaced
             {
@@ -276,7 +276,8 @@ fn measure_pdfa(path: &Path, verapdf: Option<&str>) -> Measured {
     let mut speed_ms = Vec::new();
     let mut completes = true;
     for _ in 0..RUNS {
-        let mut doc = open(path);
+        // Not `mut`: converting no longer touches the open document.
+        let doc = open(path);
         let started = Instant::now();
         // A refused conversion is a document in the denominator, not a
         // document that quietly leaves the corpus.

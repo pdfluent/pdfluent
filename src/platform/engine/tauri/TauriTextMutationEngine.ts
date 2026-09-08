@@ -18,7 +18,7 @@
  *   set_text_run_style — bold/italic via font substitution via pdf-manip (G6)
  *
  * IPC contract (field name mapping camelCase TypeScript → snake_case Rust/serde):
- *   replace:  { page_index, original_text, replacement_text }
+ *   replace:  { page_index, original_text, replacement_text, anchor? }
  *   format:   { page_index, original_text, font_size?, color? }
  *   style:    { page_index, original_text, bold?, italic? }
  *
@@ -29,6 +29,7 @@
  */
 
 import { invokeCommand as invoke } from '../../../lib/commandBridge';
+import type { TextReplaceResultWire } from '../../../lib/tauri-api';
 import type { AsyncEngineResult } from '../../../core/engine/types';
 import type {
   TextMutationEngineWithFormatting,
@@ -48,12 +49,19 @@ interface TauriReplaceTextSpanRequest {
   page_index: number;
   original_text: string;
   replacement_text: string;
+  /**
+   * Where the user was pointing, in PDF user space. Absent means "the first
+   * occurrence"; present means the backend ranks the page's matches against it.
+   */
+  anchor?: { x: number; y: number; width: number; height: number };
 }
 
-interface TauriReplaceTextSpanResult {
-  replaced: boolean;
-  reason: string | null;
-}
+/**
+ * The backend result. Its key list lives in `src/lib/textSpanWireContract.ts`
+ * and is bound to this type at compile time, so a rename on either side of the
+ * IPC stops the build instead of quietly delivering `undefined`.
+ */
+type TauriReplaceTextSpanResult = TextReplaceResultWire;
 
 // G5 — format_text_span
 
@@ -91,8 +99,9 @@ interface TauriSetTextRunStyleResult {
  * Tauri-backed implementation of TextMutationEngineWithFormatting.
  *
  * replaceTextSpan:
- *   Uses pdf_manip::text_replace to parse page content streams, decode Tj/TJ
- *   runs through the page font map, and write the exact replacement text.
+ *   Uses the SDK's pdf_manip::text_edit session (find -> stage -> commit) so
+ *   one addressable occurrence changes, and the writer's own report -- which
+ *   occurrence, which font, whether a font stood in -- comes back with it.
  *
  * formatTextSpan — Track G5:
  *   Uses pdf-text-format::format_text_run via extract_page_text_runs match.
@@ -111,6 +120,7 @@ export class TauriTextMutationEngine implements TextMutationEngineWithFormatting
       page_index: request.pageIndex,
       original_text: request.originalText,
       replacement_text: request.replacementText,
+      ...(request.target?.rect && { anchor: request.target.rect }),
     };
     try {
       const result = await invoke<TauriReplaceTextSpanResult>('replace_text_span', {
@@ -121,6 +131,15 @@ export class TauriTextMutationEngine implements TextMutationEngineWithFormatting
         value: {
           replaced: result.replaced,
           reason: result.reason,
+          detail: result.detail,
+          occurrenceIndex: result.occurrence_index,
+          occurrenceCount: result.occurrence_count,
+          fontUsed: result.font_used,
+          fontSubstituted: result.font_substituted,
+          fitApplied: result.fit_applied,
+          signaturesPresent: result.signatures_present,
+          tagsAffected: result.tags_affected,
+          diagnostics: result.diagnostics,
         },
       };
     } catch (e) {

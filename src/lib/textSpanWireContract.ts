@@ -5,7 +5,7 @@
 // of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
-import type { TextSpanInfo, FontMetricsInfo } from './tauri-api';
+import type { TextSpanInfo, FontMetricsInfo, TextReplaceResultWire } from './tauri-api';
 
 /**
  * Canonical wire-key lists for the text-span DTO returned by `get_page_text_spans`.
@@ -43,6 +43,27 @@ export const TEXT_SPAN_WIRE_KEYS = [
   'fontMetrics',
 ] as const;
 
+/**
+ * Canonical wire-key list for the result of `replace_text_span`.
+ *
+ * Same contract, same reason: the writer's report is only useful if both sides
+ * agree on what it is called. Rust half:
+ * `text_replace_result_wire_contract_is_stable` in `src-tauri/src/pdf_engine.rs`.
+ */
+export const TEXT_REPLACE_RESULT_WIRE_KEYS = [
+  'replaced',
+  'reason',
+  'detail',
+  'occurrence_index',
+  'occurrence_count',
+  'font_used',
+  'font_substituted',
+  'fit_applied',
+  'signatures_present',
+  'tags_affected',
+  'diagnostics',
+] as const;
+
 export const FONT_METRICS_WIRE_KEYS = [
   'ascent',
   'descent',
@@ -67,6 +88,13 @@ const _textSpanKeysMatch: KeysEqual<
   keyof TextSpanInfo
 > = true;
 void _textSpanKeysMatch;
+
+// Fails to compile if TEXT_REPLACE_RESULT_WIRE_KEYS and keyof TextReplaceResultWire diverge.
+const _textReplaceResultKeysMatch: KeysEqual<
+  (typeof TEXT_REPLACE_RESULT_WIRE_KEYS)[number],
+  keyof TextReplaceResultWire
+> = true;
+void _textReplaceResultKeysMatch;
 
 // Fails to compile if FONT_METRICS_WIRE_KEYS and keyof FontMetricsInfo diverge.
 const _fontMetricsKeysMatch: KeysEqual<

@@ -1,0 +1,387 @@
+{
+  "$comment": [
+    "Every control, panel, label and tab visible in the store screenshots, and the",
+    "UI-register affordance that proves the shipped app has it.",
+    "",
+    "This file exists because a screenshot is a promise. The set before this one",
+    "showed an 'Invite to sign' button the app has never had; Apple's review",
+    "guideline 2.3.3 and Microsoft's policy 10.1.1 both ask for the app as it is,",
+    "and the house rule is stricter than either: everything the interface suggests",
+    "must work.",
+    "",
+    "`shows` is a control the image shows and the app has. Its `affordance` is a",
+    "`kind:id` reference into docs/UI_REGISTER.md; tests/store-visuals-parity.test.ts",
+    "fails when that reference is gone from the register or has decayed to NO ACTION",
+    "or UNREACHABLE. A row with no reference must say why in `whyNoAffordance`.",
+    "",
+    "`blocked` is a control the image shows and the app does NOT have, or shows",
+    "differently from the shipped shell. Each one names what the image claims,",
+    "what the app actually does, and the ticket where the owner decides between",
+    "changing the image and building the control. Nothing is uploaded, and no",
+    "derivative of that image enters docs/media/, while its list is non-empty.",
+    "",
+    "Sources checked on 2026-09-08 against the shell at b22d536: the six Mac App",
+    "Store 2880x1800 renders and the six Microsoft Store 1920x1080 renders, which",
+    "carry the same six designs at a different aspect ratio.",
+    "Image ids are prefixed rather than bare digits on purpose. The register's proof walker probes test files for a quoted literal beside the token 'key', so a bare '1' in this file's test would have been counted as proof for the 1-8 mode shortcut -- a test credited with something it does not exercise, which is the exact failure the register exists to catch."
+  ],
+  "checkedOn": "2026-09-08",
+  "registerCommit": "b22d536",
+  "images": [
+    {
+      "id": "store-1",
+      "headline": "The FREE Private PDF Editor",
+      "surface": "Edit panel",
+      "shows": [
+        {
+          "control": "Mode tab — All tools",
+          "affordance": "mode-tab:tools"
+        },
+        {
+          "control": "Mode tab — Edit",
+          "affordance": "mode-tab:edit"
+        },
+        {
+          "control": "Mode tab — Convert",
+          "affordance": "mode-tab:convert"
+        },
+        {
+          "control": "Mode tab — Sign",
+          "affordance": "mode-tab:esign"
+        },
+        {
+          "control": "Edit panel body",
+          "affordance": "panel:edit"
+        },
+        {
+          "control": "Rail — select",
+          "affordance": "rail-tool:select"
+        },
+        {
+          "control": "Rail — hand",
+          "affordance": "rail-tool:hand"
+        },
+        {
+          "control": "Rail — note",
+          "affordance": "rail-tool:comment"
+        },
+        {
+          "control": "Rail — highlight",
+          "affordance": "rail-tool:highlight"
+        },
+        {
+          "control": "Rail — draw",
+          "affordance": "rail-tool:draw"
+        },
+        {
+          "control": "Rail — add text",
+          "affordance": "rail-tool:text"
+        },
+        {
+          "control": "Rail — fill and sign",
+          "affordance": "rail-tool:sign"
+        },
+        {
+          "control": "Rail — more tools",
+          "affordance": "rail-tool:more"
+        },
+        {
+          "control": "Panel lede, FORMAT TEXT label, Embedded PDF font select, B/I/U/S, five colour swatches",
+          "whyNoAffordance": "panel body, walked as one affordance (panel:edit); the copy and the five colours match src/viewer/v3/EditorV3Shell.tsx and en.json exactly"
+        },
+        {
+          "control": "Page thumbnails under PAGES",
+          "whyNoAffordance": "the thumbnail strip is a surface, not a control; its items are covered by button:v3-outline-item"
+        }
+      ],
+      "blocked": [
+        {
+          "control": "Edit panel — ADD CONTENT section with 'Insert text box' and 'Place image'",
+          "shipped": "not rendered: both sit behind LOCAL_OVERLAY_CONTROLS_ENABLED, which is false in src/viewer/v3/EditorV3Shell.tsx because the controls only draw a React overlay and never reach the PDF",
+          "decision": "pdfluent-internal#397"
+        },
+        {
+          "control": "Breadcrumb caret after the PDF badge, which reads as a document menu",
+          "shipped": "decorative: the crumb renders ChevronDownIcon with aria-hidden and no handler, so the caret opens nothing",
+          "decision": "pdfluent-internal#397"
+        }
+      ]
+    },
+    {
+      "id": "store-2",
+      "headline": "Convert PDFs Without Compromise",
+      "surface": "Convert panel",
+      "shows": [
+        {
+          "control": "Mode tab — Convert, active",
+          "affordance": "mode-tab:convert"
+        },
+        {
+          "control": "Undo arrow",
+          "affordance": "button:undo-btn"
+        },
+        {
+          "control": "Convert panel body",
+          "affordance": "panel:convert"
+        },
+        {
+          "control": "Other options — Compress PDF",
+          "affordance": "panel:compress"
+        },
+        {
+          "control": "Rail — select, active",
+          "affordance": "rail-tool:select"
+        },
+        {
+          "control": "EXPORT PDF TO rows for Microsoft Word DOCX, Microsoft Excel XLSX, Microsoft PowerPoint PPTX, Image JPG; Convert to DOCX button; Run OCR row; OCR STATUS card reading '0 possible scan pages'",
+          "whyNoAffordance": "panel body, walked as one affordance (panel:convert); every label matches the shipped strings"
+        }
+      ],
+      "blocked": [
+        {
+          "control": "Archive row labelled PDF/A-1b",
+          "shipped": "the shipped row reads PDF/A-2b, and it opens the PDF/A panel rather than exporting",
+          "decision": "pdfluent-internal#397"
+        },
+        {
+          "control": "'Document language' select set to Dutch, between the format rows and the Convert button",
+          "shipped": "no such control exists anywhere in the app; conversion takes no language input",
+          "decision": "pdfluent-internal#397"
+        },
+        {
+          "control": "Mocked document text offering 'plain text' and a 'PDF → Text' conversion",
+          "shipped": "there is no text export: ExportFormat is pdf, compressed_pdf, png, jpeg, docx, xlsx, pptx",
+          "decision": "pdfluent-internal#397"
+        }
+      ]
+    },
+    {
+      "id": "store-3",
+      "headline": "Sign PDFs in Seconds",
+      "surface": "Sign panel",
+      "shows": [
+        {
+          "control": "Mode tab — Sign, active",
+          "affordance": "mode-tab:esign"
+        },
+        {
+          "control": "Undo arrow",
+          "affordance": "button:undo-btn"
+        },
+        {
+          "control": "Rail — fill and sign, active",
+          "affordance": "rail-tool:sign"
+        }
+      ],
+      "blocked": [
+        {
+          "control": "'Invite to sign' button",
+          "shipped": "does not exist, in this panel or anywhere else. This is the same control the previous screenshot set shipped and the reason this check exists",
+          "decision": "pdfluent-internal#397"
+        },
+        {
+          "control": "'Add signature' and 'Add initials' under FILL IN YOUR DOCUMENTS AND SIGN",
+          "shipped": "not rendered: behind LOCAL_OVERLAY_CONTROLS_ENABLED, which is false",
+          "decision": "pdfluent-internal#397"
+        },
+        {
+          "control": "Status cards 'Locally signed — nothing leaves this device' and 'PAdES-compliant digital signature'",
+          "shipped": "removed on purpose: they were fixed copy shown on every document, signed or not, over a control that drew a picture of a signature",
+          "decision": "pdfluent-internal#397"
+        },
+        {
+          "control": "Panel lede 'Sign documents quickly and securely, and share them easily with others to sign'",
+          "shipped": "the lede reads 'Sign with a certificate of your own, and check the signatures a document already carries. Both happen on this device.' Sending a document to someone else to sign is not a feature",
+          "decision": "pdfluent-internal#397"
+        },
+        {
+          "control": "The shipped Sign panel is absent from the image",
+          "shipped": "the panel shows a 'Sign with a certificate' section (certificate picker, password, reason, sign and save a copy) and a 'Signatures' verification section; none of it appears",
+          "decision": "pdfluent-internal#397"
+        },
+        {
+          "control": "Microsoft Store render only: a white rectangle covers the primary button",
+          "shipped": "export artifact, not a UI question; the render is unusable as it stands",
+          "decision": "pdfluent-internal#397"
+        }
+      ]
+    },
+    {
+      "id": "store-4",
+      "headline": "Open Any PDF Instantly",
+      "surface": "Reading view",
+      "shows": [
+        {
+          "control": "Search button",
+          "affordance": "button:search-btn"
+        },
+        {
+          "control": "Page thumbnails under Pages",
+          "whyNoAffordance": "the thumbnail strip is a surface, not a control"
+        },
+        {
+          "control": "More button in the top bar",
+          "whyNoAffordance": "the more-trigger carries no test id, so the register does not walk it; the export entry it is confused with (button:export-btn) lives in the Share menu"
+        }
+      ],
+      "blocked": [
+        {
+          "control": "'Open PDF' button in the top bar while a 24-page document is open",
+          "shipped": "the Open-PDF button is replaced by the mode tabs as soon as a document is open; the two are mutually exclusive",
+          "decision": "pdfluent-internal#397"
+        },
+        {
+          "control": "Mode tabs All tools / Edit / Convert / Sign are missing",
+          "shipped": "they are always present with a document open",
+          "decision": "pdfluent-internal#397"
+        },
+        {
+          "control": "Page navigation '1 / 24' and zoom '100%' in the top bar",
+          "shipped": "both live in the floating bottom bar (button:floating-page-indicator, button:zoom-reset-btn), never in the top bar",
+          "decision": "pdfluent-internal#397"
+        },
+        {
+          "control": "Download and sidebar-toggle icons in the top bar",
+          "shipped": "the top bar carries undo, redo, search, read aloud, save and more; export lives in the Share menu and the rail toggle is a command-palette entry",
+          "decision": "pdfluent-internal#397"
+        },
+        {
+          "control": "Vertical icon strip down the left edge",
+          "shipped": "that is LeftNavRail, which the register lists as UNREACHABLE — nothing in the running app renders it. The shipped shell has the floating tool rail over the page instead",
+          "decision": "pdfluent-internal#397"
+        },
+        {
+          "control": "Microsoft Store render only: a white rectangle covers the second page thumbnail",
+          "shipped": "export artifact, not a UI question; the render is unusable as it stands",
+          "decision": "pdfluent-internal#397"
+        }
+      ]
+    },
+    {
+      "id": "store-5",
+      "headline": "Everything You Need In One PDF Editor",
+      "surface": "All-tools panel",
+      "shows": [
+        {
+          "control": "Mode tab — All tools, active",
+          "affordance": "mode-tab:tools"
+        },
+        {
+          "control": "Undo arrow",
+          "affordance": "button:undo-btn"
+        },
+        {
+          "control": "All-tools panel body",
+          "affordance": "panel:tools"
+        },
+        {
+          "control": "Compress PDF — Reduce the file size",
+          "affordance": "panel:compress"
+        },
+        {
+          "control": "Split PDF — By range or per page",
+          "affordance": "panel:split"
+        },
+        {
+          "control": "Merge files — Combine PDFs",
+          "affordance": "panel:merge"
+        },
+        {
+          "control": "Redact — Permanently black out text",
+          "affordance": "panel:redact"
+        },
+        {
+          "control": "Protect — Password & permissions",
+          "affordance": "panel:protect"
+        },
+        {
+          "control": "Watermark — Text across all pages",
+          "affordance": "panel:watermark"
+        },
+        {
+          "control": "Export / convert — To Word, Excel, JPG…",
+          "affordance": "panel:convert"
+        },
+        {
+          "control": "Rail — select, active",
+          "affordance": "rail-tool:select"
+        },
+        {
+          "control": "Organize pages — Sort, rotate, delete",
+          "whyNoAffordance": "the row switches to organize mode; the register walks that mode's controls (button:organize-*, button:batch-*) rather than the row that opens it"
+        },
+        {
+          "control": "Panel lede and the section labels You might find useful / Pages / Content & security / Document status & interaction, and the '0 comments' card",
+          "whyNoAffordance": "panel body, walked as one affordance (panel:tools); every label matches the shipped strings"
+        }
+      ],
+      "blocked": []
+    },
+    {
+      "id": "store-6",
+      "headline": "Read PDFs Without Distractions",
+      "surface": "Reading view with the rail",
+      "shows": [
+        {
+          "control": "Mode tab — All tools",
+          "affordance": "mode-tab:tools"
+        },
+        {
+          "control": "Undo arrow",
+          "affordance": "button:undo-btn"
+        },
+        {
+          "control": "Mode tab — Edit",
+          "affordance": "mode-tab:edit"
+        },
+        {
+          "control": "Mode tab — Convert",
+          "affordance": "mode-tab:convert"
+        },
+        {
+          "control": "Mode tab — Sign",
+          "affordance": "mode-tab:esign"
+        },
+        {
+          "control": "Rail — select, active",
+          "affordance": "rail-tool:select"
+        },
+        {
+          "control": "Rail — hand",
+          "affordance": "rail-tool:hand"
+        },
+        {
+          "control": "Rail — note",
+          "affordance": "rail-tool:comment"
+        },
+        {
+          "control": "Rail — highlight",
+          "affordance": "rail-tool:highlight"
+        },
+        {
+          "control": "Rail — draw",
+          "affordance": "rail-tool:draw"
+        },
+        {
+          "control": "Rail — add text",
+          "affordance": "rail-tool:text"
+        },
+        {
+          "control": "Rail — fill and sign",
+          "affordance": "rail-tool:sign"
+        },
+        {
+          "control": "Rail — more tools",
+          "affordance": "rail-tool:more"
+        }
+      ],
+      "blocked": [
+        {
+          "control": "The Sign tab is drawn in its active state with no Sign panel open",
+          "shipped": "a tab carries the active style only while its panel is the open one, so the app cannot be in the state this image shows",
+          "decision": "pdfluent-internal#397"
+        }
+      ]
+    }
+  ]
+}

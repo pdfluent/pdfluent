@@ -31,7 +31,7 @@ afterAll(() => {
   // fixtures around is what makes a failing run readable.
 });
 
-describe("no hosted GitHub-Actions minutes on automatic triggers", () => {
+describe("every job in .github/workflows runs on our own runner", () => {
   it("rejects a hosted runner on push", () => {
     const { status, output } = runGuardOn(
       ["name: X", "on:", "  push:", "    branches: [main]", "jobs:", "  a:", "    runs-on: ubuntu-latest"].join("\n"),
@@ -61,7 +61,7 @@ describe("no hosted GitHub-Actions minutes on automatic triggers", () => {
 
   it("rejects a hosted runner on a tag push", () => {
     // A tag is still an automatic trigger: nobody presses a button, the minutes
-    // are billed, and the release train already runs on GitLab.
+    // are billed, and the release train already runs on our own machine.
     const { status } = runGuardOn(
       ["name: X", "on:", "  push:", "    tags:", '      - "v*"', "jobs:", "  a:", "    runs-on: ubuntu-22.04"].join("\n"),
     );
@@ -75,18 +75,86 @@ describe("no hosted GitHub-Actions minutes on automatic triggers", () => {
     expect(status).toBe(1);
   });
 
-  it("accepts a hosted runner behind workflow_dispatch", () => {
-    const { status } = runGuardOn(
+  // Until 2026-09-08 this case expected 0: a hosted runner was allowed as long
+  // as a human started it. That exemption made sense while GitHub carried no
+  // gates at all. It does not survive #465: the pipeline lives here now, and a
+  // dispatched hosted minute is billed exactly like a pushed one.
+  it("rejects a hosted runner behind workflow_dispatch", () => {
+    const { status, output } = runGuardOn(
       ["name: X", "on:", "  workflow_dispatch:", "jobs:", "  a:", "    runs-on: ubuntu-latest"].join("\n"),
     );
-    expect(status).toBe(0);
+    expect(status).toBe(1);
+    expect(output).toContain("ubuntu-latest");
   });
 
   it("accepts a self-hosted runner on push", () => {
     const { status } = runGuardOn(
-      ["name: X", "on:", "  push:", "jobs:", "  a:", "    runs-on: [self-hosted, linux]"].join("\n"),
+      ["name: X", "on:", "  push:", "jobs:", "  a:", "    runs-on: [self-hosted, linux, pdfluent-editor]"].join("\n"),
     );
     expect(status).toBe(0);
+  });
+
+  it("accepts a self-hosted runner behind workflow_dispatch", () => {
+    const { status } = runGuardOn(
+      [
+        "name: X",
+        "on:",
+        "  workflow_dispatch:",
+        "jobs:",
+        "  a:",
+        "    runs-on:",
+        "      - self-hosted",
+        "      - linux",
+        "      - pdfluent-editor",
+      ].join("\n"),
+    );
+    expect(status).toBe(0);
+  });
+
+  // A job with no `runs-on` is a workflow that does not start rather than one
+  // that runs somewhere cheap, but the guard has to say which job is wrong; an
+  // unreadable job read as "fine" is how the 2026-08-21 runs got through.
+  it("rejects a job with no runs-on at all", () => {
+    const { status, output } = runGuardOn(
+      ["name: X", "on:", "  push:", "jobs:", "  a:", "    steps:", "      - run: echo hi"].join("\n"),
+    );
+    expect(status).toBe(1);
+    expect(output).toContain("no runs-on");
+  });
+
+  // A reusable workflow outside this repository takes its runner with it, and
+  // nothing here can read that file.
+  it("rejects a reusable workflow from another repository", () => {
+    const { status, output } = runGuardOn(
+      ["name: X", "on:", "  push:", "jobs:", "  a:", "    uses: some-org/some-repo/.github/workflows/build.yml@v1"].join("\n"),
+    );
+    expect(status).toBe(1);
+    expect(output).toContain("some-org/some-repo");
+  });
+
+  it("accepts a reusable workflow from this repository", () => {
+    const { status } = runGuardOn(
+      ["name: X", "on:", "  push:", "jobs:", "  a:", "    uses: ./.github/workflows/quality.yml"].join("\n"),
+    );
+    expect(status).toBe(0);
+  });
+
+  it("names the offending job, not only the file", () => {
+    const { status, output } = runGuardOn(
+      [
+        "name: X",
+        "on:",
+        "  push:",
+        "jobs:",
+        "  good-one:",
+        "    runs-on: [self-hosted, linux]",
+        "  bad-one:",
+        "    runs-on: ubuntu-latest",
+      ].join("\n"),
+    );
+    expect(status).toBe(1);
+    expect(output).toContain("bad-one");
+    expect(output).not.toContain("good-one");
   });
 
   it("does not read a shell heredoc as configuration", () => {
@@ -136,6 +204,9 @@ describe("the release branch is gated by more than a typecheck", () => {
     // The save round-trip gate. It was written as a branch job on purpose:
     // tag-only is how the four above went unrun between beta.20 and beta.21.
     "quality:golden-roundtrip",
+    // The PDF/A conversion gate. Same reason again: the claim it protects is
+    // the one the plan calls the strongest, and it had no test at all.
+    "quality:golden-pdfa",
     // The four-axis ratchet. Same reason, and one more: a baseline that is
     // only judged at tag time is a baseline that drifts for a whole release.
     "quality:axes",

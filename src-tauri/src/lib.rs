@@ -21,8 +21,10 @@ mod telemetry;
 // path at all. That is why the save round-trip was only ever measured by a
 // scratch replica of it, and why a regression there would have reached a
 // release unseen. The module stays private; only the document type is
-// re-exported, for src-tauri/tests/golden_roundtrip.rs.
-pub use pdf_engine::OpenDocument;
+// re-exported, for src-tauri/tests/golden_roundtrip.rs. The PDF/A conversion
+// gate (src-tauri/tests/golden_pdfa.rs) reads what a conversion cost, so its
+// reply type comes along.
+pub use pdf_engine::{OpenDocument, PdfAConvertResult};
 
 use ocr::{
     get_ocr_status_command, run_paddle_ocr_command, OcrRuntimeStatus, PaddleOcrRequest,
@@ -32,7 +34,7 @@ use pdf_engine::{
     AnnotationInfo, AttachmentInfo, CompressResult, DocumentInfo, ExtractedImageInfo,
     FormFieldInfo, InvoiceData, InvoiceValidationResult, LayerInfo, OutlineItemInfo,
     PdfAValidationResult, RedactReport, RenderedPage, SdkDocument, SearchRedactReport,
-    SetFieldValueRequest, SignatureVerifyResult, TextReplaceResult, TextSpanInfo,
+    SetFieldValueRequest, SignatureVerifyResult, SpanAnchor, TextReplaceResult, TextSpanInfo,
 };
 use std::process::{Child, Command};
 use std::sync::atomic::{AtomicBool, AtomicU8, Ordering};
@@ -1503,14 +1505,35 @@ fn validate_pdfa(state: State<AppState>) -> Result<PdfAValidationResult, String>
     state.with_document(|doc| Ok(doc.validate_pdfa()))
 }
 
+/// Convert to PDF/A on a worker thread, against a copy.
+///
+/// `async` + `spawn_blocking` for the same reason the DOCX export is: a
+/// conversion of a real form took up to 3.9 seconds on the route this replaced,
+/// and holding the document mutex on the UI thread for that long freezes the
+/// window. The copy is what keeps the open document out of it — the conversion
+/// writes a new file and changes nothing the user has open.
 #[tauri::command]
-fn convert_to_pdfa(
-    state: State<AppState>,
+async fn convert_to_pdfa(
+    state: State<'_, AppState>,
     level: String,
     output_path: String,
-) -> Result<PdfAValidationResult, String> {
+) -> Result<PdfAConvertResult, String> {
     let output_path = security::validate_dialog_output_path(&output_path, &["pdf"])?;
-    state.with_document_mut(|doc| doc.convert_to_pdfa(&level, &output_path))
+    let doc = state.with_document(|doc| Ok(doc.clone_lopdf()))?;
+    applog("export: PDF/A conversion started on worker thread");
+    let res = tauri::async_runtime::spawn_blocking(move || {
+        pdf_engine::convert_doc_to_pdfa(doc, &level, &output_path)
+    })
+    .await
+    .map_err(|e| format!("PDF/A conversion task failed: {e}"))?;
+    match &res {
+        Ok(outcome) => applog(&format!(
+            "export: PDF/A conversion finished in {} ms at {:.2}x the input size",
+            outcome.elapsed_ms, outcome.size_ratio
+        )),
+        Err(e) => applog(&format!("export: PDF/A conversion failed: {e}")),
+    }
+    res
 }
 
 // ── Encryption commands ───────────────────────────────────────────────
@@ -1566,22 +1589,46 @@ struct ReplaceTextSpanRequest {
     page_index: u32,
     original_text: String,
     replacement_text: String,
+    /// Where on the page the user was pointing, in PDF user space. Absent means
+    /// the first occurrence, which is what batch callers want.
+    #[serde(default)]
+    anchor: Option<SpanAnchor>,
 }
 
 /// Replace a single text span in a PDF page content stream.
 /// See OpenDocument::replace_text_span for full documentation.
+///
+/// `async` on purpose: a synchronous Tauri command runs on the main thread, and
+/// this one parses the page, scans every occurrence and rebuilds a content
+/// stream while holding the document mutex. Off the main thread the window
+/// keeps painting while it does.
 #[tauri::command]
-fn replace_text_span(
-    state: State<AppState>,
+async fn replace_text_span(
+    state: State<'_, AppState>,
     request: ReplaceTextSpanRequest,
 ) -> Result<TextReplaceResult, String> {
-    state.with_document_mut(|doc| {
+    let result = state.with_document_mut(|doc| {
         doc.replace_text_span(
             request.page_index,
             &request.original_text,
             &request.replacement_text,
+            request.anchor,
         )
-    })
+    })?;
+    applog(&format!(
+        "replace_text_span p{} occurrence {:?}/{:?} -> {} font={:?} substituted={:?}",
+        request.page_index,
+        result.occurrence_index,
+        result.occurrence_count,
+        if result.replaced {
+            "replaced".to_string()
+        } else {
+            result.reason.clone().unwrap_or_else(|| "unknown".to_string())
+        },
+        result.font_used,
+        result.font_substituted,
+    ));
+    Ok(result)
 }
 
 // ── Text formatting commands (G5) ─────────────────────────────────────

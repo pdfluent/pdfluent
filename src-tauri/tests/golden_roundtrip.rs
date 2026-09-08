@@ -238,7 +238,7 @@ fn edit_roundtrip(path: &Path, word: &str) -> (usize, usize) {
     for page in 0..pages {
         let mut on_page = 0usize;
         while doc
-            .replace_text_span(page as u32, word, &replacement)
+            .replace_text_span(page as u32, word, &replacement, None)
             .unwrap_or_else(|e| panic!("{name}: replace_text_span page {page}: {e}"))
             .replaced
         {
