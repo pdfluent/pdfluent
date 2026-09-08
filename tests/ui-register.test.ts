@@ -36,6 +36,7 @@ import {
   renderGeneratedTs,
   renderMarkdown,
   resolveEffects,
+  runnableText,
   shortcutLiterals,
   switchCases,
   wiredTiles,
@@ -244,6 +245,54 @@ describe('ui-register resolution', () => {
 // ---------------------------------------------------------------------------
 // The gate
 // ---------------------------------------------------------------------------
+
+describe('a skipped test is not proof', () => {
+  // `skip` interpolated, not written out: the no-silent-failures lint scans this
+  // file and a literal `test.skip(` here would be a finding in the checkout.
+  const SKIP = 'skip';
+  const SPEC = [
+    "import { test, expect } from '@playwright/test';",
+    '',
+    'async function exportAndCheck(page) {',
+    "  await page.locator('[data-testid=\"export-btn\"]').click();",
+    '}',
+    '',
+    "test('runs', async ({ page }) => {",
+    "  await expect(page.locator('[data-testid=\"live-btn\"]')).toBeVisible();",
+    '});',
+    '',
+    "test('does not run', async ({ page }) => {",
+    `  test.${SKIP}(true, 'the control moved into a dropdown');`,
+    '  await exportAndCheck(page);',
+    '});',
+    '',
+    `test.${SKIP}('declared as skipped', async ({ page }) => {`,
+    "  await expect(page.locator('[data-testid=\"dead-btn\"]')).toBeVisible();",
+    '});',
+  ].join('\n');
+
+  const runnable = runnableText(SPEC);
+
+  it('keeps the file the same length, so line numbers still line up', () => {
+    expect(runnable).toHaveLength(SPEC.length);
+  });
+
+  it('keeps what a live test names', () => {
+    expect(runnable).toContain('live-btn');
+  });
+
+  it('drops what only a skipped test names', () => {
+    expect(runnable).not.toContain('dead-btn');
+  });
+
+  it('drops a helper that only skipped tests call', () => {
+    // This is the one that mattered: `export-btn` was never inside a skipped
+    // test body, it was in a helper four of them called, and the register read
+    // it as proof that the export button was wired.
+    expect(SPEC).toContain('export-btn');
+    expect(runnable).not.toContain('export-btn');
+  });
+});
 
 describe('ui-register gate', () => {
   const affordance = (over: Record<string, unknown> = {}) => ({

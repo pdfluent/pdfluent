@@ -47,10 +47,13 @@ pub struct PendingCrash {
     pub stack: Option<String>,
 }
 
-/// Managed state: the resolved path to the pending-crashes file. Shared by the
-/// panic hook (write) and the `take_pending_crashes` command (read + clear).
+/// Managed state: the resolved paths of the two files this module owns. The
+/// crash file is shared by the panic hook (write) and `take_pending_crashes`
+/// (read + clear); the session file is written on start and on clean exit and
+/// read by `session_reliability`.
 pub struct TelemetryState {
     pub crash_file: Mutex<PathBuf>,
+    pub session_file: Mutex<PathBuf>,
 }
 
 /// Human-friendly OS name, matching what the review dialog displays.
@@ -128,6 +131,20 @@ pub fn take_pending_crashes(state: tauri::State<'_, TelemetryState>) -> Vec<Pend
         .filter(|line| !line.trim().is_empty())
         .filter_map(|line| serde_json::from_str::<PendingCrash>(line).ok())
         .collect()
+}
+
+/// How many sessions ended cleanly. Read from the local session file; nothing
+/// is sent from here. The frontend asks for this only while building a crash or
+/// feedback report, and writes the answer into the text the user reads before
+/// deciding whether to send it -- the opt-in path, and nowhere else.
+#[tauri::command]
+pub fn session_reliability(state: tauri::State<'_, TelemetryState>) -> crate::session_log::SessionCounts {
+    match state.session_file.lock() {
+        Ok(path) => crate::session_log::read_counts(path.as_path()),
+        // A poisoned lock is not a reason to fail a report; no history is the
+        // honest answer, and the caller renders nothing for it.
+        Err(_) => crate::session_log::count_sessions(""),
+    }
 }
 
 /// Open an external URL in the user's default browser. Restricted to our own

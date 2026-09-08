@@ -56,8 +56,8 @@ const useLegacy =
 // possible invoke. If the WebContent process is suspended before timers run
 // (observed on macOS), this ping never arrives and the Rust side recreates
 // the window — see spawn_startup_watchdog in src-tauri/src/lib.rs.
-import("@tauri-apps/api/core")
-  .then(({ invoke }) => invoke("frontend_ready"))
+import("./lib/commandBridge")
+  .then(({ invokeCommand }) => invokeCommand("frontend_ready"))
   .catch(() => { /* browser/test runtime — no Tauri IPC */ });
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(

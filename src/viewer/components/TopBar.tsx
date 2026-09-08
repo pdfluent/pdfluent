@@ -126,7 +126,7 @@ export function TopBar({
     if (currentFilePath) {
       push({ id: taskId, label: t('tasks.savingLabel'), progress: null, status: 'running' });
       try {
-        const { invoke } = await import('@tauri-apps/api/core');
+        const { invokeCommand: invoke } = await import('../../lib/commandBridge');
         await invoke('save_pdf', { path: currentFilePath });
         update(taskId, { status: 'done', label: t('tasks.savedLabel') });
         onSaveComplete();

@@ -22,5 +22,10 @@
     "The universal DMG was written 2026-07-24 14:44, between those two, and its Info.plist reads CFBundleShortVersionString and CFBundleVersion 1.0.0-beta.21.",
     "461fedf changes five files under store/ and nothing a build reads, so either commit yields the same binary."
   ],
+  "quality_reports": {
+    "macos": null,
+    "windows": null,
+    "note": "Shipped 2026-07-24, before the release quality suite existed, so neither platform has a PASS report and null is what that looks like. What could still be checked afterwards is recorded in quality/reports/1.0.0-beta.21-macos.json: the shipped DMG mounts, carries the Developer ID signature with the hardened runtime, is accepted by Gatekeeper as Notarized Developer ID and has its ticket stapled. That report is INCOMPLETE by design -- the binary was never launched by the suite. From the next release on, publishing refuses without quality/reports/<version>-<platform>.json at verdict PASS (scripts/quality/require-report.mjs), and this field names those files."
+  },
   "recorded": "2026-09-07"
 }

@@ -46,11 +46,12 @@ so (2026-09-07):
   those in CI (`scripts/ci/commits_use_the_noreply_alias.py`), and an address in
   a commit is readable by anyone, no login and no clone needed.
 - A **third-party form withdrawn from the public repository** is still reachable
-  as a blob from the trunk's history (`git rev-list --objects HEAD`, one hit:
-  `src-tauri/tests/fixtures/imm5257e_dynamic_xfa.pdf`). Its own guard there
-  (`no_withdrawn_blobs.py`) walks every object and refuses it. The current tree
-  no longer references that fixture — the tests were pointed at one we own in
-  `36b2efd` — but a history transplant brings the blob back regardless.
+  as a blob from the trunk's history (`git rev-list --objects HEAD` finds one).
+  It is not named here: this document is itself published, and a path is all
+  anyone needs to fetch the blob. The public repository's own guard
+  (`no_withdrawn_blobs.py`) holds the list and walks every object. The current
+  tree no longer references that fixture — the tests were pointed at one we own
+  in `36b2efd` — but a history transplant brings the blob back regardless.
 
 A snapshot keeps the public lineage, publishes exactly the tree the manifest
 calls public, and carries no blob outside it (verified: 249 new objects, 0 on the
@@ -100,6 +101,21 @@ than a gate on publication. It is worth running anyway: three messages currently
 name the Windows build host, and the day someone does publish history that is
 what would go out with it.
 
+It is a local hook rather than a CI job, and that is a decision. The customer
+and partner names live in a list outside the tree
+(`~/.config/pdfluent/interne-termen.txt`) on purpose; a CI variable store is not
+a better place for them, and a runner without the list cannot judge the rule —
+the script says `SKIPPED (not a pass)` and exits non-zero rather than approving.
+So it runs where the list is:
+
+```
+git config core.hooksPath .githooks
+```
+
+`.githooks/commit-msg` then refuses a message before it becomes a commit. The
+tree rule, the one that does gate publication, is built into
+`publish-public-snapshot.mjs` and cannot be skipped.
+
 ## What each guard refuses
 
 | Guard | Refuses |
@@ -109,3 +125,15 @@ what would go out with it.
 | `scripts/ci/internal-terms.mjs` | commercial statements, customer and partner names, and our own machines and key stores, in a message or in a published file. Technique goes through: `password` is a feature here and `Adobe` is a fact about the world |
 | `scripts/ci/legacy-shell-fenced.mjs` | a production bundle containing the retired V1 shell |
 | `scripts/ci/publish-public-snapshot.mjs` | building a snapshot git would sign with a personal address. The public side has that rule too, in its own CI — but there it runs after the push, with the address already published |
+
+## The binaries were judged before they were published
+
+`docs/SHIPPED.json` carries a `quality_reports` object naming the release
+quality suite's report for each platform (`quality/reports/<version>-<platform>.json`).
+`scripts/ci/repo-truth.mjs` checks that each named report exists, parses, judged
+this version, and says `PASS`; an override file counts only when it names a
+ticket number.
+
+`null` is allowed for one reason and one reason only: the release predates the
+suite. The date is a literal in the script. A release recorded after it that
+names no report was published without one, and that is what this leg is for.

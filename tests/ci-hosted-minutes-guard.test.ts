@@ -6,7 +6,7 @@
 // See https://pdfluent.com/license for terms.
 
 import { spawnSync } from "node:child_process";
-import { mkdtempSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdtempSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -128,7 +128,19 @@ describe("the release branch is gated by more than a typecheck", () => {
 
   // beta.21 shipped without any of these ever running: they were tag-only, and
   // the last tag was beta.20 (2026-07-15).
-  for (const name of ["cargo-test", "clippy", "native-smoke", "playwright"]) {
+  for (const name of [
+    "cargo-test",
+    "clippy",
+    "native-smoke",
+    "playwright",
+    // The save round-trip gate. It was written as a branch job on purpose:
+    // tag-only is how the four above went unrun between beta.20 and beta.21.
+    "quality:golden-roundtrip",
+    // The four-axis ratchet. Same reason, and one more: a baseline that is
+    // only judged at tag time is a baseline that drifts for a whole release.
+    "quality:axes",
+    "quality:offline-allowlist",
+  ]) {
     it(`runs ${name} on a push to a release branch`, () => {
       const body = jobBody(name);
       expect(body).toContain("$CI_COMMIT_BRANCH =~ /^(main|release\\/)/");
@@ -143,6 +155,24 @@ describe("the release branch is gated by more than a typecheck", () => {
     expect(ci).toContain("XFA_SDK_REV:");
     // A `--branch <name>` clone is what made three machines build three SDKs.
     expect(ci).not.toContain("--branch xfa/sdk-phase2-commit-loop");
+  });
+
+  // The offline promise ("works 100% offline") and the accessibility promise
+  // are both product claims with a test behind them now. A test nobody runs is
+  // the failure mode this file exists for, so the wiring is asserted too.
+  it("scans the shipped bundle for undeclared origins", () => {
+    expect(jobBody("quality:offline-allowlist")).toContain(
+      "scripts/ci/offline-allowlist.mjs --config --tree dist",
+    );
+  });
+
+  it("keeps the accessibility spec inside the Playwright run", () => {
+    expect(existsSync(join(ROOT, "tests/e2e/accessibility.spec.ts"))).toBe(true);
+    const config = readFileSync(join(ROOT, "playwright.config.ts"), "utf8");
+    // The job runs `npx playwright test` unfiltered, so the only way to lose
+    // the spec is to exclude it here.
+    expect(config).not.toContain("accessibility");
+    expect(jobBody("playwright")).toContain("npx playwright test");
   });
 
   it("runs the hosted-minutes guard in the fast gate", () => {

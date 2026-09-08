@@ -195,7 +195,7 @@ export function ModeToolbar({
     const taskId = `delete-page-${Date.now()}`;
     push({ id: taskId, label: t('tasks.deletePageRunning', { page: pageIndex + 1 }), progress: null, status: 'running' });
     try {
-      const { invoke } = await import('@tauri-apps/api/core');
+      const { invokeCommand: invoke } = await import('../../lib/commandBridge');
       const result = await invoke<{ page_count: number }>('delete_pages', { pageIndices: [pageIndex] });
       update(taskId, { status: 'done', label: t('tasks.deletePageDone', { page: pageIndex + 1 }) });
       onPageMutation(result.page_count);
@@ -210,7 +210,7 @@ export function ModeToolbar({
     const taskId = `rotate-page-right-${Date.now()}`;
     push({ id: taskId, label: t('tasks.rotateRightRunning', { page: pageIndex + 1 }), progress: null, status: 'running' });
     try {
-      const { invoke } = await import('@tauri-apps/api/core');
+      const { invokeCommand: invoke } = await import('../../lib/commandBridge');
       const result = await invoke<{ page_count: number }>('rotate_page_right', { pageIndex });
       update(taskId, { status: 'done', label: t('tasks.rotateRightDone', { page: pageIndex + 1 }) });
       onPageMutation(result.page_count);
@@ -225,7 +225,7 @@ export function ModeToolbar({
     const taskId = `rotate-page-left-${Date.now()}`;
     push({ id: taskId, label: t('tasks.rotateLeftRunning', { page: pageIndex + 1 }), progress: null, status: 'running' });
     try {
-      const { invoke } = await import('@tauri-apps/api/core');
+      const { invokeCommand: invoke } = await import('../../lib/commandBridge');
       const result = await invoke<{ page_count: number }>('rotate_page_left', { pageIndex });
       update(taskId, { status: 'done', label: t('tasks.rotateLeftDone', { page: pageIndex + 1 }) });
       onPageMutation(result.page_count);

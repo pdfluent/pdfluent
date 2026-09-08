@@ -76,8 +76,11 @@ describe('AnnotationEngine interface — loadAnnotations', () => {
 // ---------------------------------------------------------------------------
 
 describe('TauriAnnotationEngine — loadAnnotations', () => {
-  it('imports invoke from tauri api', () => {
-    expect(tauriAnnotSource).toContain("from '@tauri-apps/api/core'");
+  it('reaches the backend through the command bridge, not the raw IPC', () => {
+    // The bridge reports a rejected command to the user and the app log before
+    // rethrowing; a direct @tauri-apps/api/core import skips both.
+    expect(tauriAnnotSource).toContain("from '../../../lib/commandBridge'");
+    expect(tauriAnnotSource).not.toContain("@tauri-apps/api/core");
     expect(tauriAnnotSource).toContain('invoke');
   });
 

@@ -63,7 +63,10 @@ describe("a snapshot is not signed with a personal address", () => {
     // passed rather than that it refuses whatever it is given.
     const r = publishAs("10383561+jasperdew@users.noreply.github.com");
     expect(r.status).not.toBe(0);
-    expect(r.err).not.toContain("noreply github alias");
+    // The refusal sentence, verbatim from identityFault. It used to be asserted
+    // in a lower-cased spelling the script never emits, so the check held for
+    // any output at all — including the refusal it was meant to rule out.
+    expect(r.err).not.toContain("git would sign the snapshot as");
     expect(r.err + r.out).toContain(MISSING_REF);
   });
 });

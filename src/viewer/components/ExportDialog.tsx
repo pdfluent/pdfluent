@@ -119,7 +119,7 @@ export function ExportDialog({ isOpen, onClose, onExportComplete, pageIndex, pag
           return;
         }
 
-        const { invoke } = await import('@tauri-apps/api/core');
+        const { invokeCommand: invoke } = await import('../../lib/commandBridge');
         const path = await invoke<string | null>('save_pdf_as_dialog');
         if (!path) { setExporting(false); return; }
 
@@ -136,7 +136,7 @@ export function ExportDialog({ isOpen, onClose, onExportComplete, pageIndex, pag
         push({ id: taskId, label: t('tasks.compressRunning'), progress: null, status: 'running' });
         onClose();
 
-        const { invoke } = await import('@tauri-apps/api/core');
+        const { invokeCommand: invoke } = await import('../../lib/commandBridge');
         await invoke('compress_pdf', { outputPath: path });
         update(taskId, { status: 'done', label: t('tasks.compressDone') });
 
@@ -153,7 +153,7 @@ export function ExportDialog({ isOpen, onClose, onExportComplete, pageIndex, pag
           push({ id: taskId, label: t('tasks.exportImageRunning', { ext: ext.toUpperCase() }), progress: null, status: 'running' });
           onClose();
 
-          const { invoke } = await import('@tauri-apps/api/core');
+          const { invokeCommand: invoke } = await import('../../lib/commandBridge');
           await invoke('export_page_as_image', { pageIndex, format: ext, outputPath: path });
           update(taskId, { status: 'done', label: t('tasks.exportImageDone', { page: pageIndex + 1, ext: ext.toUpperCase() }) });
 
@@ -171,7 +171,7 @@ export function ExportDialog({ isOpen, onClose, onExportComplete, pageIndex, pag
           });
           onClose();
 
-          const { invoke } = await import('@tauri-apps/api/core');
+          const { invokeCommand: invoke } = await import('../../lib/commandBridge');
           for (let i = 0; i < pageCount; i++) {
             const padded = String(i + 1).padStart(4, '0');
             const fileName = `page-${padded}.${ext === 'jpeg' ? 'jpg' : ext}`;
@@ -193,7 +193,7 @@ export function ExportDialog({ isOpen, onClose, onExportComplete, pageIndex, pag
         push({ id: taskId, label: t('tasks.exportWordRunning'), progress: null, status: 'running' });
         onClose();
 
-        const { invoke } = await import('@tauri-apps/api/core');
+        const { invokeCommand: invoke } = await import('../../lib/commandBridge');
         await invoke('convert_to_docx', { outputPath: path });
         update(taskId, { status: 'done', label: t('tasks.exportWordDone') });
 
@@ -205,7 +205,7 @@ export function ExportDialog({ isOpen, onClose, onExportComplete, pageIndex, pag
         push({ id: taskId, label: t('tasks.exportExcelRunning'), progress: null, status: 'running' });
         onClose();
 
-        const { invoke } = await import('@tauri-apps/api/core');
+        const { invokeCommand: invoke } = await import('../../lib/commandBridge');
         await invoke('convert_to_xlsx', { outputPath: path });
         update(taskId, { status: 'done', label: t('tasks.exportExcelDone') });
 
@@ -217,7 +217,7 @@ export function ExportDialog({ isOpen, onClose, onExportComplete, pageIndex, pag
         push({ id: taskId, label: t('tasks.exportPowerpointRunning'), progress: null, status: 'running' });
         onClose();
 
-        const { invoke } = await import('@tauri-apps/api/core');
+        const { invokeCommand: invoke } = await import('../../lib/commandBridge');
         await invoke('convert_to_pptx', { outputPath: path });
         update(taskId, { status: 'done', label: t('tasks.exportPowerpointDone') });
       }

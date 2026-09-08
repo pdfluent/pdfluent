@@ -16,6 +16,7 @@ import { resolve } from "node:path";
 import { spawnSync } from "node:child_process";
 import { describe, expect, it } from "vitest";
 import { runToFile } from "./run";
+import { isPublished } from "../../scripts/ci/public-tree.mjs";
 
 const root = resolve(__dirname, "../..");
 const manifest = JSON.parse(readFileSync(resolve(root, "docs/PUBLIC_TREE.json"), "utf8")) as {
@@ -65,6 +66,46 @@ describe("what leaves this repository is declared", () => {
     for (const entry of manifest.public_only) {
       expect([...published].some((p) => p === entry.path || p.startsWith(`${entry.path}/`)),
         `${entry.path} is declared public-only but this repository publishes it`).toBe(false);
+    }
+  });
+
+  // The manifest publishes by default, so a document arriving in the tree is
+  // published by nobody deciding anything. Fifteen third-party PDFs landed in
+  // src-tauri/tests/golden on 2026-09-07 with a README calling them ours; the
+  // next snapshot would have carried four government forms out with it. What
+  // stops the next one is that this directory is held back by path, so a file
+  // added to it inherits the decision instead of escaping it.
+  it("does not publish anything added to the golden set", () => {
+    const published = new Set(tool("--list", "HEAD").out.split("\n").filter(Boolean));
+    for (const path of [...published]) {
+      expect(path.startsWith("src-tauri/tests/golden/"),
+        `${path} would be published; the golden set is third-party and measured data`).toBe(false);
+    }
+    // Named paths that do not exist yet: the rule has to hold for the file
+    // somebody adds tomorrow, and a check over today's listing alone cannot say
+    // that. isPublished is the same function the publisher uses.
+    for (const hypothetical of [
+      "src-tauri/tests/golden/new-baseline.tsv",
+      "src-tauri/tests/golden/xfa-00000000_some_government_form.pdf",
+      "src-tauri/tests/golden/nested/deeper.tsv",
+    ]) {
+      expect(isPublished(hypothetical, manifest),
+        `${hypothetical} would be published without anyone deciding it should`).toBe(false);
+    }
+    // And the test that reads them is published, because it is ours and it says
+    // SKIPPED (not a pass) when the documents are absent.
+    expect(published.has("src-tauri/tests/golden_roundtrip.rs")).toBe(true);
+  });
+
+  it("does not publish a measurement that carries no claim id", () => {
+    // CLAIMS.md is the rule: an external number has an id or it does not ship.
+    // A published .tsv is an external number whether or not it was meant as one.
+    for (const hypothetical of [
+      "docs/perf/render-path-v2-report.md",
+      "docs/perf/pdfa-baseline.tsv",
+      "test-results/.last-run.json",
+    ]) {
+      expect(isPublished(hypothetical, manifest), `${hypothetical} would be published`).toBe(false);
     }
   });
 

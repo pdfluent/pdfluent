@@ -36,7 +36,7 @@
 // for the machinery.
 //
 // usage: node scripts/ci/repo-truth.mjs [--no-fetch] [--trunk <ref>]
-import { readFileSync } from "node:fs";
+import { readFileSync, existsSync } from "node:fs";
 import { resolve } from "node:path";
 import { execFileSync } from "node:child_process";
 import { loadManifest, publicationDiff, staleEntries, treeOf, root } from "./public-tree.mjs";
@@ -114,6 +114,53 @@ export function publishedFrom(ref) {
   return m ? m[1] : null;
 }
 
+// The day scripts/quality/release_suite.sh landed. Before it, a release could
+// not have a report; after it, a release without one was published unjudged.
+export const SUITE_FIRST_SHIPPED = "2026-09-08";
+
+export function qualityReportFailures(record, { root: base = root } = {}) {
+  const failures = [];
+  const q = record.quality_reports;
+  if (!q || typeof q !== "object") {
+    failures.push(
+      "docs/SHIPPED.json has no `quality_reports`: nothing says whether the binaries people\n" +
+      "  downloaded were ever judged against the release quality suite.",
+    );
+    return failures;
+  }
+  for (const platform of ["macos", "windows"]) {
+    const named = q[platform];
+    if (named === null || named === undefined) {
+      if (record.recorded && record.recorded >= SUITE_FIRST_SHIPPED) {
+        failures.push(
+          `docs/SHIPPED.json names no ${platform} quality report for ${record.version}, and it was\n` +
+          `  recorded on ${record.recorded}, after the suite existed (${SUITE_FIRST_SHIPPED}). Either the\n` +
+          "  report is missing or the release was published without one.",
+        );
+      }
+      continue;
+    }
+    const p = resolve(base, String(named));
+    if (!existsSync(p)) { failures.push(`docs/SHIPPED.json names ${named}, which is not a file here.`); continue; }
+    let report;
+    try { report = JSON.parse(readFileSync(p, "utf8")); }
+    catch (e) { failures.push(`${named} is not valid JSON: ${String(e.message).split("\n")[0]}`); continue; }
+    if (String(named).endsWith(".override.json")) {
+      if (!/^\d+$/.test(String(report.ticket || ""))) {
+        failures.push(`${named} is an override with no ticket number. An exception nobody has to answer for is not an exception.`);
+      }
+      continue;
+    }
+    if (report.verdict !== "PASS" || report.exit_code !== 0) {
+      failures.push(`${named} says ${report.verdict} (exit ${report.exit_code}); the binaries were published on a report that did not pass.`);
+    }
+    if (report.version !== record.version) {
+      failures.push(`${named} judged ${report.version} and docs/SHIPPED.json describes ${record.version}.`);
+    }
+  }
+  return failures;
+}
+
 export function check({ trunk, fetch = true } = {}) {
   const manifest = loadManifest();
   const trunkRef = resolveTrunk(trunk);
@@ -159,6 +206,14 @@ export function check({ trunk, fetch = true } = {}) {
       );
     }
   }
+
+  // 1b. And the binaries were judged before they were published.
+  //
+  // Null is allowed for exactly one reason: the release predates the suite. The
+  // date below is the day the suite landed; anything shipped after it that
+  // names no report was published without one, which is the state this leg
+  // exists to make visible.
+  for (const f of qualityReportFailures(record)) failures.push(f);
 
   // 2. The public repository says which commit it was published from.
   const from = publishedFrom(PUBLIC_REF);

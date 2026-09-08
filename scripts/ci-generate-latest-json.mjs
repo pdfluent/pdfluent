@@ -23,6 +23,7 @@
 
 import { readFileSync, readdirSync, writeFileSync, existsSync } from 'node:fs';
 import path from 'node:path';
+import { requireQualityReport, overrideOr } from './quality/require-report.mjs';
 
 const tag = process.env.CI_COMMIT_TAG ?? '';
 // v* = production release; rc* = CI debug run (workflow rule allows both)
@@ -91,6 +92,28 @@ const linux   = findPlatformArtifact(linuxDir, /\.AppImage\.tar\.gz\.sig$/)
 // for the gated desktop release — see the Windows+macOS-only release policy). Each
 // platform is included only when its signed updater artifact is present; require
 // at least one so we never publish an empty feed.
+// Every platform that IS present must carry a PASS quality report covering the
+// exact payload the feed will point at. This is a refusal, not a warning: a
+// latest.json naming an unverified payload is precisely the thing an update
+// feed must never say, and "omitted with a WARN" was how it could have said it.
+for (const [platform, found, dir] of [['macos', macos, macosDir], ['windows', windows, windowsDir]]) {
+  if (!found) continue;
+  try {
+    overrideOr(
+      () => requireQualityReport({
+        version,
+        platform,
+        file: path.join(dir, found.artifactName),
+        updater: true,
+      }),
+      { version, platform, file: path.join(dir, found.artifactName) },
+    );
+  } catch (e) {
+    console.error(`ERROR: ${e.message}`);
+    process.exit(e.code ?? 1);
+  }
+}
+
 if (!macos)   console.warn('WARN: darwin-aarch64 sig missing — omitted from latest.json');
 if (!windows) console.warn('WARN: windows-x86_64 sig missing — omitted from latest.json');
 if (!linux)   console.warn('WARN: linux-x86_64 sig missing — omitted from latest.json (Linux is optional)');

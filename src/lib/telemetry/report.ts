@@ -22,7 +22,7 @@
 // dialog) rather than swallowed — but never escalate into a crash-on-crash.
 // ---------------------------------------------------------------------------
 
-import { invoke } from '@tauri-apps/api/core';
+import { invokeCommand as invoke } from '../commandBridge';
 import { scrub, scrubOptional } from './scrub';
 
 /**

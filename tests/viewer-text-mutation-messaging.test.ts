@@ -162,11 +162,22 @@ describe('getBackendRejectionMessage — unknown code fallback', () => {
     expectValidMessage(msg);
   });
 
-  it('fallback for unknown code is the internal-error message', () => {
+  it('falls back to the internal-error headline for an unknown code', () => {
     const unknown = getBackendRejectionMessage('nonexistent-code');
     const internal = getBackendRejectionMessage('internal-error');
     expect(unknown.tooltip).toBe(internal.tooltip);
-    expect(unknown.explanation).toBe(internal.explanation);
+  });
+
+  it('keeps the unknown code itself in the explanation', () => {
+    // The generic message used to replace the one sentence that named the real
+    // cause, so every rejection the writer had no code for read the same.
+    expect(getBackendRejectionMessage('nonexistent-code').explanation)
+      .toContain('nonexistent-code');
+  });
+
+  it('keeps a thrown engine message alongside a known code', () => {
+    const message = getBackendRejectionMessage('page-not-found', 'page 12 of 8 requested');
+    expect(message.explanation).toContain('page 12 of 8 requested');
   });
 });
 

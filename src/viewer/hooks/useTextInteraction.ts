@@ -19,6 +19,7 @@ import { isTextInteractionActive } from '../text/textInteractionRules';
 import { getEditability, extractText, extractRawText } from '../text/textEditability';
 import { getMutationSupport, validateReplacement } from '../text/textMutationSupport';
 import { getBackendRejectionMessage, getUnsupportedMessage } from '../text/textMutationMessaging';
+import type { TextMutationRejection } from '../text/textMutationMessaging';
 import type { TextContextActionId } from '../components/TextContextBar';
 import { getCanonicalTextMutationEngine } from '../../platform/engine/canonicalTextMutationEngine';
 import { toEditorTextSpan } from '../text/editorTextSpan';
@@ -196,6 +197,15 @@ export function useTextInteraction(
   // while editing must not teleport the editor onto another page.
   const [editingPageIndex, setEditingPageIndex] = useState<number | null>(null);
   const [textDraft, setTextDraft] = useState<string>('');
+  /**
+   * Why the last text edit did not land, kept until the next edit.
+   *
+   * The toast stack shows three entries and slides away; a rejection the user
+   * did not happen to be looking at was gone before they could read it, which
+   * is why "not replaced" was the whole story in practice.
+   */
+  const [textMutationRejection, setTextMutationRejection] =
+    useState<TextMutationRejection | null>(null);
 
   // Draft visual style states
   const [draftFontSize, setDraftFontSize] = useState<number | null>(null);
@@ -261,6 +271,7 @@ export function useTextInteraction(
   }, [mode, activeAnnotationTool, onExternalLinkClick]);
 
   const handleEditEntry = useCallback((target: TextParagraphTarget) => {
+    setTextMutationRejection(null);
     const editability = getEditability(target, mode, activeAnnotationTool);
     if (editability.status !== 'editable') {
       setAppErrors(prev => appendError(prev, makeTextMutationError(editability.label)));
@@ -529,8 +540,22 @@ export function useTextInteraction(
           logMessages.push(`Tekst bewerkt: "${currentTextKey}" → "${committedText}"`);
           currentTextKey = committedText; // Update search key for subsequent style operations
         } else {
-          const reason = !result.success ? result.error.message : (result.value.reason ?? 'Tekst niet gevonden in de PDF-inhoud.');
-          setAppErrors(prev => appendError(prev, makeTextMutationError(getBackendRejectionMessage(reason).explanation)));
+          // Two different failures arrive here: a typed rejection from the
+          // writer (`value.reason` is one of the nine codes) and a thrown
+          // engine error (free text). Both carry a reason; neither used to
+          // survive the trip to the screen.
+          const code = result.success ? (result.value.reason ?? 'text-not-found-in-content-stream') : 'internal-error';
+          const detail = result.success ? undefined : result.error.message;
+          const message = getBackendRejectionMessage(code, detail);
+          setTextMutationRejection({
+            code,
+            detail: detail ?? null,
+            originalText: currentTextKey,
+            tooltip: message.tooltip,
+            explanation: message.explanation,
+            actionable: message.actionable,
+          });
+          setAppErrors(prev => appendError(prev, makeTextMutationError(message.explanation)));
           // Abort further formatting since the span couldn't be targeted/replaced
           return;
         }
@@ -646,6 +671,7 @@ export function useTextInteraction(
       }
 
       if (mutationSuccess) {
+        setTextMutationRejection(null);
         markDirty();
         onDocumentMutated?.();
         setDocumentEventLog(prev => appendEvent(prev, makeDocumentEvent(
@@ -698,6 +724,8 @@ export function useTextInteraction(
     return () => { document.removeEventListener('selectionchange', updateFormatState); };
   }, [editingTextTargetId]);
 
+  const dismissTextMutationRejection = useCallback(() => setTextMutationRejection(null), []);
+
   return {
     selectedTextTargetId,
     selectedTextTarget,
@@ -716,5 +744,7 @@ export function useTextInteraction(
     handleFormatCommand,
     editorDivRef,
     editingPageIndex,
+    textMutationRejection,
+    dismissTextMutationRejection,
   };
 }

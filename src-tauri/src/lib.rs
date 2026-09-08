@@ -13,7 +13,16 @@ mod pdf_engine;
 mod pdfa_export_guard;
 mod sdk_facade;
 mod security;
+mod session_log;
 mod telemetry;
+
+// Test seam. `pdf_engine` is a private module, so an integration test — which
+// links against this crate from the outside — could not reach the open/save
+// path at all. That is why the save round-trip was only ever measured by a
+// scratch replica of it, and why a regression there would have reached a
+// release unseen. The module stays private; only the document type is
+// re-exported, for src-tauri/tests/golden_roundtrip.rs.
+pub use pdf_engine::OpenDocument;
 
 use ocr::{
     get_ocr_status_command, run_paddle_ocr_command, OcrRuntimeStatus, PaddleOcrRequest,
@@ -21,7 +30,7 @@ use ocr::{
 };
 use pdf_engine::{
     AnnotationInfo, AttachmentInfo, CompressResult, DocumentInfo, ExtractedImageInfo,
-    FormFieldInfo, InvoiceData, InvoiceValidationResult, LayerInfo, OpenDocument, OutlineItemInfo,
+    FormFieldInfo, InvoiceData, InvoiceValidationResult, LayerInfo, OutlineItemInfo,
     PdfAValidationResult, RedactReport, RenderedPage, SdkDocument, SearchRedactReport,
     SetFieldValueRequest, SignatureVerifyResult, TextReplaceResult, TextSpanInfo,
 };
@@ -142,6 +151,20 @@ fn spawn_startup_watchdog(handle: tauri::AppHandle) {
             }
         });
     });
+}
+
+/// One line from the frontend into the same durable log the backend writes to.
+///
+/// A failure the user sees on screen and a failure in the log used to be two
+/// different sets: the backend logged, the webview did not, and a support
+/// bundle showed a clean run for a session in which three commands had failed.
+/// `commandBridge.ts` calls this for every rejected command and every visible
+/// fallback, so the log is the whole story.
+#[tauri::command]
+fn frontend_log(message: String) {
+    // Bounded: a log line is a diagnostic, not a transport for document text.
+    let trimmed: String = message.chars().take(2000).collect();
+    applog(&format!("frontend: {trimmed}"));
 }
 
 /// First invoke from the frontend — proof the webview's JS is alive.
@@ -1997,15 +2020,34 @@ fn build_menu(handle: &tauri::AppHandle) -> Result<Menu<tauri::Wry>, String> {
         .map_err(|e| e.to_string())
 }
 
-/// Durable local log file: ~/Library/Logs/com.pdfluent.app/PDFluent.log (macOS).
-#[cfg(target_os = "macos")]
-fn app_log_file_path() -> Option<std::path::PathBuf> {
+/// Directory for durable local logs. macOS puts logs in ~/Library/Logs; the
+/// other two platforms have no such convention, so the local data directory it
+/// is. Windows is a shipped platform and had no durable log at all: everything
+/// below was compiled out there, which is why a Windows report could never say
+/// how far startup had got.
+fn app_log_dir_path() -> Option<std::path::PathBuf> {
+    #[cfg(target_os = "macos")]
     let dir = dirs::home_dir()?
         .join("Library")
         .join("Logs")
         .join("com.pdfluent.app");
+    #[cfg(not(target_os = "macos"))]
+    let dir = dirs::data_local_dir()?.join("com.pdfluent.app").join("logs");
+
     std::fs::create_dir_all(&dir).ok()?;
-    Some(dir.join("PDFluent.log"))
+    Some(dir)
+}
+
+/// Durable local log file: `<log dir>/PDFluent.log`.
+fn app_log_file_path() -> Option<std::path::PathBuf> {
+    Some(app_log_dir_path()?.join("PDFluent.log"))
+}
+
+/// Where the session counter keeps its start/clean-quit lines. Next to the app
+/// log, because that is where someone looks when they want to know what the
+/// app did.
+fn session_log_path() -> Option<std::path::PathBuf> {
+    Some(app_log_dir_path()?.join(session_log::SESSION_FILE_NAME))
 }
 
 /// Append a timestamped line to the durable local log (and echo to stderr, which
@@ -2015,17 +2057,14 @@ fn app_log_file_path() -> Option<std::path::PathBuf> {
 /// prompt blocking a filesystem call).
 pub fn applog(msg: &str) {
     eprintln!("{msg}");
-    #[cfg(target_os = "macos")]
-    {
-        use std::io::Write;
-        let ts = std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .map(|d| d.as_secs())
-            .unwrap_or(0);
-        if let Some(path) = app_log_file_path() {
-            if let Ok(mut f) = std::fs::OpenOptions::new().create(true).append(true).open(path) {
-                let _ = writeln!(f, "[{ts}] {msg}");
-            }
+    use std::io::Write;
+    let ts = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| d.as_secs())
+        .unwrap_or(0);
+    if let Some(path) = app_log_file_path() {
+        if let Ok(mut f) = std::fs::OpenOptions::new().create(true).append(true).open(path) {
+            let _ = writeln!(f, "[{ts}] {msg}");
         }
     }
 }
@@ -2075,8 +2114,24 @@ pub fn run() {
                     std::env::temp_dir().join(telemetry::CRASH_FILE_NAME)
                 });
             telemetry::install_panic_hook(crash_file.clone());
+
+            // Crash-free sessions (plan §3). One line now, one on the way out;
+            // a start with no matching quit is a session that did not end
+            // cleanly. Purely local -- the number leaves the machine only if
+            // the user sends a report and reads it in the text first.
+            let session_file = session_log_path()
+                .unwrap_or_else(|| std::env::temp_dir().join(session_log::SESSION_FILE_NAME));
+            if let Err(e) = session_log::record(
+                &session_file,
+                session_log::EVENT_START,
+                env!("CARGO_PKG_VERSION"),
+            ) {
+                applog(&format!("session log: could not record the start: {e}"));
+            }
+
             app.manage(telemetry::TelemetryState {
                 crash_file: Mutex::new(crash_file),
+                session_file: Mutex::new(session_file),
             });
 
             #[cfg(desktop)]
@@ -2138,6 +2193,7 @@ pub fn run() {
         .manage(PendingOpen(Mutex::new(cli_pending)))
         .invoke_handler(tauri::generate_handler![
             frontend_ready,
+            frontend_log,
             open_pdf,
             pick_pdf_dialog,
             remember_file_access,
@@ -2250,6 +2306,7 @@ pub fn run() {
             telemetry::get_environment,
             telemetry::take_pending_crashes,
             telemetry::open_external_url,
+            telemetry::session_reliability,
             take_pending_open,
         ])
         .build(tauri::generate_context!())
@@ -2262,6 +2319,25 @@ pub fn run() {
                     api.prevent_exit();
                     return;
                 }
+            }
+
+            // The other half of the pair. RunEvent::Exit fires for a menu
+            // quit, a window close and a Cmd-Q alike; a kill, a panic or a
+            // power cut leaves the start line unmatched, which is exactly the
+            // distinction being counted.
+            if let tauri::RunEvent::Exit = &event {
+                if let Some(state) = app_handle.try_state::<telemetry::TelemetryState>() {
+                    if let Ok(path) = state.session_file.lock() {
+                        if let Err(e) = session_log::record(
+                            path.as_path(),
+                            session_log::EVENT_CLEAN_QUIT,
+                            env!("CARGO_PKG_VERSION"),
+                        ) {
+                            applog(&format!("session log: could not record the clean quit: {e}"));
+                        }
+                    }
+                }
+                applog("clean_quit: the app is exiting normally");
             }
 
             // Balance any outstanding security-scoped access on exit so no
@@ -2293,7 +2369,7 @@ pub fn run() {
                 }
             }
             #[cfg(not(target_os = "macos"))]
-            let _ = (&app_handle, &event);
+            let _ = &event;
         });
 }
 

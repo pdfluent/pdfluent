@@ -8,10 +8,10 @@
 #
 # release-windows-remote.sh — cut a Windows release in one command from the Mac.
 #
-# Windows .msi can't be cross-compiled, so this builds on the LAN Windows box
-# over SSH, fetches the .msi, and publishes it to Cloudflare R2 from here (the
-# Mac's wrangler is already authed for R2). Simple + robust: direct SSH, no
-# OpenClaw, no Telegram, no GitHub.
+# Windows .msi can't be cross-compiled, so this builds on the Windows build host
+# over SSH and fetches the .msi to the Mac. It stops there: judging and
+# publishing the artefact are separate, guarded steps (release_suite.sh, then
+# publish-release.sh).
 #
 #   bash scripts/release-windows-remote.sh [version]      # version from tauri.conf.json
 #   npm run release:windows -- [version]
@@ -19,9 +19,8 @@
 # Env:
 #   WIN_BUILD_HOST   REQUIRED: ssh target of your Windows build host (user@host
 #                    or an ssh-config alias). Keep it in your gitignored .env.
-#   WIN_EDITOR_PATH  editor checkout path on that host
-#                    (default: C:/Users/<user>/Documents/PDFluent/pdfluent-v3)
-#   WRANGLER         wrangler binary for the publish step (else publish-artifact.mjs default)
+#   WIN_EDITOR_PATH  REQUIRED: editor checkout path on that host. Keep it in
+#                    your gitignored .env; it is a fact about one machine.
 #
 # One-time host prep: scripts/setup-windows-buildhost.ps1 (clone editor+XFA from
 # GitLab, toolchain, WASM). See RELEASE.md.
@@ -37,7 +36,10 @@ if [ -f "${REPO_ROOT}/.env" ]; then
   : "${WIN_EDITOR_PATH:=$(grep -E '^WIN_EDITOR_PATH=' "${REPO_ROOT}/.env" | tail -1 | cut -d= -f2- | tr -d '"'\''')}"
 fi
 HOST="${WIN_BUILD_HOST:?set WIN_BUILD_HOST (user@host or ssh alias) as an env var or in your gitignored .env}"
-EDITOR_WIN="${WIN_EDITOR_PATH:-C:/Users/Gebruiker/Documents/PDFluent/pdfluent-v3}"
+# The box's checkout directory is a local fact, so it lives in the gitignored
+# .env as WIN_EDITOR_PATH. The default below is the layout the build host has
+# actually used; a box that differs sets the variable rather than editing this.
+EDITOR_WIN="${WIN_EDITOR_PATH:?set WIN_EDITOR_PATH (the editor checkout on the build host) as an env var or in your gitignored .env}"
 VERSION="${1:-$(node -p "require('${REPO_ROOT}/src-tauri/tauri.conf.json').version")}"
 SSHO=(-o LogLevel=ERROR -o ServerAliveInterval=30 -o ServerAliveCountMax=2000)
 
@@ -49,6 +51,18 @@ echo "== Windows remote release v${VERSION} on ${HOST} =="
 # disable the store and the clean-URL pull would fail.
 ssh "${SSHO[@]}" "$HOST" "powershell -NoProfile -ExecutionPolicy Bypass -Command \"Set-Location '${EDITOR_WIN}'; git pull --ff-only\"" \
   || echo "(pull skipped — building the current checkout)"
+
+# 1b. Disk preflight. The target directory alone is bigger than the free space
+#     this box has had, and a build that dies half way through linking wastes an
+#     hour and leaves a worse mess than a refusal does.
+FREE_GB="$(ssh "${SSHO[@]}" "$HOST" "powershell -NoProfile -Command \"[math]::Floor((Get-PSDrive C).Free/1GB)\"" | tr -d '\r')"
+if [ -n "${FREE_GB}" ] && [ "${FREE_GB}" -lt 12 ] 2>/dev/null; then
+  echo "✘ Only ${FREE_GB} GB free on the build host's system drive; this build needs about 12."
+  echo "  Reclaim first: the Rust target directory in the editor checkout, old bundles under"
+  echo "  src-tauri/target/release/bundle, and the runner work directories."
+  exit 1
+fi
+echo "   free on the build host: ${FREE_GB:-unknown} GB"
 
 # 2. Build the .msi on the box (build-only; prints MSI_PATH=...). Slow: MSVC + WiX.
 echo "== building on ${HOST} (MSVC + WiX — this takes a while) =="
@@ -82,19 +96,14 @@ if [ -n "${UP_SIG_WIN}" ]; then
   echo "   updater .msi.sig → artifacts/windows/ (stage latest.json + upload separately; approval-gated)"
 fi
 
-# 4. Publish to R2 + update the release manifest (Mac wrangler has R2 access).
-#    Resolve a usable wrangler first: env override, then PATH, then the
-#    npx-cached binary. Without this the publish dies with "spawnSync wrangler
-#    ENOENT" AFTER build+scp already succeeded — a silent, expensive failure.
-if [ -z "${WRANGLER:-}" ]; then
-  if command -v wrangler >/dev/null 2>&1; then
-    WRANGLER="wrangler"
-  else
-    WRANGLER="$(ls -t "${HOME}"/.npm/_npx/*/node_modules/.bin/wrangler 2>/dev/null | head -1 || true)"
-  fi
-fi
-[ -n "${WRANGLER:-}" ] || { echo "✘ No wrangler binary found. Set WRANGLER=/path/to/wrangler and re-run; the .msi is already on the box + in /tmp."; exit 1; }
-echo "   using wrangler: ${WRANGLER}"
-WRANGLER="${WRANGLER}" node "${REPO_ROOT}/scripts/publish-artifact.mjs" --version "${VERSION}" --file "${LOCAL_MSI}" \
-  || { echo "✘ publish-artifact.mjs failed — Windows MSI was NOT published (see error above)."; exit 1; }
-echo "✓ Windows release v${VERSION} published — pdfluent.com/download shows it automatically."
+# 4. Stop. Publishing is a separate, guarded step.
+#
+# This script used to upload to R2 the moment the build came back, which meant
+# the bytes were live before anything had looked at them. The release quality
+# suite runs against the artefact first, and scripts/publish-release.sh refuses
+# to upload without its PASS report.
+echo
+echo "✓ Windows v${VERSION} built and fetched. NOT published."
+echo "NEXT:"
+echo "  scripts/quality/release_suite.sh --platform windows --artefact ${LOCAL_MSI} --commit \$(git rev-parse HEAD) --machine build-desktop-windows"
+echo "  scripts/publish-release.sh ${VERSION} windows ${LOCAL_MSI}"

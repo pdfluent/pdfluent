@@ -1,0 +1,21 @@
+#!/bin/sh
+# Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
+#
+# This software is proprietary. The PDFluent application is free to use,
+# including for commercial purposes. Redistribution, or extraction or reuse
+# of its components (including the embedded PDF engine), requires a licence.
+# See https://pdfluent.com/license for terms.
+#
+# Refuse a commit message that carries something internal.
+#
+# This runs here and not in CI, and that is a decision rather than an omission:
+# the customer and partner names live in a list outside the tree
+# (~/.config/pdfluent/interne-termen.txt) on purpose, and a CI variable store is
+# not a better place for them. A machine without the list cannot judge the rule.
+#
+# Install: git config core.hooksPath .githooks
+#
+# Without the list the script says SKIPPED (not a pass) and exits non-zero, so a
+# machine that cannot judge does not approve. That is deliberate: set the list
+# up, or write the message somewhere the rule does not apply.
+exec node "$(dirname "$0")/../scripts/ci/internal-terms.mjs" --message "$1"

@@ -46,7 +46,9 @@
   --font-mono: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
   --text-primary: #1c1c1e;
   --text-secondary: #57606e;
-  --text-muted: #8a8f9c;
+  /* 4.83:1 on white. #8a8f9c was 3.23:1 -- below the 4.5:1 AA minimum for
+     body text, and it is the colour of every secondary label in the shell. */
+  --text-muted: #6b7280;
   --text-disabled: #b3b7c0;
   --on-primary: #ffffff;
   --workspace: #eef0f3;
@@ -106,7 +108,8 @@
 .pfv3.theme-dark {
   --text-primary: #ececf0;
   --text-secondary: #a3a8b4;
-  --text-muted: #80858f;
+  /* 4.84:1 on the dark panel; #80858f was 4.23:1. */
+  --text-muted: #8b909b;
   --text-disabled: #5a5e68;
   --on-primary: #0e0e12;
   --workspace: #17181c;

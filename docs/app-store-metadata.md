@@ -1,99 +1,17 @@
-# PDFluent — App Store Metadata
+# PDFluent — store metadata
 
-## Mac App Store
+This file used to hold a second copy of the App Store and Microsoft Store
+listing fields. Two copies is one too many: by 2026-09 this one still priced the
+editor as free only until a business used it, and pointed at a licence purchase
+inside the app. There is no licence UI in any build and the editor is free for
+everyone, commercial use included. The same copy promised "no telemetry" while
+the app has opt-in crash and feedback reporting.
 
-### App Name
-PDFluent — PDF Editor
+Neither store was ever filled in from this file. Both were filled in from the
+dossiers, which carry the fields, the privacy answers and the reviewer notes
+together, and which have tests holding them against the app:
 
-### Subtitle
-View, edit, sign & convert PDFs
+- **Mac App Store** → [`store/mas/`](../store/mas/README.md)
+- **Microsoft Store** → [`store/`](../store/README.md)
 
-### Category
-Productivity
-
-### Description
-PDFluent is a fast, privacy-first PDF editor for macOS. Every operation runs locally on your device — your documents never leave your machine.
-
-**Core features:**
-- View and navigate PDF documents with smooth rendering
-- Fill and edit PDF form fields (AcroForm and XFA)
-- Add annotations: highlights, underlines, comments, shapes, freehand drawing
-- Merge, split, rotate, reorder, and delete pages
-- Compress PDFs to reduce file size
-- Add text watermarks
-- Digital signatures (PAdES) with PKCS#12 certificates
-- PDF/A validation and conversion for archival compliance
-- Encrypt and decrypt PDFs with password protection
-- Search text across the entire document
-- Export pages as PNG or JPEG images
-- ZUGFeRD/Factur-X e-invoice extraction
-
-**Privacy by design:**
-All processing happens on your device. No cloud uploads, no accounts required, no telemetry. Your documents stay yours.
-
-**Completely free.**
-Free for everyone, including business and commercial use. No account, no subscription.
-
-### Keywords
-pdf, editor, viewer, annotate, sign, merge, split, forms, privacy, local
-
-### Privacy URL
-https://pdfluent.com/privacy
-
-### Support URL
-https://pdfluent.com/support
-
-### Marketing URL
-https://pdfluent.com
-
-### Age Rating
-4+
-
-### Price
-Free (with in-app license for commercial use)
-
----
-
-## Microsoft Store
-
-### App Name
-PDFluent
-
-### Short Description
-Fast, private PDF editor. View, annotate, fill forms, sign, merge, and convert PDFs — all locally.
-
-### Description
-PDFluent is a privacy-first desktop PDF editor. Every operation processes locally on your device.
-
-Features:
-• PDF viewing with smooth page rendering
-• Form filling (AcroForm and XFA forms)
-• Annotations: highlights, underlines, comments, shapes, drawings
-• Page manipulation: merge, split, rotate, reorder, delete
-• PDF compression
-• Text watermarks
-• Digital signatures (PAdES/PKCS#12)
-• PDF/A validation and conversion
-• Password encryption/decryption
-• Full-text search
-• Export pages as images
-• E-invoice extraction (ZUGFeRD/Factur-X)
-
-Privacy: all processing is local. No cloud, no accounts, no telemetry.
-
-Completely free, including for business and commercial use.
-
-### Category
-Productivity
-
-### Age Rating
-3+
-
-### Privacy Policy URL
-https://pdfluent.com/privacy
-
-### Website
-https://pdfluent.com
-
-### Support Contact
-support@pdfluent.com
+Put listing copy there, not here.

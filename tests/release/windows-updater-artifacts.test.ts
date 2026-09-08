@@ -66,6 +66,11 @@ function runGenerator(opts: GenOpts): { out: LatestJson; dir: string } {
       CI_COMMIT_TAG: `v${opts.version}`,
       CF_R2_PUBLIC_URL: "https://pdfluent.com/releases",
       CF_R2_BUCKET_NAME: "pdfluent-releases",
+      // These fixtures are about sig DISCOVERY, not about the publish gate:
+      // there is no artefact here to hash and no report to hash it against.
+      // The gate itself is covered in tests/release-suite/publish-guard.test.ts,
+      // including that this generator refuses without the override.
+      PDFLUENT_PUBLISH_WITHOUT_REPORT: "411",
     },
     encoding: "utf8",
     stdio: ["ignore", "pipe", "pipe"],

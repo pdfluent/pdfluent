@@ -380,7 +380,8 @@
     "reorderFailed": "Yeniden sıralama başarısız",
     "addPageFailed": "PDF ekleme başarısız",
     "insertFailed": "PDF ekleme başarısız",
-    "splitFailed": "Bölme başarısız"
+    "splitFailed": "Bölme başarısız",
+    "commandFailedTitle": "'{{command}}' did not complete"
   },
   "events": {
     "formFieldUpdated": "Form alanı güncellendi",
@@ -427,7 +428,48 @@
     "ocrCannotSave": "OCR metni için düzenleme ve kaydetme mümkün değil.",
     "removeDocProtection": "Metin düzenlemeyi etkinleştirmek için belge korumasını kaldırın.",
     "pageNotFound": "Sayfa bulunamadı",
-    "requiresFontInspection": "Metin düzenleme için yazı tipi incelemesi gereklidir (6. aşamada planlandı)."
+    "requiresFontInspection": "Metin düzenleme için yazı tipi incelemesi gereklidir (6. aşamada planlandı).",
+    "rejection": {
+      "bannerTitle": "This text was not changed",
+      "bannerDetail": "Reason reported by the PDF engine: {{detail}}",
+      "bannerDismiss": "Dismiss",
+      "replacement-too-long": {
+        "tooltip": "Replacement is too long",
+        "explanation": "The replacement is longer than the text it replaces. Keep it the same length or shorter so the surrounding layout stays intact."
+      },
+      "text-not-found-in-content-stream": {
+        "tooltip": "Text not found in the PDF",
+        "explanation": "The text could not be located in the page's content stream. It may be part of an image, or drawn with an encoding the writer cannot match."
+      },
+      "no-content-stream": {
+        "tooltip": "This page has no editable content",
+        "explanation": "The page carries no content stream to edit. Scanned and image-only pages look like this; run OCR to read them, but the recognised text is an overlay and cannot be written back."
+      },
+      "empty-original-text": {
+        "tooltip": "Nothing to replace",
+        "explanation": "The selected text is empty, so there is nothing for the writer to find and replace."
+      },
+      "page-not-found": {
+        "tooltip": "Page not found",
+        "explanation": "The page this edit belongs to is not in the document any more. Reopen the file and try again."
+      },
+      "encoding-not-supported": {
+        "tooltip": "Character encoding not supported",
+        "explanation": "This font's encoding cannot be written to directly. CID fonts, Identity-H/V and custom encodings are not editable in this version."
+      },
+      "font-encoding-unsafe": {
+        "tooltip": "Font encoding blocks this edit",
+        "explanation": "The font behind this text uses an encoding (CID, Identity-H/V) that makes a direct replacement unsafe. Only Latin-encoded fonts can be edited."
+      },
+      "glyph-risk-detected": {
+        "tooltip": "Some characters may be missing from the font",
+        "explanation": "The replacement contains characters the embedded font may not carry, which would leave empty boxes in the PDF. Stick to characters the original text already uses."
+      },
+      "internal-error": {
+        "tooltip": "The edit could not be completed",
+        "explanation": "The PDF writer stopped with an unexpected error. Save the document and try again."
+      }
+    }
   },
   "validation": {
     "modeRequiresSession": "'{{mode}}' modu etkin bir düzenleme oturumu gerektiriyor.",
@@ -1201,8 +1243,6 @@
       "exportPdfTo": "PDF'yi şuraya dışa aktar",
       "image": "Görüntü",
       "archive": "Arşiv",
-      "documentLanguage": "Belge dili",
-      "dutch": "Hollandaca",
       "convertToDocx": "DOCX'e dönüştür",
       "otherOptions": "Diğer seçenekler",
       "runOcr": "OCR çalıştır",
@@ -1382,6 +1422,9 @@
       "lines": "Line items: {{count}}",
       "valid": "Valid against {{profile}}",
       "invalid": "Not valid: {{errors}} errors, {{warnings}} warnings"
+    },
+    "canvas": {
+      "document": "PDF document"
     }
   },
   "about": {
@@ -1418,5 +1461,13 @@
     "body": "This document wants to open an external website. Are you opening it from a trusted source?",
     "alwaysAllow": "Always allow",
     "openOnce": "Open once"
+  },
+  "fallbacks": {
+    "ocrUnavailableTitle": "OCR is not available on this computer",
+    "ocrUnavailableMessage": "PDFluent could not start the text-recognition engine. {{reason}}",
+    "ocrFailedMessage": "Text recognition stopped on page {{page}}: {{reason}}",
+    "xfaStaticTitle": "Form filled without recalculation",
+    "xfaStaticMessage": "This build writes XFA field values straight into the form. Field scripts do not run, so calculated totals and fields that appear or hide based on your answer stay as they are.",
+    "featureUnavailableTitle": "'{{feature}}' is not available in this build"
   }
 }

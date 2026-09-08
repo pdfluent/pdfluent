@@ -1,0 +1,882 @@
+{
+  "_readme": [
+    "Failures the editor swallows on purpose, one entry per accepted line.",
+    "Written for pdfluent-internal#413. A silent failure is the one bug class the",
+    "test suite cannot see: the code runs, returns, and the person in front of the",
+    "app gets a spinner that stopped. Some swallowing is right -- a localStorage",
+    "write that fails in a sandboxed webview must not take the document with it --",
+    "so the rule is not 'never swallow', it is that swallowing is a decision and",
+    "the decision is written down where a reviewer can disagree with it.",
+    "scripts/quality/no-silent-failures.mjs --check fails on a hit that is not",
+    "here, on an entry that matches no line any more, on an entry covering a",
+    "different number of lines than when it was written, and on an entry without a",
+    "reason. Entries are anchored on (file, kind, code) -- the trimmed source line,",
+    "not a line number -- so moving code does not invalidate them but rewriting the",
+    "line does, which is the point: rewriting the catch means re-deciding.",
+    "The counts are the measure, and they are meant to go down.",
+    "Since 2026-09-08 the list also carries skipped tests: a test that does not run is a pass nobody earned, and the UI register used to accept one as proof."
+  ],
+  "accepted": [
+    {
+      "file": "src-tauri/src/lib.rs",
+      "kind": "discarded-result",
+      "code": "let _ = handle.run_on_main_thread(move || {",
+      "count": 2,
+      "reason": "startup watchdog recovery: if the main thread cannot be reached the app is already past saving, and the watchdog's next tick retries."
+    },
+    {
+      "file": "src-tauri/src/lib.rs",
+      "kind": "discarded-result",
+      "code": "let _ = win.show();",
+      "count": 1,
+      "reason": "window management during watchdog recovery; a window that refuses to show is reported by the recovery attempt counter in the log, not by this call."
+    },
+    {
+      "file": "src-tauri/src/lib.rs",
+      "kind": "discarded-result",
+      "code": "let _ = win.set_focus();",
+      "count": 1,
+      "reason": "focus is cosmetic. Failing to raise a window must not abort the recovery that just created it."
+    },
+    {
+      "file": "src-tauri/src/lib.rs",
+      "kind": "discarded-result",
+      "code": "let _ = old.close();",
+      "count": 1,
+      "reason": "closing the frozen window during recovery; the new window is already up, and a failed close leaves a stale window rather than a broken app."
+    },
+    {
+      "file": "src-tauri/src/lib.rs",
+      "kind": "discarded-result",
+      "code": "let _ = open::that(&path);",
+      "count": 1,
+      "reason": "opening the crash log in the platform file manager. The path is printed in the same dialog, so the user can reach it either way."
+    },
+    {
+      "file": "src-tauri/src/lib.rs",
+      "kind": "discarded-result",
+      "code": "let _ = telemetry::open_external_url(WEBSITE_URL.to_string());",
+      "count": 2,
+      "reason": "menu item opening the website in the default browser. A browser that will not launch is visible to the user immediately -- nothing happened."
+    },
+    {
+      "file": "src-tauri/src/lib.rs",
+      "kind": "discarded-result",
+      "code": "let _ = child.kill();",
+      "count": 2,
+      "reason": "stopping the text-to-speech subprocess. It is already being replaced or the app is quitting; a kill that fails leaves a process the OS reaps."
+    },
+    {
+      "file": "src-tauri/src/lib.rs",
+      "kind": "discarded-result",
+      "code": "let _ = child.wait();",
+      "count": 2,
+      "reason": "reaping the text-to-speech subprocess after kill, to avoid a zombie. There is no outcome for the user in either branch."
+    },
+    {
+      "file": "src-tauri/src/lib.rs",
+      "kind": "discarded-result",
+      "code": "let _ = state;",
+      "count": 2,
+      "reason": "platform stub: binds the unused parameter on the platforms where text-to-speech is not implemented, right above the Err that tells the user so."
+    },
+    {
+      "file": "src-tauri/src/lib.rs",
+      "kind": "unwrap-or-default",
+      "code": "serde_json::from_str(&raw).unwrap_or_default()",
+      "count": 1,
+      "reason": "the security-scoped bookmark store. A corrupt store reads as empty, which drops Recent-file access rather than the file itself; the reopen then asks for the file through the normal dialog."
+    },
+    {
+      "file": "src-tauri/src/lib.rs",
+      "kind": "discarded-result",
+      "code": "let _ = std::fs::create_dir_all(parent);",
+      "count": 1,
+      "reason": "creating the bookmark store directory; the write on the next line is the operation that matters and it carries its own guard."
+    },
+    {
+      "file": "src-tauri/src/lib.rs",
+      "kind": "discarded-result",
+      "code": "let _ = std::fs::write(&path, json);",
+      "count": 1,
+      "reason": "persisting security-scoped bookmarks. Losing them costs Recent-file access after a relaunch, never the open document."
+    },
+    {
+      "file": "src-tauri/src/lib.rs",
+      "kind": "unwrap-or-default",
+      "code": "let path = selftest_arg(\"--selftest-path\").unwrap_or_default();",
+      "count": 1,
+      "reason": "debug_assertions-only bookmark self-test driven from the command line; an empty path is a valid case the self-test reports on. Not compiled into a release build."
+    },
+    {
+      "file": "src-tauri/src/lib.rs",
+      "kind": "discarded-result",
+      "code": "let _ = writeln!(f, \"[{ts}] {msg}\");",
+      "count": 1,
+      "reason": "writing to the app log itself. Logging is what runs when something has already gone wrong, so it must not become the next thing that goes wrong."
+    },
+    {
+      "file": "src-tauri/src/lib.rs",
+      "kind": "discarded-result",
+      "code": "let _ = telemetry::open_external_url(telemetry::FEEDBACK_URL.to_string());",
+      "count": 1,
+      "reason": "menu item opening the feedback page in the default browser; a browser that will not launch is visible to the user as nothing happening."
+    },
+    {
+      "file": "src-tauri/src/lib.rs",
+      "kind": "discarded-result",
+      "code": "let _ = telemetry::open_external_url(LICENSE_URL.to_string());",
+      "count": 1,
+      "reason": "menu item opening the licence page in the default browser; same as the other two menu links."
+    },
+    {
+      "file": "src-tauri/src/lib.rs",
+      "kind": "discarded-result",
+      "code": "let _ = app.emit(\"menu-event\", id);",
+      "count": 1,
+      "reason": "forwarding a menu click to the webview. If the webview is gone the menu is gone with it; the startup watchdog owns that case."
+    },
+    {
+      "file": "src-tauri/src/lib.rs",
+      "kind": "discarded-result",
+      "code": "let _ = window.show();",
+      "count": 1,
+      "reason": "raising the main window from the dock/taskbar handler. Cosmetic, and the user retries by clicking again."
+    },
+    {
+      "file": "src-tauri/src/lib.rs",
+      "kind": "discarded-result",
+      "code": "let _ = window.set_focus();",
+      "count": 1,
+      "reason": "focusing the main window from the dock/taskbar handler; cosmetic in the same way as the show above it."
+    },
+    {
+      "file": "src-tauri/src/lib.rs",
+      "kind": "discarded-result",
+      "code": "let _ = app_handle.emit(\"open-file\", path);",
+      "count": 1,
+      "reason": "delivering an open-file event to the webview. The path is also kept in take_pending_open, which the frontend polls at startup, so a dropped event is recovered."
+    },
+    {
+      "file": "src-tauri/src/lib.rs",
+      "kind": "discarded-result",
+      "code": "let _ = &event;",
+      "count": 1,
+      "reason": "binds the otherwise-unused run-event parameter on the platforms without an open-file event. No runtime behaviour; app_handle left the binding when the clean-quit record started using it."
+    },
+    {
+      "file": "src-tauri/src/ocr.rs",
+      "kind": "discarded-result",
+      "code": "let _ = std::fs::remove_file(&tmp_path);",
+      "count": 2,
+      "reason": "removing the temporary image handed to the OCR bridge. A leftover temp file is the OS's problem; the OCR result has already been read or already failed with its own message."
+    },
+    {
+      "file": "src-tauri/src/pdf_engine.rs",
+      "kind": "unwrap-or-default",
+      "code": ".unwrap_or_default();",
+      "count": 5,
+      "reason": "optional PDF dictionary entries -- attachment /Desc, /CreationDate, and the optional-content /ON, /OFF and /Locked arrays. Absent is a legal document, and an empty value is the correct reading of it, not a swallowed error."
+    },
+    {
+      "file": "src-tauri/src/pdfa_export_guard.rs",
+      "kind": "discarded-result",
+      "code": "let _ = std::fs::remove_file(&out);",
+      "count": 4,
+      "reason": "cleaning up the temporary export the PDF/A guard just inspected. The guard's verdict is the result; the temp file is scratch."
+    },
+    {
+      "file": "src-tauri/src/telemetry.rs",
+      "kind": "discarded-result",
+      "code": "let _ = std::fs::create_dir_all(parent);",
+      "count": 1,
+      "reason": "creating the crash-report directory; the write below it is what matters and telemetry is opt-in and off by default."
+    },
+    {
+      "file": "src-tauri/src/telemetry.rs",
+      "kind": "discarded-result",
+      "code": "let _ = writeln!(file, \"{line}\");",
+      "count": 1,
+      "reason": "appending to the crash-report queue. A crash reporter that fails loudly during a crash makes the crash worse and tells the user nothing they can use."
+    },
+    {
+      "file": "src-tauri/src/telemetry.rs",
+      "kind": "discarded-result",
+      "code": "let _ = std::fs::remove_file(&path);",
+      "count": 1,
+      "reason": "deleting a crash report that has been sent. A leftover would be re-sent once; a hard failure here would block the quit path."
+    },
+    {
+      "file": "src/components/Sidebar.tsx",
+      "kind": "silent-catch",
+      "code": "} catch {",
+      "count": 1,
+      "reason": "thumbnail generation in the retired V1 shell (?legacy). One page that will not render leaves a gap in a strip; the shipped v3 shell has its own thumbnails."
+    },
+    {
+      "file": "src/components/telemetry/CrashReporter.tsx",
+      "kind": "silent-rejection",
+      "code": "void sendReport(payload).catch(() => undefined);",
+      "count": 1,
+      "reason": "auto-sending an opt-in crash report. Telling a user that the report about the crash also failed adds a second dialog to a moment that already has one."
+    },
+    {
+      "file": "src/components/telemetry/CrashReporter.tsx",
+      "kind": "silent-rejection",
+      "code": ".catch(() => undefined); // command may not exist yet / no backend",
+      "count": 1,
+      "reason": "polling the backend for a pending Rust crash. Runs outside Tauri too, where the command does not exist; a missing crash report is the normal case."
+    },
+    {
+      "file": "src/components/Viewer.tsx",
+      "kind": "silent-catch",
+      "code": "} catch {",
+      "count": 2,
+      "reason": "retired V1 shell (?legacy): a user-agent probe that answers false, and an iframe fragment write that is a scroll position. Neither is reachable from the shipped shell."
+    },
+    {
+      "file": "src/components/Viewer.tsx",
+      "kind": "silent-rejection",
+      "code": "void createAnnotation(payload).catch((error) => {",
+      "count": 1,
+      "reason": "retired V1 shell (?legacy); the handler writes the failure to the debug log that shell shows."
+    },
+    {
+      "file": "src/components/Viewer.tsx",
+      "kind": "silent-rejection",
+      "code": ".catch((err) => {",
+      "count": 1,
+      "reason": "retired V1 shell (?legacy); the handler drops a stale render request and leaves the previous page on screen."
+    },
+    {
+      "file": "src/core/document/fingerprint.ts",
+      "kind": "silent-catch",
+      "code": "} catch {",
+      "count": 1,
+      "reason": "header scan for a document fingerprint. It reads the first bytes to guess XFA and page count before the real parse; the parse itself reports."
+    },
+    {
+      "file": "src/i18n/index.ts",
+      "kind": "silent-catch",
+      "code": "} catch { /* navigator unavailable */ }",
+      "count": 1,
+      "reason": "reading the OS locale. No navigator means fall through to English, which is what the user gets anyway."
+    },
+    {
+      "file": "src/i18n/index.ts",
+      "kind": "silent-catch",
+      "code": "} catch { /* localStorage unavailable */ }",
+      "count": 1,
+      "reason": "reading the stored language choice. Unavailable storage falls through to the OS locale."
+    },
+    {
+      "file": "src/i18n/index.ts",
+      "kind": "silent-catch",
+      "code": "} catch { /* ignore write errors */ }",
+      "count": 1,
+      "reason": "persisting the language choice. The switch has already taken effect; only surviving a restart is at risk."
+    },
+    {
+      "file": "src/lib/audit-log.ts",
+      "kind": "silent-catch",
+      "code": "} catch {",
+      "count": 1,
+      "reason": "reading the audit log out of storage. Corrupt or absent reads as empty, and the log is a record of what happened, not a thing to act on."
+    },
+    {
+      "file": "src/lib/debug-log.ts",
+      "kind": "silent-catch",
+      "code": "} catch {",
+      "count": 2,
+      "reason": "serialising a value into the debug log, and reading the log back. A value that will not serialise is replaced by its String() form; a corrupt log reads as empty."
+    },
+    {
+      "file": "src/lib/enterprise.ts",
+      "kind": "silent-catch",
+      "code": "} catch {",
+      "count": 2,
+      "reason": "parsing enterprise policy JSON. A malformed policy falls back to defaults, which is the safe direction: defaults are the most restrictive set."
+    },
+    {
+      "file": "src/lib/file-drop.ts",
+      "kind": "silent-catch",
+      "code": "} catch {",
+      "count": 1,
+      "reason": "decodeURI on a dropped file path. A path that will not decode is used as-is, which is right for a path that was never percent-encoded."
+    },
+    {
+      "file": "src/lib/pdf-manipulator.ts",
+      "kind": "silent-catch",
+      "code": "} catch {",
+      "count": 3,
+      "reason": "the pdf-lib helper module: an unknown font name falls back to Helvetica, a missing attachment is a no-op, and a signature-field probe answers with an empty report. Not on the desktop write path, which goes through the Rust engine."
+    },
+    {
+      "file": "src/lib/telemetry/crashChannel.ts",
+      "kind": "silent-catch",
+      "code": "} catch {",
+      "count": 2,
+      "reason": "a crash listener that throws must not escalate a crash into a second crash. The remaining listeners still run."
+    },
+    {
+      "file": "src/lib/telemetry/report.ts",
+      "kind": "silent-catch",
+      "code": "} catch {",
+      "count": 3,
+      "reason": "locale detection for a crash report and the report build itself. A crash report with a missing locale is still a usable crash report."
+    },
+    {
+      "file": "src/lib/telemetry/report.ts",
+      "kind": "silent-rejection",
+      "code": "const data = (await res.json().catch(() => null)) as",
+      "count": 1,
+      "reason": "reading the id out of the 202 response. The report has been accepted at this point; the id is only used for a follow-up the user never sees."
+    },
+    {
+      "file": "src/main.tsx",
+      "kind": "silent-rejection",
+      "code": ".catch(() => { /* browser/test runtime — no Tauri IPC */ });",
+      "count": 1,
+      "reason": "the liveness ping to the Rust startup watchdog. Outside Tauri there is no IPC at all, and inside it a missed ping is exactly what the watchdog is for."
+    },
+    {
+      "file": "src/platform/native/nativeServices.ts",
+      "kind": "silent-catch",
+      "code": "} catch {",
+      "count": 3,
+      "reason": "native text-to-speech pause/resume/stop. The bridge has already reported the command failure; this catch then falls through to the Web Speech path, which may well be the one speaking."
+    },
+    {
+      "file": "src/viewer/collaboration/reviewerIdentity.ts",
+      "kind": "silent-catch",
+      "code": "} catch {",
+      "count": 1,
+      "reason": "reading the stored reviewer identity. Absent or corrupt means the app asks for a name instead of guessing one."
+    },
+    {
+      "file": "src/viewer/collaboration/reviewerIdentity.ts",
+      "kind": "silent-catch",
+      "code": "} catch { /* ignore write errors */ }",
+      "count": 1,
+      "reason": "persisting the reviewer identity. The name is already in use for this session; only remembering it next time is at risk."
+    },
+    {
+      "file": "src/viewer/components/LeftNavRail.tsx",
+      "kind": "silent-catch",
+      "code": "} catch {",
+      "count": 1,
+      "reason": "reading computed style off a selection to seed the format controls. A failed read leaves the controls at their defaults."
+    },
+    {
+      "file": "src/viewer/components/LeftNavRail.tsx",
+      "kind": "silent-catch",
+      "code": "} catch { /* localStorage unavailable (e.g. sandboxed iframe) */ }",
+      "count": 1,
+      "reason": "reading which nav panel was open. Falls back to closed, which is the default state anyway."
+    },
+    {
+      "file": "src/viewer/components/LeftNavRail.tsx",
+      "kind": "silent-catch",
+      "code": "} catch { /* ignore write errors */ }",
+      "count": 1,
+      "reason": "persisting which nav panel is open. A layout preference, not document state."
+    },
+    {
+      "file": "src/viewer/components/OrganizeGrid.tsx",
+      "kind": "silent-catch",
+      "code": "} catch {",
+      "count": 1,
+      "reason": "page deletion in the organise grid. The line above sets the task-queue entry to error with a label the user reads, and the bridge has already reported the command."
+    },
+    {
+      "file": "src/viewer/components/PageCanvas.tsx",
+      "kind": "silent-catch",
+      "code": "} catch {",
+      "count": 1,
+      "reason": "sampling a pixel to pick the page background colour. Out-of-bounds means the sample is skipped and the next one is used."
+    },
+    {
+      "file": "src/viewer/components/PageCanvas.tsx",
+      "kind": "silent-rejection",
+      "code": "navigator.clipboard.writeText(text).catch(() => {});",
+      "count": 1,
+      "reason": "copying selected text. A clipboard the browser refuses is visible the moment the user pastes, and a toast about it would fire on every denied permission prompt."
+    },
+    {
+      "file": "src/viewer/components/RightContextPanel.tsx",
+      "kind": "silent-catch",
+      "code": "} catch {",
+      "count": 6,
+      "reason": "encrypt, decrypt, watermark and the three redaction actions, each of which sets its own task-queue entry to error with a label. The panel is also dead code: nothing imports it (see docs/ui_register_exceptions.json)."
+    },
+    {
+      "file": "src/viewer/components/SignaturePanel.tsx",
+      "kind": "silent-rejection",
+      "code": ".catch(() => {",
+      "count": 1,
+      "reason": "verifying signatures on open; an unsigned or unreadable document shows an empty signature list, which is what it has. The bridge reports the command failure."
+    },
+    {
+      "file": "src/viewer/components/SignaturePanel.tsx",
+      "kind": "silent-catch",
+      "code": "} catch {",
+      "count": 1,
+      "reason": "signing from the dead signature panel; the task-queue entry above it is set to error with a label."
+    },
+    {
+      "file": "src/viewer/components/TextEditFloatingPill.tsx",
+      "kind": "silent-catch",
+      "code": "} catch {",
+      "count": 1,
+      "reason": "clipboard read during paste, with document.execCommand('paste') as the fallback on the next line -- an actual second attempt, not a shrug."
+    },
+    {
+      "file": "src/viewer/hooks/useAnnotations.ts",
+      "kind": "silent-catch",
+      "code": "} catch { /* ignore read errors */ }",
+      "count": 1,
+      "reason": "restoring the last page position for a reopened file. A failed read opens page one."
+    },
+    {
+      "file": "src/viewer/hooks/useAnnotations.ts",
+      "kind": "silent-rejection",
+      "code": "}).catch(() => { /* ignore — labels are optional */ });",
+      "count": 1,
+      "reason": "page labels. A document without them falls back to page numbers, which is what most documents use."
+    },
+    {
+      "file": "src/viewer/hooks/useAnnotations.ts",
+      "kind": "silent-catch",
+      "code": "} catch { /* silent — task queue surfaces errors */ }",
+      "count": 3,
+      "reason": "creating shape, ink and text-markup annotations. The bridge reports the command failure to the error stack; the annotation simply does not appear."
+    },
+    {
+      "file": "src/viewer/hooks/useAnnotations.ts",
+      "kind": "silent-catch",
+      "code": "} catch { /* silent */ }",
+      "count": 5,
+      "reason": "creating and applying redactions and reordering pages. The bridge reports the command failure; the page state on screen is refetched from the document either way."
+    },
+    {
+      "file": "src/viewer/hooks/useAnnotations.ts",
+      "kind": "silent-catch",
+      "code": "} catch { return null; }",
+      "count": 2,
+      "reason": "search-and-redact and delete-page both answer null on failure, and the caller renders that as no matches / no change. The bridge has already reported why."
+    },
+    {
+      "file": "src/viewer/hooks/useAnnotations.ts",
+      "kind": "silent-catch",
+      "code": "} catch { return false; }",
+      "count": 1,
+      "reason": "metadata redaction answers false, which the caller turns into a failed task-queue entry. The bridge has already reported why."
+    },
+    {
+      "file": "src/viewer/hooks/useDocumentLifecycle.ts",
+      "kind": "silent-catch",
+      "code": "} catch { /* silent — task queue lives in TopBar, not here */ }",
+      "count": 1,
+      "reason": "save-as. The bridge reports the failed save_pdf and the document stays marked dirty, so nothing is lost or claimed saved."
+    },
+    {
+      "file": "src/viewer/hooks/useDocumentLifecycle.ts",
+      "kind": "silent-catch",
+      "code": "} catch { /* save failed — proceed anyway; task bar will surface the error */ }",
+      "count": 1,
+      "reason": "the save inside a close/reopen flow. The bridge reports it and the dirty flag is not cleared, so the unsaved-changes prompt still stands."
+    },
+    {
+      "file": "src/viewer/hooks/useFormFields.ts",
+      "kind": "silent-catch",
+      "code": "} catch { /* silent — TopBar task queue surfaces errors */ }",
+      "count": 1,
+      "reason": "auto-save after a form-field write. The bridge reports the failed save_pdf and the document stays dirty."
+    },
+    {
+      "file": "src/viewer/hooks/useFormModel.ts",
+      "kind": "silent-rejection",
+      "code": ".catch(() => {",
+      "count": 1,
+      "reason": "loading the AcroForm model. A document with no form presents an empty model, which is the same shape as a document whose model failed to load; the bridge reports the difference."
+    },
+    {
+      "file": "src/viewer/hooks/usePageNavigation.ts",
+      "kind": "silent-catch",
+      "code": "} catch { /* ignore write errors */ }",
+      "count": 1,
+      "reason": "remembering the page you were on per file. A convenience across sessions, capped at 50 entries."
+    },
+    {
+      "file": "src/viewer/hooks/useRecentFiles.ts",
+      "kind": "silent-catch",
+      "code": "} catch {",
+      "count": 1,
+      "reason": "reading the recent-files list. Corrupt or absent reads as empty, and the list rebuilds as files are opened."
+    },
+    {
+      "file": "src/viewer/hooks/useRecentFiles.ts",
+      "kind": "silent-catch",
+      "code": "} catch { /* ignore write errors (e.g. private browsing quota) */ }",
+      "count": 1,
+      "reason": "persisting the recent-files list after an open."
+    },
+    {
+      "file": "src/viewer/hooks/useRecentFiles.ts",
+      "kind": "silent-catch",
+      "code": "} catch { /* ignore write errors */ }",
+      "count": 2,
+      "reason": "persisting the recent-files list after a removal or a clear. The in-memory list is already updated."
+    },
+    {
+      "file": "src/viewer/hooks/useRenderedCanvas.ts",
+      "kind": "silent-catch",
+      "code": "} catch {",
+      "count": 1,
+      "reason": "createImageBitmap for the render cache. Returning null falls back to drawing the ImageData directly, so the page still paints."
+    },
+    {
+      "file": "src/viewer/hooks/useSidebarState.ts",
+      "kind": "silent-catch",
+      "code": "} catch {",
+      "count": 1,
+      "reason": "reading whether the left rail was open. Falls back to open, the default."
+    },
+    {
+      "file": "src/viewer/hooks/useSidebarState.ts",
+      "kind": "silent-catch",
+      "code": "} catch { /* localStorage unavailable or corrupt */ }",
+      "count": 1,
+      "reason": "reading the recent-commands list for the palette. Falls back to empty."
+    },
+    {
+      "file": "src/viewer/hooks/useSidebarState.ts",
+      "kind": "silent-catch",
+      "code": "} catch { /* ignore write errors */ }",
+      "count": 2,
+      "reason": "persisting the rail state and the palette's recent commands. Layout preferences."
+    },
+    {
+      "file": "src/viewer/hooks/useTextInteraction.ts",
+      "kind": "silent-catch",
+      "code": "} catch {",
+      "count": 1,
+      "reason": "Range.setEnd on a DOM range that has moved under the caret. Returning null means the caret offset is not derived this frame, and the next keystroke recomputes it."
+    },
+    {
+      "file": "src/viewer/hooks/useZoomControls.ts",
+      "kind": "silent-catch",
+      "code": "} catch { /* localStorage unavailable */ }",
+      "count": 1,
+      "reason": "reading the stored zoom level; falls back to 150%."
+    },
+    {
+      "file": "src/viewer/hooks/useZoomControls.ts",
+      "kind": "silent-catch",
+      "code": "} catch { /* ignore write errors */ }",
+      "count": 1,
+      "reason": "persisting the zoom level. The zoom has already been applied."
+    },
+    {
+      "file": "src/viewer/import/reviewBundleImport.ts",
+      "kind": "silent-catch",
+      "code": "} catch {",
+      "count": 1,
+      "reason": "parsing an imported review bundle. The catch returns a typed failure with a message the import dialog shows -- the reason does reach the user, just not through this binding."
+    },
+    {
+      "file": "src/viewer/performance/performanceTelemetry.ts",
+      "kind": "silent-catch",
+      "code": "} catch {",
+      "count": 1,
+      "reason": "PerformanceObserver for long tasks, which WebKit does not implement. No observer means no long-task numbers, which is a gap in a diagnostic, not in the product."
+    },
+    {
+      "file": "src/viewer/state/appSettings.ts",
+      "kind": "silent-catch",
+      "code": "} catch {",
+      "count": 1,
+      "reason": "reading app settings. Corrupt settings fall back to defaults rather than blocking startup on a JSON error."
+    },
+    {
+      "file": "src/viewer/state/appSettings.ts",
+      "kind": "silent-catch",
+      "code": "} catch { /* ignore write errors */ }",
+      "count": 1,
+      "reason": "persisting app settings. The setting is already in effect for this session."
+    },
+    {
+      "file": "src/viewer/state/autosaveManager.ts",
+      "kind": "silent-catch",
+      "code": "} catch { /* ignore write errors */ }",
+      "count": 1,
+      "reason": "recording where the autosave went. Losing the record costs the recovery prompt, not the autosaved file."
+    },
+    {
+      "file": "src/viewer/state/autosaveManager.ts",
+      "kind": "silent-catch",
+      "code": "} catch {",
+      "count": 1,
+      "reason": "reading the recovery record. Absent or corrupt means no recovery prompt is offered, which is the same as having nothing to recover."
+    },
+    {
+      "file": "src/viewer/state/autosaveManager.ts",
+      "kind": "silent-catch",
+      "code": "} catch { /* ignore */ }",
+      "count": 1,
+      "reason": "clearing the recovery record once the document is saved. A leftover record offers a recovery the user can decline."
+    },
+    {
+      "file": "src/viewer/state/fileBookmarks.ts",
+      "kind": "silent-catch",
+      "code": "} catch { /* keep going without a bookmark */ }",
+      "count": 1,
+      "reason": "minting a macOS security-scoped bookmark. Without one the file still opens now; only reopening it from Recent after a relaunch is affected, and that path asks for the file again."
+    },
+    {
+      "file": "src/viewer/state/fileBookmarks.ts",
+      "kind": "silent-catch",
+      "code": "} catch {",
+      "count": 1,
+      "reason": "resolving a stored bookmark before a Recent open. False sends the caller down the normal open-dialog path, which is the honest outcome."
+    },
+    {
+      "file": "src/viewer/state/fileBookmarks.ts",
+      "kind": "silent-catch",
+      "code": "} catch { /* nothing was holding access */ }",
+      "count": 1,
+      "reason": "releasing security-scoped access. Releasing something that was never held is the normal case, not an error."
+    },
+    {
+      "file": "src/viewer/text/linkDetection.ts",
+      "kind": "silent-catch",
+      "code": "} catch {",
+      "count": 1,
+      "reason": "URL parsing while scanning page text for links. Text that is not a URL is the overwhelmingly common case; null means no link is drawn."
+    },
+    {
+      "file": "src/viewer/v3/EditorV3Shell.tsx",
+      "kind": "silent-catch",
+      "code": "} catch { /* ignore */ }",
+      "count": 1,
+      "reason": "reading whether the thumbnail drawer was open; falls back to open."
+    },
+    {
+      "file": "src/viewer/v3/EditorV3Shell.tsx",
+      "kind": "silent-catch",
+      "code": "} catch { /* ignore write errors */ }",
+      "count": 1,
+      "reason": "persisting the thumbnail drawer state. A layout preference."
+    },
+    {
+      "file": "src/viewer/v3/EditorV3Shell.tsx",
+      "kind": "silent-catch",
+      "code": "} catch {",
+      "count": 5,
+      "reason": "encrypt, decrypt, metadata and watermark each set their task-queue entry to error with a label the user reads, on top of what the bridge reports. The fifth is the confirm dialog for applying redactions, which defaults to not confirmed -- a failure there cannot make a destructive action run."
+    },
+    {
+      "file": "src/viewer/ViewerApp.tsx",
+      "kind": "silent-catch",
+      "code": "try { return localStorage.getItem('pdfluent.user.author') ?? ''; } catch { return ''; }",
+      "count": 1,
+      "reason": "reading the stored reviewer name for new comments. Empty means the app asks."
+    },
+    {
+      "file": "src/viewer/ViewerApp.tsx",
+      "kind": "silent-catch",
+      "code": "} catch {",
+      "count": 3,
+      "reason": "persisting the reviewer name, reading the auto-open-links preference, and setting the window title. The first two are conveniences; a window title that will not set is cosmetic and must never take the document with it."
+    },
+    {
+      "file": "src/viewer/ViewerApp.tsx",
+      "kind": "silent-rejection",
+      "code": "void relaunchApp().catch(() => { setUpdateRestartHint('failed'); });",
+      "count": 1,
+      "reason": "the handler sets a hint the user reads: quit and reopen by hand. Flagged because the binding is unused, not because the failure is hidden."
+    },
+    {
+      "file": "src/viewer/ViewerApp.tsx",
+      "kind": "silent-rejection",
+      "code": ".catch(() => { setUpdateCheckNotice('failed'); });",
+      "count": 1,
+      "reason": "the handler sets the update-check notice to failed, which the topbar renders. Flagged for the unused binding, not for hiding anything."
+    },
+    {
+      "file": "src/viewer/ViewerApp.tsx",
+      "kind": "silent-catch",
+      "code": "} catch { /* localStorage unavailable */ }",
+      "count": 1,
+      "reason": "persisting the auto-open-external-links choice. The choice holds for this session either way."
+    },
+    {
+      "file": "src/viewer/ViewerApp.tsx",
+      "kind": "silent-rejection",
+      "code": ".catch(() => { if (!cancelled) setLinkAnnotations([]); });",
+      "count": 1,
+      "reason": "link annotations for the current page. No links is a normal document state and the page still renders; the bridge reports the command failure."
+    },
+    {
+      "file": "src/viewer/ViewerApp.tsx",
+      "kind": "silent-rejection",
+      "code": "void invoke<string[]>('get_page_labels').then(labels => setPageLabels(labels)).catch(() => {});",
+      "count": 1,
+      "reason": "page labels, optional in every PDF. Without them the app numbers pages; the bridge has already reported the command failure."
+    },
+    {
+      "file": "src/viewer/ViewerApp.tsx",
+      "kind": "silent-rejection",
+      "code": "void invoke<AttachmentInfo[]>('list_attachments').then(list => setAttachments(list)).catch(() => {});",
+      "count": 1,
+      "reason": "the attachment list. Most documents have none, so an empty list is indistinguishable from the normal case; the bridge reports the failure."
+    },
+    {
+      "file": "src/viewer/ViewerApp.tsx",
+      "kind": "silent-rejection",
+      "code": "}).catch(() => {});",
+      "count": 1,
+      "reason": "the optional-content layer list. Most documents have no layers; the bridge reports the command failure."
+    },
+    {
+      "file": "src/viewer/ViewerApp.tsx",
+      "kind": "silent-rejection",
+      "code": "const pending = await invoke<string | null>('take_pending_open').catch(() => null);",
+      "count": 1,
+      "reason": "asking the backend whether a file was double-clicked to launch the app. Null means it was not, which is the usual case."
+    },
+    {
+      "file": "tests/e2e/smoke-shell.spec.ts",
+      "kind": "skipped-test",
+      "code": "test.skip(\"item3: Alle tools opens without obscuring the document (manual/native)\", () => {});",
+      "count": 1,
+      "reason": "manual/native check: the All-tools overlay is a Tauri window behaviour the browser harness cannot reproduce. Kept as a named placeholder so the release checklist item has an address; the register does not count it as proof of anything."
+    },
+    {
+      "file": "tests/e2e/smoke-shell.spec.ts",
+      "kind": "skipped-test",
+      "code": "test.skip(\"item4: Bewerken tab opens edit UI (manual/native)\", () => {});",
+      "count": 1,
+      "reason": "manual/native check: the Edit tab needs the native engine's text runs, which the browser harness does not have. Named placeholder, no proof value."
+    },
+    {
+      "file": "tests/e2e/smoke-shell.spec.ts",
+      "kind": "skipped-test",
+      "code": "test.skip(\"item5: Cmd+F focuses search (handler in useKeyboardShortcuts; manual/native)\", () => {});",
+      "count": 1,
+      "reason": "manual/native check: Cmd+F focus depends on the Tauri window's key handling. Named placeholder, no proof value."
+    },
+    {
+      "file": "tests/e2e/visual-e2e-beta-blockers.spec.ts",
+      "kind": "skipped-test",
+      "code": "test.skip(true, 'v3-arch-gap: nav-next/prev/go-to-page testids live in LeftNavRail which is not rendered in the V3 shell — rewrite needed');",
+      "count": 1,
+      "reason": "the ids this test drives live in LeftNavRail, which the v3 shell does not render. The test targets a shell that is gone; it goes with the rewrite, not before."
+    },
+    {
+      "file": "tests/e2e/visual-e2e-beta-blockers.spec.ts",
+      "kind": "skipped-test",
+      "code": "test.skip(true, 'v3-arch-gap: toolbar-zoom-display and zoom-in/out buttons live in ModeToolbar which is not rendered in the V3 shell — rewrite needed');",
+      "count": 1,
+      "reason": "drives ModeToolbar ids the v3 shell does not render. Same rewrite."
+    },
+    {
+      "file": "tests/e2e/visual-e2e-beta-blockers.spec.ts",
+      "kind": "skipped-test",
+      "code": "test.skip(true, 'v3-arch-gap: search button/panel testids live in ModeToolbar+SearchPanel which are not rendered in the V3 shell — rewrite needed');",
+      "count": 1,
+      "reason": "drives ModeToolbar and SearchPanel ids the v3 shell does not render; the v3 shell has its own search popover. Same rewrite."
+    },
+    {
+      "file": "tests/e2e/visual-e2e-beta-blockers.spec.ts",
+      "kind": "skipped-test",
+      "code": "test.skip(true, 'runtime gap: BrowserTestRuntimeAdapter uses MockPdfEngine which returns no real text spans — text selection requires the native Tauri engine');",
+      "count": 1,
+      "reason": "text selection needs real text spans and the browser harness runs MockPdfEngine. Covered on the native side by the smoke and by cargo tests; a browser test cannot reach it."
+    },
+    {
+      "file": "tests/e2e/visual-e2e-beta-blockers.spec.ts",
+      "kind": "skipped-test",
+      "code": "test.skip(true, 'runtime gap: browser-test harness exposes no native addHighlight command.');",
+      "count": 1,
+      "reason": "annotation creation is a native command the browser harness does not expose. The path is covered by cargo tests on the engine side."
+    },
+    {
+      "file": "tests/e2e/visual-e2e-beta-blockers.spec.ts",
+      "kind": "skipped-test",
+      "code": "test.skip(true, 'runtime gap: browser-test harness exposes no native addStickyNote command.');",
+      "count": 1,
+      "reason": "annotation creation is a native command the browser harness does not expose. Same as the highlight case."
+    },
+    {
+      "file": "tests/e2e/visual-e2e-beta-blockers.spec.ts",
+      "kind": "skipped-test",
+      "code": "test.skip(true, 'runtime gap: export after annotation is blocked until native annotation creation is available.');",
+      "count": 1,
+      "reason": "depends on native annotation creation, which the browser harness cannot do. Blocked behind the two cases above."
+    },
+    {
+      "file": "tests/e2e/visual-e2e-beta-blockers.spec.ts",
+      "kind": "skipped-test",
+      "code": "test.skip(true, 'v3-arch-gap: doc-info-form-type lives in RightContextPanel (not rendered in V3); XFA banner text is Dutch hardcoded — rewrite needed');",
+      "count": 1,
+      "reason": "drives RightContextPanel, which nothing renders (recorded as a dead surface in docs/ui_register_exceptions.json), and asserts Dutch banner text. Goes with that panel."
+    },
+    {
+      "file": "tests/e2e/visual-e2e-beta-blockers.spec.ts",
+      "kind": "skipped-test",
+      "code": "test.skip(true, 'v3-arch-gap: XFA banner text is Dutch hardcoded; export-btn is in share dropdown (not directly accessible) — rewrite needed');",
+      "count": 1,
+      "reason": "same dead RightContextPanel surface plus a share-dropdown step the test never opens. Goes with the rewrite."
+    },
+    {
+      "file": "tests/e2e/visual-e2e-beta-blockers.spec.ts",
+      "kind": "skipped-test",
+      "code": "test.skip(true, 'v3-arch-gap: pdfa-panel/validate-pdfa-btn live in RightContextPanel which is not rendered in the V3 shell — rewrite needed');",
+      "count": 1,
+      "reason": "drives RightContextPanel ids that nothing renders. Goes with that panel."
+    },
+    {
+      "file": "tests/e2e/visual-e2e-beta-blockers.spec.ts",
+      "kind": "skipped-test",
+      "code": "test.skip(true, 'v3-arch-gap: convert-pdfa-btn/pdfa-status live in RightContextPanel which is not rendered in the V3 shell — rewrite needed');",
+      "count": 1,
+      "reason": "drives RightContextPanel ids that nothing renders. Goes with that panel."
+    },
+    {
+      "file": "tests/e2e/visual-e2e-beta-blockers.spec.ts",
+      "kind": "skipped-test",
+      "code": "test.skip(true, 'v3-arch-gap: export-btn is inside the share dropdown (requires opening it first) — rewrite needed');",
+      "count": 1,
+      "reason": "the export button moved into the share dropdown and the test still clicks it directly. This is the skip that made button:export-btn read as wired; it is now recorded as UNTESTED in docs/ui_register_exceptions.json until the rewrite lands."
+    },
+    {
+      "file": "tests/e2e/visual-e2e-beta-blockers.spec.ts",
+      "kind": "skipped-test",
+      "code": "test.skip(true, 'v3-arch-gap: Organize is not exposed as a mode tab in browser-test; ModeSwitcher BROWSER_TEST_TABS only includes Read/Edit/Convert/Sign — rewrite needed');",
+      "count": 1,
+      "reason": "browser-test exposes only Read/Edit/Convert/Sign as mode tabs, so the test cannot reach Organize. The disabled-outside-Tauri rule it checks is covered by the runtime-tool-wiring unit tests."
+    },
+    {
+      "file": "tests/e2e/visual-e2e-beta-blockers.spec.ts",
+      "kind": "skipped-test",
+      "code": "test.skip(true, 'v3-arch-gap: Review is not exposed as a mode tab in browser-test; ModeSwitcher BROWSER_TEST_TABS only includes Read/Edit/Convert/Sign — rewrite needed');",
+      "count": 1,
+      "reason": "browser-test exposes only Read/Edit/Convert/Sign as mode tabs, so the test cannot reach Review. Same coverage note as the Organize case."
+    },
+    {
+      "file": "tests/e2e/visual-e2e-beta-blockers.spec.ts",
+      "kind": "skipped-test",
+      "code": "test.skip(true, 'v3-arch-gap: toolbar.ocrScan button lives in ModeToolbar which is not rendered in the V3 shell — rewrite needed');",
+      "count": 1,
+      "reason": "drives a ModeToolbar id the v3 shell does not render. Same rewrite."
+    },
+    {
+      "file": "tests/e2e/visual-e2e-beta-blockers.spec.ts",
+      "kind": "skipped-test",
+      "code": "test.skip(true, 'v3-arch-gap: Protect is not exposed as a mode tab in browser-test; ModeSwitcher BROWSER_TEST_TABS only includes Read/Edit/Convert/Sign — rewrite needed');",
+      "count": 1,
+      "reason": "browser-test exposes only Read/Edit/Convert/Sign as mode tabs, so the test cannot reach Protect. Same coverage note as the Organize case."
+    }
+  ]
+}

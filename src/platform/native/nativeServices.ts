@@ -86,7 +86,7 @@ function webCapabilities(): NativeCapabilities {
 export async function detectNativeCapabilities(): Promise<NativeCapabilities> {
   if (isTauri) {
     try {
-      const { invoke } = await import('@tauri-apps/api/core');
+      const { invokeCommand: invoke } = await import('../../lib/commandBridge');
       return await invoke<NativeCapabilities>('get_native_capabilities');
     } catch (error) {
       if (import.meta.env.DEV) {
@@ -112,7 +112,7 @@ export async function speakText(text: string, options: SpeakTextOptions = {}): P
   // and does fire onboundary events.
   if (isTauri && !options.onBoundary) {
     try {
-      const { invoke } = await import('@tauri-apps/api/core');
+      const { invokeCommand: invoke } = await import('../../lib/commandBridge');
       return await invoke<SpeakTextResult>('native_tts_speak', {
         payload: { text: cleaned, rate: options.rate ?? 1, voice: options.voice ?? null, language },
       });
@@ -181,7 +181,7 @@ function chooseBrowserVoice(language: string, voices: readonly SpeechSynthesisVo
 export async function pauseSpeech(): Promise<void> {
   if (isTauri) {
     try {
-      const { invoke } = await import('@tauri-apps/api/core');
+      const { invokeCommand: invoke } = await import('../../lib/commandBridge');
       await invoke('native_tts_pause');
       return;
     } catch {
@@ -196,7 +196,7 @@ export async function pauseSpeech(): Promise<void> {
 export async function resumeSpeech(): Promise<void> {
   if (isTauri) {
     try {
-      const { invoke } = await import('@tauri-apps/api/core');
+      const { invokeCommand: invoke } = await import('../../lib/commandBridge');
       await invoke('native_tts_resume');
       return;
     } catch {
@@ -211,7 +211,7 @@ export async function resumeSpeech(): Promise<void> {
 export async function stopSpeech(): Promise<void> {
   if (isTauri) {
     try {
-      const { invoke } = await import('@tauri-apps/api/core');
+      const { invokeCommand: invoke } = await import('../../lib/commandBridge');
       await invoke('native_tts_stop');
     } catch {
       // The web fallback below is still useful when desktop TTS was not active.

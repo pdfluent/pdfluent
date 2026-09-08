@@ -15,16 +15,25 @@
 #
 # This needs the network, so it is a release step (RELEASE.md §5), not a CI step.
 # CI only proves the dossier agrees with the record; only this script proves the
-# record agrees with the Store. When it cannot reach the Store it prints
-# SKIPPED (not a pass) on stderr and exits 0 — a skipped check must never read
-# as a passed one, and must never fail a release on someone's flaky wifi.
+# record agrees with the Store.
+#
+# EXIT CODES
+#   0  the live listing matches store/live-listing.json
+#   1  it does not — the record is stale, refresh it with --write
+#   3  the check could not run (offline, no curl, no node, HTTP error)
+#
+# 3 and not 0: it printed "SKIPPED (not a pass)" and exited 0, so a caller that
+# checked the exit code read a check that never ran as one that passed. The
+# separate code keeps both facts — this did not fail, and it did not pass — so a
+# release step can decide to continue on someone's flaky wifi while still
+# knowing that nothing was verified.
 set -uo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 RECORD="${ROOT}/store/live-listing.json"
 WRITE=0
 [ "${1:-}" = "--write" ] && WRITE=1
 
-skip() { echo "SKIPPED (not a pass): $*" >&2; exit 0; }
+skip() { echo "SKIPPED (not a pass): $*" >&2; exit 3; }
 [ -r "$RECORD" ] || skip "no ${RECORD} to compare against"
 command -v curl >/dev/null 2>&1 || skip "curl not installed"
 command -v node >/dev/null 2>&1 || skip "node not installed"
@@ -69,7 +78,7 @@ node -e '
   const missing = Object.entries(live).filter(([, v]) => v === null).map(([k]) => k);
   if (missing.length === Object.keys(live).length) {
     console.error("SKIPPED (not a pass): no listing fields could be read");
-    process.exit(0);
+    process.exit(3);
   }
 
   let drift = 0;

@@ -27,7 +27,7 @@
 // ---------------------------------------------------------------------------
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { invoke } from '@tauri-apps/api/core';
+import { invokeCommand as invoke } from '../../lib/commandBridge';
 import {
   buildReport,
   getEnvironment,
@@ -41,6 +41,11 @@ import {
   onCrash,
   type CapturedCrash,
 } from '../../lib/telemetry/crashChannel';
+import {
+  readSessionReliability,
+  withReliabilityNote,
+  type SessionReliability,
+} from '../../lib/telemetry/sessions';
 import {
   loadAppSettings,
   updateAppSetting,
@@ -60,6 +65,10 @@ export function CrashReporter() {
 
   // Environment is fetched once; held in a ref so handlers see the latest.
   const envRef = useRef<ReportEnvironment | null>(null);
+  // Local crash-free count. Read once at mount, never sent on its own: it goes
+  // into the message the user reads in the dialog, so it travels under the same
+  // consent as the crash text itself.
+  const sessionsRef = useRef<SessionReliability | null>(null);
   // Guard so a crash storm can't stack dozens of dialogs.
   const busyRef = useRef(false);
 
@@ -68,7 +77,11 @@ export function CrashReporter() {
     const env = envRef.current;
     if (!env) return;
     const payload = buildReport(
-      { type: 'crash', message: crash.message, stack: crash.stack },
+      {
+        type: 'crash',
+        message: withReliabilityNote(crash.message, sessionsRef.current),
+        stack: crash.stack,
+      },
       env,
     );
     // Fire and forget; a failed auto-send must stay silent.
@@ -92,7 +105,11 @@ export function CrashReporter() {
       setActive(crash);
       setPreview(
         buildReport(
-          { type: 'crash', message: crash.message, stack: crash.stack },
+          {
+            type: 'crash',
+            message: withReliabilityNote(crash.message, sessionsRef.current),
+            stack: crash.stack,
+          },
           env,
         ),
       );
@@ -106,6 +123,10 @@ export function CrashReporter() {
 
     void getEnvironment().then((env) => {
       if (!cancelled) envRef.current = env;
+    });
+
+    void readSessionReliability().then((stats) => {
+      if (!cancelled) sessionsRef.current = stats;
     });
 
     const prevOnError = window.onerror;
@@ -166,9 +187,10 @@ export function CrashReporter() {
         updateAppSetting('crashReportAutoSend', true);
       }
 
+      const base = withReliabilityNote(active.message, sessionsRef.current);
       const message = note.trim()
-        ? `${active.message}\n\n--- user note ---\n${note.trim()}`
-        : active.message;
+        ? `${base}\n\n--- user note ---\n${note.trim()}`
+        : base;
       const payload = buildReport(
         { type: 'crash', message, stack: active.stack },
         env,

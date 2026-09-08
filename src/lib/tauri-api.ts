@@ -4,7 +4,7 @@
 // including for commercial purposes. Redistribution, or extraction or reuse
 // of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
-import { invoke } from "@tauri-apps/api/core";
+import { invokeCommand as invoke } from "./commandBridge";
 
 // ---------------------------------------------------------------------------
 // Types

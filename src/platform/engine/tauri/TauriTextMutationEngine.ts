@@ -28,7 +28,7 @@
  *   real PDF bytes.
  */
 
-import { invoke } from '@tauri-apps/api/core';
+import { invokeCommand as invoke } from '../../../lib/commandBridge';
 import type { AsyncEngineResult } from '../../../core/engine/types';
 import type {
   TextMutationEngineWithFormatting,

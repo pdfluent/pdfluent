@@ -251,7 +251,9 @@ describe('final stability — messaging system coverage', () => {
 
   it('getBackendRejectionMessage falls back to internal-error for unknown code', () => {
     const msg = getBackendRejectionMessage('totally-unknown-code-xyz');
-    expect(msg.tooltip).toContain('fout'); // Dutch: error
+    expect(msg.tooltip).toBe(getBackendRejectionMessage('internal-error').tooltip);
+    // ...and still says what the engine actually reported.
+    expect(msg.explanation).toContain('totally-unknown-code-xyz');
   });
 
   it('getOverflowRiskMessage is consistent for overflow 0–100', () => {

@@ -837,6 +837,15 @@ impl OpenDocument {
         }
     }
 
+    /// Page count as the editor's open path sees it.
+    ///
+    /// Named here rather than reached through `pdf_doc` so the golden
+    /// round-trip gate (src-tauri/tests/golden_roundtrip.rs) does not have to
+    /// depend on the SDK crate to count pages.
+    pub fn page_count(&self) -> usize {
+        self.pdf_doc.page_count()
+    }
+
     /// Cheap clone of the render source for lock-free rendering on another thread.
     pub fn render_snapshot(&self) -> Arc<PdfDocument> {
         Arc::clone(&self.render_doc)

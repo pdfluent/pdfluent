@@ -21,8 +21,10 @@
 #   2. Repackage PDFluent.app into a clean drag-to-Applications .dmg with
 #      hdiutil. (Tauri's own bundle_dmg.sh styles the DMG window with
 #      AppleScript and fails on headless / CI machines; hdiutil does not.)
-#   3. Upload the .dmg to R2 at  <version>/PDFluent_<version>_<arch>.dmg
-#   4. Verify the public download URL returns HTTP 200.
+#   3. Stop, and print the two commands that judge and then publish it.
+#
+# It does NOT upload. Publishing runs through scripts/publish-release.sh, which
+# refuses without a PASS report from the release quality suite.
 #
 # Requirements:
 #   - macOS + Xcode Command Line Tools, Rust, Node, npm.
@@ -82,7 +84,7 @@ echo
 # (APPLE_SIGNING_IDENTITY + APPLE_ID/APPLE_PASSWORD/APPLE_TEAM_ID or
 # APPLE_API_KEY/APPLE_API_ISSUER/APPLE_API_KEY_PATH) — docs/RELEASE_RUNBOOK_GA.md.
 if [ -n "${TAURI_SIGNING_PRIVATE_KEY:-}" ]; then UPDATER=true; else UPDATER=false; fi
-echo "== 1/4  tauri build (universal .app; updater artifacts: ${UPDATER}) =="
+echo "== 1/3  tauri build (universal .app; updater artifacts: ${UPDATER}) =="
 npm run tauri build -- --target universal-apple-darwin --bundles app \
   --config "{\"bundle\":{\"createUpdaterArtifacts\":${UPDATER}}}"
 
@@ -110,7 +112,7 @@ if [ "${UPDATER}" = "true" ]; then
 fi
 
 # ── 2. package a premium, branded DMG (background + arrow + positioned icons) ─
-echo "== 2/4  package DMG =="
+echo "== 2/3  package DMG =="
 OUT="${REPO_ROOT}/dist-release/${DMG_NAME}"
 BG="${REPO_ROOT}/scripts/dmg/bg.png"   # bg@2x.png alongside → Retina
 mkdir -p "$(dirname "${OUT}")"; rm -f "${OUT}"
@@ -137,25 +139,15 @@ rm -rf "${STAGE}"
 SIZE="$(du -h "${OUT}" | cut -f1 | tr -d ' ')"
 echo "   dmg: ${OUT} (${SIZE})"
 
-# ── 3. upload to R2 + update the public release manifest ─────────────────────
-echo "== 3/4  upload to R2 + update manifest =="
-# publish-artifact.mjs uploads <version>/<file> AND merges this platform into
-# releases/manifest.json so the website auto-points at it. Platform is inferred
-# from the filename (…_aarch64.dmg → darwin-aarch64).
-WRANGLER="${WRANGLER}" CF_R2_BUCKET_NAME="${BUCKET}" \
-  node "${REPO_ROOT}/scripts/publish-artifact.mjs" --version "${VERSION}" --file "${OUT}"
-
-# ── 4. verify the public URL ─────────────────────────────────────────────────
-echo "== 4/4  verify =="
-sleep 3
-CODE="$(curl -sS -o /dev/null -w '%{http_code}' -I "${PUBLIC_BASE}/${KEY}" || echo 000)"
-if [ "${CODE}" = "200" ]; then
-  echo "✓ Live: ${PUBLIC_BASE}/${KEY} (HTTP 200, ${SIZE})"
-else
-  echo "✘ ${PUBLIC_BASE}/${KEY} returned HTTP ${CODE} (R2 may still be propagating; re-check)"
-  exit 1
-fi
-
+# ── 3. Stop. Publishing is a separate, guarded step. ─────────────────────────
+#
+# The DMG used to go to R2 from here, which put the bytes in front of users
+# before anything had judged them. The release quality suite runs against this
+# artefact, and scripts/publish-release.sh refuses to upload without its PASS
+# report.
 echo
-echo "Done. If this is a new version, make sure the website download page"
-echo "(src/pages/DownloadPage.tsx → EDITOR_VERSION) matches ${VERSION}, then redeploy."
+echo "✓ macOS v${VERSION} built and packaged. NOT published."
+echo "   dmg: ${OUT} (${SIZE})"
+echo "NEXT:"
+echo "  scripts/quality/release_suite.sh --platform macos --artefact ${OUT} --commit $(git -C "${REPO_ROOT}" rev-parse HEAD) --machine dev-macbook-m1pro"
+echo "  scripts/publish-release.sh ${VERSION} macos ${OUT}"

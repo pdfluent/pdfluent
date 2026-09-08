@@ -30,7 +30,7 @@ const isTauri = isTauriRuntime();
 export async function rememberFileAccess(path: string): Promise<void> {
   if (!isTauri) return;
   try {
-    const { invoke } = await import('@tauri-apps/api/core');
+    const { invokeCommand: invoke } = await import('../../lib/commandBridge');
     await invoke('remember_file_access', { path });
   } catch { /* keep going without a bookmark */ }
 }
@@ -43,7 +43,7 @@ export async function rememberFileAccess(path: string): Promise<void> {
 export async function prepareRecentOpen(path: string): Promise<boolean> {
   if (!isTauri) return true;
   try {
-    const { invoke } = await import('@tauri-apps/api/core');
+    const { invokeCommand: invoke } = await import('../../lib/commandBridge');
     return await invoke<boolean>('prepare_recent_open', { path });
   } catch {
     return false;
@@ -57,7 +57,7 @@ export async function prepareRecentOpen(path: string): Promise<boolean> {
 export async function releaseFileAccess(path: string): Promise<void> {
   if (!isTauri) return;
   try {
-    const { invoke } = await import('@tauri-apps/api/core');
+    const { invokeCommand: invoke } = await import('../../lib/commandBridge');
     await invoke('release_file_access', { path });
   } catch { /* nothing was holding access */ }
 }

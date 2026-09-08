@@ -67,6 +67,9 @@ store/scripts/check-live-listing.sh
 ## What the guard cannot see
 
 `check-live-listing.sh` needs the network, so it is a release step, not a CI step.
+It exits 0 on a match, 1 on drift and 3 when it could not run at all — check the
+code, not just the output: a check that never ran used to exit 0 like one that
+passed.
 CI only checks that the dossier agrees with `live-listing.json`; if nobody ever
 refreshes that file, CI is consistent with a stale record. The refresh is step 4
 above for that reason, and the script prints

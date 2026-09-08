@@ -257,10 +257,10 @@ describe('backend rejection — font-encoding-unsafe', () => {
     expect(getBackendRejectionMessage('font-encoding-unsafe').tooltip.length).toBeGreaterThan(0);
   });
 
-  it('explanation mentions lettertype or codering', () => {
+  it('explanation names the font or its encoding', () => {
     const msg = getBackendRejectionMessage('font-encoding-unsafe');
     const lower = msg.explanation.toLowerCase();
-    expect(lower.includes('lettertype') || lower.includes('codering')).toBe(true);
+    expect(lower.includes('font') || lower.includes('encoding')).toBe(true);
   });
 
   it('is not actionable (user cannot change font encoding)', () => {
@@ -277,10 +277,10 @@ describe('backend rejection — glyph-risk-detected', () => {
     expect(getBackendRejectionMessage('glyph-risk-detected').actionable).toBe(true);
   });
 
-  it('explanation mentions tekens or lettertype', () => {
+  it('explanation names the characters or the font', () => {
     const msg = getBackendRejectionMessage('glyph-risk-detected');
     const lower = msg.explanation.toLowerCase();
-    expect(lower.includes('tekens') || lower.includes('lettertype')).toBe(true);
+    expect(lower.includes('characters') || lower.includes('font')).toBe(true);
   });
 });
 

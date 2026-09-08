@@ -108,16 +108,22 @@ fn stamped_page_count(pdf_bytes: &[u8]) -> (usize, usize) {
 
 /// The same count on a real document, for a before/after measurement that a
 /// three-page fixture cannot give. Off by default: the corpus is not in this
-/// repository. Point `PDFLUENT_PDFA_MEASURE_PDF` at a PDF to run it.
+/// repository. Point `PDFLUENT_PDFA_MEASURE_PDF` at a PDF and run
+/// `cargo test -- --ignored pdfa_export_stamps_no_page_of_a_real_document`.
+///
+/// `#[ignore]` rather than an early `return`: this used to print
+/// "SKIPPED (not a pass)" to a stderr `cargo test` swallows for a passing test
+/// and then report `ok`, so a measurement that never ran was indistinguishable
+/// in the log from one that passed. Ignored is a state the summary prints, and
+/// asking for it without the variable now fails instead of quietly measuring
+/// nothing.
 #[test]
+#[ignore = "needs PDFLUENT_PDFA_MEASURE_PDF: the corpus is not in this repository"]
 fn pdfa_export_stamps_no_page_of_a_real_document() {
-    let Ok(path) = std::env::var("PDFLUENT_PDFA_MEASURE_PDF") else {
-        eprintln!(
-            "SKIPPED (not a pass): set PDFLUENT_PDFA_MEASURE_PDF to a PDF path \
-             to measure the export on a real document"
-        );
-        return;
-    };
+    let path = std::env::var("PDFLUENT_PDFA_MEASURE_PDF").expect(
+        "SKIPPED (not a pass): set PDFLUENT_PDFA_MEASURE_PDF to a PDF path \
+         to measure the export on a real document",
+    );
 
     let mut doc = OpenDocument::open(&path).expect("open the document to measure");
     let out = std::env::temp_dir().join("pdfluent_pdfa_export_measure.pdf");

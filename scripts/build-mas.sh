@@ -13,14 +13,19 @@
 # Distribution + an embedded provisioning profile, and delivered as a signed
 # .pkg via altool.
 #
-# ⚠️  DRAFT — NOT yet run end-to-end. It is blocked on the owner-created assets
-#     below and must be validated once they exist (task M2 → M3):
-#       1. "Apple Distribution: Innovation Trigger B.V. (58Z6SVW7CN)" cert
-#       2. "3rd Party Mac Developer Installer: Innovation Trigger B.V. (58Z6SVW7CN)" cert
-#       3. App ID com.pdfluent.app registered
-#       4. A "Mac App Store" provisioning profile, saved to
-#          src-tauri/PDFluent_MAS.provisionprofile  (gitignored)
-#       5. The app record created in App Store Connect
+# Build numbers. App Store Connect rejects an upload whose CFBundleVersion is
+# not strictly greater than every build already uploaded for the same marketing
+# version, and it never forgets a number — not even from a build that was
+# rejected. So the counter cannot live in a shell default: store/mas/build-number
+# is committed, holds the last number this script handed out, and the script
+# refuses any number that does not exceed it. The number is written back BEFORE
+# the build, not after: burning a number on a failed build costs nothing, while
+# reusing one costs a round trip through App Store Connect.
+#
+#   MAS_DRY_RUN=1 bash scripts/build-mas.sh   resolve + validate the number, print
+#                                             it, change nothing, build nothing
+#   MAS_BUILD_NUMBER=<n>                      use n instead of "last + 1"
+#   MAS_BUILD_NUMBER_FILE=<path>              point the counter elsewhere (tests)
 #
 # Reuses the notary API key (keychain profile is Developer-ID-only; altool needs
 # the raw key), so pass the key id + issuer + .p8 path via env:
@@ -38,8 +43,44 @@ PROFILE="src-tauri/PDFluent_MAS.provisionprofile"
 INHERIT_ENT="${REPO_ROOT}/src-tauri/Entitlements.appstore.inherit.plist"
 
 CONF="src-tauri/tauri.conf.json"
-VERSION="$(node -p "require('./${CONF}').version")"
+MAS_CONF="src-tauri/tauri.mas.conf.json"
+# The overlay carries the marketing version that is actually shipped to the
+# store (CFBundleShortVersionString); tauri.conf.json still names the direct-
+# download line. Naming the pkg after the overlay keeps the file on disk and the
+# version in App Store Connect the same string.
+VERSION="$(node -p "require('./${MAS_CONF}').version || require('./${CONF}').version")"
 PRODUCT="$(node -p "require('./${CONF}').productName")"
+
+# ── 0. build number ──────────────────────────────────────────────────────────
+BUILD_NUMBER_FILE="${MAS_BUILD_NUMBER_FILE:-${REPO_ROOT}/store/mas/build-number}"
+[ -f "${BUILD_NUMBER_FILE}" ] \
+  || { echo "✘ No build-number counter at ${BUILD_NUMBER_FILE}"; exit 1; }
+RECORDED="$(tr -d '[:space:]' < "${BUILD_NUMBER_FILE}")"
+case "${RECORDED}" in
+  ''|*[!0-9]*) echo "✘ Counter ${BUILD_NUMBER_FILE} is not a whole number: '${RECORDED}'"; exit 1 ;;
+esac
+# An empty MAS_BUILD_NUMBER is a mistake, not a request for the default: a
+# caller that set the variable and produced nothing should hear about it.
+if [ -n "${MAS_BUILD_NUMBER+set}" ]; then
+  BUILD_NUMBER="${MAS_BUILD_NUMBER}"
+else
+  BUILD_NUMBER="$((RECORDED + 1))"
+fi
+case "${BUILD_NUMBER}" in
+  ''|*[!0-9]*) echo "✘ MAS_BUILD_NUMBER is not a whole number: '${BUILD_NUMBER}'"; exit 1 ;;
+esac
+if [ "${BUILD_NUMBER}" -le "${RECORDED}" ]; then
+  echo "✘ Build number ${BUILD_NUMBER} does not exceed the last one handed out (${RECORDED})."
+  echo "  App Store Connect refuses a CFBundleVersion it has already seen for version ${VERSION}."
+  exit 1
+fi
+if [ -n "${MAS_DRY_RUN:-}" ]; then
+  echo "CFBundleVersion=${BUILD_NUMBER}"
+  echo "   dry run — counter unchanged, nothing built"
+  exit 0
+fi
+printf '%s\n' "${BUILD_NUMBER}" > "${BUILD_NUMBER_FILE}"
+echo "== 0/4  build number ${RECORDED} -> ${BUILD_NUMBER} (recorded in ${BUILD_NUMBER_FILE}) =="
 
 # ── preflight ────────────────────────────────────────────────────────────────
 security find-identity -v | grep -q "Apple Distribution: Innovation Trigger" \
@@ -78,10 +119,10 @@ while IFS= read -r bin; do
 done < <(find "${APP}/Contents" -type f \( -perm -u+x -o -name '*.dylib' -o -name '*.so' \))
 # App Store requires purely-numeric CFBundle versions (no "-beta.NN"). The
 # marketing version (CFBundleShortVersionString) is 1.0.0 from tauri.mas.conf.json;
-# CFBundleVersion is a build number that must strictly increase across uploads —
-# override per upload with MAS_BUILD_NUMBER. Set BEFORE the re-seal so the
-# signature covers the edited Info.plist.
-/usr/libexec/PlistBuddy -c "Set :CFBundleVersion ${MAS_BUILD_NUMBER:-1}" "${APP}/Contents/Info.plist"
+# CFBundleVersion is the strictly increasing build number resolved in step 0 from
+# store/mas/build-number. Set BEFORE the re-seal so the signature covers the
+# edited Info.plist.
+/usr/libexec/PlistBuddy -c "Set :CFBundleVersion ${BUILD_NUMBER}" "${APP}/Contents/Info.plist"
 echo "   CFBundleShortVersionString=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "${APP}/Contents/Info.plist"), CFBundleVersion=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "${APP}/Contents/Info.plist")"
 # Re-seal the outer app with the MAS entitlements (Tauri already signed it once
 # during the build; re-seal so the outer signature covers the re-signed helpers).
@@ -96,6 +137,13 @@ mkdir -p "$(dirname "${OUT}")"; rm -f "${OUT}"
 xcrun productbuild --sign "${PKG_IDENTITY}" \
   --component "${APP}" /Applications "${OUT}"
 echo "   pkg: ${OUT}"
+
+# ── 3.5 read the signature back ──────────────────────────────────────────────
+# Signing three times with three plists gives three chances to sign with the
+# wrong one, and every wrong result still installs and launches. Read what is in
+# the signature and compare it with what we meant to sign.
+echo "== 3.5  verify entitlements =="
+node "${REPO_ROOT}/scripts/mas-entitlements.mjs" --pkg "${OUT}"
 
 # ── 4. upload to App Store Connect (optional) ────────────────────────────────
 # Upload only when the App Store Connect API key is provided; otherwise stop at

@@ -39,11 +39,17 @@
 //                     a repo-local binary, e.g. .../node_modules/.bin/wrangler)
 //   CF_R2_BUCKET_NAME R2 bucket (default: pdfluent-releases)
 //   CF_RELEASES_BASE  public base (default: https://pdfluent.com/releases)
+//
+// Publishing without a PASS quality/reports/<version>-<platform>.json is
+// refused; see docs/RELEASE_RUNBOOK_GA.md section 7. The check runs BEFORE the
+// first upload: a refusal after the bytes are already in the bucket is not a
+// gate, it is a log line.
 
 import { readFileSync, writeFileSync, statSync, existsSync, readdirSync, mkdtempSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
+import { requireQualityReport, overrideOr } from './quality/require-report.mjs';
 
 const BUCKET = process.env.CF_R2_BUCKET_NAME || 'pdfluent-releases';
 const RELEASES_BASE = (process.env.CF_RELEASES_BASE || 'https://pdfluent.com/releases').replace(/\/$/, '');
@@ -178,11 +184,15 @@ function platformFromFilename(name) {
   return null;
 }
 
-// ── main ──────────────────────────────────────────────────────────────────
+// ── main ───────────────────────────────────────────────────────────
 const version = args.version;
 if (!version || version === true) die('--version is required');
+const dryRun = args['dry-run'] === true;
+const reportsDir = (args['reports-dir'] && args['reports-dir'] !== true) ? String(args['reports-dir']) : 'quality/reports';
 
-let manifest = fetchManifest();
+// Collect first, judge second, upload third. Building the list has no side
+// effects, so a refusal here costs nothing and an accepted run uploads bytes
+// that a report already covers.
 const toRegister = []; // {platform, filename, size, file?}
 
 if (args['register-dir']) {
@@ -193,7 +203,7 @@ if (args['register-dir']) {
     for (const f of readdirSync(dir)) {
       const plat = platformFromFilename(f);
       if (!plat) continue; // skip .sig / .tar.gz etc — only the primary download
-      toRegister.push({ platform: plat, filename: f, size: statSync(path.join(dir, f)).size });
+      toRegister.push({ platform: plat, filename: f, size: statSync(path.join(dir, f)).size, file: path.join(dir, f) });
     }
   }
   if (!toRegister.length) die(`--register-dir ${base}: no .dmg/.AppImage/.msi found`);
@@ -203,15 +213,52 @@ if (args['register-dir']) {
   const filename = path.basename(file);
   const platform = args.platform && args.platform !== true ? String(args.platform) : platformFromFilename(filename);
   if (!platform || !PLATFORM_META[platform]) die(`unknown --platform (got "${platform}"); valid: ${Object.keys(PLATFORM_META).join(', ')}`);
-  const contentType = (args['content-type'] && args['content-type'] !== true) ? String(args['content-type']) : PLATFORM_META[platform].contentType;
-  r2Put(`${version}/${filename}`, file, contentType);
-  toRegister.push({ platform, filename, size: statSync(file).size });
+  toRegister.push({ platform, filename, size: statSync(file).size, file, upload: true });
 } else if (args.platform && args.filename && args.size) {
+  // Registering a name with no file to hash: there is nothing here for a report
+  // to be about, so this form needs the override.
   toRegister.push({ platform: String(args.platform), filename: String(args.filename), size: Number(args.size) });
 } else {
   die('provide one of: --file <path> | --register-dir <dir> | (--platform --filename --size)');
 }
 
+for (const r of toRegister) {
+  // Linux is out of scope for the gated desktop release; it is not judged and
+  // not refused.
+  if (r.platform === 'linux-x86_64') continue;
+  try {
+    overrideOr(
+      () => {
+        if (!r.file) {
+          die(`registering ${r.filename} without a file to hash cannot be covered by a quality report.\n` +
+              `  Publish the file itself (--file), or set PDFLUENT_PUBLISH_WITHOUT_REPORT=<ticket number>.`);
+        }
+        return requireQualityReport({ version, platform: r.platform, file: r.file, reportsDir });
+      },
+      { version, platform: r.platform, file: r.file, reportsDir },
+    );
+  } catch (e) {
+    console.error(`\u2718 ${e.message}`);
+    process.exit(e.code ?? 1);
+  }
+}
+
+if (dryRun) {
+  for (const r of toRegister) {
+    if (r.upload) console.log(`would put ${BUCKET}/${version}/${r.filename}`);
+    console.log(`would register ${r.platform} → ${version}/${r.filename} (${r.size} bytes)`);
+  }
+  console.log(`would put ${BUCKET}/${MANIFEST_KEY}`);
+  process.exit(0);
+}
+
+for (const r of toRegister) {
+  if (!r.upload) continue;
+  const contentType = (args['content-type'] && args['content-type'] !== true) ? String(args['content-type']) : PLATFORM_META[r.platform].contentType;
+  r2Put(`${version}/${r.filename}`, r.file, contentType);
+}
+
+let manifest = fetchManifest();
 for (const r of toRegister) {
   manifest = mergePlatform(manifest, version, r.platform, entryFor(version, r.platform, r.filename, r.size));
   console.log(`✓ manifest: ${r.platform} → ${version}/${r.filename} (${r.size} bytes)`);

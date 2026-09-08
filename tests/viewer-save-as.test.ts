@@ -68,7 +68,7 @@ describe('ViewerApp — save-as: handleSaveAs', () => {
     // The save-as flow now uses the dedicated `save_pdf_as_dialog`
     // Tauri command (it owns both file-picker dialog + write) instead
     // of importing plugin-dialog and chaining save+invoke separately.
-    expect(saveAsFnBody).toMatch(/import\(['"]@tauri-apps\/(plugin-dialog|api\/core)['"]\)/);
+    expect(saveAsFnBody).toMatch(/import\(['"](@tauri-apps\/plugin-dialog|[./]*lib\/commandBridge)['"]\)/);
   });
 
   it('returns early when user cancels the dialog (path is null/empty)', () => {

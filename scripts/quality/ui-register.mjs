@@ -909,11 +909,110 @@ export function probesFor(a) {
   }
 }
 
+/**
+ * The parts of a test file that actually run, with every skipped test blanked
+ * out character for character so offsets still line up.
+ *
+ * `visual-e2e-beta-blockers.spec.ts` has 23 tests and skips 19 of them with
+ * `test.skip(true, 'v3-arch-gap: …')`. Playwright prints the skips and exits 0,
+ * so the job was green -- and this walker read the literals inside those bodies
+ * as proof. `button:export-btn` was `wired` on the strength of a test that has
+ * never run. A skip is a decision to ship without the test; it cannot also be
+ * the evidence that shipping is safe.
+ */
+export function runnableText(text) {
+  const blank = (s) => s.replace(/[^\n]/g, ' ');
+  const spans = [];
+
+  /** The balanced call starting at the '(' at or after `from`. */
+  const callSpan = (from) => {
+    const open = text.indexOf('(', from);
+    if (open < 0) return null;
+    let depth = 0;
+    for (let i = open; i < text.length; i++) {
+      if (text[i] === '(') depth++;
+      else if (text[i] === ')' && --depth === 0) return [from, i + 1];
+    }
+    return [from, text.length];
+  };
+
+  // test.skip(...) / it.fixme(...) / describe.skip(...) as the declaration.
+  const declared = /\b(?:describe|test|it)\s*\.\s*(?:skip|fixme|failing)\s*\(/g;
+  let m;
+  while ((m = declared.exec(text))) {
+    const span = callSpan(m.index);
+    if (span) spans.push(span);
+  }
+
+  // A plain test(...) whose body calls test.skip(...) / this.skip() at runtime:
+  // the declaration reads as a live test and the body never runs.
+  const plain = /(?:^|[^.\w])(?:test|it)\s*\(/g;
+  while ((m = plain.exec(text))) {
+    const at = m.index + m[0].length - 1;
+    const span = callSpan(at);
+    if (!span) continue;
+    const body = text.slice(span[0], span[1]);
+    if (/\b(?:test|it)\s*\.\s*skip\s*\(|\bthis\s*\.\s*skip\s*\(/.test(body)) spans.push(span);
+  }
+
+  if (!spans.length) return text;
+  let out = text;
+  for (const [start, end] of spans) {
+    out = out.slice(0, start) + blank(out.slice(start, end)) + out.slice(end);
+  }
+  return dropUnreachableHelpers(out, blank);
+}
+
+/**
+ * Local helpers nothing live calls any more, blanked as well.
+ *
+ * Blanking the skipped tests is not enough on its own: `export-btn` appears in
+ * this file inside `exportPdfAndAssertValid`, a helper called only from tests
+ * that skip. The literal is in a file that runs, in a function that does not,
+ * and reading it as proof is the same mistake one level down. Repeated to a
+ * fixed point, because dropping one helper can orphan the next.
+ *
+ * Only unexported, file-local declarations: an exported helper may be used by a
+ * spec this walker is not looking at.
+ */
+function dropUnreachableHelpers(text, blank) {
+  const bodySpan = (from) => {
+    const open = text.indexOf('{', from);
+    if (open < 0) return null;
+    let depth = 0;
+    for (let i = open; i < text.length; i++) {
+      if (text[i] === '{') depth++;
+      else if (text[i] === '}' && --depth === 0) return i + 1;
+    }
+    return text.length;
+  };
+
+  let out = text;
+  for (let pass = 0; pass < 8; pass++) {
+    let changed = false;
+    const decl = /^(?:async\s+)?function\s+([A-Za-z_$][\w$]*)\s*[(<]/gm;
+    let m;
+    while ((m = decl.exec(out))) {
+      const name = m[1];
+      if (/^\s*export\s/.test(out.slice(Math.max(0, m.index - 10), m.index + 1))) continue;
+      const end = bodySpan(m.index);
+      if (end === null) continue;
+      const outside = out.slice(0, m.index) + out.slice(end);
+      if (new RegExp(`\\b${name}\\b`).test(outside)) continue;
+      out = out.slice(0, m.index) + blank(out.slice(m.index, end)) + out.slice(end);
+      changed = true;
+    }
+    if (!changed) break;
+  }
+  return out;
+}
+
 export function findProof(a, tests) {
   const hits = [];
   for (const [file, text] of tests) {
+    const runnable = runnableText(text);
     for (const group of probesFor(a)) {
-      if (group.every((lit) => text.includes(lit))) {
+      if (group.every((lit) => runnable.includes(lit))) {
         hits.push({ file, kind: testKind(text), job: ciJobFor(file) });
         break;
       }

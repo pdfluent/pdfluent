@@ -884,7 +884,17 @@ export function EditorV3Shell(props: EditorV3ShellProps) {
             />
           )}
 
-          <div ref={canvasRef} data-print-region className="canvas" aria-label="PDF document">
+          {/* role + tabIndex, not decoration: aria-label on a bare div is ignored
+              (and reported as a prohibited attribute), and a scrollable region
+              that cannot be focused cannot be scrolled from the keyboard. */}
+          <div
+            ref={canvasRef}
+            data-print-region
+            className="canvas"
+            role="region"
+            tabIndex={0}
+            aria-label={t('editorV3.canvas.document')}
+          >
             {children}
           </div>
 
@@ -1471,7 +1481,7 @@ function EditorV3TopBar(props: TopBarProps) {
     push({ id: taskId, label: t('editorV3.toasts.saving'), progress: null, status: 'running' });
     try {
       if (isTauri && props.currentFilePath) {
-        const { invoke } = await import('@tauri-apps/api/core');
+        const { invokeCommand: invoke } = await import('../../lib/commandBridge');
         await invoke('save_pdf', { path: props.currentFilePath });
       } else {
         await props.onSaveAs();
@@ -1521,7 +1531,7 @@ function EditorV3TopBar(props: TopBarProps) {
 
   async function openExternalUrl(url: string): Promise<void> {
     if (isTauri) {
-      const { invoke } = await import('@tauri-apps/api/core');
+      const { invokeCommand: invoke } = await import('../../lib/commandBridge');
       await invoke('open_external_url', { url });
       return;
     }
@@ -1887,9 +1897,9 @@ function EditorV3Panel({
     setCompressProgress(10);
     const taskId = `compress-${Date.now()}`;
     try {
-      const [{ save }, { invoke }] = await Promise.all([
+      const [{ save }, { invokeCommand: invoke }] = await Promise.all([
         import('@tauri-apps/plugin-dialog'),
-        import('@tauri-apps/api/core'),
+        import('../../lib/commandBridge'),
       ]);
       const defaultName = currentFilePath
         ? basenameFromPath(currentFilePath).replace(/\.pdf$/i, '-compressed.pdf')
@@ -1930,9 +1940,9 @@ function EditorV3Panel({
     setSplitBusy(true);
     const taskId = `split-${Date.now()}`;
     try {
-      const [{ open }, { invoke }] = await Promise.all([
+      const [{ open }, { invokeCommand: invoke }] = await Promise.all([
         import('@tauri-apps/plugin-dialog'),
-        import('@tauri-apps/api/core'),
+        import('../../lib/commandBridge'),
       ]);
       const pickedDir = await open({ directory: true, multiple: false, title: t('editorV3.toasts.splitFolder') });
       const outputDir = normalizeDialogPaths(pickedDir)[0];
@@ -1997,9 +2007,9 @@ function EditorV3Panel({
     setMergeBusy(true);
     const taskId = `merge-${Date.now()}`;
     try {
-      const [{ save }, { invoke }] = await Promise.all([
+      const [{ save }, { invokeCommand: invoke }] = await Promise.all([
         import('@tauri-apps/plugin-dialog'),
-        import('@tauri-apps/api/core'),
+        import('../../lib/commandBridge'),
       ]);
       const outputPath = await save({
         title: t('editorV3.toasts.saveMergedPdf'),
@@ -2291,8 +2301,6 @@ function EditorV3Panel({
                 </button>
               );
             })}
-            <div className="field-label">{t('editorV3.convert.documentLanguage')}</div>
-            <div className="select"><span>{t('editorV3.convert.dutch')}</span><ChevronDownIcon aria-hidden="true" /></div>
             <button className="btn-primary accent" onClick={() => onOpenExport('docx')}><RefreshCwIcon aria-hidden="true" /><span>{t('editorV3.convert.convertToDocx')}</span></button>
             <div className="divider" />
             <div className="panel-section-label">{t('editorV3.convert.otherOptions')}</div>
@@ -2823,7 +2831,7 @@ function EncryptDecryptControls({ onApplied }: { onApplied?: () => void }) {
     push({ id: taskId, label: t('tasks.encryptRunning'), progress: null, status: 'running' });
 
     try {
-      const { invoke } = await import('@tauri-apps/api/core');
+      const { invokeCommand: invoke } = await import('../../lib/commandBridge');
       await invoke('encrypt_pdf', { userPassword, ownerPassword, outputPath: path });
       update(taskId, { status: 'done', label: t('tasks.encryptDone') });
       setUserPassword('');
@@ -2844,7 +2852,7 @@ function EncryptDecryptControls({ onApplied }: { onApplied?: () => void }) {
     push({ id: taskId, label: t('tasks.decryptRunning'), progress: null, status: 'running' });
 
     try {
-      const { invoke } = await import('@tauri-apps/api/core');
+      const { invokeCommand: invoke } = await import('../../lib/commandBridge');
       await invoke('decrypt_pdf', { password: decryptPassword });
       update(taskId, { status: 'done', label: t('tasks.decryptDone') });
       setDecryptPassword('');
@@ -2936,7 +2944,7 @@ function PdfaControls({ onApplied }: { onApplied?: () => void }) {
     setBusy(true);
     setError(null);
     try {
-      const { invoke } = await import('@tauri-apps/api/core');
+      const { invokeCommand: invoke } = await import('../../lib/commandBridge');
       setResult(await invoke<PdfAValidationResult>('validate_pdfa'));
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
@@ -2954,7 +2962,7 @@ function PdfaControls({ onApplied }: { onApplied?: () => void }) {
     const taskId = `pdfa-${Date.now()}`;
     push({ id: taskId, label: t('tasks.pdfaRunning'), progress: null, status: 'running' });
     try {
-      const { invoke } = await import('@tauri-apps/api/core');
+      const { invokeCommand: invoke } = await import('../../lib/commandBridge');
       const report = await invoke<PdfAValidationResult>('convert_to_pdfa', { level, outputPath: path });
       setResult(report);
       update(taskId, { status: 'done', label: t('tasks.pdfaDone') });
@@ -3052,7 +3060,7 @@ function MetadataControls({ onApplied }: { onApplied?: () => void }) {
     const taskId = `metadata-${Date.now()}`;
     push({ id: taskId, label: t('tasks.metadataRunning'), progress: null, status: 'running' });
     try {
-      const { invoke } = await import('@tauri-apps/api/core');
+      const { invokeCommand: invoke } = await import('../../lib/commandBridge');
       await invoke('set_metadata', {
         title: nextTitle.length > 0 ? nextTitle : null,
         author: nextAuthor.length > 0 ? nextAuthor : null,
@@ -3120,7 +3128,7 @@ function InvoiceControls() {
     setBusy(true);
     setError(null);
     try {
-      const { invoke } = await import('@tauri-apps/api/core');
+      const { invokeCommand: invoke } = await import('../../lib/commandBridge');
       setData(await invoke<InvoiceData | null>('extract_invoice_data'));
       setValidation(await invoke<InvoiceValidationResult | null>('validate_invoice'));
       setChecked(true);
@@ -3235,9 +3243,9 @@ function CertificateSignControls({
     setBusy(true);
     const taskId = `sign-${Date.now()}`;
     try {
-      const [{ save }, { invoke }] = await Promise.all([
+      const [{ save }, { invokeCommand: invoke }] = await Promise.all([
         import('@tauri-apps/plugin-dialog'),
-        import('@tauri-apps/api/core'),
+        import('../../lib/commandBridge'),
       ]);
       const defaultName = currentFilePath !== null
         ? (currentFilePath.split(/[\\/]/).filter(Boolean).pop() ?? 'document.pdf').replace(/\.pdf$/i, '-signed.pdf')
@@ -3338,7 +3346,7 @@ function SignatureVerifyControls({ signedRevision = 0 }: { signedRevision?: numb
     setBusy(true);
     setError(null);
     try {
-      const { invoke } = await import('@tauri-apps/api/core');
+      const { invokeCommand: invoke } = await import('../../lib/commandBridge');
       setResults(await invoke<SignatureVerifyResult[]>('verify_signatures'));
       setChecked(true);
     } catch (e) {
@@ -3403,7 +3411,7 @@ function WatermarkControls({ onApplied }: { onApplied?: () => void }) {
     const taskId = `watermark-${Date.now()}`;
     push({ id: taskId, label: t('tasks.watermarkRunning'), progress: null, status: 'running' });
     try {
-      const { invoke } = await import('@tauri-apps/api/core');
+      const { invokeCommand: invoke } = await import('../../lib/commandBridge');
       await invoke('add_watermark', { text: trimmed, opacity });
       update(taskId, { status: 'done', label: t('tasks.watermarkDone') });
       onApplied?.();

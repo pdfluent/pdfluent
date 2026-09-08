@@ -13,6 +13,10 @@
       "state": "UNREACHABLE",
       "reason": "rendered by a component nothing puts on screen; it goes when that surface goes"
     },
+    "button:export-btn": {
+      "state": "UNTESTED",
+      "reason": "reaches its handler, and the only test that named it was a helper called exclusively from tests that skip. Found on 2026-09-08 when the walker stopped reading a skipped test as proof: visual-e2e-beta-blockers.spec.ts skips 19 of its 23 tests, and exportPdfAndAssertValid -- the one place the id appeared -- is called from four of them. The control is wired; what is missing is a test that runs. It goes with the rewrite those skips already ask for."
+    },
     "button:extract-attachment-btn": {
       "state": "UNREACHABLE",
       "reason": "rendered by a component nothing puts on screen; it goes when that surface goes"
@@ -56,6 +60,70 @@
     "button:text-left-underline-btn": {
       "state": "UNREACHABLE",
       "reason": "rendered by a component nothing puts on screen; it goes when that surface goes"
+    },
+    "dead-surface:src/viewer/ViewerSidePanels.tsx": {
+      "lines": 140,
+      "reason": "nothing renders it; scheduled for removal with the legacy shell"
+    },
+    "dead-surface:src/viewer/WelcomeSection.tsx": {
+      "lines": 92,
+      "reason": "nothing renders it; scheduled for removal with the legacy shell"
+    },
+    "dead-surface:src/viewer/components/BusyStateOverlay.tsx": {
+      "lines": 147,
+      "reason": "nothing renders it; scheduled for removal with the legacy shell"
+    },
+    "dead-surface:src/viewer/components/EmptyStates.tsx": {
+      "lines": 146,
+      "reason": "nothing renders it; scheduled for removal with the legacy shell"
+    },
+    "dead-surface:src/viewer/components/IssuePanel.tsx": {
+      "lines": 128,
+      "reason": "nothing renders it; scheduled for removal with the legacy shell"
+    },
+    "dead-surface:src/viewer/components/LeftNavRail.tsx": {
+      "lines": 1024,
+      "reason": "superseded by the v3 shell, which has its own rail and a thumbnails drawer. Its bookmarks, attachments, layers, fields and format panels are the \"fetched but never rendered\" entries in the plan."
+    },
+    "dead-surface:src/viewer/components/ModeSwitcher.tsx": {
+      "lines": 349,
+      "reason": "superseded by the v3 topbar mode tabs; the e2e helpers still switch modes by clicking its text, which is one reason those specs cannot pass."
+    },
+    "dead-surface:src/viewer/components/ModeToolbar.tsx": {
+      "lines": 499,
+      "reason": "nothing renders it: the 42-tile dispatch and the old hand-written wired list lived here. The list is gone; the component and its switch stay until the tiles have a home that renders."
+    },
+    "dead-surface:src/viewer/components/ObjectSelectionOverlay.tsx": {
+      "lines": 249,
+      "reason": "nothing renders it; scheduled for removal with the legacy shell"
+    },
+    "dead-surface:src/viewer/components/RecoveryDialog.tsx": {
+      "lines": 115,
+      "reason": "nothing renders it; scheduled for removal with the legacy shell"
+    },
+    "dead-surface:src/viewer/components/RightContextPanel.tsx": {
+      "lines": 2170,
+      "reason": "dead since the v3 shell took over: 2,169 lines, zero importers, and 37 test files assert against its source. Deleting it means rewriting those tests, which belongs with the legacy-shell removal (E3) rather than in this change. Its metadata, PDF/A, signature, OCR and redaction panels are the ones the plan lists as \"none\" in the shipped shell."
+    },
+    "dead-surface:src/viewer/components/SearchPanel.tsx": {
+      "lines": 115,
+      "reason": "rendered only by LeftNavRail and ViewerSidePanels, neither of which is rendered. The v3 shell has its own search popover."
+    },
+    "dead-surface:src/viewer/components/SignaturePanel.tsx": {
+      "lines": 283,
+      "reason": "rendered only by RightContextPanel; it goes with it."
+    },
+    "dead-surface:src/viewer/components/TimelinePanel.tsx": {
+      "lines": 93,
+      "reason": "nothing renders it; scheduled for removal with the legacy shell"
+    },
+    "dead-surface:src/viewer/components/TopBar.tsx": {
+      "lines": 441,
+      "reason": "superseded by the topbar inside EditorV3Shell."
+    },
+    "dead-surface:src/viewer/components/WelcomeScreen.tsx": {
+      "lines": 229,
+      "reason": "reached only through WelcomeSection, which nothing imports. tests/e2e/helpers/app.ts waits for its data-testid=\"welcome-screen\", so every spec using that helper is waiting for an element that is never rendered."
     },
     "mode-tab:edit": {
       "state": "UNTESTED",
@@ -268,70 +336,6 @@
     "tile:toolbar.underline": {
       "state": "UNTESTED",
       "reason": "reaches its handler, and no test names it yet"
-    },
-    "dead-surface:src/viewer/components/RightContextPanel.tsx": {
-      "lines": 2170,
-      "reason": "dead since the v3 shell took over: 2,169 lines, zero importers, and 37 test files assert against its source. Deleting it means rewriting those tests, which belongs with the legacy-shell removal (E3) rather than in this change. Its metadata, PDF/A, signature, OCR and redaction panels are the ones the plan lists as \"none\" in the shipped shell."
-    },
-    "dead-surface:src/viewer/components/LeftNavRail.tsx": {
-      "lines": 1024,
-      "reason": "superseded by the v3 shell, which has its own rail and a thumbnails drawer. Its bookmarks, attachments, layers, fields and format panels are the \"fetched but never rendered\" entries in the plan."
-    },
-    "dead-surface:src/viewer/components/ModeToolbar.tsx": {
-      "lines": 499,
-      "reason": "nothing renders it: the 42-tile dispatch and the old hand-written wired list lived here. The list is gone; the component and its switch stay until the tiles have a home that renders."
-    },
-    "dead-surface:src/viewer/components/TopBar.tsx": {
-      "lines": 441,
-      "reason": "superseded by the topbar inside EditorV3Shell."
-    },
-    "dead-surface:src/viewer/components/ModeSwitcher.tsx": {
-      "lines": 349,
-      "reason": "superseded by the v3 topbar mode tabs; the e2e helpers still switch modes by clicking its text, which is one reason those specs cannot pass."
-    },
-    "dead-surface:src/viewer/components/SignaturePanel.tsx": {
-      "lines": 283,
-      "reason": "rendered only by RightContextPanel; it goes with it."
-    },
-    "dead-surface:src/viewer/components/ObjectSelectionOverlay.tsx": {
-      "lines": 249,
-      "reason": "nothing renders it; scheduled for removal with the legacy shell"
-    },
-    "dead-surface:src/viewer/components/WelcomeScreen.tsx": {
-      "lines": 229,
-      "reason": "reached only through WelcomeSection, which nothing imports. tests/e2e/helpers/app.ts waits for its data-testid=\"welcome-screen\", so every spec using that helper is waiting for an element that is never rendered."
-    },
-    "dead-surface:src/viewer/components/BusyStateOverlay.tsx": {
-      "lines": 147,
-      "reason": "nothing renders it; scheduled for removal with the legacy shell"
-    },
-    "dead-surface:src/viewer/components/EmptyStates.tsx": {
-      "lines": 146,
-      "reason": "nothing renders it; scheduled for removal with the legacy shell"
-    },
-    "dead-surface:src/viewer/ViewerSidePanels.tsx": {
-      "lines": 140,
-      "reason": "nothing renders it; scheduled for removal with the legacy shell"
-    },
-    "dead-surface:src/viewer/components/IssuePanel.tsx": {
-      "lines": 128,
-      "reason": "nothing renders it; scheduled for removal with the legacy shell"
-    },
-    "dead-surface:src/viewer/components/RecoveryDialog.tsx": {
-      "lines": 115,
-      "reason": "nothing renders it; scheduled for removal with the legacy shell"
-    },
-    "dead-surface:src/viewer/components/SearchPanel.tsx": {
-      "lines": 115,
-      "reason": "rendered only by LeftNavRail and ViewerSidePanels, neither of which is rendered. The v3 shell has its own search popover."
-    },
-    "dead-surface:src/viewer/components/TimelinePanel.tsx": {
-      "lines": 93,
-      "reason": "nothing renders it; scheduled for removal with the legacy shell"
-    },
-    "dead-surface:src/viewer/WelcomeSection.tsx": {
-      "lines": 92,
-      "reason": "nothing renders it; scheduled for removal with the legacy shell"
     }
   }
 }

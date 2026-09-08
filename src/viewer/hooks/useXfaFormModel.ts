@@ -16,6 +16,8 @@ import { isTauriRuntime } from '../../lib/tauri-detection';
 import { makeCommand } from '../undoEngine';
 import type { UndoCommand } from '../undoEngine';
 import i18n from '../../i18n';
+import { reportCommandFailure } from '../../lib/commandBridge';
+import { announceXfaStaticWrite } from '../state/fallbackNotices';
 import type { PdfDocument } from '../../core/document';
 
 /**
@@ -132,6 +134,8 @@ export function useXfaFormModel(
   // Last *committed* value per field — the undo baseline (distinct from `values`
   // which mirrors live keystrokes).
   const committedRef = useRef<Record<string, XfaLocalValue>>({});
+  // Whether this document has already been told that its writes are static.
+  const staticWriteAnnouncedRef = useRef(false);
 
   const reload = useCallback(() => setReloadNonce(n => n + 1), []);
 
@@ -140,6 +144,7 @@ export function useXfaFormModel(
   // Load the model whenever the (XFA) document identity or version changes.
   useEffect(() => {
     let cancelled = false;
+    staticWriteAnnouncedRef.current = false;
     if (!pdfDoc || !isXfa || !isTauriRuntime()) {
       setModel([]);
       setValues({});
@@ -224,6 +229,17 @@ export function useXfaFormModel(
         const result = await commitXfaFieldValue(requestFor(name, kind, value));
         markDirty();
 
+        // A Phase 1 write is a different product from a Phase 2 commit: the
+        // value lands, but no field script runs, so a calculated total stays
+        // wrong and a subform that should appear does not. The comment on this
+        // function used to call that "falls back transparently", which is the
+        // whole problem -- transparent to the code, invisible to the person
+        // filling in the form. Once per document, not once per keystroke.
+        if (!result.interactive && !staticWriteAnnouncedRef.current) {
+          staticWriteAnnouncedRef.current = true;
+          announceXfaStaticWrite();
+        }
+
         // Surface what the commit loop revealed/hid (debug output, task §3).
         if (result.presenceChanges.length > 0 || result.pageCountBefore !== result.pageCountAfter) {
 
@@ -247,9 +263,10 @@ export function useXfaFormModel(
         // Re-layout may have changed the rendered pages → repaint.
         requestRepaint();
       } catch (err) {
-        // Keep the optimistic value so input isn't lost; surface for diagnostics.
+        // Keep the optimistic value so input isn't lost, but say so: the field
+        // shows what was typed while the document does not carry it.
         // (Read-only / unbound fields can legitimately reject.)
-        console.error('[PDFluent] XFA commit failed for', name, err);
+        reportCommandFailure('commit_xfa_field_value', err);
       }
     },
     [markDirty, requestFor, requestRepaint],

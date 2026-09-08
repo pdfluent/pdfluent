@@ -91,8 +91,8 @@ export function SignaturePanel({ pdfDoc }: SignaturePanelProps) {
       return;
     }
     setVerifying(true);
-    import('@tauri-apps/api/core')
-      .then(({ invoke }) => invoke<SignatureResult[]>('verify_signatures'))
+    import('../../lib/commandBridge')
+      .then(({ invokeCommand }) => invokeCommand<SignatureResult[]>('verify_signatures'))
       .then((results) => {
         setSignatures(results);
       })
@@ -130,7 +130,7 @@ export function SignaturePanel({ pdfDoc }: SignaturePanelProps) {
     });
     setSigning(true);
     try {
-      const { invoke } = await import('@tauri-apps/api/core');
+      const { invokeCommand: invoke } = await import('../../lib/commandBridge');
       await invoke('sign_pdf', { certPath, password, reason, outputPath });
       update(taskId, { status: 'done', label: t('tasks.signDone') });
       // Re-verify after signing

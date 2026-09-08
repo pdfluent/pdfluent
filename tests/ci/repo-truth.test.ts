@@ -12,11 +12,13 @@
 // Mutation to check this is not vacuous: make the missing-`Published-from` path
 // return 0, or drop the day limit, and a case here goes red.
 import { execFileSync } from "node:child_process";
-import { mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { afterAll, describe, expect, it } from "vitest";
 import { runToFile } from "./run";
+// @ts-expect-error — a plain .mjs script with no type declarations
+import { qualityReportFailures } from "../../scripts/ci/repo-truth.mjs";
 
 const root = resolve(__dirname, "../..");
 const git = (args: string[], input?: string) =>
@@ -111,5 +113,75 @@ describe("what people can read is what they run", () => {
     expect(days).toBeTruthy();
     expect(doc).toContain(`${commits} commits`);
     expect(doc).toContain(`${days} days`);
+  });
+});
+
+// ── The binaries were judged before they were published ─────────────────────
+//
+// A release that names no quality report was published without one. Before the
+// suite existed that is a fact about history; after it, it is a release nobody
+// looked at, and the difference is a date rather than a judgement call.
+describe("repo-truth: shipped binaries name their quality reports", () => {
+  it("accepts a release that predates the suite", () => {
+    expect(qualityReportFailures({
+      version: "1.0.0-beta.21",
+      recorded: "2026-09-07",
+      quality_reports: { macos: null, windows: null },
+    })).toEqual([]);
+  });
+
+  it("refuses a release recorded after the suite that names no report", () => {
+    const f = qualityReportFailures({
+      version: "1.0.0",
+      recorded: "2026-10-01",
+      quality_reports: { macos: null, windows: null },
+    });
+    expect(f.length).toBe(2);
+    expect(f.join("\n")).toContain("published without one");
+  });
+
+  it("refuses a SHIPPED.json with no quality_reports field at all", () => {
+    expect(qualityReportFailures({ version: "1.0.0", recorded: "2026-10-01" }).length).toBe(1);
+  });
+
+  it("refuses a named report that did not pass", () => {
+    const dir = mkdtempSync(join(tmpdir(), "pdfluent-shipped-"));
+    mkdirSync(join(dir, "quality", "reports"), { recursive: true });
+    const rel = "quality/reports/1.0.0-macos.json";
+    writeFileSync(join(dir, rel), JSON.stringify({ verdict: "INCOMPLETE", exit_code: 3, version: "1.0.0" }));
+    const f = qualityReportFailures(
+      { version: "1.0.0", recorded: "2026-10-01", quality_reports: { macos: rel, windows: null } },
+      { root: dir },
+    );
+    expect(f.join("\n")).toContain("INCOMPLETE");
+  });
+
+  it("accepts a PASS report for the shipped version", () => {
+    const dir = mkdtempSync(join(tmpdir(), "pdfluent-shipped-"));
+    mkdirSync(join(dir, "quality", "reports"), { recursive: true });
+    const rel = "quality/reports/1.0.0-macos.json";
+    writeFileSync(join(dir, rel), JSON.stringify({ verdict: "PASS", exit_code: 0, version: "1.0.0" }));
+    const f = qualityReportFailures(
+      { version: "1.0.0", recorded: "2026-10-01", quality_reports: { macos: rel, windows: rel } },
+      { root: dir },
+    );
+    expect(f).toEqual([]);
+  });
+
+  it("refuses an override with no ticket number", () => {
+    const dir = mkdtempSync(join(tmpdir(), "pdfluent-shipped-"));
+    mkdirSync(join(dir, "quality", "reports"), { recursive: true });
+    const rel = "quality/reports/1.0.0-macos.override.json";
+    writeFileSync(join(dir, rel), JSON.stringify({ ticket: "", sha256: null }));
+    const f = qualityReportFailures(
+      { version: "1.0.0", recorded: "2026-10-01", quality_reports: { macos: rel, windows: null } },
+      { root: dir },
+    );
+    expect(f.join("\n")).toContain("no ticket number");
+  });
+
+  it("the shipped record in this repository satisfies the leg", () => {
+    const record = JSON.parse(readFileSync(join(process.cwd(), "docs/SHIPPED.json"), "utf8"));
+    expect(qualityReportFailures(record)).toEqual([]);
   });
 });

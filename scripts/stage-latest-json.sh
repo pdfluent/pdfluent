@@ -29,10 +29,16 @@ REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 cd "${REPO_ROOT}"
 VERSION="${1:?usage: stage-latest-json.sh <version>   (e.g. 1.0.0)}"
 
-echo "== 1/2  verify updater signatures (trusted key only) =="
+echo "== 1/3  verify updater signatures (trusted key only) =="
 bash scripts/verify-updater-sigs.sh
 
-echo "== 2/2  generate latest.json (LOCAL staging — no upload) =="
+echo "== 2/3  every staged updater payload must carry a PASS quality report =="
+# The signature says the payload came from us. It does not say the payload
+# works: that is what the release quality suite ran against the artefact, and
+# an update feed pointing at an unjudged payload is worse than no feed at all.
+node scripts/quality/require-report.mjs --version "${VERSION}" --artifacts artifacts --updater
+
+echo "== 3/3  generate latest.json (LOCAL staging — no upload) =="
 # CF_R2_PUBLIC_URL only sets the URLs written INTO latest.json; the generator
 # performs no network upload. Uploading is a separate, approval-gated wrangler
 # step that this script intentionally does not perform.

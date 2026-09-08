@@ -58,6 +58,10 @@ const FORBIDDEN: { label: string; re: RegExp }[] = [
   { label: 'Pdfium engine claim', re: /Pdfium \(rendering\)/i },
   { label: 'LibPDF engine claim', re: /LibPDF \(manipulation\)/i },
   { label: '"early development" status', re: /\bearly development\b/i },
+  // The store metadata doc priced the editor as "Free (with in-app license for
+  // commercial use)" for five months after the licence UI was deleted. There is
+  // no licence UI in any build, so there is no honest use of this phrase.
+  { label: 'in-app licence pricing claim', re: /in-app licen[cs]e for commercial use/i },
   { label: '"not ready for end-user" status', re: /not (yet )?ready for end-user/i },
   { label: 'project-is-AGPL note', re: /Project license is AGPL/i },
   // Legal-entity normalization: the entity is "Innovation Trigger B.V." — the

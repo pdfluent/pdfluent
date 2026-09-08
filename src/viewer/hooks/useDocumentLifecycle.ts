@@ -47,7 +47,7 @@ export function useDocumentLifecycle(
     if (docLoadingRef.current) return;
     isSavingRef.current = true;
     try {
-      const { invoke } = await import('@tauri-apps/api/core');
+      const { invokeCommand: invoke } = await import('../../lib/commandBridge');
       const path = await invoke<string | null>('save_pdf_as_dialog');
       if (!path) return;
       setCurrentFilePath(path);
@@ -142,7 +142,7 @@ export function useDocumentLifecycle(
   const handleUnsavedSave = useCallback(async () => {
     if (currentFilePath) {
       try {
-        const { invoke } = await import('@tauri-apps/api/core');
+        const { invokeCommand: invoke } = await import('../../lib/commandBridge');
         await invoke('save_pdf', { path: currentFilePath });
         clearDirty();
       } catch { /* save failed — proceed anyway; task bar will surface the error */ }

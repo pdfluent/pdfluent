@@ -300,7 +300,7 @@ function EncryptDecryptControls() {
     push({ id: taskId, label: t('tasks.encryptRunning'), progress: null, status: 'running' });
 
     try {
-      const { invoke } = await import('@tauri-apps/api/core');
+      const { invokeCommand: invoke } = await import('../../lib/commandBridge');
       await invoke('encrypt_pdf', { userPassword, ownerPassword, outputPath: path });
       update(taskId, { status: 'done', label: t('tasks.encryptDone') });
       setUserPassword('');
@@ -320,7 +320,7 @@ function EncryptDecryptControls() {
     push({ id: taskId, label: t('tasks.decryptRunning'), progress: null, status: 'running' });
 
     try {
-      const { invoke } = await import('@tauri-apps/api/core');
+      const { invokeCommand: invoke } = await import('../../lib/commandBridge');
       await invoke('decrypt_pdf', { password: decryptPassword });
       update(taskId, { status: 'done', label: t('tasks.decryptDone') });
       setDecryptPassword('');
@@ -406,7 +406,7 @@ function WatermarkControls({ onApplied }: { onApplied?: () => void }) {
     const taskId = `watermark-${Date.now()}`;
     push({ id: taskId, label: t('tasks.watermarkRunning'), progress: null, status: 'running' });
     try {
-      const { invoke } = await import('@tauri-apps/api/core');
+      const { invokeCommand: invoke } = await import('../../lib/commandBridge');
       await invoke('add_watermark', { text: trimmed, opacity });
       update(taskId, { status: 'done', label: t('tasks.watermarkDone') });
       onApplied?.();

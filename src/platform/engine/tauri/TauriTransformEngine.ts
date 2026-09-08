@@ -126,7 +126,7 @@ export class TauriTransformEngine implements TransformEngine {
 
   async flattenXfa(document: PdfDocument): AsyncEngineResult<PdfDocument> {
     try {
-      const { invoke } = await import('@tauri-apps/api/core');
+      const { invokeCommand: invoke } = await import('../../../lib/commandBridge');
       const info = await invoke<TauriDocumentInfo>('flatten_xfa');
       const pages: Page[] = info.pages.map(p => ({
         index: p.index,
@@ -199,7 +199,7 @@ export class TauriTransformEngine implements TransformEngine {
       return { success: false, error: { code: 'page-not-found', message: 'Invalid page index in new order' } };
     }
     try {
-      const { invoke } = await import('@tauri-apps/api/core');
+      const { invokeCommand: invoke } = await import('../../../lib/commandBridge');
       const info = await invoke<TauriReorderDocInfo>('reorder_pages', { newOrder });
       const pages: Page[] = info.pages.map(p => ({
         index: p.index,

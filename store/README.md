@@ -18,6 +18,10 @@ there, and every field the submission form asks for.
 | Version shown | 1.0.0 (package `1.0.0-beta.21`) |
 | Package last updated | 2026-07-27 |
 
+> **Looking for the Mac App Store?** That submission has its own dossier in
+> [`mas/`](mas/README.md): build number scheme, entitlements check, screenshots,
+> listing, privacy and export answers, and the upload runbook.
+
 > **Shipping a new version?** Read [`update-runbook.md`](update-runbook.md). The
 > Store serves a URL, not our bytes: an update that does not change the package
 > URL keeps handing users the old MSI. The machine-readable record of what is

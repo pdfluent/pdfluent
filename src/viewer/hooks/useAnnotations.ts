@@ -27,6 +27,8 @@ import { captureRevisionSnapshot } from '../revisionSnapshot';
 import type { RevisionSnapshot } from '../revisionSnapshot';
 import { compareSnapshots, formatSnapshotDiffMarkdown } from '../revisionCompare';
 import i18n from '../../i18n';
+import { reportCommandFailure } from '../../lib/commandBridge';
+import { announceOcrUnavailable } from '../state/fallbackNotices';
 
 const isTauri = isTauriRuntime();
 
@@ -159,7 +161,7 @@ export function useAnnotations(
     });
 
     if (isTauri) {
-      void import('@tauri-apps/api/core').then(({ invoke }) => {
+      void import('../../lib/commandBridge').then(({ invokeCommand: invoke }) => {
         void invoke<string[]>('get_page_labels').then(labels => {
           // page labels are consumed by LeftNavRail; we expose them via onPageLabels callback
           // Currently ViewerApp holds pageLabels state and calls setPageLabels — see below.
@@ -241,7 +243,7 @@ export function useAnnotations(
   const handleMetadataChange = useCallback((key: 'title' | 'author' | 'subject' | 'keywords', value: string) => {
     if (!pdfDoc || !isTauri) return;
     if (key === 'title' || key === 'author') {
-      void import('@tauri-apps/api/core').then(({ invoke }) => {
+      void import('../../lib/commandBridge').then(({ invokeCommand: invoke }) => {
         void invoke('set_metadata', {
           title: key === 'title' ? value : null,
           author: key === 'author' ? value : null,
@@ -472,10 +474,14 @@ export function useAnnotations(
     setOcrRunning(true);
     setOcrProgress({ processed: 0, total: pagesToProcess.length });
     try {
-      const { invoke } = await import('@tauri-apps/api/core');
+      const { invokeCommand: invoke } = await import('../../lib/commandBridge');
       const ocrStatus = await invoke<{ available: boolean; remediation: string }>('get_ocr_status');
       if (!ocrStatus.available) {
-        console.error('OCR runtime unavailable:', ocrStatus.remediation);
+        // OCR is a Python subprocess (src-tauri/src/ocr.rs). On a machine
+        // without the bridge this used to log to a console nobody has open and
+        // return, so the button spun once and stopped -- indistinguishable from
+        // a document with no text to find.
+        announceOcrUnavailable(ocrStatus.remediation);
         return;
       }
       const results = new Map(ocrPageWords);
@@ -502,7 +508,9 @@ export function useAnnotations(
       }
       setOcrPageWords(results);
     } catch (err) {
-      console.error('OCR failed:', err);
+      // A page that fails mid-run leaves the pages before it recognised; say
+      // which page stopped it rather than dropping the whole run in silence.
+      reportCommandFailure('run_paddle_ocr', err);
     } finally {
       setOcrRunning(false);
     }
@@ -535,7 +543,7 @@ export function useAnnotations(
     const color = annotationAppearance.color;
     const backendRects = validRects.map(r => [r.x, r.y, r.x + r.width, r.y + r.height] as [number, number, number, number]);
     try {
-      const { invoke } = await import('@tauri-apps/api/core');
+      const { invokeCommand: invoke } = await import('../../lib/commandBridge');
       if (activeAnnotationTool === 'highlight') {
         await invoke('add_highlight_annotation', { pageIndex, rects: backendRects, color });
       } else if (activeAnnotationTool === 'underline') {
@@ -582,7 +590,7 @@ export function useAnnotations(
     const color = annotationAppearance.color;
     const backendRects = validRects.map(r => [r.x, r.y, r.x + r.width, r.y + r.height] as [number, number, number, number]);
     try {
-      const { invoke } = await import('@tauri-apps/api/core');
+      const { invokeCommand: invoke } = await import('../../lib/commandBridge');
       if (type === 'highlight') {
         await invoke('add_highlight_annotation', { pageIndex, rects: backendRects, color });
       } else if (type === 'underline') {
@@ -604,7 +612,7 @@ export function useAnnotations(
     const color = annotationAppearance.color;
     const backendRect: [number, number, number, number] = [rect.x, rect.y, rect.x + rect.width, rect.y + rect.height];
     try {
-      const { invoke } = await import('@tauri-apps/api/core');
+      const { invokeCommand: invoke } = await import('../../lib/commandBridge');
       await invoke('add_shape_annotation', { pageIndex, rect: backendRect, shapeType: 'rectangle', color, strokeWidth: annotationAppearance.strokeWidth });
       await refetchComments();
       markDirty();
@@ -621,7 +629,7 @@ export function useAnnotations(
     if (!pdfDoc || !isTauri) return;
     if (docLoadingRef.current) return;
     try {
-      const { invoke } = await import('@tauri-apps/api/core');
+      const { invokeCommand: invoke } = await import('../../lib/commandBridge');
       await invoke('add_ink_annotation', {
         pageIndex,
         paths: [path],
@@ -641,7 +649,7 @@ export function useAnnotations(
     if (docLoadingRef.current) return;
     const backendRect: [number, number, number, number] = [rect.x, rect.y, rect.x + rect.width, rect.y + rect.height];
     try {
-      const { invoke } = await import('@tauri-apps/api/core');
+      const { invokeCommand: invoke } = await import('../../lib/commandBridge');
       await invoke('add_redaction_annotation', { pageIndex, rect: backendRect });
       await refetchComments();
       markDirty();
@@ -680,7 +688,7 @@ export function useAnnotations(
   const handleUpdateAnnotationColor = useCallback(async (annotationId: string, color: [number, number, number]) => {
     if (!pdfDoc) return;
     try {
-      const { invoke } = await import('@tauri-apps/api/core');
+      const { invokeCommand: invoke } = await import('../../lib/commandBridge');
       await invoke('update_annotation_color', { annotationId, color });
       await refetchComments();
       markDirty();
@@ -691,7 +699,7 @@ export function useAnnotations(
   const handleApplyRedactions = useCallback(async () => {
     if (!pdfDoc || !isTauri) return;
     try {
-      const { invoke } = await import('@tauri-apps/api/core');
+      const { invokeCommand: invoke } = await import('../../lib/commandBridge');
       await invoke('apply_redactions');
       await refetchComments();
       markDirty();
@@ -705,7 +713,7 @@ export function useAnnotations(
   const handleRedactSearch = useCallback(async (query: string): Promise<{ matchesFound: number; areasRedacted: number } | null> => {
     if (!pdfDoc || !isTauri || !query.trim()) return null;
     try {
-      const { invoke } = await import('@tauri-apps/api/core');
+      const { invokeCommand: invoke } = await import('../../lib/commandBridge');
       const result = await invoke<{ matches_found: number; areas_redacted: number }>('redact_search', { query });
       await refetchComments();
       markDirty();
@@ -717,7 +725,7 @@ export function useAnnotations(
   const handleRedactMetadata = useCallback(async (): Promise<boolean> => {
     if (!pdfDoc || !isTauri) return false;
     try {
-      const { invoke } = await import('@tauri-apps/api/core');
+      const { invokeCommand: invoke } = await import('../../lib/commandBridge');
       await invoke('redact_metadata');
       markDirty();
       return true;
@@ -741,7 +749,7 @@ export function useAnnotations(
   const handleReorderPages = useCallback(async (newOrder: number[]) => {
     if (!pdfDoc || !isTauri) return;
     try {
-      const { invoke } = await import('@tauri-apps/api/core');
+      const { invokeCommand: invoke } = await import('../../lib/commandBridge');
       await invoke('reorder_pages', { newOrder });
       markDirty();
     } catch { /* silent */ }
@@ -751,7 +759,7 @@ export function useAnnotations(
   const handleDeletePage = useCallback(async (pageIndex: number): Promise<number | null> => {
     if (!pdfDoc || !isTauri) return null;
     try {
-      const { invoke } = await import('@tauri-apps/api/core');
+      const { invokeCommand: invoke } = await import('../../lib/commandBridge');
       const result = await invoke<{ page_count: number }>('delete_pages', { pageIndices: [pageIndex] });
       return result.page_count;
     } catch { return null; }

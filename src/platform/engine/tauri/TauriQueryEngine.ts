@@ -5,7 +5,7 @@
 // of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
-import { invoke } from '@tauri-apps/api/core';
+import { invokeCommand as invoke } from '../../../lib/commandBridge';
 import type { PdfDocument, TextSpan } from '../../../core/document';
 import type { EngineResult, AsyncEngineResult } from '../../../core/engine/types';
 import type { QueryEngine } from '../../../core/engine/QueryEngine';

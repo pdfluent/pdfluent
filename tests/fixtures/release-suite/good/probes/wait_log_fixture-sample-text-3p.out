@@ -1,0 +1,5 @@
+PDFluent 1.0.0-beta.21 starting (pid 1) [frontend 4f2a91c7:9331]
+startup watchdog: frontend_ready ping received
+open_pdf: document parsed OK (3 pages)
+clean_quit: the app is exiting normally
+app exit: released the document and the render pool

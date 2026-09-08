@@ -19,7 +19,8 @@
  * - Extended BackendRejectionCode: font-encoding-unsafe, glyph-risk-detected
  *
  * Keeps message strings in one place — no magic strings at call sites.
- * All messages are in Dutch (UI language).
+ * Backend rejection messages go through i18n; the support-class and
+ * reason-code tables above them are still Dutch literals.
  */
 
 import type {
@@ -45,6 +46,20 @@ export interface MutationMessage {
    * false → purely informational
    */
   readonly actionable: boolean;
+}
+
+/**
+ * A rejected text edit, as the UI needs to show it: the engine's own code and
+ * message alongside the sentence a person can act on. The code is kept because
+ * a support bundle needs the machine-readable half; the banner prints both.
+ */
+export interface TextMutationRejection extends MutationMessage {
+  /** One of BackendRejectionCode, or whatever the engine sent that was not. */
+  readonly code: string;
+  /** Verbatim engine message when the failure was thrown rather than typed. */
+  readonly detail: string | null;
+  /** The text the writer was asked to replace. */
+  readonly originalText: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -149,67 +164,41 @@ export type BackendRejectionCode =
   | 'glyph-risk-detected'
   | 'internal-error';
 
-const BACKEND_REJECTION_MESSAGES: Record<BackendRejectionCode, MutationMessage> = {
-  'replacement-too-long': {
-    tooltip: 'Vervangtekst te lang',
-    explanation:
-      'De vervangende tekst is langer dan de originele tekst. ' +
-      'De tekst moet even lang of korter zijn om de opmaak intact te houden.',
-    actionable: true,
-  },
-  'text-not-found-in-content-stream': {
-    tooltip: 'Tekst niet gevonden in PDF',
-    explanation:
-      'De te vervangen tekst kon niet worden gevonden in de PDF-inhoudsstream. ' +
-      'Mogelijk is de tekst gerenderd via een afbeelding of een onverwachte codering.',
-    actionable: false,
-  },
-  'no-content-stream': {
-    tooltip: 'Geen inhoudsstream op deze pagina',
-    explanation:
-      'De pagina bevat geen bewerkbare inhoudsstream. ' +
-      'Dit kan voorkomen bij gescande of afbeelding-gebaseerde PDF\'s.',
-    actionable: false,
-  },
-  'empty-original-text': {
-    tooltip: 'Lege tekst kan niet worden vervangen',
-    explanation: 'De originele tekst is leeg. Er valt niets te vervangen.',
-    actionable: false,
-  },
-  'page-not-found': {
-    tooltip: i18n.t('textMutation.pageNotFound'),
-    explanation: 'De opgegeven pagina bestaat niet in het document.',
-    actionable: false,
-  },
-  'encoding-not-supported': {
-    tooltip: 'Tekencodering niet ondersteund',
-    explanation:
-      'De tekencodering van dit lettertype wordt niet ondersteund voor directe bewerking. ' +
-      'CID-lettertypen, Identity-H/V, en aangepaste coderingen zijn momenteel niet bewerkbaar.',
-    actionable: false,
-  },
-  'font-encoding-unsafe': {
-    tooltip: 'Lettertype-codering niet ondersteund',
-    explanation:
-      'Het lettertype van deze tekst gebruikt een codering (bijv. CID, Identity-H/V) ' +
-      'die directe tekstvarvanging blokkeert. Alleen Latin-gecodeerde lettertypes zijn bewerkbaar.',
-    actionable: false,
-  },
-  'glyph-risk-detected': {
-    tooltip: 'Tekens mogelijk niet beschikbaar in lettertype',
-    explanation:
-      'De vervangende tekst bevat tekens die mogelijk ontbreken in het ingebedde lettertype. ' +
-      'Dit kan leiden tot lege vakjes (tofu) in de PDF. Gebruik alleen standaard Latin-tekens.',
-    actionable: true,
-  },
-  'internal-error': {
-    tooltip: 'Interne fout bij bewerken',
-    explanation:
-      'Er is een onverwachte fout opgetreden bij het bewerken van de tekst. ' +
-      'Sla het document op en probeer het opnieuw.',
-    actionable: true,
-  },
-};
+/**
+ * The nine ways `replace_text_span` can decline, in the reader's language.
+ *
+ * These used to be Dutch string literals in this file. An English-speaking user
+ * hitting a CID-encoded font got a sentence they could not read, which reaches
+ * them no better than the "not replaced" it replaced. Read through i18n at call
+ * time, not at module load: the language switcher would otherwise hand out
+ * whatever locale was active when this module was first imported.
+ */
+function backendRejectionMessage(code: BackendRejectionCode): MutationMessage {
+  return {
+    tooltip: i18n.t(`textMutation.rejection.${code}.tooltip`),
+    explanation: i18n.t(`textMutation.rejection.${code}.explanation`),
+    actionable: ACTIONABLE_REJECTIONS.has(code),
+  };
+}
+
+/** Rejections the user can do something about, as opposed to be informed of. */
+const ACTIONABLE_REJECTIONS = new Set<BackendRejectionCode>([
+  'replacement-too-long',
+  'glyph-risk-detected',
+  'internal-error',
+]);
+
+const KNOWN_REJECTION_CODES = new Set<BackendRejectionCode>([
+  'replacement-too-long',
+  'text-not-found-in-content-stream',
+  'no-content-stream',
+  'empty-original-text',
+  'page-not-found',
+  'encoding-not-supported',
+  'font-encoding-unsafe',
+  'glyph-risk-detected',
+  'internal-error',
+]);
 
 // ---------------------------------------------------------------------------
 // Font encoding messages — Phase 5 Batch 7
@@ -281,10 +270,18 @@ export function getUnsupportedMessage(result: TextMutationSupportResult): Mutati
  * Get the user-facing message for a backend rejection code.
  * Falls back to a generic internal-error message for unknown codes.
  */
-export function getBackendRejectionMessage(code: string): MutationMessage {
-  const known = BACKEND_REJECTION_MESSAGES[code as BackendRejectionCode];
-  if (known) return known;
-  return BACKEND_REJECTION_MESSAGES['internal-error'];
+export function getBackendRejectionMessage(code: string, detail?: string): MutationMessage {
+  const known = KNOWN_REJECTION_CODES.has(code as BackendRejectionCode);
+  const base = backendRejectionMessage(known ? (code as BackendRejectionCode) : 'internal-error');
+  // What the engine actually said. An unrecognised code used to be swapped for
+  // the generic internal-error text, so the one sentence that named the real
+  // cause was the one thrown away -- and every rejection read the same.
+  const raw = (detail ?? (known ? undefined : code))?.trim();
+  if (!raw) return base;
+  return {
+    ...base,
+    explanation: `${base.explanation} ${i18n.t('textMutation.rejection.bannerDetail', { detail: raw })}`,
+  };
 }
 
 /**

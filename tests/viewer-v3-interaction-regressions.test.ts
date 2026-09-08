@@ -73,7 +73,16 @@ describe('V3 desktop interaction regressions', () => {
       textInteractionSource.indexOf('// 1. Text replacement mutation'),
       textInteractionSource.indexOf('// 2. Selection-level format mutation')
     );
-    expect(replacementBranch).toContain('getBackendRejectionMessage(reason).explanation');
+    expect(replacementBranch).toContain('getBackendRejectionMessage(code, detail)');
     expect(replacementBranch).not.toContain('makeTextMutationError(reason))');
+  });
+
+  it('keeps the rejection on screen instead of only in a toast that slides away', () => {
+    const replacementBranch = textInteractionSource.slice(
+      textInteractionSource.indexOf('// 1. Text replacement mutation'),
+      textInteractionSource.indexOf('// 2. Selection-level format mutation')
+    );
+    expect(replacementBranch).toContain('setTextMutationRejection({');
+    expect(replacementBranch).toContain('detail: detail ?? null');
   });
 });

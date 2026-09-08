@@ -12,7 +12,8 @@ import type { OutlineNode, TextSpan } from '../core/document';
 import { makeDocumentEvent, appendEvent } from './state/documentEvents';
 import type { DocumentEvent } from './state/documentEvents';
 import type { AppError } from './state/errorCenter';
-import { clearError } from './state/errorCenter';
+import { appendError, clearError } from './state/errorCenter';
+import { subscribeCommandFailures } from '../lib/commandBridge';
 import i18n from '../i18n';
 import { scheduleStartupUpdateCheckIfEnabled, checkAndInstallUpdate, checkForUpdate, relaunchApp } from '../lib/updater';
 import { loadAppSettings, saveAppSettings } from './state/appSettings';
@@ -208,6 +209,14 @@ export function ViewerApp() {
   // App-level error registry — surfaced by Phase 4+ notification UI
   const [appErrors, setAppErrors] = useState<AppError[]>([]);
   const [pendingExternalLink, setPendingExternalLink] = useState<{ href: string; label: string } | null>(null);
+
+  // Every command failure and every visible fallback, from anywhere in the
+  // tree, lands in the same stack the user reads. Without this the bridge
+  // reports into an empty room: hooks five levels down have no setter for it.
+  useEffect(() => subscribeCommandFailures(error => {
+    setAppErrors(prev => appendError(prev, error));
+  }), []);
+
   const [xfaFlattenBusy, setXfaFlattenBusy] = useState(false);
   const [xfaFlattenError, setXfaFlattenError] = useState<string | null>(null);
   const [xfaBannerDismissed, setXfaBannerDismissed] = useState(false);
@@ -306,7 +315,7 @@ export function ViewerApp() {
   const handleExtractAttachment = useCallback((name: string) => {
     if (isTauri) {
       void (async () => {
-        const { invoke } = await import('@tauri-apps/api/core');
+        const { invokeCommand: invoke } = await import('../lib/commandBridge');
         await invoke<string | null>('save_attachment_dialog', { name });
       })();
     } else {
@@ -324,7 +333,7 @@ export function ViewerApp() {
   const handleAddAttachment = useCallback(() => {
     if (isTauri) {
       void (async () => {
-        const { invoke } = await import('@tauri-apps/api/core');
+        const { invokeCommand: invoke } = await import('../lib/commandBridge');
         const list = await invoke<AttachmentInfo[] | null>('add_attachment_dialog');
         if (list) setAttachments(list);
       })();
@@ -352,7 +361,7 @@ export function ViewerApp() {
   const handleRemoveAttachment = useCallback((name: string) => {
     if (isTauri) {
       void (async () => {
-        const { invoke } = await import('@tauri-apps/api/core');
+        const { invokeCommand: invoke } = await import('../lib/commandBridge');
         await invoke('remove_attachment', { name });
         const list = await invoke<AttachmentInfo[]>('list_attachments');
         setAttachments(list);
@@ -416,7 +425,7 @@ export function ViewerApp() {
   const handleRuntimeSave = useCallback(async () => {
     if (!pdfDoc || pageCount === 0) return;
     if (isTauri && currentFilePath) {
-      const { invoke } = await import('@tauri-apps/api/core');
+      const { invokeCommand: invoke } = await import('../lib/commandBridge');
       await invoke('save_pdf', { path: currentFilePath });
       clearDirty();
       return;
@@ -437,7 +446,7 @@ export function ViewerApp() {
       });
 
       if (!confirmed) return;
-      const { invoke } = await import('@tauri-apps/api/core');
+      const { invokeCommand: invoke } = await import('../lib/commandBridge');
       await invoke('open_external_url', { url: href });
       return;
     }
@@ -518,7 +527,7 @@ export function ViewerApp() {
       return;
     }
     try {
-      const { invoke } = await import('@tauri-apps/api/core');
+      const { invokeCommand: invoke } = await import('../lib/commandBridge');
       await invoke('open_external_url', { url: uri });
     } catch (err) {
       console.error('[PDFluent] failed to open external URL', err);
@@ -654,6 +663,8 @@ export function ViewerApp() {
     formatState,
     handleFormatCommand,
     editorDivRef,
+    textMutationRejection,
+    dismissTextMutationRejection,
   } = useTextInteraction(
     mode,
     activeAnnotationTool,
@@ -772,7 +783,7 @@ export function ViewerApp() {
   useEffect(() => {
     setPageLabels([]);
     if (!pdfDoc || !isTauri) return;
-    void import('@tauri-apps/api/core').then(({ invoke }) => {
+    void import('../lib/commandBridge').then(({ invokeCommand: invoke }) => {
       void invoke<string[]>('get_page_labels').then(labels => setPageLabels(labels)).catch(() => {});
     });
   }, [pdfDoc?.id]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -812,7 +823,7 @@ export function ViewerApp() {
   useEffect(() => {
     setAttachments([]);
     if (!pdfDoc || !isTauri) return;
-    void import('@tauri-apps/api/core').then(({ invoke }) => {
+    void import('../lib/commandBridge').then(({ invokeCommand: invoke }) => {
       void invoke<AttachmentInfo[]>('list_attachments').then(list => setAttachments(list)).catch(() => {});
     });
   }, [pdfDoc?.id]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -821,7 +832,7 @@ export function ViewerApp() {
     setLayers([]);
     setLayerVisibility(new Map());
     if (!pdfDoc || !isTauri) return;
-    void import('@tauri-apps/api/core').then(({ invoke }) => {
+    void import('../lib/commandBridge').then(({ invokeCommand: invoke }) => {
       void invoke<LayerInfo[]>('list_layers').then(list => {
         setLayers(list);
         setLayerVisibility(new Map(list.map(layer => [layer.id, true])));
@@ -1108,9 +1119,9 @@ export function ViewerApp() {
     let cancelled = false;
     let unlisten: (() => void) | undefined;
     void (async () => {
-      const [{ listen }, { invoke }] = await Promise.all([
+      const [{ listen }, { invokeCommand: invoke }] = await Promise.all([
         import('@tauri-apps/api/event'),
-        import('@tauri-apps/api/core'),
+        import('../lib/commandBridge'),
       ]);
       if (cancelled) return;
       unlisten = await listen<string>('open-file', (e) => {
@@ -1331,8 +1342,12 @@ export function ViewerApp() {
             </div>
           )}
 
+          {/* data-testid="welcome-screen": every e2e helper waits for it before
+              doing anything. It lived on components/WelcomeScreen.tsx, which
+              nothing renders, so the wait timed out and every spec built on the
+              helpers failed at its first line. */}
           {!pdfDoc && !docLoading && !docError && (
-            <section className="welcome-v3">
+            <section className="welcome-v3" data-testid="welcome-screen">
               <input
                 ref={welcomeFileInputRef}
                 type="file"
@@ -1687,6 +1702,37 @@ export function ViewerApp() {
         </div>
       )}
 
+      {/* Why the last text edit did not land. Sits above the toast stack and
+          stays until the next edit: a rejection that scrolls away is the same
+          as "not replaced", which is what this replaces. */}
+      {textMutationRejection && (
+        <div
+          data-testid="text-edit-rejection"
+          role="status"
+          className="fixed left-1/2 bottom-12 z-[72] w-[min(520px,calc(100vw-2rem))] -translate-x-1/2 rounded-lg border border-amber-500/40 bg-background/95 px-3 py-2 shadow-lg backdrop-blur"
+        >
+          <div className="flex items-start gap-2">
+            <div className="min-w-0 flex-1">
+              <p className="text-xs font-semibold">{i18n.t('textMutation.rejection.bannerTitle')}</p>
+              <p className="mt-0.5 text-xs font-medium text-foreground/90">{textMutationRejection.tooltip}</p>
+              <p className="mt-0.5 text-xs leading-snug text-foreground/70">{textMutationRejection.explanation}</p>
+              <p className="mt-1 font-mono text-[10px] text-muted-foreground" data-testid="text-edit-rejection-code">
+                {textMutationRejection.code}
+              </p>
+            </div>
+            <button
+              type="button"
+              data-testid="text-edit-rejection-dismiss"
+              onClick={dismissTextMutationRejection}
+              className="shrink-0 rounded p-0.5 text-muted-foreground hover:bg-muted hover:text-foreground"
+              aria-label={i18n.t('textMutation.rejection.bannerDismiss')}
+            >
+              <XIcon className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        </div>
+      )}
+
       {appErrors.length > 0 && (
         <div
           data-testid="app-error-stack"
@@ -1696,11 +1742,18 @@ export function ViewerApp() {
             <div
               key={error.id}
               data-testid="app-error-toast"
-              className="rounded-lg border border-destructive/20 bg-background/95 px-3 py-2 shadow-lg backdrop-blur"
+              data-severity={error.severity}
+              // A visible fallback is a warning: the action did something, just
+              // less than its label promised. Painting it the same red as a
+              // failed command tells the user the wrong thing about a document
+              // that did change.
+              className={`rounded-lg border bg-background/95 px-3 py-2 shadow-lg backdrop-blur ${
+                error.severity === 'error' ? 'border-destructive/20' : 'border-amber-500/40'
+              }`}
             >
               <div className="flex items-start gap-2">
                 <div className="min-w-0 flex-1">
-                  <p className="text-xs font-semibold text-destructive">{error.title}</p>
+                  <p className={`text-xs font-semibold ${error.severity === 'error' ? 'text-destructive' : 'text-foreground'}`}>{error.title}</p>
                   <p className="mt-0.5 text-xs leading-snug text-foreground/80">{error.message}</p>
                 </div>
                 <button

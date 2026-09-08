@@ -111,8 +111,9 @@ describe('TextMutationEngine — interface shape', () => {
 // ---------------------------------------------------------------------------
 
 describe('TauriTextMutationEngine — IPC implementation', () => {
-  it('imports invoke from @tauri-apps/api/core', () => {
-    expect(tauriTextMutationEngineSrc).toContain("from '@tauri-apps/api/core'");
+  it('reaches the backend through the command bridge, not the raw IPC', () => {
+    expect(tauriTextMutationEngineSrc).toContain("from '../../../lib/commandBridge'");
+    expect(tauriTextMutationEngineSrc).not.toContain("@tauri-apps/api/core");
     expect(tauriTextMutationEngineSrc).toContain('invoke');
   });
 

@@ -109,7 +109,7 @@ export function OrganizeGrid({ thumbnails, pageCount, onPageMutation, onMarkDirt
     const taskId = `delete-page-${Date.now()}`;
     push({ id: taskId, label: t('tasks.deletePageRunning', { page: pageIndex + 1 }), progress: null, status: 'running' });
     try {
-      const { invoke } = await import('@tauri-apps/api/core');
+      const { invokeCommand: invoke } = await import('../../lib/commandBridge');
       const result = await invoke<{ page_count: number }>('delete_pages', { pageIndices: [pageIndex] });
       update(taskId, { status: 'done', label: t('tasks.deletePageDone', { page: pageIndex + 1 }) });
       onPageMutation(result.page_count);
@@ -125,7 +125,7 @@ export function OrganizeGrid({ thumbnails, pageCount, onPageMutation, onMarkDirt
     const taskId = `rotate-page-${Date.now()}`;
     push({ id: taskId, label: t('tasks.rotatePageRunning', { page: pageIndex + 1 }), progress: null, status: 'running' });
     try {
-      const { invoke } = await import('@tauri-apps/api/core');
+      const { invokeCommand: invoke } = await import('../../lib/commandBridge');
       const result = await invoke<{ page_count: number }>('rotate_pages', { pageIndices: [pageIndex], rotation });
       update(taskId, { status: 'done', label: t('tasks.rotatePageDone', { page: pageIndex + 1 }) });
       onPageMutation(result.page_count);
@@ -143,7 +143,7 @@ export function OrganizeGrid({ thumbnails, pageCount, onPageMutation, onMarkDirt
     const taskId = `batch-delete-${Date.now()}`;
     push({ id: taskId, label: t('tasks.deleteManyRunning', { count: indices.length }), progress: null, status: 'running' });
     try {
-      const { invoke } = await import('@tauri-apps/api/core');
+      const { invokeCommand: invoke } = await import('../../lib/commandBridge');
       const result = await invoke<{ page_count: number }>('delete_pages', { pageIndices: indices });
       update(taskId, { status: 'done', label: t('tasks.deleteManyDone', { count: indices.length }) });
       clearSelection();
@@ -160,7 +160,7 @@ export function OrganizeGrid({ thumbnails, pageCount, onPageMutation, onMarkDirt
     const taskId = `batch-rotate-${Date.now()}`;
     push({ id: taskId, label: t('tasks.batchRotateRunning', { count: indices.length }), progress: null, status: 'running' });
     try {
-      const { invoke } = await import('@tauri-apps/api/core');
+      const { invokeCommand: invoke } = await import('../../lib/commandBridge');
       const result = await invoke<{ page_count: number }>('rotate_pages', { pageIndices: indices, rotation });
       update(taskId, { status: 'done', label: t('tasks.batchRotateDone', { count: indices.length }) });
       clearSelection();
@@ -189,7 +189,7 @@ export function OrganizeGrid({ thumbnails, pageCount, onPageMutation, onMarkDirt
     const taskId = `reorder-pages-${Date.now()}`;
     push({ id: taskId, label: t('organize.applyingOrder'), progress: null, status: 'running' });
     try {
-      const { invoke } = await import('@tauri-apps/api/core');
+      const { invokeCommand: invoke } = await import('../../lib/commandBridge');
       const result = await invoke<{ page_count: number }>('reorder_pages', { newOrder: pendingOrder });
       update(taskId, { status: 'done', label: t('organize.orderApplied') });
       setPendingOrder(null);
@@ -230,7 +230,7 @@ export function OrganizeGrid({ thumbnails, pageCount, onPageMutation, onMarkDirt
     const taskId = `append-pdf-${Date.now()}`;
     push({ id: taskId, label: t('organize.addingPdf'), progress: null, status: 'running' });
     try {
-      const { invoke } = await import('@tauri-apps/api/core');
+      const { invokeCommand: invoke } = await import('../../lib/commandBridge');
       const result = await invoke<{ page_count: number }>('append_pdf', { sourcePath });
       update(taskId, { status: 'done', label: t('organize.pdfAdded') });
       onMarkDirty();
@@ -261,7 +261,7 @@ export function OrganizeGrid({ thumbnails, pageCount, onPageMutation, onMarkDirt
     const taskId = `combine-pdf-${Date.now()}`;
     push({ id: taskId, label: t('organize.combiningFiles', { count: sources.length }), progress: null, status: 'running' });
     try {
-      const { invoke } = await import('@tauri-apps/api/core');
+      const { invokeCommand: invoke } = await import('../../lib/commandBridge');
       let latestCount = pageCount;
       for (const sourcePath of sources) {
         const result = await invoke<{ page_count: number }>('append_pdf', { sourcePath });
@@ -292,7 +292,7 @@ export function OrganizeGrid({ thumbnails, pageCount, onPageMutation, onMarkDirt
     const taskId = `insert-pdf-${Date.now()}`;
     push({ id: taskId, label: t('organize.insertingPdf', { page: atIndex + 1 }), progress: null, status: 'running' });
     try {
-      const { invoke } = await import('@tauri-apps/api/core');
+      const { invokeCommand: invoke } = await import('../../lib/commandBridge');
       const result = await invoke<{ page_count: number }>('insert_pdf_at', { sourcePath, atIndex });
       update(taskId, { status: 'done', label: t('organize.pdfInserted') });
       clearSelection();
@@ -317,7 +317,7 @@ export function OrganizeGrid({ thumbnails, pageCount, onPageMutation, onMarkDirt
     const taskId = `export-selection-${Date.now()}`;
     push({ id: taskId, label: t('organize.exportingPages', { count: indices.length }), progress: null, status: 'running' });
     try {
-      const { invoke } = await import('@tauri-apps/api/core');
+      const { invokeCommand: invoke } = await import('../../lib/commandBridge');
       await invoke('extract_pages_to_file', { pageIndices: indices, outputPath });
       update(taskId, { status: 'done', label: t('organize.selectionExported', { name: outputPath.split('/').pop() ?? outputPath }) });
       // Current document is unchanged — no dirty or page mutation
@@ -339,7 +339,7 @@ export function OrganizeGrid({ thumbnails, pageCount, onPageMutation, onMarkDirt
     const taskId = `split-pages-${Date.now()}`;
     push({ id: taskId, label: t('organize.splittingPages'), progress: null, status: 'running' });
     try {
-      const { invoke } = await import('@tauri-apps/api/core');
+      const { invokeCommand: invoke } = await import('../../lib/commandBridge');
       const paths = await invoke<string[]>('split_into_pages', { outputDir });
       update(taskId, { status: 'done', label: t('organize.pagesSaved', { count: paths.length }) });
       // Current document is unchanged — no dirty or page mutation
@@ -365,7 +365,7 @@ export function OrganizeGrid({ thumbnails, pageCount, onPageMutation, onMarkDirt
     const taskId = `split-range-${Date.now()}`;
     push({ id: taskId, label: t('organize.splittingRanges', { count: ranges.length }), progress: null, status: 'running' });
     try {
-      const { invoke } = await import('@tauri-apps/api/core');
+      const { invokeCommand: invoke } = await import('../../lib/commandBridge');
       const paths = await invoke<string[]>('split_pdf', { ranges, outputDir });
       update(taskId, { status: 'done', label: t('organize.filesSaved', { count: paths.length }) });
     } catch (err) {

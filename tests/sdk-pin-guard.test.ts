@@ -126,7 +126,13 @@ describe('SDK pin drift-guard', () => {
     // side is a mirror of the same history — so CI rewrites the URL instead of
     // carrying a second credential. Every job that compiles Rust needs it, and
     // they all get it from the same `*sdk-pin` block.
-    expect(GITLAB_CI).toMatch(/insteadOf "https:\/\/github\.com\/pdfluent\/engine"/);
+    //
+    // The rewrite moved from `git config --global` to GIT_CONFIG_COUNT/KEY/
+    // VALUE: on a shell runner --global wrote the token-bearing URL into the
+    // runner user's ~/.gitconfig and left it there. See
+    // tests/ci-runner-hygiene.test.ts.
+    expect(GITLAB_CI).toMatch(/GIT_CONFIG_KEY_0="url\.[^"]*\.insteadOf"/);
+    expect(GITLAB_CI).toMatch(/GIT_CONFIG_VALUE_0="https:\/\/github\.com\/pdfluent\/engine"/);
     // `stage:` is what separates a job from the variables block and the shared
     // anchors, which mention cargo without ever running it.
     const rustJobs = GITLAB_CI.split(/\n(?=[a-z][a-z0-9-]*:\n)/).filter(

@@ -73,7 +73,7 @@ export function useFormFields(
     // Save to current path if known; otherwise open Save As dialog
     if (currentFilePath && runtimeSupports('save')) {
       try {
-        const { invoke } = await import('@tauri-apps/api/core');
+        const { invokeCommand: invoke } = await import('../../lib/commandBridge');
         await invoke('save_pdf', { path: currentFilePath });
         clearDirty();
       } catch { /* silent — TopBar task queue surfaces errors */ }

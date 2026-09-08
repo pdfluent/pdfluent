@@ -1,0 +1,10 @@
+Executable=PDFluent.app/Contents/MacOS/pdfluent-desktop
+Identifier=com.pdfluent.app
+Format=app bundle with Mach-O universal (x86_64 arm64)
+CodeDirectory v=20500 size=1042 flags=0x10000(runtime) hashes=25+7 location=embedded
+Signature size=9057
+Authority=Developer ID Application: Innovation Trigger B.V. (58Z6SVW7CN)
+Authority=Developer ID Certification Authority
+Authority=Apple Root CA
+TeamIdentifier=58Z6SVW7CN
+Sealed Resources version=2 rules=13 files=214
