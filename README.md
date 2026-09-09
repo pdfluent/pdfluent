@@ -40,7 +40,7 @@ A longer, regularly updated comparison lives at [pdfluent.com/vs-adobe-acrobat](
 
 ## Built on the PDFluent SDK
 
-The editor's PDF engine, the [PDFluent SDK](https://pdfluent.com/sdk), is a separate, commercially licensed product with bindings for six languages. If you're building your own PDF tooling rather than using the editor, the SDK is what you want:
+The editor's PDF engine, the [PDFluent SDK](https://pdfluent.com/sdk), is a separate product with bindings for six languages. It is dual-licensed: AGPL-3.0, or a commercial licence if the copyleft does not work for you. If you're building your own PDF tooling rather than using the editor, the SDK is what you want:
 
 | Language | Package | Install |
 |---|---|---|
@@ -69,7 +69,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for how to set up a dev environment, code
 Yes, for the desktop editor, including commercial and business use. No license key, no trial period, no feature gates.
 
 **Is it open source?**
-It's source-available, not open source in the OSI sense. The code here is public under the license in [LICENSE.md](LICENSE.md), which lets you read, build, and modify the editor but doesn't grant a right to extract or redistribute the embedded PDF engine outside the app. The separately licensed [PDFluent SDK](https://pdfluent.com/sdk) is a different product with its own commercial license.
+It's source-available, not open source in the OSI sense. The code here is public under the license in [LICENSE.md](LICENSE.md), which lets you read, build, and modify the editor but doesn't grant a right to extract or redistribute the embedded PDF engine outside the app. The [PDFluent SDK](https://pdfluent.com/sdk) is a different product with its own licence: AGPL-3.0, or a commercial licence at your option.
 
 **Does anything leave my device?**
 No, by default. PDFluent doesn't upload your documents anywhere. Optional diagnostics are opt-in.
