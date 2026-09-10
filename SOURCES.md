@@ -33,6 +33,7 @@ question gets asked before the commit rather than after the publication.
 | `tests/fixtures/minimal.pdf` | written by us, smallest valid PDF | ours |
 | `tests/fixtures/sample-text.pdf` | written by us | ours |
 | `tests/fixtures/sample-xfa.pdf` | written by us as a minimal XFA shell | ours |
+| `src-tauri/tests/fixtures/xl_31_dynamic_multipage_overflow.pdf` | written by us as a dynamic XFA overflow case | ours |
 | `store/screenshots/en/demo/Project-Proposal.pdf` | written by us as demo content | ours |
 
 ## Images

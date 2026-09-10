@@ -217,6 +217,27 @@ republishing is an afternoon, at four months it is the work again. The numbers
 live in `scripts/ci/repo-truth.mjs` and a test fails if this document and the
 script stop agreeing.
 
+### Changing a file that exists only on the public side
+
+`SOURCES.md`, the public repository's own workflows and the guards they run are
+`public_only`: the snapshot carries them over from the public head rather than
+publishing them from here. That left no way to change one. The only edit that
+reached them was a commit made directly on the public repository — which is
+exactly how a public head came to carry no `Published-from:` trailer on
+2026-09-09, with nothing able to say for two hours which trunk commit the public
+side held.
+
+They are edited in `docs/public-only/` instead. A file there replaces, or adds,
+the public-only entry at the same path, so a change to any of them passes this
+repository's gate and its review and then arrives inside a snapshot commit that
+carries the trailer like every other. **A public-only file is never changed by
+committing to the public repository.**
+
+A file under `docs/public-only/` that the manifest does not name as
+`public_only` is refused: without that the directory is a second way to publish
+anything, which is the one thing `PUBLIC_TREE.json` exists to prevent. The
+directory itself is `internal`, or every overlaid file would appear twice.
+
 ## Publishing
 
 1. `node scripts/ci/internal-terms.mjs --tree` — nothing internal in the tree
@@ -224,6 +245,14 @@ script stop agreeing.
 2. `node scripts/ci/publish-public-snapshot.mjs` — builds the snapshot commit on
    top of the current public head. It refuses first if git would sign it with
    anything but a `@users.noreply.github.com` alias, and it never pushes.
+   Before it offers anything to push, it runs the public repository's own
+   guards against the snapshot tree — the address scan and the sources
+   requirement — and refuses if either says no. Not copies of them: the snapshot
+   carries those files forward, so the guards inside the tree judge the tree,
+   and whatever the public side will run on the pushed commit has already run
+   here on the same bytes. Two of them were failing on published snapshots
+   before this existed, one of them since the snapshot before that, because this
+   side published without ever asking what that side checks.
 3. `git push --dry-run <public> <commit>:refs/heads/main` — read what it says.
 4. Push, then run `node scripts/ci/repo-truth.mjs`. Green is the receipt.
 

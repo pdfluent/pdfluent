@@ -36,7 +36,7 @@
 //   node scripts/ci/publish-public-snapshot.mjs [--source <ref>] [--no-fetch]
 //   … then push the printed commit yourself. This script never pushes.
 import { execFileSync, spawnSync } from "node:child_process";
-import { mkdtempSync, rmSync } from "node:fs";
+import { existsSync, mkdtempSync, readdirSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { loadManifest, isPublished, isPublicOnly, root } from "./public-tree.mjs";
@@ -96,6 +96,112 @@ export function identityFault(author, committer) {
   return null;
 }
 
+/**
+ * The checks the public repository runs, run here, before the push.
+ *
+ * Two of its guards have been failing on published snapshots: one on a personal
+ * address in a test fixture, one on two files with no row in SOURCES.md. Both
+ * were only visible after a push — to a repository anyone can read — because
+ * this side publishes without ever asking what that side checks. One of them had
+ * been red since the snapshot before, which is how long "we find out afterwards"
+ * lasts.
+ *
+ * These are not reimplementations. The snapshot carries the public-only files
+ * forward, so the guards are inside the tree being judged and they judge
+ * themselves: whatever the public side runs on the pushed commit runs here on
+ * the same bytes first. A copy would drift, and a drifting copy of a guard is
+ * worse than no copy, because it reports on a rule nobody holds.
+ *
+ * The tree is materialised into a throwaway repository because both guards ask
+ * `git ls-files` what to look at, which is the right question and needs an
+ * index to answer.
+ */
+export function publicGuardsRefuse(commit, { guards = PUBLIC_GUARDS } = {}) {
+  const dir = mkdtempSync(join(tmpdir(), "pdfluent-snapshot-guards-"));
+  const run = (cmd, args, opts = {}) => spawnSync(cmd, args, { encoding: "utf8", ...opts });
+  try {
+    const archive = spawnSync("git", ["archive", "--format=tar", commit], {
+      cwd: root, encoding: "buffer", maxBuffer: 512 * 1024 * 1024,
+    });
+    if (archive.status !== 0) return [`could not read the snapshot tree: ${String(archive.stderr)}`];
+    const untar = spawnSync("tar", ["-x", "-C", dir], { input: archive.stdout });
+    if (untar.status !== 0) return [`could not unpack the snapshot tree: ${String(untar.stderr)}`];
+
+    for (const args of [["init", "-q"], ["add", "-A"]]) run("git", args, { cwd: dir });
+
+    const refused = [];
+    for (const guard of guards) {
+      if (!existsSync(join(dir, guard))) {
+        // Not a pass: these live in the published tree, so a missing one means
+        // the snapshot no longer carries the check it is meant to satisfy.
+        refused.push(`  - ${guard} is not in the snapshot, so it could not be run.`);
+        continue;
+      }
+      const r = run("python3", [guard], { cwd: dir });
+      if (r.status !== 0) {
+        refused.push(`  - ${guard} exited ${r.status}:\n${`${r.stdout}${r.stderr}`.trim().split("\n").map((l) => `      ${l}`).join("\n")}`);
+      }
+    }
+    return refused;
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+}
+
+export const PUBLIC_GUARDS = [
+  "scripts/ci/no_personal_address_in_the_tree.py",
+  "scripts/ci/every_document_has_a_source.py",
+];
+
+/**
+ * Where a public-only file is edited.
+ *
+ * SOURCES.md, the public repository's own workflows and the guards they run
+ * exist only on that side, so the snapshot carries them over from the public
+ * head untouched. That left no way to change one: the only edit that reached
+ * them was a commit made directly on the public repository — which is how a head
+ * came to carry no `Published-from:` trailer on 2026-09-09, and how nobody could
+ * say for two hours which trunk commit the public side held.
+ *
+ * They are edited here instead. `docs/public-only/<path>` replaces, or adds, the
+ * public-only entry at `<path>`, so a change to any of them passes this
+ * repository's gate and its review and arrives inside a snapshot commit that
+ * carries the trailer like every other.
+ *
+ * A file under here that the manifest does not name as `public_only` is refused.
+ * Without that, the directory quietly becomes a second way to publish anything,
+ * which is the one thing PUBLIC_TREE.json exists to prevent.
+ */
+export const OVERLAY_DIR = "docs/public-only";
+
+export function applyOverlay(kept, manifest, { dir = join(root, OVERLAY_DIR) } = {}) {
+  if (!existsSync(dir)) return null;
+  const files = [];
+  const walk = (d, prefix) => {
+    for (const name of readdirSync(d, { withFileTypes: true })) {
+      const full = join(d, name.name);
+      const rel = prefix ? `${prefix}/${name.name}` : name.name;
+      if (name.isDirectory()) walk(full, rel);
+      else if (name.isFile()) files.push([rel, full]);
+    }
+  };
+  walk(dir, "");
+  const stray = files.filter(([rel]) => !isPublicOnly(rel, manifest)).map(([rel]) => rel);
+  if (stray.length) {
+    return (
+      `publish: ${OVERLAY_DIR} holds ${stray.length} file(s) the manifest does not call public-only:\n` +
+      stray.map((p) => `  · ${p}`).join("\n") +
+      `\n\nAn overlay file is a published file. Declare it in docs/PUBLIC_TREE.json under\n` +
+      "public_only with the reason it lives only on that side, or publish it the ordinary way."
+    );
+  }
+  for (const [rel, full] of files) {
+    const sha = execFileSync("git", ["hash-object", "-w", full], { cwd: root, encoding: "utf8" }).trim();
+    kept.set(rel, ["100644", sha]);
+  }
+  return null;
+}
+
 function main(argv) {
   // First, before the fetch: refusing early is the whole point of refusing here.
   let author, committer;
@@ -135,7 +241,12 @@ function main(argv) {
     return 1;
   }
 
-  const keep = entries(PUBLIC_REF).filter(([, , p]) => isPublicOnly(p, manifest));
+  const kept = new Map(
+    entries(PUBLIC_REF).filter(([, , p]) => isPublicOnly(p, manifest)).map(([m, sha, p]) => [p, [m, sha]]),
+  );
+  const overlaid = applyOverlay(kept, manifest);
+  if (typeof overlaid === "string") { console.error(overlaid); return 1; }
+  const keep = [...kept].map(([p, [m, sha]]) => [m, sha, p]);
   const publish = entries(sourceSha).filter(([, , p]) => isPublished(p, manifest));
   if (keep.length === 0) {
     console.error("publish: the public head carries none of the public-only files the manifest names.");
@@ -200,6 +311,18 @@ function main(argv) {
     console.log(`  published from ${sourceSha.slice(0, 7)} (${source})`);
     console.log(`  files          ${publish.length} published + ${keep.length} public-only, ${changed.length} changed`);
     console.log("");
+
+    const refused = publicGuardsRefuse(commit);
+    if (refused.length) {
+      console.error("The public repository's own guards refuse this snapshot:\n");
+      for (const r of refused) console.error(`${r}\n`);
+      console.error(
+        "Nothing has been pushed. Fix it on the trunk (or, for a public-only file, through\n" +
+        "the route in docs/REPO_TRUTH.md) and build the snapshot again.",
+      );
+      return 1;
+    }
+
     console.log("Nothing has been pushed. To publish it:");
     console.log(`  git push ${PUBLIC_URL} ${commit}:refs/heads/main`);
     console.log("Check it first with --dry-run, and read docs/REPO_TRUTH.md before you do.");
