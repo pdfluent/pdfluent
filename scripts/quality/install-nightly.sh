@@ -59,9 +59,24 @@ if [ "${DRY}" -eq 0 ] && [ ! -d "${CHECKOUT}/.git" ]; then
     && git -C "${CHECKOUT}" remote add gitlab "$(git -C "${REPO_ROOT}" remote get-url gitlab)" 2>/dev/null || true
 fi
 
+# The Windows lane reads the build host's address from the gitignored .env. It
+# is machine-local and never committed, so the nightly's checkout has none of
+# its own: without this the Windows half reports COULD_NOT_RUN every night for a
+# reason that has nothing to do with any artefact.
+if [ "${DRY}" -eq 0 ] && [ -f "${REPO_ROOT}/.env" ] && [ ! -f "${CHECKOUT}/.env" ]; then
+  cp "${REPO_ROOT}/.env" "${CHECKOUT}/.env"
+fi
+
 sed -e "s#__CHECKOUT__#${CHECKOUT}#g" -e "s#__LOGDIR__#${SUPPORT}/logs#g" -e "s#__ARTEFACTS__#${ARTEFACTS}#g" \
   "${REPO_ROOT}/packaging/launchd/${LABEL}.plist" > "${TARGET}.new"
-plutil -lint "${TARGET}.new" >/dev/null
+# plutil is macOS-only and this script is read by a pipeline that is not. A
+# missing tool is a reason to say so, not a silent pass: the file is still
+# written and the cases that matter read it directly.
+if command -v plutil >/dev/null 2>&1; then
+  plutil -lint "${TARGET}.new" >/dev/null
+else
+  echo "SKIPPED (not a pass): plutil is macOS-only, so the plist was not linted" >&2
+fi
 
 if [ "${DRY}" -eq 1 ]; then
   cat "${TARGET}.new"; rm -f "${TARGET}.new"; exit 0

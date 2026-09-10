@@ -18,7 +18,7 @@ import { join, resolve } from "node:path";
 import { afterAll, describe, expect, it } from "vitest";
 import { runToFile } from "./run";
 // @ts-expect-error — a plain .mjs script with no type declarations
-import { qualityReportFailures } from "../../scripts/ci/repo-truth.mjs";
+import { qualityReportFailures, cutInProgress, isNewer } from "../../scripts/ci/repo-truth.mjs";
 
 const root = resolve(__dirname, "../..");
 const git = (args: string[], input?: string) =>
@@ -112,7 +112,16 @@ describe("what people can read is what they run", () => {
       version: string; commit: string;
     };
     const pkg = JSON.parse(readFileSync(resolve(root, "package.json"), "utf8")) as { version: string };
-    expect(shipped.version).toBe(pkg.version);
+    // The two versions agree, or this checkout is between the bump and the
+    // record of what was built — the state every cut passes through, and the
+    // only one where they may differ. Same helper the guard uses, so the case
+    // and the script cannot drift apart on what "in progress" means.
+    if (shipped.version !== pkg.version) {
+      expect(
+        cutInProgress(pkg.version, shipped.version),
+        `package.json ${pkg.version} and SHIPPED.json ${shipped.version} differ, and this is not a cut in progress`,
+      ).toBeTruthy();
+    }
     expect(() => git(["merge-base", "--is-ancestor", shipped.commit, "HEAD"])).not.toThrow();
   });
 
@@ -197,5 +206,45 @@ describe("repo-truth: shipped binaries name their quality reports", () => {
   it("the shipped record in this repository satisfies the leg", () => {
     const record = JSON.parse(readFileSync(join(process.cwd(), "docs/SHIPPED.json"), "utf8"));
     expect(qualityReportFailures(record)).toEqual([]);
+  });
+});
+
+// ── A cut in progress is not a drift ────────────────────────────────────────
+//
+// The bumps land as one commit and the record of what was built lands as
+// another, because the second has to name the first one's sha. Between them,
+// package.json names a version SHIPPED.json has never heard of. The guard used
+// to call that a failure, which meant the only way to land a version bump was
+// to skip the gate that exists to catch exactly this kind of mismatch.
+describe("repo-truth: the state between the bump and the record", () => {
+  const never = () => false;
+  const always = () => true;
+
+  it("tolerates a newer package.json while no tag exists yet", () => {
+    const why = cutInProgress("1.0.0", "1.0.0-beta.21", { hasTag: never });
+    expect(why).toBeTruthy();
+    expect(why).toContain("cut in progress");
+  });
+
+  it("still fails once the tag exists and the record has not followed", () => {
+    // This is the drift the leg is for: something was built and tagged, and
+    // nothing says what it was built from.
+    expect(cutInProgress("1.0.0", "1.0.0-beta.21", { hasTag: always })).toBeNull();
+  });
+
+  it("does not tolerate a version going backwards", () => {
+    expect(cutInProgress("1.0.0-beta.20", "1.0.0-beta.21", { hasTag: never })).toBeNull();
+    expect(cutInProgress("0.9.0", "1.0.0", { hasTag: never })).toBeNull();
+  });
+
+  it("leaves the ordinary case alone", () => {
+    expect(cutInProgress("1.0.0", "1.0.0", { hasTag: never })).toBeNull();
+  });
+
+  it("counts a release as newer than its own prereleases", () => {
+    expect(isNewer("1.0.0", "1.0.0-beta.21")).toBe(true);
+    expect(isNewer("1.0.0-beta.21", "1.0.0")).toBe(false);
+    expect(isNewer("1.0.1", "1.0.0")).toBe(true);
+    expect(isNewer("1.0.0", "1.0.0")).toBe(false);
   });
 });

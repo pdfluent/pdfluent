@@ -1416,7 +1416,7 @@ dependencies = [
 [[package]]
 name = "formcalc-interpreter"
 version = "1.0.0"
-source = "git+https://github.com/pdfluent/engine?rev=e8b80ac4317152fccbfc2ad876dd89058a85cb6e#e8b80ac4317152fccbfc2ad876dd89058a85cb6e"
+source = "git+https://github.com/pdfluent/engine?rev=5b2e506bbe957a9db8f21f43978c400621f8f1bf#5b2e506bbe957a9db8f21f43978c400621f8f1bf"
 dependencies = [
  "thiserror 2.0.18",
  "xfa-dom-resolver",
@@ -3343,7 +3343,7 @@ checksum = "df94ce210e5bc13cb6651479fa48d14f601d9858cfe0467f43ae157023b938d3"
 [[package]]
 name = "pdf-annot"
 version = "1.0.0"
-source = "git+https://github.com/pdfluent/engine?rev=e8b80ac4317152fccbfc2ad876dd89058a85cb6e#e8b80ac4317152fccbfc2ad876dd89058a85cb6e"
+source = "git+https://github.com/pdfluent/engine?rev=5b2e506bbe957a9db8f21f43978c400621f8f1bf#5b2e506bbe957a9db8f21f43978c400621f8f1bf"
 dependencies = [
  "log",
  "pdf-syntax",
@@ -3354,7 +3354,7 @@ dependencies = [
 [[package]]
 name = "pdf-compliance"
 version = "1.0.0"
-source = "git+https://github.com/pdfluent/engine?rev=e8b80ac4317152fccbfc2ad876dd89058a85cb6e#e8b80ac4317152fccbfc2ad876dd89058a85cb6e"
+source = "git+https://github.com/pdfluent/engine?rev=5b2e506bbe957a9db8f21f43978c400621f8f1bf#5b2e506bbe957a9db8f21f43978c400621f8f1bf"
 dependencies = [
  "flate2",
  "log",
@@ -3368,7 +3368,7 @@ dependencies = [
 [[package]]
 name = "pdf-docx"
 version = "1.0.0"
-source = "git+https://github.com/pdfluent/engine?rev=e8b80ac4317152fccbfc2ad876dd89058a85cb6e#e8b80ac4317152fccbfc2ad876dd89058a85cb6e"
+source = "git+https://github.com/pdfluent/engine?rev=5b2e506bbe957a9db8f21f43978c400621f8f1bf#5b2e506bbe957a9db8f21f43978c400621f8f1bf"
 dependencies = [
  "log",
  "pdfluent-extract",
@@ -3381,7 +3381,7 @@ dependencies = [
 [[package]]
 name = "pdf-engine"
 version = "1.0.0"
-source = "git+https://github.com/pdfluent/engine?rev=e8b80ac4317152fccbfc2ad876dd89058a85cb6e#e8b80ac4317152fccbfc2ad876dd89058a85cb6e"
+source = "git+https://github.com/pdfluent/engine?rev=5b2e506bbe957a9db8f21f43978c400621f8f1bf#5b2e506bbe957a9db8f21f43978c400621f8f1bf"
 dependencies = [
  "formcalc-interpreter",
  "kurbo 0.13.1",
@@ -3400,7 +3400,7 @@ dependencies = [
 [[package]]
 name = "pdf-font"
 version = "1.0.0-beta.5"
-source = "git+https://github.com/pdfluent/engine?rev=e8b80ac4317152fccbfc2ad876dd89058a85cb6e#e8b80ac4317152fccbfc2ad876dd89058a85cb6e"
+source = "git+https://github.com/pdfluent/engine?rev=5b2e506bbe957a9db8f21f43978c400621f8f1bf#5b2e506bbe957a9db8f21f43978c400621f8f1bf"
 dependencies = [
  "brotli",
  "log",
@@ -3410,7 +3410,7 @@ dependencies = [
 [[package]]
 name = "pdf-interpret"
 version = "0.5.8"
-source = "git+https://github.com/pdfluent/engine?rev=e8b80ac4317152fccbfc2ad876dd89058a85cb6e#e8b80ac4317152fccbfc2ad876dd89058a85cb6e"
+source = "git+https://github.com/pdfluent/engine?rev=5b2e506bbe957a9db8f21f43978c400621f8f1bf#5b2e506bbe957a9db8f21f43978c400621f8f1bf"
 dependencies = [
  "bitflags 2.13.1",
  "kurbo 0.13.1",
@@ -3430,7 +3430,7 @@ dependencies = [
 [[package]]
 name = "pdf-invoice"
 version = "1.0.0"
-source = "git+https://github.com/pdfluent/engine?rev=e8b80ac4317152fccbfc2ad876dd89058a85cb6e#e8b80ac4317152fccbfc2ad876dd89058a85cb6e"
+source = "git+https://github.com/pdfluent/engine?rev=5b2e506bbe957a9db8f21f43978c400621f8f1bf#5b2e506bbe957a9db8f21f43978c400621f8f1bf"
 dependencies = [
  "chrono",
  "flate2",
@@ -3445,13 +3445,14 @@ dependencies = [
 [[package]]
 name = "pdf-manip"
 version = "1.0.0"
-source = "git+https://github.com/pdfluent/engine?rev=e8b80ac4317152fccbfc2ad876dd89058a85cb6e#e8b80ac4317152fccbfc2ad876dd89058a85cb6e"
+source = "git+https://github.com/pdfluent/engine?rev=5b2e506bbe957a9db8f21f43978c400621f8f1bf#5b2e506bbe957a9db8f21f43978c400621f8f1bf"
 dependencies = [
  "flate2",
  "image",
  "js-sys",
  "pdf-font",
  "pdf-standard-fonts",
+ "pdf-substitute-fonts",
  "pdfluent-cff",
  "pdfluent-jbig2",
  "pdfluent-lopdf",
@@ -3470,7 +3471,7 @@ dependencies = [
 [[package]]
 name = "pdf-pptx"
 version = "1.0.0"
-source = "git+https://github.com/pdfluent/engine?rev=e8b80ac4317152fccbfc2ad876dd89058a85cb6e#e8b80ac4317152fccbfc2ad876dd89058a85cb6e"
+source = "git+https://github.com/pdfluent/engine?rev=5b2e506bbe957a9db8f21f43978c400621f8f1bf#5b2e506bbe957a9db8f21f43978c400621f8f1bf"
 dependencies = [
  "pdfluent-extract",
  "pdfluent-lopdf",
@@ -3482,7 +3483,7 @@ dependencies = [
 [[package]]
 name = "pdf-redact"
 version = "1.0.0"
-source = "git+https://github.com/pdfluent/engine?rev=e8b80ac4317152fccbfc2ad876dd89058a85cb6e#e8b80ac4317152fccbfc2ad876dd89058a85cb6e"
+source = "git+https://github.com/pdfluent/engine?rev=5b2e506bbe957a9db8f21f43978c400621f8f1bf#5b2e506bbe957a9db8f21f43978c400621f8f1bf"
 dependencies = [
  "flate2",
  "pdf-manip",
@@ -3495,7 +3496,7 @@ dependencies = [
 [[package]]
 name = "pdf-render"
 version = "1.0.0"
-source = "git+https://github.com/pdfluent/engine?rev=e8b80ac4317152fccbfc2ad876dd89058a85cb6e#e8b80ac4317152fccbfc2ad876dd89058a85cb6e"
+source = "git+https://github.com/pdfluent/engine?rev=5b2e506bbe957a9db8f21f43978c400621f8f1bf#5b2e506bbe957a9db8f21f43978c400621f8f1bf"
 dependencies = [
  "bytemuck",
  "fast_image_resize",
@@ -3508,12 +3509,17 @@ dependencies = [
 [[package]]
 name = "pdf-standard-fonts"
 version = "1.0.0"
-source = "git+https://github.com/pdfluent/engine?rev=e8b80ac4317152fccbfc2ad876dd89058a85cb6e#e8b80ac4317152fccbfc2ad876dd89058a85cb6e"
+source = "git+https://github.com/pdfluent/engine?rev=5b2e506bbe957a9db8f21f43978c400621f8f1bf#5b2e506bbe957a9db8f21f43978c400621f8f1bf"
+
+[[package]]
+name = "pdf-substitute-fonts"
+version = "1.0.0"
+source = "git+https://github.com/pdfluent/engine?rev=5b2e506bbe957a9db8f21f43978c400621f8f1bf#5b2e506bbe957a9db8f21f43978c400621f8f1bf"
 
 [[package]]
 name = "pdf-syntax"
 version = "0.5.6"
-source = "git+https://github.com/pdfluent/engine?rev=e8b80ac4317152fccbfc2ad876dd89058a85cb6e#e8b80ac4317152fccbfc2ad876dd89058a85cb6e"
+source = "git+https://github.com/pdfluent/engine?rev=5b2e506bbe957a9db8f21f43978c400621f8f1bf#5b2e506bbe957a9db8f21f43978c400621f8f1bf"
 dependencies = [
  "flate2",
  "log",
@@ -3528,7 +3534,7 @@ dependencies = [
 [[package]]
 name = "pdf-text-format"
 version = "1.0.0"
-source = "git+https://github.com/pdfluent/engine?rev=e8b80ac4317152fccbfc2ad876dd89058a85cb6e#e8b80ac4317152fccbfc2ad876dd89058a85cb6e"
+source = "git+https://github.com/pdfluent/engine?rev=5b2e506bbe957a9db8f21f43978c400621f8f1bf#5b2e506bbe957a9db8f21f43978c400621f8f1bf"
 dependencies = [
  "pdf-manip",
  "pdfluent-lopdf",
@@ -3538,7 +3544,7 @@ dependencies = [
 [[package]]
 name = "pdf-xfa"
 version = "1.0.0"
-source = "git+https://github.com/pdfluent/engine?rev=e8b80ac4317152fccbfc2ad876dd89058a85cb6e#e8b80ac4317152fccbfc2ad876dd89058a85cb6e"
+source = "git+https://github.com/pdfluent/engine?rev=5b2e506bbe957a9db8f21f43978c400621f8f1bf#5b2e506bbe957a9db8f21f43978c400621f8f1bf"
 dependencies = [
  "base64 0.22.1",
  "flate2",
@@ -3561,7 +3567,7 @@ dependencies = [
 [[package]]
 name = "pdf-xlsx"
 version = "1.0.0"
-source = "git+https://github.com/pdfluent/engine?rev=e8b80ac4317152fccbfc2ad876dd89058a85cb6e#e8b80ac4317152fccbfc2ad876dd89058a85cb6e"
+source = "git+https://github.com/pdfluent/engine?rev=5b2e506bbe957a9db8f21f43978c400621f8f1bf#5b2e506bbe957a9db8f21f43978c400621f8f1bf"
 dependencies = [
  "pdfluent-extract",
  "pdfluent-lopdf",
@@ -3572,7 +3578,7 @@ dependencies = [
 [[package]]
 name = "pdfluent"
 version = "1.0.0"
-source = "git+https://github.com/pdfluent/engine?rev=e8b80ac4317152fccbfc2ad876dd89058a85cb6e#e8b80ac4317152fccbfc2ad876dd89058a85cb6e"
+source = "git+https://github.com/pdfluent/engine?rev=5b2e506bbe957a9db8f21f43978c400621f8f1bf#5b2e506bbe957a9db8f21f43978c400621f8f1bf"
 dependencies = [
  "getrandom 0.2.17",
  "image",
@@ -3596,12 +3602,12 @@ dependencies = [
 [[package]]
 name = "pdfluent-ccitt"
 version = "0.2.2"
-source = "git+https://github.com/pdfluent/engine?rev=e8b80ac4317152fccbfc2ad876dd89058a85cb6e#e8b80ac4317152fccbfc2ad876dd89058a85cb6e"
+source = "git+https://github.com/pdfluent/engine?rev=5b2e506bbe957a9db8f21f43978c400621f8f1bf#5b2e506bbe957a9db8f21f43978c400621f8f1bf"
 
 [[package]]
 name = "pdfluent-cff"
 version = "0.2.1"
-source = "git+https://github.com/pdfluent/engine?rev=e8b80ac4317152fccbfc2ad876dd89058a85cb6e#e8b80ac4317152fccbfc2ad876dd89058a85cb6e"
+source = "git+https://github.com/pdfluent/engine?rev=5b2e506bbe957a9db8f21f43978c400621f8f1bf#5b2e506bbe957a9db8f21f43978c400621f8f1bf"
 
 [[package]]
 name = "pdfluent-desktop"
@@ -3644,7 +3650,7 @@ dependencies = [
 [[package]]
 name = "pdfluent-extract"
 version = "1.0.0"
-source = "git+https://github.com/pdfluent/engine?rev=e8b80ac4317152fccbfc2ad876dd89058a85cb6e#e8b80ac4317152fccbfc2ad876dd89058a85cb6e"
+source = "git+https://github.com/pdfluent/engine?rev=5b2e506bbe957a9db8f21f43978c400621f8f1bf#5b2e506bbe957a9db8f21f43978c400621f8f1bf"
 dependencies = [
  "flate2",
  "image",
@@ -3656,7 +3662,7 @@ dependencies = [
 [[package]]
 name = "pdfluent-forms"
 version = "1.0.0"
-source = "git+https://github.com/pdfluent/engine?rev=e8b80ac4317152fccbfc2ad876dd89058a85cb6e#e8b80ac4317152fccbfc2ad876dd89058a85cb6e"
+source = "git+https://github.com/pdfluent/engine?rev=5b2e506bbe957a9db8f21f43978c400621f8f1bf#5b2e506bbe957a9db8f21f43978c400621f8f1bf"
 dependencies = [
  "log",
  "pdf-syntax",
@@ -3667,7 +3673,7 @@ dependencies = [
 [[package]]
 name = "pdfluent-jbig2"
 version = "0.3.0"
-source = "git+https://github.com/pdfluent/engine?rev=e8b80ac4317152fccbfc2ad876dd89058a85cb6e#e8b80ac4317152fccbfc2ad876dd89058a85cb6e"
+source = "git+https://github.com/pdfluent/engine?rev=5b2e506bbe957a9db8f21f43978c400621f8f1bf#5b2e506bbe957a9db8f21f43978c400621f8f1bf"
 dependencies = [
  "pdfluent-ccitt",
 ]
@@ -3675,7 +3681,7 @@ dependencies = [
 [[package]]
 name = "pdfluent-jpeg2000"
 version = "0.4.0"
-source = "git+https://github.com/pdfluent/engine?rev=e8b80ac4317152fccbfc2ad876dd89058a85cb6e#e8b80ac4317152fccbfc2ad876dd89058a85cb6e"
+source = "git+https://github.com/pdfluent/engine?rev=5b2e506bbe957a9db8f21f43978c400621f8f1bf#5b2e506bbe957a9db8f21f43978c400621f8f1bf"
 dependencies = [
  "fearless_simd 0.6.0",
  "image",
@@ -3685,7 +3691,7 @@ dependencies = [
 [[package]]
 name = "pdfluent-lopdf"
 version = "0.39.5"
-source = "git+https://github.com/pdfluent/engine?rev=e8b80ac4317152fccbfc2ad876dd89058a85cb6e#e8b80ac4317152fccbfc2ad876dd89058a85cb6e"
+source = "git+https://github.com/pdfluent/engine?rev=5b2e506bbe957a9db8f21f43978c400621f8f1bf#5b2e506bbe957a9db8f21f43978c400621f8f1bf"
 dependencies = [
  "aes",
  "bitflags 2.13.1",
@@ -3728,7 +3734,7 @@ dependencies = [
 [[package]]
 name = "pdfluent-sign"
 version = "1.0.0"
-source = "git+https://github.com/pdfluent/engine?rev=e8b80ac4317152fccbfc2ad876dd89058a85cb6e#e8b80ac4317152fccbfc2ad876dd89058a85cb6e"
+source = "git+https://github.com/pdfluent/engine?rev=5b2e506bbe957a9db8f21f43978c400621f8f1bf#5b2e506bbe957a9db8f21f43978c400621f8f1bf"
 dependencies = [
  "der",
  "digest 0.10.7",
@@ -7343,7 +7349,7 @@ dependencies = [
 [[package]]
 name = "xfa-dom-resolver"
 version = "1.0.0"
-source = "git+https://github.com/pdfluent/engine?rev=e8b80ac4317152fccbfc2ad876dd89058a85cb6e#e8b80ac4317152fccbfc2ad876dd89058a85cb6e"
+source = "git+https://github.com/pdfluent/engine?rev=5b2e506bbe957a9db8f21f43978c400621f8f1bf#5b2e506bbe957a9db8f21f43978c400621f8f1bf"
 dependencies = [
  "roxmltree",
  "thiserror 2.0.18",
@@ -7352,7 +7358,7 @@ dependencies = [
 [[package]]
 name = "xfa-js-sandboxed"
 version = "1.0.0"
-source = "git+https://github.com/pdfluent/engine?rev=e8b80ac4317152fccbfc2ad876dd89058a85cb6e#e8b80ac4317152fccbfc2ad876dd89058a85cb6e"
+source = "git+https://github.com/pdfluent/engine?rev=5b2e506bbe957a9db8f21f43978c400621f8f1bf#5b2e506bbe957a9db8f21f43978c400621f8f1bf"
 dependencies = [
  "rquickjs",
  "thiserror 2.0.18",
@@ -7361,7 +7367,7 @@ dependencies = [
 [[package]]
 name = "xfa-json"
 version = "1.0.0"
-source = "git+https://github.com/pdfluent/engine?rev=e8b80ac4317152fccbfc2ad876dd89058a85cb6e#e8b80ac4317152fccbfc2ad876dd89058a85cb6e"
+source = "git+https://github.com/pdfluent/engine?rev=5b2e506bbe957a9db8f21f43978c400621f8f1bf#5b2e506bbe957a9db8f21f43978c400621f8f1bf"
 dependencies = [
  "indexmap 2.14.0",
  "serde",
@@ -7372,7 +7378,7 @@ dependencies = [
 [[package]]
 name = "xfa-layout-engine"
 version = "1.0.0"
-source = "git+https://github.com/pdfluent/engine?rev=e8b80ac4317152fccbfc2ad876dd89058a85cb6e#e8b80ac4317152fccbfc2ad876dd89058a85cb6e"
+source = "git+https://github.com/pdfluent/engine?rev=5b2e506bbe957a9db8f21f43978c400621f8f1bf#5b2e506bbe957a9db8f21f43978c400621f8f1bf"
 dependencies = [
  "formcalc-interpreter",
  "log",

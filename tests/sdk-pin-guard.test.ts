@@ -126,16 +126,14 @@ describe('SDK pin drift-guard', () => {
     }
   });
 
-  it('lets the CI runner reach the pinned revision through the engine mirror', () => {
-    // The runner has a GitLab token, not a GitHub one, and the engine's GitLab
-    // side is a mirror of the same history — so CI rewrites the URL instead of
-    // carrying a second credential. Every job that compiles Rust needs it, and
-    // they all get it from the same `*sdk-pin` block.
+  it('lets the CI runner reach the pinned revision at the engine itself', () => {
+    // CI fetches the engine from the engine, with a deploy key that can read
+    // that one repository and nothing else. Every job that compiles Rust needs
+    // it, and they all get it from the same `*sdk-pin` block.
     //
-    // The rewrite moved from `git config --global` to GIT_CONFIG_COUNT/KEY/
-    // VALUE: on a shell runner --global wrote the token-bearing URL into the
-    // runner user's ~/.gitconfig and left it there. See
-    // tests/ci-runner-hygiene.test.ts.
+    // The rewrite lives in GIT_CONFIG_COUNT/KEY/VALUE rather than `git config
+    // --global`: on a shell runner --global wrote the route into the runner
+    // user's ~/.gitconfig and left it there. See tests/ci-runner-hygiene.test.ts.
     expect(SDK_PIN).toMatch(/GIT_CONFIG_KEY_0=url\.[^\n]*\.insteadOf/);
     expect(SDK_PIN).toMatch(/GIT_CONFIG_VALUE_0=https:\/\/github\.com\/pdfluent\/engine/);
     // A job is a key at indent 2 under `jobs:`; `runs-on` is what separates one
@@ -161,6 +159,32 @@ describe('SDK pin drift-guard', () => {
     // And CI checks it too, so a Cargo.toml bumped on its own fails the job
     // rather than building a revision the mirror was never asked about.
     expect(SDK_PIN).toContain('is not the revision src-tauri/Cargo.toml pins');
+  });
+
+  it('does not route the engine through the backup copy', () => {
+    // It used to, because CI ran there and a GitHub credential was the one
+    // thing the runner did not have. The backup is refreshed once a night, so
+    // every pin bump in the hours after an engine landing failed on "not on the
+    // engine mirror yet" — true, and about the backup rather than about the pin.
+    // Pointing this at the backup again brings that back, so it is a decision
+    // and not an edit.
+    for (const [name, text] of [['the sdk-pin action', SDK_PIN], ['the quality workflow', CI_WORKFLOW]] as const) {
+      const routing = text.split('\n').filter(l => /insteadOf|GIT_CONFIG_VALUE_0|fetch -q --depth 1/.test(l));
+      for (const line of routing) {
+        expect(line, `${name} routes the engine through the backup:\n${line.trim()}`).not.toMatch(/gitlab\.com/);
+      }
+    }
+  });
+
+  it('keeps the deploy key in a file the job owns and removes it', () => {
+    // A private key on a shell runner outlives the job unless something deletes
+    // it, and "unless something deletes it" is not a property — the always-step
+    // is. Mode 600 and a pinned host key: a key offered to whatever answers on
+    // that address is a key offered to whoever is answering.
+    expect(SDK_PIN).toContain('chmod 600');
+    expect(SDK_PIN).toContain('StrictHostKeyChecking=yes');
+    expect(SDK_PIN).not.toContain('StrictHostKeyChecking=accept-new');
+    expect(SDK_PIN).toMatch(/if: always\(\)[\s\S]{0,200}rm -rf "\$\{ENGINE_SSH_DIR/);
   });
 
   it('never prints part of the clone credential into a job log', () => {

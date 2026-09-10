@@ -121,9 +121,27 @@ describe("the GitHub pipeline carries the whole gate set", () => {
     });
   }
 
+  // One runner, thirteen serial jobs, five terminals landing: without this the
+  // queue only grows and the trunk's verdict is hours old. Cancelling is limited
+  // to runs another run has overtaken -- the head that replaces one contains it,
+  // and every landing has already been through the same steps locally.
+  it("does not let the queue outrun the trunk", () => {
+    const source = readFileSync(join(WORKFLOWS, "quality.yml"), "utf8");
+    expect(source).toContain("group: quality-${{ github.ref }}");
+    expect(source).toContain("cancel-in-progress: true");
+  });
+
   it("runs the hosted-minutes guard inside the fast gate", () => {
     const fast = quality.find((job) => job.name === "quality-gates-fast");
     expect(fast!.body).toContain("scripts/ci/no-hosted-ci-on-auto-triggers.mjs");
+  });
+
+  // On 2026-09-08 a test landed carrying an internal host in a published file
+  // and blocked the next snapshot. Nothing in CI saw it: the scan only ran at
+  // publication time, which is days later and on someone else's branch.
+  it("scans what goes public for internal names, on every push", () => {
+    const fast = quality.find((job) => job.name === "quality-gates-fast");
+    expect(fast!.body).toContain("scripts/ci/internal-terms.mjs --tree");
   });
 
   it("leaves no workflow behind on a hosted runner", () => {

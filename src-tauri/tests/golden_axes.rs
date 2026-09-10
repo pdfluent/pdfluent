@@ -385,6 +385,81 @@ fn shell(command: &str) -> String {
         .unwrap_or_default()
 }
 
+/// The machine's one-minute load average, or None where we cannot read it.
+///
+/// Speed is the one axis that measures the machine as much as the code, and this
+/// box is shared: a second CI runner lives on the same four cores. On
+/// 2026-09-08 the same ~700 ms of someone else's work landed on
+/// xfa-bd91fbf7_pdf_0010 in one run and on xfa-e2bb8995_eimm5669e.2 in the next,
+/// and the first of those became a baseline. A number taken under load is a
+/// number about the load.
+fn load_average() -> Option<f64> {
+    if cfg!(target_os = "linux") {
+        let raw = fs::read_to_string("/proc/loadavg").ok()?;
+        return raw.split_whitespace().next()?.parse().ok();
+    }
+    if cfg!(target_os = "macos") {
+        // `{ 1.23 4.56 7.89 }`
+        let raw = shell("sysctl -n vm.loadavg");
+        return raw.split_whitespace().nth(1)?.parse().ok();
+    }
+    None
+}
+
+/// Quiet enough to measure on. Split out so the rule can be tested without a
+/// machine that happens to be busy.
+///
+/// An unreadable load is neither quiet nor busy: it is a machine we cannot
+/// judge, and refusing there would mean no platform without /proc ever gets a
+/// number. Measure, and the run file records `null` so the reader knows.
+fn quiet_enough(load: Option<f64>, ceiling: f64) -> bool {
+    match load {
+        None => true,
+        Some(value) => value <= ceiling,
+    }
+}
+
+/// Wait until the machine is quiet enough to measure on, and say what it was.
+///
+/// Waiting rather than refusing outright: on a box that is shared by design,
+/// "refuse when busy" is a gate that stands permanently open. It polls, and only
+/// when the machine will not settle does it hand back the load it saw so the
+/// caller can announce a skip instead of publishing a number.
+fn wait_until_quiet() -> (Option<f64>, bool) {
+    let ceiling: f64 = std::env::var("PDFLUENT_AXES_MAX_LOAD")
+        .ok()
+        .and_then(|v| v.parse().ok())
+        .unwrap_or(1.0);
+    let patience = std::time::Duration::from_secs(
+        std::env::var("PDFLUENT_AXES_LOAD_WAIT_S")
+            .ok()
+            .and_then(|v| v.parse().ok())
+            .unwrap_or(600),
+    );
+
+    let started = Instant::now();
+    let mut load = load_average();
+    if quiet_enough(load, ceiling) {
+        return (load, true);
+    }
+    while let Some(value) = load {
+        if quiet_enough(load, ceiling) {
+            return (Some(value), true);
+        }
+        if started.elapsed() >= patience {
+            return (Some(value), false);
+        }
+        eprintln!(
+            "golden_axes: load {value:.2} is over {ceiling:.2}, waiting for the machine to settle \
+             ({}s so far)",
+            started.elapsed().as_secs()
+        );
+        std::thread::sleep(std::time::Duration::from_secs(15));
+        load = load_average();
+    }
+    (load, false)
+}
+
 fn json_object(entries: &BTreeMap<String, Measured>) -> String {
     entries
         .iter()
@@ -410,6 +485,19 @@ fn golden_axes_writes_a_run_file() {
             "SKIPPED (not a pass): veraPDF is not installed, so the PDF/A conformance metric was \
              not measured. Retention, stamped pages, speed and size were."
         );
+    }
+
+    // Before a single conversion is timed. Everything below is a speed number,
+    // and a speed number taken beside someone else's build is about their build.
+    let (load, quiet) = wait_until_quiet();
+    if !quiet {
+        eprintln!(
+            "SKIPPED (not a pass): the machine did not settle (one-minute load {}), so no run \
+             file was written. A speed measured under load is a measurement of the load; see the \
+             load_average note in this file.",
+            load.map(|v| format!("{v:.2}")).unwrap_or_else(|| "unreadable".to_string()),
+        );
+        return;
     }
 
     let words = edit_words();
@@ -454,9 +542,13 @@ fn golden_axes_writes_a_run_file() {
     let body = format!(
         "{{\n  \"run_id\": \"{run_id}\",\n  \"platform\": \"{platform}\",\n  \"machine\": \"{machine}\",\n  \
          \"set\": \"golden-17\",\n  \"editor_commit\": \"{commit}\",\n  \"xfa_sdk_rev\": \"{sdk_rev}\",\n  \
-         \"tools\": {{\"verapdf\": \"{}\"}},\n  \"capabilities\": {{\n    \"save\": {{\n{}\n    }},\n    \
+         \"tools\": {{\"verapdf\": \"{}\"}},\n  \"load_1min\": {},\n  \"capabilities\": {{\n    \"save\": {{\n{}\n    }},\n    \
          \"text_edit\": {{\n{}\n    }},\n    \"pdfa\": {{\n{}\n    }}\n  }}\n}}\n",
         verapdf.as_deref().unwrap_or("absent"),
+        // Always, not only when it is interesting: a run without the load it was
+        // taken under cannot be told apart from a contaminated one afterwards,
+        // which is how a 965 ms floor got blessed.
+        load.map(|v| format!("{v:.2}")).unwrap_or_else(|| "null".to_string()),
         json_object(&save),
         json_object(&text_edit),
         json_object(&pdfa),
@@ -482,4 +574,18 @@ fn every_measured_document_is_in_the_manifest() {
             "{name} is in the corpus but not in MANIFEST.json"
         );
     }
+}
+
+#[test]
+fn a_busy_machine_is_not_measured_on() {
+    // The rule that keeps someone else's build out of our speed axis. On
+    // 2026-09-08 the same ~700 ms landed on a different document in each of two
+    // runs, and the first of those became a floor of 965 ms for a document that
+    // costs 344.
+    assert!(!quiet_enough(Some(3.5), 1.0), "a loaded machine must not be measured on");
+    assert!(quiet_enough(Some(0.4), 1.0), "a quiet machine must be measured on");
+    assert!(quiet_enough(Some(1.0), 1.0), "exactly at the ceiling is still quiet");
+    // Not a refusal: a platform whose load we cannot read would otherwise never
+    // produce a number at all.
+    assert!(quiet_enough(None, 1.0), "an unreadable load is not a busy machine");
 }

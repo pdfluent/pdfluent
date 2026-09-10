@@ -21,8 +21,9 @@
 // PASS (0). NOT_APPLICABLE is neither — a build that deliberately ships without
 // updater artefacts is a clean 0 and the report says why.
 
-import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
+import { readFileSync, writeFileSync, existsSync, mkdirSync, realpathSync } from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 export const VERDICTS = {
   PASS: { verdict: "PASS", exit_code: 0 },
@@ -129,7 +130,17 @@ export function readSteps(work) {
 }
 
 // ── CLI ──────────────────────────────────────────────────────────────────────
-if (import.meta.url === `file://${process.argv[1]}`) {
+// Run directly, not imported -- compared as paths, both resolved.
+//
+// The usual spelling of this test compares `import.meta.url` to
+// `file://${process.argv[1]}`. One is a URL and percent-encodes a space, the
+// other is a path and does not, so on any checkout whose path contains one the
+// comparison is quietly false: the module loads, defines everything and does
+// nothing. The nightly keeps its checkout under ~/Library/Application Support,
+// and the first run there made every probe, printed every skip, wrote no report
+// and exited 0. Node also resolves a symlinked entry point before filling in
+// import.meta.url, which the same comparison gets wrong in the other direction.
+if (process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const argv = process.argv.slice(2);
   const args = {};
   for (let i = 0; i < argv.length; i++) {

@@ -69,6 +69,60 @@ function isAncestor(a, b) {
   try { git(["merge-base", "--is-ancestor", a, b]); return true; } catch { return false; }
 }
 
+/**
+ * Semver-ish comparison, enough to answer "is this one newer".
+ *
+ * Only the numeric core is compared, and a prerelease sorts below the release
+ * it leads to — `1.0.0-beta.21` is older than `1.0.0`. Nothing here needs the
+ * full grammar: it decides one question, and the question is which way a
+ * version moved.
+ */
+export function isNewer(a, b) {
+  const parse = (v) => {
+    const [core, pre = ""] = String(v).split("-", 2);
+    return { nums: core.split(".").map((n) => Number.parseInt(n, 10) || 0), pre };
+  };
+  const x = parse(a), y = parse(b);
+  for (let i = 0; i < 3; i++) {
+    if ((x.nums[i] ?? 0) !== (y.nums[i] ?? 0)) return (x.nums[i] ?? 0) > (y.nums[i] ?? 0);
+  }
+  if (x.pre === y.pre) return false;
+  if (x.pre === "") return true;   // a release is newer than any prerelease of it
+  if (y.pre === "") return false;
+  return x.pre > y.pre;
+}
+
+/** Whether this repository already carries the release tag for a version. */
+export function tagExists(version, { ref = `refs/tags/v${version}` } = {}) {
+  return exists(ref);
+}
+
+/**
+ * A cut in progress, which is not a drift.
+ *
+ * The bumps land as one commit and the record of what was built lands as
+ * another, because the second one has to name the first one's sha and that does
+ * not exist until it does. Between those two commits package.json names a
+ * version docs/SHIPPED.json has never heard of — the state every release passes
+ * through, and the state this guard used to call a failure.
+ *
+ * Narrow on purpose, because the failure it replaces is a real one. All three
+ * have to hold: the version moved forward, the tag for it does not exist yet,
+ * and therefore nothing has been built or published under it. Once the tag
+ * exists, a SHIPPED.json that has not followed is exactly the drift this guard
+ * is for, and it goes back to being red.
+ */
+export function cutInProgress(pkgVersion, shippedVersion, { hasTag = tagExists } = {}) {
+  if (pkgVersion === shippedVersion) return null;
+  if (!isNewer(pkgVersion, shippedVersion)) return null;
+  if (hasTag(pkgVersion)) return null;
+  return (
+    `package.json says ${pkgVersion} and docs/SHIPPED.json still describes ${shippedVersion}, ` +
+    `with no v${pkgVersion} tag yet: a cut in progress, not a drift. The record of what was ` +
+    "built follows the tag, and this leg goes back to failing the moment that tag exists."
+  );
+}
+
 export function shippedVersion() {
   return JSON.parse(readFileSync(resolve(root, "package.json"), "utf8")).version;
 }
@@ -189,7 +243,10 @@ export function check({ trunk, fetch = true } = {}) {
   let shippedSha = null;
   const record = shipped();
   facts.push(`shipped source     ${record.commit.slice(0, 7)} (docs/SHIPPED.json, ${record.version})`);
-  if (record.version !== version) {
+  const cutting = cutInProgress(version, record.version);
+  if (cutting) {
+    facts.push(`cut in progress    ${cutting}`);
+  } else if (record.version !== version) {
     failures.push(
       `docs/SHIPPED.json describes ${record.version} and package.json says ${version}.\n` +
       "  One of the two is stale, and neither says which.",

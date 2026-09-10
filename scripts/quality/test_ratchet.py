@@ -72,9 +72,16 @@ class Fixture:
         (self.root / "quality").mkdir()
         # Two classes, on two platforms: a baseline holds a row per platform,
         # and a bless of one of them must leave the other's numbers alone.
+        #
+        # The darwin class is `dedicated` here and the linux one is not, so the
+        # cases below can test both halves of the speed rule: the tolerances
+        # themselves on a machine where speed is judged hard, and the advisory
+        # behaviour on a machine that is shared. The real quality/MACHINES.toml
+        # marks nothing dedicated.
         (self.root / "quality" / "MACHINES.toml").write_text(
             "[dev-macbook-m1pro]\n"
             'platform = "darwin"\n'
+            "dedicated = true\n"
             f'calibrated_on = "{calibrated}"\n'
             "calibration_valid_days = 180\n"
             "\n"
@@ -165,6 +172,47 @@ class RatchetTest(unittest.TestCase):
         code, out = self.judge({"doc-a": measured(speed=(100.0, 100.0, 100.0, 280.0, 280.0)), "doc-b": measured()})
         self.assertEqual(code, 1, out)  # +40%, +80 ms
         self.assertIn("speed_p95_ms", out)
+
+    # Speed on a machine that is not dedicated. The build host shares four cores
+    # with two other CI agents, and on 2026-09-08/09 that produced three red runs
+    # on three different documents -- bd91fbf7 at 965 ms against a 344 ms truth,
+    # then e2bb8995 at 1031 against 358, then 6e9eac47 at 512 against 441 -- every
+    # one of them speed and none of them correctness. A gate that is red for a
+    # reason nobody can act on is a gate people learn to ignore.
+    def test_4b_speed_on_a_shared_machine_is_advisory(self):
+        self.fixture.baseline("pdfa", [
+            row("doc-a", platform="linux", machine="runner-desktop-wsl-4core"),
+            row("doc-b", platform="linux", machine="runner-desktop-wsl-4core"),
+        ])
+        run = self.fixture.run_file(
+            "pdfa",
+            {"doc-a": measured(speed=(100.0, 100.0, 100.0, 280.0, 280.0)), "doc-b": measured()},
+            platform="linux", machine="runner-desktop-wsl-4core",
+        )
+        code, out = self.fixture.ratchet("--capability", "pdfa", "--run", str(run))
+        self.assertEqual(code, 0, out)
+        self.assertIn("ADVISORY", out)
+        self.assertIn("speed_p95_ms", out)
+        self.assertIn("is not dedicated", out)
+        self.assertIn('"advisory": 1', out)
+        self.assertIn('"findings": 0', out)
+
+    # The other half of the same rule: shared machine or not, a document that
+    # stops converting is still a failure. Speed is the only axis that moves
+    # because a neighbour is compiling.
+    def test_4c_correctness_on_a_shared_machine_is_still_hard(self):
+        self.fixture.baseline("pdfa", [
+            row("doc-a", platform="linux", machine="runner-desktop-wsl-4core"),
+            row("doc-b", platform="linux", machine="runner-desktop-wsl-4core"),
+        ])
+        run = self.fixture.run_file(
+            "pdfa",
+            {"doc-a": measured(completes=False), "doc-b": measured()},
+            platform="linux", machine="runner-desktop-wsl-4core",
+        )
+        code, out = self.fixture.ratchet("--capability", "pdfa", "--run", str(run))
+        self.assertEqual(code, 1, out)
+        self.assertIn("completes true -> false", out)
 
     def test_5_fidelity_loss_is_not_offset_by_size(self):
         self.fixture.baseline("pdfa", [

@@ -184,6 +184,20 @@ stop compounding that. **The next editor release is `1.0.0`, tagged `v1.0.0`,
 cut once the quality gates it claims are actually green** — the editor's version
 is its own and does not track the SDK's.
 
+### The state between the bump and the record
+
+A cut takes two commits and cannot take one. The bumps land first; the record
+of what was built lands second, because it has to name the first one's sha and
+that does not exist until the commit does. Between them `package.json` names a
+version `SHIPPED.json` has never heard of.
+
+That is every release, not a mistake, and this guard used to call it a failure —
+which meant the only way to land a version bump was to skip the gate that exists
+to catch exactly this kind of mismatch. It knows the state now, and knows it
+narrowly: the version must have moved **forward**, and the tag for it must not
+exist yet. Once `v<version>` is tagged, a `SHIPPED.json` that has not followed
+is the drift this leg is for, and it is red again.
+
 That leaves the currently shipped binaries with no tag naming their source, so
 [`SHIPPED.json`](SHIPPED.json) names it instead, with the evidence, and
 `scripts/ci/repo-truth.mjs` checks that the commit is on the trunk and that the

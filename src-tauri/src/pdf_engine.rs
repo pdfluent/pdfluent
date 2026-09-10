@@ -6587,9 +6587,27 @@ mod tests {
     const TEST_P12: &[u8] = include_bytes!("../tests/fixtures/signer-test.p12");
     const TEST_P12_PASSWORD: &str = "pdfluent-test";
 
+    /// A private copy of the test certificate, written whole.
+    ///
+    /// Three tests need this file and cargo runs them at once, so one shared
+    /// path meant one thread's truncating write landing inside another's read:
+    /// the reader got a prefix and the loader said `ASN1Error Eof`. Six runs in
+    /// thirty failed that way, in two different tests, which is exactly the
+    /// shape that reads as "the signing code is flaky" and is nothing of the
+    /// kind.
+    ///
+    /// Unique per call, so no two tests share the file at all, and the process
+    /// id is in the name because this machine runs more than one gate at a
+    /// time. Written to a neighbour and renamed, so even a reader that guessed
+    /// the name would see the whole file or no file.
     fn test_certificate_path() -> std::path::PathBuf {
-        let path = op_tmp("signer-test.p12");
-        std::fs::write(&path, TEST_P12).expect("write test certificate");
+        use std::sync::atomic::{AtomicU64, Ordering};
+        static NEXT: AtomicU64 = AtomicU64::new(0);
+        let n = NEXT.fetch_add(1, Ordering::Relaxed);
+        let path = op_tmp(&format!("signer-test-{}-{}.p12", std::process::id(), n));
+        let staging = path.with_extension("p12.part");
+        std::fs::write(&staging, TEST_P12).expect("write test certificate");
+        std::fs::rename(&staging, &path).expect("publish test certificate");
         path
     }
 

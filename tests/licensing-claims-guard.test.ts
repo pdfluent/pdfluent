@@ -89,6 +89,35 @@ const FORBIDDEN: { label: string; re: RegExp }[] = [
   // to hold the copyright. The entity pattern above only catches a B.V./BV suffix.
   { label: 'stale "PDFluent Contributors" copyright holder',
     re: /Copyright \(c\)[^\n]*PDFluent Contributors/i },
+  // AGENTS.md described the licence as "Proprietary non-commercial free /
+  // commercial per-seat" for two months after the model was abolished — the old
+  // model stated as a present fact, in the file agents read first. The per-seat
+  // pattern above wanted the word "licence" next to it and this phrasing does
+  // not have one.
+  { label: 'editor priced per seat', re: /commercial per-seat/i },
+  // "No licence key is required" is a sentence we want to be able to write, so
+  // this catches the affirmative shapes only.
+  { label: 'licence key required to use the editor',
+    re: /requires? (an? )?licen[cs]e key|licen[cs]e key (is )?required\b/i },
+];
+
+/**
+ * Sentences that are true today and must stay writable.
+ *
+ * Every pattern above was written against a phrasing that was in the tree, and
+ * the file says so: five of them missed a sixth wording. The pull the other way
+ * is just as real — a pattern broad enough to catch every wording also catches
+ * "there is no licence key", which is the thing we most want to be able to say.
+ * These are the sentences the repository actually carries. If a new pattern
+ * turns one of them red, the pattern is wrong, not the sentence.
+ */
+const MUST_STAY_LEGAL = [
+  'No license key or payment is required.',
+  'Yes, for the desktop editor, including commercial and business use. No license key, no trial period, no feature gates.',
+  'It is free for everyone, including at work. There is no licence key and nothing to buy.',
+  'no licence key, no paywall, no per-seat pricing, no trial period and no in-app purchase',
+  'Apple forbids in-app license-key mechanisms',
+  'the editor is free — no in-app licensing/pricing UI remains',
 ];
 
 function walk(dir: string, out: string[]): void {
@@ -105,6 +134,15 @@ function walk(dir: string, out: string[]): void {
     }
   }
 }
+
+describe('licensing claims drift-guard: what must stay writable', () => {
+  for (const sentence of MUST_STAY_LEGAL) {
+    it(`does not fire on: ${sentence.slice(0, 60)}…`, () => {
+      const hit = FORBIDDEN.find(f => f.re.test(sentence));
+      expect(hit?.label ?? null, `pattern "${hit?.label}" would forbid a true sentence`).toBeNull();
+    });
+  }
+});
 
 describe('licensing claims drift-guard', () => {
   const files: string[] = [];

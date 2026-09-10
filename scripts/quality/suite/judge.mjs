@@ -23,10 +23,11 @@
 // Check syntax: `<id>[@<probe>]`. The probe name defaults to the id with the
 // colon and dashes turned into underscores.
 
-import { readFileSync, existsSync, appendFileSync, statSync } from "node:fs";
+import { readFileSync, existsSync, appendFileSync, statSync, realpathSync } from "node:fs";
 import { walkTargets, judgeWalk } from "./ui_walk.mjs";
 import { createHash } from "node:crypto";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 // Windows PowerShell's `Set-Content -Encoding utf8` writes a byte order mark
 // first, and every judge that anchors a pattern to the start of a probe then
@@ -354,7 +355,17 @@ export function sizeOfFile(file) {
 }
 
 // ── CLI ──────────────────────────────────────────────────────────────────────
-if (import.meta.url === `file://${process.argv[1]}`) {
+// Run directly, not imported -- compared as paths, both resolved.
+//
+// The usual spelling of this test compares `import.meta.url` to
+// `file://${process.argv[1]}`. One is a URL and percent-encodes a space, the
+// other is a path and does not, so on any checkout whose path contains one the
+// comparison is quietly false: the module loads, defines everything and does
+// nothing. The nightly keeps its checkout under ~/Library/Application Support,
+// and the first run there made every probe, printed every skip, wrote no report
+// and exited 0. Node also resolves a symlinked entry point before filling in
+// import.meta.url, which the same comparison gets wrong in the other direction.
+if (process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const args = {};
   const argv = process.argv.slice(2);
   for (let i = 0; i < argv.length; i++) {

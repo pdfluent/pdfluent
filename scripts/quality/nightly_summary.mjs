@@ -20,8 +20,9 @@
 // Exit 0 only on PASS, so the caller cannot mistake "wrote a summary" for
 // "the night was clean".
 
-import { readFileSync, readdirSync, existsSync } from "node:fs";
+import { readFileSync, readdirSync, existsSync, realpathSync } from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 /** Worst first: the summary of several platforms is the worst of them. */
 const ORDER = ["FAIL", "COULD_NOT_RUN", "STALE", "MISSING", "INCOMPLETE", "PASS"];
@@ -82,11 +83,26 @@ export function readReports(dir) {
 }
 
 // ── CLI ──────────────────────────────────────────────────────────────────────
-if (import.meta.url === `file://${process.argv[1]}`) {
+// Run directly, not imported -- compared as paths, both resolved.
+//
+// The usual spelling of this test compares `import.meta.url` to
+// `file://${process.argv[1]}`. One is a URL and percent-encodes a space, the
+// other is a path and does not, so on any checkout whose path contains one the
+// comparison is quietly false: the module loads, defines everything and does
+// nothing. The nightly keeps its checkout under ~/Library/Application Support,
+// and the first run there made every probe, printed every skip, wrote no report
+// and exited 0. Node also resolves a symlinked entry point before filling in
+// import.meta.url, which the same comparison gets wrong in the other direction.
+if (process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const dir = process.argv[2] ?? "quality/reports";
   const arg = process.argv.indexOf("--platforms");
   const platforms = arg > 0 ? String(process.argv[arg + 1]).split(",").filter(Boolean) : null;
   const s = summarise(readReports(dir), { platforms });
+  // exitCode, not exit(): a write to a pipe or a redirect is asynchronous, and
+  // process.exit() drops whatever has not been flushed. The first nightly run
+  // wrote an empty NIGHTLY.md for exactly that reason -- a summary nobody can
+  // read is the failure mode this file exists to prevent, arriving by the back
+  // door.
   process.stdout.write(s.text);
-  process.exit(s.verdict === "PASS" ? 0 : 1);
+  process.exitCode = s.verdict === "PASS" ? 0 : 1;
 }

@@ -256,19 +256,43 @@ def as_float(text: str) -> float | None:
         return None
 
 
-def compare(baseline: Row, now: Row) -> list[str]:
+# The two axes that measure the machine as much as the code. On a box that is
+# shared with other CI agents they move for reasons that have nothing to do with
+# a change: on 2026-09-08/09 three consecutive runs went red on three different
+# documents, each time on speed alone and never on correctness, while a second
+# and then a third runner took work on the same four cores. A gate that is red
+# for a reason nobody can act on is a gate people learn to ignore, and that is
+# more expensive than the axis it protects.
+#
+# So speed is judged hard only on a machine class marked `dedicated = true` in
+# quality/MACHINES.toml -- a machine nothing else is allowed to use. Elsewhere it
+# is printed as ADVISORY, with the load the run was taken under, and does not
+# decide the exit status. Correctness, fidelity and size stay hard everywhere:
+# those do not move because a neighbour is compiling.
+SPEED_AXES = ("speed_p50_ms", "speed_p95_ms")
+
+
+def machine_is_dedicated(run: dict) -> bool:
+    return machine_classes().get(run["machine"], {}).get("dedicated", "").lower() == "true"
+
+
+def compare(baseline: Row, now: Row) -> list[tuple[str, str]]:
     """Every way a row can be worse, and every way it can be better than the
-    floor without anyone saying so."""
-    findings: list[str] = []
+    floor without anyone saying so.
+
+    Each finding carries the axis it came from, because not every axis is
+    judged the same way everywhere: see SPEED_AXES and `dedicated`."""
+    findings: list[tuple[str, str]] = []
     doc, metric = baseline["doc"], baseline["fidelity_metric"]
 
     if baseline["completes"] == "true" and now["completes"] != "true":
-        findings.append(f"{doc}: completes true -> {now['completes']}")
+        findings.append(("completes", f"{doc}: completes true -> {now['completes']}"))
     if baseline["completes"] != "true" and now["completes"] == "true":
-        findings.append(
+        findings.append((
+            "completes",
             f"{doc}: completes {baseline['completes']} -> true; raise the baseline in its"
-            " own commit and say what moved it"
-        )
+            " own commit and say what moved it",
+        ))
 
     findings += judge(
         doc, f"fidelity ({metric})", as_float(baseline["fidelity"]), as_float(now["fidelity"]),
@@ -313,18 +337,18 @@ def judge(
     tol_abs: float,
     both_required: bool = False,
     forbid_any_growth: bool = False,
-) -> list[str]:
+) -> list[tuple[str, str]]:
     if was is None and now is None:
         return []
     if was is not None and now is None:
-        return [f"{doc}: {axis} was measured ({was}) and is missing now"]
+        return [(axis, f"{doc}: {axis} was measured ({was}) and is missing now")]
     if was is None:
         return []
 
     delta = now - was
     worse = -delta if higher_is_better else delta
     if forbid_any_growth and worse > 0:
-        return [f"{doc}: {axis} {was} -> {now}, and this row may not grow at all"]
+        return [(axis, f"{doc}: {axis} {was} -> {now}, and this row may not grow at all")]
 
     over_abs = abs(delta) > tol_abs
     over_pct = tol_pct is None or (was != 0 and abs(delta) / abs(was) * 100.0 > tol_pct)
@@ -332,11 +356,12 @@ def judge(
     if not outside:
         return []
     if worse > 0:
-        return [f"{doc}: {axis} {was} -> {now} (worse, tolerance {tol_pct}% / {tol_abs})"]
-    return [
+        return [(axis, f"{doc}: {axis} {was} -> {now} (worse, tolerance {tol_pct}% / {tol_abs})")]
+    return [(
+        axis,
         f"{doc}: {axis} {was} -> {now} (better than the floor; raise the baseline in its own"
-        " commit and say what moved it)"
-    ]
+        " commit and say what moved it)",
+    )]
 
 
 def run_capability(capability: str, run: dict, platform: str, bless: bool, ticket: str | None) -> tuple[int, list[str]]:
@@ -355,6 +380,8 @@ def run_capability(capability: str, run: dict, platform: str, bless: bool, ticke
         return bless_rows(capability, path, baseline_rows, measured, ticket)
 
     by_key = {row.key: row for row in baseline_rows}
+    dedicated = machine_is_dedicated(run)
+    load = run.get("load_1min")
     findings: list[str] = []
     judged = 0
     for row in measured:
@@ -364,7 +391,17 @@ def run_capability(capability: str, run: dict, platform: str, bless: bool, ticke
             # on another platform is worse than none.
             continue
         judged += 1
-        findings += [f"[{capability}] {finding}" for finding in compare(was, row)]
+        for axis, text in compare(was, row):
+            if axis in SPEED_AXES and not dedicated:
+                # Printed, never counted. The number is still in the log for
+                # whoever wants to read the trend; it just does not fail a
+                # landing on a machine that cannot hold a speed number still.
+                findings.append(
+                    f"[{capability}] ADVISORY (machine {run['machine']} is not dedicated,"
+                    f" load_1min {fmt(load) if load is not None else 'unrecorded'}): {text}"
+                )
+                continue
+            findings.append(f"[{capability}] {text}")
 
     if judged == 0:
         findings.append(
@@ -372,7 +409,8 @@ def run_capability(capability: str, run: dict, platform: str, bless: bool, ticke
             f" bless a run on {platform} to create them"
         )
         return 0, findings
-    return (1 if findings else 0), findings
+    hard = [line for line in findings if "] ADVISORY (" not in line]
+    return (1 if hard else 0), findings
 
 
 def bless_rows(capability: str, path: Path, baseline_rows: list[Row], measured: list[Row], ticket: str | None) -> tuple[int, list[str]]:
@@ -390,7 +428,7 @@ def bless_rows(capability: str, path: Path, baseline_rows: list[Row], measured: 
         # measurements, and a bless must not quietly drop them.
         for column in ("tol_speed_pct", "tol_speed_ms", "tol_fidelity", "tol_size_pct"):
             row.values[column] = was[column]
-        moved = compare(was, row)
+        moved = [text for _axis, text in compare(was, row)]
         worse = [finding for finding in moved if "worse" in finding or "-> false" in finding]
         if worse and was["why"] in ("-", ""):
             problems.append(f"[{capability}] {row['doc']} moved the wrong way and has no why: {worse}")
@@ -440,8 +478,10 @@ def main() -> int:
 
     for line in lines:
         print(line)
+    advisory = sum(1 for line in lines if "] ADVISORY (" in line)
     print(json.dumps({"axes": {"run_id": run["run_id"], "platform": platform,
-                               "machine": run["machine"], "findings": len(lines),
+                               "machine": run["machine"], "findings": len(lines) - advisory,
+                               "advisory": advisory,
                                "status": status}}, sort_keys=True))
     return status
 

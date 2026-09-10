@@ -23,10 +23,11 @@
 // it writes the override next to the reports so the exception is a file in the
 // release rather than a decision that lived in one terminal for ten minutes.
 
-import { readFileSync, writeFileSync, existsSync, readdirSync, statSync, mkdirSync } from "node:fs";
+import { readFileSync, writeFileSync, existsSync, readdirSync, statSync, mkdirSync, realpathSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 export const KNOWN_SCHEMAS = new Set(["pdfluent-release-suite/1"]);
 
@@ -195,7 +196,17 @@ function updaterPayloadsIn(dir) {
 }
 
 // ── CLI ──────────────────────────────────────────────────────────────────────
-if (import.meta.url === `file://${process.argv[1]}`) {
+// Run directly, not imported -- compared as paths, both resolved.
+//
+// The usual spelling of this test compares `import.meta.url` to
+// `file://${process.argv[1]}`. One is a URL and percent-encodes a space, the
+// other is a path and does not, so on any checkout whose path contains one the
+// comparison is quietly false: the module loads, defines everything and does
+// nothing. The nightly keeps its checkout under ~/Library/Application Support,
+// and the first run there made every probe, printed every skip, wrote no report
+// and exited 0. Node also resolves a symlinked entry point before filling in
+// import.meta.url, which the same comparison gets wrong in the other direction.
+if (process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const argv = process.argv.slice(2);
   const a = {};
   for (let i = 0; i < argv.length; i++) {
