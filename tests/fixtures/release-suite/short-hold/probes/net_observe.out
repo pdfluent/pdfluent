@@ -1,0 +1,18 @@
+--- sample 1 ---
+p4711
+f18
+n127.0.0.1:51204
+--- nettop ---
+time,,interface,state,bytes_in,bytes_out,rx_dupe,rx_ooo,re-tx,rtt_avg,rcvsize,tx_win,tc_class,tc_mgt,cc_algo,P,C,R,W,arch,
+10:14:02.118441,pdfluent-desktop.4711,,,0,0,0,0,0,,,,,,,,,,,,
+10:14:02.118392,tcp4 127.0.0.1:51204<->*:*,lo0,Listen,,,,,,,,,,-,cubic,-,-,-,-,so,
+--- document fixture-acroform-1p window 1490 ms ---
+--- window 1490 ms ---
+--- sample 2 ---
+p4711
+f18
+n127.0.0.1:51204
+f21
+n127.0.0.1:51205->127.0.0.1:51204
+--- document fixture-sample-text-3p window 1180 ms ---
+--- window 61240 ms ---

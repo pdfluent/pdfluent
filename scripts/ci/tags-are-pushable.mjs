@@ -38,6 +38,7 @@ import { execFileSync } from "node:child_process";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { NOREPLY_ALIAS } from "./publish-public-snapshot.mjs";
+import { isMainModule } from "../lib/main-module.mjs";
 
 export const root = process.env.PDFLUENT_REPO_DIR || resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
 
@@ -100,4 +101,7 @@ function main() {
   return 1;
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) process.exit(main());
+// exitCode, not exit(): a write to a pipe is asynchronous, and process.exit()
+// drops whatever libuv has not handed to the kernel yet. See
+// tests/ci/guards-flush-before-exit.test.ts.
+if (isMainModule(import.meta.url)) process.exitCode = main();

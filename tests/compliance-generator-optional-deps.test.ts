@@ -21,7 +21,15 @@
  *     "MIT OR GPL" dual licence is not over-blocked
  */
 import { describe, it, expect, afterAll } from 'vitest';
-import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, rmSync, existsSync } from 'node:fs';
+import {
+  chmodSync,
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
@@ -55,6 +63,9 @@ interface ReportEntry {
   direct: boolean;
   scope: string;
   optional: boolean;
+  licenseFilePath?: string | null;
+  repository?: string;
+  homepage?: string;
 }
 
 interface Report {
@@ -285,5 +296,274 @@ describe('third-party notice generator: a skipped source is not a pass', () => {
     const complete = runCheck(writeReport([]));
     expect(complete.status, complete.stdout + complete.stderr).toBe(0);
     expect(complete.stdout).toContain('License check passed (1 entries');
+  });
+});
+
+/**
+ * The same lockfile must produce the same inventory on every machine.
+ *
+ * It did not. The npm section read `license`, `repository`, `homepage` and the
+ * licence file out of node_modules whenever the package happened to be
+ * installed, and a platform-optional package is installed on exactly one
+ * OS/CPU. So `@rollup/rollup-darwin-arm64` carried a repository URL in the
+ * copy generated on a Mac and `@rollup/rollup-linux-x64-gnu` carried it in the
+ * copy generated on the Linux runner — two inventories of one lockfile, and a
+ * freshness check in .github/workflows/compliance.yml that could not be green
+ * on both.
+ *
+ * The npm section is now read from package-lock.json alone, so these three
+ * layouts — the darwin optional set, the linux optional set, and no install at
+ * all — have to agree byte for byte.
+ */
+const NATIVE_DARWIN = '@fixture/native-darwin-arm64';
+const NATIVE_LINUX = '@fixture/native-linux-x64';
+const HOST_TOOL = 'host-tool';
+
+const GENERATED_FILES = [
+  'compliance-report.json',
+  'THIRD_PARTY.md',
+  'THIRD_PARTY_ATTRIBUTIONS.md',
+] as const;
+
+/**
+ * One lockfile, one of the platform sets on disk. `installed` names the
+ * platform packages npm would have unpacked on that host; the plain dependency
+ * is always there, as npm ci leaves it on every host.
+ */
+function writePlatformFixture(installed: readonly string[]): string {
+  const root = mkdtempSync(join(tmpdir(), 'third-party-platform-'));
+  fixtureRoots.push(root);
+
+  const manifest = {
+    name: 'fixture-app',
+    version: '0.0.0',
+    dependencies: { [HOST_TOOL]: '^5.0.0' },
+  };
+  writeFileSync(join(root, 'package.json'), JSON.stringify(manifest, null, 2));
+  writeFileSync(
+    join(root, 'package-lock.json'),
+    JSON.stringify(
+      {
+        name: 'fixture-app',
+        version: '0.0.0',
+        lockfileVersion: 3,
+        requires: true,
+        packages: {
+          '': manifest,
+          [`node_modules/${HOST_TOOL}`]: {
+            version: '5.0.0',
+            license: 'MIT',
+            optionalDependencies: { [NATIVE_DARWIN]: '5.0.0', [NATIVE_LINUX]: '5.0.0' },
+          },
+          [`node_modules/${NATIVE_DARWIN}`]: {
+            version: '5.0.0',
+            license: 'MIT',
+            optional: true,
+            os: ['darwin'],
+            cpu: ['arm64'],
+          },
+          [`node_modules/${NATIVE_LINUX}`]: {
+            version: '5.0.0',
+            license: 'MIT',
+            optional: true,
+            os: ['linux'],
+            cpu: ['x64'],
+          },
+        },
+      },
+      null,
+      2,
+    ),
+  );
+
+  const install = (name: string, extra: Record<string, unknown>): void => {
+    mkdirSync(join(root, 'node_modules', name), { recursive: true });
+    writeFileSync(
+      join(root, 'node_modules', name, 'package.json'),
+      JSON.stringify({ name, version: '5.0.0', license: 'MIT', ...extra }),
+    );
+    writeFileSync(join(root, 'node_modules', name, 'LICENSE'), 'MIT\n');
+  };
+  install(HOST_TOOL, {});
+  for (const name of installed) {
+    // The fields that used to leak the host into the inventory.
+    install(name, {
+      repository: { url: `git+https://example.invalid/${name.split('/').pop()}.git` },
+      homepage: `https://example.invalid/${name.split('/').pop()}`,
+    });
+  }
+  return root;
+}
+
+function generatedFiles(root: string): Record<string, string> {
+  const gen = runGenerator(root);
+  expect(gen.status, gen.stdout + gen.stderr).toBe(0);
+  return Object.fromEntries(
+    GENERATED_FILES.map((name) => [name, readFileSync(join(root, name), 'utf8')]),
+  );
+}
+
+describe('third-party notice generator: the inventory does not depend on the host', () => {
+  it('writes the same files from the darwin set, the linux set and no install at all', () => {
+    const onDarwin = generatedFiles(writePlatformFixture([NATIVE_DARWIN]));
+    const onLinux = generatedFiles(writePlatformFixture([NATIVE_LINUX]));
+    const fromLockAlone = generatedFiles(writePlatformFixture([]));
+
+    for (const name of GENERATED_FILES) {
+      expect(onLinux[name], `${name} differs between the darwin and linux layouts`).toBe(
+        onDarwin[name],
+      );
+      // The freshness check has to be reproducible without an install at all.
+      expect(fromLockAlone[name], `${name} depends on node_modules`).toBe(onDarwin[name]);
+    }
+  });
+
+  it('records both platform binaries, from the lock, with no host-dependent field', () => {
+    const report = (() => {
+      const root = writePlatformFixture([NATIVE_DARWIN]);
+      runGenerator(root);
+      return readReport(root);
+    })();
+
+    for (const name of [NATIVE_DARWIN, NATIVE_LINUX]) {
+      const entry = report.entries.find((candidate) => candidate.name === name);
+      expect(entry, `${name} is missing from the inventory`).toBeDefined();
+      expect(entry?.license).toBe('MIT');
+      expect(entry?.optional).toBe(true);
+      expect(entry?.policyStatus).toBe('allowed');
+      // Present on this host or not, the row says the same thing.
+      expect(entry?.licenseFilePath ?? null).toBeNull();
+      expect(entry?.repository ?? '').toBe('');
+      expect(entry?.homepage ?? '').toBe('');
+    }
+  });
+});
+
+/**
+ * The cargo half had the same disease in a different organ.
+ *
+ * `licenseFilePath` recorded where this machine unpacked the crate, and that
+ * prefix is CARGO_HOME: `~/.cargo/registry/src/...` on a developer Mac,
+ * `/var/cache/cargo-home/registry/src/...` on the Linux runner. Compliance run
+ * 35082579311 failed on exactly that and nothing else -- 214 lines, all of them
+ * a licenseFilePath prefix, with the registry hash, the crate directory, the
+ * engine checkout hash and the pinned short revision already identical.
+ *
+ * Only the part below CARGO_HOME is a fact about the crate, so that is what the
+ * inventory records now.
+ */
+const REGISTRY_DIR = 'registry/src/index.crates.io-1949cf8c6b5b557f/fixture-dep-1.0.0';
+const GIT_CHECKOUT_DIR = 'git/checkouts/fixture-engine-e95b3c6e45dc1908/51f6f1b/crates/fixture-crate';
+
+/**
+ * A cargo home laid out the way cargo lays one out, with the two shapes that
+ * reach the inventory: an unpacked registry crate and a git checkout.
+ */
+function writeCargoHome(root: string, name: string): string {
+  const cargoHome = join(root, name);
+  for (const [dir, crate] of [
+    [REGISTRY_DIR, 'fixture-dep'],
+    [GIT_CHECKOUT_DIR, 'fixture-crate'],
+  ] as const) {
+    mkdirSync(join(cargoHome, dir), { recursive: true });
+    writeFileSync(
+      join(cargoHome, dir, 'Cargo.toml'),
+      `[package]\nname = "${crate}"\nversion = "1.0.0"\n`,
+    );
+    writeFileSync(join(cargoHome, dir, 'LICENSE'), 'MIT\n');
+  }
+  return cargoHome;
+}
+
+/**
+ * A workspace whose `cargo` is a stub printing metadata for two crates that
+ * live in `cargoHome`. The real cargo would print the same shape; what the test
+ * needs is control over the prefix, which is the whole point.
+ */
+function writeCargoFixture(cargoHomeName: string): { workspace: string; bin: string } {
+  const root = mkdtempSync(join(tmpdir(), 'third-party-cargo-'));
+  fixtureRoots.push(root);
+  const cargoHome = writeCargoHome(root, cargoHomeName);
+  const workspace = join(root, 'workspace');
+  mkdirSync(join(workspace, 'src-tauri'), { recursive: true });
+  writeFileSync(join(workspace, 'package.json'), JSON.stringify({ name: 'fixture-app', version: '0.0.0' }));
+  writeFileSync(
+    join(workspace, 'package-lock.json'),
+    JSON.stringify({ name: 'fixture-app', version: '0.0.0', lockfileVersion: 3, packages: {} }),
+  );
+  writeFileSync(
+    join(workspace, 'src-tauri', 'Cargo.toml'),
+    '[package]\nname = "fixture"\nversion = "0.0.0"\n',
+  );
+
+  const metadata = {
+    packages: [
+      {
+        id: 'fixture-dep 1.0.0',
+        name: 'fixture-dep',
+        version: '1.0.0',
+        license: 'MIT',
+        repository: 'https://example.invalid/fixture-dep',
+        homepage: '',
+        manifest_path: join(cargoHome, REGISTRY_DIR, 'Cargo.toml'),
+      },
+      {
+        id: 'fixture-crate 1.0.0',
+        name: 'fixture-crate',
+        version: '1.0.0',
+        license: 'MIT OR LicenseRef-PDFluent-Commercial',
+        repository: '',
+        homepage: '',
+        license_file: 'LICENSE',
+        manifest_path: join(cargoHome, GIT_CHECKOUT_DIR, 'Cargo.toml'),
+      },
+    ],
+    workspace_members: [],
+  };
+  const bin = join(root, 'bin');
+  mkdirSync(bin, { recursive: true });
+  const cargoStub = join(bin, 'cargo');
+  const metadataPath = join(root, 'metadata.json');
+  writeFileSync(metadataPath, JSON.stringify(metadata));
+  // Node, not /bin/sh: the stub has to run on a PATH that holds nothing else.
+  writeFileSync(
+    cargoStub,
+    `#!${process.execPath}\n` +
+      `process.stdout.write(require('node:fs').readFileSync(${JSON.stringify(metadataPath)}, 'utf8'));\n`,
+  );
+  chmodSync(cargoStub, 0o755);
+  return { workspace, bin };
+}
+
+describe('third-party notice generator: the inventory does not record CARGO_HOME', () => {
+  it('writes the same rows whichever directory cargo unpacked the crates into', () => {
+    const run = (cargoHomeName: string): Report => {
+      const { workspace, bin } = writeCargoFixture(cargoHomeName);
+      const gen = spawnSync(process.execPath, [GENERATE], {
+        cwd: workspace,
+        encoding: 'utf8',
+        env: { ...process.env, PATH: `${bin}:${dirname(process.execPath)}` },
+      });
+      expect(gen.status, gen.stdout + gen.stderr).toBe(0);
+      expect(gen.stderr).not.toContain('SKIPPED');
+      return readReport(workspace);
+    };
+
+    // The two shapes this has actually been seen in: a home-relative cargo home
+    // on a developer machine and a system one on the CI runner.
+    const onDeveloperMachine = run('dot-cargo');
+    const onRunner = run('var-cache-cargo-home');
+
+    expect(onRunner.entries).toEqual(onDeveloperMachine.entries);
+
+    const paths = onRunner.entries.map((entry) => entry.licenseFilePath);
+    expect(paths).toContain(`${REGISTRY_DIR}/LICENSE`);
+    expect(paths).toContain(`${GIT_CHECKOUT_DIR}/LICENSE`);
+    // The crate is identified, the machine is not.
+    for (const recorded of paths) {
+      expect(recorded, `${recorded} still carries a host prefix`).not.toContain('dot-cargo');
+      expect(recorded).not.toContain('var-cache-cargo-home');
+      expect(recorded?.startsWith('/')).toBe(false);
+    }
   });
 });

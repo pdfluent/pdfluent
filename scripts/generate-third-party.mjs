@@ -67,11 +67,34 @@ function inferLicenseByPackageName(source, name) {
   return "";
 }
 
-// Paths in the report must read the same on every machine: relative inside the
-// workspace and its sibling tree, "~"-relative under the home directory (which
-// is where Cargo puts the pinned engine checkout, under ~/.cargo/git).
+// The directories cargo unpacks into, below CARGO_HOME. Everything above them
+// is the machine: `~/.cargo` on a developer box, `/var/cache/cargo-home` on the
+// CI runner, anywhere CARGO_HOME points. Everything below them -- the registry
+// hash, the crate directory, the checkout hash, the pinned short revision -- is
+// the crate, and is identical on every host. Recording the prefix is what made
+// compliance run 35082579311 red on 214 lines that said nothing else.
+const CARGO_HOME_SUBTREES = ["registry/src", "registry/cache", "git/checkouts", "git/db"];
+
+function cargoHomeRelative(filePath) {
+  const withSlashes = filePath.split(path.sep).join("/");
+  for (const subtree of CARGO_HOME_SUBTREES) {
+    const marker = `/${subtree}/`;
+    const at = withSlashes.lastIndexOf(marker);
+    if (at !== -1) return withSlashes.slice(at + 1);
+  }
+  return null;
+}
+
+// Paths in the report must read the same on every machine: CARGO_HOME-relative
+// inside the cargo caches, relative inside the workspace and its sibling tree,
+// "~"-relative under the home directory.
 function presentPath(filePath) {
   if (typeof filePath !== "string" || !path.isAbsolute(filePath)) return filePath;
+  // First, and not after the workspace check: a cargo home may sit anywhere,
+  // including beside the checkout, and "../<whatever CARGO_HOME is called>/..."
+  // is just as much a fact about the machine as the absolute path is.
+  const inCargoHome = cargoHomeRelative(filePath);
+  if (inCargoHome) return inCargoHome;
   const relative = path.relative(workspaceRoot, filePath);
   const levelsUp = relative.split(path.sep).filter((segment) => segment === "..").length;
   if (levelsUp <= 2) return relative;
@@ -182,63 +205,29 @@ function gatherNpmEntries() {
       continue;
     }
 
-    const version = String(lockEntry.version ?? "");
-    const modulePathFromLock = path.join(workspaceRoot, lockPath);
-    const modulePathFromName = path.join(workspaceRoot, "node_modules", dependencyName);
-    const nodeModulePath = existsSync(modulePathFromLock)
-      ? modulePathFromLock
-      : modulePathFromName;
-    const modulePackageJsonPath = path.join(nodeModulePath, "package.json");
-    let license = "";
-    let repository = "";
-    let homepage = "";
-    if (existsSync(modulePackageJsonPath)) {
-      const modulePackageJson = readJsonFile(modulePackageJsonPath);
-      if (typeof modulePackageJson.license === "string") {
-        license = modulePackageJson.license;
-      } else if (
-        Array.isArray(modulePackageJson.licenses) &&
-        modulePackageJson.licenses.length > 0
-      ) {
-        license = modulePackageJson.licenses
-          .map((value) =>
-            typeof value === "string"
-              ? value
-              : typeof value?.type === "string"
-                ? value.type
-                : "",
-          )
-          .filter((value) => value.length > 0)
-          .join(" OR ");
-      }
-
-      if (typeof modulePackageJson.homepage === "string") {
-        homepage = modulePackageJson.homepage;
-      }
-      if (typeof modulePackageJson.repository === "string") {
-        repository = modulePackageJson.repository;
-      } else if (typeof modulePackageJson.repository?.url === "string") {
-        repository = modulePackageJson.repository.url;
-      }
-    }
-    // A package that is not installed here (other OS/CPU) still has its
-    // licence recorded in the lock file; that record is what npm resolved.
-    if (license.length === 0 && typeof lockEntry.license === "string") {
-      license = lockEntry.license;
-    }
-
+    // Everything below comes out of the lock record and nothing out of
+    // node_modules. A platform-optional package (@rollup/rollup-<os>-<cpu>,
+    // @esbuild/*, @img/sharp-*) is unpacked on exactly one OS/CPU, so reading
+    // its licence, repository, homepage or licence file off disk made the
+    // inventory a fact about the machine that ran `npm ci`: the Mac copy
+    // carried a repository URL on the darwin row and the Linux copy carried it
+    // on the linux row. The freshness check in .github/workflows/compliance.yml
+    // compares the committed inventory with a fresh run, so it could not be
+    // green on both. `resolved` is the provenance that survives: the registry
+    // tarball the lock pins, identical on every host.
     const entry = {
       source: "npm",
       name: dependencyName,
-      version,
+      version: String(lockEntry.version ?? ""),
       direct: directDependencies.has(dependencyName),
       // "dev" is tooling only; "runtime" can end up in the shipped bundle.
       scope: lockEntry.dev === true ? "dev" : "runtime",
       optional: lockEntry.optional === true || lockEntry.devOptional === true,
-      license,
-      repository,
-      homepage,
-      licenseFilePath: findLicenseFileInDirectory(nodeModulePath),
+      license: typeof lockEntry.license === "string" ? lockEntry.license : "",
+      resolved: typeof lockEntry.resolved === "string" ? lockEntry.resolved : "",
+      repository: "",
+      homepage: "",
+      licenseFilePath: null,
     };
     const dedupeKey = `${entry.source}::${entry.name}::${entry.version}`;
     const existing = dedupeMap.get(dedupeKey);

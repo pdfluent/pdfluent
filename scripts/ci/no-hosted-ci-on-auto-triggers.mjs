@@ -31,6 +31,7 @@
 
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
+import { isMainModule } from "../lib/main-module.mjs";
 
 /**
  * Drop block scalars (`run: |`) before any line-based reading: their bodies are
@@ -207,11 +208,11 @@ function main() {
     violations = findJobsOffOurRunner(directory);
   } catch (error) {
     console.error(`no-hosted-ci-on-auto-triggers: cannot read ${directory}: ${error.message}`);
-    process.exit(2);
+    return 2;
   }
   if (violations.length === 0) {
     console.log(`no-hosted-ci-on-auto-triggers: OK (${directory})`);
-    return;
+    return 0;
   }
   console.error("no-hosted-ci-on-auto-triggers: jobs that are not on our own runner\n");
   for (const violation of violations) {
@@ -220,7 +221,10 @@ function main() {
   console.error(
     "\nEvery job belongs on the self-hosted runner: runs-on: [self-hosted, linux, pdfluent-editor].",
   );
-  process.exit(1);
+  return 1;
 }
 
-if (process.argv[1] && import.meta.url === `file://${process.argv[1]}`) main();
+// exitCode, not exit(): a write to a pipe is asynchronous, and process.exit()
+// drops whatever libuv has not handed to the kernel yet. See
+// tests/ci/guards-flush-before-exit.test.ts.
+if (isMainModule(import.meta.url)) process.exitCode = main();

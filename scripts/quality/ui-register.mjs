@@ -50,6 +50,7 @@
 import { readFileSync, writeFileSync, readdirSync, statSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join, relative, resolve as resolvePath } from 'node:path';
+import { isMainModule } from '../lib/main-module.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 export const REPO = resolvePath(HERE, '..', '..');
@@ -1613,11 +1614,22 @@ function main(argv) {
   return 0;
 }
 
-if (process.argv[1] && process.argv[1].endsWith('ui-register.mjs')) {
+// ── CLI ──────────────────────────────────────────────────────────────────────
+// Run directly, not imported -- decided on the file rather than on the spelling
+// of a path. `process.argv[1].endsWith('ui-register.mjs')` answers a question about
+// a name, and every copy, wrapper, renamed link and checkout that does not end
+// in that name makes it answer no: the module loads, runs nothing, prints
+// nothing and exits 0, which is byte for byte a clean pass. See
+// scripts/lib/main-module.mjs and tests/ci/guards-are-never-silent.test.ts.
+//
+// exitCode, not exit(): a write to a pipe is asynchronous, and process.exit()
+// drops whatever libuv has not handed to the kernel yet. See
+// tests/ci/guards-flush-before-exit.test.ts.
+if (isMainModule(import.meta.url)) {
   try {
-    process.exit(main(process.argv.slice(2)));
+    process.exitCode = main(process.argv.slice(2));
   } catch (err) {
     console.error('ui-register could not run:', err);
-    process.exit(2);
+    process.exitCode = 2;
   }
 }

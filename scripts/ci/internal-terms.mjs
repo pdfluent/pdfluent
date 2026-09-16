@@ -41,6 +41,7 @@ import { resolve } from "node:path";
 import { homedir } from "node:os";
 import { execFileSync } from "node:child_process";
 import { loadManifest, isPublished, treeOf, root } from "./public-tree.mjs";
+import { isMainModule } from "../lib/main-module.mjs";
 
 const RULES = [
   ["commercial", /\b(no customers yet|geen klanten|customer count|klantaantal|run ?rate|winstmarge|profit margin|revenue (that|which) does not exist|omzetdoel|verdienmodel|go-to-market|prijsstrategie|pricing strategy)\b/gi],
@@ -174,9 +175,49 @@ function scanRange(range, activeRules) {
   return { findings: violations(text, activeRules), inspected: n, unit: "commits" };
 }
 
-function isText(sha) {
-  const buf = execFileSync("git", ["cat-file", "blob", sha], { cwd: root, maxBuffer: 64 * 1024 * 1024 });
-  return !buf.subarray(0, 8192).includes(0);
+// ONE READ FOR THE WHOLE TREE, NOT TWO PER FILE.
+// Asking git for a blob costs a process, and this scan asked twice for each one:
+// once to sniff it for NUL bytes, once to read it. On this tree that is over two
+// thousand processes: three runs on an idle machine on 2026-09-16 took 138, 151
+// and 143 s, and the regex work -- the part that decides anything -- was 0.1 s
+// of it. `cat-file --batch` answers for every blob down one pipe, and the same
+// three runs then took 0.46, 0.45 and 0.45 s. What is handed on is the same
+// bytes, so the sniff and the scan judge exactly what they judged before.
+//
+// The record is `<oid> <type> <size>\n<bytes>\n`, and the size is why this is
+// safe to parse: a stream that stops early stops mid-record and is refused,
+// rather than read as a repository of shorter files. That failure is not
+// hypothetical here -- a short read from a child process is what put the
+// length check in `treeOf`.
+function readBlobs(shas) {
+  const blobs = new Map();
+  if (shas.length === 0) return blobs;
+  const out = execFileSync("git", ["cat-file", "--batch", "--buffer"], {
+    cwd: root, input: `${shas.join("\n")}\n`, maxBuffer: 512 * 1024 * 1024,
+  });
+  let at = 0;
+  for (const sha of shas) {
+    const nl = out.indexOf(10, at);
+    if (nl < 0) {
+      throw new Error(`internal-terms: the batch read stopped before ${sha}. Read again; do not trust it.`);
+    }
+    const header = out.toString("latin1", at, nl);
+    const [oid, type, size] = header.split(" ");
+    if (type !== "blob") {
+      throw new Error(`internal-terms: git answered '${header}' for ${sha}; that is not a blob and the tree cannot be judged without it.`);
+    }
+    const start = nl + 1;
+    const end = start + Number(size);
+    if (end > out.length) {
+      throw new Error(`internal-terms: the batch read of ${sha} was cut off at ${out.length - start} of ${size} bytes. Read again; do not trust it.`);
+    }
+    blobs.set(oid, out.subarray(start, end));
+    at = end + 1;
+  }
+  if (at !== out.length) {
+    throw new Error(`internal-terms: the batch read holds ${out.length - at} bytes nobody asked for. Read again; do not trust it.`);
+  }
+  return blobs;
 }
 
 function scanTree(ref, activeRules) {
@@ -186,6 +227,9 @@ function scanTree(ref, activeRules) {
   if (paths.length < MIN_FILES) {
     throw new Error(`internal-terms: ${ref} publishes ${paths.length} files, fewer than ${MIN_FILES}. The invocation is wrong.`);
   }
+  // Two names can carry the same content. The blob is then asked for once and
+  // judged against each name that points at it.
+  const blobs = readBlobs([...new Set(paths.map(([, sha]) => sha))]);
   const findings = [];
   let read = 0;
   for (const [path, sha] of paths) {
@@ -198,9 +242,11 @@ function scanTree(ref, activeRules) {
       const m = findAll(search, path)[0];
       if (m) findings.push({ rule: name, what: m[0], where: path, context: "<in the file name>" });
     }
-    if (!isText(sha)) continue;
+    const blob = blobs.get(sha);
+    if (!blob) throw new Error(`internal-terms: the batch read returned nothing for ${path}. Read again; do not trust it.`);
+    if (blob.subarray(0, 8192).includes(0)) continue;
     read += 1;
-    const text = execFileSync("git", ["cat-file", "blob", sha], { cwd: root, encoding: "utf8", maxBuffer: 64 * 1024 * 1024 });
+    const text = blob.toString("utf8");
     // Whole blob at a time, then the line number from the offset. Line by line
     // was the obvious shape and it ran the partner alternation once per line of
     // package-lock.json; on this tree that alone was minutes per run, and a
@@ -263,4 +309,7 @@ function main(argv) {
   return 1;
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) process.exit(main(process.argv.slice(2)));
+// exitCode, not exit(): a write to a pipe is asynchronous, and process.exit()
+// drops whatever libuv has not handed to the kernel yet. See
+// tests/ci/guards-flush-before-exit.test.ts.
+if (isMainModule(import.meta.url)) process.exitCode = main(process.argv.slice(2));

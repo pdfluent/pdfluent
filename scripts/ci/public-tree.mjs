@@ -27,6 +27,7 @@ import { readFileSync } from "node:fs";
 import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { execFileSync } from "node:child_process";
+import { isMainModule } from "../lib/main-module.mjs";
 
 export const root = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
 export const MANIFEST = resolve(root, "docs/PUBLIC_TREE.json");
@@ -164,4 +165,7 @@ function main(argv) {
   return 2;
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) process.exit(main(process.argv.slice(2)));
+// exitCode, not exit(): a write to a pipe is asynchronous, and process.exit()
+// drops whatever libuv has not handed to the kernel yet. See
+// tests/ci/guards-flush-before-exit.test.ts.
+if (isMainModule(import.meta.url)) process.exitCode = main(process.argv.slice(2));

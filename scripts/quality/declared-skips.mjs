@@ -27,6 +27,7 @@ import { readFileSync } from 'node:fs';
 import { dirname, isAbsolute, relative, resolve as resolvePath, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { readAllowlist } from './no-silent-failures.mjs';
+import { isMainModule } from '../lib/main-module.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const REPO = resolvePath(HERE, '..', '..');
@@ -111,7 +112,7 @@ function main() {
   const path = process.argv[2];
   if (!path) {
     console.error('usage: node scripts/quality/declared-skips.mjs <playwright-report.json>');
-    process.exit(2);
+    return 2;
   }
   let report;
   try {
@@ -120,7 +121,7 @@ function main() {
     // A missing report is not an absence of skips; it is an absence of evidence,
     // and passing on it would rebuild the hole this check exists to close.
     console.error(`no Playwright report at ${path}: ${error.message}`);
-    process.exit(1);
+    return 1;
   }
 
   const { skipped, undeclared, unused } = compare(report, declaredSkips());
@@ -137,8 +138,20 @@ function main() {
     console.error('\nDeclared skips that did not happen — remove the entries:\n');
     for (const f of unused) console.error(`  ${f.file}: ${f.ran} skipped, ${f.declared} declared`);
   }
-  if (failed) process.exit(1);
+  if (failed) return 1;
   console.log(`declared-skips: ${skipped.length} skipped test(s), all declared.`);
+  return 0;
 }
 
-if (process.argv[1] && process.argv[1].endsWith('declared-skips.mjs')) main();
+// ── CLI ──────────────────────────────────────────────────────────────────────
+// Run directly, not imported -- decided on the file rather than on the spelling
+// of a path. `process.argv[1].endsWith('declared-skips.mjs')` answers a question about
+// a name, and every copy, wrapper, renamed link and checkout that does not end
+// in that name makes it answer no: the module loads, runs nothing, prints
+// nothing and exits 0, which is byte for byte a clean pass. See
+// scripts/lib/main-module.mjs and tests/ci/guards-are-never-silent.test.ts.
+//
+// exitCode, not exit(): a write to a pipe is asynchronous, and process.exit()
+// drops whatever libuv has not handed to the kernel yet. See
+// tests/ci/guards-flush-before-exit.test.ts.
+if (isMainModule(import.meta.url)) process.exitCode = main();

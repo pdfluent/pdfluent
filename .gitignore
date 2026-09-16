@@ -38,9 +38,6 @@ src-tauri/lib/args.gn
 # Tauri generated
 src-tauri/gen/
 
-# Generated compliance report (regenerate via: npm run compliance:generate)
-compliance-report.json
-
 # Playwright test results (generated on each run)
 test-results/
 

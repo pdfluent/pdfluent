@@ -80,7 +80,7 @@ driver_s2_checks() {
 
 driver_s3_checks() {
   local out=""
-  for pair in net_denied_run:offline:denied net_observe:offline:observe offline_allowlist:offline:allowlist; do
+  for pair in net_observe:offline:observe offline_allowlist:offline:allowlist; do
     probe="${pair%%:*}"; check="${pair#*:}"
     if _fake_have "${probe}"; then _fake_stage "${probe}"; out="${out}${out:+,}${check}"; fi
   done

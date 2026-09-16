@@ -30,6 +30,7 @@ import { readFileSync, readdirSync, statSync, rmSync, existsSync } from "node:fs
 import { resolve, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
+import { isMainModule } from "../lib/main-module.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const legacyDir = resolve(root, "src/legacy");
@@ -39,9 +40,11 @@ const outDir = resolve(root, outName);
 const MIN_MARKERS = 10;
 const keep = process.argv.includes("--keep");
 
+// Returns the exit code rather than taking it: `return die(...)` at the call
+// site ends main() with the output still in flight behind it.
 function die(reason) {
   console.error(`\nLEGACY-SHELL-FENCED: ${reason}\n`);
-  process.exit(1);
+  return 1;
 }
 
 function walk(dir, out = []) {
@@ -71,57 +74,73 @@ function literals(text) {
   return found;
 }
 
-if (!existsSync(legacyDir)) {
-  // The shell is gone entirely, which is the end state this gate exists to
-  // protect. Nothing to prove; say so rather than reporting a silent pass.
-  console.log("legacy-shell-fenced: src/legacy/ does not exist — nothing can leak. OK");
-  process.exit(0);
-}
+function main() {
+  if (!existsSync(legacyDir)) {
+    // The shell is gone entirely, which is the end state this gate exists to
+    // protect. Nothing to prove; say so rather than reporting a silent pass.
+    console.log("legacy-shell-fenced: src/legacy/ does not exist — nothing can leak. OK");
+    return 0;
+  }
 
-const legacyFiles = walk(legacyDir);
-const legacyText = legacyFiles.map((p) => readFileSync(p, "utf8")).join("\n");
-const otherText = walk(srcDir)
-  .filter((p) => !p.startsWith(legacyDir))
-  .map((p) => readFileSync(p, "utf8"))
-  .join("\n");
+  const legacyFiles = walk(legacyDir);
+  const legacyText = legacyFiles.map((p) => readFileSync(p, "utf8")).join("\n");
+  const otherText = walk(srcDir)
+    .filter((p) => !p.startsWith(legacyDir))
+    .map((p) => readFileSync(p, "utf8"))
+    .join("\n");
 
-const markers = [...literals(legacyText)].filter((s) => !otherText.includes(s));
-if (markers.length < MIN_MARKERS) {
-  die(
-    `SKIPPED (not a pass): only ${markers.length} of the literals in src/legacy/ are\n` +
-    `unique to it (need ${MIN_MARKERS}). Without unique markers this gate cannot tell a\n` +
-    "fenced bundle from a bundle it failed to read.",
+  const markers = [...literals(legacyText)].filter((s) => !otherText.includes(s));
+  if (markers.length < MIN_MARKERS) {
+    return die(
+      `SKIPPED (not a pass): only ${markers.length} of the literals in src/legacy/ are\n` +
+      `unique to it (need ${MIN_MARKERS}). Without unique markers this gate cannot tell a\n` +
+      "fenced bundle from a bundle it failed to read.",
+    );
+  }
+
+  if (existsSync(outDir)) rmSync(outDir, { recursive: true, force: true });
+  const build = spawnSync(
+    "npx",
+    ["vite", "build", "--outDir", outName, "--emptyOutDir", "--logLevel", "warn"],
+    { cwd: root, stdio: "inherit", env: { ...process.env, NODE_ENV: "production" } },
   );
-}
+  if (build.status !== 0) return die(`the production build failed (exit ${build.status}) — a build that did not run proves nothing.`);
 
-if (existsSync(outDir)) rmSync(outDir, { recursive: true, force: true });
-const build = spawnSync(
-  "npx",
-  ["vite", "build", "--outDir", outName, "--emptyOutDir", "--logLevel", "warn"],
-  { cwd: root, stdio: "inherit", env: { ...process.env, NODE_ENV: "production" } },
-);
-if (build.status !== 0) die(`the production build failed (exit ${build.status}) — a build that did not run proves nothing.`);
+  const emitted = walk(outDir).filter((p) => /\.(js|mjs|css|html)$/.test(p));
+  if (emitted.length === 0) return die("the build emitted no js/css/html — nothing was scanned.");
+  const bundleBytes = emitted.reduce((n, p) => n + statSync(p).size, 0);
+  const bundleText = emitted.map((p) => readFileSync(p, "utf8")).join("\n");
 
-const emitted = walk(outDir).filter((p) => /\.(js|mjs|css|html)$/.test(p));
-if (emitted.length === 0) die("the build emitted no js/css/html — nothing was scanned.");
-const bundleBytes = emitted.reduce((n, p) => n + statSync(p).size, 0);
-const bundleText = emitted.map((p) => readFileSync(p, "utf8")).join("\n");
-
-const hits = markers.filter((s) => bundleText.includes(s));
-console.log(
-  `legacy-shell-fenced: ${emitted.length} emitted files, ${bundleBytes} bytes; ` +
-  `${markers.length} legacy-only markers checked; ${hits.length} found in the bundle.`,
-);
-if (!keep) rmSync(outDir, { recursive: true, force: true });
-
-if (hits.length > 0) {
-  console.error(
-    `\nLEGACY-SHELL-FENCED FAILED: ${hits.length} of ${markers.length} strings that exist only in\n` +
-    "src/legacy/ are in the production bundle. The retired V1 shell ships to users.\n" +
-    "Put the import behind `import.meta.env.DEV` in src/main.tsx.\n",
+  const hits = markers.filter((s) => bundleText.includes(s));
+  console.log(
+    `legacy-shell-fenced: ${emitted.length} emitted files, ${bundleBytes} bytes; ` +
+    `${markers.length} legacy-only markers checked; ${hits.length} found in the bundle.`,
   );
-  for (const s of hits.slice(0, 8)) console.error(`  · ${JSON.stringify(s)}`);
-  if (hits.length > 8) console.error(`  … and ${hits.length - 8} more`);
-  process.exit(1);
+  if (!keep) rmSync(outDir, { recursive: true, force: true });
+
+  if (hits.length > 0) {
+    console.error(
+      `\nLEGACY-SHELL-FENCED FAILED: ${hits.length} of ${markers.length} strings that exist only in\n` +
+      "src/legacy/ are in the production bundle. The retired V1 shell ships to users.\n" +
+      "Put the import behind `import.meta.env.DEV` in src/main.tsx.\n",
+    );
+    for (const s of hits.slice(0, 8)) console.error(`  · ${JSON.stringify(s)}`);
+    if (hits.length > 8) console.error(`  … and ${hits.length - 8} more`);
+    return 1;
+  }
+  console.log("OK: the production bundle contains none of the legacy shell.");
+  return 0;
 }
-console.log("OK: the production bundle contains none of the legacy shell.");
+
+// ── CLI ──────────────────────────────────────────────────────────────────────
+// Run directly, not imported. Nothing imports this file today, which is how the
+// unconditional form survives: the first test or sibling that reaches in for one
+// function gets the whole run as a side effect of the import. The answer is
+// decided on the file -- same device, same inode -- so it stays true through a
+// symlink, a copy and a renamed link, and says so on stderr when it cannot tell.
+// See scripts/lib/main-module.mjs.
+//
+// exitCode, not exit(): a write to a pipe is asynchronous, and process.exit()
+// drops whatever libuv has not handed to the kernel yet. See
+// tests/ci/guards-flush-before-exit.test.ts.
+if (isMainModule(import.meta.url)) process.exitCode = main();

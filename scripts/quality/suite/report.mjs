@@ -21,9 +21,9 @@
 // PASS (0). NOT_APPLICABLE is neither — a build that deliberately ships without
 // updater artefacts is a clean 0 and the report says why.
 
-import { readFileSync, writeFileSync, existsSync, mkdirSync, realpathSync } from "node:fs";
+import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
+import { isMainModule } from "../../lib/main-module.mjs";
 
 export const VERDICTS = {
   PASS: { verdict: "PASS", exit_code: 0 },
@@ -130,17 +130,10 @@ export function readSteps(work) {
 }
 
 // ── CLI ──────────────────────────────────────────────────────────────────────
-// Run directly, not imported -- compared as paths, both resolved.
-//
-// The usual spelling of this test compares `import.meta.url` to
-// `file://${process.argv[1]}`. One is a URL and percent-encodes a space, the
-// other is a path and does not, so on any checkout whose path contains one the
-// comparison is quietly false: the module loads, defines everything and does
-// nothing. The nightly keeps its checkout under ~/Library/Application Support,
-// and the first run there made every probe, printed every skip, wrote no report
-// and exited 0. Node also resolves a symlinked entry point before filling in
-// import.meta.url, which the same comparison gets wrong in the other direction.
-if (process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)) {
+// A function that returns its exit code rather than a block that takes it: the
+// caller below sets process.exitCode, so nothing the CLI printed is still in
+// flight when the process ends.
+function cli() {
   const argv = process.argv.slice(2);
   const args = {};
   for (let i = 0; i < argv.length; i++) {
@@ -166,10 +159,10 @@ if (process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.me
         if (w[i] !== h[i]) { console.error(`  line ${i + 1}:\n    generated: ${w[i] ?? "(none)"}\n    on disk:   ${h[i] ?? "(none)"}`); break; }
       }
       if (args.write) { writeFileSync(mdPath, want, "utf8"); console.error("  (rewritten)"); }
-      process.exit(1);
+      return 1;
     }
     console.log(`✓ ${path.relative(process.cwd(), mdPath)} matches its JSON`);
-    process.exit(0);
+    return 0;
   }
 
   const work = String(args.work);
@@ -187,5 +180,12 @@ if (process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.me
   writeFileSync(`${base}.json`, JSON.stringify(report, null, 2) + "\n", "utf8");
   writeFileSync(`${base}.md`, renderMarkdown(report), "utf8");
   console.log(`${report.verdict} — ${path.relative(process.cwd(), base)}.json`);
-  process.exit(report.exit_code);
+  return report.exit_code;
 }
+
+// Run directly, not imported -- decided on the file rather than on the spelling
+// of a path (scripts/lib/main-module.mjs), and ended with exitCode rather than
+// with a hard exit: a write to a pipe is asynchronous, and process.exit() drops
+// whatever libuv has not handed to the kernel yet.
+// See tests/ci/guards-flush-before-exit.test.ts.
+if (isMainModule(import.meta.url)) process.exitCode = cli();

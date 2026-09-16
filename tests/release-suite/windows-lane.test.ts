@@ -86,6 +86,36 @@ describe("the build-host lane", () => {
     const useAt = ps1.indexOf("msiexec.exe");
     expect(ps1.slice(0, useAt)).toContain("$MsiPath");
   });
+
+  // The lane carries the allow-list to the build host instead of reading that
+  // host's checkout. A script copied on its own is only a script while it can
+  // still reach what it imports, and the failure when it cannot is the quiet
+  // one: `Test-Path` is true, node refuses to load it, and the row reads as an
+  // allow-list that found nothing.
+  it("carries every script it sends with what that script imports", () => {
+    const sh = readFileSync(path.join(REPO_ROOT, "scripts/quality/suite/drivers/windows.sh"), "utf8");
+    const carried = new Map<string, string>();   // path on the host -> path here
+    const scp = /scp\s+"\$\{WIN_SSH\[@\]\}"\s+"\$\{REPO_ROOT\}\/([^"]+\.mjs)"\s+"\$\{WIN_BUILD_HOST\}:\$\{REMOTE_WORK\}\/([^"]+\.mjs)"/g;
+    for (let m = scp.exec(sh); m; m = scp.exec(sh)) carried.set(m[2], m[1]);
+    // A floor: an empty listing agrees with everything.
+    expect(carried.size, "the lane sends no .mjs at all — the regex above, or the lane, has moved")
+      .toBeGreaterThan(0);
+
+    for (const [there, here] of carried) {
+      const src = readFileSync(path.join(REPO_ROOT, here), "utf8");
+      const imports = /\bfrom\s+['"](\.[^'"]+)['"]/g;
+      for (let m = imports.exec(src); m; m = imports.exec(src)) {
+        const needed = path.posix.normalize(path.posix.join(path.posix.dirname(there), m[1]));
+        expect([...carried.keys()], `${here} imports ${m[1]}, which the lane does not send`)
+          .toContain(needed);
+      }
+    }
+
+    const allowlist = /-Allowlist '\$\{REMOTE_WORK\}\/([^']+)'/.exec(sh);
+    expect(allowlist, "the lane no longer names an allow-list").not.toBeNull();
+    expect([...carried.keys()], "the allow-list it runs is not one of the files it sent")
+      .toContain(allowlist![1]);
+  });
 });
 
 describe("an application that writes no log", () => {

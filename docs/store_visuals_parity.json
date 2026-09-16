@@ -20,13 +20,18 @@
     "changing the image and building the control. Nothing is uploaded, and no",
     "derivative of that image enters docs/media/, while its list is non-empty.",
     "",
-    "Sources checked on 2026-09-08 against the shell at b22d536: the six Mac App",
-    "Store 2880x1800 renders and the six Microsoft Store 1920x1080 renders, which",
-    "carry the same six designs at a different aspect ratio.",
+    "A claim does not stop being a claim by moving out of the interface and into",
+    "the sample document on the same picture. Body copy that reads as a feature",
+    "list is blocked on the same terms as a button.",
+    "",
+    "Sources checked on 2026-09-16 against the shell at ba0bfb2: the revised six",
+    "Mac App Store renders and the revised six Microsoft Store 1920x1080 renders,",
+    "which carry the same six designs at a different aspect ratio. Images 1, 2, 3",
+    "and 4 were redrawn in this round; 5 and 6 keep their design.",
     "Image ids are prefixed rather than bare digits on purpose. The register's proof walker probes test files for a quoted literal beside the token 'key', so a bare '1' in this file's test would have been counted as proof for the 1-8 mode shortcut -- a test credited with something it does not exercise, which is the exact failure the register exists to catch."
   ],
-  "checkedOn": "2026-09-08",
-  "registerCommit": "b22d536",
+  "checkedOn": "2026-09-16",
+  "registerCommit": "ba0bfb2",
   "images": [
     {
       "id": "store-1",
@@ -38,7 +43,7 @@
           "affordance": "mode-tab:tools"
         },
         {
-          "control": "Mode tab — Edit",
+          "control": "Mode tab — Edit, active",
           "affordance": "mode-tab:edit"
         },
         {
@@ -46,7 +51,7 @@
           "affordance": "mode-tab:convert"
         },
         {
-          "control": "Mode tab — Sign",
+          "control": "Mode tab — Sign, clipped under the tab-overflow chevron",
           "affordance": "mode-tab:esign"
         },
         {
@@ -54,7 +59,163 @@
           "affordance": "panel:edit"
         },
         {
+          "control": "Undo arrow",
+          "affordance": "button:undo-btn"
+        },
+        {
+          "control": "Redo arrow",
+          "affordance": "button:redo-btn"
+        },
+        {
+          "control": "Search button",
+          "affordance": "button:search-btn"
+        },
+        {
+          "control": "Read-aloud button",
+          "affordance": "button:read-aloud-btn"
+        },
+        {
+          "control": "Save button",
+          "affordance": "button:save-btn"
+        },
+        {
           "control": "Rail — select",
+          "affordance": "rail-tool:select"
+        },
+        {
+          "control": "Rail — hand",
+          "affordance": "rail-tool:hand"
+        },
+        {
+          "control": "Rail — note",
+          "affordance": "rail-tool:comment"
+        },
+        {
+          "control": "Rail — highlight",
+          "affordance": "rail-tool:highlight"
+        },
+        {
+          "control": "Rail — draw",
+          "affordance": "rail-tool:draw"
+        },
+        {
+          "control": "Rail — add text, active",
+          "affordance": "rail-tool:text"
+        },
+        {
+          "control": "Rail — fill and sign",
+          "affordance": "rail-tool:sign"
+        },
+        {
+          "control": "Rail — more tools",
+          "affordance": "rail-tool:more"
+        },
+        {
+          "control": "Floating bottom bar — page counter",
+          "affordance": "button:floating-page-indicator"
+        },
+        {
+          "control": "Floating bottom bar — zoom out",
+          "affordance": "button:zoom-out-btn"
+        },
+        {
+          "control": "Floating bottom bar — zoom level",
+          "affordance": "button:zoom-reset-btn"
+        },
+        {
+          "control": "Floating bottom bar — zoom in",
+          "affordance": "button:zoom-in-btn"
+        },
+        {
+          "control": "Floating bottom bar — fit to view",
+          "affordance": "button:zoom-fit-width-btn"
+        },
+        {
+          "control": "Panel lede, FORMAT TEXT label, Embedded PDF font select, B/I/U/S, five colour swatches",
+          "whyNoAffordance": "panel body, walked as one affordance (panel:edit); the lede matches editorV3.edit.lede in src/i18n/locales/en.json word for word and the five colours match src/viewer/v3/EditorV3Shell.tsx"
+        },
+        {
+          "control": "Page thumbnails under PAGES",
+          "whyNoAffordance": "the thumbnail strip is a surface, not a control; its items are covered by button:v3-outline-item"
+        },
+        {
+          "control": "Breadcrumb 'My files / <file name>' with a PDF badge and a caret",
+          "whyNoAffordance": "the crumb carries no test id, so the register does not walk it. The render is faithful to the shell: src/viewer/v3/EditorV3Shell.tsx draws the same badge and the same caret (ChevronDownIcon, aria-hidden, no handler), so the image promises nothing the app does not itself draw. The caret reading as a document menu is an app question, not an image one"
+        },
+        {
+          "control": "More button in the top bar",
+          "whyNoAffordance": "the more-trigger carries no test id, so the register does not walk it; the export entry it is confused with (button:export-btn) lives in the Share menu"
+        },
+        {
+          "control": "Share button and the privacy badge beside it",
+          "whyNoAffordance": "neither carries a test id: the share-trigger opens the menu the register walks through button:export-btn, and the privacy badge is a static indicator with a tooltip, not a control"
+        },
+        {
+          "control": "Round chevron over the last mode tab",
+          "whyNoAffordance": "the tab-overflow scroll button carries no test id; it is the shipped behaviour of the horizontally scrolling mode-tab strip at this window width, which is why the Sign tab is clipped rather than missing"
+        },
+        {
+          "control": "Right-hand floating rail — thumbnails toggle, previous page, page counter, next page, fit to view",
+          "whyNoAffordance": "none of the five buttons carries a test id, so the register does not walk them; they are the shipped .rightrail block in src/viewer/v3/EditorV3Shell.tsx"
+        }
+      ],
+      "blocked": []
+    },
+    {
+      "id": "store-2",
+      "headline": "Convert PDFs Without Compromise",
+      "surface": "Convert panel",
+      "shows": [
+        {
+          "control": "Mode tab — All tools",
+          "affordance": "mode-tab:tools"
+        },
+        {
+          "control": "Mode tab — Edit",
+          "affordance": "mode-tab:edit"
+        },
+        {
+          "control": "Mode tab — Convert, active",
+          "affordance": "mode-tab:convert"
+        },
+        {
+          "control": "Mode tab — Sign, clipped under the tab-overflow chevron",
+          "affordance": "mode-tab:esign"
+        },
+        {
+          "control": "Convert panel body",
+          "affordance": "panel:convert"
+        },
+        {
+          "control": "Archive row — PDF/A-2b",
+          "affordance": "panel:pdfa"
+        },
+        {
+          "control": "Other options — Compress PDF",
+          "affordance": "panel:compress"
+        },
+        {
+          "control": "Undo arrow",
+          "affordance": "button:undo-btn"
+        },
+        {
+          "control": "Redo arrow",
+          "affordance": "button:redo-btn"
+        },
+        {
+          "control": "Search button",
+          "affordance": "button:search-btn"
+        },
+        {
+          "control": "Read-aloud button",
+          "affordance": "button:read-aloud-btn"
+        },
+        {
+          "control": "Save button",
+          "affordance": "button:save-btn"
+        },
+        {
+          "control": "Rail — select, active",
           "affordance": "rail-tool:select"
         },
         {
@@ -86,72 +247,59 @@
           "affordance": "rail-tool:more"
         },
         {
-          "control": "Panel lede, FORMAT TEXT label, Embedded PDF font select, B/I/U/S, five colour swatches",
-          "whyNoAffordance": "panel body, walked as one affordance (panel:edit); the copy and the five colours match src/viewer/v3/EditorV3Shell.tsx and en.json exactly"
+          "control": "Floating bottom bar — page counter",
+          "affordance": "button:floating-page-indicator"
+        },
+        {
+          "control": "Floating bottom bar — zoom out",
+          "affordance": "button:zoom-out-btn"
+        },
+        {
+          "control": "Floating bottom bar — zoom level",
+          "affordance": "button:zoom-reset-btn"
+        },
+        {
+          "control": "Floating bottom bar — zoom in",
+          "affordance": "button:zoom-in-btn"
+        },
+        {
+          "control": "Floating bottom bar — fit to view",
+          "affordance": "button:zoom-fit-width-btn"
+        },
+        {
+          "control": "EXPORT PDF TO rows for Microsoft Word DOCX, Microsoft Excel XLSX, Microsoft PowerPoint PPTX, Image JPG; Convert to DOCX button; Run OCR row; OCR STATUS card reading '0 possible scan pages', 'OCR overlay visible', 'Confidence from 60%'",
+          "whyNoAffordance": "panel body, walked as one affordance (panel:convert); every label matches the shipped strings, and the Archive row now reads PDF/A-2b and opens the PDF/A panel, which is what the shell does"
         },
         {
           "control": "Page thumbnails under PAGES",
           "whyNoAffordance": "the thumbnail strip is a surface, not a control; its items are covered by button:v3-outline-item"
+        },
+        {
+          "control": "Breadcrumb 'My files / <file name>' with a PDF badge and a caret",
+          "whyNoAffordance": "the crumb carries no test id, so the register does not walk it. The render is faithful to the shell: src/viewer/v3/EditorV3Shell.tsx draws the same badge and the same caret (ChevronDownIcon, aria-hidden, no handler), so the image promises nothing the app does not itself draw. The caret reading as a document menu is an app question, not an image one"
+        },
+        {
+          "control": "More button in the top bar",
+          "whyNoAffordance": "the more-trigger carries no test id, so the register does not walk it; the export entry it is confused with (button:export-btn) lives in the Share menu"
+        },
+        {
+          "control": "Share button and the privacy badge beside it",
+          "whyNoAffordance": "neither carries a test id: the share-trigger opens the menu the register walks through button:export-btn, and the privacy badge is a static indicator with a tooltip, not a control"
+        },
+        {
+          "control": "Round chevron over the last mode tab",
+          "whyNoAffordance": "the tab-overflow scroll button carries no test id; it is the shipped behaviour of the horizontally scrolling mode-tab strip at this window width, which is why the Sign tab is clipped rather than missing"
+        },
+        {
+          "control": "Right-hand floating rail — thumbnails toggle, previous page, page counter, next page, fit to view",
+          "whyNoAffordance": "none of the five buttons carries a test id, so the register does not walk them; they are the shipped .rightrail block in src/viewer/v3/EditorV3Shell.tsx"
         }
       ],
       "blocked": [
         {
-          "control": "Edit panel — ADD CONTENT section with 'Insert text box' and 'Place image'",
-          "shipped": "not rendered: both sit behind LOCAL_OVERLAY_CONTROLS_ENABLED, which is false in src/viewer/v3/EditorV3Shell.tsx because the controls only draw a React overlay and never reach the PDF",
-          "decision": "pdfluent-internal#397"
-        },
-        {
-          "control": "Breadcrumb caret after the PDF badge, which reads as a document menu",
-          "shipped": "decorative: the crumb renders ChevronDownIcon with aria-hidden and no handler, so the caret opens nothing",
-          "decision": "pdfluent-internal#397"
-        }
-      ]
-    },
-    {
-      "id": "store-2",
-      "headline": "Convert PDFs Without Compromise",
-      "surface": "Convert panel",
-      "shows": [
-        {
-          "control": "Mode tab — Convert, active",
-          "affordance": "mode-tab:convert"
-        },
-        {
-          "control": "Undo arrow",
-          "affordance": "button:undo-btn"
-        },
-        {
-          "control": "Convert panel body",
-          "affordance": "panel:convert"
-        },
-        {
-          "control": "Other options — Compress PDF",
-          "affordance": "panel:compress"
-        },
-        {
-          "control": "Rail — select, active",
-          "affordance": "rail-tool:select"
-        },
-        {
-          "control": "EXPORT PDF TO rows for Microsoft Word DOCX, Microsoft Excel XLSX, Microsoft PowerPoint PPTX, Image JPG; Convert to DOCX button; Run OCR row; OCR STATUS card reading '0 possible scan pages'",
-          "whyNoAffordance": "panel body, walked as one affordance (panel:convert); every label matches the shipped strings"
-        }
-      ],
-      "blocked": [
-        {
-          "control": "Archive row labelled PDF/A-1b",
-          "shipped": "the shipped row reads PDF/A-2b, and it opens the PDF/A panel rather than exporting",
-          "decision": "pdfluent-internal#397"
-        },
-        {
-          "control": "'Document language' select set to Dutch, between the format rows and the Convert button",
-          "shipped": "no such control exists anywhere in the app; conversion takes no language input",
-          "decision": "pdfluent-internal#397"
-        },
-        {
-          "control": "Mocked document text offering 'plain text' and a 'PDF → Text' conversion",
-          "shipped": "there is no text export: ExportFormat is pdf, compressed_pdf, png, jpeg, docx, xlsx, pptx",
-          "decision": "pdfluent-internal#397"
+          "control": "Sample document copy: 'Convert PDFs to Word, PNG, JPG or plain text without uploading your files' and an Available Formats list ending in 'PDF -> Text'",
+          "shipped": "there is no text export: ExportFormat in src/viewer/components/ExportDialog.tsx is pdf, compressed_pdf, png, jpeg, docx, xlsx, pptx, and the Convert panel offers no Text row. The claim moved out of the panel into the document body, where on a store image it still reads as a list of what the app converts to",
+          "decision": "pdfluent-internal#457"
         }
       ]
     },
@@ -161,48 +309,152 @@
       "surface": "Sign panel",
       "shows": [
         {
+          "control": "Mode tab — All tools, clipped under the tab-overflow chevron",
+          "affordance": "mode-tab:tools"
+        },
+        {
+          "control": "Mode tab — Edit",
+          "affordance": "mode-tab:edit"
+        },
+        {
+          "control": "Mode tab — Convert",
+          "affordance": "mode-tab:convert"
+        },
+        {
           "control": "Mode tab — Sign, active",
           "affordance": "mode-tab:esign"
+        },
+        {
+          "control": "Sign panel body",
+          "affordance": "panel:esign"
+        },
+        {
+          "control": "Certificate picker — 'No certificate chosen'",
+          "affordance": "button:sign-cert-pick"
+        },
+        {
+          "control": "'Sign and save a copy' button",
+          "affordance": "button:sign-with-certificate"
         },
         {
           "control": "Undo arrow",
           "affordance": "button:undo-btn"
         },
         {
+          "control": "Redo arrow",
+          "affordance": "button:redo-btn"
+        },
+        {
+          "control": "Search button",
+          "affordance": "button:search-btn"
+        },
+        {
+          "control": "Read-aloud button",
+          "affordance": "button:read-aloud-btn"
+        },
+        {
+          "control": "Save button",
+          "affordance": "button:save-btn"
+        },
+        {
+          "control": "Rail — select",
+          "affordance": "rail-tool:select"
+        },
+        {
+          "control": "Rail — hand",
+          "affordance": "rail-tool:hand"
+        },
+        {
+          "control": "Rail — note",
+          "affordance": "rail-tool:comment"
+        },
+        {
+          "control": "Rail — highlight",
+          "affordance": "rail-tool:highlight"
+        },
+        {
+          "control": "Rail — draw",
+          "affordance": "rail-tool:draw"
+        },
+        {
+          "control": "Rail — add text",
+          "affordance": "rail-tool:text"
+        },
+        {
           "control": "Rail — fill and sign, active",
           "affordance": "rail-tool:sign"
+        },
+        {
+          "control": "Rail — more tools",
+          "affordance": "rail-tool:more"
+        },
+        {
+          "control": "Floating bottom bar — page counter",
+          "affordance": "button:floating-page-indicator"
+        },
+        {
+          "control": "Floating bottom bar — zoom out",
+          "affordance": "button:zoom-out-btn"
+        },
+        {
+          "control": "Floating bottom bar — zoom level",
+          "affordance": "button:zoom-reset-btn"
+        },
+        {
+          "control": "Floating bottom bar — zoom in",
+          "affordance": "button:zoom-in-btn"
+        },
+        {
+          "control": "Floating bottom bar — fit to view",
+          "affordance": "button:zoom-fit-width-btn"
+        },
+        {
+          "control": "Panel lede 'Sign with a certificate of your own, and check the signatures a document already carries. Both happen on this device.', the SIGN WITH A CERTIFICATE label and the PAdES B-B sentence under it",
+          "whyNoAffordance": "panel body, walked as one affordance (panel:esign); the three strings are editorV3.esign.lede, .signSection and .padesLevel in src/i18n/locales/en.json, word for word"
+        },
+        {
+          "control": "'Certificate password' and 'Why you are signing' inputs",
+          "whyNoAffordance": "both carry a test id (sign-cert-password, sign-reason) but the register walks buttons, not text inputs; they gate button:sign-with-certificate, which is listed above"
+        },
+        {
+          "control": "SIGNATURES section with the 'Check signatures' button",
+          "whyNoAffordance": "the verify button carries no test id, so the register does not walk it on its own; panel:esign is the affordance that resolves verify_signatures, and the label is editorV3.esign.verify"
+        },
+        {
+          "control": "Page thumbnails under PAGES",
+          "whyNoAffordance": "the thumbnail strip is a surface, not a control; its items are covered by button:v3-outline-item"
+        },
+        {
+          "control": "Breadcrumb 'My files / <file name>' with a PDF badge and a caret",
+          "whyNoAffordance": "the crumb carries no test id, so the register does not walk it. The render is faithful to the shell: src/viewer/v3/EditorV3Shell.tsx draws the same badge and the same caret (ChevronDownIcon, aria-hidden, no handler), so the image promises nothing the app does not itself draw. The caret reading as a document menu is an app question, not an image one"
+        },
+        {
+          "control": "More button in the top bar",
+          "whyNoAffordance": "the more-trigger carries no test id, so the register does not walk it; the export entry it is confused with (button:export-btn) lives in the Share menu"
+        },
+        {
+          "control": "Share button and the privacy badge beside it",
+          "whyNoAffordance": "neither carries a test id: the share-trigger opens the menu the register walks through button:export-btn, and the privacy badge is a static indicator with a tooltip, not a control"
+        },
+        {
+          "control": "Round chevron over the last mode tab",
+          "whyNoAffordance": "the tab-overflow scroll button carries no test id; it is the shipped behaviour of the horizontally scrolling mode-tab strip at this window width, which is why the Sign tab is clipped rather than missing"
+        },
+        {
+          "control": "Right-hand floating rail — thumbnails toggle, previous page, page counter, next page, fit to view",
+          "whyNoAffordance": "none of the five buttons carries a test id, so the register does not walk them; they are the shipped .rightrail block in src/viewer/v3/EditorV3Shell.tsx"
         }
       ],
       "blocked": [
         {
-          "control": "'Invite to sign' button",
-          "shipped": "does not exist, in this panel or anywhere else. This is the same control the previous screenshot set shipped and the reason this check exists",
-          "decision": "pdfluent-internal#397"
+          "control": "Marketing tile 'Draw or Type Signatures' in the left-hand feature list",
+          "shipped": "signing is certificate-only: the panel takes a PKCS#12 file, a password and a reason and calls sign_pdf. Nothing in the app draws or types a signature — the register lists tile:toolbar.initials as NO ACTION, and the overlay signature and initials controls sit behind LOCAL_OVERLAY_CONTROLS_ENABLED, which is false in src/viewer/v3/EditorV3Shell.tsx",
+          "decision": "pdfluent-internal#457"
         },
         {
-          "control": "'Add signature' and 'Add initials' under FILL IN YOUR DOCUMENTS AND SIGN",
-          "shipped": "not rendered: behind LOCAL_OVERLAY_CONTROLS_ENABLED, which is false",
-          "decision": "pdfluent-internal#397"
-        },
-        {
-          "control": "Status cards 'Locally signed — nothing leaves this device' and 'PAdES-compliant digital signature'",
-          "shipped": "removed on purpose: they were fixed copy shown on every document, signed or not, over a control that drew a picture of a signature",
-          "decision": "pdfluent-internal#397"
-        },
-        {
-          "control": "Panel lede 'Sign documents quickly and securely, and share them easily with others to sign'",
-          "shipped": "the lede reads 'Sign with a certificate of your own, and check the signatures a document already carries. Both happen on this device.' Sending a document to someone else to sign is not a feature",
-          "decision": "pdfluent-internal#397"
-        },
-        {
-          "control": "The shipped Sign panel is absent from the image",
-          "shipped": "the panel shows a 'Sign with a certificate' section (certificate picker, password, reason, sign and save a copy) and a 'Signatures' verification section; none of it appears",
-          "decision": "pdfluent-internal#397"
-        },
-        {
-          "control": "Microsoft Store render only: a white rectangle covers the primary button",
-          "shipped": "export artifact, not a UI question; the render is unusable as it stands",
-          "decision": "pdfluent-internal#397"
+          "control": "Sample document copy 'Signature Methods: Draw signature, Type signature, Upload signature image, Save for future use'",
+          "shipped": "none of the four exists. On a store image a four-item list under a 'Signature Methods' heading reads as a feature list, which is the same promise the tile above makes and the same class of claim as the 'Invite to sign' button that shipped in the previous set",
+          "decision": "pdfluent-internal#457"
         }
       ]
     },
@@ -212,50 +464,123 @@
       "surface": "Reading view",
       "shows": [
         {
+          "control": "Mode tab — All tools",
+          "affordance": "mode-tab:tools"
+        },
+        {
+          "control": "Mode tab — Edit",
+          "affordance": "mode-tab:edit"
+        },
+        {
+          "control": "Mode tab — Convert",
+          "affordance": "mode-tab:convert"
+        },
+        {
+          "control": "Mode tab — Sign, clipped under the tab-overflow chevron",
+          "affordance": "mode-tab:esign"
+        },
+        {
+          "control": "Undo arrow",
+          "affordance": "button:undo-btn"
+        },
+        {
+          "control": "Redo arrow",
+          "affordance": "button:redo-btn"
+        },
+        {
           "control": "Search button",
           "affordance": "button:search-btn"
         },
         {
-          "control": "Page thumbnails under Pages",
-          "whyNoAffordance": "the thumbnail strip is a surface, not a control"
+          "control": "Read-aloud button",
+          "affordance": "button:read-aloud-btn"
+        },
+        {
+          "control": "Save button",
+          "affordance": "button:save-btn"
+        },
+        {
+          "control": "Rail — select, active",
+          "affordance": "rail-tool:select"
+        },
+        {
+          "control": "Rail — hand",
+          "affordance": "rail-tool:hand"
+        },
+        {
+          "control": "Rail — note",
+          "affordance": "rail-tool:comment"
+        },
+        {
+          "control": "Rail — highlight",
+          "affordance": "rail-tool:highlight"
+        },
+        {
+          "control": "Rail — draw",
+          "affordance": "rail-tool:draw"
+        },
+        {
+          "control": "Rail — add text",
+          "affordance": "rail-tool:text"
+        },
+        {
+          "control": "Rail — fill and sign",
+          "affordance": "rail-tool:sign"
+        },
+        {
+          "control": "Rail — more tools",
+          "affordance": "rail-tool:more"
+        },
+        {
+          "control": "Floating bottom bar — page counter",
+          "affordance": "button:floating-page-indicator"
+        },
+        {
+          "control": "Floating bottom bar — zoom out",
+          "affordance": "button:zoom-out-btn"
+        },
+        {
+          "control": "Floating bottom bar — zoom level",
+          "affordance": "button:zoom-reset-btn"
+        },
+        {
+          "control": "Floating bottom bar — zoom in",
+          "affordance": "button:zoom-in-btn"
+        },
+        {
+          "control": "Floating bottom bar — fit to view",
+          "affordance": "button:zoom-fit-width-btn"
+        },
+        {
+          "control": "Page thumbnails under PAGES",
+          "whyNoAffordance": "the thumbnail strip is a surface, not a control; its items are covered by button:v3-outline-item"
+        },
+        {
+          "control": "Breadcrumb 'My files / <file name>' with a PDF badge and a caret",
+          "whyNoAffordance": "the crumb carries no test id, so the register does not walk it. The render is faithful to the shell: src/viewer/v3/EditorV3Shell.tsx draws the same badge and the same caret (ChevronDownIcon, aria-hidden, no handler), so the image promises nothing the app does not itself draw. The caret reading as a document menu is an app question, not an image one"
         },
         {
           "control": "More button in the top bar",
           "whyNoAffordance": "the more-trigger carries no test id, so the register does not walk it; the export entry it is confused with (button:export-btn) lives in the Share menu"
+        },
+        {
+          "control": "Share button and the privacy badge beside it",
+          "whyNoAffordance": "neither carries a test id: the share-trigger opens the menu the register walks through button:export-btn, and the privacy badge is a static indicator with a tooltip, not a control"
+        },
+        {
+          "control": "Round chevron over the last mode tab",
+          "whyNoAffordance": "the tab-overflow scroll button carries no test id; it is the shipped behaviour of the horizontally scrolling mode-tab strip at this window width, which is why the Sign tab is clipped rather than missing"
+        },
+        {
+          "control": "Right-hand floating rail — thumbnails toggle, previous page, page counter, next page, fit to view",
+          "whyNoAffordance": "none of the five buttons carries a test id, so the register does not walk them; they are the shipped .rightrail block in src/viewer/v3/EditorV3Shell.tsx"
+        },
+        {
+          "control": "No right-hand panel is open",
+          "whyNoAffordance": "a shipped state, not a control: the mode tabs are always present with a document open and none of them is drawn active here, which is exactly what the shell renders when no panel is open"
         }
       ],
-      "blocked": [
-        {
-          "control": "'Open PDF' button in the top bar while a 24-page document is open",
-          "shipped": "the Open-PDF button is replaced by the mode tabs as soon as a document is open; the two are mutually exclusive",
-          "decision": "pdfluent-internal#397"
-        },
-        {
-          "control": "Mode tabs All tools / Edit / Convert / Sign are missing",
-          "shipped": "they are always present with a document open",
-          "decision": "pdfluent-internal#397"
-        },
-        {
-          "control": "Page navigation '1 / 24' and zoom '100%' in the top bar",
-          "shipped": "both live in the floating bottom bar (button:floating-page-indicator, button:zoom-reset-btn), never in the top bar",
-          "decision": "pdfluent-internal#397"
-        },
-        {
-          "control": "Download and sidebar-toggle icons in the top bar",
-          "shipped": "the top bar carries undo, redo, search, read aloud, save and more; export lives in the Share menu and the rail toggle is a command-palette entry",
-          "decision": "pdfluent-internal#397"
-        },
-        {
-          "control": "Vertical icon strip down the left edge",
-          "shipped": "that is LeftNavRail, which the register lists as UNREACHABLE — nothing in the running app renders it. The shipped shell has the floating tool rail over the page instead",
-          "decision": "pdfluent-internal#397"
-        },
-        {
-          "control": "Microsoft Store render only: a white rectangle covers the second page thumbnail",
-          "shipped": "export artifact, not a UI question; the render is unusable as it stands",
-          "decision": "pdfluent-internal#397"
-        }
-      ]
+      "blocked": []
     },
     {
       "id": "store-5",
@@ -379,7 +704,7 @@
         {
           "control": "The Sign tab is drawn in its active state with no Sign panel open",
           "shipped": "a tab carries the active style only while its panel is the open one, so the app cannot be in the state this image shows",
-          "decision": "pdfluent-internal#397"
+          "decision": "pdfluent-internal#457"
         }
       ]
     }

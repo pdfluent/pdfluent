@@ -41,6 +41,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { loadManifest, isPublished, isPublicOnly, root } from "./public-tree.mjs";
 import { PUBLIC_REF, PUBLIC_URL, shippedVersion } from "./repo-truth.mjs";
+import { isMainModule } from "../lib/main-module.mjs";
 
 function git(args, opts = {}) {
   return execFileSync("git", args, { cwd: root, encoding: "utf8", maxBuffer: 256 * 1024 * 1024, ...opts }).trim();
@@ -332,4 +333,7 @@ function main(argv) {
   }
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) process.exit(main(process.argv.slice(2)));
+// exitCode, not exit(): a write to a pipe is asynchronous, and process.exit()
+// drops whatever libuv has not handed to the kernel yet. See
+// tests/ci/guards-flush-before-exit.test.ts.
+if (isMainModule(import.meta.url)) process.exitCode = main(process.argv.slice(2));

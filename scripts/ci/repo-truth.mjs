@@ -40,6 +40,7 @@ import { readFileSync, existsSync } from "node:fs";
 import { resolve } from "node:path";
 import { execFileSync } from "node:child_process";
 import { loadManifest, publicationDiff, staleEntries, treeOf, root } from "./public-tree.mjs";
+import { isMainModule } from "../lib/main-module.mjs";
 
 // The release-in-progress window. A release is cut, the binaries are built and
 // signed off-pipeline, and only then is the snapshot published; meanwhile work
@@ -361,4 +362,7 @@ function main(argv) {
   return 1;
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) process.exit(main(process.argv.slice(2)));
+// exitCode, not exit(): a write to a pipe is asynchronous, and process.exit()
+// drops whatever libuv has not handed to the kernel yet. See
+// tests/ci/guards-flush-before-exit.test.ts.
+if (isMainModule(import.meta.url)) process.exitCode = main(process.argv.slice(2));

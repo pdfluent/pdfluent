@@ -17,6 +17,7 @@
 // Usage: node scripts/quality/baseline_commit_guard.mjs --range <A>..<B> [--repo <dir>]
 
 import { execFileSync, spawnSync } from "node:child_process";
+import { isMainModule } from "../lib/main-module.mjs";
 
 const args = process.argv.slice(2);
 const option = (name) => {
@@ -26,10 +27,6 @@ const option = (name) => {
 
 const repo = option("--repo") ?? process.cwd();
 const range = option("--range");
-if (!range) {
-  console.error("baseline_commit_guard: --range <A>..<B> is required");
-  process.exit(2);
-}
 
 const git = (...argv) =>
   execFileSync("git", ["-C", repo, ...argv], { encoding: "utf8" }).replace(/\s+$/, "");
@@ -75,61 +72,82 @@ function numeric(value) {
   return Number.isNaN(parsed) ? undefined : parsed;
 }
 
-const problems = [];
-
-for (const sha of git("rev-list", "--reverse", range).split("\n").filter(Boolean)) {
-  const files = git("show", "--name-only", "--format=", sha).split("\n").filter(Boolean);
-  const axesFiles = files.filter((file) => file.startsWith(AXES));
-  if (axesFiles.length === 0) continue;
-
-  const strays = files.filter((file) => !ALLOWED.some((prefix) => file.startsWith(prefix)));
-  if (strays.length > 0) {
-    problems.push(
-      `${sha.slice(0, 8)}: a baseline commit may not also change ${strays.join(", ")}`,
-    );
+function main() {
+  if (!range) {
+    console.error("baseline_commit_guard: --range <A>..<B> is required");
+    return 2;
   }
 
-  const message = git("log", "-1", "--format=%B", sha);
-  if (!/#\d+/.test(message)) {
-    problems.push(
-      `${sha.slice(0, 8)}: a baseline commit must name the ticket it was agreed on (#NNN)`,
-    );
-  }
+  const problems = [];
 
-  for (const file of axesFiles) {
-    // A new baseline file has nothing to lower. Asked for directly rather
-    // than caught from a throw: `git show` on a missing path writes "fatal:"
-    // to stderr, and a caught error that still prints reads like a failure.
-    const existedBefore = spawnSync(
-      "git",
-      ["-C", repo, "cat-file", "-e", `${sha}^:${file}`],
-      { stdio: "ignore" },
-    ).status === 0;
-    if (!existedBefore) continue;
-    const before = parseRows(git("show", `${sha}^:${file}`));
-    const after = parseRows(git("show", `${sha}:${file}`));
-    for (const [key, row] of after) {
-      const was = before.get(key);
-      if (!was) continue;
-      const lowered = Object.entries(AXIS_DIRECTION).filter(([column, direction]) => {
-        const a = numeric(was[column]);
-        const b = numeric(row[column]);
-        if (a === undefined || b === undefined) return false;
-        return direction === "higher" ? b < a : b > a;
-      });
-      if (lowered.length > 0 && (row.why === "-" || row.why === "")) {
-        problems.push(
-          `${sha.slice(0, 8)}: ${file} ${row.doc} accepts a worse ` +
-            `${lowered.map(([column]) => column).join(", ")} with no why`,
-        );
+  for (const sha of git("rev-list", "--reverse", range).split("\n").filter(Boolean)) {
+    const files = git("show", "--name-only", "--format=", sha).split("\n").filter(Boolean);
+    const axesFiles = files.filter((file) => file.startsWith(AXES));
+    if (axesFiles.length === 0) continue;
+
+    const strays = files.filter((file) => !ALLOWED.some((prefix) => file.startsWith(prefix)));
+    if (strays.length > 0) {
+      problems.push(
+        `${sha.slice(0, 8)}: a baseline commit may not also change ${strays.join(", ")}`,
+      );
+    }
+
+    const message = git("log", "-1", "--format=%B", sha);
+    if (!/#\d+/.test(message)) {
+      problems.push(
+        `${sha.slice(0, 8)}: a baseline commit must name the ticket it was agreed on (#NNN)`,
+      );
+    }
+
+    for (const file of axesFiles) {
+      // A new baseline file has nothing to lower. Asked for directly rather
+      // than caught from a throw: `git show` on a missing path writes "fatal:"
+      // to stderr, and a caught error that still prints reads like a failure.
+      const existedBefore = spawnSync(
+        "git",
+        ["-C", repo, "cat-file", "-e", `${sha}^:${file}`],
+        { stdio: "ignore" },
+      ).status === 0;
+      if (!existedBefore) continue;
+      const before = parseRows(git("show", `${sha}^:${file}`));
+      const after = parseRows(git("show", `${sha}:${file}`));
+      for (const [key, row] of after) {
+        const was = before.get(key);
+        if (!was) continue;
+        const lowered = Object.entries(AXIS_DIRECTION).filter(([column, direction]) => {
+          const a = numeric(was[column]);
+          const b = numeric(row[column]);
+          if (a === undefined || b === undefined) return false;
+          return direction === "higher" ? b < a : b > a;
+        });
+        if (lowered.length > 0 && (row.why === "-" || row.why === "")) {
+          problems.push(
+            `${sha.slice(0, 8)}: ${file} ${row.doc} accepts a worse ` +
+              `${lowered.map(([column]) => column).join(", ")} with no why`,
+          );
+        }
       }
     }
   }
+
+  if (problems.length > 0) {
+    console.error("baseline_commit_guard: a baseline moved without the paperwork:");
+    for (const problem of problems) console.error(`  ${problem}`);
+    return 1;
+  }
+  console.log(`baseline_commit_guard: OK (${range})`);
+  return 0;
 }
 
-if (problems.length > 0) {
-  console.error("baseline_commit_guard: a baseline moved without the paperwork:");
-  for (const problem of problems) console.error(`  ${problem}`);
-  process.exit(1);
-}
-console.log(`baseline_commit_guard: OK (${range})`);
+// ── CLI ──────────────────────────────────────────────────────────────────────
+// Run directly, not imported. Nothing imports this file today, which is how the
+// unconditional form survives: the first test or sibling that reaches in for one
+// function gets the whole run as a side effect of the import. The answer is
+// decided on the file -- same device, same inode -- so it stays true through a
+// symlink, a copy and a renamed link, and says so on stderr when it cannot tell.
+// See scripts/lib/main-module.mjs.
+//
+// exitCode, not exit(): a write to a pipe is asynchronous, and process.exit()
+// drops whatever libuv has not handed to the kernel yet. See
+// tests/ci/guards-flush-before-exit.test.ts.
+if (isMainModule(import.meta.url)) process.exitCode = main();

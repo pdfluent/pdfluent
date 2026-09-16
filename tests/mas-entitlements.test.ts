@@ -21,12 +21,12 @@
  */
 
 import { spawnSync } from 'node:child_process';
-import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { chmodSync, existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
-import { diffEntitlements, parseEntitlements } from '../scripts/mas-entitlements.mjs';
+import { diffEntitlements, parseEntitlements, signedForTheAppStore } from '../scripts/mas-entitlements.mjs';
 
 const ROOT = resolve(import.meta.dirname, '..');
 const EXPECTED_PLIST = join(ROOT, 'src-tauri', 'Entitlements.appstore.plist');
@@ -125,6 +125,33 @@ describe('MAS entitlements comparison', () => {
     expect(run.stdout).toContain('MAS ENTITLEMENTS OK');
   });
 
+  it('tells an App Store signature from a Developer ID one', () => {
+    // Both builds write their .app to the same path, so this is the only thing
+    // standing between "no MAS build here" and six entitlement differences
+    // reported against a Developer ID build (2026-09-10, on the release
+    // machine, hours after building the DMG).
+    const stub = (authority: string) => {
+      const dir = mkdtempSync(join(tmpdir(), 'mas-codesign-'));
+      writeFileSync(join(dir, 'codesign'), `#!/bin/sh\necho "Authority=${authority}" >&2\n`);
+      chmodSync(join(dir, 'codesign'), 0o755);
+      return dir;
+    };
+    const withPath = (dir: string, fn: () => boolean) => {
+      const before = process.env.PATH;
+      process.env.PATH = `${dir}:${before}`;
+      try { return fn(); } finally { process.env.PATH = before; }
+    };
+    const appStore = stub('Apple Distribution: Innovation Trigger B.V. (58Z6SVW7CN)');
+    const developerId = stub('Developer ID Application: Innovation Trigger B.V. (58Z6SVW7CN)');
+    try {
+      expect(withPath(appStore, () => signedForTheAppStore('/nonexistent.app'))).toBe(true);
+      expect(withPath(developerId, () => signedForTheAppStore('/nonexistent.app'))).toBe(false);
+    } finally {
+      rmSync(appStore, { recursive: true, force: true });
+      rmSync(developerId, { recursive: true, force: true });
+    }
+  });
+
   it('matches the entitlements of the signed MAS artifact when one is present', () => {
     // The artifact is a local build product (dist-release/ and target/ are both
     // gitignored), so this leg cannot run on the Linux CI runner. It is the leg
@@ -135,11 +162,17 @@ describe('MAS entitlements comparison', () => {
       'src-tauri/target/universal-apple-darwin/release/bundle/macos/PDFluent.app',
     );
     const pkg = process.env.MAS_PKG ?? join(ROOT, 'dist-release', 'PDFluent_1.0.0_mas.pkg');
-    const target = existsSync(app) ? ['--app', app] : existsSync(pkg) ? ['--pkg', pkg] : null;
+    // An .app at that path is not necessarily a MAS build: the Developer ID
+    // release build writes to it too, and judging that one against the App
+    // Store entitlements reports six differences that are all correct for a
+    // Developer ID build. The certificate decides which build this is.
+    const masApp = existsSync(app) && signedForTheAppStore(app);
+    const target = masApp ? ['--app', app] : existsSync(pkg) ? ['--pkg', pkg] : null;
     if (process.platform !== 'darwin' || target === null) {
       process.stderr.write(
-        `SKIPPED (not a pass): no signed MAS artifact on this machine (${app}, ${pkg}) — ` +
-          'run scripts/build-mas.sh first\n',
+        `SKIPPED (not a pass): no signed MAS artifact on this machine (${app}${
+          existsSync(app) && !masApp ? ' — a Developer ID build sits there' : ''
+        }, ${pkg}) — run scripts/build-mas.sh first\n`,
       );
       return;
     }

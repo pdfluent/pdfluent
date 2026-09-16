@@ -30,8 +30,9 @@ describe("a checkout whose path contains a space", () => {
   it("still writes the report it judged", () => {
     // A copy, not a symlink: node resolves a symlinked path before it fills in
     // import.meta.url, so a link would prove something else entirely. The
-    // renderer imports nothing but node builtins, so one file and a work
-    // directory are the whole fixture.
+    // renderer imports node builtins and the one module that answers whether it
+    // is the command, so the fixture keeps both at the same distance from each
+    // other as the checkout does.
     // realpath: the system temp directory is itself behind a symlink on macOS,
     // and node resolves a symlinked entry point, which would make this pass for
     // the wrong reason.
@@ -39,7 +40,11 @@ describe("a checkout whose path contains a space", () => {
     const spacey = path.join(dir, "a checkout with spaces");
     mkdirSync(path.join(spacey, "work"), { recursive: true });
     mkdirSync(path.join(spacey, "out"), { recursive: true });
-    copyFileSync(path.join(REPO_ROOT, "scripts/quality/suite/report.mjs"), path.join(spacey, "report.mjs"));
+    mkdirSync(path.join(spacey, "scripts/quality/suite"), { recursive: true });
+    mkdirSync(path.join(spacey, "scripts/lib"), { recursive: true });
+    const renderer = path.join(spacey, "scripts/quality/suite/report.mjs");
+    copyFileSync(path.join(REPO_ROOT, "scripts/quality/suite/report.mjs"), renderer);
+    copyFileSync(path.join(REPO_ROOT, "scripts/lib/main-module.mjs"), path.join(spacey, "scripts/lib/main-module.mjs"));
 
     writeFileSync(path.join(spacey, "work", "meta.json"), JSON.stringify({
       run_id: "spacey", version: "9.9.9", platform: "fake", machine: "test-fake",
@@ -50,7 +55,7 @@ describe("a checkout whose path contains a space", () => {
       "utf8");
 
     const r = runToFile("node", [
-      path.join(spacey, "report.mjs"),
+      renderer,
       "--work", path.join(spacey, "work"),
       "--out", path.join(spacey, "out"),
     ], { cwd: spacey, env: process.env });

@@ -62,10 +62,34 @@ esac
 WORK="${WORK:-$(mktemp -d "${TMPDIR:-/tmp}/pdfluent-release-suite.XXXXXX")}"
 mkdir -p "${WORK}/probes" "${WORK}/numbers" "${WORK}/ms"
 : > "${WORK}/steps.ndjson"
-cleanup() { [ "${KEEP}" -eq 1 ] || rm -rf "${WORK}"; }
-trap cleanup EXIT
 
-export WORK REPO_ROOT ARTEFACT PLATFORM COMMIT MACHINE EXPECT_UPDATER WATCHDOG SUITE_DIR
+# The processes the suite starts to watch a launch, and the rule that none of
+# them outlives it. Sourced before the traps below, because those traps call
+# into it and a run interrupted in the next three lines is still a run that
+# must not leave a watcher behind.
+# shellcheck source=suite/observers.sh
+. "${SUITE_DIR}/observers.sh"
+
+cleanup() { observer_reap; [ "${KEEP}" -eq 1 ] || rm -rf "${WORK}"; }
+trap cleanup EXIT
+# EXIT is not enough. A shell killed by a signal it has not trapped never
+# reaches it, and that is the shape of every abort this suite meets in
+# practice: a gate timeout, a Ctrl-C, a terminal that went away. Each handler
+# re-raises so the run still dies of what killed it.
+trap 'cleanup; trap - INT; kill -INT $$' INT
+trap 'cleanup; trap - TERM; kill -TERM $$' TERM
+trap 'cleanup; trap - HUP; kill -HUP $$' HUP
+
+# The pid an observer has to see alive to keep watching. Exported because the
+# observer is several processes away from this shell by the time it asks.
+SUITE_PID="$$"
+
+export WORK REPO_ROOT ARTEFACT PLATFORM COMMIT MACHINE EXPECT_UPDATER WATCHDOG SUITE_DIR SUITE_PID
+
+# What one step learns and the next step needs. Sourced before the driver so a
+# driver can use it while it is being read.
+# shellcheck source=suite/state.sh
+. "${SUITE_DIR}/state.sh"
 
 # shellcheck source=suite/drivers/fake.sh
 . "${SUITE_DIR}/drivers/${PLATFORM}.sh" 2>/dev/null || {
@@ -141,8 +165,10 @@ emit_gaps() {
 
 for s in s1_identity s2_launch s3_offline s4_updater s5_ui_walk; do
   # Each step in its own subshell: a step that dies takes its own rows with it,
-  # not the run.
-  ( . "${SUITE_DIR}/steps/${s}.sh"; "step_${s%%_*}" ) || true
+  # not the run. The subshell reaps its own observers too -- a watcher started
+  # for S2 has nothing left to watch once S2 is over, and waiting for the
+  # suite's own exit to notice that is four more steps of a `nettop` per launch.
+  ( observer_traps_install; . "${SUITE_DIR}/steps/${s}.sh"; "step_${s%%_*}" ) || true
 done
 emit_gaps
 

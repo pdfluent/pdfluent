@@ -23,11 +23,11 @@
 // Check syntax: `<id>[@<probe>]`. The probe name defaults to the id with the
 // colon and dashes turned into underscores.
 
-import { readFileSync, existsSync, appendFileSync, statSync, realpathSync } from "node:fs";
+import { readFileSync, existsSync, appendFileSync, statSync } from "node:fs";
 import { walkTargets, judgeWalk } from "./ui_walk.mjs";
 import { createHash } from "node:crypto";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
+import { isMainModule } from "../../lib/main-module.mjs";
 
 // Windows PowerShell's `Set-Content -Encoding utf8` writes a byte order mark
 // first, and every judge that anchors a pattern to the start of a probe then
@@ -50,10 +50,67 @@ export function readProbe(work, name) {
 
 const pass = (numbers = {}) => ({ status: "PASS", reason: "", numbers });
 const fail = (reason, numbers = {}) => ({ status: "FAIL", reason, numbers });
-const skip = (reason) => ({ status: "SKIPPED", reason, numbers: {} });
+// A skip may carry numbers. "It did not measure enough" is a claim about an
+// amount, and a reader who cannot see how far short it fell cannot tell a
+// sampler that never started from one that stopped a second too early.
+const skip = (reason, numbers = {}) => ({ status: "SKIPPED", reason, numbers });
 const na = (reason) => ({ status: "NOT_APPLICABLE", reason, numbers: {} });
 
 const firstLine = (s) => s.split("\n").map((l) => l.trim()).filter(Boolean)[0] ?? "";
+
+// A local address, in every spelling the two samplers use. IPv4 loopback, IPv6
+// loopback with brackets (lsof) and without (nettop), the unspecified address,
+// and the `*:*` a listening socket shows for the peer it has not got yet.
+const LOCAL_PEER = /^(?:127\.\d+\.\d+\.\d+|\[::1\]|::1|0\.0\.0\.0|\[::\]|\*)[.:]/;
+
+/**
+ * One peer, in one spelling: `address:port`, lower case.
+ *
+ * The two samplers do not agree on how to write an address and neither agrees
+ * with a resolver. `lsof` brackets an IPv6 literal and separates the port with
+ * a colon; `nettop` writes the same address bare and separates the port with a
+ * dot; `dns.lookup` returns the address alone. Comparing those as raw strings
+ * means a declared endpoint matches in one sampler and reads as an intruder in
+ * the other, which is the accusation this row must never get wrong.
+ *
+ * The separator is whichever of `.` or `:` comes last, because an IPv6 literal
+ * keeps its colons and its port is the tail either way.
+ */
+export function normalizePeer(peer) {
+  const s = String(peer).trim();
+  const bracketed = /^\[([^\]]+)\][.:](\d+)$/.exec(s);
+  if (bracketed) return `${bracketed[1].toLowerCase()}:${bracketed[2]}`;
+  const at = Math.max(s.lastIndexOf("."), s.lastIndexOf(":"));
+  if (at <= 0) return s.toLowerCase();
+  return `${s.slice(0, at).toLowerCase()}:${s.slice(at + 1)}`;
+}
+
+/**
+ * The remote ends of the sockets in a sampler's output, `host:port`.
+ *
+ * Only the peer side counts. The near side of any connection is this machine's
+ * own address, and a listening socket bound to a LAN interface has no peer at
+ * all -- reading either as a remote turns "the app listens" into "the app
+ * called somebody", which is a different accusation.
+ *
+ *   lsof -F n   n127.0.0.1:52342->127.0.0.1:1420
+ *   nettop -L   tcp4 10.0.0.9:52377<->93.184.216.34:443,en0,Established,...
+ */
+export function remoteEndpoints(text) {
+  const out = [];
+  for (const raw of String(text).split("\n")) {
+    const line = raw.trim();
+    if (!line || line.startsWith("---")) continue;
+    for (const m of line.matchAll(/<?->\s*([A-Za-z0-9.:\[\]*]+)/g)) {
+      const peer = m[1].replace(/[,;]+$/, "");
+      if (!peer || LOCAL_PEER.test(peer) || peer === "*") continue;
+      // A peer with no port is a half-open row, not a connection.
+      if (!/[.:]\d+$/.test(peer)) continue;
+      out.push(peer);
+    }
+  }
+  return out;
+}
 
 /**
  * Every check the suite can make. `capability` is the axis vocabulary the run
@@ -218,43 +275,102 @@ export const JUDGES = {
   },
 
   // ── S3 offline ─────────────────────────────────────────────────────────────
-  "offline:denied": {
-    step: "S3", capability: "offline", probe: "net_denied_run",
-    run: (p) => {
-      if (!/document parsed OK/.test(p.out)) return fail("with the network denied the app did not parse the document");
-      // The updater is expected to fail without a network. Anything else that
-      // fails on a denied socket is a feature that needs the internet, which is
-      // the promise this step exists to check.
-      const offenders = p.out
-        .split("\n")
-        .filter((l) => /operation not permitted|Operation not permitted|os error 1\b/.test(l))
-        .filter((l) => !/updater|latest\.json/i.test(l));
-      if (offenders.length) return fail(`network refusal reached the product, not just the updater: ${offenders[0].trim()}`);
-      return p.rc === 0 ? pass() : fail(`the denied-network run exited ${p.rc}`);
-    },
-  },
+  //
+  // What replaced the sandbox run, and why (#543). Starting the shipped bundle
+  // under `sandbox-exec` measured the harness: launchd puts a sandboxed app in
+  // its container, a second sandbox leaves it unable to reach that container,
+  // and it died before its own code ran -- identically with a profile that
+  // allowed everything. Building a second, unsandboxed app to squeeze would
+  // have measured bytes nobody ships.
+  //
+  // So the delivered artefact is watched instead of squeezed: while S2 has it
+  // open, its sockets are sampled, and what the samples say is judged here.
   "offline:observe": {
     step: "S3", capability: "offline", probe: "net_observe",
     run: (p, meta) => {
-      const allowed = new Set(meta.allowed_remotes ?? []);
-      const seen = [];
-      for (const line of p.out.split("\n")) {
-        const m = /(\d{1,3}(?:\.\d{1,3}){3}|\[[0-9a-fA-F:]+\]):(\d+)/g;
-        let hit;
-        while ((hit = m.exec(line)) !== null) {
-          const [, host, port] = hit;
-          if (host.startsWith("127.") || host === "[::1]" || host === "0.0.0.0") continue;
-          seen.push(`${host}:${port}`);
-        }
+      if (p.rc === 3) {
+        return skip((/SKIPPED \(not a pass\): (.*)/.exec(p.out)?.[1] ?? "connections were not sampled during this run").trim());
       }
-      const strangers = [...new Set(seen)].filter((r) => !allowed.has(r));
-      if (strangers.length) return fail(`the app connected to ${strangers.join(", ")}, which is not on the allowed list`, { remotes: seen.length });
-      return pass({ remotes: seen.length });
+      const samples = (p.out.match(/^--- sample \d+/gm) ?? []).length;
+      // The LAST window line, not the first. S2 opens every golden document in
+      // its own launch and the sampler writes a line per launch, each one the
+      // span since the first; taking the first turned a run that watched a
+      // minute into a row claiming five seconds (seen on the 15-09 rehearsal).
+      const windows = [...p.out.matchAll(/^--- window (\d+) ms/gm)];
+      // One line per launch: which document it opened and how long that launch
+      // was watched. The cumulative span cannot answer the question #551 asks,
+      // because seventeen launches of a second each and one launch of a minute
+      // add up to the same number and only one of them can have reached the
+      // moment the app checks for an update.
+      const perDocument = [...p.out.matchAll(/^--- document (\S+) window (\d+) ms/gm)]
+        .map((m) => ({ doc: m[1], ms: Number.parseInt(m[2], 10) }));
+      const coveredMs = perDocument.length ? Math.max(...perDocument.map((d) => d.ms)) : 0;
+      const required = Number(meta.startup_check_delay_ms);
+      const numbers = {
+        samples,
+        window_ms: windows.length ? Number.parseInt(windows[windows.length - 1][1], 10) : 0,
+        documents: perDocument.length,
+        covered_ms: coveredMs,
+        startup_check_ms: Number.isFinite(required) ? required : 0,
+        windows_ms: perDocument.map((d) => `${d.doc}:${d.ms}`).join(","),
+      };
+      // A run that watched nothing is not a run that saw nothing. Without this
+      // a sampler that never started reads exactly like an app that never
+      // connected, which is the whole failure this repository keeps meeting.
+      if (samples === 0) return skip("the sampler wrote no sample, so no window of the run was observed");
+      const allowed = new Set((meta.allowed_remotes ?? []).map(normalizePeer));
+      const seen = remoteEndpoints(p.out).map(normalizePeer);
+      const strangers = seen.filter((r) => !allowed.has(r));
+      // Peers that were expected. Worth counting rather than discarding: with a
+      // window that now covers the startup update check, seeing the declared
+      // endpoint is evidence the window covered something, and seeing none of
+      // it in a held launch is worth a second look at the hold.
+      numbers.declared_remotes = new Set(seen.filter((r) => allowed.has(r))).size;
+      if (strangers.length) {
+        // A host the run could not resolve is why a peer may look strange, and
+        // saying so is the difference between a finding and an accusation.
+        const blind = (meta.allowed_remotes_unresolved ?? []).join(", ");
+        return fail(
+          `the app opened a socket to ${[...new Set(strangers)].join(", ")}, which is not on the allowed list` +
+            (blind ? ` (and ${blind} could not be resolved to addresses for this run, so a declared call would read the same way)` : ""),
+          { ...numbers, remotes: new Set(strangers).size },
+        );
+      }
+      // A finding outranks a gap, so the coverage question is asked only after
+      // nothing was seen. "We did not watch long enough" must never become a
+      // reason to stop reporting what was seen inside the window.
+      //
+      // The bar is the product's own delay, read from src/lib/updater.ts into
+      // meta. The margin on top of it belongs to the driver's hold, not here: a
+      // launch that cleared the delay covered the check, and failing it for
+      // missing the margin would fail the machine rather than the run.
+      if (!Number.isFinite(required) || required <= 0) {
+        return skip(
+          "the run did not record how long the app waits before its startup update check, so no window can be said to have covered it",
+          { ...numbers, remotes: 0 },
+        );
+      }
+      if (coveredMs < required) {
+        return skip(
+          `no launch outlived the startup update check: the longest was watched for ${coveredMs} ms and the check fires after ${required} ms, so the quiet window is one the app had not yet had the chance to break`,
+          { ...numbers, remotes: 0 },
+        );
+      }
+      // The wording is the measurement and not a conclusion drawn from it.
+      // Sampling is not watching: a connection opened and closed between two
+      // samples is a connection this run cannot rule out. `samples`,
+      // `window_ms` and the per-document windows are on the row so a reader can
+      // see how thin or thick the evidence is.
+      return pass({ ...numbers, remotes: 0 });
     },
   },
   "offline:allowlist": {
     step: "S3", capability: "offline",
-    run: (p) => (p.rc === 0 ? pass() : fail(`the binary names an endpoint outside the allow-list: ${firstLine(p.out)}`)),
+    run: (p) => {
+      // Exit 3 is the scanner saying every target it was handed was absent.
+      if (p.rc === 3) return skip((/SKIPPED \(not a pass\): (.*)/.exec(p.out)?.[1] ?? "nothing was scanned").trim());
+      return p.rc === 0 ? pass() : fail(`the product names an endpoint outside the allow-list: ${firstLine(p.out)}`);
+    },
   },
 
   // ── S4 updater ─────────────────────────────────────────────────────────────
@@ -355,17 +471,10 @@ export function sizeOfFile(file) {
 }
 
 // ── CLI ──────────────────────────────────────────────────────────────────────
-// Run directly, not imported -- compared as paths, both resolved.
-//
-// The usual spelling of this test compares `import.meta.url` to
-// `file://${process.argv[1]}`. One is a URL and percent-encodes a space, the
-// other is a path and does not, so on any checkout whose path contains one the
-// comparison is quietly false: the module loads, defines everything and does
-// nothing. The nightly keeps its checkout under ~/Library/Application Support,
-// and the first run there made every probe, printed every skip, wrote no report
-// and exited 0. Node also resolves a symlinked entry point before filling in
-// import.meta.url, which the same comparison gets wrong in the other direction.
-if (process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)) {
+// A function that returns its exit code rather than a block that takes it: the
+// caller below sets process.exitCode, so nothing the CLI printed is still in
+// flight when the process ends.
+function cli() {
   const args = {};
   const argv = process.argv.slice(2);
   for (let i = 0; i < argv.length; i++) {
@@ -440,5 +549,12 @@ if (process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.me
   } else {
     judgeList(args.checks || "");
   }
-  process.exit(worst);
+  return worst;
 }
+
+// Run directly, not imported -- decided on the file rather than on the spelling
+// of a path (scripts/lib/main-module.mjs), and ended with exitCode rather than
+// with a hard exit: a write to a pipe is asynchronous, and process.exit() drops
+// whatever libuv has not handed to the kernel yet.
+// See tests/ci/guards-flush-before-exit.test.ts.
+if (isMainModule(import.meta.url)) process.exitCode = cli();

@@ -79,7 +79,7 @@ _win_run_once() {
   [ "${_win_ran}" -eq 1 ] && return 0
   _win_ran=1
   local remote_msi="${REMOTE_WORK}/$(basename "${ARTEFACT}")"
-  ssh "${WIN_SSH[@]}" "${WIN_BUILD_HOST}" "powershell -NoProfile -Command \"New-Item -ItemType Directory -Force -Path '${REMOTE_WORK}' | Out-Null; Remove-Item -Recurse -Force '${REMOTE_WORK}/probes' -ErrorAction SilentlyContinue\"" >/dev/null 2>&1
+  ssh "${WIN_SSH[@]}" "${WIN_BUILD_HOST}" "powershell -NoProfile -Command \"New-Item -ItemType Directory -Force -Path '${REMOTE_WORK}','${REMOTE_WORK}/scripts/ci','${REMOTE_WORK}/scripts/lib' | Out-Null; Remove-Item -Recurse -Force '${REMOTE_WORK}/probes' -ErrorAction SilentlyContinue\"" >/dev/null 2>&1
   scp "${WIN_SSH[@]}" "${ARTEFACT}" "${WIN_BUILD_HOST}:${remote_msi}" >/dev/null 2>&1 || return 0
   scp "${WIN_SSH[@]}" "${SUITE_DIR}/drivers/windows.ps1" "${WIN_BUILD_HOST}:${REMOTE_WORK}/windows.ps1" >/dev/null 2>&1 || return 0
 
@@ -93,12 +93,18 @@ _win_run_once() {
   # machine is behind is the failure this suite exists to catch, not one to
   # inherit.
   scp -r "${WIN_SSH[@]}" "${REPO_ROOT}/src-tauri/tests/golden" "${WIN_BUILD_HOST}:${REMOTE_WORK}/golden" >/dev/null 2>&1 || true
-  scp "${WIN_SSH[@]}" "${REPO_ROOT}/scripts/ci/offline-allowlist.mjs" "${WIN_BUILD_HOST}:${REMOTE_WORK}/offline-allowlist.mjs" >/dev/null 2>&1 || true
+  # Under the names it has in the checkout: the allow-list asks
+  # scripts/lib/main-module.mjs whether it is the command, and a copy that
+  # cannot reach it does not start. A guard that does not start on this host
+  # reads as "the allow-list found nothing", which is the whole failure mode
+  # this lane exists to refuse.
+  scp "${WIN_SSH[@]}" "${REPO_ROOT}/scripts/ci/offline-allowlist.mjs" "${WIN_BUILD_HOST}:${REMOTE_WORK}/scripts/ci/offline-allowlist.mjs" >/dev/null 2>&1 || true
+  scp "${WIN_SSH[@]}" "${REPO_ROOT}/scripts/lib/main-module.mjs" "${WIN_BUILD_HOST}:${REMOTE_WORK}/scripts/lib/main-module.mjs" >/dev/null 2>&1 || true
 
   local no_launch=""
   [ "${PDFLUENT_SUITE_NO_LAUNCH:-0}" = "1" ] && no_launch="-NoLaunch"
   ssh "${WIN_SSH[@]}" "${WIN_BUILD_HOST}" \
-    "powershell -NoProfile -ExecutionPolicy Bypass -File '${REMOTE_WORK}/windows.ps1' -Msi '${remote_msi}' -Work '${REMOTE_WORK}' -Golden '${REMOTE_WORK}/golden' -Allowlist '${REMOTE_WORK}/offline-allowlist.mjs' -Documents '$(_win_documents)' ${no_launch}" \
+    "powershell -NoProfile -ExecutionPolicy Bypass -File '${REMOTE_WORK}/windows.ps1' -Msi '${remote_msi}' -Work '${REMOTE_WORK}' -Golden '${REMOTE_WORK}/golden' -Allowlist '${REMOTE_WORK}/scripts/ci/offline-allowlist.mjs' -Documents '$(_win_documents)' ${no_launch}" \
     > "${WORK}/windows-run.log" 2>&1 || true
   scp -r "${WIN_SSH[@]}" "${WIN_BUILD_HOST}:${REMOTE_WORK}/probes/." "${WORK}/probes/" >/dev/null 2>&1 || true
   scp -r "${WIN_SSH[@]}" "${WIN_BUILD_HOST}:${REMOTE_WORK}/ms/." "${WORK}/ms/" >/dev/null 2>&1 || true
@@ -132,10 +138,11 @@ driver_s2_checks() {
 
 driver_s3_probes() { :; }
 driver_s3_checks() {
-  # No sandbox-exec here, and blocking one program needs an administrator rule
-  # that changes a machine other work runs on. The static allow-list is what
-  # this platform can honestly report; the denied-network run is not done, and
-  # that is why a Windows report is INCOMPLETE on this row.
+  # The allow-list scan is what this platform can honestly report. macOS
+  # measures the offline promise by sampling the sockets of the running artefact
+  # during S2 (#543); the installer here is driven over ssh from another machine
+  # and no sampler runs beside it, so that row is a named gap and a Windows
+  # report is INCOMPLETE because of it.
   [ -e "${WORK}/probes/offline_allowlist.rc" ] && printf 'offline:allowlist'
 }
 
@@ -157,5 +164,5 @@ driver_ui_walk() {
 }
 
 driver_gaps() {
-  printf 'S3|offline:denied|offline|no network-denying sandbox on Windows: blocking one program needs an administrator firewall rule on a machine other work runs on\n'
+  printf 'S3|offline:observe|offline|the installer is driven over ssh from another machine, and no socket sampler runs beside it there, so no window of this run was observed\n'
 }

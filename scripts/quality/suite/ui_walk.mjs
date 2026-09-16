@@ -40,10 +40,11 @@
 //
 //   node ui_walk.mjs --targets            the list a driver has to cover, as JSON
 
-import { readFileSync, realpathSync } from "node:fs";
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import path from "node:path";
 import { KIND_TITLE, REGISTER_PATH } from "../ui-register.mjs";
-import { fileURLToPath } from "node:url";
+import { isMainModule } from "../../lib/main-module.mjs";
 
 /** Section heading → affordance kind, inverted from the renderer's own table. */
 const KIND_OF_TITLE = new Map(Object.entries(KIND_TITLE).map(([kind, title]) => [title, kind]));
@@ -163,20 +164,20 @@ export function judgeWalk(targets, walkText, { missingProbe = false, missingReas
 // ── CLI ──────────────────────────────────────────────────────────────────────
 // Run directly, not imported -- compared as paths, both resolved.
 //
-// The usual spelling of this test compares `import.meta.url` to
-// `file://${process.argv[1]}`. One is a URL and percent-encodes a space, the
-// other is a path and does not, so on any checkout whose path contains one the
-// comparison is quietly false: the module loads, defines everything and does
-// nothing. The nightly keeps its checkout under ~/Library/Application Support,
-// and the first run there made every probe, printed every skip, wrote no report
-// and exited 0. Node also resolves a symlinked entry point before filling in
-// import.meta.url, which the same comparison gets wrong in the other direction.
-if (process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  const root = path.resolve(process.argv[3] ?? path.join(path.dirname(new URL(import.meta.url).pathname), "..", "..", ".."));
+// Why this is not a comparison of two path strings: scripts/lib/main-module.mjs.
+// Three separate spellings of it are wrong here, and every one of them ends in
+// a module that loads, runs nothing, prints nothing and exits 0.
+if (isMainModule(import.meta.url)) {
+  // fileURLToPath, not `.pathname`: a URL percent-encodes a space and a
+  // checkout under a path with one would look for a register that is not there.
+  const root = path.resolve(process.argv[3] ?? path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "..", ".."));
   if (process.argv[2] === "--targets") {
     process.stdout.write(JSON.stringify(walkTargets(root), null, 2) + "\n");
   } else {
     process.stderr.write("usage: ui_walk.mjs --targets [repo-root]\n");
-    process.exit(2);
+    // exitCode, not exit(): a write to a pipe is asynchronous, and process.exit()
+    // drops whatever libuv has not handed to the kernel yet. See
+    // tests/ci/guards-flush-before-exit.test.ts.
+    process.exitCode = 2;
   }
 }

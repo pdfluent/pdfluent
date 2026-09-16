@@ -46,6 +46,7 @@
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { dirname, join, relative, resolve as resolvePath } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { isMainModule } from '../lib/main-module.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 export const REPO = resolvePath(HERE, '..', '..');
@@ -382,14 +383,14 @@ function main() {
       console.log(`${allowed.has(keyOf(h)) ? 'allowed ' : 'UNLISTED'} ${h.kind.padEnd(18)} ${h.file}:${h.line}  ${h.code}`);
     }
     console.log(`\n${hits.length} hits, ${entries.length} allow-list entries`);
-    return;
+    return 0;
   }
 
   if (mode === '--skeleton') {
     console.log(JSON.stringify(
       dedupe(unlisted).map((h) => ({ file: h.file, kind: h.kind, code: h.code, count: h.count, reason: '' })),
       null, 2));
-    return;
+    return 0;
   }
 
   let failed = false;
@@ -416,8 +417,20 @@ function main() {
     console.error(`\n${unreasoned.length} allow-list entr(ies) without a reason (min ${MIN_REASON} chars):\n`);
     for (const e of unreasoned) console.error(`  ${e.file}  [${e.kind}]  ${e.code}`);
   }
-  if (failed) process.exit(1);
+  if (failed) return 1;
   console.log(`no-silent-failures: ${hits.length} swallowed failure(s), all ${entries.length} on the list with a reason.`);
+  return 0;
 }
 
-if (process.argv[1] && process.argv[1].endsWith('no-silent-failures.mjs')) main();
+// ── CLI ──────────────────────────────────────────────────────────────────────
+// Run directly, not imported -- decided on the file rather than on the spelling
+// of a path. `process.argv[1].endsWith('no-silent-failures.mjs')` answers a question about
+// a name, and every copy, wrapper, renamed link and checkout that does not end
+// in that name makes it answer no: the module loads, runs nothing, prints
+// nothing and exits 0, which is byte for byte a clean pass. See
+// scripts/lib/main-module.mjs and tests/ci/guards-are-never-silent.test.ts.
+//
+// exitCode, not exit(): a write to a pipe is asynchronous, and process.exit()
+// drops whatever libuv has not handed to the kernel yet. See
+// tests/ci/guards-flush-before-exit.test.ts.
+if (isMainModule(import.meta.url)) process.exitCode = main();

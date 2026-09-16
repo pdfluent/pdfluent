@@ -4,8 +4,8 @@ Generator: `scripts/generate-third-party.mjs`
 
 ## Summary
 
-- Total dependencies/assets: 1156
-- Policy status: {"allowed":1120,"internal":23,"needs-review":13}
+- Total dependencies/assets: 1155
+- Policy status: {"allowed":1118,"internal":24,"needs-review":13}
 
 ## cargo
 
@@ -358,6 +358,7 @@ Generator: `scripts/generate-third-party.mjs`
 | pdf-redact | 1.0.0 | AGPL-3.0-only OR LicenseRef-PDFluent-Commercial | internal | no |
 | pdf-render | 1.0.0 | Apache-2.0 OR MIT | allowed | no |
 | pdf-standard-fonts | 1.0.0 | AGPL-3.0-only OR LicenseRef-PDFluent-Commercial | internal | no |
+| pdf-substitute-fonts | 1.0.0 | AGPL-3.0-only OR LicenseRef-PDFluent-Commercial | internal | no |
 | pdf-syntax | 0.5.6 | Apache-2.0 OR MIT | allowed | no |
 | pdf-text-format | 1.0.0 | AGPL-3.0-only OR LicenseRef-PDFluent-Commercial | internal | no |
 | pdf-xfa | 1.0.0 | AGPL-3.0-only OR LicenseRef-PDFluent-Commercial | internal | no |
@@ -479,8 +480,8 @@ Generator: `scripts/generate-third-party.mjs`
 | serde_repr | 0.1.20 | MIT OR Apache-2.0 | allowed | no |
 | serde_spanned | 0.6.9 | MIT OR Apache-2.0 | allowed | no |
 | serde_spanned | 1.1.1 | MIT OR Apache-2.0 | allowed | no |
-| serde_with | 3.20.0 | MIT OR Apache-2.0 | allowed | no |
-| serde_with_macros | 3.20.0 | MIT OR Apache-2.0 | allowed | no |
+| serde_with | 3.21.0 | MIT OR Apache-2.0 | allowed | no |
+| serde_with_macros | 3.21.0 | MIT OR Apache-2.0 | allowed | no |
 | serde-untagged | 0.1.9 | MIT OR Apache-2.0 | allowed | no |
 | serialize-to-javascript | 0.1.2 | MIT OR Apache-2.0 | allowed | no |
 | serialize-to-javascript-impl | 0.1.2 | MIT OR Apache-2.0 | allowed | no |
@@ -524,7 +525,7 @@ Generator: `scripts/generate-third-party.mjs`
 | system-deps | 6.2.2 | MIT OR Apache-2.0 | allowed | no |
 | tao | 0.35.2 | Apache-2.0 | allowed | no |
 | tao-macros | 0.1.3 | MIT OR Apache-2.0 | allowed | no |
-| tar | 0.4.45 | MIT OR Apache-2.0 | allowed | no |
+| tar | 0.4.46 | MIT OR Apache-2.0 | allowed | no |
 | target-lexicon | 0.12.16 | Apache-2.0 WITH LLVM-exception | allowed | no |
 | tauri | 2.11.1 | Apache-2.0 OR MIT | allowed | no |
 | tauri-build | 2.6.1 | Apache-2.0 OR MIT | allowed | no |
@@ -666,7 +667,6 @@ Generator: `scripts/generate-third-party.mjs`
 | windows_x86_64_msvc | 0.53.1 | MIT OR Apache-2.0 | allowed | no |
 | windows-collections | 0.2.0 | MIT OR Apache-2.0 | allowed | no |
 | windows-core | 0.61.2 | MIT OR Apache-2.0 | allowed | no |
-| windows-core | 0.62.2 | MIT OR Apache-2.0 | allowed | no |
 | windows-future | 0.2.1 | MIT OR Apache-2.0 | allowed | no |
 | windows-implement | 0.60.2 | MIT OR Apache-2.0 | allowed | no |
 | windows-interface | 0.59.3 | MIT OR Apache-2.0 | allowed | no |
@@ -674,9 +674,7 @@ Generator: `scripts/generate-third-party.mjs`
 | windows-link | 0.2.1 | MIT OR Apache-2.0 | allowed | no |
 | windows-numerics | 0.2.0 | MIT OR Apache-2.0 | allowed | no |
 | windows-result | 0.3.4 | MIT OR Apache-2.0 | allowed | no |
-| windows-result | 0.4.1 | MIT OR Apache-2.0 | allowed | no |
 | windows-strings | 0.4.2 | MIT OR Apache-2.0 | allowed | no |
-| windows-strings | 0.5.1 | MIT OR Apache-2.0 | allowed | no |
 | windows-sys | 0.45.0 | MIT OR Apache-2.0 | allowed | no |
 | windows-sys | 0.48.0 | MIT OR Apache-2.0 | allowed | no |
 | windows-sys | 0.52.0 | MIT OR Apache-2.0 | allowed | no |
@@ -746,26 +744,26 @@ Generator: `scripts/generate-third-party.mjs`
 | @alloc/quick-lru | 5.2.0 | MIT | allowed | no |
 | @ampproject/remapping | 2.3.0 | Apache-2.0 | allowed | no |
 | @axe-core/playwright | 4.13.0 | MPL-2.0 | allowed | yes |
-| @babel/code-frame | 7.29.0 | MIT | allowed | no |
-| @babel/compat-data | 7.29.0 | MIT | allowed | no |
-| @babel/core | 7.29.0 | MIT | allowed | no |
-| @babel/generator | 7.29.1 | MIT | allowed | no |
-| @babel/helper-compilation-targets | 7.28.6 | MIT | allowed | no |
-| @babel/helper-globals | 7.28.0 | MIT | allowed | no |
-| @babel/helper-module-imports | 7.28.6 | MIT | allowed | no |
-| @babel/helper-module-transforms | 7.28.6 | MIT | allowed | no |
+| @babel/code-frame | 7.29.7 | MIT | allowed | no |
+| @babel/compat-data | 7.29.7 | MIT | allowed | no |
+| @babel/core | 7.29.7 | MIT | allowed | no |
+| @babel/generator | 7.29.8 | MIT | allowed | no |
+| @babel/helper-compilation-targets | 7.29.7 | MIT | allowed | no |
+| @babel/helper-globals | 7.29.7 | MIT | allowed | no |
+| @babel/helper-module-imports | 7.29.7 | MIT | allowed | no |
+| @babel/helper-module-transforms | 7.29.7 | MIT | allowed | no |
 | @babel/helper-plugin-utils | 7.28.6 | MIT | allowed | no |
-| @babel/helper-string-parser | 7.27.1 | MIT | allowed | no |
-| @babel/helper-validator-identifier | 7.28.5 | MIT | allowed | no |
-| @babel/helper-validator-option | 7.27.1 | MIT | allowed | no |
-| @babel/helpers | 7.28.6 | MIT | allowed | no |
-| @babel/parser | 7.29.0 | MIT | allowed | no |
+| @babel/helper-string-parser | 7.29.7 | MIT | allowed | no |
+| @babel/helper-validator-identifier | 7.29.7 | MIT | allowed | no |
+| @babel/helper-validator-option | 7.29.7 | MIT | allowed | no |
+| @babel/helpers | 7.29.7 | MIT | allowed | no |
+| @babel/parser | 7.29.8 | MIT | allowed | no |
 | @babel/plugin-transform-react-jsx-self | 7.27.1 | MIT | allowed | no |
 | @babel/plugin-transform-react-jsx-source | 7.27.1 | MIT | allowed | no |
 | @babel/runtime | 7.29.2 | MIT | allowed | no |
-| @babel/template | 7.28.6 | MIT | allowed | no |
-| @babel/traverse | 7.29.0 | MIT | allowed | no |
-| @babel/types | 7.29.0 | MIT | allowed | no |
+| @babel/template | 7.29.7 | MIT | allowed | no |
+| @babel/traverse | 7.29.8 | MIT | allowed | no |
+| @babel/types | 7.29.8 | MIT | allowed | no |
 | @bcoe/v8-coverage | 0.2.3 | MIT | allowed | no |
 | @esbuild/aix-ppc64 | 0.25.12 | MIT | allowed | no |
 | @esbuild/aix-ppc64 | 0.21.5 | MIT | allowed | no |
@@ -825,8 +823,9 @@ Generator: `scripts/generate-third-party.mjs`
 | @eslint/js | 9.39.3 | MIT | allowed | yes |
 | @eslint/object-schema | 2.1.7 | Apache-2.0 | allowed | no |
 | @eslint/plugin-kit | 0.4.1 | Apache-2.0 | allowed | no |
-| @humanfs/core | 0.19.1 | Apache-2.0 | allowed | no |
-| @humanfs/node | 0.16.7 | Apache-2.0 | allowed | no |
+| @humanfs/core | 0.19.2 | Apache-2.0 | allowed | no |
+| @humanfs/node | 0.16.8 | Apache-2.0 | allowed | no |
+| @humanfs/types | 0.15.0 | Apache-2.0 | allowed | no |
 | @humanwhocodes/module-importer | 1.0.1 | Apache-2.0 | allowed | no |
 | @humanwhocodes/retry | 0.4.3 | Apache-2.0 | allowed | no |
 | @isaacs/cliui | 8.0.2 | ISC | allowed | no |
@@ -934,19 +933,19 @@ Generator: `scripts/generate-third-party.mjs`
 | axe-core | 4.13.0 | MPL-2.0 | allowed | yes |
 | balanced-match | 4.0.4 | MIT | allowed | no |
 | balanced-match | 1.0.2 | MIT | allowed | no |
-| baseline-browser-mapping | 2.10.0 | Apache-2.0 | allowed | no |
+| baseline-browser-mapping | 2.11.24 | Apache-2.0 | allowed | no |
 | binary-extensions | 2.3.0 | MIT | allowed | no |
-| brace-expansion | 5.0.4 | MIT | allowed | no |
-| brace-expansion | 1.1.12 | MIT | allowed | no |
+| brace-expansion | 5.0.12 | MIT | allowed | no |
+| brace-expansion | 1.1.21 | MIT | allowed | no |
 | brace-expansion | 2.1.4 | MIT | allowed | no |
 | brace-expansion | 5.0.9 | MIT | allowed | no |
 | braces | 3.0.3 | MIT | allowed | no |
-| browserslist | 4.28.1 | MIT | allowed | no |
+| browserslist | 4.29.0 | MIT | allowed | no |
 | bytestreamjs | 2.0.1 | BSD-3-Clause | allowed | no |
 | cac | 6.7.14 | MIT | allowed | no |
 | callsites | 3.1.0 | MIT | allowed | no |
 | camelcase-css | 2.0.1 | MIT | allowed | no |
-| caniuse-lite | 1.0.30001775 | CC-BY-4.0 | needs-review | no |
+| caniuse-lite | 1.0.30001810 | CC-BY-4.0 | needs-review | no |
 | chai | 5.3.3 | MIT | allowed | no |
 | chalk | 4.1.2 | MIT | allowed | no |
 | check-error | 2.1.3 | MIT | allowed | no |
@@ -966,7 +965,7 @@ Generator: `scripts/generate-third-party.mjs`
 | didyoumean | 1.2.2 | Apache-2.0 | allowed | no |
 | dlv | 1.1.3 | MIT | allowed | no |
 | eastasianwidth | 0.2.0 | MIT | allowed | no |
-| electron-to-chromium | 1.5.302 | ISC | allowed | no |
+| electron-to-chromium | 1.5.430 | ISC | allowed | no |
 | emoji-regex | 9.2.2 | MIT | allowed | no |
 | emoji-regex | 8.0.0 | MIT | allowed | no |
 | es-module-lexer | 1.7.0 | MIT | allowed | no |
@@ -997,7 +996,7 @@ Generator: `scripts/generate-third-party.mjs`
 | fill-range | 7.1.1 | MIT | allowed | no |
 | find-up | 5.0.0 | MIT | allowed | no |
 | flat-cache | 4.0.1 | MIT | allowed | no |
-| flatted | 3.3.4 | ISC | allowed | no |
+| flatted | 3.4.4 | ISC | allowed | no |
 | foreground-child | 3.3.1 | ISC | allowed | no |
 | fraction.js | 5.3.4 | MIT | allowed | no |
 | fsevents | 2.3.3 | MIT | allowed | no |
@@ -1034,7 +1033,7 @@ Generator: `scripts/generate-third-party.mjs`
 | jackspeak | 3.4.3 | BlueOak-1.0.0 | needs-review | no |
 | jiti | 1.21.7 | MIT | allowed | no |
 | js-tokens | 4.0.0 | MIT | allowed | no |
-| js-yaml | 4.1.1 | MIT | allowed | no |
+| js-yaml | 4.3.2 | MIT | allowed | no |
 | jsesc | 3.1.0 | MIT | allowed | no |
 | json-buffer | 3.0.1 | MIT | allowed | no |
 | json-schema-traverse | 0.4.1 | MIT | allowed | no |
@@ -1065,9 +1064,9 @@ Generator: `scripts/generate-third-party.mjs`
 | minipass | 7.1.3 | BlueOak-1.0.0 | needs-review | no |
 | ms | 2.1.3 | MIT | allowed | no |
 | mz | 2.7.0 | MIT | allowed | no |
-| nanoid | 3.3.11 | MIT | allowed | no |
+| nanoid | 3.3.19 | MIT | allowed | no |
 | natural-compare | 1.4.0 | MIT | allowed | no |
-| node-releases | 2.0.27 | MIT | allowed | no |
+| node-releases | 2.0.55 | MIT | allowed | no |
 | normalize-path | 3.0.0 | MIT | allowed | no |
 | object-assign | 4.1.1 | MIT | allowed | no |
 | object-hash | 3.0.0 | MIT | allowed | no |
@@ -1085,19 +1084,19 @@ Generator: `scripts/generate-third-party.mjs`
 | pathe | 1.1.2 | MIT | allowed | no |
 | pathval | 2.0.1 | MIT | allowed | no |
 | picocolors | 1.1.1 | ISC | allowed | no |
-| picomatch | 2.3.1 | MIT | allowed | no |
-| picomatch | 4.0.3 | MIT | allowed | no |
+| picomatch | 2.3.2 | MIT | allowed | no |
+| picomatch | 4.0.7 | MIT | allowed | no |
 | pify | 2.3.0 | MIT | allowed | no |
 | pirates | 4.0.7 | MIT | allowed | no |
 | pkijs | 3.3.3 | BSD-3-Clause | allowed | no |
 | playwright | 1.58.2 | Apache-2.0 | allowed | no |
 | playwright-core | 1.58.2 | Apache-2.0 | allowed | no |
-| postcss | 8.5.8 | MIT | allowed | yes |
+| postcss | 8.5.28 | MIT | allowed | yes |
 | postcss-import | 15.1.0 | MIT | allowed | no |
 | postcss-js | 4.1.0 | MIT | allowed | no |
 | postcss-load-config | 4.0.2 | MIT | allowed | no |
 | postcss-nested | 6.2.0 | MIT | allowed | no |
-| postcss-selector-parser | 6.1.2 | MIT | allowed | no |
+| postcss-selector-parser | 6.1.4 | MIT | allowed | no |
 | postcss-value-parser | 4.2.0 | MIT | allowed | no |
 | prelude-ls | 1.2.1 | MIT | allowed | no |
 | process-nextick-args | 2.0.1 | MIT | allowed | no |
@@ -1159,11 +1158,11 @@ Generator: `scripts/generate-third-party.mjs`
 | typescript | 5.9.3 | Apache-2.0 | allowed | yes |
 | typescript-eslint | 8.56.1 | MIT | allowed | yes |
 | undici-types | 7.24.6 | MIT | allowed | no |
-| update-browserslist-db | 1.2.3 | MIT | allowed | no |
+| update-browserslist-db | 1.3.3 | MIT | allowed | no |
 | uri-js | 4.4.1 | BSD-2-Clause | allowed | no |
 | use-sync-external-store | 1.6.0 | MIT | allowed | no |
 | util-deprecate | 1.0.2 | MIT | allowed | no |
-| vite | 6.4.1 | MIT | allowed | yes |
+| vite | 6.4.3 | MIT | allowed | yes |
 | vite | 5.4.21 | MIT | allowed | yes |
 | vite-node | 2.1.9 | MIT | allowed | no |
 | vitest | 2.1.9 | MIT | allowed | yes |
@@ -1174,7 +1173,7 @@ Generator: `scripts/generate-third-party.mjs`
 | wrap-ansi | 8.1.0 | MIT | allowed | no |
 | wrap-ansi-cjs | 7.0.0 | MIT | allowed | no |
 | yallist | 3.1.1 | ISC | allowed | no |
-| yaml | 2.8.2 | ISC | allowed | no |
+| yaml | 2.9.1 | ISC | allowed | no |
 | yocto-queue | 0.1.0 | MIT | allowed | no |
 
 ## python

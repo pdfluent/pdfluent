@@ -23,11 +23,11 @@
 // it writes the override next to the reports so the exception is a file in the
 // release rather than a decision that lived in one terminal for ten minutes.
 
-import { readFileSync, writeFileSync, existsSync, readdirSync, statSync, mkdirSync, realpathSync } from "node:fs";
+import { readFileSync, writeFileSync, existsSync, readdirSync, statSync, mkdirSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
+import { isMainModule } from "../lib/main-module.mjs";
 
 export const KNOWN_SCHEMAS = new Set(["pdfluent-release-suite/1"]);
 
@@ -150,8 +150,7 @@ export function overrideOr(fn, { version, platform, file, reportsDir = "quality/
   const raw = process.env.PDFLUENT_PUBLISH_WITHOUT_REPORT;
   if (raw === undefined || raw === "") return fn();
   if (!/^#?\d+$/.test(raw.trim())) {
-    console.error("✘ PDFLUENT_PUBLISH_WITHOUT_REPORT needs a ticket number (digits, optionally with a leading #). An override without a ticket is an override nobody has to answer for.");
-    process.exit(1);
+    throw new Refused("PDFLUENT_PUBLISH_WITHOUT_REPORT needs a ticket number (digits, optionally with a leading #). An override without a ticket is an override nobody has to answer for.");
   }
   const ticket = raw.trim().replace(/^#/, "");
   const platformKey = platformKeyFor(platform);
@@ -196,17 +195,10 @@ function updaterPayloadsIn(dir) {
 }
 
 // ── CLI ──────────────────────────────────────────────────────────────────────
-// Run directly, not imported -- compared as paths, both resolved.
-//
-// The usual spelling of this test compares `import.meta.url` to
-// `file://${process.argv[1]}`. One is a URL and percent-encodes a space, the
-// other is a path and does not, so on any checkout whose path contains one the
-// comparison is quietly false: the module loads, defines everything and does
-// nothing. The nightly keeps its checkout under ~/Library/Application Support,
-// and the first run there made every probe, printed every skip, wrote no report
-// and exited 0. Node also resolves a symlinked entry point before filling in
-// import.meta.url, which the same comparison gets wrong in the other direction.
-if (process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)) {
+// A function that returns its exit code rather than a block that takes it: the
+// caller below sets process.exitCode, so nothing the CLI printed is still in
+// flight when the process ends.
+function cli() {
   const argv = process.argv.slice(2);
   const a = {};
   for (let i = 0; i < argv.length; i++) {
@@ -219,7 +211,7 @@ if (process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.me
   }
   const root = process.cwd();
   const version = a.version && a.version !== true ? String(a.version) : null;
-  if (!version) { console.error("✘ --version is required"); process.exit(1); }
+  if (!version) { console.error("✘ --version is required"); return 1; }
   const reportsDir = a["reports-dir"] && a["reports-dir"] !== true ? String(a["reports-dir"]) : "quality/reports";
   const trunk = a.trunk && a.trunk !== true ? String(a.trunk) : "HEAD";
   const updater = a.updater === true;
@@ -230,7 +222,7 @@ if (process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.me
     targets = updater ? updaterPayloadsIn(dir) : artefactsIn(dir);
     if (!targets.length) {
       console.error(`✘ no ${updater ? "updater payloads" : "artefacts"} under ${path.relative(root, dir)}/{macos,windows,linux}/ — nothing to judge, and nothing to publish.`);
-      process.exit(1);
+      return 1;
     }
     // Linux is out of scope for the gated release; it is skipped here rather
     // than refused, so a Linux artefact that happens to be present does not
@@ -241,13 +233,13 @@ if (process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.me
     });
   } else if (a.file && a.file !== true) {
     const file = path.resolve(root, String(a.file));
-    if (!existsSync(file)) { console.error(`✘ --file not found: ${file}`); process.exit(1); }
+    if (!existsSync(file)) { console.error(`✘ --file not found: ${file}`); return 1; }
     const platform = a.platform && a.platform !== true ? String(a.platform) : null;
-    if (!platform) { console.error("✘ --platform is required with --file"); process.exit(1); }
+    if (!platform) { console.error("✘ --platform is required with --file"); return 1; }
     targets = [{ platform, file }];
   } else {
     console.error("✘ provide --file <path> --platform <key>, or --artifacts <dir>");
-    process.exit(1);
+    return 1;
   }
 
   try {
@@ -261,7 +253,15 @@ if (process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.me
       }
     }
   } catch (e) {
-    if (e instanceof Refused) { console.error(`✘ ${e.message}`); process.exit(e.code); }
+    if (e instanceof Refused) { console.error(`✘ ${e.message}`); return e.code; }
     throw e;
   }
+  return 0;
 }
+
+// Run directly, not imported -- decided on the file rather than on the spelling
+// of a path (scripts/lib/main-module.mjs), and ended with exitCode rather than
+// with a hard exit: a write to a pipe is asynchronous, and process.exit() drops
+// whatever libuv has not handed to the kernel yet.
+// See tests/ci/guards-flush-before-exit.test.ts.
+if (isMainModule(import.meta.url)) process.exitCode = cli();

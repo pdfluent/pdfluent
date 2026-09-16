@@ -54,6 +54,60 @@ describe("release suite — a clean artefact", () => {
     expect((json.artefacts as { primary: { sha256: string } }).primary.sha256).toBe(s.sha256);
   });
 
+  // The mutation: a judge that reads the sampler's exit 3 as a failed run. That
+  // is how a harness that could not measure anything was printed as the product
+  // failing the offline promise (#542, and the same trap in #543's replacement).
+  it("reads the sampler's own skip as a skip, not as a broken product", () => {
+    const s = stageCase("good", {
+      "net_observe.out":
+        "SKIPPED (not a pass): the application never showed a process id, so no socket of it could be sampled\n",
+      "net_observe.rc": "3\n",
+    });
+    run(suiteArgs(s));
+    const { json } = readReport(s);
+    const observed = row(json, "offline:observe");
+    expect(observed?.status).toBe("SKIPPED");
+    expect(observed?.reason).toContain("process id");
+  });
+
+  // An empty sampler file is the dangerous shape: no socket was seen because
+  // nothing looked. It must never read as the app having stayed quiet.
+  it("refuses to call a run with no samples a clean one", () => {
+    const s = stageCase("good", { "net_observe.out": "", "net_observe.rc": "0\n" });
+    expect(run(suiteArgs(s)).status).toBe(3);
+    const observed = row(readReport(s).json, "offline:observe")!;
+    expect(observed.status).toBe("SKIPPED");
+    expect(observed.reason).toContain("no sample");
+  });
+
+  // What a PASS on this row is allowed to mean: sockets were sampled, and none
+  // of the samples held a remote one. The count and the window are on the row so
+  // that claim can be weighed instead of taken.
+  it("says how much it watched when it says it saw nothing", () => {
+    const s = stageCase("good");
+    run(suiteArgs(s));
+    const observed = row(readReport(s).json, "offline:observe")!;
+    expect(observed.status).toBe("PASS");
+    expect(observed.numbers.samples).toBe(2);
+    expect(observed.numbers.window_ms).toBe(61240);
+    expect(observed.numbers.remotes).toBe(0);
+  });
+
+  // The window each launch was watched for, per document, on the row and in the
+  // markdown. Seventeen launches of a second each and one launch of a minute
+  // have the same `window_ms`; only the per-document numbers tell them apart.
+  it("reports the window it covered per document", () => {
+    const s = stageCase("good");
+    run(suiteArgs(s));
+    const { json, md } = readReport(s);
+    const observed = row(json, "offline:observe")!;
+    expect(observed.numbers.documents).toBe(2);
+    expect(observed.numbers.covered_ms).toBe(8612);
+    expect(observed.numbers.startup_check_ms).toBeGreaterThan(0);
+    expect(String(observed.numbers.windows_ms)).toContain("fixture-acroform-1p:8612");
+    expect(md).toContain("fixture-acroform-1p:8612");
+  });
+
   it("names what it did not measure instead of implying it did", () => {
     const s = stageCase("good");
     run(suiteArgs(s));
@@ -163,6 +217,22 @@ describe("release suite — a skip is not a pass", () => {
     expect(x.status).toBe("SKIPPED");
     expect(x.reason.length).toBeGreaterThan(0);
     expect(r.err).toContain("SKIPPED (not a pass): stapler");
+  });
+
+  // The red-then-green case for #551: the same clean run, with every launch cut
+  // short of the app's own update-check delay. Nothing about the product
+  // changes, and the row has to stop claiming a clean window.
+  it("returns INCOMPLETE when no launch outlived the startup update check", () => {
+    const s = stageCase("short-hold");
+    const r = run(suiteArgs(s));
+    expect(r.status).toBe(3);
+    const { json } = readReport(s);
+    expect(json.verdict).toBe("INCOMPLETE");
+    const observed = row(json, "offline:observe")!;
+    expect(observed.status).toBe("SKIPPED");
+    expect(observed.reason).toContain("1490");
+    expect(observed.numbers.covered_ms).toBe(1490);
+    expect(r.err).toContain("SKIPPED (not a pass): offline:observe");
   });
 
   it("refuses to run at all without a machine class", () => {

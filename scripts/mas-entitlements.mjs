@@ -25,7 +25,7 @@
 // --app/--pkg need macOS (codesign, pkgutil); --actual works anywhere, which is
 // what the unit tests drive.
 
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
 import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
@@ -135,6 +135,31 @@ export function diffEntitlements(expected, actual) {
     if (!expected.has(k)) problems.push(`extra: ${k} = ${show(actual.get(k))} — not in the expected file`);
   }
   return problems.sort();
+}
+
+/**
+ * Whether this bundle carries an App Store signature.
+ *
+ * `scripts/build-mas.sh` and an ordinary release build put their .app at the
+ * same path under target/, so finding one there says nothing about which build
+ * made it. Judging a Developer ID build against the App Store entitlements
+ * reports three cs.* exceptions and three missing App Store keys -- every line
+ * true, and none of them a defect, because a Developer ID build is meant to
+ * carry exactly that set. It turned the gate red on the release machine on
+ * 2026-09-10, hours after a Developer ID build, with a message about
+ * entitlements.
+ *
+ * The certificate is what tells the two builds apart, and it says so without
+ * consulting the entitlements this file exists to judge -- which matters: the
+ * App Store keys are among the things a bad MAS build gets wrong, so they
+ * cannot also be what decides whether to look.
+ */
+export function signedForTheAppStore(app) {
+  const run = spawnSync('codesign', ['-dvv', app], { encoding: 'utf8' });
+  // codesign writes its description to stderr.
+  return /^Authority=(Apple Distribution|3rd Party Mac Developer Application)/m.test(
+    `${run.stdout ?? ''}${run.stderr ?? ''}`,
+  );
 }
 
 function entitlementsOfApp(app) {

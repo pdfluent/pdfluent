@@ -13,11 +13,23 @@
 // nobody had added a request. That is not a property, it is a habit, and a
 // dependency can break it without anyone writing a line of code.
 //
-// What this checks, and why it is a scan and not a source assertion: a URL can
-// arrive from a transitive dependency, a minifier can inline one, and Rust
-// bakes string literals from every crate into the executable. Reading our own
-// sources would answer for our own sources only. So this reads what ships --
-// the built bundle, and the release executable when one exists.
+// What this checks, and what it refuses to judge.
+//
+// BLOCKING, on what this repository writes and ships: the built frontend bundle
+// (dist/, where a minifier can inline an origin a dependency brought in) and the
+// backend sources (src-tauri/src/, where a fetch is a fetch). An undeclared
+// origin in either is a decision somebody made here, and it fails the gate.
+//
+// ADVISORY, on the linked executable: a release binary carries the string
+// literals of every crate in the tree and of the system frameworks it links --
+// XML namespace identifiers, Apple's OCSP and CRL hosts, documentation links in
+// error messages of crates nothing calls. None of them is a request, and the
+// allow-list cannot tell an address the product would dial from a name that
+// merely spells like one. Declaring them would grow the allow-list with hosts
+// we do not own in order to silence a scan; failing on them would make the gate
+// a coin toss that a toolchain bump decides. So the binary is reported and
+// never gated (decided 2026-09-10, #543), with a fixed ignore list for the two
+// families that are certain to be names rather than addresses.
 //
 // Two kinds of origin, and the difference matters:
 //   endpoint  the app may actually contact it. Only pdfluent.com hosts qualify,
@@ -32,9 +44,9 @@
 // unit test keeps in step with this file.
 //
 // usage:
-//   node scripts/ci/offline-allowlist.mjs --tree dist
+//   node scripts/ci/offline-allowlist.mjs                       (dist + src-tauri/src + config)
+//   node scripts/ci/offline-allowlist.mjs --tree dist --tree src-tauri/src
 //   node scripts/ci/offline-allowlist.mjs --binary src-tauri/target/release/pdfluent
-//   node scripts/ci/offline-allowlist.mjs --tree dist --binary <path> --binary <path>
 //
 // A missing --binary target is reported as SKIPPED (not a pass). It does not
 // fail a run that also scanned a tree -- something was judged -- but a run with
@@ -42,12 +54,14 @@
 // "did not look". A gate that quietly checks nothing is the thing this
 // repository has been burned by three times.
 //
-// Exit codes: 0 everything scanned is declared, 1 an undeclared origin ships,
-// 2 bad arguments, 3 nothing was scanned.
+// Exit codes: 0 everything the gate judges is declared, 1 an undeclared origin
+// ships in a gated target, 2 bad arguments, 3 nothing was scanned. An advisory
+// finding never changes the status: it is a line to read, not a verdict.
 
 import { readFileSync, readdirSync, statSync, existsSync } from 'node:fs';
 import { resolve, dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { isMainModule } from '../lib/main-module.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
 
@@ -103,9 +117,56 @@ export const ALLOWED = [
     kind: 'inert',
     why: 'Documentation link inside a Rollup/Vite runtime error message.',
   },
+  {
+    origin: 'https://apps.microsoft.com',
+    kind: 'inert',
+    why: 'The Store listing, printed in the About box so a user can say which build they have. Never opened: open_external_url refuses every host but pdfluent.com.',
+  },
 ];
 
+/**
+ * Host families the ADVISORY binary scan does not bother a reader with.
+ *
+ * Both are certainly names rather than addresses, and both arrive without
+ * anybody in this repository writing them: XML and RDF namespace identifiers
+ * come in with any document toolchain, and Apple's certificate hosts are baked
+ * into the system frameworks a signed macOS binary links. An entry here silences
+ * a line in a report; it grants nothing, because the binary scan grants nothing.
+ */
+export const BINARY_IGNORED = [
+  { host: 'ns.adobe.com', why: 'XMP namespace identifier.' },
+  { host: 'purl.org', why: 'Dublin Core and RDF namespace identifiers.' },
+  { host: 'w3.org', why: 'XML, SVG, RDF and XMP namespace identifiers.' },
+  { host: 'xmlns.com', why: 'FOAF namespace identifier.' },
+  { host: 'iptc.org', why: 'IPTC photo-metadata namespace identifier.' },
+  { host: 'aiim.org', why: 'PDF/A namespace identifier.' },
+  { host: 'openoffice.org', why: 'ODF namespace identifier.' },
+  { host: 'openxmlformats.org', why: 'OOXML namespace identifier.' },
+  { host: 'oasis-open.org', why: 'OASIS namespace identifier.' },
+  { host: 'apple.com', why: "Apple's OCSP, CRL and certificate-authority hosts, linked in by the system frameworks a signed build uses." },
+  { host: 'digicert.com', why: 'Certificate-chain and timestamp hosts carried in the signature material.' },
+  { host: 'sectigo.com', why: 'Certificate-chain host carried in the signature material.' },
+  { host: 'verisign.com', why: 'Legacy certificate-chain host carried in the signature material.' },
+  { host: 'entrust.net', why: 'Legacy certificate-chain host carried in the signature material.' },
+];
+
+/** True when `origin`'s host is one of the ignored families, or under it. */
+export function ignoredInBinary(origin) {
+  const host = String(origin).replace(/^https?:\/\//, '').replace(/:\d+$/, '').toLowerCase();
+  return BINARY_IGNORED.some(({ host: h }) => host === h || host.endsWith(`.${h}`));
+}
+
 const ALLOWED_ORIGINS = new Set(ALLOWED.map((entry) => entry.origin));
+
+/**
+ * What a run with no `--tree` of its own gates: the built frontend and the
+ * backend sources. Exported so a test can state the list without depending on
+ * which of the two happens to exist on the machine running it -- `dist` is
+ * built on one runner and absent on the others, and a test that only ever saw
+ * the machine with a build in it is how this list got read as scanned when it
+ * was not.
+ */
+export const DEFAULT_TREES = ['dist', 'src-tauri/src'];
 
 // A host is letters, digits, dots and dashes -- deliberately strict, so an
 // interpolated `https://${host}` or a truncated string in a binary does not
@@ -210,6 +271,51 @@ export function checkNoHttpClient(cargoToml) {
   return [...new Set(found)].sort();
 }
 
+/**
+ * A Rust source with its `#[cfg(test)]` modules removed.
+ *
+ * Test code is not shipped code, and backend tests name hosts on purpose: the
+ * case that proves `open_external_url` refuses everything but pdfluent.com has
+ * to write down a host it refuses. Scanning those as origins the product
+ * carries would force the allow-list to declare `https://evil.com` -- and an
+ * allow-list that declares it stops failing when it turns up in dist/, which is
+ * the one place it would matter.
+ *
+ * Brace counting, skipping string literals and line comments so a brace inside
+ * a string does not end the module early.
+ */
+export function stripRustTestModules(source) {
+  let out = '';
+  let i = 0;
+  while (i < source.length) {
+    const at = source.indexOf('#[cfg(test)]', i);
+    if (at === -1) { out += source.slice(i); break; }
+    out += source.slice(i, at);
+    // From the attribute to the `{` that opens the item it guards.
+    let j = source.indexOf('{', at);
+    if (j === -1) { out += source.slice(at); break; }
+    let depth = 0;
+    for (; j < source.length; j++) {
+      const c = source[j];
+      if (c === '"') {
+        j++;
+        while (j < source.length && source[j] !== '"') { if (source[j] === '\\') j++; j++; }
+        continue;
+      }
+      if (c === '/' && source[j + 1] === '/') {
+        const nl = source.indexOf('\n', j);
+        if (nl === -1) { j = source.length; break; }
+        j = nl;
+        continue;
+      }
+      if (c === '{') depth++;
+      else if (c === '}') { depth--; if (depth === 0) { j++; break; } }
+    }
+    i = j;
+  }
+  return out;
+}
+
 function walk(dir, out = []) {
   for (const name of readdirSync(dir)) {
     const p = join(dir, name);
@@ -226,7 +332,8 @@ function walk(dir, out = []) {
 export function scanTree(dir) {
   const found = new Map();
   for (const file of walk(dir)) {
-    const text = readFileSync(file, 'latin1');
+    const raw = readFileSync(file, 'latin1');
+    const text = file.endsWith('.rs') ? stripRustTestModules(raw) : raw;
     for (const origin of extractOrigins(text)) {
       const where = found.get(origin) ?? [];
       where.push(relative(dir, file));
@@ -242,8 +349,12 @@ export function scanTree(dir) {
  */
 export function scanBinary(file) {
   const found = new Map();
+  // Named relative to the repository, or by its basename when it is outside
+  // one: a report that quotes an absolute path quotes the machine it ran on.
+  const rel = relative(root, file);
+  const where = rel.startsWith('..') ? file.split('/').pop() : rel;
   for (const origin of extractOrigins(readFileSync(file, 'latin1'))) {
-    found.set(origin, [relative(root, file)]);
+    found.set(origin, [where]);
   }
   return found;
 }
@@ -259,6 +370,32 @@ function report(label, found) {
   return bad;
 }
 
+/**
+ * The binary, reported and not judged. Nothing here reaches the exit code: the
+ * word on each line is ADVISORY, never FAIL, so a reader is not invited to
+ * treat it as a verdict somebody forgot to act on.
+ */
+function reportAdvisory(label, found) {
+  const origins = [...found.keys()].sort();
+  const undeclared = origins.filter((o) => !ALLOWED_ORIGINS.has(o) && !ignoredInBinary(o));
+  const ignored = origins.filter((o) => ignoredInBinary(o));
+  console.log(
+    `ADVISORY ${label}: ${origins.length} origins, ` +
+      `${origins.length - undeclared.length - ignored.length} declared, ` +
+      `${ignored.length} known-inert, ${undeclared.length} undeclared (not gating)`,
+  );
+  for (const origin of undeclared) {
+    console.log(`  ADVISORY  ${origin}  (${[...new Set(found.get(origin))].slice(0, 3).join(', ')})`);
+  }
+  if (undeclared.length) {
+    console.log(
+      '  A binary carries the string literals of every crate and framework it links.\n' +
+        '  These are worth a look and nothing more; the gate is the dist/ and\n' +
+        '  src-tauri/src/ scan above.',
+    );
+  }
+}
+
 function main() {
   const argv = process.argv.slice(2);
   const trees = [];
@@ -270,11 +407,11 @@ function main() {
     else if (argv[i] === '--config') config = true;
     else {
       console.error(`OFFLINE-ALLOWLIST: unknown argument ${argv[i]}`);
-      process.exit(2);
+      return 2;
     }
   }
   if (trees.length === 0 && binaries.length === 0 && !config) {
-    trees.push('dist');
+    trees.push(...DEFAULT_TREES);
     config = true;
   }
 
@@ -301,11 +438,21 @@ function main() {
     checked++;
   }
 
+  // Every tree is scanned, and a missing one is remembered rather than thrown.
+  //
+  // This used to exit on the first absent directory, which made the ORDER of
+  // the arguments decide what got looked at: `dist` is built on the frontend
+  // runner and absent everywhere else, so on the Linux CI runner the default
+  // run stopped at `dist` and the backend sources -- the half that is always
+  // present -- were never scanned at all. The run still fails, at the end, and
+  // names what it could not reach; what it changes is that everything it CAN
+  // reach is judged first. (Trunk run on 1a552cfe, 2026-09-15.)
+  const unreachable = [];
   for (const tree of trees) {
     const dir = resolve(root, tree);
     if (!existsSync(dir)) {
-      console.error(`OFFLINE-ALLOWLIST: ${tree} does not exist -- run npm run build first`);
-      process.exit(1);
+      unreachable.push(tree);
+      continue;
     }
     bad = bad.concat(report(`tree ${tree}`, scanTree(dir)));
     checked++;
@@ -319,33 +466,53 @@ function main() {
       console.error(`SKIPPED (not a pass): no executable at ${binary}`);
       continue;
     }
-    bad = bad.concat(report(`binary ${binary}`, scanBinary(file)));
+    // Reported, never gated. `bad` is deliberately not touched here. The label
+    // is the name, not the path: a report that quotes an absolute path quotes
+    // the machine it ran on.
+    reportAdvisory(`binary ${file.split('/').pop()}`, scanBinary(file));
     checked++;
   }
 
-  if (checked === 0) {
+  if (checked === 0 && unreachable.length === 0) {
     // Exit 3, not 0. Every target named was absent, so this run judged
     // nothing, and a caller reading the status has to be able to tell that
     // from a clean scan.
     console.error('SKIPPED (not a pass): nothing to scan');
-    process.exit(3);
+    return 3;
+  }
+
+  // A tree that was named and is not there is a failure, not a skip: somebody
+  // asked for it to be gated. `dist` is the usual one, and the answer is
+  // usually `npm run build`.
+  if (unreachable.length > 0) {
+    console.error(
+      `\nOFFLINE-ALLOWLIST: ${unreachable.join(', ')} does not exist, so nothing in it was scanned` +
+        `${unreachable.includes('dist') ? ' -- run npm run build first' : ''}`,
+    );
   }
 
   if (bad.length > 0) {
     console.error(
       `\nOFFLINE-ALLOWLIST: ${bad.length} undeclared origin(s): ${[...new Set(bad)].join(', ')}\n` +
         'The app promises to work offline and to talk to nothing but pdfluent.com.\n' +
-        'If this origin is genuinely inert (a namespace, a documentation link in a\n' +
-        'dependency error message), declare it in scripts/ci/offline-allowlist.mjs\n' +
-        'and in docs/OUTBOUND_ENDPOINTS.md with the reason. If it is an endpoint,\n' +
-        'it does not ship.\n',
+        'This origin is in the built frontend or in the backend sources, so it is\n' +
+        'in this repository on purpose. If it is genuinely inert (a namespace, a\n' +
+        'documentation link in a dependency error message, copy in a dialog),\n' +
+        'declare it in scripts/ci/offline-allowlist.mjs and in\n' +
+        'docs/OUTBOUND_ENDPOINTS.md with the reason. If it is an endpoint, it does\n' +
+        'not ship.\n',
     );
-    process.exit(1);
   }
 
+  if (bad.length > 0 || unreachable.length > 0) return 1;
+
   console.log('OFFLINE-ALLOWLIST: every origin that ships is declared.');
+  return 0;
 }
 
-if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  main();
+// exitCode, not exit(): a write to a pipe is asynchronous, and process.exit()
+// drops whatever libuv has not handed to the kernel yet. See
+// tests/ci/guards-flush-before-exit.test.ts.
+if (isMainModule(import.meta.url)) {
+  process.exitCode = main();
 }
