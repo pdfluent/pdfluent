@@ -2,30 +2,23 @@
   "$comment": [
     "Which commit the binaries people are downloading were built from.",
     "",
-    "There is no tag for this release and there will not be one: 1.0.0-beta.21 is a",
-    "version string that says 'final' and 'not final' in the same breath, and the",
-    "decision on 2026-09-07 was to stop making it worse. The next editor release is",
-    "1.0.0, tagged v1.0.0, once the quality gates it claims are actually green.",
-    "",
-    "That leaves a shipped binary whose source has to be nameable some other way, so",
-    "it is named here, with the evidence, and scripts/ci/repo-truth.mjs checks that",
-    "the commit is on the release branch and that the public repository carries it."
+    "1.0.0 is tagged v1.0.0 on this commit; scripts/ci/repo-truth.mjs checks that the commit is on the release branch and that the public repository carries it."
   ],
-  "version": "1.0.0-beta.21",
-  "commit": "596c911598ec787eea7c111ae9b7621da549ad6e",
+  "version": "1.0.0",
+  "commit": "73b907cf8e5b5d33d1acec6fb675a4cc61b79581",
   "artifacts": [
-    "PDFluent_1.0.0-beta.21_universal.dmg (notarised, stapled, on pdfluent.com)",
-    "PDFluent_1.0.0-beta.21_x64_en-US.msi (Authenticode-signed; the Microsoft Store listing serves this installer)"
+    "PDFluent_1.0.0_universal.dmg (notarised, stapled, on pdfluent.com; sha256 d72813b71d764723788534f2c19a2b0be5257f148df859a8ffdd3489c2ccdf10)",
+    "PDFluent_1.0.0_x64_en-US.msi (Authenticode-signed, on pdfluent.com; sha256 27244d5742954ee8b493be7ad0c21dcd2f63157d43ff031bf1a63967063db769)"
   ],
   "evidence": [
-    "package.json first reads 1.0.0-beta.21 at 596c911 (2026-07-24 14:03 +0200); the commit after it on the branch is 461fedf (2026-07-24 18:41 +0200).",
-    "The universal DMG was written 2026-07-24 14:44, between those two, and its Info.plist reads CFBundleShortVersionString and CFBundleVersion 1.0.0-beta.21.",
-    "461fedf changes five files under store/ and nothing a build reads, so either commit yields the same binary."
+    "Built from the detached checkout of 73b907cf (tag v1.0.0) on 2026-09-17; DMG Info.plist reads CFBundleShortVersionString 1.0.0; MSI product version 1.0.0.",
+    "Quality run dev-macbook-m1pro-2026-09-18-macos-73b907c: S0\u2013S4 PASS, S5 skipped (a release build has no inspectable web view).",
+    "Quality run build-desktop-windows-2026-09-18-windows-73b907c: S1 PASS (authenticode, version, msi_install); S2/S3 could not be observed over the ssh lane, as in the 2026-09-08 rehearsal."
   ],
   "quality_reports": {
-    "macos": null,
-    "windows": null,
-    "note": "Shipped 2026-07-24, before the release quality suite existed, so neither platform has a PASS report and null is what that looks like. What could still be checked afterwards is recorded in quality/reports/1.0.0-beta.21-macos.json: the shipped DMG mounts, carries the Developer ID signature with the hardened runtime, is accepted by Gatekeeper as Notarized Developer ID and has its ticket stapled. That report is INCOMPLETE by design -- the binary was never launched by the suite. From the next release on, publishing refuses without quality/reports/<version>-<platform>.json at verdict PASS (scripts/quality/require-report.mjs), and this field names those files."
+    "macos": "quality/reports/1.0.0-macos.override.json",
+    "windows": "quality/reports/1.0.0-windows.override.json",
+    "note": "Both platforms were published under the recorded override (ticket #427). The suite did run on exactly these bytes: quality/reports/1.0.0-macos.json is INCOMPLETE (S0-S4 PASS, S5 skipped because a release build has no inspectable web view) and quality/reports/1.0.0-windows.json is FAIL (S1 PASS; S2/S3 not observable over the ssh lane, as in the 2026-09-08 rehearsal). Closing that gap is tracked on #427."
   },
-  "recorded": "2026-09-07"
+  "recorded": "2026-09-18"
 }

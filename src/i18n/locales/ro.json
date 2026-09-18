@@ -744,7 +744,7 @@
   "textEdit": {
     "cancel": "Anulează",
     "save": "Salvează",
-    "betaLimitHelp": "Notă: În această versiune beta, editarea textului este limitată la înlocuirea cuvintelor existente cu text de lungime egală sau mai scurtă pentru a preveni deplasările de aspect.",
+    "betaLimitHelp": "Notă: Editarea textului este limitată la înlocuirea cuvintelor existente cu text de lungime egală sau mai scurtă pentru a preveni deplasările de aspect.",
     "saveChanges": "Salvează modificările",
     "cancelEditing": "Anulează editarea",
     "bold": "Îngroșat",

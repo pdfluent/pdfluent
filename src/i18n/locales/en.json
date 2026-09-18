@@ -739,7 +739,7 @@
   "textEdit": {
     "cancel": "Cancel",
     "save": "Save",
-    "betaLimitHelp": "Note: In this beta version, text editing is limited to replacing existing words with equal or shorter text to prevent layout shifts.",
+    "betaLimitHelp": "Note: Text editing is limited to replacing existing words with equal or shorter text to prevent layout shifts.",
     "saveChanges": "Save changes",
     "cancelEditing": "Cancel editing",
     "bold": "Bold",

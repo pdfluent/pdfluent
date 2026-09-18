@@ -744,7 +744,7 @@
   "textEdit": {
     "cancel": "Peruuta",
     "save": "Tallenna",
-    "betaLimitHelp": "Huom: Tässä betaversiossa tekstin muokkaus on rajoitettu olemassa olevien sanojen korvaamiseen yhtä pitkällä tai lyhyemmällä tekstillä asettelun muutosten estämiseksi.",
+    "betaLimitHelp": "Huom: Tekstin muokkaus on rajoitettu olemassa olevien sanojen korvaamiseen yhtä pitkällä tai lyhyemmällä tekstillä asettelun muutosten estämiseksi.",
     "saveChanges": "Tallenna muutokset",
     "cancelEditing": "Peruuta muokkaus",
     "bold": "Lihavointi",

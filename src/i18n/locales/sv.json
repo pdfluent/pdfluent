@@ -744,7 +744,7 @@
   "textEdit": {
     "cancel": "Avbryt",
     "save": "Spara",
-    "betaLimitHelp": "Obs: I den här betaversionen är textredigering begränsad till att ersätta befintliga ord med lika lång eller kortare text för att förhindra layoutförskjutningar.",
+    "betaLimitHelp": "Obs: Textredigering är begränsad till att ersätta befintliga ord med lika lång eller kortare text för att förhindra layoutförskjutningar.",
     "saveChanges": "Spara ändringar",
     "cancelEditing": "Avbryt redigering",
     "bold": "Fet",

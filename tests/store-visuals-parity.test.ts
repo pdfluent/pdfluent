@@ -17,6 +17,13 @@
 // It is also the gate on uploading. A `blocked` row is a control the image
 // promises and the app does not have; while an image has one, no derivative of
 // it may enter docs/media/ and it does not go to a store.
+//
+// An owner may decide to ship a render with such a control in it anyway, and
+// that is what an `ownerAccepted` row records. The escape hatch is the risk:
+// moving a row from `blocked` to `ownerAccepted` is the shortest way to make
+// this file stop complaining. So an acceptance has to say who decided, on what
+// day and why, and one that does not keeps the render unpublished exactly as a
+// `blocked` row does.
 
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { resolve } from 'node:path';
@@ -52,12 +59,52 @@ interface BlockedRow {
   decision: string;
 }
 
+interface OwnerAcceptedRow {
+  control: string;
+  shipped: string;
+  date: string;
+  decidedBy: string;
+  reason: string;
+}
+
 interface ImageEntry {
   id: string;
   headline: string;
   surface: string;
   shows: ShowsRow[];
   blocked: BlockedRow[];
+  ownerAccepted?: OwnerAcceptedRow[];
+}
+
+/**
+ * The fields an owner acceptance is missing, by name; empty when it is whole.
+ *
+ * An `ownerAccepted` entry is the one way a control the app does not have may
+ * stay in a render that ships: the owner looked at it and decided the image
+ * goes out as it stands. That is a legitimate answer, and it is also the
+ * obvious way to make this whole file stop complaining -- move a row from
+ * `blocked` to `ownerAccepted` and the render is publishable again. So the
+ * entry has to carry what makes it auditable: who decided, on what day, and
+ * why. An entry short of any of those is not a decision, it is a row that was
+ * moved, and it keeps the render out of docs/media/ exactly as `blocked` does.
+ */
+export function ownerAcceptanceGaps(row: Partial<OwnerAcceptedRow>): string[] {
+  const gaps: string[] = [];
+  const filled = (value: string | undefined) => (value ?? '').trim() !== '';
+  if (!filled(row.control)) gaps.push('control');
+  if (!filled(row.shipped)) gaps.push('shipped');
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(row.date ?? '')) gaps.push('date');
+  if (!filled(row.decidedBy)) gaps.push('decidedBy');
+  if (!filled(row.reason)) gaps.push('reason');
+  return gaps;
+}
+
+/** A render may reach docs/media/ only with nothing open against it. */
+export function keepsRenderUnpublished(image: ImageEntry): boolean {
+  return (
+    image.blocked.length > 0 ||
+    (image.ownerAccepted ?? []).some((row) => ownerAcceptanceGaps(row).length > 0)
+  );
 }
 
 /**
@@ -105,6 +152,50 @@ describe('parseRegister', () => {
 
   it('finds the real register non-empty, so an unreadable file cannot pass as clean', () => {
     expect(register.size).toBeGreaterThan(100);
+  });
+});
+
+describe('ownerAcceptanceGaps', () => {
+  const whole = {
+    control: 'The Sign tab drawn active with no Sign panel open',
+    shipped: 'a tab carries the active style only while its panel is the open one',
+    date: '2026-09-16',
+    decidedBy: 'owner',
+    reason: 'accepted for the listing; not something to build',
+  };
+
+  it('finds nothing missing in a whole decision', () => {
+    expect(ownerAcceptanceGaps(whole)).toEqual([]);
+  });
+
+  it('names the reason when it is gone', () => {
+    expect(ownerAcceptanceGaps({ ...whole, reason: undefined })).toEqual(['reason']);
+  });
+
+  it('names the reason when it is only whitespace', () => {
+    expect(ownerAcceptanceGaps({ ...whole, reason: '   ' })).toEqual(['reason']);
+  });
+
+  it('names the date when it is gone, and when it is not a day', () => {
+    expect(ownerAcceptanceGaps({ ...whole, date: undefined })).toEqual(['date']);
+    expect(ownerAcceptanceGaps({ ...whole, date: 'September' })).toEqual(['date']);
+  });
+
+  it('names who decided when nobody did', () => {
+    expect(ownerAcceptanceGaps({ ...whole, decidedBy: '' })).toEqual(['decidedBy']);
+  });
+
+  it('keeps a render unpublished when its acceptance is short of a field', () => {
+    const image = (accepted: Record<string, unknown>): ImageEntry => ({
+      id: 'store-x',
+      headline: 'x',
+      surface: 'x',
+      shows: [],
+      blocked: [],
+      ownerAccepted: [accepted as OwnerAcceptedRow],
+    });
+    expect(keepsRenderUnpublished(image(whole))).toBe(false);
+    expect(keepsRenderUnpublished(image({ ...whole, reason: undefined }))).toBe(true);
   });
 });
 
@@ -156,20 +247,27 @@ describe('store visuals parity', () => {
           expect(row.decision).toMatch(/^pdfluent-internal#\d+$/);
         });
       }
+
+      for (const row of image.ownerAccepted ?? []) {
+        it(`"${row.control}" carries a traceable owner decision`, () => {
+          expect(ownerAcceptanceGaps(row)).toEqual([]);
+        });
+      }
     });
   }
 
-  it('keeps every blocked render out of docs/media/', () => {
+  it('keeps every unresolved render out of docs/media/', () => {
     // The rule with teeth. A derivative in docs/media/ is a README hero and a
     // site hero: publishing one from an image that promises a control the app
     // does not have is the failure this whole file exists to stop, one step
-    // further along than a store upload.
+    // further along than a store upload. An open row bars it, and so does an
+    // owner acceptance that cannot be traced back to a decision.
     const media = existsSync(resolve(root, 'docs/media')) ? readdirSync(resolve(root, 'docs/media')) : [];
     const published = new Set(
       media.map((name) => /^(store-[1-6])-/.exec(name)?.[1]).filter((id): id is string => Boolean(id)),
     );
     const wrong = manifest.images
-      .filter((image) => image.blocked.length > 0 && published.has(image.id))
+      .filter((image) => keepsRenderUnpublished(image) && published.has(image.id))
       .map((image) => image.id);
     expect(wrong).toEqual([]);
   });

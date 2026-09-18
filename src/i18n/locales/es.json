@@ -744,7 +744,7 @@
   "textEdit": {
     "cancel": "Cancelar",
     "save": "Guardar",
-    "betaLimitHelp": "Nota: En esta versión beta, la edición de texto se limita a reemplazar palabras existentes con texto de igual o más corta longitud para evitar cambios de diseño.",
+    "betaLimitHelp": "Nota: La edición de texto se limita a reemplazar palabras existentes con texto de igual o más corta longitud para evitar cambios de diseño.",
     "saveChanges": "Guardar cambios",
     "cancelEditing": "Cancelar edición",
     "bold": "Negrita",

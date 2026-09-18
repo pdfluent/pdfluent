@@ -744,7 +744,7 @@
   "textEdit": {
     "cancel": "Batal",
     "save": "Simpan",
-    "betaLimitHelp": "Catatan: Dalam versi beta ini, pengeditan teks terbatas pada penggantian kata yang ada dengan teks yang sama panjang atau lebih pendek untuk mencegah pergeseran tata letak.",
+    "betaLimitHelp": "Catatan: Pengeditan teks terbatas pada penggantian kata yang ada dengan teks yang sama panjang atau lebih pendek untuk mencegah pergeseran tata letak.",
     "saveChanges": "Simpan perubahan",
     "cancelEditing": "Batal mengedit",
     "bold": "Tebal",

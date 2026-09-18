@@ -744,7 +744,7 @@
   "textEdit": {
     "cancel": "Annulla",
     "save": "Salva",
-    "betaLimitHelp": "Nota: In questa versione beta, la modifica del testo è limitata alla sostituzione di parole esistenti con testo di lunghezza uguale o inferiore per evitare cambiamenti di layout.",
+    "betaLimitHelp": "Nota: La modifica del testo è limitata alla sostituzione di parole esistenti con testo di lunghezza uguale o inferiore per evitare cambiamenti di layout.",
     "saveChanges": "Salva modifiche",
     "cancelEditing": "Annulla modifica",
     "bold": "Grassetto",

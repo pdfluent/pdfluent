@@ -744,7 +744,7 @@
   "textEdit": {
     "cancel": "Annuller",
     "save": "Gem",
-    "betaLimitHelp": "Bemærk: I denne betaversion er tekstredigering begrænset til at erstatte eksisterende ord med tekst af samme eller kortere længde for at forhindre layoutforskydninger.",
+    "betaLimitHelp": "Bemærk: Tekstredigering er begrænset til at erstatte eksisterende ord med tekst af samme eller kortere længde for at forhindre layoutforskydninger.",
     "saveChanges": "Gem ændringer",
     "cancelEditing": "Annuller redigering",
     "bold": "Fed",

@@ -744,7 +744,7 @@
   "textEdit": {
     "cancel": "Mégse",
     "save": "Mentés",
-    "betaLimitHelp": "Megjegyzés: Ebben a bétaverzióban a szöveg szerkesztése csak meglévő szavak egyenlő vagy rövidebb szöveggel való helyettesítésére korlátozódik az elrendezési eltolódások megelőzése érdekében.",
+    "betaLimitHelp": "Megjegyzés: A szöveg szerkesztése csak meglévő szavak egyenlő vagy rövidebb szöveggel való helyettesítésére korlátozódik az elrendezési eltolódások megelőzése érdekében.",
     "saveChanges": "Változtatások mentése",
     "cancelEditing": "Szerkesztés megszakítása",
     "bold": "Félkövér",

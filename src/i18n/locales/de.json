@@ -744,7 +744,7 @@
   "textEdit": {
     "cancel": "Abbrechen",
     "save": "Speichern",
-    "betaLimitHelp": "Hinweis: In dieser Beta-Version ist die Textbearbeitung auf das Ersetzen vorhandener Wörter mit gleichem oder kürzerem Text beschränkt, um Layout-Verschiebungen zu vermeiden.",
+    "betaLimitHelp": "Hinweis: Die Textbearbeitung ist auf das Ersetzen vorhandener Wörter mit gleichem oder kürzerem Text beschränkt, um Layout-Verschiebungen zu vermeiden.",
     "saveChanges": "Änderungen speichern",
     "cancelEditing": "Bearbeitung abbrechen",
     "bold": "Fett",

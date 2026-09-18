@@ -744,7 +744,7 @@
   "textEdit": {
     "cancel": "İptal",
     "save": "Kaydet",
-    "betaLimitHelp": "Not: Bu beta sürümünde metin düzenleme, düzen kaymalarını önlemek için mevcut kelimeleri eşit veya daha kısa metinle değiştirmeyle sınırlıdır.",
+    "betaLimitHelp": "Not: Metin düzenleme, düzen kaymalarını önlemek için mevcut kelimeleri eşit veya daha kısa metinle değiştirmeyle sınırlıdır.",
     "saveChanges": "Değişiklikleri kaydet",
     "cancelEditing": "Düzenlemeyi iptal et",
     "bold": "Kalın",

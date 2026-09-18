@@ -767,7 +767,7 @@
   "textEdit": {
     "cancel": "Annuleren",
     "save": "Opslaan",
-    "betaLimitHelp": "Let op: In deze bèta-versie is tekstbewerking beperkt tot het vervangen van bestaande woorden van gelijke of kortere lengte om lay-outverschuivingen te voorkomen.",
+    "betaLimitHelp": "Let op: Tekstbewerking is beperkt tot het vervangen van bestaande woorden van gelijke of kortere lengte om lay-outverschuivingen te voorkomen.",
     "saveChanges": "Wijzigingen opslaan",
     "cancelEditing": "Bewerking annuleren",
     "bold": "Vet",

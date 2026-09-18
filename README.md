@@ -12,7 +12,7 @@ Most PDF editors either cost money every month or run your documents through som
 
 ## Status
 
-Public beta on macOS and Windows. Complete for the non-XFA feature set: viewing, AcroForm filling (text, checkbox, radio, combo/list, comb), annotations, page management, merge/split, digital signatures, conversions, and OCR. XFA documents can be viewed and converted or flattened to a standard PDF. Dynamic XFA interactive fill is still experimental and not part of this release.
+Available on macOS and Windows. Complete for the non-XFA feature set: viewing, AcroForm filling (text, checkbox, radio, combo/list, comb), annotations, page management, merge/split, digital signatures, conversions, and OCR. XFA documents can be viewed and converted or flattened to a standard PDF. Dynamic XFA interactive fill is still experimental and not part of this release.
 
 ## Features
 

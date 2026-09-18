@@ -1998,7 +1998,7 @@
       "license": "AGPL-3.0-only OR LicenseRef-PDFluent-Commercial",
       "repository": "https://github.com/pdfluent/pdfluent-sdk",
       "homepage": "https://pdfluent.com",
-      "licenseFilePath": "git/checkouts/engine-e95b3c6e45dc1908/51f6f1b/crates/formcalc-interpreter/LICENSE",
+      "licenseFilePath": "git/checkouts/engine-e95b3c6e45dc1908/4e15226/crates/formcalc-interpreter/LICENSE",
       "licenseStatus": "known",
       "policyStatus": "internal",
       "policyReason": null
@@ -4364,7 +4364,7 @@
       "license": "AGPL-3.0-only OR LicenseRef-PDFluent-Commercial",
       "repository": "https://pdfluent.com/source",
       "homepage": "https://pdfluent.com",
-      "licenseFilePath": "git/checkouts/engine-e95b3c6e45dc1908/51f6f1b/crates/pdf-annot/LICENSE",
+      "licenseFilePath": "git/checkouts/engine-e95b3c6e45dc1908/4e15226/crates/pdf-annot/LICENSE",
       "licenseStatus": "known",
       "policyStatus": "internal",
       "policyReason": null
@@ -4377,7 +4377,7 @@
       "license": "AGPL-3.0-only OR LicenseRef-PDFluent-Commercial",
       "repository": "https://pdfluent.com/source",
       "homepage": "https://pdfluent.com",
-      "licenseFilePath": "git/checkouts/engine-e95b3c6e45dc1908/51f6f1b/crates/pdf-compliance/LICENSE",
+      "licenseFilePath": "git/checkouts/engine-e95b3c6e45dc1908/4e15226/crates/pdf-compliance/LICENSE",
       "licenseStatus": "known",
       "policyStatus": "internal",
       "policyReason": null
@@ -4390,7 +4390,7 @@
       "license": "AGPL-3.0-only OR LicenseRef-PDFluent-Commercial",
       "repository": "https://github.com/pdfluent/pdfluent-sdk",
       "homepage": "https://pdfluent.com",
-      "licenseFilePath": "git/checkouts/engine-e95b3c6e45dc1908/51f6f1b/crates/pdf-docx/LICENSE",
+      "licenseFilePath": "git/checkouts/engine-e95b3c6e45dc1908/4e15226/crates/pdf-docx/LICENSE",
       "licenseStatus": "known",
       "policyStatus": "internal",
       "policyReason": null
@@ -4403,7 +4403,7 @@
       "license": "AGPL-3.0-only OR LicenseRef-PDFluent-Commercial",
       "repository": "https://pdfluent.com/source",
       "homepage": "https://pdfluent.com",
-      "licenseFilePath": "git/checkouts/engine-e95b3c6e45dc1908/51f6f1b/crates/pdf-engine/LICENSE",
+      "licenseFilePath": "git/checkouts/engine-e95b3c6e45dc1908/4e15226/crates/pdf-engine/LICENSE",
       "licenseStatus": "known",
       "policyStatus": "internal",
       "policyReason": null
@@ -4411,7 +4411,7 @@
     {
       "source": "cargo",
       "name": "pdf-font",
-      "version": "1.0.0-beta.5",
+      "version": "1.0.0-beta.6",
       "direct": false,
       "license": "Apache-2.0 OR MIT",
       "repository": "https://pdfluent.com/source",
@@ -4424,7 +4424,7 @@
     {
       "source": "cargo",
       "name": "pdf-interpret",
-      "version": "0.5.8",
+      "version": "0.5.9",
       "direct": false,
       "license": "Apache-2.0 OR MIT",
       "repository": "https://pdfluent.com/source",
@@ -4442,7 +4442,7 @@
       "license": "AGPL-3.0-only OR LicenseRef-PDFluent-Commercial",
       "repository": "https://github.com/pdfluent/pdfluent-sdk",
       "homepage": "",
-      "licenseFilePath": "git/checkouts/engine-e95b3c6e45dc1908/51f6f1b/crates/pdf-invoice/LICENSE",
+      "licenseFilePath": "git/checkouts/engine-e95b3c6e45dc1908/4e15226/crates/pdf-invoice/LICENSE",
       "licenseStatus": "known",
       "policyStatus": "internal",
       "policyReason": null
@@ -4455,7 +4455,7 @@
       "license": "AGPL-3.0-only OR LicenseRef-PDFluent-Commercial",
       "repository": "https://github.com/pdfluent/pdfluent-sdk",
       "homepage": "https://pdfluent.com",
-      "licenseFilePath": "git/checkouts/engine-e95b3c6e45dc1908/51f6f1b/crates/pdf-manip/LICENSE",
+      "licenseFilePath": "git/checkouts/engine-e95b3c6e45dc1908/4e15226/crates/pdf-manip/LICENSE",
       "licenseStatus": "known",
       "policyStatus": "internal",
       "policyReason": null
@@ -4468,7 +4468,7 @@
       "license": "AGPL-3.0-only OR LicenseRef-PDFluent-Commercial",
       "repository": "https://github.com/pdfluent/pdfluent-sdk",
       "homepage": "",
-      "licenseFilePath": "git/checkouts/engine-e95b3c6e45dc1908/51f6f1b/crates/pdf-pptx/LICENSE",
+      "licenseFilePath": "git/checkouts/engine-e95b3c6e45dc1908/4e15226/crates/pdf-pptx/LICENSE",
       "licenseStatus": "known",
       "policyStatus": "internal",
       "policyReason": null
@@ -4481,7 +4481,7 @@
       "license": "AGPL-3.0-only OR LicenseRef-PDFluent-Commercial",
       "repository": "https://github.com/pdfluent/pdfluent-sdk",
       "homepage": "https://pdfluent.com",
-      "licenseFilePath": "git/checkouts/engine-e95b3c6e45dc1908/51f6f1b/crates/pdf-redact/LICENSE",
+      "licenseFilePath": "git/checkouts/engine-e95b3c6e45dc1908/4e15226/crates/pdf-redact/LICENSE",
       "licenseStatus": "known",
       "policyStatus": "internal",
       "policyReason": null
@@ -4507,7 +4507,7 @@
       "license": "AGPL-3.0-only OR LicenseRef-PDFluent-Commercial",
       "repository": "https://github.com/pdfluent/pdfluent-sdk",
       "homepage": "https://pdfluent.com",
-      "licenseFilePath": "git/checkouts/engine-e95b3c6e45dc1908/51f6f1b/crates/pdf-standard-fonts/LICENSE",
+      "licenseFilePath": "git/checkouts/engine-e95b3c6e45dc1908/4e15226/crates/pdf-standard-fonts/LICENSE",
       "licenseStatus": "known",
       "policyStatus": "internal",
       "policyReason": null
@@ -4520,7 +4520,7 @@
       "license": "AGPL-3.0-only OR LicenseRef-PDFluent-Commercial",
       "repository": "https://github.com/pdfluent/pdfluent",
       "homepage": "",
-      "licenseFilePath": "git/checkouts/engine-e95b3c6e45dc1908/51f6f1b/crates/pdf-substitute-fonts/LICENSE",
+      "licenseFilePath": "git/checkouts/engine-e95b3c6e45dc1908/4e15226/crates/pdf-substitute-fonts/LICENSE",
       "licenseStatus": "known",
       "policyStatus": "internal",
       "policyReason": null
@@ -4528,7 +4528,7 @@
     {
       "source": "cargo",
       "name": "pdf-syntax",
-      "version": "0.5.6",
+      "version": "0.5.7",
       "direct": false,
       "license": "Apache-2.0 OR MIT",
       "repository": "https://pdfluent.com/source",
@@ -4546,7 +4546,7 @@
       "license": "AGPL-3.0-only OR LicenseRef-PDFluent-Commercial",
       "repository": "https://github.com/pdfluent/pdfluent-sdk",
       "homepage": "https://pdfluent.com",
-      "licenseFilePath": "git/checkouts/engine-e95b3c6e45dc1908/51f6f1b/crates/pdf-text-format/LICENSE",
+      "licenseFilePath": "git/checkouts/engine-e95b3c6e45dc1908/4e15226/crates/pdf-text-format/LICENSE",
       "licenseStatus": "known",
       "policyStatus": "internal",
       "policyReason": null
@@ -4559,7 +4559,7 @@
       "license": "AGPL-3.0-only OR LicenseRef-PDFluent-Commercial",
       "repository": "https://pdfluent.com/source",
       "homepage": "https://pdfluent.com",
-      "licenseFilePath": "git/checkouts/engine-e95b3c6e45dc1908/51f6f1b/crates/pdf-xfa/LICENSE",
+      "licenseFilePath": "git/checkouts/engine-e95b3c6e45dc1908/4e15226/crates/pdf-xfa/LICENSE",
       "licenseStatus": "known",
       "policyStatus": "internal",
       "policyReason": null
@@ -4572,7 +4572,7 @@
       "license": "AGPL-3.0-only OR LicenseRef-PDFluent-Commercial",
       "repository": "https://github.com/pdfluent/pdfluent-sdk",
       "homepage": "",
-      "licenseFilePath": "git/checkouts/engine-e95b3c6e45dc1908/51f6f1b/crates/pdf-xlsx/LICENSE",
+      "licenseFilePath": "git/checkouts/engine-e95b3c6e45dc1908/4e15226/crates/pdf-xlsx/LICENSE",
       "licenseStatus": "known",
       "policyStatus": "internal",
       "policyReason": null
@@ -4585,7 +4585,7 @@
       "license": "AGPL-3.0-only OR LicenseRef-PDFluent-Commercial",
       "repository": "https://github.com/pdfluent/pdfluent-sdk",
       "homepage": "https://pdfluent.com",
-      "licenseFilePath": "git/checkouts/engine-e95b3c6e45dc1908/51f6f1b/crates/pdfluent/LICENSE",
+      "licenseFilePath": "git/checkouts/engine-e95b3c6e45dc1908/4e15226/crates/pdfluent/LICENSE",
       "licenseStatus": "known",
       "policyStatus": "internal",
       "policyReason": null
@@ -4593,7 +4593,7 @@
     {
       "source": "cargo",
       "name": "pdfluent-ccitt",
-      "version": "0.2.2",
+      "version": "0.2.3",
       "direct": false,
       "license": "Apache-2.0 OR MIT",
       "repository": "https://pdfluent.com/source",
@@ -4606,7 +4606,7 @@
     {
       "source": "cargo",
       "name": "pdfluent-cff",
-      "version": "0.2.1",
+      "version": "0.2.2",
       "direct": false,
       "license": "MIT OR Apache-2.0",
       "repository": "https://pdfluent.com/source",
@@ -4624,7 +4624,7 @@
       "license": "AGPL-3.0-only OR LicenseRef-PDFluent-Commercial",
       "repository": "https://github.com/pdfluent/pdfluent-sdk",
       "homepage": "https://pdfluent.com",
-      "licenseFilePath": "git/checkouts/engine-e95b3c6e45dc1908/51f6f1b/crates/pdf-extract/LICENSE",
+      "licenseFilePath": "git/checkouts/engine-e95b3c6e45dc1908/4e15226/crates/pdf-extract/LICENSE",
       "licenseStatus": "known",
       "policyStatus": "internal",
       "policyReason": null
@@ -4637,7 +4637,7 @@
       "license": "AGPL-3.0-only OR LicenseRef-PDFluent-Commercial",
       "repository": "https://pdfluent.com/source",
       "homepage": "https://pdfluent.com",
-      "licenseFilePath": "git/checkouts/engine-e95b3c6e45dc1908/51f6f1b/crates/pdf-forms/LICENSE",
+      "licenseFilePath": "git/checkouts/engine-e95b3c6e45dc1908/4e15226/crates/pdf-forms/LICENSE",
       "licenseStatus": "known",
       "policyStatus": "internal",
       "policyReason": null
@@ -4676,7 +4676,7 @@
       "license": "MIT",
       "repository": "https://pdfluent.com/source",
       "homepage": "https://pdfluent.com",
-      "licenseFilePath": "git/checkouts/engine-e95b3c6e45dc1908/51f6f1b/crates/lopdf/LICENSE",
+      "licenseFilePath": "git/checkouts/engine-e95b3c6e45dc1908/4e15226/crates/lopdf/LICENSE",
       "licenseStatus": "known",
       "policyStatus": "allowed",
       "policyReason": null
@@ -4702,7 +4702,7 @@
       "license": "AGPL-3.0-only OR LicenseRef-PDFluent-Commercial",
       "repository": "https://pdfluent.com/source",
       "homepage": "https://pdfluent.com",
-      "licenseFilePath": "git/checkouts/engine-e95b3c6e45dc1908/51f6f1b/crates/pdf-sign/LICENSE",
+      "licenseFilePath": "git/checkouts/engine-e95b3c6e45dc1908/4e15226/crates/pdf-sign/LICENSE",
       "licenseStatus": "known",
       "policyStatus": "internal",
       "policyReason": null
@@ -9018,7 +9018,7 @@
       "license": "AGPL-3.0-only OR LicenseRef-PDFluent-Commercial",
       "repository": "https://github.com/pdfluent/pdfluent-sdk",
       "homepage": "https://pdfluent.com",
-      "licenseFilePath": "git/checkouts/engine-e95b3c6e45dc1908/51f6f1b/crates/xfa-dom-resolver/LICENSE",
+      "licenseFilePath": "git/checkouts/engine-e95b3c6e45dc1908/4e15226/crates/xfa-dom-resolver/LICENSE",
       "licenseStatus": "known",
       "policyStatus": "internal",
       "policyReason": null
@@ -9031,7 +9031,7 @@
       "license": "AGPL-3.0-only OR LicenseRef-PDFluent-Commercial",
       "repository": "https://pdfluent.com/source",
       "homepage": "https://pdfluent.com",
-      "licenseFilePath": "git/checkouts/engine-e95b3c6e45dc1908/51f6f1b/crates/xfa-js-sandboxed/LICENSE",
+      "licenseFilePath": "git/checkouts/engine-e95b3c6e45dc1908/4e15226/crates/xfa-js-sandboxed/LICENSE",
       "licenseStatus": "known",
       "policyStatus": "internal",
       "policyReason": null
@@ -9044,7 +9044,7 @@
       "license": "AGPL-3.0-only OR LicenseRef-PDFluent-Commercial",
       "repository": "https://github.com/pdfluent/pdfluent-sdk",
       "homepage": "https://pdfluent.com",
-      "licenseFilePath": "git/checkouts/engine-e95b3c6e45dc1908/51f6f1b/crates/xfa-json/LICENSE",
+      "licenseFilePath": "git/checkouts/engine-e95b3c6e45dc1908/4e15226/crates/xfa-json/LICENSE",
       "licenseStatus": "known",
       "policyStatus": "internal",
       "policyReason": null
@@ -9057,7 +9057,7 @@
       "license": "AGPL-3.0-only OR LicenseRef-PDFluent-Commercial",
       "repository": "https://github.com/pdfluent/pdfluent-sdk",
       "homepage": "https://pdfluent.com",
-      "licenseFilePath": "git/checkouts/engine-e95b3c6e45dc1908/51f6f1b/crates/xfa-layout-engine/LICENSE",
+      "licenseFilePath": "git/checkouts/engine-e95b3c6e45dc1908/4e15226/crates/xfa-layout-engine/LICENSE",
       "licenseStatus": "known",
       "policyStatus": "internal",
       "policyReason": null
@@ -9351,7 +9351,7 @@
     {
       "source": "internal",
       "name": "pdfluent-desktop",
-      "version": "1.0.0-beta.21",
+      "version": "1.0.0",
       "direct": false,
       "license": "LicenseRef-PDFluent-Proprietary",
       "repository": "https://github.com/pdfluent/pdfluent",

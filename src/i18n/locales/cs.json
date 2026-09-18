@@ -744,7 +744,7 @@
   "textEdit": {
     "cancel": "Zrušit",
     "save": "Uložit",
-    "betaLimitHelp": "Poznámka: V této beta verzi je úprava textu omezena na nahrazení stávajících slov stejně dlouhým nebo kratším textem, aby nedocházelo k posunům rozvržení.",
+    "betaLimitHelp": "Poznámka: Úprava textu je omezena na nahrazení stávajících slov stejně dlouhým nebo kratším textem, aby nedocházelo k posunům rozvržení.",
     "saveChanges": "Uložit změny",
     "cancelEditing": "Zrušit úpravy",
     "bold": "Tučné",

@@ -20,18 +20,26 @@
     "changing the image and building the control. Nothing is uploaded, and no",
     "derivative of that image enters docs/media/, while its list is non-empty.",
     "",
+    "`ownerAccepted` is the third answer: a control the app does not have that the",
+    "owner has looked at and decided to ship in the render anyway. It carries the",
+    "day, who decided and the reason, and the test rejects an entry short of any",
+    "of the three -- otherwise moving a row out of `blocked` would be a way to",
+    "make the check stop complaining rather than a decision anyone made.",
+    "",
     "A claim does not stop being a claim by moving out of the interface and into",
     "the sample document on the same picture. Body copy that reads as a feature",
     "list is blocked on the same terms as a button.",
     "",
-    "Sources checked on 2026-09-16 against the shell at ba0bfb2: the revised six",
-    "Mac App Store renders and the revised six Microsoft Store 1920x1080 renders,",
-    "which carry the same six designs at a different aspect ratio. Images 1, 2, 3",
-    "and 4 were redrawn in this round; 5 and 6 keep their design.",
+    "Sources checked on 2026-09-16, second design round, against the shell at",
+    "d3d0cd69: the six Mac App Store renders and the six Microsoft Store 1920x1080",
+    "renders, which carry the same six designs at a different aspect ratio. Images",
+    "1, 2, 3 and 4 were redrawn in the first round of the day; 2 and 3 again in the",
+    "second, which is what this revision records. Renders 5 and 6 keep their",
+    "original design.",
     "Image ids are prefixed rather than bare digits on purpose. The register's proof walker probes test files for a quoted literal beside the token 'key', so a bare '1' in this file's test would have been counted as proof for the 1-8 mode shortcut -- a test credited with something it does not exercise, which is the exact failure the register exists to catch."
   ],
-  "checkedOn": "2026-09-16",
-  "registerCommit": "ba0bfb2",
+  "checkedOn": "2026-09-16 (round 2)",
+  "registerCommit": "d3d0cd69",
   "images": [
     {
       "id": "store-1",
@@ -293,15 +301,13 @@
         {
           "control": "Right-hand floating rail — thumbnails toggle, previous page, page counter, next page, fit to view",
           "whyNoAffordance": "none of the five buttons carries a test id, so the register does not walk them; they are the shipped .rightrail block in src/viewer/v3/EditorV3Shell.tsx"
+        },
+        {
+          "control": "Sample document body: 'Convert PDFs to Word, Excel, PowerPoint, PNG or JPG without uploading your files' and an Available Formats list of PDF -> Word, Excel, PowerPoint, PNG, JPG",
+          "whyNoAffordance": "document body, not a control, so the register does not walk it; it is here because body copy that reads as a feature list is a claim like any other. The five named formats are five of the seven in ExportFormat in src/viewer/components/ExportDialog.tsx (pdf, compressed_pdf, png, jpeg, docx, xlsx, pptx), which tests/viewer-export-dialog.test.ts pins string by string. Nothing outside that set is named: the round-1 copy's 'plain text' and its 'PDF -> Text' row, the one claim the app could not meet, are both gone"
         }
       ],
-      "blocked": [
-        {
-          "control": "Sample document copy: 'Convert PDFs to Word, PNG, JPG or plain text without uploading your files' and an Available Formats list ending in 'PDF -> Text'",
-          "shipped": "there is no text export: ExportFormat in src/viewer/components/ExportDialog.tsx is pdf, compressed_pdf, png, jpeg, docx, xlsx, pptx, and the Convert panel offers no Text row. The claim moved out of the panel into the document body, where on a store image it still reads as a list of what the app converts to",
-          "decision": "pdfluent-internal#457"
-        }
-      ]
+      "blocked": []
     },
     {
       "id": "store-3",
@@ -443,20 +449,17 @@
         {
           "control": "Right-hand floating rail — thumbnails toggle, previous page, page counter, next page, fit to view",
           "whyNoAffordance": "none of the five buttons carries a test id, so the register does not walk them; they are the shipped .rightrail block in src/viewer/v3/EditorV3Shell.tsx"
-        }
-      ],
-      "blocked": [
-        {
-          "control": "Marketing tile 'Draw or Type Signatures' in the left-hand feature list",
-          "shipped": "signing is certificate-only: the panel takes a PKCS#12 file, a password and a reason and calls sign_pdf. Nothing in the app draws or types a signature — the register lists tile:toolbar.initials as NO ACTION, and the overlay signature and initials controls sit behind LOCAL_OVERLAY_CONTROLS_ENABLED, which is false in src/viewer/v3/EditorV3Shell.tsx",
-          "decision": "pdfluent-internal#457"
         },
         {
-          "control": "Sample document copy 'Signature Methods: Draw signature, Type signature, Upload signature image, Save for future use'",
-          "shipped": "none of the four exists. On a store image a four-item list under a 'Signature Methods' heading reads as a feature list, which is the same promise the tile above makes and the same class of claim as the 'Invite to sign' button that shipped in the previous set",
-          "decision": "pdfluent-internal#457"
+          "control": "Marketing tile 'Verify Signatures' in the left-hand feature list",
+          "affordance": "tile:toolbar.signature"
+        },
+        {
+          "control": "Panel subtitle 'Sign with your certificate and verify signatures - completely offline.' and the sample document's How it works list: 'Sign with your own certificate', 'Your files never leave your computer'",
+          "whyNoAffordance": "headline and document body, not controls. Both halves of the subtitle are what the panel does and nothing more: signing is the certificate route behind button:sign-with-certificate and verification is verify_signatures, which panel:esign resolves. The round-1 copy promised drawn, typed, uploaded and saved signatures, in a tile and in a four-item 'Signature Methods' list; neither appears here, and nothing replaced them with another method"
         }
-      ]
+      ],
+      "blocked": []
     },
     {
       "id": "store-4",
@@ -700,11 +703,14 @@
           "affordance": "rail-tool:more"
         }
       ],
-      "blocked": [
+      "blocked": [],
+      "ownerAccepted": [
         {
           "control": "The Sign tab is drawn in its active state with no Sign panel open",
           "shipped": "a tab carries the active style only while its panel is the open one, so the app cannot be in the state this image shows",
-          "decision": "pdfluent-internal#457"
+          "date": "2026-09-16",
+          "decidedBy": "owner",
+          "reason": "the render is otherwise faithful and the tab style is the only thing wrong with it; redrawing it buys a highlight nobody reads as a promise, where the rows this check exists for named controls that do not exist. Accepted for both store listings as it stands, and explicitly not something to build: there is to be no state in which a mode tab is active with its panel closed"
         }
       ]
     }

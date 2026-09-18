@@ -350,8 +350,8 @@ Generator: `scripts/generate-third-party.mjs`
 | pdf-compliance | 1.0.0 | AGPL-3.0-only OR LicenseRef-PDFluent-Commercial | internal | no |
 | pdf-docx | 1.0.0 | AGPL-3.0-only OR LicenseRef-PDFluent-Commercial | internal | no |
 | pdf-engine | 1.0.0 | AGPL-3.0-only OR LicenseRef-PDFluent-Commercial | internal | no |
-| pdf-font | 1.0.0-beta.5 | Apache-2.0 OR MIT | allowed | no |
-| pdf-interpret | 0.5.8 | Apache-2.0 OR MIT | allowed | no |
+| pdf-font | 1.0.0-beta.6 | Apache-2.0 OR MIT | allowed | no |
+| pdf-interpret | 0.5.9 | Apache-2.0 OR MIT | allowed | no |
 | pdf-invoice | 1.0.0 | AGPL-3.0-only OR LicenseRef-PDFluent-Commercial | internal | no |
 | pdf-manip | 1.0.0 | AGPL-3.0-only OR LicenseRef-PDFluent-Commercial | internal | no |
 | pdf-pptx | 1.0.0 | AGPL-3.0-only OR LicenseRef-PDFluent-Commercial | internal | no |
@@ -359,13 +359,13 @@ Generator: `scripts/generate-third-party.mjs`
 | pdf-render | 1.0.0 | Apache-2.0 OR MIT | allowed | no |
 | pdf-standard-fonts | 1.0.0 | AGPL-3.0-only OR LicenseRef-PDFluent-Commercial | internal | no |
 | pdf-substitute-fonts | 1.0.0 | AGPL-3.0-only OR LicenseRef-PDFluent-Commercial | internal | no |
-| pdf-syntax | 0.5.6 | Apache-2.0 OR MIT | allowed | no |
+| pdf-syntax | 0.5.7 | Apache-2.0 OR MIT | allowed | no |
 | pdf-text-format | 1.0.0 | AGPL-3.0-only OR LicenseRef-PDFluent-Commercial | internal | no |
 | pdf-xfa | 1.0.0 | AGPL-3.0-only OR LicenseRef-PDFluent-Commercial | internal | no |
 | pdf-xlsx | 1.0.0 | AGPL-3.0-only OR LicenseRef-PDFluent-Commercial | internal | no |
 | pdfluent | 1.0.0 | AGPL-3.0-only OR LicenseRef-PDFluent-Commercial | internal | no |
-| pdfluent-ccitt | 0.2.2 | Apache-2.0 OR MIT | allowed | no |
-| pdfluent-cff | 0.2.1 | MIT OR Apache-2.0 | allowed | no |
+| pdfluent-ccitt | 0.2.3 | Apache-2.0 OR MIT | allowed | no |
+| pdfluent-cff | 0.2.2 | MIT OR Apache-2.0 | allowed | no |
 | pdfluent-extract | 1.0.0 | AGPL-3.0-only OR LicenseRef-PDFluent-Commercial | internal | no |
 | pdfluent-forms | 1.0.0 | AGPL-3.0-only OR LicenseRef-PDFluent-Commercial | internal | no |
 | pdfluent-jbig2 | 0.3.0 | Apache-2.0 OR MIT | allowed | no |
@@ -735,7 +735,7 @@ Generator: `scripts/generate-third-party.mjs`
 
 | Name | Version | License | Policy | Direct |
 |---|---:|---|---|---:|
-| pdfluent-desktop | 1.0.0-beta.21 | LicenseRef-PDFluent-Proprietary | internal | no |
+| pdfluent-desktop | 1.0.0 | LicenseRef-PDFluent-Proprietary | internal | no |
 
 ## npm
 

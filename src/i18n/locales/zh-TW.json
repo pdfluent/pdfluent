@@ -744,7 +744,7 @@
   "textEdit": {
     "cancel": "取消",
     "save": "儲存",
-    "betaLimitHelp": "注意：在此測試版中，文字編輯僅限於用相同或更短的文字取代現有單字，以防止版面偏移。",
+    "betaLimitHelp": "注意：文字編輯僅限於用相同或更短的文字取代現有單字，以防止版面偏移。",
     "saveChanges": "儲存變更",
     "cancelEditing": "取消編輯",
     "bold": "粗體",

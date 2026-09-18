@@ -744,7 +744,7 @@
   "textEdit": {
     "cancel": "Hủy",
     "save": "Lưu",
-    "betaLimitHelp": "Lưu ý: Trong phiên bản beta này, chỉnh sửa văn bản giới hạn ở việc thay thế các từ hiện có bằng văn bản bằng hoặc ngắn hơn để tránh thay đổi bố cục.",
+    "betaLimitHelp": "Lưu ý: Chỉnh sửa văn bản giới hạn ở việc thay thế các từ hiện có bằng văn bản bằng hoặc ngắn hơn để tránh thay đổi bố cục.",
     "saveChanges": "Lưu thay đổi",
     "cancelEditing": "Hủy chỉnh sửa",
     "bold": "Đậm",

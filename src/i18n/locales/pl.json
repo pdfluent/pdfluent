@@ -744,7 +744,7 @@
   "textEdit": {
     "cancel": "Anuluj",
     "save": "Zapisz",
-    "betaLimitHelp": "Uwaga: W tej wersji beta edycja tekstu jest ograniczona do zastępowania istniejących słów równym lub krótszym tekstem, aby zapobiec przesunięciom układu.",
+    "betaLimitHelp": "Uwaga: Edycja tekstu jest ograniczona do zastępowania istniejących słów równym lub krótszym tekstem, aby zapobiec przesunięciom układu.",
     "saveChanges": "Zapisz zmiany",
     "cancelEditing": "Anuluj edycję",
     "bold": "Pogrubienie",

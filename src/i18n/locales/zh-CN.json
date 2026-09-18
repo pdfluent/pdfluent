@@ -744,7 +744,7 @@
   "textEdit": {
     "cancel": "取消",
     "save": "保存",
-    "betaLimitHelp": "注意：在此测试版中，文本编辑仅限于用相同或更短的文本替换现有单词，以防止布局偏移。",
+    "betaLimitHelp": "注意：文本编辑仅限于用相同或更短的文本替换现有单词，以防止布局偏移。",
     "saveChanges": "保存更改",
     "cancelEditing": "取消编辑",
     "bold": "粗体",

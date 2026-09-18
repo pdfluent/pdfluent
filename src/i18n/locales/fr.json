@@ -744,7 +744,7 @@
   "textEdit": {
     "cancel": "Annuler",
     "save": "Enregistrer",
-    "betaLimitHelp": "Remarque: Dans cette version bêta, la modification du texte est limitée au remplacement de mots existants par un texte d'égale ou de plus courte longueur pour éviter les décalages de mise en page.",
+    "betaLimitHelp": "Remarque: La modification du texte est limitée au remplacement de mots existants par un texte d'égale ou de plus courte longueur pour éviter les décalages de mise en page.",
     "saveChanges": "Enregistrer les modifications",
     "cancelEditing": "Annuler la modification",
     "bold": "Gras",
