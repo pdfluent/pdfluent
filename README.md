@@ -2,7 +2,7 @@
 
 PDFluent is a free, source-available PDF editor for macOS and Windows. It edits, converts, redacts, and signs PDFs entirely on your device, with no account, no upload, and no subscription.
 
-[**Download for macOS and Windows**](https://pdfluent.com/download) · [Source-available license](LICENSE.md) · [PDFluent SDK](#built-on-the-pdfluent-sdk)
+[**Download for macOS and Windows**](https://pdfluent.com/download) · [Microsoft Store](https://apps.microsoft.com/detail/xpdbxj6xrlfqk2) · [Source-available license](LICENSE.md) · [PDFluent SDK](#built-on-the-pdfluent-sdk)
 
 ![The PDFluent all-tools panel: compress, organize, split, merge, redact, protect, watermark and export, all running locally](docs/media/store-5-all-tools-1440x900.png)
 
@@ -51,7 +51,7 @@ The editor's PDF engine, the [PDFluent SDK](https://pdfluent.com/sdk), is a sepa
 | .NET | [`pdfluent`](https://www.nuget.org/packages/pdfluent) on NuGet | `dotnet add package pdfluent` |
 | Java | [`com.pdfluent:pdfluent`](https://central.sonatype.com/artifact/com.pdfluent/pdfluent) on Maven Central | see Maven Central for the dependency snippet |
 
-Full SDK documentation: [pdfluent.com/docs](https://pdfluent.com/docs). SDK licensing and pricing: [pdfluent.com/sdk/pricing](https://pdfluent.com/sdk/pricing).
+Full SDK documentation: [pdfluent.com/docs](https://pdfluent.com/docs). SDK licensing and pricing: [pdfluent.com/sdk/pricing](https://pdfluent.com/sdk/pricing). SDK source: [github.com/pdfluent/pdfluent-sdk](https://github.com/pdfluent/pdfluent-sdk).
 
 The editor itself doesn't need any of this. It ships with the engine built in and never checks a license.
 
