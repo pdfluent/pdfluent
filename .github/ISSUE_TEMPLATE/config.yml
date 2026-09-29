@@ -1,8 +1,8 @@
 blank_issues_enabled: true
 contact_links:
-  - name: Community Discord
-    url: https://discord.gg/pdfluent
-    about: Ask product questions, report non-critical issues, and join discussions.
-  - name: GitHub Discussions
+  - name: Question about the editor
     url: https://github.com/pdfluent/pdfluent/discussions
-    about: Use Discussions for ideas, support questions, and roadmap feedback.
+    about: For questions about the desktop editor, use the editor Discussions space in pdfluent/pdfluent.
+  - name: Question about the SDK
+    url: https://github.com/pdfluent/pdfluent-sdk/discussions/categories/q-a
+    about: Ask SDK usage questions in the Q&A category of pdfluent/pdfluent-sdk Discussions.
