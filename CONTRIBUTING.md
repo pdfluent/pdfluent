@@ -88,7 +88,6 @@ Open an issue on GitHub with:
 ## Community channels
 
 - GitHub Discussions: https://github.com/pdfluent/pdfluent/discussions
-- Discord: https://discord.gg/pdfluent
 
 If you are new to the codebase, start with issues labeled **good first issue**.
 
