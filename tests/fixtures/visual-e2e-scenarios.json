@@ -28,7 +28,7 @@
       "floating-page-indicator text matches '1 / 3'"
     ],
     "failure_meaning": "Document open flow is broken — the viewer does not transition from welcome to document state",
-    "notes_for_codex": "The loadDocument() hook accepts a path string or an ArrayBuffer. Pass the path string. The hook is only available in dev mode (Vite). In preview mode, use the file input flow instead via [data-testid='welcome-open-btn']."
+    "notes": "The loadDocument() hook accepts a path string or an ArrayBuffer. Pass the path string. The hook is only available in dev mode (Vite). In preview mode, use the file input flow instead via [data-testid='welcome-open-btn']."
   },
   {
     "id": "VE-002",
@@ -56,7 +56,7 @@
       "No error message in page-view area"
     ],
     "failure_meaning": "browser-test render engine failed — PdfDoc.renderPage() returned an error or empty bytes. Check browser console for browser-test render errors.",
-    "notes_for_codex": "Use page.locator('[data-testid=\"rendered-page\"]').evaluate(el => el.naturalWidth) to assert the image loaded. A src of 'blob:' with naturalWidth=0 means the blob is empty (render failure)."
+    "notes": "Use page.locator('[data-testid=\"rendered-page\"]').evaluate(el => el.naturalWidth) to assert the image loaded. A src of 'blob:' with naturalWidth=0 means the blob is empty (render failure)."
   },
   {
     "id": "VE-003",
@@ -89,7 +89,7 @@
       "rendered-page src changes after navigation (different blob URL)"
     ],
     "failure_meaning": "Page navigation is broken — either the indicator does not update or the engine fails to render the new page",
-    "notes_for_codex": "Use page.locator('[data-testid=\"floating-page-indicator\"]').textContent() to read the current page label. For the nav-go-to-page-input, use fill('1') then keyboard.press('Enter')."
+    "notes": "Use page.locator('[data-testid=\"floating-page-indicator\"]').textContent() to read the current page label. For the nav-go-to-page-input, use fill('1') then keyboard.press('Enter')."
   },
   {
     "id": "VE-004",
@@ -124,7 +124,7 @@
       "Zoom in/out buttons are NOT disabled (no disabled attribute)"
     ],
     "failure_meaning": "Zoom controls are broken or incorrectly gated. If disabled: wiredTools configuration regressed.",
-    "notes_for_codex": "Zoom buttons in ModeToolbar do not have data-testid — locate them by title attribute: page.getByTitle('Zoom in'). The ModeToolbar ToolButton sets title to t(tool.label) when wired or t(tool.label) + ' (not yet available)' when not wired. Assert no '(not yet available)' suffix."
+    "notes": "Zoom buttons in ModeToolbar do not have data-testid — locate them by title attribute: page.getByTitle('Zoom in'). The ModeToolbar ToolButton sets title to t(tool.label) when wired or t(tool.label) + ' (not yet available)' when not wired. Assert no '(not yet available)' suffix."
   },
   {
     "id": "VE-005",
@@ -155,7 +155,7 @@
       "At least one search-result-item is in DOM"
     ],
     "failure_meaning": "Text extraction (PdfDoc.text() or PdfDoc.getTextPositions()) is broken, or the search panel does not open",
-    "notes_for_codex": "The Search text toolbar button opens the left-rail search panel (not the command palette). The command palette (search-btn in TopBar / Meta+K) is for commands, not in-document text search. The search is client-side over extracted text positions."
+    "notes": "The Search text toolbar button opens the left-rail search panel (not the command palette). The command palette (search-btn in TopBar / Meta+K) is for commands, not in-document text search. The search is client-side over extracted text positions."
   },
   {
     "id": "VE-006",
@@ -182,7 +182,7 @@
       "text-context-bar appears after drag-select"
     ],
     "failure_meaning": "Text layer extraction or rendering is broken — PdfDoc.getTextPositions() returned empty or the TextInteractionOverlay is not mounted",
-    "notes_for_codex": "Text spans are positioned as transparent overlays over the rendered-page img. The TextInteractionOverlay mounts only when textSpans (from useSearch hook) are available. If sample-text.pdf has no extractable text, this test cannot pass. Verify the fixture has real selectable text."
+    "notes": "Text spans are positioned as transparent overlays over the rendered-page img. The TextInteractionOverlay mounts only when textSpans (from useSearch hook) are available. If sample-text.pdf has no extractable text, this test cannot pass. Verify the fixture has real selectable text."
   },
   {
     "id": "VE-007",
@@ -213,7 +213,7 @@
       "comment-filter-count does not change from unsupported browser-test creation"
     ],
     "failure_meaning": "If this scenario runs as a beta-blocker, the scenario classification regressed. If the tool is visible, unsupported browser-test annotation creation is being presented as usable.",
-    "notes_for_codex": "Rust source contains PdfDoc.addHighlight behind the annotate feature, but the browser-test feature excludes annotate. Tauri command surface does not expose addHighlight."
+    "notes": "Rust source contains PdfDoc.addHighlight behind the annotate feature, but the browser-test feature excludes annotate. Tauri command surface does not expose addHighlight."
   },
   {
     "id": "VE-008",
@@ -240,7 +240,7 @@
       "comment-filter-count does not change from unsupported browser-test creation"
     ],
     "failure_meaning": "If this scenario runs as a beta-blocker, the scenario classification regressed. If add-comment-btn is visible in browser-test, unsupported sticky-note creation is being presented as usable.",
-    "notes_for_codex": "Rust source contains PdfDoc.addStickyNote behind the annotate feature, but the browser-test feature excludes annotate. Tauri command surface does not expose addStickyNote."
+    "notes": "Rust source contains PdfDoc.addStickyNote behind the annotate feature, but the browser-test feature excludes annotate. Tauri command surface does not expose addStickyNote."
   },
   {
     "id": "VE-009",
@@ -266,7 +266,7 @@
     "expected_capability_gating": "add-free-text status is apiAvailableButRuntimeMissing and there is no free text toolbar button.",
     "visual_checkpoints": [],
     "failure_meaning": "Scenario is blocked because the current browser-test harness does not expose PdfDoc.addFreeText.",
-    "notes_for_codex": "Skip this scenario until the browser-test harness exports PdfDoc.addFreeText and a free text annotation button is added to the review mode annotation toolbar with testid 'annotation-tool-freetext'."
+    "notes": "Skip this scenario until the browser-test harness exports PdfDoc.addFreeText and a free text annotation button is added to the review mode annotation toolbar with testid 'annotation-tool-freetext'."
   },
   {
     "id": "VE-010",
@@ -291,7 +291,7 @@
       "Scenario is skipped until annotation creation runtime exports exist"
     ],
     "failure_meaning": "If this scenario runs as a beta-blocker before annotation creation is exported, the scenario classification regressed.",
-    "notes_for_codex": "Clean browser PDF export remains covered by VE-017/VE-021. Annotated export should be restored when PdfDoc.addHighlight or PdfDoc.addStickyNote exists in Tauri command surface."
+    "notes": "Clean browser PDF export remains covered by VE-017/VE-021. Annotated export should be restored when PdfDoc.addHighlight or PdfDoc.addStickyNote exists in Tauri command surface."
   },
   {
     "id": "VE-011",
@@ -321,7 +321,7 @@
       "doc-info-form-type contains 'XFA'"
     ],
     "failure_meaning": "XFA detection is not working — either the native document parser does not set xfaDetected, or the ViewerApp UI banner condition is broken",
-    "notes_for_codex": "The XFA banner can be located by visible text. The fixture sample-xfa.pdf contains an app-owned /XFA marker and is valid for detection workflow testing; deep packet-removal proof requires a redistributable real XFA fixture."
+    "notes": "The XFA banner can be located by visible text. The fixture sample-xfa.pdf contains an app-owned /XFA marker and is valid for detection workflow testing; deep packet-removal proof requires a redistributable real XFA fixture."
   },
   {
     "id": "VE-012",
@@ -351,7 +351,7 @@
       "rendered-page remains visible"
     ],
     "failure_meaning": "Flatten UI or TauriTransformEngine.flattenXfa() failed even though PdfDoc.flattenXfa is exposed in the current browser-test harness.",
-    "notes_for_codex": "The XFA banner button calls engine.transform.flattenXfa(pdfDoc), replaces the current document, marks it dirty, and export downloads valid PDF bytes. The current fixture supports workflow and reopen checks; it must not be used for byte-difference or real XFA packet-removal proof."
+    "notes": "The XFA banner button calls engine.transform.flattenXfa(pdfDoc), replaces the current document, marks it dirty, and export downloads valid PDF bytes. The current fixture supports workflow and reopen checks; it must not be used for byte-difference or real XFA packet-removal proof."
   },
   {
     "id": "VE-013",
@@ -380,7 +380,7 @@
     "downloaded bytes reopen successfully"
     ],
     "failure_meaning": "Browser export after flatten failed or produced a non-PDF. If a byte-difference or no-/XFA assertion is needed, replace sample-xfa.pdf with a redistributable real XFA fixture.",
-    "notes_for_codex": "This is implemented in the same Playwright flow as VE-012. The current fixture contains a synthetic /XFA marker comment for viewer detection, so tests must not assert that the marker string disappears."
+    "notes": "This is implemented in the same Playwright flow as VE-012. The current fixture contains a synthetic /XFA marker comment for viewer detection, so tests must not assert that the marker string disappears."
   },
   {
     "id": "VE-014",
@@ -409,7 +409,7 @@
       "pdfa-status appears after validation"
     ],
     "failure_meaning": "PDF/A validation UI or TauriValidationEngine.validatePdfA() failed even though PdfDoc.validatePdfA is exposed in the current browser-test harness.",
-    "notes_for_codex": "The app exposes PDF/A controls in the Convert right panel, not the toolbar."
+    "notes": "The app exposes PDF/A controls in the Convert right panel, not the toolbar."
   },
   {
     "id": "VE-015",
@@ -439,7 +439,7 @@
       "export-dialog downloads a valid PDF"
     ],
     "failure_meaning": "PDF/A conversion UI, byte replacement, or browser export after conversion failed even though PdfDoc.convertToPdfa is exposed in the current browser-test harness.",
-    "notes_for_codex": "The app calls engine.transform.convertToPdfA(doc, '2b'), replaces current canonical bytes, marks dirty, and browser export clears dirty after download."
+    "notes": "The app calls engine.transform.convertToPdfA(doc, '2b'), replaces current canonical bytes, marks dirty, and browser export clears dirty after download."
   },
   {
     "id": "VE-016",
@@ -470,7 +470,7 @@
       "organize-grid tile count matches new page count"
     ],
     "failure_meaning": "Merge (append) operation failed in Tauri backend, or the native file dialog did not fire",
-    "notes_for_codex": "In browser-test the button is always disabled: disabled={!isTauri || ...}. The browser-test harness supports merge at the API level (PdfDoc.merge(otherBytes)) but the ViewerApp UI exposes it only via Tauri. To test browser-test merge, you would need to invoke the engine directly via the test hook — not possible with the current window.__pdfluent_test__ API."
+    "notes": "In browser-test the button is always disabled: disabled={!isTauri || ...}. The browser-test harness supports merge at the API level (PdfDoc.merge(otherBytes)) but the ViewerApp UI exposes it only via Tauri. To test browser-test merge, you would need to invoke the engine directly via the test hook — not possible with the current window.__pdfluent_test__ API."
   },
   {
     "id": "VE-017",
@@ -502,7 +502,7 @@
       "downloaded file extension is .pdf"
     ],
     "failure_meaning": "browser-test PDF export is completely broken. This is a severity-1 beta blocker.",
-    "notes_for_codex": "The ExportDialog lazily imports the component — if clicking export-btn and the dialog doesn't appear within 3 seconds, the lazy load or the ViewerApp isExportOpen state is broken. Use page.waitForSelector('[data-testid=\"export-dialog\"]', {state: 'visible', timeout: 5000})."
+    "notes": "The ExportDialog lazily imports the component — if clicking export-btn and the dialog doesn't appear within 3 seconds, the lazy load or the ViewerApp isExportOpen state is broken. Use page.waitForSelector('[data-testid=\"export-dialog\"]', {state: 'visible', timeout: 5000})."
   },
   {
     "id": "VE-018",
@@ -533,7 +533,7 @@
       "task queue shows 'done' status after save"
     ],
     "failure_meaning": "Tauri save_pdf command failed or the dialog was cancelled unexpectedly",
-    "notes_for_codex": "In browser-test, save-as-btn triggers handleSaveAs which opens the export dialog (not a native save dialog). In Tauri, it calls @tauri-apps/plugin-dialog save(). Use WebdriverIO or Tauri-specific test tooling for native dialog interactions — Playwright cannot interact with OS-native dialogs."
+    "notes": "In browser-test, save-as-btn triggers handleSaveAs which opens the export dialog (not a native save dialog). In Tauri, it calls @tauri-apps/plugin-dialog save(). Use WebdriverIO or Tauri-specific test tooling for native dialog interactions — Playwright cannot interact with OS-native dialogs."
   },
   {
     "id": "VE-019",
@@ -570,7 +570,7 @@
       "No task queue entry after clicking disabled button"
     ],
     "failure_meaning": "Capability gating regressed — browser-test can now trigger page deletion or merging which it shouldn't be able to do",
-    "notes_for_codex": "The per-page [data-testid='organize-delete-{i}'] and [data-testid='organize-rotate-{i}'] buttons in the grid may also be disabled in browser-test. Check them too: locator('[data-testid=\"organize-delete-0\"]').isDisabled(). Batch action buttons: disabled={!isTauri || ...} in OrganizeGrid."
+    "notes": "The per-page [data-testid='organize-delete-{i}'] and [data-testid='organize-rotate-{i}'] buttons in the grid may also be disabled in browser-test. Check them too: locator('[data-testid=\"organize-delete-0\"]').isDisabled(). Batch action buttons: disabled={!isTauri || ...} in OrganizeGrid."
   },
   {
     "id": "VE-020",
@@ -603,7 +603,7 @@
       "annotation-tool-redaction count === 0"
     ],
     "failure_meaning": "Annotation toolbar browser-test gating regressed — unsupported annotation creation is being shown in browser mode",
-    "notes_for_codex": "Use locator.count() and assert all creation controls equal 0. These buttons are conditionally rendered (not just disabled) in browser-test while runtime exports are absent."
+    "notes": "Use locator.count() and assert all creation controls equal 0. These buttons are conditionally rendered (not just disabled) in browser-test while runtime exports are absent."
   },
   {
     "id": "VE-021",
@@ -636,7 +636,7 @@
       "The only option value is 'pdf'"
     ],
     "failure_meaning": "Export format gating regressed — formats that require Tauri native commands are now being offered in the browser",
-    "notes_for_codex": "const options = await page.locator('[data-testid=\"export-format-select\"] option').all(); then check options.length === 1 and (await options[0].getAttribute('value')) === 'pdf'."
+    "notes": "const options = await page.locator('[data-testid=\"export-format-select\"] option').all(); then check options.length === 1 and (await options[0].getAttribute('value')) === 'pdf'."
   },
   {
     "id": "VE-022",
@@ -667,7 +667,7 @@
       "No error or success toast visible"
     ],
     "failure_meaning": "A disabled tool button is dispatching actions or showing toasts — capability gating is broken",
-    "notes_for_codex": "Use { force: true } to click a disabled button (bypass Playwright's disabled-click guard). The ModeToolbar ToolButton sets onClick={undefined} when !wired, so the click should silently do nothing. Use page.locator('[data-task-queue-item]') or inspect the BottomTaskBar to verify no task was pushed."
+    "notes": "Use { force: true } to click a disabled button (bypass Playwright's disabled-click guard). The ModeToolbar ToolButton sets onClick={undefined} when !wired, so the click should silently do nothing. Use page.locator('[data-task-queue-item]') or inspect the BottomTaskBar to verify no task was pushed."
   },
   {
     "id": "VE-023",
@@ -694,7 +694,7 @@
       "Title contains '(not yet available)'"
     ],
     "failure_meaning": "OCR scan is incorrectly enabled in browser-test — clicking it would silently fail or error since no browser-test OCR engine is wired",
-    "notes_for_codex": "The OCR tool button has no data-testid in ModeToolbar. Locate it by title: page.getByTitle('OCR scan (not yet available)'). In English locale the title is 'OCR scan (not yet available)' when disabled."
+    "notes": "The OCR tool button has no data-testid in ModeToolbar. Locate it by title: page.getByTitle('OCR scan (not yet available)'). In English locale the title is 'OCR scan (not yet available)' when disabled."
   },
   {
     "id": "VE-024",
@@ -718,6 +718,6 @@
       "annotation-tool-redaction-protect count === 0 in browser-test"
     ],
     "failure_meaning": "Redaction draw tool is incorrectly shown in browser-test harness — the isTauri guard failed",
-    "notes_for_codex": "page.locator('[data-testid=\"annotation-tool-redaction-protect\"]').count() must equal 0 in browser-test. This is a DOM-existence check, not a disabled-attribute check. The button is simply not rendered when !isTauri."
+    "notes": "page.locator('[data-testid=\"annotation-tool-redaction-protect\"]').count() must equal 0 in browser-test. This is a DOM-existence check, not a disabled-attribute check. The button is simply not rendered when !isTauri."
   }
 ]

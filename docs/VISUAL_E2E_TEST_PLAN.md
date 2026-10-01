@@ -1,7 +1,7 @@
 # PDFluent — Visual / Click-Through E2E Test Plan
 
 > **Version:** 2026-05-14  
-> **Audience:** Codex (automated agent) and human QA  
+> **Audience:** the automated runner and human QA  
 > **Scope:** PDFluent viewer app (`/?v2`) in browser/WASM runtime  
 > **Runtime under test:** `WasmPdfEngine` (default in browser)  
 > Tauri scenarios are marked 🖥️ and are out-of-scope until a native build is available.
@@ -213,11 +213,11 @@ All `data-testid` selectors can be referenced as `[data-testid="<id>"]`.
 
 ---
 
-## 4. Missing Selectors (Codex Workarounds Required)
+## 4. Missing Selectors (Workarounds Required)
 
-The following elements do not have `data-testid` attributes in the current codebase. Codex must use fallback locators:
+The following elements do not have `data-testid` attributes in the current codebase. The runner must use fallback locators:
 
-| Element | Why it's needed | Codex workaround |
+| Element | Why it's needed | Workaround |
 |---------|----------------|-----------------|
 | **Mode switcher tabs** | Switching between Read/Review/Organize etc. | `page.getByRole('button', { name: '<Mode>', exact: true })` |
 | **XFA warning banner** | Verify XFA detection in VE-011 | `page.locator('.text-amber-700, .text-amber-400').first()` or `page.getByText('contains XFA form data')` |
@@ -313,7 +313,7 @@ See `tests/fixtures/visual-e2e-scenarios.json` for the full machine-readable def
 
 ---
 
-## 8. Commands for Codex
+## 8. Commands for the runner
 
 ```bash
 # Pre-flight checks

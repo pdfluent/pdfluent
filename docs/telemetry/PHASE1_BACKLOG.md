@@ -20,7 +20,7 @@ following can still pass through a crash message or stack:
 
 - `password=hunter2`, `passwd: ...`, `secret=...`
 - `Authorization: Bearer abc123`, bare `Bearer <token>`
-- OpenAI-style keys: `sk-...`
+- Vendor-style API keys: `sk-...`
 - AWS access keys: `AKIA...` (and the longer secret key forms)
 - short/medium API keys and `api_key=...` / `token=...` assignments
 
