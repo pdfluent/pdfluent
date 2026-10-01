@@ -10,7 +10,7 @@ import { tid } from './helpers/selectors';
 import * as path from 'path';
 
 const SAMPLE_TEXT = 'tests/fixtures/sample-text.pdf';
-const ARTIFACTS_DIR = '/Users/jasperdewinter/.gemini/antigravity/brain/f9a7ad25-e948-4383-a61d-795a954d038f';
+const ARTIFACTS_DIR = 'test-results/visual-validate';
 
 test.describe('Visual E2E Validation - Real User Interaction', () => {
   test('should load PDF, enter edit mode, modify text inline, and save changes successfully', async ({ page }) => {

@@ -44,7 +44,7 @@ test.describe('AI config isolation', () => {
     await seedLocalStorage(
       page,
       'pdfluent.ai.config',
-      JSON.stringify({ apiKey: '', model: 'claude-haiku-4-5-20251001', maxTokens: 1024 }),
+      JSON.stringify({ apiKey: '', model: 'test-model-1', maxTokens: 1024 }),
     );
     const errors: string[] = [];
     page.on('pageerror', (err) => {
@@ -70,7 +70,7 @@ test.describe('AI config isolation', () => {
     await seedLocalStorage(
       page,
       'pdfluent.ai.config',
-      JSON.stringify({ apiKey: 'test-key', model: 'claude-haiku-4-5-20251001', maxTokens: 1024 }),
+      JSON.stringify({ apiKey: 'test-key', model: 'test-model-1', maxTokens: 1024 }),
     );
     await gotoViewerWithDoc(page);
     await expect(page.locator(tid('floating-page-indicator'))).toBeVisible();
