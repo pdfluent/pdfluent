@@ -233,6 +233,13 @@ export const JUDGES = {
     step: "S2", capability: "open", probe: "applog_missing",
     run: (p) => fail(`the installed application wrote no log file, so no parse mark could appear: ${firstLine(p.out) || "(no path reported)"}`),
   },
+  // WebView2 does not start in session 0, so an app launched from there never
+  // shows its frontend and never opens anything. Every open row of the 1.0.0
+  // Windows report timed out for exactly that reason (#427).
+  desktop: {
+    step: "S2", capability: "open", probe: "desktop_session",
+    run: (p) => (p.rc === 0 ? pass() : fail(`no desktop session to start the app in: ${firstLine(p.out) || `rc ${p.rc}`}`)),
+  },
   open: {
     step: "S2", capability: "open", probe: "wait_log",
     run: (p, meta, ctx) => {
@@ -529,6 +536,13 @@ function cli() {
         // passed, which is what this whole file is arranged against.
         const [step, id, capability, reason] = rest;
         emit({ step, id, capability, status: "SKIPPED", ms: 0, numbers: {}, reason: reason ?? "", evidence: [] }, false);
+      } else if (kind === "N") {
+        // Nothing of this kind is in these bytes (an unsigned CI build has no
+        // signature chain), or the step was outside --steps. Not a pass and not
+        // a skip: the row carries the reason so the report shows what it did
+        // not judge, and the verdict fold leaves it out (report.mjs).
+        const [step, id, capability, reason] = rest;
+        emit({ step, id, capability, status: "NOT_APPLICABLE", ms: 0, numbers: {}, reason: reason ?? "", evidence: [] }, false);
       } else if (kind === "W") {
         // The UI walk expands here rather than in the orchestrator. The list of
         // controls comes from the register, which is a file to parse, and the
@@ -542,7 +556,7 @@ function cli() {
           missingReason: rest[1] ?? "",
         })) emit(r);
       } else {
-        process.stderr.write(`judge: queue line neither J nor S: ${line.slice(0, 80)}\n`);
+        process.stderr.write(`judge: queue line neither J, S, N nor W: ${line.slice(0, 80)}\n`);
         worst = Math.max(worst, 1);
       }
     }

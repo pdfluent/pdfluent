@@ -1,0 +1,13 @@
+# Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
+# See https://pdfluent.com/license for terms.
+#
+# LF in every working tree, whatever the machine's core.autocrlf says. Git for
+# Windows installs with autocrlf=true system-wide, and a CRLF checkout breaks
+# every line-anchored parser in this repository: on the first Windows CI run
+# about 300 vitest cases failed on carriage returns alone (the UI register read
+# as empty, the workflow guards could not find their own jobs). text=auto
+# leaves binary files (the golden PDFs, images) untouched.
+* text=auto eol=lf
+# Documents are bytes: a PDF without NUL bytes still reads as text to git, and
+# its xref offsets die with the first converted line ending.
+*.pdf binary

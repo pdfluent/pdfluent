@@ -102,6 +102,11 @@ export function requireQualityReport({
   if (!KNOWN_SCHEMAS.has(report.schema)) {
     throw new Refused(`${path.relative(root, reportPath)} says schema "${report.schema}", which this guard does not know how to read.`);
   }
+  // A CI run judges an unsigned build with its own identifier. Its PASS is a
+  // statement about the code, never about bytes a user can download.
+  if (report.mode !== undefined && report.mode !== "release") {
+    throw new Refused(`${path.relative(root, reportPath)} is a ${report.mode} run (release_suite.sh --mode ${report.mode}). Only a release run of the artefact itself publishes.${HOWTO(path.relative(root, reportPath))}`);
+  }
   if (report.verdict !== "PASS" || report.exit_code !== 0) {
     throw new Refused(`${path.relative(root, reportPath)} says ${report.verdict} (exit ${report.exit_code}). Only a PASS publishes.${HOWTO(path.relative(root, reportPath))}`);
   }

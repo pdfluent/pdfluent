@@ -54,7 +54,8 @@ function stagedDriver(w: string): string {
     set -u
     WORK=${JSON.stringify(w)}; REPO_ROOT=${JSON.stringify(REPO_ROOT)}
     SUITE_DIR=${JSON.stringify(SUITE_DIR)}; ARTEFACT="\${WORK}/PDFluent_0.0.0_universal.dmg"
-    export WORK REPO_ROOT SUITE_DIR ARTEFACT
+    PDFLUENT_SUITE_MOUNT_POINT="\${WORK}/mnt"
+    export WORK REPO_ROOT SUITE_DIR ARTEFACT PDFLUENT_SUITE_MOUNT_POINT
     mkdir -p "\${WORK}/probes" "\${WORK}/numbers" "\${WORK}/ms" "\${WORK}/mnt/PDFluent.app/Contents/MacOS"
     : > "\${ARTEFACT}"
     . "\${SUITE_DIR}/state.sh"

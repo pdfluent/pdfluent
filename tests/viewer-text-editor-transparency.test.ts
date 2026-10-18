@@ -27,6 +27,11 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+// Imported once, when the file loads. Imported inside each case, the first case
+// paid for transforming the module graph behind core/index and timed out at 5 s
+// on a loaded runner (quality:macos, 2026-10-18) while asserting a string.
+import { EDITOR_FEATURE_FLAGS, isEditorFeatureEnabled } from '../src/viewer/text/editorFeatureFlags';
+import { toEditorTextSpan, getEditorFontFamily } from '../src/viewer/text/editorTextSpan';
 
 const root = join(import.meta.dirname, '..');
 
@@ -162,15 +167,13 @@ describe('TextInteractionOverlay editingTargetId', () => {
 // ---------------------------------------------------------------------------
 
 describe('editorFeatureFlags defaults', () => {
-  it('all feature flags are enabled (G1/G2/G5/G6 have landed)', async () => {
-    const { EDITOR_FEATURE_FLAGS } = await import('../src/viewer/text/editorFeatureFlags');
+  it('all feature flags are enabled (G1/G2/G5/G6 have landed)', () => {
     for (const [key, value] of Object.entries(EDITOR_FEATURE_FLAGS)) {
       expect(value, `Flag ${key} should be true — G capabilities landed`).toBe(true);
     }
   });
 
-  it('isEditorFeatureEnabled returns true for all flags (G capabilities landed)', async () => {
-    const { isEditorFeatureEnabled } = await import('../src/viewer/text/editorFeatureFlags');
+  it('isEditorFeatureEnabled returns true for all flags (G capabilities landed)', () => {
     expect(isEditorFeatureEnabled('sdkTextMetadata')).toBe(true);
     expect(isEditorFeatureEnabled('sdkTextCharBounds')).toBe(true);
     // Format/style writes are Tauri-only; canFormatText/canSetFontStyle are gated
@@ -185,48 +188,41 @@ describe('editorFeatureFlags defaults', () => {
 // ---------------------------------------------------------------------------
 
 describe('toEditorTextSpan adapter', () => {
-  it('creates stable id from pageIndex and spanIndex', async () => {
-    const { toEditorTextSpan } = await import('../src/viewer/text/editorTextSpan');
+  it('creates stable id from pageIndex and spanIndex', () => {
     const span = { text: 'hello', rect: { x: 0, y: 0, width: 100, height: 20 }, fontSize: 12 };
     const result = toEditorTextSpan(span, 3, 7);
     expect(result.id).toBe('p3:s7');
   });
 
-  it('sets replaceTextMode to parser-backed for native text replacement', async () => {
-    const { toEditorTextSpan } = await import('../src/viewer/text/editorTextSpan');
+  it('sets replaceTextMode to parser-backed for native text replacement', () => {
     const span = { text: 'test', rect: { x: 0, y: 0, width: 50, height: 15 }, fontSize: 10 };
     const result = toEditorTextSpan(span, 0, 0);
     expect(result.sdkCapabilities.replaceTextMode).toBe('parser-backed');
   });
 
-  it('sets canFormatText to false when sdkTextFormatWrites=false', async () => {
-    const { toEditorTextSpan } = await import('../src/viewer/text/editorTextSpan');
+  it('sets canFormatText to false when sdkTextFormatWrites=false', () => {
     const span = { text: 'test', rect: { x: 0, y: 0, width: 50, height: 15 }, fontSize: 10 };
     const result = toEditorTextSpan(span, 0, 0);
     expect(result.sdkCapabilities.canFormatText).toBe(false);
   });
 
-  it('fontName is passed through when sdkTextMetadata=true and fontName is present in span', async () => {
-    const { toEditorTextSpan } = await import('../src/viewer/text/editorTextSpan');
+  it('fontName is passed through when sdkTextMetadata=true and fontName is present in span', () => {
     const span = { text: 'test', rect: { x: 0, y: 0, width: 50, height: 15 }, fontSize: 10, fontName: 'Helvetica' };
     const result = toEditorTextSpan(span, 0, 0);
     // sdkTextMetadata is now true so fontName is passed through from the span
     expect(result.fontName).toBe('Helvetica');
   });
 
-  it('getEditorFontFamily falls back to system-ui when fontName unavailable', async () => {
-    const { getEditorFontFamily } = await import('../src/viewer/text/editorTextSpan');
+  it('getEditorFontFamily falls back to system-ui when fontName unavailable', () => {
     expect(getEditorFontFamily(null)).toBe('system-ui, -apple-system, sans-serif');
   });
 
-  it('getEditorFontFamily maps Helvetica to CSS equivalent', async () => {
-    const { getEditorFontFamily } = await import('../src/viewer/text/editorTextSpan');
+  it('getEditorFontFamily maps Helvetica to CSS equivalent', () => {
     const span = { id: 'p0:s0', text: 'x', rect: { x: 0, y: 0, width: 10, height: 10 }, fontSize: 12, fontName: 'Helvetica', sdkCapabilities: { replaceTextMode: 'basic-provisional' as const, canFormatText: false, canSetFontStyle: false, hasAccurateMetrics: false } };
     expect(getEditorFontFamily(span)).toBe('Helvetica, Arial, sans-serif');
   });
 
-  it('getEditorFontFamily strips subset prefix before lookup', async () => {
-    const { getEditorFontFamily } = await import('../src/viewer/text/editorTextSpan');
+  it('getEditorFontFamily strips subset prefix before lookup', () => {
     const span = { id: 'p0:s0', text: 'x', rect: { x: 0, y: 0, width: 10, height: 10 }, fontSize: 12, fontName: 'ABCDEF+Helvetica', sdkCapabilities: { replaceTextMode: 'basic-provisional' as const, canFormatText: false, canSetFontStyle: false, hasAccurateMetrics: false } };
     expect(getEditorFontFamily(span)).toBe('Helvetica, Arial, sans-serif');
   });

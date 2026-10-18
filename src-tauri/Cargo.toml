@@ -36,8 +36,9 @@ pdfluent-macos-secure = { path = "crates/macos-secure" }
 # A pin, not a path: until 2026-09-07 these were 19 path dependencies into a
 # checkout next to this repository, so the editor built against whatever branch
 # that working copy happened to be on and CI cloned a third state. The revision
-# below is on `pdfluent/engine` master and carries the removal of the free-tier
-# PDF/A stamp (`f9ae3a1d7`); `src/pdfa_export_guard.rs` proves the export comes
+# below is the released SDK 1.1.0 (engine tag `v1.1.0`, the same code as the
+# 1.1.0 crates on crates.io); it carries the removal of the free-tier PDF/A
+# stamp (`f9ae3a1d7`), and `src/pdfa_export_guard.rs` proves the export comes
 # out unmarked.
 #
 # Move them together, never one at a time — `tests/sdk-pin-guard.test.ts` fails
@@ -47,24 +48,24 @@ pdfluent-macos-secure = { path = "crates/macos-secure" }
 # `.github/actions/sdk-pin/action.yml`), so a commit that only GitHub has builds here and nowhere
 # else. Engine master is fast-forward only, so the mirror catches up on its
 # own; a tag pipeline cut before it does will fail on the fetch.
-pdf-engine = { git = "https://github.com/pdfluent/engine", rev = "4e1522602c0027afc844c2e7ee552cf9c46373f6", features = ["xfa", "serde"] }
-pdf-forms = { package = "pdfluent-forms", git = "https://github.com/pdfluent/engine", rev = "4e1522602c0027afc844c2e7ee552cf9c46373f6" }
-pdf-annot = { git = "https://github.com/pdfluent/engine", rev = "4e1522602c0027afc844c2e7ee552cf9c46373f6", features = ["write"] }
-pdf-sign = { package = "pdfluent-sign", git = "https://github.com/pdfluent/engine", rev = "4e1522602c0027afc844c2e7ee552cf9c46373f6" }
-pdf-manip = { git = "https://github.com/pdfluent/engine", rev = "4e1522602c0027afc844c2e7ee552cf9c46373f6", features = ["image-insert", "font-subset", "pdfa-convert"] }
-pdf-text-format = { git = "https://github.com/pdfluent/engine", rev = "4e1522602c0027afc844c2e7ee552cf9c46373f6" }
-pdf-compliance = { git = "https://github.com/pdfluent/engine", rev = "4e1522602c0027afc844c2e7ee552cf9c46373f6" }
-pdf-extract = { package = "pdfluent-extract", git = "https://github.com/pdfluent/engine", rev = "4e1522602c0027afc844c2e7ee552cf9c46373f6" }
-pdf-redact = { git = "https://github.com/pdfluent/engine", rev = "4e1522602c0027afc844c2e7ee552cf9c46373f6" }
-pdf-docx = { git = "https://github.com/pdfluent/engine", rev = "4e1522602c0027afc844c2e7ee552cf9c46373f6" }
-pdf-xlsx = { git = "https://github.com/pdfluent/engine", rev = "4e1522602c0027afc844c2e7ee552cf9c46373f6" }
-pdf-pptx = { git = "https://github.com/pdfluent/engine", rev = "4e1522602c0027afc844c2e7ee552cf9c46373f6" }
-pdf-invoice = { git = "https://github.com/pdfluent/engine", rev = "4e1522602c0027afc844c2e7ee552cf9c46373f6" }
-lopdf = { package = "pdfluent-lopdf", git = "https://github.com/pdfluent/engine", rev = "4e1522602c0027afc844c2e7ee552cf9c46373f6" }
-pdf-syntax = { git = "https://github.com/pdfluent/engine", rev = "4e1522602c0027afc844c2e7ee552cf9c46373f6" }
+pdf-engine = { git = "https://github.com/pdfluent/engine", rev = "38f09b5b8b2a3cd6bd1d1b9a843b1e14d7f6b2fb", features = ["xfa", "serde"] }
+pdf-forms = { package = "pdfluent-forms", git = "https://github.com/pdfluent/engine", rev = "38f09b5b8b2a3cd6bd1d1b9a843b1e14d7f6b2fb" }
+pdf-annot = { git = "https://github.com/pdfluent/engine", rev = "38f09b5b8b2a3cd6bd1d1b9a843b1e14d7f6b2fb", features = ["write"] }
+pdf-sign = { package = "pdfluent-sign", git = "https://github.com/pdfluent/engine", rev = "38f09b5b8b2a3cd6bd1d1b9a843b1e14d7f6b2fb" }
+pdf-manip = { git = "https://github.com/pdfluent/engine", rev = "38f09b5b8b2a3cd6bd1d1b9a843b1e14d7f6b2fb", features = ["image-insert", "font-subset", "pdfa-convert"] }
+pdf-text-format = { git = "https://github.com/pdfluent/engine", rev = "38f09b5b8b2a3cd6bd1d1b9a843b1e14d7f6b2fb" }
+pdf-compliance = { git = "https://github.com/pdfluent/engine", rev = "38f09b5b8b2a3cd6bd1d1b9a843b1e14d7f6b2fb" }
+pdf-extract = { package = "pdfluent-extract", git = "https://github.com/pdfluent/engine", rev = "38f09b5b8b2a3cd6bd1d1b9a843b1e14d7f6b2fb" }
+pdf-redact = { git = "https://github.com/pdfluent/engine", rev = "38f09b5b8b2a3cd6bd1d1b9a843b1e14d7f6b2fb" }
+pdf-docx = { git = "https://github.com/pdfluent/engine", rev = "38f09b5b8b2a3cd6bd1d1b9a843b1e14d7f6b2fb" }
+pdf-xlsx = { git = "https://github.com/pdfluent/engine", rev = "38f09b5b8b2a3cd6bd1d1b9a843b1e14d7f6b2fb" }
+pdf-pptx = { git = "https://github.com/pdfluent/engine", rev = "38f09b5b8b2a3cd6bd1d1b9a843b1e14d7f6b2fb" }
+pdf-invoice = { git = "https://github.com/pdfluent/engine", rev = "38f09b5b8b2a3cd6bd1d1b9a843b1e14d7f6b2fb" }
+lopdf = { package = "pdfluent-lopdf", git = "https://github.com/pdfluent/engine", rev = "38f09b5b8b2a3cd6bd1d1b9a843b1e14d7f6b2fb" }
+pdf-syntax = { git = "https://github.com/pdfluent/engine", rev = "38f09b5b8b2a3cd6bd1d1b9a843b1e14d7f6b2fb" }
 
 # PDFluent public SDK facade (Phase 2 migration boundary)
-pdfluent = { git = "https://github.com/pdfluent/engine", rev = "4e1522602c0027afc844c2e7ee552cf9c46373f6" }
+pdfluent = { git = "https://github.com/pdfluent/engine", rev = "38f09b5b8b2a3cd6bd1d1b9a843b1e14d7f6b2fb" }
 
 [target."cfg(not(any(target_os = \"android\", target_os = \"ios\")))".dependencies]
 # Optional so the Mac App Store build can drop them (see the `updater` feature).

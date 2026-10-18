@@ -15,7 +15,23 @@
 #
 #   scripts/quality/release_suite.sh --artefact <dmg|msi> --platform macos|windows|fake \
 #       [--commit <sha>] [--machine <class>] [--report-dir quality/reports] \
-#       [--work <dir>] [--keep] [--expect-updater] [--no-watchdog]
+#       [--work <dir>] [--keep] [--expect-updater] [--no-watchdog] \
+#       [--mode release|ci] [--steps s1,s2,s3,s4,s5]
+#
+# --mode ci judges an unsigned CI build (quality.yml, macos-app / windows-app)
+# instead of a release artefact. It runs the same drivers on the same golden
+# documents; what differs is named in the report, never dropped: the signature
+# rows are NOT_APPLICABLE with the reason (a CI build is unsigned by design and
+# the chain is judged on the release run), the bundle identifier is the CI one
+# from src-tauri/tauri.ci.conf.json (so a CI copy can never be mistaken for, or
+# quit, the PDFluent the owner has installed on the same machine), and the
+# report says `mode: ci`. require-report.mjs refuses a ci report outright: it
+# can never stand in for a release run.
+#
+# --steps narrows the run to the steps listed. A step left out is not silent:
+# it gets a SKIPPED (not a pass) line on stderr and a NOT_APPLICABLE row that
+# says it was outside the scope of this run, so the report shows what it did
+# not judge. Defaults to all five.
 #
 # Exit codes:
 #   0  every step PASS                          → publishing may proceed
@@ -36,6 +52,7 @@ cd "${REPO_ROOT}"
 
 ARTEFACT=""; PLATFORM=""; COMMIT=""; MACHINE="${PDFLUENT_MACHINE_CLASS:-}"
 REPORT_DIR="quality/reports"; WORK=""; KEEP=0; EXPECT_UPDATER=0; WATCHDOG=1
+SUITE_MODE="release"; STEPS="s1,s2,s3,s4,s5"
 while [ $# -gt 0 ]; do
   case "$1" in
     --artefact) ARTEFACT="${2:-}"; shift 2 ;;
@@ -48,7 +65,9 @@ while [ $# -gt 0 ]; do
     --no-launch) export PDFLUENT_SUITE_NO_LAUNCH=1; shift ;;
     --expect-updater) EXPECT_UPDATER=1; shift ;;
     --no-watchdog) WATCHDOG=0; shift ;;
-    -h|--help) sed -n '9,30p' "$0"; exit 0 ;;
+    --mode) SUITE_MODE="${2:-}"; shift 2 ;;
+    --steps) STEPS="${2:-}"; shift 2 ;;
+    -h|--help) sed -n '9,48p' "$0"; exit 0 ;;
     *) echo "release_suite: unknown argument $1" >&2; exit 2 ;;
   esac
 done
@@ -58,6 +77,13 @@ case "${PLATFORM}" in
   *) echo "✘ --platform must be macos, windows or fake (got '${PLATFORM}')" >&2; exit 2 ;;
 esac
 [ -n "${ARTEFACT}" ] || { echo "✘ --artefact is required" >&2; exit 2; }
+case "${SUITE_MODE}" in
+  release|ci) ;;
+  *) echo "✘ --mode must be release or ci (got '${SUITE_MODE}')" >&2; exit 2 ;;
+esac
+for s in ${STEPS//,/ }; do
+  case "$s" in s1|s2|s3|s4|s5) ;; *) echo "✘ --steps takes s1..s5 (got '${s}')" >&2; exit 2 ;; esac
+done
 
 WORK="${WORK:-$(mktemp -d "${TMPDIR:-/tmp}/pdfluent-release-suite.XXXXXX")}"
 mkdir -p "${WORK}/probes" "${WORK}/numbers" "${WORK}/ms"
@@ -84,7 +110,7 @@ trap 'cleanup; trap - HUP; kill -HUP $$' HUP
 # observer is several processes away from this shell by the time it asks.
 SUITE_PID="$$"
 
-export WORK REPO_ROOT ARTEFACT PLATFORM COMMIT MACHINE EXPECT_UPDATER WATCHDOG SUITE_DIR SUITE_PID
+export WORK REPO_ROOT ARTEFACT PLATFORM COMMIT MACHINE EXPECT_UPDATER WATCHDOG SUITE_DIR SUITE_PID SUITE_MODE
 
 # What one step learns and the next step needs. Sourced before the driver so a
 # driver can use it while it is being read.
@@ -126,12 +152,20 @@ skip_row() { # skip_row <step> <id> <capability> <reason>
   echo "SKIPPED (not a pass): $2 — $4" >&2
 }
 
+# A row that does not apply to this artefact, with the reason. Not a skip: a
+# skip says the suite should have measured something and did not; this says
+# there is nothing of that kind in these bytes (an unsigned CI build has no
+# signature chain to verify). Only --mode ci and --steps produce one.
+na_row() { # na_row <step> <id> <capability> <reason>
+  printf 'N\t%s\t%s\t%s\t%s\n' "$(_flat "$1")" "$(_flat "$2")" "$(_flat "$3")" "$(_flat "$4")" >> "${QUEUE}"
+}
+
 flush_judgements() {
   [ -s "${QUEUE}" ] || return 0
   node "${SUITE_DIR}/judge.mjs" --work "${WORK}" --queue "${QUEUE}" || true
   : > "${QUEUE}"
 }
-export -f judge skip_row _flat 2>/dev/null || true
+export -f judge skip_row na_row _flat 2>/dev/null || true
 
 render() {
   node "${SUITE_DIR}/report.mjs" --work "${WORK}" --out "${REPORT_DIR}"
@@ -164,6 +198,15 @@ emit_gaps() {
 }
 
 for s in s1_identity s2_launch s3_offline s4_updater s5_ui_walk; do
+  case ",${STEPS}," in
+    *",${s%%_*},"*) ;;
+    *)
+      # Out of scope for this run, and said so twice: on stderr now and as a
+      # row in the report, so a narrowed run never reads as a full one.
+      echo "SKIPPED (not a pass): ${s} — not in --steps ${STEPS} for this run" >&2
+      na_row "$(printf '%s' "${s%%_*}" | tr 's' 'S')" "scope:${s}" scope "not in --steps ${STEPS} for this ${SUITE_MODE} run"
+      continue ;;
+  esac
   # Each step in its own subshell: a step that dies takes its own rows with it,
   # not the run. The subshell reaps its own observers too -- a watcher started
   # for S2 has nothing left to watch once S2 is over, and waiting for the

@@ -40,7 +40,7 @@ import { existsSync, mkdtempSync, readdirSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { loadManifest, isPublished, isPublicOnly, root } from "./public-tree.mjs";
-import { PUBLIC_REF, PUBLIC_URL, shippedVersion } from "./repo-truth.mjs";
+import { PUBLIC_REF, PUBLIC_URL, PUBLISHED_FROM, shippedVersion } from "./repo-truth.mjs";
 import { isMainModule } from "../lib/main-module.mjs";
 
 function git(args, opts = {}) {
@@ -203,6 +203,68 @@ export function applyOverlay(kept, manifest, { dir = join(root, OVERLAY_DIR) } =
   return null;
 }
 
+/**
+ * Commits made directly on the public repository, and whether the trunk has
+ * taken them in.
+ *
+ * A snapshot replaces every published file with the trunk's copy. A commit made
+ * on the public side after the last snapshot therefore does not survive the next
+ * one: it is reverted, silently, in a commit whose message says it is the tree
+ * the binaries were built from. Between 2026-09-22 and 2026-10-01 three such
+ * commits landed there (a README link, the removal of a dead invite link, and
+ * neutral wording in place of tool names). None of them was on the trunk, so the
+ * next publication would have put all of it back.
+ *
+ * The trunk takes one in with a commit that carries `Absorbs-public: <sha>` for
+ * it. A snapshot is only built when every public commit since the last
+ * `Published-from:` is named that way. Public-only files are carried over from
+ * the public head and would survive anyway; the rule is the same for them,
+ * because a direct commit is the route docs/REPO_TRUTH.md says is not used.
+ */
+export const ABSORBS_PUBLIC = /^Absorbs-public:\s*([0-9a-f]{7,40})\s*$/gm;
+
+/** Public commits after the last snapshot, newest first, or a refusal. */
+export function directCommits(publicRef, { cwd = root } = {}) {
+  const out = execFileSync("git", ["log", "--first-parent", "--format=%H%x00%B%x01", publicRef], {
+    cwd, encoding: "utf8", maxBuffer: 256 * 1024 * 1024,
+  });
+  const direct = [];
+  for (const record of out.split("\x01")) {
+    const [sha, body = ""] = record.replace(/^\s+/, "").split("\0");
+    if (!sha) continue;
+    if (PUBLISHED_FROM.test(body)) return { direct, snapshot: sha };
+    direct.push({ sha, subject: body.split("\n")[0] });
+  }
+  return { direct, snapshot: null };
+}
+
+/** The direct public commits no trunk commit in `sourceRef` says it absorbed. */
+export function unabsorbed(direct, sourceRef, { cwd = root } = {}) {
+  const log = execFileSync("git", ["log", "--format=%B", sourceRef], {
+    cwd, encoding: "utf8", maxBuffer: 256 * 1024 * 1024,
+  });
+  const named = [...log.matchAll(ABSORBS_PUBLIC)].map((m) => m[1]);
+  return direct.filter(({ sha }) => !named.some((n) => sha.startsWith(n)));
+}
+
+export function absorptionFault(publicRef, sourceRef, opts = {}) {
+  const { direct, snapshot } = directCommits(publicRef, opts);
+  if (snapshot === null) {
+    return "publish: no commit on the public head carries a `Published-from:` trailer, so there is\n" +
+      "no snapshot to build on. Not a pass: an unknown lineage is not a checked one.";
+  }
+  const missing = unabsorbed(direct, sourceRef, opts);
+  if (missing.length === 0) return null;
+  return (
+    `publish: ${missing.length} commit(s) were made directly on the public repository after the last\n` +
+    `snapshot (${snapshot.slice(0, 7)}), and ${sourceRef} has not taken them in:\n` +
+    missing.map(({ sha, subject }) => `  · ${sha.slice(0, 8)} ${subject}`).join("\n") +
+    "\n\nA snapshot built now would revert them without saying so. Port each change to the\n" +
+    "trunk (a public-only file through docs/public-only/) in a commit that carries\n" +
+    "`Absorbs-public: <sha>` for it, land that, and build the snapshot again."
+  );
+}
+
 function main(argv) {
   // First, before the fetch: refusing early is the whole point of refusing here.
   let author, committer;
@@ -227,6 +289,12 @@ function main(argv) {
 
   const sourceSha = git(["rev-parse", source]);
   const publicSha = git(["rev-parse", PUBLIC_REF]);
+
+  const unabsorbedFault = absorptionFault(PUBLIC_REF, sourceSha);
+  if (unabsorbedFault) {
+    console.error(`\n${unabsorbedFault}\n`);
+    return 1;
+  }
 
   // The internal-names scan runs HERE and not in CI, and that is deliberate: it
   // needs the customer and partner list, which lives outside the tree because a

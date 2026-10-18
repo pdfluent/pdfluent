@@ -233,6 +233,21 @@ repository's gate and its review and then arrives inside a snapshot commit that
 carries the trailer like every other. **A public-only file is never changed by
 committing to the public repository.**
 
+### A commit that was made on the public side anyway
+
+A snapshot replaces every published file with the trunk's copy, so a commit
+made directly on the public repository is reverted by the next one, silently.
+Three of them sat on the public head from 2026-09-22 (a README link, the removal
+of a dead invite link, and neutral wording in place of tool names) with none of
+it on the trunk, and the public head carried no `Published-from:` trailer for
+the whole time.
+
+`publish-public-snapshot.mjs` refuses to build while any public commit after
+the last `Published-from:` is not taken in. The trunk takes one in with a commit
+that ports the change and carries `Absorbs-public: <sha>` for it. Then the next
+snapshot carries the change instead of undoing it, and its trailer makes the
+head answerable again.
+
 A file under `docs/public-only/` that the manifest does not name as
 `public_only` is refused: without that the directory is a second way to publish
 anything, which is the one thing `PUBLIC_TREE.json` exists to prevent. The
@@ -287,7 +302,7 @@ tree rule, the one that does gate publication, is built into
 | `scripts/ci/legacy-shell-fenced.mjs` | a production bundle containing the retired V1 shell |
 | `scripts/ci/remotes-agree.mjs` | a trunk commit that reached CI without reaching the other copy of the trunk, and a run that could not read that copy at all |
 | `scripts/ci/tags-are-pushable.mjs` | a tag the primary would refuse: a lightweight one, or an annotated one made with a personal address |
-| `scripts/ci/publish-public-snapshot.mjs` | building a snapshot git would sign with a personal address. The public side has that rule too, in its own CI — but there it runs after the push, with the address already published |
+| `scripts/ci/publish-public-snapshot.mjs` | building a snapshot that would revert a commit made on the public side which no trunk commit names with `Absorbs-public:`, or one git would sign with a personal address. The public side has that rule too, in its own CI — but there it runs after the push, with the address already published |
 
 ## The binaries were judged before they were published
 

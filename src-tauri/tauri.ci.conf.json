@@ -1,0 +1,12 @@
+{
+  "identifier": "com.pdfluent.app.ci",
+  "bundle": {
+    "createUpdaterArtifacts": false,
+    "macOS": {
+      "signingIdentity": "-"
+    },
+    "windows": {
+      "signCommand": null
+    }
+  }
+}

@@ -156,6 +156,72 @@ describe("the GitHub pipeline carries the whole gate set", () => {
   });
 });
 
+// The two platforms that ship. Until 17-10 nothing in the pipeline built or ran
+// the editor on either: the macOS-only Rust never compiled in CI, and the
+// Windows smoke lane had never opened a document (#427). Each platform's job is
+// the whole gate for that platform, on a runner on that platform.
+describe("the shipping platforms are built and judged on themselves", () => {
+  const quality = jobsOf("quality.yml");
+  const PLATFORMS = [
+    { name: "quality:macos", runner: ["self-hosted", "macOS", "pdfluent-editor-macos"], suite: "--platform macos", bundle: "--bundles app" },
+    { name: "quality:windows", runner: ["self-hosted", "Windows", "pdfluent-editor-windows"], suite: "--platform windows", bundle: "--bundles msi" },
+  ];
+
+  for (const p of PLATFORMS) {
+    describe(p.name, () => {
+      const job = () => {
+        const found = quality.find((candidate) => candidate.name === p.name);
+        expect(found, `${p.name} has no job in .github/workflows/quality.yml`).toBeDefined();
+        return found!;
+      };
+
+      it("runs on a runner of that platform, and is a hard gate", () => {
+        expect(runsOn(job())).toEqual(p.runner);
+        expect(job().body, `${p.name} is continue-on-error — a soft gate is not a gate`).not.toContain("continue-on-error");
+        expect(job().body).not.toMatch(/^\s+if:\s*\$\{\{\s*false/m);
+      });
+
+      it("runs the whole frontend suite, unfiltered", () => {
+        expect(job().body).toContain("npx vitest run --minWorkers=1 --maxWorkers=2\n");
+        expect(job().body).toContain("npm run typecheck");
+      });
+
+      // The bookmark crate is a path dependency: `cargo test` alone builds it and
+      // never runs its tests, which is how it went untested on the one platform
+      // where it is not a stub.
+      it("tests and lints the platform's own Rust, the bookmark crate included", () => {
+        expect(job().body).toContain("cargo test --manifest-path src-tauri/Cargo.toml -p pdfluent-desktop -p pdfluent-macos-secure");
+        expect(job().body).toMatch(/cargo clippy --manifest-path src-tauri\/Cargo\.toml -p pdfluent-desktop -p pdfluent-macos-secure --all-targets -- -D warnings/);
+      });
+
+      it("builds the app with the CI identity and launches it through the release suite", () => {
+        expect(job().body).toContain(`npx tauri build ${p.bundle} --config src-tauri/tauri.ci.conf.json`);
+        expect(job().body).toContain(`scripts/quality/release_suite.sh --mode ci --steps s1,s2,s3 ${p.suite}`);
+      });
+
+      it("keeps the report it judged, even when the judgement was red", () => {
+        expect(job().body).toContain("if: ${{ !cancelled() && steps.smoke.outcome != 'skipped' }}");
+        expect(job().body).toContain("fetch-depth: 0");
+        expect(job().body).toContain("suite-report/");
+      });
+    });
+  }
+
+  // The CI build must never be the installed app's twin: same identifier means
+  // the same sandbox container and the same AppleScript quit target -- a CI
+  // run that quits or overwrites the state of the PDFluent on the machine it
+  // runs on. (On Windows the MSI is unpacked, never installed: see
+  // tests/release-suite/ci-mode.test.ts.)
+  it("gives the CI build an identity of its own and no signing", () => {
+    const ci = JSON.parse(readFileSync(join(ROOT, "src-tauri/tauri.ci.conf.json"), "utf8"));
+    const shipped = JSON.parse(readFileSync(join(ROOT, "src-tauri/tauri.conf.json"), "utf8"));
+    expect(ci.identifier).toBe(`${shipped.identifier}.ci`);
+    expect(ci.bundle.createUpdaterArtifacts).toBe(false);
+    expect(ci.bundle.macOS.signingIdentity).toBe("-");
+    expect(ci.bundle.windows.signCommand).toBeNull();
+  });
+});
+
 describe("the release train", () => {
   const release = jobsOf("release.yml");
   const named = (name: string) => release.find((job) => job.name === name);
@@ -188,7 +254,13 @@ describe("the release train", () => {
   // the pipeline or read as a macOS/Windows blocker.
   it("keeps Linux non-gating", () => {
     expect(named("build-linux")!.body).toContain("continue-on-error: true");
-    expect(named("publish-updater")!.body).toContain("continue-on-error: true");
+  });
+
+  // latest.json is the update feed for macOS and Windows as well as Linux
+  // (scripts/ci-generate-latest-json.mjs). A soft failure there is an update
+  // nobody gets, reported green.
+  it("does not let the update feed fail softly", () => {
+    expect(named("publish-updater")!.body).not.toContain("continue-on-error");
   });
 });
 

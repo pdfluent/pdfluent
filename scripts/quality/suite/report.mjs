@@ -53,6 +53,9 @@ export function buildReport(meta, rawSteps) {
   return {
     schema: "pdfluent-release-suite/1",
     run_id: meta.run_id,
+    // "ci" for an unsigned CI build (release_suite.sh --mode ci). Absent on
+    // reports written before the field existed, which were all release runs.
+    mode: meta.mode ?? "release",
     source: "artefact",
     version: meta.version,
     platform: meta.platform,
@@ -91,6 +94,9 @@ export function renderMarkdown(r) {
   L.push(`| frontend fingerprint | ${cell(r.built_from?.frontend_fingerprint)} |`);
   L.push(`| suite commit | ${cell(r.suite_commit)} |`);
   L.push(`| machine class | ${cell(r.machine)} |`);
+  // Only a non-release run says so: every committed release report predates the
+  // field, and its markdown must still regenerate byte for byte from its JSON.
+  if (r.mode && r.mode !== "release") L.push(`| mode | ${cell(r.mode)} (not a release run; it can never publish) |`);
   L.push(`| os | ${cell(r.os)} |`);
   L.push(`| golden set | ${cell(r.golden_set?.count)} documents, ${cell(r.golden_set?.verified_by)} |`);
   L.push("");

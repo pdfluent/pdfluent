@@ -21,6 +21,29 @@ _run() {  # _run <probe> <command...>
 }
 
 APP=""          # the copy under test, found in S1 and used from S2 on
+
+# --mode ci (release_suite.sh): an unsigned CI build with its own identifier,
+# run on a machine where the owner's own PDFluent may be open. Everything that
+# finds, quits or kills "the app" then goes by the path of the copy under test
+# and by the CI identifier -- never by the process name or the shipped bundle
+# id, which would reach the installed copy.
+_ci() { [ "${SUITE_MODE:-release}" = "ci" ]; }
+_bundle_id() {
+  local v
+  v="$(suite_state_get bundle_id)"
+  if [ -z "${v}" ]; then
+    v="$(python3 -c 'import json,sys;print(json.load(open(sys.argv[1]))["expected_bundle_id"])' "${WORK}/meta.json" 2>/dev/null || echo com.pdfluent.app)"
+    suite_state_set bundle_id "${v}"
+  fi
+  printf '%s' "${v}"
+}
+_app_pgrep() {
+  if _ci; then pgrep -f "^${APP}/Contents/MacOS/pdfluent-desktop"; else pgrep -x pdfluent-desktop; fi
+}
+_app_kill9() {
+  if _ci; then pkill -9 -f "^${APP}/Contents/MacOS/" >/dev/null 2>&1 || true
+  else pkill -9 -x pdfluent-desktop >/dev/null 2>&1 || true; fi
+}
 LOG_DIR=""
 NO_LAUNCH="${PDFLUENT_SUITE_NO_LAUNCH:-0}"
 
@@ -59,14 +82,41 @@ driver_check_tools() {
   '
 }
 
-driver_kill_leftovers() { pkill -x pdfluent-desktop >/dev/null 2>&1 || true; }
+driver_kill_leftovers() {
+  if _ci; then
+    # Only copies this run unpacked. A CI run starts with none, and the
+    # Applications/ directory of an earlier run is gone with its work dir.
+    pkill -f "^${WORK}/Applications/" >/dev/null 2>&1 || true
+  else
+    pkill -x pdfluent-desktop >/dev/null 2>&1 || true
+  fi
+}
 driver_os_string() { printf 'macOS %s' "$(sw_vers -productVersion 2>/dev/null || echo unknown)"; }
 driver_load1() { sysctl -n vm.loadavg 2>/dev/null | awk '{print $2}'; }
 
 driver_s1_probes() {
-  local mnt="${WORK}/mnt"
-  mkdir -p "${mnt}" "${WORK}/Applications"
+  # The mount point lives on the internal disk, always. hdiutil refuses to
+  # mount onto a directory of a volume with ownership disabled ("insufficient
+  # permissions"), which is what the CI runner's build volume is -- and a mount
+  # point holds no data, so nothing is written there. /usr/bin/mktemp directly:
+  # the runner's mktemp shim would put it back on the build volume.
+  # PDFLUENT_SUITE_MOUNT_POINT is for the suite's own cases, which hand it a
+  # directory that already holds a bundle instead of mounting anything.
+  local mnt="${PDFLUENT_SUITE_MOUNT_POINT:-}" made_mnt=0
+  if [ -z "${mnt}" ]; then
+    mnt="$(/usr/bin/mktemp -d /private/tmp/pdfluent-suite-mnt.XXXXXX)" && made_mnt=1
+  fi
+  mkdir -p "${WORK}/Applications"
   _run mount hdiutil attach -nobrowse -readonly -mountpoint "${mnt}" "${ARTEFACT}"
+  # A failed attach can leave the image attached and unmounted; the next run
+  # then fails on "resource temporarily unavailable". Detach it by image path.
+  if [ "$(cat "${WORK}/probes/mount.rc" 2>/dev/null)" != "0" ]; then
+    hdiutil info 2>/dev/null | awk -v img="${ARTEFACT}" '
+      /^image-path/ { on = (index($0, img) > 0) }
+      on && /^\/dev\/disk[0-9]+[ \t]/ { print $1; on = 0 }' | while read -r dev; do
+      hdiutil detach "${dev}" >/dev/null 2>&1 || true
+    done
+  fi
   local src
   src="$(/usr/bin/find "${mnt}" -maxdepth 1 -name '*.app' | head -1)"
   if [ -n "${src}" ]; then
@@ -78,6 +128,8 @@ driver_s1_probes() {
     printf '%s\n' "$(basename "${src}")" > "${WORK}/probes/mount.out"
   fi
   hdiutil detach "${mnt}" >/dev/null 2>&1 || true
+  [ "${made_mnt}" = 1 ] && rmdir "${mnt}" 2>/dev/null
+  true
   [ -n "${APP}" ] || return 0
 
   _run bundle_version /usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "${APP}/Contents/Info.plist"
@@ -99,7 +151,9 @@ driver_s1_probes() {
 
   # Sandboxed builds write their logs inside the container.
   if grep -q 'app-sandbox' "${WORK}/probes/entitlements.out" 2>/dev/null; then
-    LOG_DIR="${HOME}/Library/Containers/com.pdfluent.app/Data/Library/Logs/com.pdfluent.app"
+    # The container is named after the bundle identifier; the directory inside
+    # it is the one the app hard-codes (app_log_dir_path in src-tauri/src/lib.rs).
+    LOG_DIR="${HOME}/Library/Containers/$(_bundle_id)/Data/Library/Logs/com.pdfluent.app"
   else
     LOG_DIR="${HOME}/Library/Logs/com.pdfluent.app"
   fi
@@ -114,7 +168,22 @@ driver_s1_probes() {
 }
 
 driver_s1_checks() {
-  printf '%s' "mount,version,bundle_id,codesign,spctl,stapler,entitlements$([ -e "${WORK}/probes/embed_gate.rc" ] && printf ',embed')"
+  local embed=""
+  [ -e "${WORK}/probes/embed_gate.rc" ] && embed=",embed"
+  if _ci; then
+    # The probes ran and their output is in the work dir; what they would be
+    # judged against -- a Developer ID chain, a notarisation ticket -- is not
+    # in an ad-hoc signed CI build, and pretending otherwise would be a FAIL
+    # about the build type rather than about the code. The release run judges
+    # them on the artefact that ships.
+    local why="a CI build is ad-hoc signed by design; the Developer ID chain and notarisation are judged on the release run of the shipped artefact"
+    na_row S1 codesign signature "${why}"
+    na_row S1 spctl signature "${why}"
+    na_row S1 stapler signature "${why}"
+    printf '%s' "mount,version,bundle_id,entitlements${embed}"
+    return 0
+  fi
+  printf '%s' "mount,version,bundle_id,codesign,spctl,stapler,entitlements${embed}"
 }
 
 driver_documents() {
@@ -256,7 +325,7 @@ if left > 0:
 _app_pid() {
   local left=100 pid=""
   while [ "${left}" -gt 0 ]; do
-    pid="$(pgrep -x pdfluent-desktop 2>/dev/null | head -1)"
+    pid="$(_app_pgrep 2>/dev/null | head -1)"
     [ -n "${pid}" ] && { printf '%s' "${pid}"; return 0; }
     /bin/sleep 0.1; left=$((left - 1))
   done
@@ -278,7 +347,11 @@ driver_open_document() {
   driver_kill_leftovers
   started="$(python3 -c 'import time;print(time.time())')"
   [ -f "${WORK}/s2_t0" ] || printf '%s' "${started}" > "${WORK}/s2_t0"
-  open -a "${APP}" "${pdf}" >/dev/null 2>&1
+  # -g on a CI run: the runner is a person's desktop, and seventeen launches
+  # that each take the focus make it unusable for the length of the job. The
+  # window still opens and the web view still runs; it just stays behind.
+  if _ci; then open -g -a "${APP}" "${pdf}" >/dev/null 2>&1
+  else open -a "${APP}" "${pdf}" >/dev/null 2>&1; fi
 
   # S3 rides on this launch. Starting the app a second time to watch it would
   # watch a different run than the one every other row is about.
@@ -305,12 +378,12 @@ driver_open_document() {
   # says so is the same one it always was.
   _hold_for_startup_check "${started}" "${doc}"
 
-  _run alive pgrep -x pdfluent-desktop
-  osascript -e 'tell application id "com.pdfluent.app" to quit' >/dev/null 2>&1 || true
+  _run alive _app_pgrep
+  osascript -e "tell application id \"$(_bundle_id)\" to quit" >/dev/null 2>&1 || true
   local left=150
-  while [ "${left}" -gt 0 ] && pgrep -x pdfluent-desktop >/dev/null 2>&1; do /bin/sleep 0.1; left=$((left - 1)); done
-  if pgrep -x pdfluent-desktop >/dev/null 2>&1; then
-    pkill -9 -x pdfluent-desktop >/dev/null 2>&1 || true
+  while [ "${left}" -gt 0 ] && _app_pgrep >/dev/null 2>&1; do /bin/sleep 0.1; left=$((left - 1)); done
+  if _app_pgrep >/dev/null 2>&1; then
+    _app_kill9
     printf 'the app did not quit within 15 s and had to be killed\n' >> "${WORK}/probes/quit_forced.out"
     echo 1 > "${WORK}/probes/quit_forced.rc"
   fi

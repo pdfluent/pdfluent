@@ -1,0 +1,19 @@
+{
+  "_what": "Test files that do not run on one platform, each with the reason. vitest.config.ts excludes them on that platform only and prints SKIPPED (not a pass) for every one, so a Windows run says what it did not judge. tests/platform-exclusions.test.ts fails on an entry without a reason, on a file that no longer exists, and on any platform other than win32. Every entry here still runs on Linux (quality-gates-fast) and macOS (quality:macos). Shrink this list; never grow it to make a red run green without a reason that is about the platform rather than about the code.",
+  "win32": {
+    "tests/release-suite/observer-cleanup.test.ts": "drives scripts/quality/suite/observers.sh with POSIX ps/kill/nettop; the Windows lane samples sockets in windows.ps1 and never sources observers.sh",
+    "tests/ui-register.test.ts": "scripts/quality/ui-register.mjs resolves component imports as '/'-separated paths and finds 0 affordances on Windows (tool bug, open); the register is generated and gated on Linux by quality:ui-register",
+    "tests/release-suite/ui-walk.test.ts": "reads its targets through the same ui-register walker, so it inherits the separator bug above",
+    "tests/compliance-generator-optional-deps.test.ts": "imports scripts/generate-third-party.mjs by a bare Windows path (ERR_UNSUPPORTED_ESM_URL_SCHEME, tool bug, open); the notice files are generated and gated on Linux",
+    "tests/licence-policy-dual-commercial.test.ts": "same bare-path import of scripts/generate-third-party.mjs as above",
+    "tests/ci/repo-truth.test.ts": "builds fixture repositories with git commit-tree under an environment stripped of GIT_*, which has no commit identity on the Windows build account; the guard runs on Linux",
+    "tests/ci/publish-public-guards.test.ts": "same git commit-tree fixtures as repo-truth",
+    "tests/ci/public-tree.test.ts": "same git commit-tree fixtures as repo-truth",
+    "tests/ci/internal-terms.test.ts": "its git stub writes a call log through a POSIX shell shim that Windows git does not run; the scan runs on Linux",
+    "tests/mas-entitlements.test.ts": "the Mac App Store entitlements tool is a macOS/Linux shell pipeline",
+    "tests/release-windows/remote-from-sha.test.ts": "tests scripts/release-windows-remote.sh, which runs on the Mac and drives the Windows host over ssh; it is not meant to run on Windows",
+    "tests/ci/guards-flush-before-exit.test.ts": "measures POSIX pipe buffering on process.exit(); on Windows a hard exit keeps the output, so the premise of the case does not hold",
+    "tests/offline-endpoint-allowlist.test.ts": "asserts no temp path leaks into a message; the redaction matches '/tmp'-style paths and misses a backslash temp path (tool bug, open); the allow-list runs on Linux",
+    "tests/ci/remotes-agree.test.ts": "asserts a token is redacted from git's error; Windows git prints the file-URL form '//user:token@E:/...' which the redaction does not match (guard bug, open; the guard runs on Linux only)"
+  }
+}

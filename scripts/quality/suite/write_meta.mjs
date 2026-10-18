@@ -108,6 +108,14 @@ async function main(argv) {
 
   const version = JSON.parse(readFileSync(path.join(repo, "package.json"), "utf8")).version;
   const tauriConf = JSON.parse(readFileSync(path.join(repo, "src-tauri/tauri.conf.json"), "utf8"));
+  // A CI build carries its own identifier (src-tauri/tauri.ci.conf.json) so it
+  // never shares a container, a log directory or an AppleScript quit with the
+  // PDFluent a person has installed on the same machine. The identity row
+  // checks for that identifier, not the shipped one.
+  const mode = a.mode === "ci" ? "ci" : "release";
+  const ciConf = mode === "ci"
+    ? JSON.parse(readFileSync(path.join(repo, "src-tauri/tauri.ci.conf.json"), "utf8"))
+    : null;
   const artefact = path.resolve(a.artefact);
   const suiteCommit = git(["rev-parse", "HEAD"]);
   const builtFrom = a.commit || suiteCommit;
@@ -120,7 +128,8 @@ async function main(argv) {
   try { golden = JSON.parse(a.golden || "null"); } catch { golden = null; }
 
   const meta = {
-    run_id: `${a.machine}-${new Date().toISOString().slice(0, 10)}-${a.platform}-${String(builtFrom).slice(0, 7)}`,
+    run_id: `${a.machine}-${new Date().toISOString().slice(0, 10)}-${a.platform}${mode === "ci" ? "-ci" : ""}-${String(builtFrom).slice(0, 7)}`,
+    mode,
     version,
     platform: a.platform,
     platform_key: PLATFORM_KEY[a.platform] ?? a.platform,
@@ -156,7 +165,7 @@ async function main(argv) {
     tools,
     golden_set: golden,
     expected_version: version,
-    expected_bundle_id: tauriConf.identifier ?? "com.pdfluent.app",
+    expected_bundle_id: (ciConf?.identifier ?? tauriConf.identifier) ?? "com.pdfluent.app",
     open_timeout_s: 60,
     // The app's one unprompted outbound moment, and how long S2 holds a launch
     // open to cover it (#551). Both are read out of src/lib/updater.ts here, so

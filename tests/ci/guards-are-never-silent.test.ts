@@ -45,7 +45,7 @@
 // "every command here asks scripts/lib/main-module.mjs, and none of them reads
 // process.argv[1] itself".
 import { execFileSync } from "node:child_process";
-import { mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import { linkSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, rmSync, statSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, relative, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
@@ -60,13 +60,31 @@ afterAll(() => rmSync(dir, { recursive: true, force: true }));
 // already reached through /var -> /private/var and reproduces this on its own;
 // on Linux nothing is symlinked unless it is made so, and the gate is Linux.
 const linked = join(dir, "checkout-through-a-symlink");
-symlinkSync(repo, linked);
+// A second path to the same thing. On Windows a symlink needs a privilege the
+// CI account does not hold (EPERM), so a directory gets a junction and a file a
+// hard link: both are the same file reached through another name, which is
+// what these cases are about.
+function anotherPath(target: string, path: string): void {
+  if (process.platform !== "win32") return symlinkSync(target, path);
+  if (statSync(target).isDirectory()) return symlinkSync(target, path, "junction");
+  return linkSync(target, path);
+}
+anotherPath(repo, linked);
 
 // A hook exports GIT_DIR, and a guard that inherits it reads a repository
 // other than the one it was pointed at.
+//
+// The pipeline's own event leaks the same way. Run inside a pull_request job,
+// remotes-agree inherited GITHUB_EVENT_NAME=pull_request and answered "a pull
+// request has not landed" before it ever looked at the branch the case hands
+// it -- red on the first pull request this repository ran, green on every push.
+// A case sets the context it means to test; nothing of the job's own leaks in.
+const PIPELINE_CONTEXT = ["GITHUB_EVENT_NAME", "GITHUB_REF", "GITHUB_REF_NAME", "GITHUB_REF_TYPE", "GITHUB_HEAD_REF", "GITHUB_BASE_REF", "CI_PIPELINE_SOURCE", "CI_COMMIT_BRANCH", "CI_MERGE_REQUEST_IID"];
 function cleanEnv(extra: NodeJS.ProcessEnv = {}): NodeJS.ProcessEnv {
   const env: NodeJS.ProcessEnv = {};
-  for (const [k, v] of Object.entries(process.env)) if (!k.startsWith("GIT_")) env[k] = v;
+  for (const [k, v] of Object.entries(process.env)) {
+    if (!k.startsWith("GIT_") && !PIPELINE_CONTEXT.includes(k)) env[k] = v;
+  }
   return { ...env, ...extra };
 }
 
@@ -183,7 +201,7 @@ const renamed = join(dir, "links-wearing-another-name");
 mkdirSync(renamed);
 function underAnotherName(g: Guard): string {
   const link = join(renamed, `zzq-${g.script.replace(/[/.]/g, "-")}.mjs`);
-  symlinkSync(join(repo, g.script), link);
+  anotherPath(join(repo, g.script), link);
   return link;
 }
 
@@ -192,13 +210,21 @@ describe("every guard answers the same whichever path it is reached through", ()
     it(`${g.script} runs whichever way it is reached, and says so`, () => {
       const real = run(join(repo, g.script), g);
       const through = run(join(linked, g.script), g);
-      const named = run(underAnotherName(g), g);
+      // A file symlink needs a privilege the Windows CI account does not hold,
+      // and a hard link is not the same case: node resolves a symlink before
+      // filling in import.meta.url, but a hard link is a file of its own in
+      // another directory, so its relative imports break for a reason that is
+      // about the link. On Windows this one way is announced and left out.
+      const fileLinks = process.platform !== "win32";
+      if (!fileLinks) process.stderr.write(`SKIPPED (not a pass): ${g.script} under another name — no file symlinks for the Windows CI account\n`);
+      const named = fileLinks ? run(underAnotherName(g), g) : null;
 
       // The failure this replaces had one shape: nothing on either stream and
       // an exit code a pipeline reads as a pass. Silence is asserted against
       // first, because a guard that says nothing has judged nothing.
       const ways = [
-        ["its own path", real], ["a symlinked path", through], ["a link under another name", named],
+        ["its own path", real], ["a symlinked path", through],
+        ...(named ? [["a link under another name", named] as const] : []),
       ] as const;
       for (const [how, r] of ways) {
         expect(r.out.trim(), `${g.script} said nothing through ${how}`).not.toBe("");
@@ -256,8 +282,8 @@ fixture("zzq-old-spelling.mjs", [
 ].join("\n"));
 
 const linkedFixtures = join(dir, "fixtures-through-a-symlink");
-symlinkSync(fixtures, linkedFixtures);
-symlinkSync(guardFixture, join(fixtures, "zzq-guard-under-another-name.mjs"));
+anotherPath(fixtures, linkedFixtures);
+anotherPath(guardFixture, join(fixtures, "zzq-guard-under-another-name.mjs"));
 
 function node(file: string) {
   const r = runToFile(process.execPath, [file], { cwd: dir, env: cleanEnv() });
@@ -300,6 +326,14 @@ describe("the check that decides whether a guard is the command", () => {
 
   it("is not decoration: the spelling it replaces is silent with exit 0 through a symlink", () => {
     const own = node(join(fixtures, "zzq-old-spelling.mjs"));
+    if (process.platform === "win32") {
+      // Worse on Windows: `file://${argv[1]}` is `file://E:\...` against
+      // import.meta.url's `file:///E:/...`, so the old spelling is silent even
+      // through its own path.
+      expect(`${own.out}${own.err}`).toBe("");
+      expect(own.status).toBe(0);
+      return;
+    }
     expect(own.out).toContain("ZZQ-GUARD RAN");
 
     const through = node(join(linkedFixtures, "zzq-old-spelling.mjs"));

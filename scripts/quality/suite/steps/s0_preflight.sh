@@ -35,8 +35,16 @@ step_s0() {
   case "${PLATFORM}" in
     macos)
       case "${name}" in *.dmg) ;; *) s0_die "macOS publishes a .dmg; got ${name}"; return 1 ;; esac
-      expected_ver="$(printf '%s' "${name}" | sed -n 's/^PDFluent_\(.*\)_universal\.dmg$/\1/p')"
-      [ -n "${expected_ver}" ] || { s0_die "${name} is not PDFluent_<version>_universal.dmg"; return 1; }
+      # A release ships the universal image. A CI run builds for the runner's
+      # own architecture only (one slice is what it can launch), and says so in
+      # the name; --mode ci is the only way such an image gets this far.
+      if [ "${SUITE_MODE:-release}" = "ci" ]; then
+        expected_ver="$(printf '%s' "${name}" | sed -En 's/^PDFluent_(.*)_(universal|aarch64|x64)\.dmg$/\1/p')"
+        [ -n "${expected_ver}" ] || { s0_die "${name} is not PDFluent_<version>_<universal|aarch64|x64>.dmg"; return 1; }
+      else
+        expected_ver="$(printf '%s' "${name}" | sed -n 's/^PDFluent_\(.*\)_universal\.dmg$/\1/p')"
+        [ -n "${expected_ver}" ] || { s0_die "${name} is not PDFluent_<version>_universal.dmg"; return 1; }
+      fi
       [ "${expected_ver}" = "${version}" ] || { s0_die "the artefact says ${expected_ver} and this checkout says ${version} — this is not the tree that artefact was built from"; return 1; }
       ;;
     windows)
@@ -63,7 +71,7 @@ step_s0() {
     --work "${WORK}" --repo "${REPO_ROOT}" --artefact "${ARTEFACT}" --platform "${PLATFORM}" \
     --machine "${MACHINE}" --commit "${COMMIT}" --tools "${tools_json}" \
     --os "$(driver_os_string)" --load1 "$(driver_load1)" \
-    --expect-updater "${EXPECT_UPDATER}" --golden "${golden_problem}" || return 1
+    --expect-updater "${EXPECT_UPDATER}" --golden "${golden_problem}" --mode "${SUITE_MODE:-release}" || return 1
 
   # One row so S0 is visible in the report. A step that cannot fail is still a
   # step a reader looks for, and its absence reads as "not run".
