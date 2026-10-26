@@ -1,0 +1,77 @@
+{
+  "component": "pii-model",
+  "manifest": "src-tauri/resources/pii/gliner-pii-component.json",
+  "about": "Licence inventory rows for the personal-data component: the inference crate compiled in under the pii-model feature, and the files downloaded as the opt-in component. THIRD_PARTY.md is generated from the lock files; these rows cover what the lock files cannot see (model weights, training data, the ONNX Runtime library). tests/pii-component-licences.test.ts ties this file to the manifest and refuses a published manifest while a row blocks publication.",
+  "rows": [
+    {
+      "name": "GLiNER and gline-rs (input/output format reference)",
+      "version": "",
+      "kind": "design reference, no code copied",
+      "license": "Apache-2.0",
+      "source": "github.com/urchade/GLiNER, github.com/fbilhaut/gline-rs",
+      "policyStatus": "allowed",
+      "blocksPublication": false,
+      "note": "src-tauri/src/pii_gliner.rs implements the GLiNER span-mode input encoding and output decoding. It was written from the model's published format (the GLiNER reference implementation, urchade/GLiNER) and from reading how gline-rs 1.1.0 (fbilhaut/gline-rs) prepares the six inputs and decodes the logits: words numbered from 1 on their first sub-token, span_idx as (start, start+offset), logits as [batch, words, width, labels], sigmoid then threshold, greedy flat selection. Both are Apache-2.0, which permits reading and reimplementing; no source was copied. gline-rs itself is NOT a dependency: it pins ort rc.9 and enables tokenizers' http feature. Their licence texts ship in the component (LICENSES/gliner-LICENSE.txt) as a courtesy and so the provenance travels with the model."
+    },
+    {
+      "name": "ort (ONNX Runtime bindings)",
+      "version": "=2.0.0-rc.12",
+      "kind": "crate (compiled in, feature pii-model)",
+      "license": "Apache-2.0",
+      "source": "github.com/pykeio/ort",
+      "policyStatus": "allowed",
+      "blocksPublication": false,
+      "note": "Dual-licensed MIT OR Apache-2.0; used under Apache-2.0. The same exact version as the engine's pdf-ocr pin, so the build has one ort-sys. Licence to be confirmed from cargo license in the build round."
+    },
+    {
+      "name": "tokenizers (Hugging Face)",
+      "version": "0.22",
+      "kind": "crate (compiled in, feature pii-model)",
+      "license": "Apache-2.0",
+      "source": "github.com/huggingface/tokenizers",
+      "policyStatus": "allowed",
+      "blocksPublication": false,
+      "note": "Built with default features off and unstable_wasm on: pure-Rust regex backend (no onig, a C library), no http feature (no download code), no progress bar. Transitive licences to be read from cargo license in the build round."
+    },
+    {
+      "name": "gliner-pii-base-v1.0 (model weights, ONNX UINT8)",
+      "version": "1.0",
+      "kind": "model file (opt-in component)",
+      "license": "Apache-2.0",
+      "source": "huggingface.co/knowledgator/gliner-pii-base-v1.0",
+      "policyStatus": "allowed",
+      "blocksPublication": false,
+      "note": "Licence as declared on the model card. The weights may be redistributed from our host under Apache-2.0 with the licence text and any NOTICE shipped alongside (LICENSES/gliner-pii-base-v1.0-LICENSE.txt). The component pins the upstream commit (model.source_revision) so the licence read is the licence shipped."
+    },
+    {
+      "name": "gliner-pii-base-v1.0 training data and backbone",
+      "version": "1.0",
+      "kind": "provenance of the model weights",
+      "license": "unverified",
+      "source": "huggingface.co/knowledgator/gliner-pii-base-v1.0",
+      "policyStatus": "needs-review",
+      "blocksPublication": true,
+      "note": "OPEN QUESTION. The model card does not name the base model or the training data, and says its numbers come from a vendor-side synthetic set. An Apache-2.0 licence on the weights does not settle whether the data they were trained on carried terms that restrict commercial redistribution of a model derived from it (some public PII datasets are released under non-commercial or custom terms, which is exactly the thing to rule out; none is asserted here). To close it: (1) read the model card and any dataset card it links on the pinned revision; (2) ask Knowledgator in writing for the training-data sources and their licences and keep the answer in the legal evidence folder; (3) record the result here and set blocksPublication to false. Until then the manifest cannot be published (tests/pii-component-licences.test.ts). Same rule as the model-licensing-ship-neutral decision: weights we host are weights we answer for."
+    },
+    {
+      "name": "ONNX Runtime (shared library in the component)",
+      "version": "",
+      "kind": "native library (opt-in component)",
+      "license": "MIT",
+      "source": "github.com/microsoft/onnxruntime",
+      "policyStatus": "allowed",
+      "blocksPublication": false,
+      "note": "Loaded at run time from the component folder (load-dynamic), never linked. The version must match the ort API level the pinned gline-rs expects (rc.9 line); pin it when the component is built. The Windows library needs the Microsoft Visual C++ runtime, which the installer already provides for the editor. Ship its licence text and third-party notices file in the component."
+    },
+    {
+      "name": "Microsoft Presidio (design reference)",
+      "version": "",
+      "kind": "design reference, no code copied",
+      "license": "MIT",
+      "source": "github.com/microsoft/presidio",
+      "policyStatus": "allowed",
+      "blocksPublication": false,
+      "note": "The recogniser structure (shape, checksum, context words) and entity list follow Presidio's. The checksum rules themselves are public specifications of the issuing authorities and are implemented in src-tauri/src/pii_ids.rs from those specifications. If Presidio source is ever copied, its MIT notice goes into THIRD_PARTY_ATTRIBUTIONS.md first."
+    }
+  ]
+}

@@ -19,7 +19,10 @@
       `files.user-selected.read-write` = the powerbox grant for every file the
       user opens/saves/exports. `bookmarks.app-scope` lets recent files reopen
       across launches via the security-scoped bookmarks in crates/macos-secure.
-      `network.client` covers optional network features (OCR model download).
+      `network.client` covers the optional network features (the crash and feedback
+      report the user sends). OCR needs none: Tesseract is bundled and runs as a
+      sandbox-inheriting helper (Entitlements.appstore.inherit.plist) that reads
+      and writes only through pipes, so it needs no file or network entitlement.
     -->
     <key>com.apple.security.app-sandbox</key>
     <true/>

@@ -60,7 +60,7 @@ function ResizeHandles({ domRect }: { domRect: { left: number; top: number; widt
           width={s}
           height={s}
           fill="white"
-          stroke="rgb(37, 99, 235)"
+          stroke="var(--selection-on-page)"
           strokeWidth={1.5}
           rx={1}
           pointerEvents="none"
@@ -118,7 +118,7 @@ export const TextInteractionOverlay = memo(function TextInteractionOverlay({
             width={Math.max(0, domRect.width + 2)}
             height={Math.max(0, domRect.height + 2)}
             fill="none"
-            stroke="rgba(37,99,235,0.25)"
+            stroke="var(--selection-on-page-line)"
             strokeWidth={1}
             strokeDasharray="4 3"
             rx={1}

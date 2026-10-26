@@ -113,7 +113,7 @@ describe("what leaves this repository is declared", () => {
     // A comparison against an empty listing agrees with everything, and that is
     // how a broken invocation reads as a clean repository.
     const empty = spawnSync("git", ["hash-object", "-w", "-t", "tree", "/dev/null"], { cwd: root, encoding: "utf8" });
-    const commit = spawnSync("git", ["commit-tree", empty.stdout.trim(), "-m", "empty"], { cwd: root, encoding: "utf8" });
+    const commit = spawnSync("git", ["-c", "user.name=fixture", "-c", "user.email=fixture@invalid", "commit-tree", empty.stdout.trim(), "-m", "empty"], { cwd: root, encoding: "utf8" });
     const r = tool("--list", commit.stdout.trim());
     expect(r.status).not.toBe(0);
     expect(r.err).toContain("fewer than");

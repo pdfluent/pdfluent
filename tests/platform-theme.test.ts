@@ -6,6 +6,7 @@ import { describe, expect, it } from "vitest";
 
 const appSource = readFileSync(new URL("../src/legacy/App.tsx", import.meta.url), "utf8");
 const css = readFileSync(new URL("../src/styles/global.css", import.meta.url), "utf8");
+const tokens = readFileSync(new URL("../src/styles/tokens.css", import.meta.url), "utf8");
 
 describe("platform-specific theming", () => {
   it("detects platform theme and applies it on the root element", () => {
@@ -17,7 +18,11 @@ describe("platform-specific theming", () => {
 
   it("defines dedicated windows override tokens and component styles", () => {
     expect(css).toContain(':root[data-platform="windows"] {');
-    expect(css).toContain("--accent: #0f6cfe;");
+    // Windows keeps its own surface tints (tokens.css); interaction colours
+    // are shared with macOS, so there is no Windows-specific blue any more.
+    expect(tokens).toContain(':root[data-platform="windows"] {');
+    expect(tokens).toContain("--bg-canvas: #d5dbe6;");
+    expect(tokens).not.toContain("#0f6cfe");
     expect(css).toContain(':root[data-platform="windows"] .toolbar {');
     expect(css).toContain(':root[data-platform="windows"] .sidebar {');
     expect(css).toContain(':root[data-platform="windows"] .viewer-page-image {');

@@ -114,9 +114,9 @@
     "allTools": "Všechny nástroje",
     "contextualBar": "Panel nástrojů režimu",
     "pdfa": "PDF/A",
-    "metadata": "Document properties",
-    "invoice": "E-invoice",
-    "bookmarks": "Bookmarks"
+    "metadata": "Vlastnosti dokumentu",
+    "invoice": "E-faktura",
+    "bookmarks": "Záložky"
   },
   "topbar": {
     "openPdf": "Otevřít PDF",
@@ -242,7 +242,6 @@
     "ownerPasswordPlaceholder": "Heslo vlastníka",
     "encryptBtn": "Šifrovat…",
     "decrypt": "Dešifrovat",
-    "currentPasswordPlaceholder": "Aktuální heslo",
     "decryptBtn": "Dešifrovat",
     "noDocument": "Žádný otevřený dokument.",
     "permCanPrint": "Tisk",
@@ -258,7 +257,11 @@
     "searchRedactBtn": "Najít a redigovat",
     "redactMetadataTitle": "Metadata",
     "redactMetadataDesc": "Odstranit autora, název a další identifikační metadata.",
-    "redactMetadataBtn": "Odstranit metadata"
+    "redactMetadataBtn": "Odstranit metadata",
+    "ownerPasswordForRemoval": "Heslo vlastníka (oprávnění)",
+    "removePasswordHelp": "Odebrání hesla vyžaduje heslo vlastníka, to, které chrání oprávnění. Heslo, kterým jste soubor otevřeli, nestačí, pokud to není také heslo vlastníka.",
+    "removePasswordReady": "Tento soubor jste otevřeli heslem vlastníka, takže ochranu lze odebrat bez opětovného zadání.",
+    "removePasswordNotProtected": "Tento dokument není chráněn heslem."
   },
   "organize": {
     "thumbnails": "Miniatury",
@@ -287,33 +290,34 @@
     "combine": "Kombinovat soubory",
     "splitRange": "Rozdělit podle rozsahu",
     "splitRangeHint": "Nejprve vyberte stránky",
-    "moveLeft": "Move selected page left",
-    "moveRight": "Move selected page right",
-    "moveLeftShort": "Left",
-    "moveRightShort": "Right",
-    "rotateLeft": "Rotate left",
-    "rotateRight": "Rotate right",
-    "rotateLeftShort": "Left",
-    "rotateRightShort": "Right",
-    "addingPdf": "Adding PDF…",
-    "pdfAdded": "PDF added",
-    "combiningFiles": "Combining {{count}} file(s)…",
-    "filesCombined": "{{count}} file(s) combined",
-    "insertingPdf": "Inserting PDF before page {{page}}…",
-    "pdfInserted": "PDF inserted",
-    "exportingPages": "Exporting {{count}} page(s)…",
-    "selectionExported": "Selection exported to {{name}}",
-    "splittingPages": "Splitting into individual pages…",
-    "pagesSaved": "{{count}} pages saved",
-    "splittingRanges": "Splitting {{count}} range(s)…",
-    "filesSaved": "{{count}} file(s) saved"
+    "moveLeft": "Přesunout vybranou stránku doleva",
+    "moveRight": "Přesunout vybranou stránku doprava",
+    "moveLeftShort": "Doleva",
+    "moveRightShort": "Doprava",
+    "rotateLeft": "Otočit doleva",
+    "rotateRight": "Otočit doprava",
+    "rotateLeftShort": "Doleva",
+    "rotateRightShort": "Doprava",
+    "addingPdf": "Přidávání PDF…",
+    "pdfAdded": "PDF přidáno",
+    "combiningFiles": "Kombinování souborů ({{count}})…",
+    "filesCombined": "Zkombinováno souborů: {{count}}",
+    "insertingPdf": "Vkládání PDF před stránku {{page}}…",
+    "pdfInserted": "PDF vloženo",
+    "exportingPages": "Exportování stránek ({{count}})…",
+    "selectionExported": "Výběr exportován do {{name}}",
+    "splittingPages": "Rozdělování na jednotlivé stránky…",
+    "pagesSaved": "Uloženo stránek: {{count}}",
+    "splittingRanges": "Rozdělování rozsahů ({{count}})…",
+    "filesSaved": "Uloženo souborů: {{count}}"
   },
   "unsavedChanges": {
     "title": "Neuložené změny",
     "message": "Chcete před pokračováním uložit změny?",
     "save": "Uložit",
     "discard": "Zahodit změny",
-    "cancel": "Zrušit"
+    "cancel": "Zrušit",
+    "messageNamed": "Chcete uložit změny v {{name}} před pokračováním?"
   },
   "welcome": {
     "title": "Otevřete PDF pro začátek",
@@ -327,13 +331,13 @@
     "lede": "Čtěte, upravujte, převádějte, vyplňujte a podepisujte — vše na vašem zařízení.",
     "privacyPromise": "Lokálně · dokumenty nikdy neopustí toto zařízení",
     "dropPdfHere": "Přetáhněte PDF sem",
-    "v3Subtitle": "Open a PDF to read, edit, convert or sign it locally.",
-    "openFileAria": "Choose a PDF file to open",
-    "clearRecent": "Clear recent",
-    "recentShort": "Recent",
-    "removeRecentAria": "Remove {{name}}",
-    "backToDocument": "Back to document",
-    "loadingDocument": "Loading document…"
+    "v3Subtitle": "Otevřete PDF a čtěte, upravujte, převádějte nebo podepisujte jej lokálně.",
+    "openFileAria": "Vyberte soubor PDF k otevření",
+    "clearRecent": "Vymazat poslední",
+    "recentShort": "Poslední",
+    "removeRecentAria": "Odebrat {{name}}",
+    "backToDocument": "Zpět na dokument",
+    "loadingDocument": "Načítání dokumentu…"
   },
   "settings": {
     "language": "Jazyk",
@@ -350,15 +354,29 @@
     "reviewerNamePlaceholder": "Jméno použité v anotacích",
     "exportPreferences": "Předvolby exportu",
     "exportFormatLabel": "Výchozí formát exportu",
-    "autosave": "Automatické ukládání",
-    "autosaveEnable": "Automaticky ukládat změny",
     "themeLabel": "Motiv",
     "ocrDefaults": "Výchozí nastavení OCR",
     "ocrLanguageLabel": "Výchozí jazyk (ISO-639-2)",
     "ocrLanguagePlaceholder": "např. eng, nld, deu",
-    "updates": "Updates",
-    "automaticUpdateCheck": "Check for a new version at startup",
-    "automaticUpdateCheckHint": "PDFluent asks pdfluent.com whether a newer version exists, a few seconds after it starts. Nothing from your documents is sent. Turn this off and the app never checks on its own — \"Check for updates\" still works whenever you ask for it."
+    "updates": "Aktualizace",
+    "automaticUpdateCheck": "Při spuštění zkontrolovat novou verzi",
+    "automaticUpdateCheckHint": "PDFluent se několik sekund po spuštění dotáže pdfluent.com, zda existuje novější verze. Nic z vašich dokumentů se neodesílá. Vypněte to a aplikace už sama nikdy nekontroluje — \"Zkontrolovat aktualizace\" stále funguje, kdykoli o to požádáte.",
+    "recoveryCopy": "Kopie pro obnovu",
+    "recoveryCopyEnable": "Uchovávat kopii neuložených změn pro obnovu, nabízenou po pádu aplikace",
+    "view": "Zobrazení",
+    "defaultZoomLabel": "Výchozí zvětšení",
+    "defaultZoomFitWidth": "Přizpůsobit šířce (výchozí)",
+    "defaultZoomFitPage": "Přizpůsobit stránce",
+    "defaultZoomActualSize": "Skutečná velikost (100 %)",
+    "defaultZoomLastUsed": "Naposledy použité",
+    "defaultZoomHint": "Dokument se otevře s tímto zvětšením a přizpůsobuje se oknu, dokud si zvětšení nezměníte sami. Přizpůsobení šířce místo toho zobrazí celou stránku, pokud se to jednoznačně hodí lépe.",
+    "securityTitle": "Zabezpečení",
+    "formScriptsLabel": "Skripty formuláře",
+    "formScriptsAsk": "Zeptat se",
+    "formScriptsAlways": "Vždy",
+    "formScriptsNever": "Nikdy",
+    "formScriptsHint": "Formuláře mohou obsahovat skripty, například výpočty. Výchozí je Zeptat se: formulář se otevře s uloženými hodnotami a nic se nespustí, dokud nesouhlasíte.",
+    "formScriptsPinned": "Vaše organizace toto nastavení určila. Zde jej nelze změnit."
   },
   "errors": {
     "loadFailed": "Načtení dokumentu selhalo",
@@ -381,7 +399,8 @@
     "addPageFailed": "Přidání PDF selhalo",
     "insertFailed": "Vložení PDF selhalo",
     "splitFailed": "Rozdělení selhalo",
-    "commandFailedTitle": "'{{command}}' did not complete"
+    "commandFailedTitle": "'{{command}}' nebyl dokončen",
+    "commandRetrying": "Dočasná chyba v {{command}} — zkouším to znovu"
   },
   "events": {
     "formFieldUpdated": "Pole formuláře aktualizováno",
@@ -430,9 +449,9 @@
     "pageNotFound": "Stránka nenalezena",
     "requiresFontInspection": "Úprava textu vyžaduje inspekci písem (plánováno pro fázi 6).",
     "rejection": {
-      "bannerTitle": "This text was not changed",
-      "bannerDetail": "Reason reported by the PDF engine: {{detail}}",
-      "bannerDismiss": "Dismiss",
+      "bannerTitle": "Tento text nebyl změněn",
+      "bannerDetail": "Důvod hlášený PDF enginem: {{detail}}",
+      "bannerDismiss": "Zavřít",
       "replacement-too-long": {
         "tooltip": "Replacement is too long",
         "explanation": "The replacement is longer than the text it replaces. Keep it the same length or shorter so the surrounding layout stays intact."
@@ -491,8 +510,8 @@
       }
     },
     "fallback": {
-      "fontSubstitutedTitle": "A standard font wrote the new text",
-      "fontSubstitutedMessage": "The original font of this text has no glyph for one or more characters you typed, so Helvetica was used for the replacement. The text is correct; it may look slightly different from the rest of the line."
+      "fontSubstitutedTitle": "Nový text zapsalo standardní písmo",
+      "fontSubstitutedMessage": "Původní písmo tohoto textu nemá glyf pro jeden nebo více znaků, které jste zadali, takže k nahrazení bylo použito písmo Helvetica. Text je správný; může vypadat mírně odlišně od zbytku řádku."
     }
   },
   "validation": {
@@ -566,12 +585,16 @@
     "watermarkDone": "Vodoznak přidán",
     "watermarkFailed": "Vodoznak selhal",
     "watermarkRunning": "Přidávání vodoznaku…",
-    "pdfaRunning": "Converting to PDF/A…",
-    "pdfaDone": "PDF/A written",
-    "pdfaFailed": "PDF/A conversion failed",
-    "metadataRunning": "Saving properties…",
-    "metadataDone": "Properties saved",
-    "metadataFailed": "Could not save properties"
+    "pdfaRunning": "Převod do PDF/A…",
+    "pdfaDone": "PDF/A zapsáno",
+    "pdfaFailed": "Převod do PDF/A selhal",
+    "metadataRunning": "Ukládání vlastností…",
+    "metadataDone": "Vlastnosti uloženy",
+    "metadataFailed": "Vlastnosti nelze uložit",
+    "exportMarkdownRunning": "Exportuje se jako Markdown…",
+    "exportMarkdownDone": "Markdown exportován",
+    "exportTablesRunning": "Exportují se tabulky do Excelu…",
+    "exportTablesDone": "Tabulky exportovány do Excelu ({{count}})"
   },
   "panels": {
     "search": "Hledat",
@@ -714,7 +737,10 @@
     "formatJpeg": "JPEG (obrázek)",
     "formatDocx": "Wordový dokument (.docx)",
     "formatXlsx": "Excelová tabulka (.xlsx)",
-    "formatPptx": "PowerPointová prezentace (.pptx)"
+    "formatPptx": "PowerPointová prezentace (.pptx)",
+    "formatMarkdown": "Markdown (.md) - Náhled",
+    "formatTablesXlsx": "Tabulky do Excelu (.xlsx) - Náhled",
+    "noTablesFound": "V tomto dokumentu nebyly rozpoznány žádné tabulky."
   },
   "goToPage": {
     "title": "Přejít na stránku",
@@ -729,7 +755,9 @@
     "documentLabel": "Dokument:",
     "savedLabel": "Uloženo:",
     "recoveryPath": "Cesta obnovy:",
-    "restore": "Obnovit"
+    "restore": "Obnovit",
+    "untitled": "Dokument bez názvu",
+    "andMore": "{{name}} a další {{count}}"
   },
   "emptyStates": {
     "noDocument": "Žádný otevřený dokument",
@@ -839,7 +867,26 @@
     "statusUnavailableWithReason": "OCR runtime není dostupný: {{reason}}",
     "statusRetry": "Zkontrolovat znovu",
     "runtimePath": "Runtime: {{path}}",
-    "missingPackages": "Chybí: {{packages}}"
+    "missingPackages": "Chybí: {{packages}}",
+    "noScannedPagesTitle": "Nic k rozpoznání",
+    "unavailable": {
+      "platform": "OCR se pro tuto platformu nenabízí.",
+      "missing": "Soubory OCR této verze chybí nebo jsou neúplné. Přeinstalujte PDFluent, abyste je obnovili."
+    },
+    "settings": {
+      "unknown": "Komponenta OCR: kontroluje se…",
+      "installed": "Komponenta OCR: Tesseract {{version}} je nainstalována"
+    },
+    "errors": {
+      "OCR_COMPONENT_UNSUPPORTED_PLATFORM": "Komponenta OCR není pro tuto platformu nabízena.",
+      "OCR_COMPONENT_NOT_INSTALLED": "Komponenta OCR není nainstalována.",
+      "OCR_LANGUAGE_MISSING": "Jazykový balíček pro OCR není nainstalován.",
+      "OCR_SIGNED_DOCUMENT": "Tento dokument je podepsán. OCR by změnilo podepsané stránky, proto se nespustí.",
+      "OCR_NOT_PERMITTED": "Oprávnění dokumentu neumožňují měnit jeho obsah.",
+      "OCR_DOCUMENT_CHANGED": "Dokument se během běhu OCR změnil. Spusťte OCR znovu.",
+      "OCR_ENGINE_FAILED": "OCR skončilo s chybou.",
+      "OCR_PAGE_OUT_OF_RANGE": "Stránka k rozpoznání není v dokumentu."
+    }
   },
   "docInfo": {
     "title": "Název",
@@ -879,7 +926,17 @@
     "italicComingSoon": "Kurzíva formátování připravujeme",
     "sourceDigital": "Textová vrstva PDF",
     "sourceOcr": "OCR",
-    "browserLimitedNote": "Kliknutím na text na stránce upravíte podporovaný text PDF. Obrázky a odkazy jsou dostupné v desktopové aplikaci."
+    "browserLimitedNote": "Kliknutím na text na stránce upravíte podporovaný text PDF. Obrázky a odkazy jsou dostupné v desktopové aplikaci.",
+    "typeface": {
+      "label": "Písmo",
+      "default": "Písmo dokumentu",
+      "noEmbed": "{{family}}: licence písma neumožňuje jeho vložení do PDF",
+      "refusedLicence": "{{family}} nelze použít: jeho licence neumožňuje vložení do PDF. Vyberte jiné písmo.",
+      "refusedGlyphs": "{{family}} nemá glyf pro {{characters}}. Vyberte jiné písmo.",
+      "refusedGone": "Toto písmo již není nainstalováno. Vyberte jiné.",
+      "refusedText": "Text ke změně stylu již není na stránce.",
+      "refusedUnusable": "{{family}} nelze načíst jako písmo. Vyberte jiné písmo."
+    }
   },
   "rightPanel": {
     "properties": "Vlastnosti",
@@ -944,9 +1001,12 @@
     "flatten": "Sloučit XFA",
     "flattenDone": "XFA sloučeno. Exportujte PDF pro stažení statické verze.",
     "flattenFailed": "Sloučení XFA selhalo",
-    "convertToStandard": "Convert to standard PDF",
-    "convertedToStandard": "XFA converted to standard PDF",
-    "convertFailed": "Conversion failed: {{message}}"
+    "convertToStandard": "Převést na standardní PDF",
+    "convertedToStandard": "XFA převedeno na standardní PDF",
+    "convertFailed": "Převod selhal: {{message}}",
+    "bannerTitle": "Formulář XFA",
+    "bannerBody": "Tento formulář XFA se zobrazuje tak, jak je. Chcete-li jeho pole vyplňovat, upravovat nebo v nich vyhledávat, převeďte ho na standardní PDF.",
+    "bannerBodyExperimental": "Tento formulář XFA se zobrazuje tak, jak je. Vyplňování polí je experimentální; chcete-li formulář spolehlivě vyplňovat, upravovat a prohledávat, převeďte ho na standardní PDF."
   },
   "security": {
     "activeContentBadge": "Blokováno",
@@ -970,7 +1030,8 @@
     "highlight": "Zvýraznit",
     "strikethrough": "Přeškrtnout",
     "underline": "Podtrhnout",
-    "copyText": "Kopírovat text"
+    "copyText": "Kopírovat text",
+    "copied": "Zkopírováno"
   },
   "update": {
     "available": "Aktualizace k dispozici",
@@ -980,10 +1041,10 @@
     "installing": "Instalace…",
     "checkFailed": "Kontrola aktualizací selhala",
     "upToDate": "Používáte nejnovější verzi",
-    "installed": "Update installed",
-    "restartNow": "Restart now",
-    "restartUnsaved": "Save your changes before restarting.",
-    "restartManual": "If it doesn't restart automatically, quit and reopen PDFluent to finish."
+    "installed": "Aktualizace nainstalována",
+    "restartNow": "Restartovat nyní",
+    "restartUnsaved": "Před restartem uložte změny.",
+    "restartManual": "Pokud se PDFluent nerestartuje automaticky, ukončete ho a znovu otevřete, aby se aktualizace dokončila."
   },
   "telemetry": {
     "addNoteLabel": "Chcete něco dodat? (volitelné)",
@@ -1012,6 +1073,11 @@
     "sentTitle": "Odesláno. Děkujeme.",
     "settingsAutoSend": "Odesílat automaticky bez dotazu",
     "settingsAutoSendNote": "Automatické zprávy jsou vyčištěny a neobsahují osobní údaje, stejně jako ty, které kontrolujete ručně.",
+    "settingsSentReports": "Zprávy o selhání odeslané z tohoto počítače: {{count}}. Z našeho serveru je automaticky mažeme po {{days}} dnech.",
+    "settingsDeleteReports": "Smazat moje zprávy o selhání",
+    "settingsDeleting": "Mazání…",
+    "settingsDeleted": "Smazané zprávy o selhání: {{count}}",
+    "settingsDeleteFailed": "Nepodařilo se smazat: {{count}}. Zkontrolujte připojení a zkuste to znovu.",
     "settingsDescription": "Zprávy nikdy neobsahují osobní údaje ani obsah dokumentů. Vše je před odesláním vyčištěno a každou zprávu nejprve vidíte. Ve výchozím nastavení vypnuto.",
     "settingsTitle": "Zprávy o pádech a chybách",
     "settingsToggle": "Odesílat zprávy o pádech a chybách",
@@ -1019,7 +1085,11 @@
     "typeBug": "Chyba",
     "typeCrash": "Pád",
     "typeFeedback": "Zpětná vazba",
-    "whatGetsSent": "Co se odesílá"
+    "whatGetsSent": "Co se odesílá",
+    "settingsSentFeedback": "Zprávy se zpětnou vazbou odeslané z tohoto počítače: {{count}}. Automaticky je z našeho serveru mažeme po {{days}} dnech.",
+    "settingsDeleteFeedback": "Smazat mé zprávy se zpětnou vazbou",
+    "settingsFeedbackDeleted": "Smazané zprávy se zpětnou vazbou: {{count}}",
+    "settingsFeedbackDeleteFailed": "Nepodařilo se smazat {{count}} zpráv se zpětnou vazbou. Zkontrolujte připojení a zkuste to znovu."
   },
   "ai": {
     "summaryInstruction": "Poskytni stručné shrnutí níže uvedeného dokumentu v češtině. Pro každou pozici uveď zaměstnavatele, roli a období. Použij odrážky.",
@@ -1076,7 +1146,8 @@
       "scrollLeft": "Posunout režimy doleva",
       "scrollRight": "Posunout režimy doprava",
       "workMode": "Pracovní režim",
-      "searchPlaceholder": "Hledat v dokumentu"
+      "searchPlaceholder": "Hledat v dokumentu",
+      "allTools": "Všechny nástroje"
     },
     "menu": {
       "about": "O aplikaci",
@@ -1147,22 +1218,17 @@
       "draw": "Kreslit",
       "signatureName": "Název podpisu",
       "typeName": "Napište své jméno…",
-      "selectStyle": "Vybrat styl",
-      "styleClassic": "Kurzíva Klasická",
-      "styleElegant": "Kurzíva Elegantní",
-      "styleBrush": "Podpis štětcem",
-      "styleModern": "Moderní písmo rukou",
       "drawHere": "Kreslte zde pomocí myši, trackpadu nebo stylus",
       "clear": "Vymazat",
       "apply": "Použít",
-      "defaultSignature": "Podpis",
       "clickToPlaceSignature": "Kliknutím na stránku umístěte podpis.",
       "addInitials": "Přidat iniciály",
       "initialsIntro": "Zadejte své iniciály pro rychlé umístění v polích iniciál.",
       "initials": "Iniciály",
       "initialsPlaceholder": "např. AB",
-      "defaultInitials": "AB",
-      "clickToPlaceInitials": "Kliknutím na stránku umístěte iniciály."
+      "clickToPlaceInitials": "Kliknutím na stránku umístěte iniciály.",
+      "signatureFont": "Písmo podpisu",
+      "plainItalic": "Prostá kurzíva"
     },
     "overlay": {
       "signaturePlaced": "Podpis umístěn!",
@@ -1177,13 +1243,13 @@
     "textbox": {
       "editTitle": "Upravit textové pole",
       "newTitle": "Nové textové pole",
-      "intro": "Tento text se umisťuje jako překrytí na aktuální stránkou. Uložení prázdného pole odstraní existující textové pole.",
       "label": "Text",
       "placeholder": "Napište text…",
       "delete": "Smazat",
       "deleted": "Textové pole smazáno.",
       "updated": "Textové pole aktualizováno.",
-      "added": "Přidáno nové textové pole."
+      "added": "Přidáno nové textové pole.",
+      "introPdf": "Textové pole se zapíše do PDF a zobrazí se v každém prohlížeči PDF. Uložení prázdného pole odstraní existující textové pole."
     },
     "rail": {
       "tools": "Nástroje PDF",
@@ -1197,12 +1263,14 @@
       "more": "Další nástroje",
       "strikeText": "Přeškrtnutí textu",
       "underlineText": "Podtržení textu",
-      "addAttachment": "Přidat přílohu"
+      "addAttachment": "Přidat přílohu",
+      "drawRectangle": "Nakreslit obdélník"
     },
     "railToasts": {
-      "commentMode": "Režim poznámky je aktivní. Vyberte text a zvolte Poznámka, nebo pomocí seznamu poznámek přidejte poznámku.",
+      "commentMode": "Režim poznámek. Klikněte na místo na stránce, kam poznámka patří.",
       "strikeout": "Přeškrtnutí je aktivní — vyberte text pro aplikaci.",
-      "underline": "Podtržení je aktivní — vyberte text pro aplikaci."
+      "underline": "Podtržení je aktivní — vyberte text pro aplikaci.",
+      "rectangle": "Obdélník je aktivní — nakreslete ho tažením po stránce."
     },
     "tools": {
       "lede": "Vyberte nástroj, abyste mohli začít. Vše běží místně na tomto zařízení.",
@@ -1238,17 +1306,18 @@
       "layers": "{{count}} vrstev",
       "manageLayers": "Spravovat vrstvy",
       "layersVisible": "{{count}} vrstev viditelných.",
-      "archiveAndData": "Archiving and data",
-      "pdfaSub": "Check or convert for long-term archiving",
-      "invoiceSub": "Read the ZUGFeRD/Factur-X invoice inside",
-      "metadataSub": "Title and author of this document"
+      "archiveAndData": "Archivace a data",
+      "pdfaSub": "Kontrola nebo převod pro dlouhodobou archivaci",
+      "invoiceSub": "Načíst vloženou fakturu ZUGFeRD/Factur-X",
+      "metadataSub": "Název a autor tohoto dokumentu",
+      "flattenForm": "Zploštit",
+      "flattenFormTitle": "Zploštit formulář: vyplněné hodnoty se stanou součástí stránky a pole budou odstraněna",
+      "flattenFormDone": "Formulář zploštěn. Vrácení zpět obnoví pole.",
+      "flattenFormFailed": "Formulář se nepodařilo zploštit: {{message}}"
     },
     "edit": {
       "lede": "Kliknutím na text v dokumentu jej upravte vložením. Lišta formátování se zobrazí přímo nad výběrem.",
       "formatText": "Formátovat text",
-      "fontLabel": "Písmo",
-      "fontHint": "Existující text PDF používá vložená písma PDF. Písmo \"{{font}}\" bude použito pro nově přidaná textová pole.",
-      "fontEmbedded": "Vložené písmo PDF",
       "color": "Barva",
       "colorLabel": "Barva {{color}}",
       "addContent": "Přidat obsah",
@@ -1261,7 +1330,18 @@
       "clickAnywhereTextBox": "Kliknutím kamkoliv na stránku umístěte textové pole.",
       "clickAnywhereImage": "Kliknutím kamkoliv na stránku umístěte obrázek.",
       "selection": "Výběr",
-      "annotationOnPage": "{{type}} na stránce {{page}}"
+      "annotationOnPage": "{{type}} na stránce {{page}}",
+      "placeStamp": "Umístit razítko",
+      "stampLabel": "Razítko",
+      "clickToPlaceStamp": "Kliknutím na stránku umístěte razítko.",
+      "placementModeStamp": "Režim umístění: razítko",
+      "stampPlaced": "Razítko umístěno.",
+      "deleteAnnotation": "Odstranit anotaci",
+      "annotationColor": "Barva anotace",
+      "editTextBox": "Upravit text",
+      "replaceImage": "Nahradit obrázek",
+      "imageReplaced": "Obrázek nahrazen.",
+      "moveHint": "Přetažením přesunete, přetažením rohu změníte velikost, nebo posuňte šipkami."
     },
     "convert": {
       "exportPdfTo": "Exportovat PDF na",
@@ -1279,10 +1359,16 @@
       "confidenceFrom": "Jistota z {{value}}%",
       "ocrOff": "OCR vypnuta",
       "ocrOn": "OCR zapnuta",
-      "ocrRunning": "OCR běží místně…"
+      "ocrRunning": "OCR běží místně…",
+      "ocrComponentUnknown": "OCR komponenta: kontrola…",
+      "ocrComponentInstalled": "OCR komponenta nainstalována",
+      "ocrLastRun": "Poslední spuštění: {{pages}} stránek, {{words}} slov přidáno jako prohledávatelný text",
+      "ocrRunningProgress": "Rozpoznávání stránky {{done}} z {{total}}…",
+      "markdown": "Markdown (Náhled)",
+      "tablesToExcel": "Tabulky do Excelu (Náhled)"
     },
     "esign": {
-      "lede": "Sign with a certificate of your own, and check the signatures a document already carries. Both happen on this device.",
+      "lede": "Podepište vlastním certifikátem a zkontrolujte podpisy, které dokument již obsahuje. Obojí probíhá na tomto zařízení.",
       "fillAndSign": "Vyplňte své dokumenty a podepište je",
       "addSignature": "Přidat podpis",
       "addInitials": "Přidat iniciály",
@@ -1290,25 +1376,25 @@
       "placementModeInitials": "Režim umístění: Iniciály",
       "clickToPlaceSignature": "Kliknutím kamkoliv na stránku umístěte svůj podpis.",
       "clickToPlaceInitials": "Kliknutím kamkoliv na stránku umístěte své iniciály.",
-      "verifySection": "Signatures",
-      "verify": "Check signatures",
-      "desktopOnly": "Available in the desktop app",
-      "unsigned": "This document carries no signatures.",
-      "signSection": "Sign with a certificate",
-      "padesLevel": "Produces a PAdES B-B signature: your certificate over the whole file, no timestamp server involved.",
-      "certificate": "Certificate (.p12 or .pfx)",
-      "certificateNone": "No certificate chosen",
-      "chooseCertificate": "Choose certificate",
-      "certificatePassword": "Certificate password",
-      "reason": "Reason (optional)",
-      "reasonPlaceholder": "Why you are signing",
-      "sign": "Sign and save a copy",
-      "signing": "Signing…",
-      "signNeedsCertificate": "Choose a certificate and enter its password first.",
-      "signSaved": "Signed copy saved as {{name}}",
-      "signFailed": "Signing failed: {{message}}",
-      "usageRights": "Reader enablement (usage rights)",
-      "usageRightsInvalidated": "Usage rights invalidated — this file was edited, so Adobe Reader no longer treats it as an enabled form."
+      "verifySection": "Podpisy",
+      "verify": "Zkontrolovat podpisy",
+      "desktopOnly": "K dispozici v desktopové aplikaci",
+      "unsigned": "Tento dokument neobsahuje žádné podpisy.",
+      "signSection": "Podepsat certifikátem",
+      "padesLevel": "Vytváří podpis PAdES B-B: váš certifikát na celý soubor, bez zapojení serveru časových razítek.",
+      "certificate": "Certifikát (.p12 nebo .pfx)",
+      "certificateNone": "Není vybrán žádný certifikát",
+      "chooseCertificate": "Vybrat certifikát",
+      "certificatePassword": "Heslo certifikátu",
+      "reason": "Důvod (nepovinné)",
+      "reasonPlaceholder": "Proč podepisujete",
+      "sign": "Podepsat a uložit kopii",
+      "signing": "Podepisování…",
+      "signNeedsCertificate": "Nejprve vyberte certifikát a zadejte jeho heslo.",
+      "signSaved": "Podepsaná kopie uložena jako {{name}}",
+      "signFailed": "Podepsání selhalo: {{message}}",
+      "usageRights": "Povolení pro Reader (práva užití)",
+      "usageRightsInvalidated": "Práva užití byla zneplatněna — tento soubor byl upraven, takže Adobe Reader s ním již nezachází jako s povoleným formulářem."
     },
     "protect": {
       "lede": "Chraňte svůj dokument PDF silnými kryptografickými hesly. Změny se aplikují místně hned.",
@@ -1330,9 +1416,11 @@
       "localViaTauri": "Místně přes Tauri příkaz, bez prostředí prohlížeče",
       "compressingImages": "Kompresi obrázků…",
       "percentComplete": "{{percent}}% dokončeno",
-      "compressPdf": "Komprimovat PDF",
       "desktopOnly": "Dostupné pouze v desktopové aplikaci",
-      "backToTools": "Zpět na nástroje"
+      "backToTools": "Zpět na nástroje",
+      "saveCopy": "Uložit komprimovanou kopii jako…",
+      "replaceOpen": "Komprimovat a nahradit otevřený dokument",
+      "replaceNote": "Kopie ponechá otevřený dokument a jeho soubor beze změny. Nahrazení změní pouze otevřený dokument; Zpět vrátí originál."
     },
     "split": {
       "lede": "Rozdělte svůj dokument do samostatných souborů PDF na stránku nebo podle konkrétního rozsahu stránek.",
@@ -1369,7 +1457,52 @@
       "applying": "Aplikování…",
       "applyPermanently": "Trvale aplikovat redakce",
       "noActiveMarkings": "Žádné aktivní označení redakce.",
-      "backToTools": "Zpět na nástroje"
+      "backToTools": "Zpět na nástroje",
+      "pii": {
+        "title": "Osobní údaje",
+        "lede": "Find personal data in the text of this document: IBANs, card numbers, national ID numbers, birth dates, e-mail addresses and phone numbers, and names and addresses when the model is installed. Review the list, then redact the ones you choose.",
+        "find": "Najít osobní údaje",
+        "scanning": "Skenování…",
+        "none": "Nothing found.",
+        "kind": {
+          "iban": "IBAN",
+          "email": "E-mailová adresa",
+          "phone": "Telefonní číslo",
+          "credit_card": "Číslo karty",
+          "national_id": "Národní identifikační číslo",
+          "date_of_birth": "Datum narození",
+          "bank_account": "Číslo bankovního účtu",
+          "person": "Jméno",
+          "address": "Adresa"
+        },
+        "where": "Strana {{pages}} · {{count}}×",
+        "selectAll": "Vybrat vše",
+        "selectNone": "Zrušit výběr",
+        "redactSelected": "Redigovat {{count}} vybraných",
+        "redacting": "Redigování…",
+        "done": "Redigováno {{count}} položek. Uložte soubor pro zachování výsledku.",
+        "failed": "Redakce selhala: {{message}}",
+        "detectFailed": "Hledání selhalo: {{message}}",
+        "patternsOnly": "Without the model this finds only items it can check, such as IBANs, cards, ID numbers, birth dates, e-mail addresses and phone numbers. Names and addresses are not detected, so check every page yourself.",
+        "suggestionsOnly": "Toto jsou návrhy. Detektor může něco přehlédnout, proto před uložením zkontrolujte každou stránku.",
+        "source": {
+          "verified": "Zkontrolováno {{detail}}",
+          "model": "Návrh modelu, {{score}}%"
+        },
+        "model": {
+          "use": "Také vyhledávat jména a adresy pomocí modelu",
+          "languages": "Kontrolováno pro: {{languages}}",
+          "remove": "Odebrat model",
+          "removeFailed": "Model se nepodařilo odebrat: {{message}}",
+          "failed": "Model se nepodařilo spustit ({{code}}). Zobrazují se pouze položky, které lze zkontrolovat.",
+          "consentTitle": "Stáhnout model osobních údajů?",
+          "consentBody": "Vyhledávání jmen a adres vyžaduje jazykový model ({{size}}). Stáhne se jednou z {{host}}, zkontroluje se proti pevnému kontrolnímu součtu a poté běží na tomto počítači. Vaše dokumenty jej nikdy neopustí.",
+          "download": "Stáhnout",
+          "downloading": "Stahování…",
+          "downloadFailed": "Stahování se nezdařilo: {{message}}",
+          "notInBuild": "Stahování v této verzi zatím není k dispozici."
+        }
+      }
     },
     "toasts": {
       "saving": "Ukládání…",
@@ -1399,7 +1532,7 @@
       "pdfsMerged": "{{count}} soubory PDF sloučeny",
       "mergedSaved": "Sloučené PDF uloženo jako {{name}}.",
       "mergeFailed": "Slučování se nezdařilo: {{message}}",
-      "redactMatches": "{{matches}} shody nalezeny, {{areas}} označení redakcí umístěny.",
+      "redactSearchDone": "Začerněné shody: {{count}}. Uložením změnu zachováte.",
       "noRedactMatches": "Žádné shody textu nebyly nalezeny k redakci.",
       "redactSearchFailed": "Hledání redakce se nezdařilo: {{message}}",
       "applyRedactConfirm": "Trvale aplikovat {{count}} označení redakce? Tím se obsah z PDF odstraní natrvalo.",
@@ -1408,108 +1541,328 @@
       "applyRedactRunning": "Aplikování redakcí natrvalo…",
       "applyRedactDone": "Redakce byly trvale aplikovány",
       "redactionsApplied": "Redakce byly trvale aplikovány.",
-      "redactFailed": "Redakce se nezdařila: {{message}}"
+      "redactFailed": "Redakce se nezdařila: {{message}}",
+      "compressedCopyToast": "Uloženo {{name}}: z {{before}} na {{after}}. Otevřený dokument zůstal nezměněn.",
+      "compressedReplacedToast": "Otevřený dokument byl zkomprimován: z {{before}} na {{after}}. Vrácení zpět obnoví původní verzi. Uložením zachováte zkomprimovanou verzi."
     },
     "thumbnails": {
       "pages": "Stránky",
       "pageAlt": "Stránka {{page}}",
-      "bookmarks": "Bookmarks"
+      "bookmarks": "Záložky"
     },
     "pdfa": {
-      "lede": "PDF/A is the archival form of PDF: fonts embedded, colours defined, nothing that depends on the outside world.",
-      "section": "Conformance",
-      "level": "Level",
-      "validate": "Check this document",
-      "convert": "Save as PDF/A…",
-      "desktopOnly": "Available in the desktop app",
-      "compliant": "Conforms to {{level}}",
-      "notCompliant": "Does not conform: {{errors}} errors, {{warnings}} warnings",
-      "moreIssues": "{{count}} more",
+      "lede": "PDF/A je archivní forma PDF: písma vložena, barvy definovány, nic, co závisí na vnějším světě.",
+      "section": "Shoda",
+      "level": "Úroveň",
+      "validate": "Zkontrolovat tento dokument",
+      "convert": "Uložit jako PDF/A…",
+      "desktopOnly": "K dispozici v desktopové aplikaci",
+      "compliant": "Vyhovuje {{level}}",
+      "notCompliant": "Nevyhovuje: {{errors}} chyb, {{warnings}} upozornění",
+      "moreIssues": "Dalších {{count}}",
       "report": {
-        "title": "What the conversion did",
-        "written": "Written to {{path}}",
-        "size": "{{out}} out of {{in}} ({{ratio}}×), in {{seconds}} s",
-        "pages": "{{count}} pages",
-        "fontsEmbedded": "{{embedded}} of {{found}} unembedded fonts embedded",
-        "fontsFailed": "Could not embed: {{fonts}}",
-        "removed": "Removed: {{count}} items that PDF/A does not allow",
-        "subset": "{{count}} font programs reduced, {{bytes}} kB saved",
-        "outputIntent": "Output intent added",
-        "unchangedDocument": "The open document was not changed.",
+        "title": "Co převod provedl",
+        "written": "Zapsáno do {{path}}",
+        "size": "{{out}} z {{in}} ({{ratio}}×), za {{seconds}} s",
+        "pages": "Stránky: {{count}}",
+        "fontsEmbedded": "Vloženo {{embedded}} z {{found}} nevložených písem",
+        "fontsFailed": "Nelze vložit: {{fonts}}",
+        "removed": "Odstraněno: {{count}} položek, které PDF/A nepovoluje",
+        "subset": "{{count}} programů písma zmenšeno, {{bytes}} kB ušetřeno",
+        "outputIntent": "Přidán výstupní záměr",
+        "unchangedDocument": "Otevřený dokument nebyl změněn.",
         "warning": "{{message}}",
-        "moreWarnings": "{{count}} more"
+        "moreWarnings": "Dalších {{count}}"
       }
     },
     "metadata": {
-      "lede": "The title and author stored inside the file, which is what other readers and search show.",
-      "section": "Properties",
-      "title": "Title",
-      "author": "Author",
-      "apply": "Save properties",
-      "desktopOnly": "Available in the desktop app"
+      "lede": "Název a autor uložené v souboru, které zobrazují ostatní čtečky a vyhledávání.",
+      "section": "Vlastnosti",
+      "title": "Název",
+      "author": "Autor",
+      "apply": "Uložit vlastnosti",
+      "desktopOnly": "K dispozici v desktopové aplikaci"
     },
     "invoice": {
-      "lede": "A ZUGFeRD or Factur-X invoice travels as XML inside the PDF. This reads it and checks it against EN 16931.",
-      "section": "Embedded invoice",
-      "read": "Read invoice",
-      "desktopOnly": "Available in the desktop app",
-      "none": "This document carries no e-invoice.",
-      "number": "Number: {{number}}",
-      "issued": "Issued: {{date}}",
-      "seller": "Seller: {{name}}",
-      "buyer": "Buyer: {{name}}",
-      "total": "Total: {{total}} {{currency}}",
-      "lines": "Line items: {{count}}",
-      "valid": "Valid against {{profile}}",
-      "invalid": "Not valid: {{errors}} errors, {{warnings}} warnings"
+      "lede": "Faktura ZUGFeRD nebo Factur-X cestuje jako XML uvnitř PDF. Toto ji načte a zkontroluje podle EN 16931.",
+      "section": "Vložená faktura",
+      "read": "Načíst fakturu",
+      "desktopOnly": "K dispozici v desktopové aplikaci",
+      "none": "Tento dokument neobsahuje žádnou e-fakturu.",
+      "number": "Číslo: {{number}}",
+      "issued": "Vystaveno: {{date}}",
+      "seller": "Prodávající: {{name}}",
+      "buyer": "Kupující: {{name}}",
+      "total": "Celkem: {{total}} {{currency}}",
+      "lines": "Položky: {{count}}",
+      "valid": "Platná podle {{profile}}",
+      "invalid": "Neplatná: {{errors}} chyb, {{warnings}} upozornění"
     },
     "canvas": {
-      "document": "PDF document"
+      "document": "Dokument PDF"
+    },
+    "stamps": {
+      "Approved": "Schváleno",
+      "NotApproved": "Neschváleno",
+      "Draft": "Koncept",
+      "Confidential": "Důvěrné",
+      "Final": "Konečné",
+      "ForComment": "K připomínkám",
+      "Expired": "Platnost vypršela"
     }
   },
   "about": {
-    "section": "About",
-    "app": "App",
-    "version": "Version",
-    "privacy": "Privacy",
-    "privacyValue": "All processing happens locally",
-    "website": "Website"
+    "section": "O aplikaci",
+    "app": "Aplikace",
+    "version": "Verze",
+    "privacy": "Soukromí",
+    "privacyValue": "Veškeré zpracování probíhá lokálně",
+    "website": "Web"
   },
   "reviewSummary": {
-    "title": "Review summary",
-    "generatedAt": "Generated on",
-    "comments": "Comments",
-    "noComments": "No comments.",
-    "replies": "Replies:",
-    "empty": "empty",
-    "redactions": "Redactions",
-    "noRedactions": "No redactions.",
-    "noIssues": "No issues.",
-    "metadataChanges": "Metadata changes",
-    "noMetadataChanges": "No changes.",
-    "changedBy": "by",
-    "on": "on"
+    "title": "Souhrn revize",
+    "generatedAt": "Vygenerováno",
+    "comments": "Komentáře",
+    "noComments": "Žádné komentáře.",
+    "replies": "Odpovědi:",
+    "empty": "prázdné",
+    "redactions": "Redakce",
+    "noRedactions": "Žádné redakce.",
+    "noIssues": "Žádné problémy.",
+    "metadataChanges": "Změny metadat",
+    "noMetadataChanges": "Žádné změny.",
+    "changedBy": "od",
+    "on": "dne"
   },
   "externalLink": {
-    "askMessage": "This PDF wants to open an external link:\n\n{{label}}\n\nURL:\n{{href}}\n\nDo you want to continue?",
-    "title": "Open external link?",
-    "openLink": "Open link",
-    "dialogBody": "This PDF wants to open an external website. Check the URL before continuing."
+    "askMessage": "Toto PDF chce otevřít externí odkaz:\n\n{{label}}\n\nURL:\n{{href}}\n\nChcete pokračovat?",
+    "title": "Otevřít externí odkaz?",
+    "openLink": "Otevřít odkaz",
+    "dialogBody": "Toto PDF chce otevřít externí web. Před pokračováním zkontrolujte URL."
   },
   "linkChoice": {
-    "title": "Open link in your browser?",
-    "body": "This document wants to open an external website. Are you opening it from a trusted source?",
-    "alwaysAllow": "Always allow",
-    "openOnce": "Open once"
+    "title": "Otevřít odkaz v prohlížeči?",
+    "body": "Tento dokument chce otevřít externí web. Otevíráte ho z důvěryhodného zdroje?",
+    "alwaysAllow": "Vždy povolit",
+    "openOnce": "Otevřít jednou"
   },
   "fallbacks": {
-    "ocrUnavailableTitle": "OCR is not available on this computer",
-    "ocrUnavailableMessage": "PDFluent could not start the text-recognition engine. {{reason}}",
-    "ocrFailedMessage": "Text recognition stopped on page {{page}}: {{reason}}",
-    "xfaStaticTitle": "Form filled without recalculation",
-    "xfaStaticMessage": "This build writes XFA field values straight into the form. Field scripts do not run, so calculated totals and fields that appear or hide based on your answer stay as they are.",
-    "featureUnavailableTitle": "'{{feature}}' is not available in this build",
-    "usageRightsInvalidatedTitle": "This document is no longer Reader-enabled",
-    "usageRightsInvalidatedMessage": "Your change was made. It also invalidated the usage-rights signature this PDF carried, which let Adobe Reader fill in and save the form. The text edit stands; the extended rights are gone and cannot be restored by undoing it."
+    "ocrUnavailableTitle": "OCR není na tomto počítači k dispozici",
+    "ocrUnavailableMessage": "PDFluent nemohl spustit modul pro rozpoznávání textu. {{reason}}",
+    "ocrFailedMessage": "Rozpoznávání textu se zastavilo na stránce {{page}}: {{reason}}",
+    "xfaStaticTitle": "Formulář vyplněn bez přepočtu",
+    "xfaStaticMessage": "Toto sestavení zapisuje hodnoty polí XFA přímo do formuláře. Skripty polí se nespouštějí, takže vypočítané součty a pole, která se zobrazují nebo skrývají na základě vaší odpovědi, zůstanou tak, jak jsou.",
+    "xfaScriptsNotRunTitle": "Některé skripty formuláře se nespouštějí",
+    "xfaScriptsNotRunMessage": "Vaše odpověď je uložena. Formulář obsahuje skripty FormCalc (nalezeno: {{count}}) a PDFluent spouští pouze skripty JavaScript. Součty a pole, která by tyto skripty aktualizovaly, si ponechají uložené hodnoty, dokud se formulář neotevře v Adobe Readeru.",
+    "xfaFieldRefusedTitle": "Formulář hodnotu nepřijal",
+    "xfaFieldReadOnly": "Pole „{{field}}“ je v tomto formuláři jen pro čtení a nelze ho změnit.",
+    "xfaFieldRejected": "Pole „{{field}}“ tuto hodnotu nepřijímá: {{reason}}",
+    "xfaFieldNotFound": "Pole „{{field}}“ už ve formuláři není. Formulář byl znovu načten.",
+    "featureUnavailableTitle": "'{{feature}}' není v této sestavení k dispozici",
+    "usageRightsInvalidatedTitle": "Tento dokument už není povolen pro Reader",
+    "usageRightsInvalidatedMessage": "Vaše změna byla provedena. Také zneplatnila podpis práv použití, který tento PDF nesl a který umožňoval aplikaci Adobe Reader vyplnit a uložit formulář. Úprava textu zůstává; rozšířená práva jsou pryč a nelze je obnovit vrácením změny.",
+    "xfaScriptsFailedTitle": "Některé skripty formuláře se nedokončily",
+    "xfaScriptsFailedMessage": "Vaše odpověď byla uložena, ale tyto skripty nedoběhly, takže hodnoty, které nastavily, mohou chybět: {{details}}.",
+    "xfaScriptKind_threw": "narazil na chybu",
+    "xfaScriptKind_timeout": "vypršel čas",
+    "xfaScriptKind_refused": "byl odmítnut sandboxem"
+  },
+  "signedSave": {
+    "title": "Tento dokument je podepsán",
+    "message": "Redakce odstraňuje obsah, na který se podpis vztahuje, takže ji nelze uložit přes podepsaný originál, aniž by se podpis narušil. Uložte místo toho kopii: kopie zachová redakci a nebude obsahovat podpis.",
+    "saveCopy": "Uložit kopii bez podpisu…",
+    "cancel": "Zrušit"
+  },
+  "passwordPrompt": {
+    "title": "Toto PDF je chráněno",
+    "message": "Zadejte heslo pro otevření {{name}}.",
+    "incorrect": "Tímto heslem se toto PDF neotevře. Zkuste to znovu.",
+    "label": "Heslo",
+    "open": "Otevřít",
+    "cancel": "Zrušit",
+    "readOnlyTitle": "Otevřeno jen pro čtení",
+    "readOnlyMessage": "Oprávnění tohoto PDF neumožňují změny. Můžete ho číst a tisknout, pokud to oprávnění dovolují. Chcete-li uložit změny, odeberte ochranu pomocí hesla vlastníka."
+  },
+  "a11y": {
+    "searchNextResult": "Další výsledek",
+    "searchPrevResult": "Předchozí výsledek"
+  },
+  "feedback": {
+    "title": "Pomozte nám vylepšit PDFluent",
+    "intro": "Řekněte nám, co jste se snažili udělat. Čteme každé hlášení.",
+    "menuLabel": "Pomozte nám vylepšit PDFluent…",
+    "fromError": "Můžete nám napsat o problému, na který jste právě narazili.",
+    "areaLabel": "Co jste se snažili udělat?",
+    "area": {
+      "open-view": "Otevřít nebo číst dokument",
+      "search-copy": "Hledat nebo kopírovat text",
+      "print": "Tisk",
+      "edit-text": "Upravit text",
+      "annotate": "Zvýraznit, komentovat nebo kreslit",
+      "forms": "Vyplnit formulář",
+      "sign": "Podepsat nebo ověřit podpis",
+      "redact": "Redigovat",
+      "pages-organize": "Otočit, přeuspořádat, sloučit nebo rozdělit stránky",
+      "convert-export": "Převést nebo exportovat",
+      "ocr": "Rozpoznat text ve skenu (OCR)",
+      "pdfa-compliance": "PDF/A",
+      "protect": "Heslo nebo oprávnění",
+      "save": "Uložit",
+      "install-update": "Nainstalovat nebo aktualizovat PDFluent",
+      "other": "Něco jiného"
+    },
+    "tryingToPlaceholder": "Vlastními slovy (volitelné)",
+    "whatHappenedLabel": "Co se stalo?",
+    "whatHappenedPlaceholder": "Co jste viděli?",
+    "whatHappenedRequired": "Napište nám, co se stalo, ať víme, kde hledat.",
+    "expectedLabel": "Co jste očekávali?",
+    "expectedPlaceholder": "Volitelné",
+    "docTypeLabel": "Jaký to byl dokument?",
+    "docType": {
+      "none": "Žádný dokument",
+      "form": "Formulář",
+      "scanned": "Sken",
+      "signed": "Podepsaný dokument",
+      "protected": "Chráněný heslem",
+      "large": "Velký (více než 100 stran)",
+      "xfa": "Formulář úřadu nebo XFA",
+      "other": "Něco jiného"
+    },
+    "docTypeUnset": "Vyberte…",
+    "pageCountLabel": "Počet stran",
+    "contextTitle": "Odesíláme spolu s hlášením",
+    "contextToggle": "Přiložit systémové údaje",
+    "contextHint": "Verze, systém, jazyk a poslední chyba nám pomohou problém zopakovat. Žádné názvy souborů, cesty ani obsah dokumentů.",
+    "fieldVersion": "Verze PDFluent",
+    "fieldSystem": "Systém",
+    "fieldLanguage": "Jazyk",
+    "fieldLastError": "Poslední chyba",
+    "fieldSessions": "Relace",
+    "notIncluded": "nezahrnuto",
+    "documentTitle": "Sdílet dokument (volitelné)",
+    "documentToggle": "Sdílet otevřený dokument s tímto hlášením",
+    "documentNone": "Není otevřen žádný dokument.",
+    "documentTooLarge": "Tento dokument je větší než 20 MB, proto ho nelze sdílet s hlášením.",
+    "documentShared": "Tento dokument bude sdílen.",
+    "documentConfirmTitle": "Sdílet tento dokument?",
+    "documentConfirmText": "Tento soubor bude odeslán do PDFluent (Innovation Trigger B.V.). Použije se pouze k prošetření tohoto hlášení, nikdy nebude zveřejněn, nikdy se nepoužije k trénování a bude smazán nejpozději 90 dní poté, co bude problém opraven, a v každém případě do 12 měsíců.",
+    "documentConfirmFile": "{{name}} ({{size}})",
+    "documentConfirmYes": "Sdílet dokument",
+    "documentConfirmNo": "Nesdílet",
+    "contactTitle": "Zůstaňme v kontaktu (volitelné)",
+    "emailLabel": "E-mailová adresa",
+    "emailInvalid": "Tohle nevypadá jako e-mailová adresa.",
+    "consentContact": "PDFluent mi může poslat e-mail s dotazy k tomuto hlášení.",
+    "consentFixed": "Pošlete mi e-mail, až to bude opraveno.",
+    "contactHint": "Vaše adresa se ukládá odděleně od vašeho hlášení, používá se pouze pro toto hlášení a nikdy pro newslettery nebo marketing.",
+    "noEmailHint": "I bez e-mailu se od nás dozvíte: když aktualizace vaše hlášení opraví, PDFluent vám to řekne v aplikaci.",
+    "privacyNotice": "Společnost Innovation Trigger B.V. obdrží toto hlášení za účelem vylepšení PDFluent. Hlášení se uchovávají až 24 měsíců. Své hlášení si můžete kdykoli nechat odstranit.",
+    "privacyLink": "Zásady ochrany osobních údajů",
+    "send": "Odeslat",
+    "sending": "Odesílání…",
+    "cancel": "Zrušit",
+    "sentTitle": "Děkujeme!",
+    "sentBody": "Vaše hlášení dorazilo. Tady je jeho číslo:",
+    "sentIdHint": "Číslo si uschovejte, pokud se budete chtít na hlášení zeptat nebo ho nechat odstranit.",
+    "sentNoLocalCopy": "PDFluent si toto číslo v tomto počítači nezapamatoval, proto si ho prosím poznamenejte.",
+    "sentDocumentFailed": "Vaše hlášení dorazilo, ale dokument se nepodařilo nahrát. Pokud na něm záleží, můžete hlášení odeslat znovu i s dokumentem.",
+    "removeReport": "Odstranit toto hlášení",
+    "removing": "Odstraňování…",
+    "removed": "Vaše hlášení bylo odstraněno.",
+    "removeFailed": "Vaše hlášení se teď nepodařilo odstranit. Zkuste to později nebo nám číslo pošlete e-mailem.",
+    "failedTitle": "Nepodařilo se odeslat",
+    "failedNetwork": "PDFluent se nepodařilo spojit se serverem. Nic nebylo odesláno a váš text tu pořád je.",
+    "failedRateLimited": "Z tohoto připojení dnes přišlo příliš mnoho hlášení. Zkuste to prosím zítra.",
+    "failedRejected": "Hlášení nebylo přijato. Zkontrolujte formulář a zkuste to znovu.",
+    "failedServer": "Na naší straně se něco pokazilo. Váš text tu pořád je; zkuste to za chvíli znovu.",
+    "tryAgain": "Zkusit znovu",
+    "fixedTitle": "Opraveno!",
+    "fixedOffered": "Verze {{version}} opravuje vaše hlášení {{ids}}. Děkujeme, že jste nám to řekli.",
+    "fixedAfterUpdate": "Vaše hlášení {{ids}} je v této verzi opraveno. Děkujeme, že jste nám to řekli.",
+    "dismiss": "Zavřít"
+  },
+  "openError": {
+    "corrupt": {
+      "title": "Tento PDF soubor je poškozený",
+      "body": "PDFluent tento soubor nedokázal přečíst. Mohl se poškodit při stahování nebo kopírování, nebo ho aplikace, která ho vytvořila, zapsala chybně. Stáhněte nebo zkopírujte ho znovu, případně otevřete originál a exportujte ho znovu jako PDF.",
+      "action": "Otevřít jiný soubor"
+    },
+    "not_pdf": {
+      "title": "Toto není soubor PDF",
+      "body": "PDFluent otevírá soubory PDF. Tento soubor je jiného typu, nebo jeho název nekončí na .pdf. Vyberte soubor PDF, a pokud je tento soubor PDF, přejmenujte ho tak, aby název končil na .pdf.",
+      "action": "Otevřít jiný soubor"
+    },
+    "empty": {
+      "title": "Tento soubor je prázdný",
+      "body": "Soubor nemá žádný obsah (0 bajtů). Stahování nebo kopírování se možná nedokončilo. Stáhněte nebo zkopírujte ho znovu a pak ho otevřete.",
+      "action": "Otevřít jiný soubor"
+    },
+    "encrypted_needs_password": {
+      "title": "Tento PDF soubor vyžaduje heslo",
+      "body": "Tento PDF soubor je chráněný heslem. Otevřete ho znovu a zadejte heslo. Pokud ho neznáte, zeptejte se osoby, která vám soubor poslala.",
+      "action": "Zadat heslo"
+    },
+    "wrong_password": {
+      "title": "Toto heslo nefunguje",
+      "body": "Heslo tento PDF soubor neotevře. Zkontrolujte překlepy a klávesu Caps Lock a zkuste to znovu.",
+      "action": "Zkusit znovu"
+    },
+    "unsupported_encryption": {
+      "title": "PDFluent tento druh ochrany neotevře",
+      "body": "Tento PDF soubor je chráněný certifikátem nebo bezpečnostní metodou, kterou PDFluent nepodporuje, takže ho zde žádné heslo neotevře. Požádejte odesílatele o kopii bez ochrany nebo chráněnou heslem.",
+      "action": "Otevřít jiný soubor"
+    },
+    "too_large": {
+      "title": "Tento soubor je příliš velký",
+      "body": "Tento soubor je větší, než může PDFluent bezpečně otevřít. Rozdělte ho nebo zmenšete v aplikaci, která ho vytvořila, a pak otevřete jednotlivé části.",
+      "action": "Otevřít jiný soubor"
+    },
+    "too_many_pages": {
+      "title": "Tento PDF soubor má příliš mnoho stránek",
+      "body": "Tento dokument má víc stránek, než může PDFluent otevřít najednou. Rozdělte ho na menší dokumenty v aplikaci, která ho vytvořila, a pak otevřete jednotlivé části.",
+      "action": "Otevřít jiný soubor"
+    },
+    "io_denied": {
+      "title": "PDFluent nemá oprávnění číst tento soubor",
+      "body": "Váš počítač nedal PDFluentu oprávnění číst tento soubor. Zkontrolujte oprávnění souboru nebo ho přesuňte do složky, například Dokumenty, a zkuste to znovu.",
+      "action": "Zkusit znovu"
+    },
+    "not_found": {
+      "title": "Tento soubor se nepodařilo najít",
+      "body": "Soubor mohl být přesunut, přejmenován nebo smazán, nebo je na disku, který už není připojený. Najděte soubor a otevřete ho znovu.",
+      "action": "Otevřít jiný soubor"
+    },
+    "unknown": {
+      "title": "Tento soubor se nepodařilo otevřít",
+      "body": "Při otevírání souboru se něco pokazilo. Zkuste to znovu. Pokud se to bude opakovat, dejte nám vědět, abychom to mohli opravit.",
+      "action": "Zkusit znovu"
+    },
+    "feedback": "Pomozte nám zlepšit PDFluent"
+  },
+  "formBar": {
+    "title": "Vyplnitelný formulář",
+    "fields": "Pole: {{count}}",
+    "clickToFill": "Kliknutím na pole ho vyplníte.",
+    "noCalculations": "Automatické výpočty z formulářů Adobe se nespouštějí.",
+    "autoLinks": "Otevírat odkazy automaticky",
+    "autoLinksTitle": "Odkazy se automaticky otevírají v prohlížeči. Kliknutím to vypnete.",
+    "highlight": "Zvýraznit pole",
+    "firstField": "První pole"
+  },
+  "tabs": {
+    "label": "Otevřené dokumenty",
+    "close": "Zavřít {{name}}",
+    "unsaved": "Neuložené změny",
+    "new": "Otevřít další dokument",
+    "tooManyTitle": "Příliš mnoho otevřených dokumentů",
+    "tooManyMessage": "Je otevřeno {{max}} dokumentů. Zavřete jeden, abyste otevřeli další."
+  },
+  "formScripts": {
+    "barLabel": "Skripty formuláře",
+    "barMessage": "Tento formulář obsahuje skripty (například výpočty). Spustit je?",
+    "barDetail": "Nalezeno skriptů: {{count}}.",
+    "runOnce": "Spustit pro tento dokument",
+    "runAlways": "Vždy spouštět skripty",
+    "dontRun": "Nespouštět"
   }
 }

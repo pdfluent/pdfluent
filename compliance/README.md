@@ -19,7 +19,6 @@ These files are generated in the repository root:
 Generate and validate:
 
 ```bash
-npm run ocr:manifest
 npm run compliance:generate
 npm run compliance:check
 ```

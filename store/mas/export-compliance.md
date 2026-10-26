@@ -39,3 +39,8 @@ licence verification at runtime, so nothing cryptographic guards a paid feature.
 **[OWNER]** Confirm points 2 and 3 once. Then, if you want the question to stop
 appearing on every upload, say so and the key goes into `tauri.mas.conf.json` in
 the same shape as the answer above.
+
+**Confirmed 23-10-2026 by the owner:** points 2 and 3 hold. Build 4 of 1.1.0 was
+uploaded with `usesNonExemptEncryption=false` on these answers. The Info.plist key
+that silences the question on every upload is not in the bundle yet; it goes in
+with the next build.

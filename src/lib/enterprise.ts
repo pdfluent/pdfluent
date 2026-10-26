@@ -20,6 +20,12 @@ export interface EnterprisePolicies {
   allowExternalSharing: boolean;
   allowOfflineExport: boolean;
   retentionDays: number;
+  /**
+   * Pins the "Form scripts" choice for everyone on this install: 'ask' keeps
+   * the bar but takes away "Always run scripts", 'always' and 'never' decide
+   * without asking. null leaves the choice to the user (Settings → Security).
+   */
+  formScripts: "ask" | "always" | "never" | null;
 }
 
 export interface EnterpriseSsoConfig {
@@ -303,6 +309,7 @@ function defaultSettings(): EnterpriseSettings {
       allowExternalSharing: false,
       allowOfflineExport: true,
       retentionDays: 365,
+      formScripts: null,
     },
     enforcePoliciesServerSide: false,
     policyDecisions: [],
@@ -324,12 +331,14 @@ function defaultSettings(): EnterpriseSettings {
     ssoSessions: [],
     branding: {
       appName: "PDFluent",
-      accentColor: "#4a9eff",
+      accentColor: "#1a1a1a",
       logoPath: null,
     },
     apiProfile: {
       version: "v1",
-      docsUrl: "https://docs.pdfluent.dev/api",
+      // Empty: the legacy shell falls back to its own literal. A URL here would put
+      // an origin into every bundle that reads the settings (the offline allow-list).
+      docsUrl: "",
       authMode: "api_key",
       defaultScopes: ["documents.read", "documents.write"],
       rateLimits: [

@@ -187,7 +187,7 @@ describe('organize pending order — order bar UI', () => {
     expect(btnBlock).toContain("t('common.apply')");
   });
 
-  it('cancel button label is "Annuleren"', () => {
+  it('cancel button label is "Cancel"', () => {
     const btnPos = gridSource.indexOf('organize-cancel-order-btn');
     const btnEnd = gridSource.indexOf('</button>', btnPos) + 9;
     const btnBlock = gridSource.slice(btnPos, btnEnd);

@@ -108,10 +108,6 @@ describe('comments filter logic — type === text', () => {
 
 // ── Source-scan tests: wiring and rendering ───────────────────────────────────
 
-const leftNavSource = readFileSync(
-  new URL('../src/viewer/components/LeftNavRail.tsx', import.meta.url),
-  'utf8'
-);
 
 const viewerAppSource = [
   '../src/viewer/hooks/usePageNavigation.ts',
@@ -132,38 +128,6 @@ const viewerAppSource = [
   '../src/viewer/WelcomeSection.tsx',
 ].map(p => readFileSync(new URL(p, import.meta.url), 'utf8')).join('\n\n');
 
-describe('CommentsPanel — v2 left rail', () => {
-  it('renders the empty state when no comments', () => {
-    expect(leftNavSource).toContain("t('leftNav.noCommentsSide'");
-    expect(leftNavSource).toContain('MessageSquareIcon');
-  });
-
-  it('renders author for each comment row', () => {
-    expect(leftNavSource).toContain('comment.author');
-  });
-
-  it('renders page number (1-based) in group headings', () => {
-    // Page numbers now appear in group headings (Pagina {pageIndex + 1}), not per-row
-    expect(leftNavSource).toContain('pageIndex + 1');
-    expect(leftNavSource).toContain('data-testid="comment-group-heading"');
-  });
-
-  it('renders contents excerpt for each comment row', () => {
-    expect(leftNavSource).toContain('comment.contents');
-  });
-
-  it('accepts comments prop in LeftNavRailProps', () => {
-    expect(leftNavSource).toContain('comments: Annotation[]');
-  });
-
-  it('passes comments to CommentsPanel via PanelContent', () => {
-    expect(leftNavSource).toContain('comments={comments}');
-  });
-
-  it('no longer has the TODO(pdfluent-viewer) marker for CommentsPanel', () => {
-    expect(leftNavSource).not.toContain('TODO(pdfluent-viewer): implement comments panel');
-  });
-});
 
 describe('ViewerApp — comments state wiring', () => {
   it('declares comments state as Annotation[]', () => {

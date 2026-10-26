@@ -6,7 +6,7 @@
 // See https://pdfluent.com/license for terms.
 
 import { isTauriRuntime } from '../../lib/tauri-detection';
-import { useState, useCallback, useMemo, useEffect, type Dispatch, type SetStateAction } from 'react';
+import { useState, useCallback, useMemo, useEffect, useRef, type Dispatch, type SetStateAction } from 'react';
 import type { PdfDocument, Annotation, Reply, FormField, OutlineNode } from '../../core/document';
 import type { PdfEngine } from '../../core/engine/PdfEngine';
 import type { DocumentMetadata } from '../../core/document/metadata';
@@ -28,8 +28,10 @@ import type { RevisionSnapshot } from '../revisionSnapshot';
 import { compareSnapshots, formatSnapshotDiffMarkdown } from '../revisionCompare';
 import i18n from '../../i18n';
 import { reportCommandFailure } from '../../lib/commandBridge';
-import { announceOcrUnavailable } from '../state/fallbackNotices';
+import { markerTarget, newlyPlacedImage, pageImageAnnotations, pageImageId, parsePageImageId, type PageImageInfo } from '../pageImages';
 import { runWhenIdle, whenFirstPainted } from '../performance/perfMarks';
+import { isMovableAnnotation, moveRect, nudgeForKey, toBackendRect, type PdfRect } from '../interaction/annotationGeometry';
+import { commitPlacement, type Placement, type PageSize } from '../v3/placement';
 
 const isTauri = isTauriRuntime();
 
@@ -59,21 +61,25 @@ export function useAnnotations(
   setFormFields: Dispatch<SetStateAction<FormField[]>>,
   setActiveFieldIdx: Dispatch<SetStateAction<number>>,
   documentEventLog: DocumentEvent[],
+  /** The pages whose rendering an annotation edit changed (appearance streams
+   *  are drawn into the page bitmap, so a moved stamp must be re-rendered). */
+  onAnnotationsChanged?: (pages: number[]) => void,
 ) {
   const [allAnnotations, setAllAnnotations] = useState<Annotation[]>([]);
   const [reviewStatuses, setReviewStatuses] = useState<Map<string, 'open' | 'resolved'>>(new Map());
   const [commentReplies, setCommentReplies] = useState<Map<string, Reply[]>>(new Map());
   const [activeCommentIdx, setActiveCommentIdx] = useState(-1);
   const [scannedPageIndices, setScannedPageIndices] = useState<Set<number>>(new Set());
-  const [ocrRunning, setOcrRunning] = useState(false);
-  // Per-page OCR word boxes — used by OcrOverlay to render bounding boxes
-  const [ocrPageWords, setOcrPageWords] = useState<Map<number, Array<{ text: string; confidence: number; x0: number; y0: number; x1: number; y1: number; renderedWidth: number; renderedHeight: number }>>>(new Map());
-  const [, setOcrProgress] = useState<{ processed: number; total: number }>({ processed: 0, total: 0 });
   // Active annotation tool — drives canvas cursor and annotation creation
   const [activeAnnotationTool, setActiveAnnotationTool] = useState<AnnotationTool>(null);
   const [annotationAppearance, setAnnotationAppearance] = useState<AnnotationAppearance>(DEFAULT_ANNOTATION_APPEARANCE);
   // Selected non-text annotation (markup type) — rendered with distinct outline in overlay
   const [selectedAnnotationId, setSelectedAnnotationId] = useState<string | null>(null);
+  // Images already in the page content of the current page (#723), shown to
+  // the selection code as placed-image stamps.
+  const [pageImages, setPageImages] = useState<Annotation[]>([]);
+  const pageIndexRef = useRef(pageIndex);
+  pageIndexRef.current = pageIndex;
   // Revision snapshots — list of captured review-state snapshots for comparison
   const [revisionSnapshots, setRevisionSnapshots] = useState<RevisionSnapshot[]>([]);
 
@@ -101,15 +107,17 @@ export function useAnnotations(
   // The selected markup annotation object (for RightContextPanel).
   const selectedAnnotation = useMemo(() => {
     if (!selectedAnnotationId) return null;
-    return allAnnotations.find(a => a.id === selectedAnnotationId) ?? null;
-  }, [selectedAnnotationId, allAnnotations]);
+    return allAnnotations.find(a => a.id === selectedAnnotationId)
+      ?? pageImages.find(a => a.id === selectedAnnotationId)
+      ?? null;
+  }, [selectedAnnotationId, allAnnotations, pageImages]);
 
   // All annotation rects on the current page — rendered as clickable markers on the canvas.
   const pageAnnotationMarks = useMemo(() =>
-    allAnnotations
+    [...allAnnotations, ...pageImages]
       .filter(a => a.pageIndex === pageIndex && a.rect)
       .map(a => ({ id: a.id, rect: a.rect!, color: a.color, type: a.type })),
-    [allAnnotations, pageIndex]
+    [allAnnotations, pageImages, pageIndex]
   );
 
   // Compute highlight rects for the active comment (if on current page and has rect)
@@ -122,13 +130,39 @@ export function useAnnotations(
   }, [activeCommentIdx, comments, pageIndex]);
 
   // Helper: refetch ALL annotations from backend and update allAnnotations state.
-  const refetchComments = useCallback(async () => {
-    if (!pdfDoc || !engine) return;
+  const loadPageImages = useCallback(async (page: number) => {
+    if (!pdfDoc || !isTauri) {
+      setPageImages([]);
+      return;
+    }
+    try {
+      const { invokeCommand: invoke } = await import('../../lib/commandBridge');
+      const images = await invoke<PageImageInfo[]>('list_page_images', { pageIndex: page });
+      // A late answer for a page the user has left is not this page's.
+      if (pageIndexRef.current === page) setPageImages(pageImageAnnotations(page, images));
+    } catch (err) {
+      setPageImages([]);
+      if (err instanceof Error) reportCommandFailure('list_page_images', err);
+    }
+  }, [pdfDoc]);
+
+  const allAnnotationsRef = useRef(allAnnotations);
+  allAnnotationsRef.current = allAnnotations;
+
+  /** Reload the annotations; resolves with what was loaded, or null when nothing was. */
+  const refetchComments = useCallback(async (): Promise<Annotation[] | null> => {
+    if (!pdfDoc || !engine) return null;
     const annotResult = await engine.annotation.loadAnnotations(pdfDoc);
     if (annotResult.success) {
       setAllAnnotations(annotResult.value);
     }
-  }, [pdfDoc, engine]);
+    await loadPageImages(pageIndexRef.current);
+    return annotResult.success ? annotResult.value : null;
+  }, [pdfDoc, engine, loadPageImages]);
+
+  useEffect(() => {
+    void loadPageImages(pageIndex);
+  }, [pageIndex, loadPageImages]);
 
   // Reset to page 0 and populate derived document data when a new document is loaded.
   useEffect(() => {
@@ -160,16 +194,6 @@ export function useAnnotations(
     void engine.document.getOutline(pdfDoc).then(result => {
       if (result.success) setOutline(result.value);
     });
-
-    if (isTauri) {
-      void import('../../lib/commandBridge').then(({ invokeCommand: invoke }) => {
-        void invoke<string[]>('get_page_labels').then(labels => {
-          // page labels are consumed by LeftNavRail; we expose them via onPageLabels callback
-          // Currently ViewerApp holds pageLabels state and calls setPageLabels — see below.
-          void labels; // consumed by caller via effect
-        }).catch(() => { /* ignore — labels are optional */ });
-      });
-    }
 
     const fieldsResult = engine.form.getAllFormFields(pdfDoc);
     if (fieldsResult.success) setFormFields(fieldsResult.value);
@@ -227,12 +251,11 @@ export function useAnnotations(
     return () => { probeCancelled = true; };
   }, [pdfDoc?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Reset activeAnnotationTool when switching away from review mode
+  // Reset activeAnnotationTool when switching away from review mode. A
+  // selection survives the edit mode: that is where its panel lives (J-46).
   useEffect(() => {
-    if (mode !== 'review') {
-      setActiveAnnotationTool(null);
-      setSelectedAnnotationId(null);
-    }
+    if (mode !== 'review') setActiveAnnotationTool(null);
+    if (mode !== 'review' && mode !== 'edit') setSelectedAnnotationId(null);
   }, [mode]);
 
   // Navigate to a comment by index: jump to its page and record it as active.
@@ -288,6 +311,7 @@ export function useAnnotations(
       { contents: '', author: authorName || 'User' }
     ).then(async result => {
       if (result.success) {
+        markDirty();
         const annotResult = await engine.annotation.loadAnnotations(pdfDoc);
         if (annotResult.success) {
           setAllAnnotations(annotResult.value);
@@ -297,7 +321,28 @@ export function useAnnotations(
         )));
       }
     });
-  }, [pdfDoc, engine, pageIndex]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [pdfDoc, engine, pageIndex, markDirty]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // A sticky note with its comment at a point the person clicked (J-51).
+  const handleAddNote = useCallback(async (
+    targetPage: number,
+    point: { x: number; y: number },
+    text: string,
+  ): Promise<boolean> => {
+    if (!pdfDoc || !engine) return false;
+    const result = await engine.annotation.createAnnotation(
+      pdfDoc, targetPage, 'text',
+      { x: point.x, y: point.y, width: 24, height: 24 },
+      { contents: text, author: authorName || 'User' },
+    );
+    if (!result.success) return false;
+    markDirty();
+    await refetchComments();
+    setDocumentEventLog(prev => appendEvent(prev, makeDocumentEvent(
+      'annotation_created', authorName || 'User', targetPage, result.value?.id ?? '', i18n.t('events.annotationCreated')
+    )));
+    return true;
+  }, [pdfDoc, engine, authorName, markDirty, refetchComments]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Delete a comment annotation.
   const handleDeleteComment = useCallback((annotationId: string) => {
@@ -306,6 +351,7 @@ export function useAnnotations(
     const deletedPage = comments[deletedIdx]?.pageIndex ?? -1;
     void engine.annotation.deleteAnnotation(pdfDoc, annotationId).then(async result => {
       if (result.success) {
+        markDirty();
         await refetchComments();
         setActiveCommentIdx(prev => {
           if (prev < 0) return prev;
@@ -318,7 +364,7 @@ export function useAnnotations(
         )));
       }
     });
-  }, [pdfDoc, engine, comments, refetchComments]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [pdfDoc, engine, comments, refetchComments, markDirty]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Update a comment's text contents, then refetch.
   const handleUpdateComment = useCallback((annotationId: string, newContents: string) => {
@@ -327,6 +373,7 @@ export function useAnnotations(
     void engine.annotation.updateAnnotation(pdfDoc, annotationId, { contents: newContents })
       .then(async result => {
         if (result.success) {
+          markDirty();
           await refetchComments();
           setDocumentEventLog(prev => appendEvent(prev, makeDocumentEvent(
             'annotation_updated', authorName, annotPage, annotationId, i18n.t('events.annotationUpdated')
@@ -479,62 +526,6 @@ export function useAnnotations(
   }, [allAnnotations, documentIssues, metadata, pdfDoc]); // eslint-disable-line react-hooks/exhaustive-deps
   void handleExportAuditReport; // will be wired to audit report export button
 
-  // Run OCR on selected pages (scanned | all) and store word results for the overlay.
-  const handleRunOcr = useCallback(async (options: {
-    language: string;
-    scope: 'scanned' | 'all';
-    preprocessMode: 'off' | 'auto' | 'manual';
-  }) => {
-    if (!pdfDoc || !isTauri || ocrRunning) return;
-    const pagesToProcess: number[] = options.scope === 'scanned'
-      ? Array.from(scannedPageIndices)
-      : Array.from({ length: pdfDoc.pages.length }, (_, i) => i);
-    if (pagesToProcess.length === 0) return;
-    setOcrRunning(true);
-    setOcrProgress({ processed: 0, total: pagesToProcess.length });
-    try {
-      const { invokeCommand: invoke } = await import('../../lib/commandBridge');
-      const ocrStatus = await invoke<{ available: boolean; remediation: string }>('get_ocr_status');
-      if (!ocrStatus.available) {
-        // OCR is a Python subprocess (src-tauri/src/ocr.rs). On a machine
-        // without the bridge this used to log to a console nobody has open and
-        // return, so the button spun once and stopped -- indistinguishable from
-        // a document with no text to find.
-        announceOcrUnavailable(ocrStatus.remediation);
-        return;
-      }
-      const results = new Map(ocrPageWords);
-      for (const idx of pagesToProcess) {
-        const rendered = await invoke<{ data_base64: string; width: number; height: number }>(
-          'render_page', { pageIndex: idx, zoom: 2 }
-        );
-        const ocrResult = await invoke<{
-          words: Array<{ text: string; confidence: number; x0: number; y0: number; x1: number; y1: number }>;
-        }>('run_paddle_ocr', {
-          payload: {
-            image_base64: rendered.data_base64,
-            language: options.language,
-            include_structure: false,
-            preprocess_mode: options.preprocessMode,
-          },
-        });
-        results.set(idx, ocrResult.words.map(w => ({
-          ...w,
-          renderedWidth: rendered.width,
-          renderedHeight: rendered.height,
-        })));
-        setOcrProgress(prev => ({ ...prev, processed: prev.processed + 1 }));
-      }
-      setOcrPageWords(results);
-    } catch (err) {
-      // A page that fails mid-run leaves the pages before it recognised; say
-      // which page stopped it rather than dropping the whole run in silence.
-      reportCommandFailure('run_paddle_ocr', err);
-    } finally {
-      setOcrRunning(false);
-    }
-  }, [pdfDoc, ocrRunning, scannedPageIndices, ocrPageWords]);
-
   // Create a text-markup annotation (highlight / underline / strikeout) from text selection rects.
   const handleTextSelection = useCallback(async (
     rects: Array<{ x: number; y: number; width: number; height: number }>
@@ -679,16 +670,72 @@ export function useAnnotations(
     } catch { /* silent */ }
   }, [pdfDoc, pageIndex, authorName, refetchComments, markDirty]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  const pageOfAnnotation = useCallback(
+    (annotationId: string) =>
+      parsePageImageId(annotationId)?.pageIndex
+      ?? allAnnotations.find(a => a.id === annotationId)?.pageIndex
+      ?? pageIndex,
+    [allAnnotations, pageIndex],
+  );
+
   // Delete a selected markup annotation (highlight/underline/strikeout/rectangle).
   const handleDeleteSelectedAnnotation = useCallback((annotationId: string) => {
     if (!pdfDoc || !engine) return;
+    const page = pageOfAnnotation(annotationId);
+    const placed = parsePageImageId(annotationId);
+    if (placed) {
+      void (async () => {
+        try {
+          const { invokeCommand: invoke } = await import('../../lib/commandBridge');
+          await invoke('delete_page_image', { pageIndex: placed.pageIndex, imageIndex: placed.index });
+          markDirty();
+          setSelectedAnnotationId(null);
+          await refetchComments();
+          onAnnotationsChanged?.([page]);
+        } catch (err) {
+          if (err instanceof Error) reportCommandFailure('delete_page_image', err);
+        }
+      })();
+      return;
+    }
     void engine.annotation.deleteAnnotation(pdfDoc, annotationId).then(async result => {
       if (result.success) {
+        markDirty();
         setSelectedAnnotationId(null);
         await refetchComments();
+        onAnnotationsChanged?.([page]);
       }
     });
-  }, [pdfDoc, engine, refetchComments]);
+  }, [pdfDoc, engine, refetchComments, markDirty, onAnnotationsChanged, pageOfAnnotation]);
+
+  // Move or resize an annotation (J-46). The backend carries the shape's own
+  // geometry along and redraws its appearance; the ids stay the same.
+  const handleUpdateAnnotationRect = useCallback(async (annotationId: string, rect: PdfRect) => {
+    if (!pdfDoc || !isTauri) return;
+    try {
+      const { invokeCommand: invoke } = await import('../../lib/commandBridge');
+      const placed = parsePageImageId(annotationId);
+      if (placed) {
+        // The placement may have been wrapped in `q cm … Q`: it keeps its
+        // selection under the index the backend reports.
+        const index = await invoke<number>('move_page_image', {
+          pageIndex: placed.pageIndex,
+          imageIndex: placed.index,
+          rect: toBackendRect(rect),
+        });
+        setSelectedAnnotationId(pageImageId(placed.pageIndex, index));
+      } else {
+        await invoke('update_annotation_rect', { annotationId, rect: toBackendRect(rect) });
+      }
+      await refetchComments();
+      markDirty();
+      onAnnotationsChanged?.([pageOfAnnotation(annotationId)]);
+    } catch (err) {
+      // A backend refusal arrives as a string and invokeCommand has already
+      // shown it; an Error never reached the backend and is reported here.
+      if (err instanceof Error) reportCommandFailure('update_annotation_rect', err);
+    }
+  }, [pdfDoc, refetchComments, markDirty, onAnnotationsChanged, pageOfAnnotation]);
 
   // Keyboard shortcut: Delete / Backspace → delete the selected markup annotation.
   useEffect(() => {
@@ -703,7 +750,25 @@ export function useAnnotations(
     return () => window.removeEventListener('keydown', handleDeleteKey);
   }, [selectedAnnotationId, handleDeleteSelectedAnnotation]);
 
-  // Update the color of a selected markup annotation.
+  // Arrow keys nudge a selected shape, stamp or text box (1 pt, 10 with Shift).
+  useEffect(() => {
+    function handleNudgeKey(e: KeyboardEvent): void {
+      const target = e.target as HTMLElement;
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT' || target.isContentEditable) return;
+      if (!selectedAnnotationId) return;
+      const nudge = nudgeForKey(e.key, e.shiftKey);
+      const ann = allAnnotations.find(a => a.id === selectedAnnotationId)
+        ?? pageImages.find(a => a.id === selectedAnnotationId);
+      if (!nudge || !ann?.rect || !isMovableAnnotation(ann.type)) return;
+      e.preventDefault();
+      void handleUpdateAnnotationRect(ann.id, moveRect(ann.rect, nudge.dx, nudge.dy));
+    }
+    window.addEventListener('keydown', handleNudgeKey);
+    return () => window.removeEventListener('keydown', handleNudgeKey);
+  }, [selectedAnnotationId, allAnnotations, pageImages, handleUpdateAnnotationRect]);
+
+  // Update the color of a selected annotation. The backend redraws its
+  // appearance, so the page shows the new colour too, not only the panel.
   const handleUpdateAnnotationColor = useCallback(async (annotationId: string, color: [number, number, number]) => {
     if (!pdfDoc) return;
     try {
@@ -711,34 +776,126 @@ export function useAnnotations(
       await invoke('update_annotation_color', { annotationId, color });
       await refetchComments();
       markDirty();
-    } catch { /* silent */ }
-  }, [pdfDoc, refetchComments, markDirty]);
+      onAnnotationsChanged?.([pageOfAnnotation(annotationId)]);
+    } catch (err) {
+      // A backend refusal arrives as a string and invokeCommand has already
+      // shown it; an Error never reached the backend and is reported here.
+      if (err instanceof Error) reportCommandFailure('update_annotation_color', err);
+    }
+  }, [pdfDoc, refetchComments, markDirty, onAnnotationsChanged, pageOfAnnotation]);
 
-  // Permanently apply all pending redaction annotations.
-  const handleApplyRedactions = useCallback(async () => {
+  // Rewrite the text of a text box; its appearance follows (J-44).
+  const handleUpdateAnnotationText = useCallback(async (annotationId: string, text: string) => {
     if (!pdfDoc || !isTauri) return;
     try {
       const { invokeCommand: invoke } = await import('../../lib/commandBridge');
-      await invoke('apply_redactions');
+      await invoke('update_annotation_contents', { annotationId, contents: text });
       await refetchComments();
       markDirty();
-      setDocumentEventLog(prev => appendEvent(prev, makeDocumentEvent(
-        'redaction_applied', authorName, -1, '', 'Redacties toegepast'
-      )));
-    } catch { /* silent */ }
-  }, [pdfDoc, authorName, refetchComments, markDirty]); // eslint-disable-line react-hooks/exhaustive-deps
+      onAnnotationsChanged?.([pageOfAnnotation(annotationId)]);
+    } catch (err) {
+      // A backend refusal arrives as a string and invokeCommand has already
+      // shown it; an Error never reached the backend and is reported here.
+      if (err instanceof Error) reportCommandFailure('update_annotation_contents', err);
+    }
+  }, [pdfDoc, refetchComments, markDirty, onAnnotationsChanged, pageOfAnnotation]);
 
-  // Search for text and mark all matches as redaction annotations.
-  const handleRedactSearch = useCallback(async (query: string): Promise<{ matchesFound: number; areasRedacted: number } | null> => {
-    if (!pdfDoc || !isTauri || !query.trim()) return null;
+  // Swap the picture of a placed image (J-45).
+  const handleReplaceAnnotationImage = useCallback(async (annotationId: string, dataUrl: string) => {
+    if (!pdfDoc || !isTauri) return;
     try {
       const { invokeCommand: invoke } = await import('../../lib/commandBridge');
-      const result = await invoke<{ matches_found: number; areas_redacted: number }>('redact_search', { query });
+      const placed = parsePageImageId(annotationId);
+      if (placed) {
+        const index = await invoke<number>('replace_page_image', {
+          pageIndex: placed.pageIndex,
+          imageIndex: placed.index,
+          imageBase64: dataUrl,
+        });
+        setSelectedAnnotationId(pageImageId(placed.pageIndex, index));
+      } else {
+        await invoke('replace_annotation_image', { annotationId, imageBase64: dataUrl });
+      }
       await refetchComments();
       markDirty();
-      return { matchesFound: result.matches_found, areasRedacted: result.areas_redacted };
-    } catch { return null; }
-  }, [pdfDoc, refetchComments, markDirty]);
+      onAnnotationsChanged?.([pageOfAnnotation(annotationId)]);
+    } catch (err) {
+      // A backend refusal arrives as a string and invokeCommand has already
+      // shown it; an Error never reached the backend and is reported here.
+      if (err instanceof Error) reportCommandFailure('replace_annotation_image', err);
+    }
+  }, [pdfDoc, refetchComments, markDirty, onAnnotationsChanged, pageOfAnnotation]);
+
+  // Write an armed placement (text box, image, stamp, signature) into the PDF.
+  // Resolves true when it landed, so the shell can say so.
+  const handlePlaceAnnotation = useCallback(async (
+    placement: Placement,
+    targetPage: number,
+    point: { x: number; y: number },
+    pageSize: PageSize,
+  ): Promise<boolean> => {
+    if (!pdfDoc || !isTauri) return false;
+    if (docLoadingRef.current) return false;
+    try {
+      const { invokeCommand: invoke } = await import('../../lib/commandBridge');
+      const idsBefore = new Set(allAnnotationsRef.current.map(a => a.id));
+      await commitPlacement(
+        (command, args) => invoke(command, args),
+        placement,
+        targetPage,
+        point,
+        pageSize,
+      );
+      const loaded = await refetchComments();
+      markDirty();
+      onAnnotationsChanged?.([targetPage]);
+      // A placed picture is selected, ready to move, replace or delete (J-45).
+      if (placement.kind === 'image' && loaded) {
+        const placed = newlyPlacedImage(idsBefore, loaded, targetPage);
+        if (placed) setSelectedAnnotationId(placed.id);
+      }
+      return true;
+    } catch (err) {
+      // A backend refusal arrives as a string and invokeCommand has already
+      // shown it; an Error (nothing drawn, nothing typed) is reported here.
+      if (err instanceof Error) reportCommandFailure(`place_${placement.kind}`, err);
+      return false;
+    }
+  }, [pdfDoc, refetchComments, markDirty, onAnnotationsChanged]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Permanently apply all pending redaction annotations.
+  //
+  // Applying rewrites page content on any page. The page bitmaps are cached by
+  // revision, so every page is re-rendered: `[]` means "no page named, so all"
+  // (see handleDocumentMutated). Without it the old text stayed on screen until
+  // the zoom changed, though the document was already redacted.
+  // A refusal (redaction-incomplete, a signed or XFA document) is rethrown so
+  // the panel reports it instead of claiming the redactions were applied.
+  const handleApplyRedactions = useCallback(async () => {
+    if (!pdfDoc || !isTauri) return;
+    const { invokeCommand: invoke } = await import('../../lib/commandBridge');
+    await invoke('apply_redactions');
+    await refetchComments();
+    markDirty();
+    onAnnotationsChanged?.([]);
+    setDocumentEventLog(prev => appendEvent(prev, makeDocumentEvent(
+      'redaction_applied', authorName, -1, '', 'Redacties toegepast'
+    )));
+  }, [pdfDoc, authorName, refetchComments, markDirty, onAnnotationsChanged]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Search for text and redact every match. The backend removes the text from
+  // the page content at once (there are no draft marks to review), so the pages
+  // must be re-rendered like after an apply. A backend error is rethrown: the
+  // old `return null` made a refusal read as "no matches".
+  const handleRedactSearch = useCallback(async (query: string): Promise<{ matchesFound: number; areasRedacted: number } | null> => {
+    if (!pdfDoc || !isTauri || !query.trim()) return null;
+    const { invokeCommand: invoke } = await import('../../lib/commandBridge');
+    const result = await invoke<{ matches_found: number; areas_redacted: number }>('redact_search', { query });
+    await refetchComments();
+    markDirty();
+    onAnnotationsChanged?.([]);
+    return { matchesFound: result.matches_found, areasRedacted: result.areas_redacted };
+  }, [pdfDoc, refetchComments, markDirty, onAnnotationsChanged]);
 
   // Strip document metadata (author, title, etc.) permanently.
   const handleRedactMetadata = useCallback(async (): Promise<boolean> => {
@@ -753,7 +910,7 @@ export function useAnnotations(
 
   // Click an annotation marker on the canvas → select it.
   const handleAnnotationClick = useCallback((annotationId: string) => {
-    const ann = allAnnotations.find(a => a.id === annotationId);
+    const ann = markerTarget(annotationId, allAnnotations, pageImages);
     if (!ann) return;
     if (ann.type === 'text') {
       const idx = comments.findIndex(c => c.id === annotationId);
@@ -761,8 +918,8 @@ export function useAnnotations(
     } else {
       setSelectedAnnotationId(prev => prev === annotationId ? null : annotationId);
     }
-    if (mode !== 'review') setMode('review');
-  }, [allAnnotations, comments, mode]); // eslint-disable-line react-hooks/exhaustive-deps
+    if (mode !== 'review' && mode !== 'edit') setMode('review');
+  }, [allAnnotations, pageImages, comments, mode]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Reorder pages by invoking the Rust reorder_pages command.
   const handleReorderPages = useCallback(async (newOrder: number[]) => {
@@ -785,6 +942,7 @@ export function useAnnotations(
   }, [pdfDoc]);
 
   return {
+    refetchAnnotations: refetchComments,
     allAnnotations,
     setAllAnnotations,
     reviewStatuses,
@@ -793,8 +951,6 @@ export function useAnnotations(
     activeCommentIdx,
     setActiveCommentIdx,
     scannedPageIndices,
-    ocrRunning,
-    ocrPageWords,
     activeAnnotationTool,
     setActiveAnnotationTool,
     annotationAppearance,
@@ -812,6 +968,7 @@ export function useAnnotations(
     handlePrevComment,
     handleMetadataChange,
     handleAddComment,
+    handleAddNote,
     handleDeleteComment,
     handleUpdateComment,
     handleToggleResolvedStatus,
@@ -819,7 +976,6 @@ export function useAnnotations(
     handleDeleteReply,
     handleResolveAll,
     handleDeleteAllResolved,
-    handleRunOcr,
     handleTextSelection,
     createTextMarkupFromSelection,
     handleRectDraw,
@@ -827,6 +983,10 @@ export function useAnnotations(
     handleRedactionDraw,
     handleDeleteSelectedAnnotation,
     handleUpdateAnnotationColor,
+    handleUpdateAnnotationRect,
+    handleUpdateAnnotationText,
+    handleReplaceAnnotationImage,
+    handlePlaceAnnotation,
     handleApplyRedactions,
     handleRedactSearch,
     handleRedactMetadata,

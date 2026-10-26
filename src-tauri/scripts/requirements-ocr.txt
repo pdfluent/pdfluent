@@ -1,4 +1,0 @@
-# SPDX-License-Identifier: LicenseRef-PDFluent-Proprietary
-# Copyright (c) 2026 Innovation Trigger B.V.
-
-paddleocr>=2.8.1

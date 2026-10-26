@@ -18,7 +18,9 @@
  * a rename leaves an orphan behind in one locale, or a key listed in
  * src/i18n/untranslated.json is translated and left on the list — the same
  * ratchet the UI register uses for its exceptions, so the backlog cannot rot
- * into a list nobody reads.
+ * into a list nobody reads. Also red when a locale's backlog grows past its
+ * ceiling in src/i18n/untranslated-ceiling.json, or a ceiling is left above
+ * the backlog after a translation lands: the backlog only shrinks.
  */
 
 import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
@@ -31,6 +33,10 @@ import {
   check,
   fill,
   flatten,
+  lowerCeilings,
+  ratchetProblems,
+  readCeilings,
+  CEILING_PATH,
   localeNames,
   readLocale,
   readUntranslated,
@@ -103,6 +109,49 @@ describe('locale key parity', () => {
       }
     }
     expect(Object.keys(backlog)).not.toContain(SOURCE_LOCALE);
+  });
+});
+
+describe('untranslated backlog ratchet', () => {
+  function fixture(backlog: string[], ceiling?: number): string {
+    const root = mkdtempSync(join(tmpdir(), 'i18n-ratchet-'));
+    mkdirSync(join(root, LOCALES_DIR), { recursive: true });
+    writeFileSync(join(root, LOCALES_DIR, 'en.json'), JSON.stringify({ a: 'Open', b: 'Close' }));
+    writeFileSync(join(root, LOCALES_DIR, 'nl.json'), JSON.stringify({ a: 'Openen', b: 'Close' }));
+    writeFileSync(join(root, UNTRANSLATED_PATH), JSON.stringify({ nl: backlog }));
+    if (ceiling !== undefined) {
+      writeFileSync(join(root, CEILING_PATH), JSON.stringify({ ceilings: { nl: ceiling } }));
+    }
+    return root;
+  }
+
+  it('every locale in the tree has a ceiling equal to its backlog', () => {
+    expect(ratchetProblems()).toEqual([]);
+    const ceilings = readCeilings() as Record<string, number>;
+    for (const name of localeNames() as string[]) {
+      if (name === SOURCE_LOCALE) continue;
+      expect(typeof ceilings[name], `${CEILING_PATH} has no ceiling for ${name}`).toBe('number');
+    }
+  });
+
+  it('a backlog that grows past its ceiling fails', () => {
+    const problems = check(fixture(['b'], 0)) as string[];
+    expect(problems.join('\n')).toMatch(/nl: 1 untranslated key\(s\), ceiling 0/);
+  });
+
+  it('a locale without a ceiling may not park anything', () => {
+    expect((check(fixture(['b'])) as string[]).join('\n')).toMatch(/ceiling 0/);
+  });
+
+  it('a ceiling above the backlog fails until it is lowered, and lowering never raises', () => {
+    const root = fixture(['b'], 3);
+    expect((check(root) as string[]).join('\n')).toMatch(/lower it/);
+    expect(lowerCeilings(root)).toEqual({ nl: 1 });
+    expect(check(root)).toEqual([]);
+
+    const tight = fixture(['b'], 0);
+    expect(lowerCeilings(tight)).toEqual({ nl: 0 });
+    expect(check(tight)).not.toEqual([]);
   });
 });
 

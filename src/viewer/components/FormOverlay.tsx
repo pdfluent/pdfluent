@@ -106,7 +106,7 @@ export function FormOverlay({
     margin: 0,
     background: readOnly ? 'rgba(244,244,245,0.55)' : 'rgba(255,255,255,0.96)',
     border: highlight
-      ? '1px solid rgba(59,130,246,0.55)'
+      ? '1px solid var(--selection-on-page-strong)'
       : '1px solid rgba(120,120,128,0.28)',
     borderRadius: 2,
     outline: 'none',
@@ -240,7 +240,7 @@ export function FormOverlay({
                 height: box.height,
                 margin: 0,
                 pointerEvents: 'auto',
-                accentColor: '#2563eb',
+                accentColor: 'var(--emphasis-on-page)',
                 cursor: field.readOnly ? 'default' : 'pointer',
               }}
             />,
@@ -282,7 +282,7 @@ export function FormOverlay({
                 height: box.height,
                 margin: 0,
                 pointerEvents: 'auto',
-                accentColor: '#2563eb',
+                accentColor: 'var(--emphasis-on-page)',
                 cursor: field.readOnly ? 'default' : 'pointer',
               }}
             />,

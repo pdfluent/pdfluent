@@ -1,7 +1,7 @@
 {
   "$schema": "https://raw.githubusercontent.com/nicoverbruggen/tauri-v2-schema/main/schema.json",
   "productName": "PDFluent",
-  "version": "1.0.0",
+  "version": "1.1.1",
   "identifier": "com.pdfluent.app",
   "build": {
     "beforeDevCommand": "npm run dev",
@@ -19,7 +19,8 @@
         "minWidth": 800,
         "minHeight": 600,
         "center": true,
-        "decorations": true
+        "decorations": true,
+        "additionalBrowserArgs": "--disable-features=msWebOOUI,msPdfOOUI,msSmartScreenProtection,msEdgeEnhanceTextContrast --disable-background-networking --disable-component-update --disable-sync --disable-domain-reliability --disable-client-side-phishing-detection --no-pings --disable-breakpad --no-first-run"
       }
     ],
     "security": {
@@ -61,10 +62,10 @@
     "createUpdaterArtifacts": true,
     "targets": "all",
     "resources": {
-      "scripts/paddle_ocr_bridge.py": "scripts/paddle_ocr_bridge.py",
-      "scripts/requirements-ocr.txt": "scripts/requirements-ocr.txt",
       "resources/bin": "resources/bin",
       "resources/fonts/liberation-2.1.5": "resources/fonts/liberation-2.1.5",
+      "resources/fonts/signature": "resources/fonts/signature",
+      "resources/ocr-bundle": "resources/ocr",
       "../LICENSE.md": "legal/LICENSE.md",
       "../THIRD_PARTY.md": "legal/THIRD_PARTY.md",
       "../THIRD_PARTY_ATTRIBUTIONS.md": "legal/THIRD_PARTY_ATTRIBUTIONS.md"

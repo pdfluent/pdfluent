@@ -67,3 +67,11 @@ latest.json
 
 # Production bundle built by scripts/ci/legacy-shell-fenced.mjs; never a source of truth.
 dist-legacy-guard/
+journey-results/
+
+# Store screenshot raw output (tests/screenshots)
+screenshots-out/
+store/screenshots/1.1.0/out/
+
+# Staged OCR component, bundled in every build (scripts/ocr-component/ocr-bundle.mjs)
+src-tauri/resources/ocr-bundle/

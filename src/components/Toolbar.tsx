@@ -221,7 +221,7 @@ function iconButton(
 const highlightSwatches = {
   yellow: "#f9dd5f",
   green: "#90d676",
-  blue: "#86b6ff",
+  blue: "#86b6ff",  // monochrome-allow: highlight colour swatch (document content)
   pink: "#f3a2cb",
 } satisfies Record<"yellow" | "green" | "blue" | "pink", string>;
 

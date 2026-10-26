@@ -110,7 +110,7 @@ describe('reportFallback', () => {
 describe('classifyCommandError', () => {
   it.each([
     ['open_pdf', 'permission denied reading the file', 'tauri_runtime_failure.fs_permission'],
-    ['run_paddle_ocr', 'paddleocr is not installed', 'environment_failure.ocr_model_missing'],
+    ['run_ocr', 'OCR_COMPONENT_NOT_INSTALLED', 'environment_failure.ocr_model_missing'],
     ['save_pdf', 'no space left on device', 'environment_failure.disk_full'],
     ['render_page', 'bad geometry', 'render_crash.invalid_geometry'],
   ])('%s / %s', (command, message, taxonomy) => {
@@ -186,17 +186,27 @@ const CALLS: Record<string, () => Promise<unknown>> = {
   decryptPdf: () => api.decryptPdf('pw'),
   redactText: () => api.redactText(0, [[0, 0, 1, 1]]),
   redactSearch: () => api.redactSearch('secret'),
+  detectPii: () => api.detectPii(),
+  redactPii: () => api.redactPii(['jan@example.com']),
   ocrPage: () => api.ocrPage(0),
   extractImages: () => api.extractImages('/tmp'),
   exportPageAsImage: () => api.exportPageAsImage(0, 'png', '/tmp/p.png'),
   convertToDocx: () => api.convertToDocx('/tmp/x.docx'),
   extractInvoiceData: () => api.extractInvoiceData(),
   validateInvoice: () => api.validateInvoice(),
-  getOcrStatus: () => api.getOcrStatus(),
-  runPaddleOcr: () => api.runPaddleOcr({
-    image_base64: '', language: 'en', include_structure: false, preprocess_mode: 'off',
-  }),
+  runOcr: () => api.runOcr(['eng'], [0]),
   getPageTextSpans: () => api.getPageTextSpans(0),
+  flattenForm: () => api.flattenForm(),
+  // Parked (the commands exist only with the cargo feature `pii`), but the
+  // wrappers stay and must report like every other.
+  detectPii: () => api.detectPii(false),
+  piiComponentStatus: () => api.piiComponentStatus(),
+  installPiiComponent: () => api.installPiiComponent(1),
+  removePiiComponent: () => api.removePiiComponent(),
+  redactPii: () => api.redactPii([]),
+  getFormScriptsPolicy: () => api.getFormScriptsPolicy(),
+  getFormScripts: () => api.getFormScripts(),
+  setFormScriptsAllowed: () => api.setFormScriptsAllowed(true),
 };
 
 describe('every wrapper in tauri-api reports its own failure', () => {
@@ -219,6 +229,14 @@ describe('every wrapper in tauri-api reports its own failure', () => {
       for (const m of body.matchAll(/invoke(?:<[^>]*>)?\(\s*["']([a-z0-9_]+)["']/gi)) covered.add(m[1]!);
     }
     expect([...commandNamesInApi()].filter(c => !covered.has(c))).toEqual([]);
+  });
+
+  it('does not toast a failed background OCR status probe, and logs it', async () => {
+    invokeMock.mockImplementation((command: string) =>
+      command === 'frontend_log' ? Promise.resolve() : Promise.reject('No resource folder: unknown path'));
+    const errors = await captured(() => api.getOcrComponentStatus());
+    expect(errors).toEqual([]);
+    await expect(api.getOcrComponentStatus()).rejects.toBeDefined();
   });
 
   it('reaches the backend only through the bridge', () => {

@@ -167,6 +167,15 @@
       "licenseStatus": "known",
       "license": "manual-review-required",
       "reason": "Metadata does not expose a machine-readable SPDX expression."
+    },
+    {
+      "source": "npm",
+      "name": "css-value",
+      "version": "0.0.1",
+      "policyStatus": "allowed",
+      "licenseStatus": "known",
+      "license": "MIT",
+      "reason": "Dev-only (webdriverio test tooling), never in the shipped bundle. The npm manifest has no license field, but the published tarball's Readme.md carries the full MIT text (Copyright 2012 TJ Holowaychuk) and upstream package.json at https://github.com/visionmedia/css-value declares MIT."
     }
   ]
 }

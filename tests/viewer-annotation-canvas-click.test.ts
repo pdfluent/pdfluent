@@ -100,7 +100,10 @@ describe('AnnotationOverlay — annotation marker rendering', () => {
     const markerStart = annotOverlaySource.indexOf('data-testid="annotation-marker"');
     const markerEnd = annotOverlaySource.indexOf('/>', markerStart) + 2;
     const markerEl = annotOverlaySource.slice(markerStart, markerEnd);
-    expect(markerEl).toContain('onAnnotationClick?.(mark.id)');
+    // A drag ends in a click; clickMark swallows that one and passes the rest on.
+    expect(markerEl).toContain('clickMark(mark.id)');
+    const clickMark = annotOverlaySource.slice(annotOverlaySource.indexOf('const clickMark'));
+    expect(clickMark.slice(0, 300)).toContain('onAnnotationClick?.(id)');
   });
 
   it('enables pointer events on individual marker rects', () => {
@@ -244,28 +247,28 @@ describe('ViewerApp — handleAnnotationClick', () => {
 
   it('finds text comment by annotationId using findIndex (for type=text annotations)', () => {
     const fnStart = viewerAppSource.indexOf('const handleAnnotationClick = useCallback(');
-    const fnEnd = viewerAppSource.indexOf('[allAnnotations, comments, mode])', fnStart) + 35;
+    const fnEnd = viewerAppSource.indexOf('[allAnnotations, pageImages, comments, mode])', fnStart) + 47;
     const fnBody = viewerAppSource.slice(fnStart, fnEnd);
     expect(fnBody).toContain('comments.findIndex(c => c.id === annotationId)');
   });
 
   it('returns early when annotation is not found in allAnnotations', () => {
     const fnStart = viewerAppSource.indexOf('const handleAnnotationClick = useCallback(');
-    const fnEnd = viewerAppSource.indexOf('[allAnnotations, comments, mode])', fnStart) + 35;
+    const fnEnd = viewerAppSource.indexOf('[allAnnotations, pageImages, comments, mode])', fnStart) + 47;
     const fnBody = viewerAppSource.slice(fnStart, fnEnd);
     expect(fnBody).toContain('if (!ann) return');
   });
 
   it('calls setActiveCommentIdx with the found index', () => {
     const fnStart = viewerAppSource.indexOf('const handleAnnotationClick = useCallback(');
-    const fnEnd = viewerAppSource.indexOf('[allAnnotations, comments, mode])', fnStart) + 35;
+    const fnEnd = viewerAppSource.indexOf('[allAnnotations, pageImages, comments, mode])', fnStart) + 47;
     const fnBody = viewerAppSource.slice(fnStart, fnEnd);
     expect(fnBody).toContain('setActiveCommentIdx(idx)');
   });
 
   it('switches mode to review when not already in review mode', () => {
     const fnStart = viewerAppSource.indexOf('const handleAnnotationClick = useCallback(');
-    const fnEnd = viewerAppSource.indexOf('[allAnnotations, comments, mode])', fnStart) + 35;
+    const fnEnd = viewerAppSource.indexOf('[allAnnotations, pageImages, comments, mode])', fnStart) + 47;
     const fnBody = viewerAppSource.slice(fnStart, fnEnd);
     expect(fnBody).toContain("mode !== 'review'");
     expect(fnBody).toContain("setMode('review')");

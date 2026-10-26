@@ -86,7 +86,7 @@ describe('ExportDialog — Escape handler: existing close affordances unchanged'
     expect(dialogSource).toContain("aria-label={t('exportDialog.closeAriaLabel'");
   });
 
-  it('Annuleren button still calls onClose', () => {
+  it('Cancel button still calls onClose', () => {
     expect(dialogSource).toContain("t('common.cancel'");
   });
 });

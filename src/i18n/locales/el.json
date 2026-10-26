@@ -56,7 +56,7 @@
     "fillAndSign": "Συμπλήρωση & Υπογραφή",
     "more": "Περισσότερα",
     "getDesktopApp": "Εφαρμογή επιφάνειας εργασίας",
-    "getDesktopAppTitle": "Επεξεργασία, OCR, επεξεργασία, οργάνωση σελίδων και εξαγωγή στην εφαρμογή επιφάνειας εργασίας"
+    "getDesktopAppTitle": "Επεξεργασία, OCR, απόκρυψη δεδομένων, οργάνωση σελίδων και εξαγωγή στην εφαρμογή υπολογιστή"
   },
   "toolbar": {
     "select": "Επιλογή",
@@ -94,7 +94,7 @@
     "date": "Ημερομηνία",
     "password": "Κωδικός",
     "permissions": "Δικαιώματα",
-    "redact": "Επεξεργασία",
+    "redact": "Απόκρυψη",
     "hide": "Απόκρυψη",
     "compare": "Σύγκριση",
     "accessibility": "Προσβασιμότητα",
@@ -114,9 +114,9 @@
     "allTools": "Όλα τα εργαλεία",
     "contextualBar": "Γραμμή εργαλείων λειτουργίας",
     "pdfa": "PDF/A",
-    "metadata": "Document properties",
-    "invoice": "E-invoice",
-    "bookmarks": "Bookmarks"
+    "metadata": "Ιδιότητες εγγράφου",
+    "invoice": "Ηλεκτρονικό τιμολόγιο",
+    "bookmarks": "Σελιδοδείκτες"
   },
   "topbar": {
     "openPdf": "Άνοιγμα PDF",
@@ -233,16 +233,15 @@
     "noFieldsBrowserHint": "Δεν βρέθηκαν πεδία φόρμας."
   },
   "protect": {
-    "applyRedactions": "Μόνιμη εφαρμογή επεξεργασιών",
-    "noRedactions": "Καμία εκκρεμής επεξεργασία.",
-    "redactionsPending": "{{count}} επεξεργασία σε εκκρεμότητα",
-    "redactionsPending_plural": "{{count}} επεξεργασίες σε εκκρεμότητα",
+    "applyRedactions": "Οριστική εφαρμογή αποκρύψεων",
+    "noRedactions": "Δεν εκκρεμούν αποκρύψεις.",
+    "redactionsPending": "{{count}} απόκρυψη σε εκκρεμότητα",
+    "redactionsPending_plural": "{{count}} αποκρύψεις σε εκκρεμότητα",
     "encrypt": "Κρυπτογράφηση",
     "userPasswordPlaceholder": "Κωδικός χρήστη",
     "ownerPasswordPlaceholder": "Κωδικός ιδιοκτήτη",
     "encryptBtn": "Κρυπτογράφηση…",
     "decrypt": "Αποκρυπτογράφηση",
-    "currentPasswordPlaceholder": "Τρέχων κωδικός",
     "decryptBtn": "Αποκρυπτογράφηση",
     "noDocument": "Δεν υπάρχει ανοικτό έγγραφο.",
     "permCanPrint": "Εκτύπωση",
@@ -253,12 +252,16 @@
     "permCanFillForms": "Συμπλήρωση φορμών",
     "permCanExtractContent": "Εξαγωγή περιεχομένου",
     "permCanAssemble": "Συναρμολόγηση",
-    "searchRedact": "Αναζήτηση και επεξεργασία",
-    "searchRedactPlaceholder": "Κείμενο για εύρεση και επεξεργασία…",
-    "searchRedactBtn": "Εύρεση και επεξεργασία",
+    "searchRedact": "Αναζήτηση και απόκρυψη",
+    "searchRedactPlaceholder": "Κείμενο για αναζήτηση και απόκρυψη…",
+    "searchRedactBtn": "Εύρεση και απόκρυψη",
     "redactMetadataTitle": "Μεταδεδομένα",
     "redactMetadataDesc": "Αφαίρεση συγγραφέα, τίτλου και άλλων αναγνωριστικών μεταδεδομένων.",
-    "redactMetadataBtn": "Αφαίρεση μεταδεδομένων"
+    "redactMetadataBtn": "Αφαίρεση μεταδεδομένων",
+    "ownerPasswordForRemoval": "Κωδικός πρόσβασης κατόχου (δικαιωμάτων)",
+    "removePasswordHelp": "Η αφαίρεση κωδικού πρόσβασης απαιτεί τον κωδικό πρόσβασης κατόχου, αυτόν που προστατεύει τα δικαιώματα. Ο κωδικός με τον οποίο ανοίξατε το αρχείο δεν αρκεί, εκτός αν είναι και ο κωδικός πρόσβασης κατόχου.",
+    "removePasswordReady": "Ανοίξατε αυτό το αρχείο με τον κωδικό πρόσβασης κατόχου, οπότε η προστασία μπορεί να αφαιρεθεί χωρίς να τον πληκτρολογήσετε ξανά.",
+    "removePasswordNotProtected": "Αυτό το έγγραφο δεν έχει προστασία με κωδικό πρόσβασης."
   },
   "organize": {
     "thumbnails": "Μικρογραφίες",
@@ -287,33 +290,34 @@
     "combine": "Συγχώνευση αρχείων",
     "splitRange": "Διαχωρισμός κατά εύρος",
     "splitRangeHint": "Επιλέξτε πρώτα σελίδες",
-    "moveLeft": "Move selected page left",
-    "moveRight": "Move selected page right",
-    "moveLeftShort": "Left",
-    "moveRightShort": "Right",
-    "rotateLeft": "Rotate left",
-    "rotateRight": "Rotate right",
-    "rotateLeftShort": "Left",
-    "rotateRightShort": "Right",
-    "addingPdf": "Adding PDF…",
-    "pdfAdded": "PDF added",
-    "combiningFiles": "Combining {{count}} file(s)…",
-    "filesCombined": "{{count}} file(s) combined",
-    "insertingPdf": "Inserting PDF before page {{page}}…",
-    "pdfInserted": "PDF inserted",
-    "exportingPages": "Exporting {{count}} page(s)…",
-    "selectionExported": "Selection exported to {{name}}",
-    "splittingPages": "Splitting into individual pages…",
-    "pagesSaved": "{{count}} pages saved",
-    "splittingRanges": "Splitting {{count}} range(s)…",
-    "filesSaved": "{{count}} file(s) saved"
+    "moveLeft": "Μετακίνηση επιλεγμένης σελίδας αριστερά",
+    "moveRight": "Μετακίνηση επιλεγμένης σελίδας δεξιά",
+    "moveLeftShort": "Αριστερά",
+    "moveRightShort": "Δεξιά",
+    "rotateLeft": "Περιστροφή αριστερά",
+    "rotateRight": "Περιστροφή δεξιά",
+    "rotateLeftShort": "Αριστερά",
+    "rotateRightShort": "Δεξιά",
+    "addingPdf": "Προσθήκη PDF…",
+    "pdfAdded": "Το PDF προστέθηκε",
+    "combiningFiles": "Συγχώνευση {{count}} αρχείων…",
+    "filesCombined": "Συγχωνεύτηκαν {{count}} αρχεία",
+    "insertingPdf": "Εισαγωγή PDF πριν από τη σελίδα {{page}}…",
+    "pdfInserted": "Το PDF εισήχθη",
+    "exportingPages": "Εξαγωγή {{count}} σελίδων…",
+    "selectionExported": "Η επιλογή εξήχθη στο {{name}}",
+    "splittingPages": "Διαίρεση σε μεμονωμένες σελίδες…",
+    "pagesSaved": "Αποθηκεύτηκαν {{count}} σελίδες",
+    "splittingRanges": "Διαίρεση {{count}} ευρών…",
+    "filesSaved": "Αποθηκεύτηκαν {{count}} αρχεία"
   },
   "unsavedChanges": {
     "title": "Μη αποθηκευμένες αλλαγές",
     "message": "Θέλετε να αποθηκεύσετε τις αλλαγές σας πριν συνεχίσετε;",
     "save": "Αποθήκευση",
     "discard": "Απόρριψη αλλαγών",
-    "cancel": "Ακύρωση"
+    "cancel": "Ακύρωση",
+    "messageNamed": "Θέλετε να αποθηκεύσετε τις αλλαγές σας στο {{name}} πριν συνεχίσετε;"
   },
   "welcome": {
     "title": "Ανοίξτε ένα PDF για να ξεκινήσετε",
@@ -327,13 +331,13 @@
     "lede": "Διαβάστε, επεξεργαστείτε, μετατρέψτε, συμπληρώστε και υπογράψτε — εξ ολοκλήρου στη συσκευή σας.",
     "privacyPromise": "Τοπικά-πρώτα · τα έγγραφα δεν εγκαταλείπουν ποτέ αυτή τη συσκευή",
     "dropPdfHere": "Ρίξτε το PDF εδώ",
-    "v3Subtitle": "Open a PDF to read, edit, convert or sign it locally.",
-    "openFileAria": "Choose a PDF file to open",
-    "clearRecent": "Clear recent",
-    "recentShort": "Recent",
-    "removeRecentAria": "Remove {{name}}",
-    "backToDocument": "Back to document",
-    "loadingDocument": "Loading document…"
+    "v3Subtitle": "Ανοίξτε ένα PDF για ανάγνωση, τροποποίηση, μετατροπή ή υπογραφή τοπικά.",
+    "openFileAria": "Επιλέξτε ένα αρχείο PDF για άνοιγμα",
+    "clearRecent": "Εκκαθάριση πρόσφατων",
+    "recentShort": "Πρόσφατα",
+    "removeRecentAria": "Αφαίρεση {{name}}",
+    "backToDocument": "Επιστροφή στο έγγραφο",
+    "loadingDocument": "Φόρτωση εγγράφου…"
   },
   "settings": {
     "language": "Γλώσσα",
@@ -350,15 +354,29 @@
     "reviewerNamePlaceholder": "Όνομα που χρησιμοποιείται στους σχολιασμούς",
     "exportPreferences": "Προτιμήσεις εξαγωγής",
     "exportFormatLabel": "Προεπιλεγμένη μορφή εξαγωγής",
-    "autosave": "Αυτόματη αποθήκευση",
-    "autosaveEnable": "Αυτόματη αποθήκευση αλλαγών",
     "themeLabel": "Θέμα",
     "ocrDefaults": "Προεπιλογές OCR",
     "ocrLanguageLabel": "Προεπιλεγμένη γλώσσα (ISO-639-2)",
     "ocrLanguagePlaceholder": "π.χ. eng, nld, deu",
-    "updates": "Updates",
-    "automaticUpdateCheck": "Check for a new version at startup",
-    "automaticUpdateCheckHint": "PDFluent asks pdfluent.com whether a newer version exists, a few seconds after it starts. Nothing from your documents is sent. Turn this off and the app never checks on its own — \"Check for updates\" still works whenever you ask for it."
+    "updates": "Ενημερώσεις",
+    "automaticUpdateCheck": "Έλεγχος για νέα έκδοση κατά την εκκίνηση",
+    "automaticUpdateCheckHint": "Το PDFluent ρωτά το pdfluent.com αν υπάρχει νεότερη έκδοση, λίγα δευτερόλεπτα μετά την εκκίνηση. Δεν αποστέλλεται τίποτα από τα έγγραφά σας. Αν το απενεργοποιήσετε, η εφαρμογή δεν ελέγχει ποτέ από μόνη της — το «Έλεγχος για ενημερώσεις» εξακολουθεί να λειτουργεί όποτε το ζητήσετε.",
+    "recoveryCopy": "Αντίγραφο ανάκτησης",
+    "recoveryCopyEnable": "Διατήρηση αντιγράφου ανάκτησης των μη αποθηκευμένων αλλαγών, που προσφέρεται μετά από κατάρρευση",
+    "view": "Προβολή",
+    "defaultZoomLabel": "Προεπιλεγμένο ζουμ",
+    "defaultZoomFitWidth": "Προσαρμογή πλάτους (προεπιλογή)",
+    "defaultZoomFitPage": "Προσαρμογή σελίδας",
+    "defaultZoomActualSize": "Πραγματικό μέγεθος (100%)",
+    "defaultZoomLastUsed": "Τελευταία χρήση",
+    "defaultZoomHint": "Ένα έγγραφο ανοίγει σε αυτό το ζουμ και ακολουθεί το παράθυρο μέχρι να κάνετε ζουμ μόνοι σας. Η Προσαρμογή πλάτους εμφανίζει ολόκληρη τη σελίδα όταν αυτή είναι σαφώς καλύτερη επιλογή.",
+    "securityTitle": "Ασφάλεια",
+    "formScriptsLabel": "Σενάρια φόρμας",
+    "formScriptsAsk": "Ερώτηση",
+    "formScriptsAlways": "Πάντα",
+    "formScriptsNever": "Ποτέ",
+    "formScriptsHint": "Οι φόρμες μπορούν να περιέχουν σενάρια, για παράδειγμα υπολογισμούς. Η προεπιλογή είναι «Ερώτηση»: μια φόρμα ανοίγει με τις αποθηκευμένες τιμές της και δεν εκτελείται τίποτα μέχρι να συμφωνήσετε.",
+    "formScriptsPinned": "Ο οργανισμός σας έχει ορίσει αυτή την επιλογή. Δεν μπορεί να αλλάξει εδώ."
   },
   "errors": {
     "loadFailed": "Αποτυχία φόρτωσης εγγράφου",
@@ -367,7 +385,7 @@
     "unknownError": "Παρουσιάστηκε απρόσμενο σφάλμα",
     "ocrFailed": "Το OCR απέτυχε",
     "exportFailed": "Η εξαγωγή απέτυχε",
-    "redactionFailed": "Η επεξεργασία απέτυχε",
+    "redactionFailed": "Η απόκρυψη απέτυχε",
     "textEditFailed": "Η επεξεργασία κειμένου απέτυχε",
     "layoutEditFailed": "Η επεξεργασία διάταξης απέτυχε",
     "annotationFailed": "Ο σχολιασμός απέτυχε",
@@ -381,7 +399,8 @@
     "addPageFailed": "Η προσθήκη PDF απέτυχε",
     "insertFailed": "Η εισαγωγή PDF απέτυχε",
     "splitFailed": "Η διαίρεση απέτυχε",
-    "commandFailedTitle": "'{{command}}' did not complete"
+    "commandFailedTitle": "Το '{{command}}' δεν ολοκληρώθηκε",
+    "commandRetrying": "Προσωρινό σφάλμα στο {{command}} — νέα προσπάθεια"
   },
   "events": {
     "formFieldUpdated": "Το πεδίο φόρμας ενημερώθηκε",
@@ -430,9 +449,9 @@
     "pageNotFound": "Η σελίδα δεν βρέθηκε",
     "requiresFontInspection": "Η επεξεργασία κειμένου απαιτεί επιθεώρηση γραμματοσειράς (προγραμματίζεται για τη φάση 6).",
     "rejection": {
-      "bannerTitle": "This text was not changed",
-      "bannerDetail": "Reason reported by the PDF engine: {{detail}}",
-      "bannerDismiss": "Dismiss",
+      "bannerTitle": "Αυτό το κείμενο δεν άλλαξε",
+      "bannerDetail": "Λόγος που ανέφερε η μηχανή PDF: {{detail}}",
+      "bannerDismiss": "Παράβλεψη",
       "replacement-too-long": {
         "tooltip": "Replacement is too long",
         "explanation": "The replacement is longer than the text it replaces. Keep it the same length or shorter so the surrounding layout stays intact."
@@ -491,8 +510,8 @@
       }
     },
     "fallback": {
-      "fontSubstitutedTitle": "A standard font wrote the new text",
-      "fontSubstitutedMessage": "The original font of this text has no glyph for one or more characters you typed, so Helvetica was used for the replacement. The text is correct; it may look slightly different from the rest of the line."
+      "fontSubstitutedTitle": "Το νέο κείμενο γράφτηκε με τυπική γραμματοσειρά",
+      "fontSubstitutedMessage": "Η αρχική γραμματοσειρά αυτού του κειμένου δεν έχει γλύφο για έναν ή περισσότερους χαρακτήρες που πληκτρολογήσατε, οπότε χρησιμοποιήθηκε η Helvetica για την αντικατάσταση. Το κείμενο είναι σωστό· μπορεί να φαίνεται ελαφρώς διαφορετικό από την υπόλοιπη γραμμή."
     }
   },
   "validation": {
@@ -502,7 +521,7 @@
     "objectInLockedLayer": "Το αντικείμενο βρίσκεται σε κλειδωμένο επίπεδο και δεν μπορεί να τροποποιηθεί.",
     "formsWithoutFields": "Η λειτουργία συμπλήρωσης φόρμας είναι ενεργή σε έγγραφο χωρίς πεδία φόρμας.",
     "annotationToolbarWrongMode": "Η γραμμή σχολιασμού εμφανίζεται στη λειτουργία '{{mode}}', αλλά απαιτεί 'annotating'.",
-    "redactionToolbarWrongMode": "Η γραμμή επεξεργασίας εμφανίζεται στη λειτουργία '{{mode}}', αλλά απαιτεί 'redacting'."
+    "redactionToolbarWrongMode": "Η γραμμή απόκρυψης εμφανίζεται στη λειτουργία '{{mode}}', αλλά απαιτεί λειτουργία απόκρυψης."
   },
   "revisions": {
     "deletedAnnotations": "## Διαγραμμένοι σχολιασμοί",
@@ -549,13 +568,13 @@
     "exportExcelDone": "Υπολογιστικό φύλλο Excel εξήχθη",
     "exportPowerpointRunning": "Μετατροπή σε PowerPoint…",
     "exportPowerpointDone": "Παρουσίαση PowerPoint εξήχθη",
-    "applyRedactRunning": "Εφαρμογή επεξεργασιών…",
-    "applyRedactDone": "Οι επεξεργασίες εφαρμόστηκαν",
-    "applyRedactFailed": "Η εφαρμογή επεξεργασιών απέτυχε",
-    "searchRedactRunning": "Αναζήτηση και επεξεργασία…",
-    "searchRedactDone": "{{count}} αντιστοίχηση επεξεργάστηκε",
-    "searchRedactDone_plural": "{{count}} αντιστοιχίσεις επεξεργάστηκαν",
-    "searchRedactFailed": "Η αναζήτηση και επεξεργασία απέτυχε",
+    "applyRedactRunning": "Εφαρμογή αποκρύψεων…",
+    "applyRedactDone": "Οι αποκρύψεις εφαρμόστηκαν",
+    "applyRedactFailed": "Η εφαρμογή των αποκρύψεων απέτυχε",
+    "searchRedactRunning": "Αναζήτηση και απόκρυψη…",
+    "searchRedactDone": "Αποκρύφθηκε {{count}} αντιστοιχία",
+    "searchRedactDone_plural": "Αποκρύφθηκαν {{count}} αντιστοιχίες",
+    "searchRedactFailed": "Η αναζήτηση και απόκρυψη απέτυχε",
     "redactMetadataRunning": "Αφαίρεση μεταδεδομένων…",
     "redactMetadataDone": "Τα μεταδεδομένα αφαιρέθηκαν",
     "redactMetadataFailed": "Η αφαίρεση μεταδεδομένων απέτυχε",
@@ -566,12 +585,16 @@
     "watermarkDone": "Το υδατογράφημα προστέθηκε",
     "watermarkFailed": "Η προσθήκη υδατογραφήματος απέτυχε",
     "watermarkRunning": "Προσθήκη υδατογραφήματος…",
-    "pdfaRunning": "Converting to PDF/A…",
-    "pdfaDone": "PDF/A written",
-    "pdfaFailed": "PDF/A conversion failed",
-    "metadataRunning": "Saving properties…",
-    "metadataDone": "Properties saved",
-    "metadataFailed": "Could not save properties"
+    "pdfaRunning": "Μετατροπή σε PDF/A…",
+    "pdfaDone": "Το PDF/A γράφτηκε",
+    "pdfaFailed": "Η μετατροπή σε PDF/A απέτυχε",
+    "metadataRunning": "Αποθήκευση ιδιοτήτων…",
+    "metadataDone": "Οι ιδιότητες αποθηκεύτηκαν",
+    "metadataFailed": "Δεν ήταν δυνατή η αποθήκευση των ιδιοτήτων",
+    "exportMarkdownRunning": "Γίνεται εξαγωγή ως Markdown…",
+    "exportMarkdownDone": "Έγινε εξαγωγή Markdown",
+    "exportTablesRunning": "Γίνεται εξαγωγή πινάκων στο Excel…",
+    "exportTablesDone": "Έγινε εξαγωγή πινάκων στο Excel ({{count}})"
   },
   "panels": {
     "search": "Αναζήτηση",
@@ -586,8 +609,8 @@
     "annotationCreated": "Ο σχολιασμός δημιουργήθηκε",
     "annotationUpdated": "Ο σχολιασμός ενημερώθηκε",
     "annotationDeleted": "Ο σχολιασμός διαγράφηκε",
-    "redactionCreated": "Η επεξεργασία δημιουργήθηκε",
-    "redactionApplied": "Η επεξεργασία εφαρμόστηκε",
+    "redactionCreated": "Η απόκρυψη δημιουργήθηκε",
+    "redactionApplied": "Η απόκρυψη εφαρμόστηκε",
     "metadataChanged": "Τα μεταδεδομένα άλλαξαν",
     "pageMutated": "Η σελίδα τροποποιήθηκε",
     "textEditCommitted": "Η επεξεργασία κειμένου αποθηκεύτηκε",
@@ -714,7 +737,10 @@
     "formatJpeg": "JPEG (εικόνα)",
     "formatDocx": "Έγγραφο Word (.docx)",
     "formatXlsx": "Υπολογιστικό φύλλο Excel (.xlsx)",
-    "formatPptx": "Παρουσίαση PowerPoint (.pptx)"
+    "formatPptx": "Παρουσίαση PowerPoint (.pptx)",
+    "formatMarkdown": "Markdown (.md) - Προεπισκόπηση",
+    "formatTablesXlsx": "Πίνακες σε Excel (.xlsx) - Προεπισκόπηση",
+    "noTablesFound": "Δεν αναγνωρίστηκαν πίνακες σε αυτό το έγγραφο."
   },
   "goToPage": {
     "title": "Μετάβαση σε σελίδα",
@@ -729,7 +755,9 @@
     "documentLabel": "Έγγραφο:",
     "savedLabel": "Αποθηκεύτηκε:",
     "recoveryPath": "Διαδρομή ανάκτησης:",
-    "restore": "Επαναφορά"
+    "restore": "Επαναφορά",
+    "untitled": "Έγγραφο χωρίς τίτλο",
+    "andMore": "{{name}} και {{count}} ακόμη"
   },
   "emptyStates": {
     "noDocument": "Δεν υπάρχει ανοικτό έγγραφο",
@@ -759,7 +787,7 @@
   "textContext": {
     "editText": "Επεξεργασία κειμένου",
     "annotate": "Σχολιασμός",
-    "redact": "Επεξεργασία",
+    "redact": "Απόκρυψη",
     "copy": "Αντιγραφή",
     "summarize": "Σύνοψη",
     "explain": "Εξήγηση",
@@ -839,7 +867,26 @@
     "statusUnavailableWithReason": "Το περιβάλλον OCR δεν είναι διαθέσιμο: {{reason}}",
     "statusRetry": "Επανέλεγχος",
     "runtimePath": "Περιβάλλον: {{path}}",
-    "missingPackages": "Λείπουν: {{packages}}"
+    "missingPackages": "Λείπουν: {{packages}}",
+    "noScannedPagesTitle": "Τίποτα προς αναγνώριση",
+    "unavailable": {
+      "platform": "Το OCR δεν προσφέρεται για αυτήν την πλατφόρμα.",
+      "missing": "Τα αρχεία OCR αυτής της έκδοσης λείπουν ή είναι ελλιπή. Επανεγκαταστήστε το PDFluent για να τα επαναφέρετε."
+    },
+    "settings": {
+      "unknown": "Στοιχείο OCR: έλεγχος…",
+      "installed": "Στοιχείο OCR: Tesseract {{version}} εγκατεστημένο"
+    },
+    "errors": {
+      "OCR_COMPONENT_UNSUPPORTED_PLATFORM": "Το στοιχείο OCR δεν προσφέρεται για αυτήν την πλατφόρμα.",
+      "OCR_COMPONENT_NOT_INSTALLED": "Το στοιχείο OCR δεν είναι εγκατεστημένο.",
+      "OCR_LANGUAGE_MISSING": "Ένα πακέτο γλώσσας για OCR δεν είναι εγκατεστημένο.",
+      "OCR_SIGNED_DOCUMENT": "Αυτό το έγγραφο είναι υπογεγραμμένο. Το OCR θα άλλαζε τις υπογεγραμμένες σελίδες, οπότε δεν εκτελείται.",
+      "OCR_NOT_PERMITTED": "Τα δικαιώματα του εγγράφου δεν επιτρέπουν την αλλαγή του περιεχομένου του.",
+      "OCR_DOCUMENT_CHANGED": "Το έγγραφο άλλαξε κατά τη διάρκεια του OCR. Εκτελέστε ξανά το OCR.",
+      "OCR_ENGINE_FAILED": "Το OCR σταμάτησε με σφάλμα.",
+      "OCR_PAGE_OUT_OF_RANGE": "Μια σελίδα προς αναγνώριση δεν υπάρχει στο έγγραφο."
+    }
   },
   "docInfo": {
     "title": "Τίτλος",
@@ -879,7 +926,17 @@
     "italicComingSoon": "Η πλάγια μορφοποίηση έρχεται σύντομα",
     "sourceDigital": "Επίπεδο κειμένου PDF",
     "sourceOcr": "OCR",
-    "browserLimitedNote": "Κάντε κλικ στο κείμενο στη σελίδα για να επεξεργαστείτε το υποστηριζόμενο κείμενο PDF. Οι εικόνες και οι σύνδεσμοι είναι διαθέσιμοι στην εφαρμογή επιφάνειας εργασίας."
+    "browserLimitedNote": "Κάντε κλικ στο κείμενο στη σελίδα για να επεξεργαστείτε το υποστηριζόμενο κείμενο PDF. Οι εικόνες και οι σύνδεσμοι είναι διαθέσιμοι στην εφαρμογή επιφάνειας εργασίας.",
+    "typeface": {
+      "label": "Γραμματοσειρά",
+      "default": "Γραμματοσειρά εγγράφου",
+      "noEmbed": "{{family}}: η άδεια της γραμματοσειράς δεν επιτρέπει την ενσωμάτωσή της σε PDF",
+      "refusedLicence": "{{family}} δεν μπορεί να χρησιμοποιηθεί: η άδειά της δεν επιτρέπει την ενσωμάτωσή της σε PDF. Διάλεξε άλλη γραμματοσειρά.",
+      "refusedGlyphs": "{{family}} δεν έχει γλύφο για {{characters}}. Διάλεξε άλλη γραμματοσειρά.",
+      "refusedGone": "Αυτή η γραμματοσειρά δεν είναι πλέον εγκατεστημένη. Διάλεξε άλλη.",
+      "refusedText": "Το κείμενο για αλλαγή στυλ δεν είναι πλέον στη σελίδα.",
+      "refusedUnusable": "{{family}} δεν μπόρεσε να διαβαστεί ως γραμματοσειρά. Διάλεξε άλλη γραμματοσειρά."
+    }
   },
   "rightPanel": {
     "properties": "Ιδιότητες",
@@ -891,7 +948,7 @@
     "annotationColorValue": "Χρώμα σχολιασμού {{color}}",
     "strokeWidth": "Πλάτος γραμμής",
     "comments": "Σχόλια",
-    "redactions": "Επεξεργασίες",
+    "redactions": "Αποκρύψεις",
     "ocr": "OCR",
     "pdfa": "PDF/A",
     "formFields": "Πεδία φόρμας",
@@ -900,13 +957,13 @@
     "changeColor": "Αλλαγή χρώματος",
     "deleteMarkup": "Διαγραφή επισήμανσης",
     "delete": "Διαγραφή",
-    "redactionConfirm": "Μόνιμη εφαρμογή {{count}} επεξεργασίας; Αυτό δεν μπορεί να αναιρεθεί.",
-    "redactionConfirm_plural": "Μόνιμη εφαρμογή {{count}} επεξεργασιών; Αυτό δεν μπορεί να αναιρεθεί.",
-    "noRedactions": "Καμία εκκρεμής επεξεργασία.",
-    "redactionCount": "{{count}} επεξεργασία σε εκκρεμότητα",
-    "redactionCount_plural": "{{count}} επεξεργασίες σε εκκρεμότητα",
-    "applyRedactions": "Μόνιμη εφαρμογή επεξεργασιών",
-    "deleteRedaction": "Διαγραφή επεξεργασίας",
+    "redactionConfirm": "Οριστική εφαρμογή {{count}} απόκρυψης; Δεν μπορεί να αναιρεθεί.",
+    "redactionConfirm_plural": "Οριστική εφαρμογή {{count}} αποκρύψεων; Δεν μπορεί να αναιρεθεί.",
+    "noRedactions": "Δεν εκκρεμούν αποκρύψεις.",
+    "redactionCount": "{{count}} απόκρυψη σε εκκρεμότητα",
+    "redactionCount_plural": "{{count}} αποκρύψεις σε εκκρεμότητα",
+    "applyRedactions": "Οριστική εφαρμογή αποκρύψεων",
+    "deleteRedaction": "Διαγραφή απόκρυψης",
     "signatures": "Ψηφιακές υπογραφές",
     "watermarkApply": "Εφαρμογή υδατογραφήματος",
     "watermarkOpacity": "Αδιαφάνεια",
@@ -944,9 +1001,12 @@
     "flatten": "Ισοπέδωση XFA",
     "flattenDone": "XFA ισοπεδώθηκε. Εξάγετε το PDF για λήψη της στατικής έκδοσης.",
     "flattenFailed": "Η ισοπέδωση XFA απέτυχε",
-    "convertToStandard": "Convert to standard PDF",
-    "convertedToStandard": "XFA converted to standard PDF",
-    "convertFailed": "Conversion failed: {{message}}"
+    "convertToStandard": "Μετατροπή σε τυπικό PDF",
+    "convertedToStandard": "Το XFA μετατράπηκε σε τυπικό PDF",
+    "convertFailed": "Η μετατροπή απέτυχε: {{message}}",
+    "bannerTitle": "Φόρμα XFA",
+    "bannerBody": "Αυτή η φόρμα XFA εμφανίζεται ως έχει. Για να συμπληρώσετε, να επεξεργαστείτε ή να αναζητήσετε τα πεδία της, μετατρέψτε την σε τυπικό PDF.",
+    "bannerBodyExperimental": "Αυτή η φόρμα XFA εμφανίζεται ως έχει. Η συμπλήρωση πεδίων είναι πειραματική· μετατρέψτε την σε τυπικό PDF για αξιόπιστη συμπλήρωση, επεξεργασία και αναζήτηση."
   },
   "security": {
     "activeContentBadge": "Αποκλείστηκε",
@@ -970,7 +1030,8 @@
     "highlight": "Επισήμανση",
     "strikethrough": "Διαγράμμιση",
     "underline": "Υπογράμμιση",
-    "copyText": "Αντιγραφή κειμένου"
+    "copyText": "Αντιγραφή κειμένου",
+    "copied": "Αντιγράφηκε"
   },
   "update": {
     "available": "Διαθέσιμη ενημέρωση",
@@ -980,10 +1041,10 @@
     "installing": "Εγκατάσταση…",
     "checkFailed": "Ο έλεγχος ενημερώσεων απέτυχε",
     "upToDate": "Χρησιμοποιείτε την πιο πρόσφατη έκδοση",
-    "installed": "Update installed",
-    "restartNow": "Restart now",
-    "restartUnsaved": "Save your changes before restarting.",
-    "restartManual": "If it doesn't restart automatically, quit and reopen PDFluent to finish."
+    "installed": "Η ενημέρωση εγκαταστάθηκε",
+    "restartNow": "Επανεκκίνηση τώρα",
+    "restartUnsaved": "Αποθηκεύστε τις αλλαγές σας πριν από την επανεκκίνηση.",
+    "restartManual": "Αν δεν γίνει αυτόματη επανεκκίνηση, κλείστε και ανοίξτε ξανά το PDFluent για να ολοκληρωθεί."
   },
   "telemetry": {
     "addNoteLabel": "Θέλετε να προσθέσετε κάτι; (προαιρετικά)",
@@ -1012,6 +1073,11 @@
     "sentTitle": "Εστάλη. Ευχαριστούμε.",
     "settingsAutoSend": "Αυτόματη αποστολή χωρίς ερώτηση",
     "settingsAutoSendNote": "Οι αυτόματες αναφορές καθαρίζονται και δεν περιέχουν προσωπικά δεδομένα, ακριβώς όπως αυτές που ελέγχετε χειροκίνητα.",
+    "settingsSentReports": "Αναφορές σφαλμάτων που στάλθηκαν από αυτόν τον υπολογιστή: {{count}}. Τις διαγράφουμε αυτόματα από τον διακομιστή μας μετά από {{days}} ημέρες.",
+    "settingsDeleteReports": "Διαγραφή των αναφορών σφαλμάτων μου",
+    "settingsDeleting": "Διαγραφή…",
+    "settingsDeleted": "Διαγραμμένες αναφορές σφαλμάτων: {{count}}",
+    "settingsDeleteFailed": "Δεν ήταν δυνατή η διαγραφή {{count}}. Ελέγξτε τη σύνδεσή σας και δοκιμάστε ξανά.",
     "settingsDescription": "Οι αναφορές δεν περιέχουν ποτέ προσωπικές πληροφορίες ή περιεχόμενο εγγράφων. Όλα καθαρίζονται πριν από την αποστολή και βλέπετε κάθε αναφορά εκ των προτέρων. Απενεργοποιημένο από προεπιλογή.",
     "settingsTitle": "Αναφορές σφαλμάτων και καταρρεύσεων",
     "settingsToggle": "Αποστολή αναφορών σφαλμάτων και καταρρεύσεων",
@@ -1019,7 +1085,11 @@
     "typeBug": "Σφάλμα",
     "typeCrash": "Κατάρρευση",
     "typeFeedback": "Σχόλιο",
-    "whatGetsSent": "Τι αποστέλλεται"
+    "whatGetsSent": "Τι αποστέλλεται",
+    "settingsSentFeedback": "Αναφορές σχολίων που στάλθηκαν από αυτόν τον υπολογιστή: {{count}}. Τις διαγράφουμε αυτόματα από τον διακομιστή μας μετά από {{days}} ημέρες.",
+    "settingsDeleteFeedback": "Διαγραφή των αναφορών σχολίων μου",
+    "settingsFeedbackDeleted": "Διαγράφηκαν αναφορές σχολίων: {{count}}",
+    "settingsFeedbackDeleteFailed": "Δεν ήταν δυνατή η διαγραφή {{count}} αναφορών σχολίων. Ελέγξτε τη σύνδεσή σας και δοκιμάστε ξανά."
   },
   "ai": {
     "summaryInstruction": "Παρέχετε συνοπτική περίληψη του παρακάτω εγγράφου στα ελληνικά. Για κάθε ρόλο, αναφέρετε τον εργοδότη, τη θέση και την περίοδο. Χρησιμοποιήστε κουκκίδες.",
@@ -1076,7 +1146,8 @@
       "scrollLeft": "Κύλιση λειτουργιών προς τα αριστερά",
       "scrollRight": "Κύλιση λειτουργιών προς τα δεξιά",
       "workMode": "Λειτουργία εργασίας",
-      "searchPlaceholder": "Αναζήτηση στο έγγραφο"
+      "searchPlaceholder": "Αναζήτηση στο έγγραφο",
+      "allTools": "Όλα τα εργαλεία"
     },
     "menu": {
       "about": "Σχετικά",
@@ -1147,22 +1218,17 @@
       "draw": "Σχέδιο",
       "signatureName": "Όνομα υπογραφής",
       "typeName": "Πληκτρολογήστε το όνομά σας…",
-      "selectStyle": "Επιλογή στυλ",
-      "styleClassic": "Cursive Classic",
-      "styleElegant": "Cursive Elegant",
-      "styleBrush": "Brush Signature",
-      "styleModern": "Modern Handwriting",
       "drawHere": "Σχεδιάστε εδώ με το ποντίκι, trackpad ή stylus",
       "clear": "Εκκαθάριση",
       "apply": "Εφαρμογή",
-      "defaultSignature": "Υπογραφή",
       "clickToPlaceSignature": "Κάντε κλικ στη σελίδα για να τοποθετήσετε την υπογραφή.",
       "addInitials": "Προσθήκη αρχικών",
       "initialsIntro": "Πληκτρολογήστε τα αρχικά σας για γρήγορη τοποθέτηση σε πεδία αρχικών.",
       "initials": "Αρχικά",
       "initialsPlaceholder": "π.χ. ΑΒ",
-      "defaultInitials": "ΑΒ",
-      "clickToPlaceInitials": "Κάντε κλικ στη σελίδα για να τοποθετήσετε τα αρχικά."
+      "clickToPlaceInitials": "Κάντε κλικ στη σελίδα για να τοποθετήσετε τα αρχικά.",
+      "signatureFont": "Γραμματοσειρά υπογραφής",
+      "plainItalic": "Απλά πλάγια"
     },
     "overlay": {
       "signaturePlaced": "Υπογραφή τοποθετημένη!",
@@ -1177,13 +1243,13 @@
     "textbox": {
       "editTitle": "Επεξεργασία πλαισίου κειμένου",
       "newTitle": "Νέο πλαίσιο κειμένου",
-      "intro": "Αυτό το κείμενο τοποθετείται ως επικάλυψη στη τρέχουσα σελίδα. Η αποθήκευση κενού διαγράφει ένα υπάρχον πλαίσιο κειμένου.",
       "label": "Κείμενο",
       "placeholder": "Πληκτρολογήστε το κείμενο…",
       "delete": "Διαγραφή",
       "deleted": "Το πλαίσιο κειμένου διαγράφηκε.",
       "updated": "Το πλαίσιο κειμένου ενημερώθηκε.",
-      "added": "Προστέθηκε νέο πλαίσιο κειμένου."
+      "added": "Προστέθηκε νέο πλαίσιο κειμένου.",
+      "introPdf": "Το πλαίσιο κειμένου γράφεται μέσα στο PDF και εμφανίζεται σε κάθε πρόγραμμα προβολής PDF. Η αποθήκευση κενού αφαιρεί ένα υπάρχον πλαίσιο κειμένου."
     },
     "rail": {
       "tools": "Εργαλεία PDF",
@@ -1197,12 +1263,14 @@
       "more": "Περισσότερα εργαλεία",
       "strikeText": "Διαγραφή κειμένου",
       "underlineText": "Υπογράμμιση κειμένου",
-      "addAttachment": "Προσθήκη συνημμένου"
+      "addAttachment": "Προσθήκη συνημμένου",
+      "drawRectangle": "Σχεδίαση ορθογωνίου"
     },
     "railToasts": {
-      "commentMode": "Λειτουργία σημείωσης ενεργή. Επιλέξτε κείμενο και επιλέξτε Σημείωση, ή χρησιμοποιήστε τη λίστα σχολίων για προσθήκη σημείωσης.",
+      "commentMode": "Λειτουργία σημείωσης. Κάντε κλικ στη σελίδα εκεί που θέλετε να μπει η σημείωση.",
       "strikeout": "Διαγραφή ενεργή — επιλέξτε κείμενο για εφαρμογή.",
-      "underline": "Υπογράμμιση ενεργή — επιλέξτε κείμενο για εφαρμογή."
+      "underline": "Υπογράμμιση ενεργή — επιλέξτε κείμενο για εφαρμογή.",
+      "rectangle": "Ορθογώνιο ενεργό — σύρετε στη σελίδα για να το σχεδιάσετε."
     },
     "tools": {
       "lede": "Επιλέξτε ένα εργαλείο για να ξεκινήσετε. Όλα εκτελούνται τοπικά σε αυτήν τη συσκευή.",
@@ -1217,7 +1285,7 @@
       "merge": "Συγχώνευση αρχείων",
       "mergeSub": "Συνδυασμός PDFs",
       "contentSecurity": "Περιεχόμενο & ασφάλεια",
-      "redact": "Διαγραφή",
+      "redact": "Απόκρυψη",
       "redactSub": "Μόνιμη μαύρισμα κειμένου",
       "protect": "Προστασία",
       "protectSub": "Κωδικός πρόσβασης & δικαιώματα",
@@ -1238,17 +1306,18 @@
       "layers": "{{count}} στρώματα",
       "manageLayers": "Διαχείριση στρωμάτων",
       "layersVisible": "{{count}} στρώματα ορατά.",
-      "archiveAndData": "Archiving and data",
-      "pdfaSub": "Check or convert for long-term archiving",
-      "invoiceSub": "Read the ZUGFeRD/Factur-X invoice inside",
-      "metadataSub": "Title and author of this document"
+      "archiveAndData": "Αρχειοθέτηση και δεδομένα",
+      "pdfaSub": "Έλεγχος ή μετατροπή για μακροχρόνια αρχειοθέτηση",
+      "invoiceSub": "Ανάγνωση του ενσωματωμένου τιμολογίου ZUGFeRD/Factur-X",
+      "metadataSub": "Τίτλος και συγγραφέας αυτού του εγγράφου",
+      "flattenForm": "Ισοπέδωση",
+      "flattenFormTitle": "Ισοπέδωση της φόρμας: οι συμπληρωμένες τιμές γίνονται μέρος της σελίδας και τα πεδία καταργούνται",
+      "flattenFormDone": "Η φόρμα ισοπεδώθηκε. Η αναίρεση επαναφέρει τα πεδία.",
+      "flattenFormFailed": "Δεν ήταν δυνατή η ισοπέδωση της φόρμας: {{message}}"
     },
     "edit": {
       "lede": "Κάντε κλικ στο κείμενο στο έγγραφο για επεξεργασία inline. Η γραμμή μορφοποίησης εμφανίζεται ακριβώς πάνω από την επιλογή.",
       "formatText": "Μορφοποίηση κειμένου",
-      "fontLabel": "Γραμματοσειρά",
-      "fontHint": "Το υπάρχον κείμενο PDF χρησιμοποιεί τις ενσωματωμένες γραμματοσειρές PDF. Η γραμματοσειρά \"{{font}}\" θα χρησιμοποιηθεί για νεοδημιουργούμενα πλαίσια κειμένου.",
-      "fontEmbedded": "Ενσωματωμένη γραμματοσειρά PDF",
       "color": "Χρώμα",
       "colorLabel": "Χρώμα {{color}}",
       "addContent": "Προσθήκη περιεχομένου",
@@ -1261,7 +1330,18 @@
       "clickAnywhereTextBox": "Κάντε κλικ οπουδήποτε στη σελίδα για να τοποθετήσετε το πλαίσιο κειμένου.",
       "clickAnywhereImage": "Κάντε κλικ οπουδήποτε στη σελίδα για να τοποθετήσετε την εικόνα.",
       "selection": "Επιλογή",
-      "annotationOnPage": "{{type}} στη σελίδα {{page}}"
+      "annotationOnPage": "{{type}} στη σελίδα {{page}}",
+      "placeStamp": "Τοποθέτηση σφραγίδας",
+      "stampLabel": "Σφραγίδα",
+      "clickToPlaceStamp": "Κάντε κλικ στη σελίδα για να τοποθετήσετε τη σφραγίδα.",
+      "placementModeStamp": "Λειτουργία τοποθέτησης: σφραγίδα",
+      "stampPlaced": "Η σφραγίδα τοποθετήθηκε.",
+      "deleteAnnotation": "Διαγραφή σχολίου",
+      "annotationColor": "Χρώμα σχολίου",
+      "editTextBox": "Επεξεργασία κειμένου",
+      "replaceImage": "Αντικατάσταση εικόνας",
+      "imageReplaced": "Η εικόνα αντικαταστάθηκε.",
+      "moveHint": "Σύρετε για μετακίνηση, σύρετε μια γωνία για αλλαγή μεγέθους ή μετακινήστε με τα βελάκια."
     },
     "convert": {
       "exportPdfTo": "Εξαγωγή PDF σε",
@@ -1279,10 +1359,16 @@
       "confidenceFrom": "Εμπιστοσύνη από {{value}}%",
       "ocrOff": "OCR απενεργοποιημένο",
       "ocrOn": "OCR ενεργοποιημένο",
-      "ocrRunning": "OCR εκτελείται τοπικά…"
+      "ocrRunning": "OCR εκτελείται τοπικά…",
+      "ocrComponentUnknown": "Στοιχείο OCR: έλεγχος…",
+      "ocrComponentInstalled": "Στοιχείο OCR εγκατεστημένο",
+      "ocrLastRun": "Τελευταία εκτέλεση: {{pages}} σελίδα(ες), {{words}} λέξη(εις) προστέθηκαν ως κείμενο με δυνατότητα αναζήτησης",
+      "ocrRunningProgress": "Αναγνώριση σελίδας {{done}} από {{total}}…",
+      "markdown": "Markdown (Προεπισκόπηση)",
+      "tablesToExcel": "Πίνακες σε Excel (Προεπισκόπηση)"
     },
     "esign": {
-      "lede": "Sign with a certificate of your own, and check the signatures a document already carries. Both happen on this device.",
+      "lede": "Υπογράψτε με δικό σας πιστοποιητικό και ελέγξτε τις υπογραφές που φέρει ήδη ένα έγγραφο. Και τα δύο γίνονται σε αυτή τη συσκευή.",
       "fillAndSign": "Συμπληρώστε τα έγγραφά σας και υπογράψτε",
       "addSignature": "Προσθήκη υπογραφής",
       "addInitials": "Προσθήκη αρχικών",
@@ -1290,25 +1376,25 @@
       "placementModeInitials": "Λειτουργία τοποθέτησης: Αρχικά",
       "clickToPlaceSignature": "Κάντε κλικ οπουδήποτε στη σελίδα για να τοποθετήσετε την υπογραφή σας.",
       "clickToPlaceInitials": "Κάντε κλικ οπουδήποτε στη σελίδα για να τοποθετήσετε τα αρχικά σας.",
-      "verifySection": "Signatures",
-      "verify": "Check signatures",
-      "desktopOnly": "Available in the desktop app",
-      "unsigned": "This document carries no signatures.",
-      "signSection": "Sign with a certificate",
-      "padesLevel": "Produces a PAdES B-B signature: your certificate over the whole file, no timestamp server involved.",
-      "certificate": "Certificate (.p12 or .pfx)",
-      "certificateNone": "No certificate chosen",
-      "chooseCertificate": "Choose certificate",
-      "certificatePassword": "Certificate password",
-      "reason": "Reason (optional)",
-      "reasonPlaceholder": "Why you are signing",
-      "sign": "Sign and save a copy",
-      "signing": "Signing…",
-      "signNeedsCertificate": "Choose a certificate and enter its password first.",
-      "signSaved": "Signed copy saved as {{name}}",
-      "signFailed": "Signing failed: {{message}}",
-      "usageRights": "Reader enablement (usage rights)",
-      "usageRightsInvalidated": "Usage rights invalidated — this file was edited, so Adobe Reader no longer treats it as an enabled form."
+      "verifySection": "Υπογραφές",
+      "verify": "Έλεγχος υπογραφών",
+      "desktopOnly": "Διαθέσιμο στην εφαρμογή επιφάνειας εργασίας",
+      "unsigned": "Αυτό το έγγραφο δεν περιέχει υπογραφές.",
+      "signSection": "Υπογραφή με πιστοποιητικό",
+      "padesLevel": "Παράγει υπογραφή PAdES B-B: το πιστοποιητικό σας σε ολόκληρο το αρχείο, χωρίς διακομιστή χρονοσήμανσης.",
+      "certificate": "Πιστοποιητικό (.p12 ή .pfx)",
+      "certificateNone": "Δεν επιλέχθηκε πιστοποιητικό",
+      "chooseCertificate": "Επιλογή πιστοποιητικού",
+      "certificatePassword": "Κωδικός πιστοποιητικού",
+      "reason": "Λόγος (προαιρετικό)",
+      "reasonPlaceholder": "Γιατί υπογράφετε",
+      "sign": "Υπογραφή και αποθήκευση αντιγράφου",
+      "signing": "Υπογραφή…",
+      "signNeedsCertificate": "Επιλέξτε πρώτα ένα πιστοποιητικό και εισαγάγετε τον κωδικό του.",
+      "signSaved": "Το υπογεγραμμένο αντίγραφο αποθηκεύτηκε ως {{name}}",
+      "signFailed": "Η υπογραφή απέτυχε: {{message}}",
+      "usageRights": "Ενεργοποίηση Reader (δικαιώματα χρήσης)",
+      "usageRightsInvalidated": "Τα δικαιώματα χρήσης ακυρώθηκαν — αυτό το αρχείο τροποποιήθηκε, οπότε το Adobe Reader δεν το αντιμετωπίζει πλέον ως ενεργοποιημένη φόρμα."
     },
     "protect": {
       "lede": "Προστατεύστε το έγγραφο PDF σας με ισχυρούς κρυπτογραφικούς κωδικούς πρόσβασης. Οι αλλαγές εφαρμόζονται τοπικά αμέσως.",
@@ -1330,9 +1416,11 @@
       "localViaTauri": "Τοπικά μέσω εντολής Tauri, όχι browser runtime",
       "compressingImages": "Συμπίεση εικόνων…",
       "percentComplete": "{{percent}}% ολοκληρώθηκε",
-      "compressPdf": "Συμπίεση PDF",
       "desktopOnly": "Διαθέσιμο μόνο στην εφαρμογή desktop",
-      "backToTools": "Πίσω στα εργαλεία"
+      "backToTools": "Πίσω στα εργαλεία",
+      "saveCopy": "Αποθήκευση συμπιεσμένου αντιγράφου ως…",
+      "replaceOpen": "Συμπίεση και αντικατάσταση του ανοιχτού εγγράφου",
+      "replaceNote": "Ένα αντίγραφο αφήνει το ανοιχτό έγγραφο και το αρχείο του ως έχουν. Η αντικατάσταση αλλάζει μόνο το ανοιχτό έγγραφο· η Αναίρεση επαναφέρει το πρωτότυπο."
     },
     "split": {
       "lede": "Διαιρέστε το έγγραφό σας σε ξεχωριστά αρχεία PDF ανά σελίδα ή ανά συγκεκριμένο εύρος σελίδων.",
@@ -1360,16 +1448,61 @@
     },
     "redact": {
       "lede": "Σημειώστε και αφαιρέστε μόνιμα ευαίσθητες πληροφορίες από το PDF. Η διαγραφή αφαιρεί το πραγματικό κείμενο και διανύσματα πηγής.",
-      "modeActive": "Η λειτουργία διαγραφής είναι ενεργή",
+      "modeActive": "Η λειτουργία απόκρυψης είναι ενεργή",
       "dragHint": "Σύρετε το ποντίκι πάνω από κείμενο ή εικόνες στη σελίδα για να τα σημειώσετε για διαγραφή.",
-      "searchAndRedact": "Αναζήτηση και διαγραφή κειμένου",
+      "searchAndRedact": "Αναζήτηση και απόκρυψη",
       "searchPlaceholder": "Όρος αναζήτησης (π.χ. ΑΦΜ, τηλέφωνο)",
       "mark": "Σημείωση",
-      "draftRedactions": "Σχέδιο διαγραφών ({{count}})",
+      "draftRedactions": "Προσχέδια αποκρύψεων ({{count}})",
       "applying": "Εφαρμογή…",
-      "applyPermanently": "Εφαρμογή διαγραφών μόνιμα",
-      "noActiveMarkings": "Δεν υπάρχουν ενεργές σημειώσεις διαγραφής.",
-      "backToTools": "Πίσω στα εργαλεία"
+      "applyPermanently": "Οριστική εφαρμογή αποκρύψεων",
+      "noActiveMarkings": "Δεν υπάρχουν ενεργές σημάνσεις απόκρυψης.",
+      "backToTools": "Πίσω στα εργαλεία",
+      "pii": {
+        "title": "Προσωπικά δεδομένα",
+        "lede": "Find personal data in the text of this document: IBANs, card numbers, national ID numbers, birth dates, e-mail addresses and phone numbers, and names and addresses when the model is installed. Review the list, then redact the ones you choose.",
+        "find": "Εύρεση προσωπικών δεδομένων",
+        "scanning": "Γίνεται σάρωση…",
+        "none": "Nothing found.",
+        "kind": {
+          "iban": "IBAN",
+          "email": "Διεύθυνση e-mail",
+          "phone": "Αριθμός τηλεφώνου",
+          "credit_card": "Αριθμός κάρτας",
+          "national_id": "Αριθμός εθνικής ταυτότητας",
+          "date_of_birth": "Ημερομηνία γέννησης",
+          "bank_account": "Αριθμός τραπεζικού λογαριασμού",
+          "person": "Όνομα",
+          "address": "Διεύθυνση"
+        },
+        "where": "Σελίδα {{pages}} · {{count}}×",
+        "selectAll": "Επιλογή όλων",
+        "selectNone": "Καμία επιλογή",
+        "redactSelected": "Απόκρυψη {{count}} επιλεγμένων",
+        "redacting": "Γίνεται απόκρυψη…",
+        "done": "Αποκρύφτηκαν {{count}} στοιχεία. Αποθηκεύστε το αρχείο για να διατηρήσετε το αποτέλεσμα.",
+        "failed": "Η απόκρυψη απέτυχε: {{message}}",
+        "detectFailed": "Η αναζήτηση απέτυχε: {{message}}",
+        "patternsOnly": "Without the model this finds only items it can check, such as IBANs, cards, ID numbers, birth dates, e-mail addresses and phone numbers. Names and addresses are not detected, so check every page yourself.",
+        "suggestionsOnly": "Αυτές είναι προτάσεις. Ο ανιχνευτής μπορεί να παραλείψει πράγματα, γι' αυτό ελέγξτε κάθε σελίδα πριν αποθηκεύσετε.",
+        "source": {
+          "verified": "Ελέγχθηκε {{detail}}",
+          "model": "Πρόταση μοντέλου, {{score}}%"
+        },
+        "model": {
+          "use": "Εύρεση και ονομάτων και διευθύνσεων με το μοντέλο",
+          "languages": "Έλεγχος για: {{languages}}",
+          "remove": "Κατάργηση του μοντέλου",
+          "removeFailed": "Δεν ήταν δυνατή η κατάργηση του μοντέλου: {{message}}",
+          "failed": "Το μοντέλο δεν μπόρεσε να εκτελεστεί ({{code}}). Εμφανίζονται μόνο τα στοιχεία που μπορούν να ελεγχθούν.",
+          "consentTitle": "Λήψη του μοντέλου προσωπικών δεδομένων;",
+          "consentBody": "Η εύρεση ονομάτων και διευθύνσεων απαιτεί ένα γλωσσικό μοντέλο ({{size}}). Κατεβαίνει μία φορά από το {{host}}, ελέγχεται με σταθερό άθροισμα ελέγχου και μετά εκτελείται σε αυτόν τον υπολογιστή. Τα έγγραφά σας δεν φεύγουν ποτέ από αυτόν τον υπολογιστή.",
+          "download": "Λήψη",
+          "downloading": "Γίνεται λήψη…",
+          "downloadFailed": "Η λήψη απέτυχε: {{message}}",
+          "notInBuild": "Η λήψη δεν είναι ακόμη διαθέσιμη σε αυτήν την έκδοση."
+        }
+      }
     },
     "toasts": {
       "saving": "Αποθήκευση…",
@@ -1399,117 +1532,337 @@
       "pdfsMerged": "{{count}} αρχεία PDF συγχωνεύθηκαν",
       "mergedSaved": "Το συγχωνευμένο PDF αποθηκεύθηκε ως {{name}}.",
       "mergeFailed": "Η συγχώνευση απέτυχε: {{message}}",
-      "redactMatches": "{{matches}} αποτελέσματα βρέθηκαν, {{areas}} σημειώσεις διαγραφής τοποθετημένες.",
+      "redactSearchDone": "Αποκρυμμένες αντιστοιχίσεις: {{count}}. Αποθηκεύστε για να κρατήσετε την αλλαγή.",
       "noRedactMatches": "Δεν βρέθηκαν αποτελέσματα κειμένου για διαγραφή.",
       "redactSearchFailed": "Η αναζήτηση διαγραφής απέτυχε: {{message}}",
       "applyRedactConfirm": "Εφαρμογή {{count}} σημείωσης διαγραφής μόνιμα; Αυτό αφαιρεί το περιεχόμενο από το PDF για πάντα.",
       "applyRedactConfirm_plural": "Εφαρμογή {{count}} σημειώσεων διαγραφής μόνιμα; Αυτό αφαιρεί το περιεχόμενο από το PDF για πάντα.",
-      "applyRedactTitle": "Εφαρμογή διαγραφών",
-      "applyRedactRunning": "Εφαρμογή διαγραφών μόνιμα…",
-      "applyRedactDone": "Οι διαγραφές εφαρμόστηκαν μόνιμα",
+      "applyRedactTitle": "Εφαρμογή αποκρύψεων",
+      "applyRedactRunning": "Εφαρμογή αποκρύψεων…",
+      "applyRedactDone": "Οι αποκρύψεις εφαρμόστηκαν οριστικά",
       "redactionsApplied": "Οι διαγραφές έχουν εφαρμοστεί μόνιμα.",
-      "redactFailed": "Η διαγραφή απέτυχε: {{message}}"
+      "redactFailed": "Η διαγραφή απέτυχε: {{message}}",
+      "compressedCopyToast": "Αποθηκεύτηκε {{name}}: {{before}} σε {{after}}. Το ανοιχτό έγγραφο δεν άλλαξε.",
+      "compressedReplacedToast": "Το ανοιχτό έγγραφο συμπιέστηκε: {{before}} σε {{after}}. Η αναίρεση επαναφέρει το πρωτότυπο. Αποθηκεύστε για να διατηρήσετε τη συμπιεσμένη έκδοση."
     },
     "thumbnails": {
       "pages": "Σελίδες",
       "pageAlt": "Σελίδα {{page}}",
-      "bookmarks": "Bookmarks"
+      "bookmarks": "Σελιδοδείκτες"
     },
     "pdfa": {
-      "lede": "PDF/A is the archival form of PDF: fonts embedded, colours defined, nothing that depends on the outside world.",
-      "section": "Conformance",
-      "level": "Level",
-      "validate": "Check this document",
-      "convert": "Save as PDF/A…",
-      "desktopOnly": "Available in the desktop app",
-      "compliant": "Conforms to {{level}}",
-      "notCompliant": "Does not conform: {{errors}} errors, {{warnings}} warnings",
-      "moreIssues": "{{count}} more",
+      "lede": "Το PDF/A είναι η αρχειακή μορφή του PDF: γραμματοσειρές ενσωματωμένες, χρώματα καθορισμένα, τίποτα που να εξαρτάται από τον έξω κόσμο.",
+      "section": "Συμμόρφωση",
+      "level": "Επίπεδο",
+      "validate": "Έλεγχος αυτού του εγγράφου",
+      "convert": "Αποθήκευση ως PDF/A…",
+      "desktopOnly": "Διαθέσιμο στην εφαρμογή επιφάνειας εργασίας",
+      "compliant": "Συμμορφώνεται με {{level}}",
+      "notCompliant": "Δεν συμμορφώνεται: {{errors}} σφάλματα, {{warnings}} προειδοποιήσεις",
+      "moreIssues": "{{count}} ακόμη",
       "report": {
-        "title": "What the conversion did",
-        "written": "Written to {{path}}",
-        "size": "{{out}} out of {{in}} ({{ratio}}×), in {{seconds}} s",
-        "pages": "{{count}} pages",
-        "fontsEmbedded": "{{embedded}} of {{found}} unembedded fonts embedded",
-        "fontsFailed": "Could not embed: {{fonts}}",
-        "removed": "Removed: {{count}} items that PDF/A does not allow",
-        "subset": "{{count}} font programs reduced, {{bytes}} kB saved",
-        "outputIntent": "Output intent added",
-        "unchangedDocument": "The open document was not changed.",
+        "title": "Τι έκανε η μετατροπή",
+        "written": "Γράφτηκε στο {{path}}",
+        "size": "{{out}} από {{in}} ({{ratio}}×), σε {{seconds}} s",
+        "pages": "{{count}} σελίδες",
+        "fontsEmbedded": "Ενσωματώθηκαν {{embedded}} από {{found}} μη ενσωματωμένες γραμματοσειρές",
+        "fontsFailed": "Δεν ήταν δυνατή η ενσωμάτωση: {{fonts}}",
+        "removed": "Αφαιρέθηκαν: {{count}} στοιχεία που δεν επιτρέπει το PDF/A",
+        "subset": "{{count}} προγράμματα γραμματοσειρών μειώθηκαν, {{bytes}} kB εξοικονομήθηκαν",
+        "outputIntent": "Προστέθηκε πρόθεση εξόδου",
+        "unchangedDocument": "Το ανοιχτό έγγραφο δεν άλλαξε.",
         "warning": "{{message}}",
-        "moreWarnings": "{{count}} more"
+        "moreWarnings": "{{count}} ακόμη"
       }
     },
     "metadata": {
-      "lede": "The title and author stored inside the file, which is what other readers and search show.",
-      "section": "Properties",
-      "title": "Title",
-      "author": "Author",
-      "apply": "Save properties",
-      "desktopOnly": "Available in the desktop app"
+      "lede": "Ο τίτλος και ο συγγραφέας που είναι αποθηκευμένοι στο αρχείο, όπως τους εμφανίζουν άλλα προγράμματα ανάγνωσης και η αναζήτηση.",
+      "section": "Ιδιότητες",
+      "title": "Τίτλος",
+      "author": "Συγγραφέας",
+      "apply": "Αποθήκευση ιδιοτήτων",
+      "desktopOnly": "Διαθέσιμο στην εφαρμογή επιφάνειας εργασίας"
     },
     "invoice": {
-      "lede": "A ZUGFeRD or Factur-X invoice travels as XML inside the PDF. This reads it and checks it against EN 16931.",
-      "section": "Embedded invoice",
-      "read": "Read invoice",
-      "desktopOnly": "Available in the desktop app",
-      "none": "This document carries no e-invoice.",
-      "number": "Number: {{number}}",
-      "issued": "Issued: {{date}}",
-      "seller": "Seller: {{name}}",
-      "buyer": "Buyer: {{name}}",
-      "total": "Total: {{total}} {{currency}}",
-      "lines": "Line items: {{count}}",
-      "valid": "Valid against {{profile}}",
-      "invalid": "Not valid: {{errors}} errors, {{warnings}} warnings"
+      "lede": "Ένα τιμολόγιο ZUGFeRD ή Factur-X ταξιδεύει ως XML μέσα στο PDF. Αυτό το διαβάζει και το ελέγχει σύμφωνα με το EN 16931.",
+      "section": "Ενσωματωμένο τιμολόγιο",
+      "read": "Ανάγνωση τιμολογίου",
+      "desktopOnly": "Διαθέσιμο στην εφαρμογή επιφάνειας εργασίας",
+      "none": "Αυτό το έγγραφο δεν περιέχει ηλεκτρονικό τιμολόγιο.",
+      "number": "Αριθμός: {{number}}",
+      "issued": "Έκδοση: {{date}}",
+      "seller": "Πωλητής: {{name}}",
+      "buyer": "Αγοραστής: {{name}}",
+      "total": "Σύνολο: {{total}} {{currency}}",
+      "lines": "Γραμμές: {{count}}",
+      "valid": "Έγκυρο σύμφωνα με {{profile}}",
+      "invalid": "Μη έγκυρο: {{errors}} σφάλματα, {{warnings}} προειδοποιήσεις"
     },
     "canvas": {
-      "document": "PDF document"
+      "document": "Έγγραφο PDF"
+    },
+    "stamps": {
+      "Approved": "Εγκρίθηκε",
+      "NotApproved": "Δεν εγκρίθηκε",
+      "Draft": "Πρόχειρο",
+      "Confidential": "Εμπιστευτικό",
+      "Final": "Τελικό",
+      "ForComment": "Για σχόλια",
+      "Expired": "Έληξε"
     }
   },
   "about": {
-    "section": "About",
-    "app": "App",
-    "version": "Version",
-    "privacy": "Privacy",
-    "privacyValue": "All processing happens locally",
-    "website": "Website"
+    "section": "Σχετικά",
+    "app": "Εφαρμογή",
+    "version": "Έκδοση",
+    "privacy": "Απόρρητο",
+    "privacyValue": "Όλη η διαδικασία γίνεται τοπικά",
+    "website": "Ιστότοπος"
   },
   "reviewSummary": {
-    "title": "Review summary",
-    "generatedAt": "Generated on",
-    "comments": "Comments",
-    "noComments": "No comments.",
-    "replies": "Replies:",
-    "empty": "empty",
-    "redactions": "Redactions",
-    "noRedactions": "No redactions.",
-    "noIssues": "No issues.",
-    "metadataChanges": "Metadata changes",
-    "noMetadataChanges": "No changes.",
-    "changedBy": "by",
-    "on": "on"
+    "title": "Σύνοψη αναθεώρησης",
+    "generatedAt": "Δημιουργήθηκε στις",
+    "comments": "Σχόλια",
+    "noComments": "Δεν υπάρχουν σχόλια.",
+    "replies": "Απαντήσεις:",
+    "empty": "κενό",
+    "redactions": "Αποκρύψεις",
+    "noRedactions": "Δεν υπάρχουν αποκρύψεις.",
+    "noIssues": "Δεν υπάρχουν ζητήματα.",
+    "metadataChanges": "Αλλαγές μεταδεδομένων",
+    "noMetadataChanges": "Δεν υπάρχουν αλλαγές.",
+    "changedBy": "από",
+    "on": "στις"
   },
   "externalLink": {
-    "askMessage": "This PDF wants to open an external link:\n\n{{label}}\n\nURL:\n{{href}}\n\nDo you want to continue?",
-    "title": "Open external link?",
-    "openLink": "Open link",
-    "dialogBody": "This PDF wants to open an external website. Check the URL before continuing."
+    "askMessage": "Αυτό το PDF θέλει να ανοίξει έναν εξωτερικό σύνδεσμο:\n\n{{label}}\n\nURL:\n{{href}}\n\nΘέλετε να συνεχίσετε;",
+    "title": "Άνοιγμα εξωτερικού συνδέσμου;",
+    "openLink": "Άνοιγμα συνδέσμου",
+    "dialogBody": "Αυτό το PDF θέλει να ανοίξει έναν εξωτερικό ιστότοπο. Ελέγξτε το URL πριν συνεχίσετε."
   },
   "linkChoice": {
-    "title": "Open link in your browser?",
-    "body": "This document wants to open an external website. Are you opening it from a trusted source?",
-    "alwaysAllow": "Always allow",
-    "openOnce": "Open once"
+    "title": "Άνοιγμα συνδέσμου στο πρόγραμμα περιήγησης;",
+    "body": "Αυτό το έγγραφο θέλει να ανοίξει έναν εξωτερικό ιστότοπο. Το ανοίγετε από αξιόπιστη πηγή;",
+    "alwaysAllow": "Να επιτρέπεται πάντα",
+    "openOnce": "Άνοιγμα μία φορά"
   },
   "fallbacks": {
-    "ocrUnavailableTitle": "OCR is not available on this computer",
-    "ocrUnavailableMessage": "PDFluent could not start the text-recognition engine. {{reason}}",
-    "ocrFailedMessage": "Text recognition stopped on page {{page}}: {{reason}}",
-    "xfaStaticTitle": "Form filled without recalculation",
-    "xfaStaticMessage": "This build writes XFA field values straight into the form. Field scripts do not run, so calculated totals and fields that appear or hide based on your answer stay as they are.",
-    "featureUnavailableTitle": "'{{feature}}' is not available in this build",
-    "usageRightsInvalidatedTitle": "This document is no longer Reader-enabled",
-    "usageRightsInvalidatedMessage": "Your change was made. It also invalidated the usage-rights signature this PDF carried, which let Adobe Reader fill in and save the form. The text edit stands; the extended rights are gone and cannot be restored by undoing it."
+    "ocrUnavailableTitle": "Το OCR δεν είναι διαθέσιμο σε αυτόν τον υπολογιστή",
+    "ocrUnavailableMessage": "Το PDFluent δεν μπόρεσε να ξεκινήσει τη μηχανή αναγνώρισης κειμένου. {{reason}}",
+    "ocrFailedMessage": "Η αναγνώριση κειμένου σταμάτησε στη σελίδα {{page}}: {{reason}}",
+    "xfaStaticTitle": "Η φόρμα συμπληρώθηκε χωρίς επανυπολογισμό",
+    "xfaStaticMessage": "Αυτή η έκδοση γράφει τις τιμές πεδίων XFA απευθείας στη φόρμα. Τα σενάρια πεδίων δεν εκτελούνται, οπότε τα υπολογισμένα σύνολα και τα πεδία που εμφανίζονται ή κρύβονται με βάση την απάντησή σας μένουν ως έχουν.",
+    "xfaScriptsNotRunTitle": "Ορισμένα σενάρια της φόρμας δεν εκτελούνται",
+    "xfaScriptsNotRunMessage": "Η απάντησή σας αποθηκεύτηκε. Η φόρμα περιέχει σενάρια FormCalc (βρέθηκαν {{count}}) και το PDFluent εκτελεί μόνο σενάρια JavaScript. Τα σύνολα και τα πεδία που θα ενημέρωναν αυτά τα σενάρια διατηρούν τις αποθηκευμένες τιμές τους μέχρι να ανοιχτεί η φόρμα στο Adobe Reader.",
+    "xfaFieldRefusedTitle": "Η φόρμα δεν δέχτηκε την τιμή",
+    "xfaFieldReadOnly": "Το πεδίο «{{field}}» είναι μόνο για ανάγνωση σε αυτή τη φόρμα και δεν μπορεί να αλλάξει.",
+    "xfaFieldRejected": "Το πεδίο «{{field}}» δεν δέχεται αυτή την τιμή: {{reason}}",
+    "xfaFieldNotFound": "Το πεδίο «{{field}}» δεν υπάρχει πλέον στη φόρμα. Η φόρμα φορτώθηκε ξανά.",
+    "featureUnavailableTitle": "Το '{{feature}}' δεν είναι διαθέσιμο σε αυτήν την έκδοση",
+    "usageRightsInvalidatedTitle": "Αυτό το έγγραφο δεν είναι πλέον ενεργοποιημένο για Reader",
+    "usageRightsInvalidatedMessage": "Η αλλαγή σας έγινε. Ακύρωσε επίσης την υπογραφή δικαιωμάτων χρήσης που έφερε αυτό το PDF, η οποία επέτρεπε στο Adobe Reader να συμπληρώνει και να αποθηκεύει τη φόρμα. Η αλλαγή στο κείμενο ισχύει· τα εκτεταμένα δικαιώματα χάθηκαν και δεν μπορούν να αποκατασταθούν με αναίρεση.",
+    "xfaScriptsFailedTitle": "Ορισμένα σενάρια φόρμας δεν ολοκληρώθηκαν",
+    "xfaScriptsFailedMessage": "Η απάντησή σας αποθηκεύτηκε, αλλά αυτά τα σενάρια δεν ολοκληρώθηκαν, οπότε μπορεί να λείπουν τιμές που όρισαν: {{details}}.",
+    "xfaScriptKind_threw": "παρουσίασε σφάλμα",
+    "xfaScriptKind_timeout": "εξαντλήθηκε ο χρόνος",
+    "xfaScriptKind_refused": "απορρίφθηκε από το sandbox"
+  },
+  "signedSave": {
+    "title": "Αυτό το έγγραφο είναι υπογεγραμμένο",
+    "message": "Η απόκρυψη αφαιρεί περιεχόμενο που καλύπτει η υπογραφή, επομένως δεν μπορεί να αποθηκευτεί πάνω στο υπογεγραμμένο πρωτότυπο χωρίς να χαλάσει η υπογραφή. Αποθηκεύστε αντίγραφο: το αντίγραφο κρατά την απόκρυψη και δεν φέρει υπογραφή.",
+    "saveCopy": "Αποθήκευση αντιγράφου χωρίς υπογραφή…",
+    "cancel": "Ακύρωση"
+  },
+  "passwordPrompt": {
+    "title": "Αυτό το PDF είναι προστατευμένο",
+    "message": "Εισαγάγετε τον κωδικό πρόσβασης για να ανοίξετε το {{name}}.",
+    "incorrect": "Ο κωδικός δεν ανοίγει αυτό το PDF. Δοκιμάστε ξανά.",
+    "label": "Κωδικός πρόσβασης",
+    "open": "Άνοιγμα",
+    "cancel": "Άκυρο",
+    "readOnlyTitle": "Άνοιγμα μόνο για ανάγνωση",
+    "readOnlyMessage": "Τα δικαιώματα αυτού του PDF δεν επιτρέπουν αλλαγές. Μπορείτε να το διαβάσετε και να το εκτυπώσετε, αν το επιτρέπουν τα δικαιώματα. Για να αποθηκεύσετε αλλαγές, αφαιρέστε την προστασία με τον κωδικό πρόσβασης κατόχου."
+  },
+  "a11y": {
+    "searchNextResult": "Επόμενο αποτέλεσμα",
+    "searchPrevResult": "Προηγούμενο αποτέλεσμα"
+  },
+  "feedback": {
+    "title": "Βοηθήστε μας να βελτιώσουμε το PDFluent",
+    "intro": "Πείτε μας τι προσπαθούσατε να κάνετε. Διαβάζουμε κάθε αναφορά.",
+    "menuLabel": "Βοηθήστε μας να βελτιώσουμε το PDFluent…",
+    "fromError": "Μπορείτε να μας πείτε για το πρόβλημα που μόλις αντιμετωπίσατε.",
+    "areaLabel": "Τι προσπαθούσατε να κάνετε;",
+    "area": {
+      "open-view": "Άνοιγμα ή ανάγνωση εγγράφου",
+      "search-copy": "Αναζήτηση ή αντιγραφή κειμένου",
+      "print": "Εκτύπωση",
+      "edit-text": "Επεξεργασία κειμένου",
+      "annotate": "Επισήμανση, σχολιασμός ή σχεδίαση",
+      "forms": "Συμπλήρωση φόρμας",
+      "sign": "Υπογραφή ή έλεγχος υπογραφής",
+      "redact": "Απόκρυψη πληροφοριών (redact)",
+      "pages-organize": "Περιστροφή, αναδιάταξη, συγχώνευση ή διαίρεση σελίδων",
+      "convert-export": "Μετατροπή ή εξαγωγή",
+      "ocr": "Αναγνώριση κειμένου σε σάρωση (OCR)",
+      "pdfa-compliance": "PDF/A",
+      "protect": "Κωδικός ή δικαιώματα",
+      "save": "Αποθήκευση",
+      "install-update": "Εγκατάσταση ή ενημέρωση του PDFluent",
+      "other": "Κάτι άλλο"
+    },
+    "tryingToPlaceholder": "Με δικά σας λόγια (προαιρετικό)",
+    "whatHappenedLabel": "Τι συνέβη;",
+    "whatHappenedPlaceholder": "Τι είδατε;",
+    "whatHappenedRequired": "Πείτε μας τι συνέβη, ώστε να ξέρουμε πού να ψάξουμε.",
+    "expectedLabel": "Τι περιμένατε;",
+    "expectedPlaceholder": "Προαιρετικό",
+    "docTypeLabel": "Τι είδους έγγραφο ήταν;",
+    "docType": {
+      "none": "Χωρίς έγγραφο",
+      "form": "Μια φόρμα",
+      "scanned": "Μια σάρωση",
+      "signed": "Ένα υπογεγραμμένο έγγραφο",
+      "protected": "Προστατευμένο με κωδικό",
+      "large": "Μεγάλο (πάνω από 100 σελίδες)",
+      "xfa": "Μια κρατική φόρμα ή φόρμα XFA",
+      "other": "Κάτι άλλο"
+    },
+    "docTypeUnset": "Επιλέξτε…",
+    "pageCountLabel": "Αριθμός σελίδων",
+    "contextTitle": "Αποστέλλεται με την αναφορά σας",
+    "contextToggle": "Συμπερίληψη στοιχείων συστήματος",
+    "contextHint": "Η έκδοση, το σύστημα, η γλώσσα και το τελευταίο σφάλμα μας βοηθούν να αναπαραγάγουμε το πρόβλημα. Χωρίς ονόματα αρχείων, διαδρομές ή περιεχόμενο εγγράφων.",
+    "fieldVersion": "Έκδοση PDFluent",
+    "fieldSystem": "Σύστημα",
+    "fieldLanguage": "Γλώσσα",
+    "fieldLastError": "Τελευταίο σφάλμα",
+    "fieldSessions": "Συνεδρίες",
+    "notIncluded": "δεν περιλαμβάνεται",
+    "documentTitle": "Κοινοποίηση εγγράφου (προαιρετικό)",
+    "documentToggle": "Κοινοποίηση του ανοιχτού εγγράφου με αυτή την αναφορά",
+    "documentNone": "Δεν είναι ανοιχτό κανένα έγγραφο.",
+    "documentTooLarge": "Αυτό το έγγραφο είναι μεγαλύτερο από 20 MB, οπότε δεν μπορεί να κοινοποιηθεί με αναφορά.",
+    "documentShared": "Αυτό το έγγραφο θα κοινοποιηθεί.",
+    "documentConfirmTitle": "Κοινοποίηση αυτού του εγγράφου;",
+    "documentConfirmText": "Αυτό το αρχείο θα σταλεί στο PDFluent (Innovation Trigger B.V.). Χρησιμοποιείται μόνο για τη διερεύνηση αυτής της αναφοράς, δεν δημοσιεύεται ποτέ, δεν χρησιμοποιείται ποτέ για εκπαίδευση και διαγράφεται το αργότερο 90 ημέρες αφού διορθωθεί το πρόβλημα, και σε κάθε περίπτωση εντός 12 μηνών.",
+    "documentConfirmFile": "{{name}} ({{size}})",
+    "documentConfirmYes": "Κοινοποίηση εγγράφου",
+    "documentConfirmNo": "Να μην κοινοποιηθεί",
+    "contactTitle": "Να μείνουμε σε επαφή (προαιρετικό)",
+    "emailLabel": "Διεύθυνση email",
+    "emailInvalid": "Αυτό δεν μοιάζει με διεύθυνση email.",
+    "consentContact": "Το PDFluent μπορεί να μου στείλει email με ερωτήσεις για αυτήν την αναφορά.",
+    "consentFixed": "Στείλτε μου email όταν διορθωθεί.",
+    "contactHint": "Η διεύθυνσή σας αποθηκεύεται χωριστά από την αναφορά σας, χρησιμοποιείται μόνο για αυτήν την αναφορά και ποτέ για ενημερωτικά δελτία ή μάρκετινγκ.",
+    "noEmailHint": "Και χωρίς email θα έχετε νέα μας: όταν μια ενημέρωση διορθώσει την αναφορά σας, το PDFluent θα σας το πει μέσα στην εφαρμογή.",
+    "privacyNotice": "Η Innovation Trigger B.V. λαμβάνει αυτήν την αναφορά για να βελτιώσει το PDFluent. Οι αναφορές διατηρούνται έως 24 μήνες. Μπορείτε να ζητήσετε τη διαγραφή της δικής σας οποιαδήποτε στιγμή.",
+    "privacyLink": "Δήλωση απορρήτου",
+    "send": "Αποστολή",
+    "sending": "Αποστολή…",
+    "cancel": "Ακύρωση",
+    "sentTitle": "Ευχαριστούμε!",
+    "sentBody": "Η αναφορά σας έφτασε. Αυτός είναι ο αριθμός της:",
+    "sentIdHint": "Κρατήστε αυτόν τον αριθμό αν θέλετε να ρωτήσετε για την αναφορά σας ή να τη διαγράψουμε.",
+    "sentNoLocalCopy": "Το PDFluent δεν μπόρεσε να θυμηθεί αυτόν τον αριθμό σε αυτόν τον υπολογιστή, γι' αυτό σημειώστε τον.",
+    "sentDocumentFailed": "Η αναφορά σας έφτασε, αλλά το έγγραφο δεν μπόρεσε να ανέβει. Αν έχει σημασία, μπορείτε να στείλετε ξανά την αναφορά μαζί με το έγγραφο.",
+    "removeReport": "Διαγραφή αυτής της αναφοράς",
+    "removing": "Διαγραφή…",
+    "removed": "Η αναφορά σας διαγράφηκε.",
+    "removeFailed": "Η αναφορά σας δεν μπόρεσε να διαγραφεί αυτή τη στιγμή. Δοκιμάστε ξανά αργότερα ή στείλτε μας τον αριθμό με email.",
+    "failedTitle": "Η αποστολή δεν ολοκληρώθηκε",
+    "failedNetwork": "Το PDFluent δεν μπόρεσε να συνδεθεί με τον διακομιστή. Δεν στάλθηκε τίποτα και το κείμενό σας είναι ακόμη εδώ.",
+    "failedRateLimited": "Σήμερα στάλθηκαν πάρα πολλές αναφορές από αυτή τη σύνδεση. Δοκιμάστε ξανά αύριο.",
+    "failedRejected": "Η αναφορά δεν έγινε δεκτή. Ελέγξτε τη φόρμα και δοκιμάστε ξανά.",
+    "failedServer": "Κάτι πήγε στραβά από την πλευρά μας. Το κείμενό σας είναι ακόμη εδώ· δοκιμάστε ξανά σε λίγο.",
+    "tryAgain": "Δοκιμή ξανά",
+    "fixedTitle": "Διορθώθηκε!",
+    "fixedOffered": "Η έκδοση {{version}} διορθώνει την αναφορά σας {{ids}}. Ευχαριστούμε που μας το είπατε.",
+    "fixedAfterUpdate": "Η αναφορά σας {{ids}} διορθώθηκε σε αυτή την έκδοση. Ευχαριστούμε που μας το είπατε.",
+    "dismiss": "Κλείσιμο"
+  },
+  "openError": {
+    "corrupt": {
+      "title": "Αυτό το PDF είναι κατεστραμμένο",
+      "body": "Το PDFluent δεν μπόρεσε να διαβάσει αυτό το αρχείο. Ίσως υπέστη ζημιά κατά τη λήψη ή την αντιγραφή, ή η εφαρμογή που το δημιούργησε το έγραψε λανθασμένα. Κατεβάστε ή αντιγράψτε το ξανά, ή ανοίξτε το πρωτότυπο και εξαγάγετε το ξανά ως PDF.",
+      "action": "Άνοιγμα άλλου αρχείου"
+    },
+    "not_pdf": {
+      "title": "Αυτό δεν είναι PDF",
+      "body": "Το PDFluent ανοίγει αρχεία PDF. Αυτό το αρχείο είναι κάτι άλλο ή το όνομά του δεν τελειώνει σε .pdf. Επιλέξτε ένα PDF ή, αν αυτό το αρχείο είναι PDF, μετονομάστε το ώστε το όνομά του να τελειώνει σε .pdf.",
+      "action": "Άνοιγμα άλλου αρχείου"
+    },
+    "empty": {
+      "title": "Αυτό το αρχείο είναι κενό",
+      "body": "Το αρχείο δεν έχει περιεχόμενο (0 byte). Η λήψη ή η αντιγραφή μπορεί να μην ολοκληρώθηκε. Κατεβάστε ή αντιγράψτε το ξανά και μετά ανοίξτε το.",
+      "action": "Άνοιγμα άλλου αρχείου"
+    },
+    "encrypted_needs_password": {
+      "title": "Αυτό το PDF χρειάζεται κωδικό",
+      "body": "Αυτό το PDF προστατεύεται με κωδικό. Ανοίξτε το ξανά και εισαγάγετε τον κωδικό. Αν δεν τον γνωρίζετε, ρωτήστε το άτομο που σας έστειλε το αρχείο.",
+      "action": "Εισαγωγή κωδικού"
+    },
+    "wrong_password": {
+      "title": "Αυτός ο κωδικός δεν λειτούργησε",
+      "body": "Ο κωδικός δεν ανοίγει αυτό το PDF. Ελέγξτε για λάθη πληκτρολόγησης και για το Caps Lock και δοκιμάστε ξανά.",
+      "action": "Δοκιμάστε ξανά"
+    },
+    "unsupported_encryption": {
+      "title": "Το PDFluent δεν μπορεί να ανοίξει αυτό το είδος προστασίας",
+      "body": "Αυτό το PDF προστατεύεται με πιστοποιητικό ή με μέθοδο ασφαλείας που το PDFluent δεν υποστηρίζει, οπότε κανένας κωδικός δεν μπορεί να το ανοίξει εδώ. Ζητήστε από τον αποστολέα ένα αντίγραφο χωρίς προστασία ή προστατευμένο με κωδικό.",
+      "action": "Άνοιγμα άλλου αρχείου"
+    },
+    "too_large": {
+      "title": "Αυτό το αρχείο είναι πολύ μεγάλο",
+      "body": "Αυτό το αρχείο είναι μεγαλύτερο από όσο μπορεί να ανοίξει με ασφάλεια το PDFluent. Χωρίστε το ή συμπιέστε το στην εφαρμογή που το δημιούργησε και ανοίξτε έπειτα τα τμήματα.",
+      "action": "Άνοιγμα άλλου αρχείου"
+    },
+    "too_many_pages": {
+      "title": "Αυτό το PDF έχει πολλές σελίδες",
+      "body": "Αυτό το έγγραφο έχει περισσότερες σελίδες από όσες μπορεί να ανοίξει μονομιάς το PDFluent. Χωρίστε το σε μικρότερα έγγραφα στην εφαρμογή που το δημιούργησε και ανοίξτε έπειτα τα τμήματα.",
+      "action": "Άνοιγμα άλλου αρχείου"
+    },
+    "io_denied": {
+      "title": "Το PDFluent δεν επιτρέπεται να διαβάσει αυτό το αρχείο",
+      "body": "Ο υπολογιστής σας δεν έδωσε στο PDFluent άδεια να διαβάσει αυτό το αρχείο. Ελέγξτε τα δικαιώματα του αρχείου ή μετακινήστε το σε φάκελο όπως τα Έγγραφα και δοκιμάστε ξανά.",
+      "action": "Δοκιμάστε ξανά"
+    },
+    "not_found": {
+      "title": "Δεν βρέθηκε αυτό το αρχείο",
+      "body": "Το αρχείο μπορεί να μετακινήθηκε, να μετονομάστηκε ή να διαγράφηκε, ή να βρίσκεται σε δίσκο που δεν είναι πλέον συνδεδεμένος. Βρείτε το αρχείο και ανοίξτε το ξανά.",
+      "action": "Άνοιγμα άλλου αρχείου"
+    },
+    "unknown": {
+      "title": "Δεν ήταν δυνατό το άνοιγμα αυτού του αρχείου",
+      "body": "Κάτι πήγε στραβά κατά το άνοιγμα του αρχείου. Δοκιμάστε ξανά. Αν συνεχίσει να συμβαίνει, ενημερώστε μας για να το διορθώσουμε.",
+      "action": "Δοκιμάστε ξανά"
+    },
+    "feedback": "Βοηθήστε μας να βελτιώσουμε το PDFluent"
+  },
+  "formBar": {
+    "title": "Φόρμα προς συμπλήρωση",
+    "fields": "Πεδία: {{count}}",
+    "clickToFill": "Κάντε κλικ σε ένα πεδίο για να το συμπληρώσετε.",
+    "noCalculations": "Οι αυτόματοι υπολογισμοί από φόρμες Adobe δεν εκτελούνται.",
+    "autoLinks": "Αυτόματο άνοιγμα συνδέσμων",
+    "autoLinksTitle": "Οι σύνδεσμοι ανοίγουν αυτόματα στο πρόγραμμα περιήγησής σας. Κάντε κλικ για απενεργοποίηση.",
+    "highlight": "Επισήμανση πεδίων",
+    "firstField": "Πρώτο πεδίο"
+  },
+  "tabs": {
+    "label": "Ανοιχτά έγγραφα",
+    "close": "Κλείσιμο {{name}}",
+    "unsaved": "Μη αποθηκευμένες αλλαγές",
+    "new": "Άνοιγμα άλλου εγγράφου",
+    "tooManyTitle": "Πάρα πολλά ανοιχτά έγγραφα",
+    "tooManyMessage": "{{max}} έγγραφα είναι ανοιχτά. Κλείστε ένα για να ανοίξετε άλλο."
+  },
+  "formScripts": {
+    "barLabel": "Σενάρια φόρμας",
+    "barMessage": "Η φόρμα περιέχει σενάρια (για παράδειγμα υπολογισμούς). Να εκτελεστούν;",
+    "barDetail": "Βρέθηκαν σενάρια: {{count}}.",
+    "runOnce": "Να εκτελεστούν για αυτό το έγγραφο",
+    "runAlways": "Να εκτελούνται πάντα τα σενάρια",
+    "dontRun": "Να μην εκτελεστούν"
   }
 }

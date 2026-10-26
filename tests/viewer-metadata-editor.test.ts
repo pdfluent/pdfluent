@@ -268,16 +268,16 @@ describe('Rust pdf_engine — set_document_info', () => {
     expect(fnBody).toContain('b"Author"');
   });
 
-  it('sets self.modified = true', () => {
+  it('marks the document modified (the sync after a mutation does it)', () => {
     const fnStart = pdfEngineSource.indexOf('pub fn set_document_info(');
-    const fnEnd = pdfEngineSource.indexOf('self.modified = true', fnStart) + 22;
+    const fnEnd = pdfEngineSource.indexOf('self.sync_after_mutation()', fnStart) + 26;
     const fnBody = pdfEngineSource.slice(fnStart, fnEnd);
-    expect(fnBody).toContain('self.modified = true');
+    expect(fnBody).toContain('self.sync_after_mutation()');
   });
 
   it('handles missing Info dict by creating one', () => {
     const fnStart = pdfEngineSource.indexOf('pub fn set_document_info(');
-    const fnEnd = pdfEngineSource.indexOf('self.modified = true', fnStart) + 22;
+    const fnEnd = pdfEngineSource.indexOf('self.sync_after_mutation()', fnStart) + 26;
     const fnBody = pdfEngineSource.slice(fnStart, fnEnd);
     expect(fnBody).toContain('add_object');
     expect(fnBody).toContain('b"Info"');

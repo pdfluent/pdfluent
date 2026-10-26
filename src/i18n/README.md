@@ -60,6 +60,29 @@ when it finishes. Run `npm run typecheck` + `npm test` afterwards to verify.
    ```
 4. **Verify** with the symmetry check below.
 
+## Untranslated keys: a backlog that only shrinks
+
+`node scripts/quality/i18n-parity.mjs --fill` copies a missing key's English
+string into every locale and lists it in `src/i18n/untranslated.json`.
+`src/i18n/untranslated-ceiling.json` caps that list per locale, and the
+`--check` run in CI fails when a list grows past its ceiling. So a new key is
+translated in the change that adds it. When a translation lands, the check
+fails until the ceiling comes down with it:
+`node scripts/quality/i18n-parity.mjs --lower`.
+
+Legal, licence and privacy text, and anything that states a number or a
+product claim, stays English on purpose and stays on the list.
+
+## Right-to-left languages
+
+`<html dir>` and `<html lang>` follow the UI language
+(`src/i18n/direction.ts`). Adding a right-to-left locale (Hebrew, Persian,
+Urdu) means adding its language code to `RTL_LANGUAGES`;
+`tests/i18n-direction.test.ts` fails if a locale written in a right-to-left
+script ships without it. Shell CSS uses logical properties
+(`inset-inline-start`, `margin-inline-end`, `text-align: start`) so it mirrors
+by itself; directional icons take the `rtl-mirror` class.
+
 ## Fallback behaviour
 
 `fallbackLng: 'en'` is set in `src/i18n/index.ts`. If a key is missing in

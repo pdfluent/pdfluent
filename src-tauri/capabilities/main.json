@@ -11,6 +11,7 @@
     "core:event:default",
     "core:webview:allow-print",
     "core:window:allow-set-title",
+    "core:window:allow-close",
     "dialog:default",
     "fs:allow-exists",
     "fs:allow-read-file",

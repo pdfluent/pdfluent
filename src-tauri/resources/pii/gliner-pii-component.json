@@ -1,0 +1,67 @@
+{
+  "schema": 1,
+  "component": "pii-model",
+  "version": "gliner-pii-base-v1.0",
+  "revision": 1,
+  "published": false,
+  "base_path": "/pii/gliner-pii-base-v1.0-1",
+  "consent_text_version": 1,
+  "languages": [],
+  "model": {
+    "name": "knowledgator/gliner-pii-base-v1.0",
+    "license": "Apache-2.0",
+    "source": "huggingface.co/knowledgator/gliner-pii-base-v1.0",
+    "source_revision": "",
+    "max_width": 12
+  },
+  "notices": [
+    {
+      "name": "GLiNER and gline-rs (input/output format reference)",
+      "version": "",
+      "license": "Apache-2.0",
+      "source": "github.com/urchade/GLiNER, github.com/fbilhaut/gline-rs",
+      "file": "LICENSES/gliner-LICENSE.txt"
+    },
+    {
+      "name": "gliner-pii-base-v1.0 (model weights, ONNX UINT8)",
+      "version": "1.0",
+      "license": "Apache-2.0",
+      "source": "huggingface.co/knowledgator/gliner-pii-base-v1.0",
+      "file": "LICENSES/gliner-pii-base-v1.0-LICENSE.txt"
+    },
+    {
+      "name": "ONNX Runtime",
+      "version": "",
+      "license": "MIT",
+      "source": "github.com/microsoft/onnxruntime",
+      "file": "LICENSES/onnxruntime-LICENSE.txt"
+    }
+  ],
+  "shared": [
+    { "path": "model/model.onnx", "sha256": "", "size": 0, "executable": false },
+    { "path": "model/tokenizer.json", "sha256": "", "size": 0, "executable": false },
+    { "path": "LICENSES/gliner-LICENSE.txt", "sha256": "", "size": 0, "executable": false },
+    { "path": "LICENSES/gliner-pii-base-v1.0-LICENSE.txt", "sha256": "", "size": 0, "executable": false },
+    { "path": "LICENSES/onnxruntime-LICENSE.txt", "sha256": "", "size": 0, "executable": false }
+  ],
+  "platforms": {
+    "macos-aarch64": {
+      "runtime": "runtime/libonnxruntime.dylib",
+      "files": [
+        { "path": "runtime/libonnxruntime.dylib", "sha256": "", "size": 0, "executable": false }
+      ]
+    },
+    "macos-x86_64": {
+      "runtime": "runtime/libonnxruntime.dylib",
+      "files": [
+        { "path": "runtime/libonnxruntime.dylib", "sha256": "", "size": 0, "executable": false }
+      ]
+    },
+    "windows-x86_64": {
+      "runtime": "runtime/onnxruntime.dll",
+      "files": [
+        { "path": "runtime/onnxruntime.dll", "sha256": "", "size": 0, "executable": false }
+      ]
+    }
+  }
+}

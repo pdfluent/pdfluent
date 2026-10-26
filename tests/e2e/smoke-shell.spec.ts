@@ -19,7 +19,7 @@
 //     src-tauri/src/pdf_engine.rs (op_outline_*, op_get_page_links_*,
 //     op_split_pdf_by_range_*, op_add_watermark_*).
 
-import { expect, test } from "@playwright/test";
+import { expect, test } from './helpers/guarded-test';
 
 // Item 1 — V3 editor shell is the default shell at "/" (no ?v2).
 test("item1: V3 editor shell is default at / without ?v2", async ({ page }) => {

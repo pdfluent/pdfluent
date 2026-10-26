@@ -37,7 +37,7 @@ function runGuard(projectDir: string): GuardRun {
   const result = spawnSync(process.execPath, [GUARD, projectDir], {
     encoding: "utf8",
     // npm audit talks to the registry; a cold cache on a shared runner is slow.
-    timeout: 180_000,
+    timeout: 100_000,
   });
   const stderr = result.stderr ?? "";
   return {

@@ -99,13 +99,13 @@ export interface GlyphRiskResult {
 // ---------------------------------------------------------------------------
 
 const ENCODING_LABELS: Record<FontEncodingClass, string> = {
-  standard_latin: 'Standaard Latin-codering — veilig voor bewerking',
-  subset_embedded: 'Ingesloten subset-lettertype — veilig voor bewerking',
-  identity_h: 'Identity-H codering — niet veilig voor directe bewerking',
-  identity_v: 'Identity-V codering — niet veilig voor directe bewerking',
-  cid_keyed: 'CID-lettertype met aangepaste CMap — niet veilig voor bewerking',
-  custom_encoding: 'Aangepaste codering — niet veilig voor bewerking',
-  unknown: 'Codering onbekend — bewerking niet beschikbaar',
+  standard_latin: 'Standard Latin encoding — safe for editing',
+  subset_embedded: 'Embedded subset font — safe for editing',
+  identity_h: 'Identity-H encoding — not safe for direct editing',
+  identity_v: 'Identity-V encoding — not safe for direct editing',
+  cid_keyed: 'CID font with a custom CMap — not safe for editing',
+  custom_encoding: 'Custom encoding — not safe for editing',
+  unknown: 'Unknown encoding — editing not available',
 };
 
 // ---------------------------------------------------------------------------
@@ -192,7 +192,7 @@ export function assessGlyphRisk(
     return {
       risk: true,
       suspectChars: [],
-      message: 'Codering ondersteunt geen directe glyfvervanging.',
+      message: 'The encoding does not support direct glyph replacement.',
     };
   }
 
@@ -209,13 +209,13 @@ export function assessGlyphRisk(
     return {
       risk: false,
       suspectChars: [],
-      message: 'Alle vervangingstekens zijn aanwezig in de standaard Latin-codering.',
+      message: 'All replacement characters are present in the standard Latin encoding.',
     };
   }
 
   return {
     risk: true,
     suspectChars: [...new Set(suspectChars)],
-    message: `Vervangingstekens buiten standaard Latin bereik: ${[...new Set(suspectChars)].map(c => `'${c}'`).join(', ')}.`,
+    message: `Replacement characters outside the standard Latin range: ${[...new Set(suspectChars)].map(c => `'${c}'`).join(', ')}.`,
   };
 }

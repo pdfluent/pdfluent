@@ -67,9 +67,33 @@ const MIN_SEGMENT_WIDTH_PT = 1.5;
 /**
  * Build a PageTextStructure from an array of TextSpans (digital source).
  */
+/**
+ * A text block the extraction engine found on the page (#640), in PDF user
+ * space `[x0, y0, x1, y1]`. When given, two lines in different engine blocks
+ * are never one paragraph: the engine separates columns, list items, table
+ * cells and captions far better than the gap heuristics below.
+ */
+export interface EngineTextBlock {
+  readonly kind: string;
+  readonly bbox: readonly [number, number, number, number];
+}
+
+/** The engine block a line sits in (its centre inside the box), or -1. */
+export function engineBlockOf(
+  rect: { x: number; y: number; width: number; height: number },
+  blocks: ReadonlyArray<EngineTextBlock>,
+): number {
+  const cx = rect.x + rect.width / 2;
+  const cy = rect.y + rect.height / 2;
+  const TOL = 1;
+  return blocks.findIndex(b =>
+    cx >= b.bbox[0] - TOL && cx <= b.bbox[2] + TOL && cy >= b.bbox[1] - TOL && cy <= b.bbox[3] + TOL);
+}
+
 export function groupDigitalTextSpans(
   spans: ReadonlyArray<TextSpan>,
   pageIndex: number,
+  engineBlocks?: ReadonlyArray<EngineTextBlock>,
 ): PageTextStructure {
   const initialSpanTargets = spans.flatMap((s, i) => splitTextSpanForEditing(s, pageIndex, i));
 
@@ -90,7 +114,7 @@ export function groupDigitalTextSpans(
     });
   }
 
-  const paragraphs = groupLinesIntoParagraphs(lines, pageIndex);
+  const paragraphs = groupLinesIntoParagraphs(lines, pageIndex, engineBlocks);
   const blocks = groupParagraphsIntoBlocks(paragraphs, pageIndex);
 
   return { pageIndex, source: 'digital', spans: spanTargets, lines, paragraphs, blocks };
@@ -463,6 +487,7 @@ function groupSpansIntoLines(
 function groupLinesIntoParagraphs(
   lines: ReadonlyArray<TextLineTarget>,
   pageIndex: number,
+  engineBlocks?: ReadonlyArray<EngineTextBlock>,
 ): ReadonlyArray<TextParagraphTarget> {
   if (lines.length === 0) return [];
 
@@ -519,6 +544,16 @@ function groupLinesIntoParagraphs(
       const prevColor = prev.spans[0]?.color;
       const currColor = curr.spans[0]?.color;
       if (prevColor && currColor && !colorsEqual(prevColor, currColor)) {
+        shouldSplit = true;
+      }
+    }
+
+    if (!shouldSplit && engineBlocks && engineBlocks.length > 0) {
+      // 0. The engine put the two lines in different blocks (#640). A line
+      //    the engine did not box (-1) leaves the decision to the heuristics.
+      const a = engineBlockOf(prev.rect, engineBlocks);
+      const b = engineBlockOf(curr.rect, engineBlocks);
+      if (a !== -1 && b !== -1 && a !== b) {
         shouldSplit = true;
       }
     }

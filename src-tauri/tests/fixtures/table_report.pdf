@@ -1,0 +1,55 @@
+%PDF-1.7
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>
+endobj
+4 0 obj
+<< /Length 781 >>
+stream
+BT /F1 18 Tf 72 720 Td (Quarterly stock report) Tj ET
+BT /F1 11 Tf 72 690 Td (The table below lists the items on hand at the end of the quarter.) Tj ET
+0 g
+72 600 420 0.5 re f
+72 572 420 0.5 re f
+72 544 420 0.5 re f
+72 516 420 0.5 re f
+72 488 420 0.5 re f
+72 488 0.5 112 re f
+252 488 0.5 112 re f
+372 488 0.5 112 re f
+492 488 0.5 112 re f
+BT /F1 12 Tf 80 581 Td (Item) Tj ET
+BT /F1 12 Tf 260 581 Td (Quantity) Tj ET
+BT /F1 12 Tf 380 581 Td (Price) Tj ET
+BT /F1 12 Tf 80 553 Td (Widget) Tj ET
+BT /F1 12 Tf 260 553 Td (10) Tj ET
+BT /F1 12 Tf 380 553 Td (2.50) Tj ET
+BT /F1 12 Tf 80 525 Td (Gadget) Tj ET
+BT /F1 12 Tf 260 525 Td (4) Tj ET
+BT /F1 12 Tf 380 525 Td (12.00) Tj ET
+BT /F1 12 Tf 80 497 Td (Gizmo) Tj ET
+BT /F1 12 Tf 260 497 Td (7) Tj ET
+BT /F1 12 Tf 380 497 Td (3.75) Tj ET
+endstream
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>
+endobj
+xref
+0 6
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000241 00000 n 
+0000001073 00000 n 
+trailer
+<< /Size 6 /Root 1 0 R >>
+startxref
+1170
+%%EOF

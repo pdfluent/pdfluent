@@ -19,6 +19,6 @@ step_s5() {
   fi
   # One queue line, expanded by the judge: the control list lives in the
   # register, and the flush is already the interpreter that has to read it.
-  printf 'W\t%s\t%s\n' "$(_flat "${REPO_ROOT}")" "$(_flat "${UI_WALK_GAP:-}")" >> "${QUEUE}"
+  printf 'W\t%s\t%s\t%s\n' "$(_flat "${REPO_ROOT}")" "$(_flat "${UI_WALK_GAP:-}")" "$(_flat "${COMMIT:-$(git -C "${REPO_ROOT}" rev-parse HEAD 2>/dev/null)}")" >> "${QUEUE}"
   return 0
 }

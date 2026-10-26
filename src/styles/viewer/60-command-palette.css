@@ -11,7 +11,6 @@
   position: fixed;
   inset: 0;
   background: rgba(15, 21, 35, 0.32);
-  backdrop-filter: blur(2px);
   z-index: 40;
   animation: pf-fade-in var(--pf-dur-fast) var(--pf-ease);
 }
@@ -65,7 +64,8 @@
 }
 
 .cmdpalette-input::placeholder {
-  color: var(--text-disabled);
+  /* A placeholder is text people read: muted (4.5:1), not disabled. */
+  color: var(--text-muted);
 }
 
 .cmdpalette-input-clear {
@@ -133,7 +133,7 @@
 }
 
 .cmdpalette-item-active {
-  background: var(--accent-soft);
+  background: var(--state-active-bg);
   color: var(--text-primary);
 }
 

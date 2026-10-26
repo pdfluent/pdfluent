@@ -11,7 +11,7 @@
  * Verifies:
  * - getEditability() returns correct status for all 7 codes
  * - isEditable(), isSelectable(), isOcrReadOnly() predicates
- * - STATUS_LABELS Dutch strings are present
+ * - STATUS_LABELS English strings are present
  * - Annotation tool suppression (any active tool → annotation-tool-active)
  * - Mode gating (only 'edit' mode allows editable status)
  * - extractText() helper
@@ -178,11 +178,11 @@ describe('textEditability — source readiness', () => {
     expect(editabilitySrc).toContain('export function extractText');
   });
 
-  it('has STATUS_LABELS map with Dutch strings', () => {
+  it('has STATUS_LABELS map with English strings', () => {
     expect(editabilitySrc).toContain('STATUS_LABELS');
-    expect(editabilitySrc).toContain('Tekst bewerken');
+    expect(editabilitySrc).toContain('Edit text');
     expect(editabilitySrc).toContain('OCR');
-    expect(editabilitySrc).toContain('bewerkingsmodus');
+    expect(editabilitySrc).toContain('edit mode');
   });
 });
 
@@ -383,9 +383,9 @@ describe('isOcrReadOnly', () => {
 // ---------------------------------------------------------------------------
 
 describe('getEditabilityLabel', () => {
-  it('returns Dutch label for editable', () => {
+  it('returns the English label for editable', () => {
     const label = getEditabilityLabel('editable');
-    expect(label).toContain('bewerken');
+    expect(label).toContain('Edit');
   });
 
   it('returns label for all 7 status codes', () => {

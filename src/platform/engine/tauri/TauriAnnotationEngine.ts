@@ -26,6 +26,7 @@ interface TauriAnnotation {
   contents: string | null;
   author: string | null;
   color: [number, number, number] | null;
+  name?: string | null;
 }
 
 function mapTauriAnnotation(raw: TauriAnnotation): Annotation {
@@ -35,6 +36,7 @@ function mapTauriAnnotation(raw: TauriAnnotation): Annotation {
     type: raw.annotation_type as AnnotationType,
     rect: raw.rect,
     contents: raw.contents ?? undefined,
+    name: raw.name ?? undefined,
     author: raw.author ?? '',
     color: raw.color
       ? `rgb(${Math.round(raw.color[0] * 255)},${Math.round(raw.color[1] * 255)},${Math.round(raw.color[2] * 255)})`
@@ -49,11 +51,12 @@ function mapTauriAnnotation(raw: TauriAnnotation): Annotation {
 }
 
 const SUPPORTED_TYPES: AnnotationType[] = [
-  'text', 'highlight', 'underline', 'strikeout', 'freehand', 'stamp', 'ink', 'redaction',
+  'text', 'highlight', 'underline', 'strikeout', 'freehand', 'freetext', 'stamp', 'ink', 'redaction',
+  'square', 'circle', 'line',
 ];
 
 const ALL_TYPES: AnnotationType[] = [
-  'text', 'highlight', 'underline', 'strikeout', 'freehand', 'line',
+  'text', 'highlight', 'underline', 'strikeout', 'freehand', 'freetext', 'squiggly', 'line',
   'square', 'circle', 'polygon', 'polyline', 'stamp', 'ink', 'file-attachment',
   'sound', 'movie', 'screen', 'widget', 'printer-mark', 'trap-net', 'watermark',
   '3d', 'rich-media', 'redaction',

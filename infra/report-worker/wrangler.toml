@@ -5,29 +5,48 @@
 # of its components (including the embedded PDF engine), requires a licence.
 # See https://pdfluent.com/license for terms.
 
-# PDFluent crash ingest Worker (plan §5).
-# Fase 0: crash reports only. General feedback/contact is the website form at
-# pdfluent.com/feedback (via feedback.pdfluent.com), not this Worker.
-# Fill in the *_id placeholders after running the `wrangler … create` commands
-# in README.md. No secrets live here — the endpoint needs none.
+# PDFluent report Worker: crash reports (/v1/report) and "Help us improve
+# PDFluent" (/v1/feedback). The IDs below are the production resources
+# created with the `wrangler … create` commands in README.md. No secrets live in this file: the
+# GitHub App key, the Turnstile secret and the rate-limit salt are set with
+# `wrangler secret put` (README, owner steps).
 
 name = "pdfluent-report"
 main = "worker.js"
 compatibility_date = "2025-01-01"
 
-# Bind the app's own address. The app bakes in only report.pdfluent.com; this
-# route attaches the Worker to that hostname (DNS already at Cloudflare).
+# Bind the app's own address. The app bakes in only report.pdfluent.com. A
+# Workers custom domain: Cloudflare creates and owns the proxied DNS record and
+# the certificate, and every path on the host (/v1/report, /v1/feedback) goes
+# to this Worker.
 routes = [
-  { pattern = "report.pdfluent.com/*", zone_name = "pdfluent.com" }
+  { pattern = "report.pdfluent.com", custom_domain = true }
 ]
 
 # D1: the single `reports` table (schema.sql).
 [[d1_databases]]
 binding = "DB"
 database_name = "pdfluent-reports"
-database_id = "REPLACE_WITH_D1_DATABASE_ID"
+database_id = "86363ad0-b283-4d5b-8228-7d39f6a4ef29"
 
 # KV: ephemeral fixed-window rate-limit counter (no IP, no PII).
 [[kv_namespaces]]
 binding = "RATE_LIMIT"
-id = "REPLACE_WITH_KV_NAMESPACE_ID"
+id = "789e43da339a4a6ba17aed8890b13c85"
+
+# R2: documents a reporter explicitly agreed to share. Private bucket, keyed by
+# report ID. A bucket lifecycle rule (README) deletes anything older than 365
+# days as a backstop to the Worker's own 90-days-after-close expiry.
+[[r2_buckets]]
+binding = "ATTACHMENTS"
+bucket_name = "pdfluent-feedback-attachments"
+jurisdiction = "eu"
+
+[vars]
+# The private tracker the GitHub App may open issues in.
+GITHUB_REPO = "pdfluent/pdfluent-internal"
+
+# Every 15 minutes: open issues that failed at submit time, expire documents
+# and reports past their retention.
+[triggers]
+crons = ["*/15 * * * *"]

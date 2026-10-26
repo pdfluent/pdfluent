@@ -212,6 +212,27 @@ function Add-SocketSample([int]$Root) {
 # twenty minutes to report seventeen broken documents about an installer that
 # starts perfectly and simply predates the log.
 $stopped = ""
+
+# One line per launch in `session_launches`, so a start line without its
+# clean_quit is attributed to a document and to a cause instead of being two
+# totals that disagree. The budget covers the close request and the wait for the
+# exit together; a launch that outlives it is killed and recorded as such, never
+# counted as a clean_quit that went missing. `exit_logged` is the app's own
+# "clean_quit: the app is exiting normally" line, `close_guard` its note that it
+# held the close for unsaved changes.
+$QuitBudgetMs = 15000
+$launchesOut = Join-Path $probes "session_launches.out"
+Set-Content -LiteralPath $launchesOut -Value "budget_ms=$QuitBudgetMs" -Encoding ascii
+Set-Content -Path (Join-Path $probes "session_launches.rc") -Value 0 -Encoding ascii
+function Add-Launch([string]$Doc, [long]$SessBase, [long]$AppBase, [bool]$Forced, [int]$QuitMs) {
+  $s = Delta $sessions $SessBase
+  $a = Delta $appLog $AppBase
+  $starts = ([regex]::Matches($s, '(?m)^start ')).Count
+  $quits = ([regex]::Matches($s, '(?m)^clean_quit ')).Count
+  $exitLogged = [int]($a -match 'clean_quit: the app is exiting normally')
+  $guard = [int]($a -match 'close guard:')
+  Add-Content -LiteralPath $launchesOut -Value "$Doc starts=$starts quits=$quits forced=$([int]$Forced) quit_ms=$QuitMs exit_logged=$exitLogged close_guard=$guard" -Encoding ascii
+}
 if ($null -eq $desktop) {
   $stopped = "no desktop session for $env:USERNAME on this machine: WebView2 cannot start in session 0, so the app could not show its window or open the document; this document was not opened"
 }
@@ -228,6 +249,7 @@ if (-not $NoLaunch -and $exe -and (Test-Path $exe) -and $Documents) {
     }
     Stop-AppUnderTest
     $appBase = Size $appLog
+    $sessBase = Size $sessions
     $started = [DateTime]::UtcNow
     $before = @(Get-AppUnderTest | ForEach-Object Id)
     $launched = Invoke-InDesktop "(Start-Process -FilePath '$exe' -ArgumentList @('`"$pdf`"') -PassThru).Id"
@@ -270,6 +292,8 @@ if (-not $NoLaunch -and $exe -and (Test-Path $exe) -and $Documents) {
     }
     if (-not $p) {
       Write-Probe "alive" "" 1
+      # No handle to close: the sweep at the top of the next launch kills it.
+      Add-Launch $doc $sessBase $appBase $true -1
       continue
     }
     # The window handle is only visible from the session the window is on.
@@ -278,8 +302,15 @@ if (-not $NoLaunch -and $exe -and (Test-Path $exe) -and $Documents) {
     $alive = Get-Process -Id $p.Id -ErrorAction SilentlyContinue
     Write-Probe "alive" $(if ($alive -and $hasWindow) { "$($p.Id)" } else { "" }) $(if ($alive) { 0 } else { 1 })
     # A quit the way a person quits: close the main window, from its session.
+    $quitAt = [DateTime]::UtcNow
     Invoke-InDesktop "`$q = Get-Process -Id $($p.Id) -ErrorAction SilentlyContinue; if (`$q) { `$q.CloseMainWindow() | Out-Null }" | Out-Null
-    if (-not $p.WaitForExit(15000)) { $p.Kill(); Write-Probe "quit_forced" "the app did not close within 15 s" 1 }
+    $forced = $false
+    if (-not $p.WaitForExit([Math]::Max(1, $QuitBudgetMs - [int]([DateTime]::UtcNow - $quitAt).TotalMilliseconds))) {
+      $forced = $true
+      $p.Kill()
+      [void]$p.WaitForExit(5000)
+    }
+    Add-Launch $doc $sessBase $appBase $forced ([int]([DateTime]::UtcNow - $quitAt).TotalMilliseconds)
   }
   Write-Probe "session_delta" (Delta $sessions $sessionsBase) 0
   if ($Script:Samples -gt 0) {

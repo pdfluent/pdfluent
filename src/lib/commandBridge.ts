@@ -27,6 +27,7 @@
 import i18n from '../i18n';
 import type { AppError, ErrorSeverity, ErrorTaxonomy } from '../viewer/state/errorCenter';
 import { makeAppError } from '../viewer/state/errorCenter';
+import { isOpenRejection } from '../viewer/state/openError';
 
 type Listener = (error: AppError) => void;
 
@@ -93,6 +94,21 @@ export function describeError(error: unknown): string {
 }
 
 /**
+ * The OCR backend answers with a stable code (`OCR_LANGUAGE_MISSING:nld`) so
+ * the message can be shown in the user's language. A code with a translation
+ * becomes that sentence, with the detail after the colon in brackets; anything
+ * else is shown as it came.
+ */
+export function localizeErrorCode(message: string): string {
+  const match = /^(OCR_[A-Z_]+)(?::\s*([\s\S]*))?$/.exec(message);
+  if (!match) return message;
+  const key = `ocr.errors.${match[1]}`;
+  if (!i18n.exists(key)) return message;
+  const detail = match[2]?.trim();
+  return detail ? `${i18n.t(key)} (${detail})` : i18n.t(key);
+}
+
+/**
  * Best-guess taxonomy for a backend message, so support bundles and the error
  * panel can group failures. Wrong guesses cost nothing; the message itself is
  * always shown verbatim underneath.
@@ -121,7 +137,7 @@ export function classifyCommandError(command: string, message: string): ErrorTax
  * second path to the screen.
  */
 export function reportCommandFailure(command: string, error: unknown): AppError {
-  const message = describeError(error);
+  const message = localizeErrorCode(describeError(error));
   const taxonomy = classifyCommandError(command, message);
   // A feature the build does not carry is not a crash, and saying "did not
   // complete" invites the user to try again at something that cannot work.
@@ -174,6 +190,18 @@ export function reportFallback(options: {
 }
 
 /**
+ * A call that is allowed to fail without a word: the question "is there a
+ * backend, and has it anything to tell me?" asked at startup. In a plain
+ * browser (the Playwright and demo runtimes) there is none, and a toast
+ * saying so on every start would be noise the user cannot act on. Nothing that
+ * does something for the user goes through here.
+ */
+export async function invokeQuietly<T>(command: string, args?: Record<string, unknown>): Promise<T> {
+  const { invoke } = await core();
+  return invoke<T>(command, args);
+}
+
+/**
  * Call a Tauri command. On failure the user is told, the log records it, and
  * the rejection is rethrown unchanged so existing call-site handling keeps
  * working.
@@ -183,7 +211,23 @@ export async function invokeCommand<T>(command: string, args?: Record<string, un
   try {
     return await invoke<T>(command, args);
   } catch (error) {
-    reportCommandFailure(command, error);
+    // A structured open refusal (open_error.rs) is explained by the open
+    // screen in the user's language; a toast here would show its raw detail.
+    // The backend has already logged it.
+    if (!isExpectedRefusal(describeError(error)) && !isOpenRejection(error)) reportCommandFailure(command, error);
     throw error;
   }
+}
+
+/**
+ * Answers that are questions, not failures: the caller asks the user and
+ * retries (viewer/state/passwordPrompt.ts). Reporting them would put an error
+ * banner on screen behind the password prompt.
+ */
+// session-gone: a tab asked the backend for a document it no longer holds
+// (J-90); the tab opens the file again, nothing failed.
+const EXPECTED_REFUSALS = ['password-required', 'password-incorrect', 'session-gone'];
+
+export function isExpectedRefusal(message: string): boolean {
+  return EXPECTED_REFUSALS.some((code) => message.startsWith(code));
 }

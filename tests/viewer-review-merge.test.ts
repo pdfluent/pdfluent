@@ -163,6 +163,6 @@ describe('describeMergeResult', () => {
   it('returns a no-changes message when result is empty', () => {
     const fnStart = source.indexOf('export function describeMergeResult');
     const body = source.slice(fnStart, fnStart + 700);
-    expect(body).toContain('Geen wijzigingen gevonden');
+    expect(body).toContain('No changes found');
   });
 });

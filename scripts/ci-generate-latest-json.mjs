@@ -18,12 +18,19 @@
 //   CF_R2_PUBLIC_URL    public base URL of R2 bucket, e.g. https://releases.pdfluent.com
 //   CF_R2_BUCKET_NAME   bucket name (used for path construction)
 //
+// Optional:
+//   FIXED_FEEDBACK_FILE JSON array of feedback report IDs fixed in this version
+//                       (scripts/release/fixed-feedback.mjs). Written as
+//                       `fixed_feedback`; the app tells a reporter whose ID is
+//                       listed, with no request of its own. Absent = [].
+//
 // Output:
 //   latest.json (written to CWD)
 
 import { readFileSync, readdirSync, writeFileSync, existsSync } from 'node:fs';
 import path from 'node:path';
 import { requireQualityReport, overrideOr } from './quality/require-report.mjs';
+import { FEEDBACK_ID_RE } from './release/fixed-feedback.mjs';
 
 const tag = process.env.CI_COMMIT_TAG ?? '';
 // v* = production release; rc* = CI debug run (workflow rule allows both)
@@ -133,11 +140,26 @@ const platforms = {
   ...(linux   ? { 'linux-x86_64':   { url: linux.url,   signature: linux.sig   } } : {}),
 };
 
+// A malformed list is refused rather than filtered: an ID that does not match
+// is a bug in the step that produced it, and dropping it quietly would leave a
+// reporter untold.
+let fixedFeedback = [];
+if (process.env.FIXED_FEEDBACK_FILE) {
+  const parsed = JSON.parse(readFileSync(process.env.FIXED_FEEDBACK_FILE, 'utf8'));
+  const bad = Array.isArray(parsed) ? parsed.filter((id) => typeof id !== 'string' || !FEEDBACK_ID_RE.test(id)) : [parsed];
+  if (bad.length) {
+    console.error(`ERROR: FIXED_FEEDBACK_FILE holds entries that are not report IDs: ${JSON.stringify(bad).slice(0, 200)}`);
+    process.exit(1);
+  }
+  fixedFeedback = [...new Set(parsed)].sort();
+}
+
 const latestJson = {
   version,
   notes: 'See the GitLab release for the full changelog.',
   pub_date: pubDate,
   platforms,
+  fixed_feedback: fixedFeedback,
 };
 
 // ─── write + verify ──────────────────────────────────────────────────────────
@@ -151,10 +173,11 @@ console.log(`  pub_date:         ${pubDate}`);
 if (macos)   console.log(`  darwin-aarch64:   ${macos.url}`);
 if (windows) console.log(`  windows-x86_64:   ${windows.url}`);
 if (linux)   console.log(`  linux-x86_64:     ${linux.url}`);
+console.log(`  fixed_feedback:   ${fixedFeedback.length} report(s)`);
 
 // Sanity-check: all required fields present
 const parsed = JSON.parse(readFileSync(outPath, 'utf8'));
-const requiredKeys = ['version', 'notes', 'pub_date', 'platforms'];
+const requiredKeys = ['version', 'notes', 'pub_date', 'platforms', 'fixed_feedback'];
 for (const key of requiredKeys) {
   if (!(key in parsed)) {
     console.error(`ERROR: generated JSON is missing key: ${key}`);

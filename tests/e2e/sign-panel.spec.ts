@@ -18,7 +18,7 @@
 // panel says so. The signature this test cannot make is made in
 // src-tauri/src/pdf_engine.rs::op_sign_with_certificate_verifies_after_reopen.
 
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect, type Page } from './helpers/guarded-test';
 import { tid } from './helpers/selectors';
 
 type TestHook = { loadDocument: (source: string | ArrayBuffer) => Promise<void> };

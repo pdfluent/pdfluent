@@ -97,11 +97,11 @@ describe('TextContextBar — editing chrome', () => {
     expect(cancelBtn).toContain('onCancel?.()');
   });
 
-  it('Commit has Dutch label "Opslaan"', () => {
+  it('Commit has the label "Save"', () => {
     expect(contextBarSrc).toContain("t('common.save'");
   });
 
-  it('Cancel has Dutch label "Annuleren"', () => {
+  it('Cancel has the label "Cancel"', () => {
     expect(contextBarSrc).toContain("t('common.cancel'");
   });
 

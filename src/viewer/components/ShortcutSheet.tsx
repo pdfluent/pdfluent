@@ -178,7 +178,7 @@ export function ShortcutSheet({ isOpen, onClose }: ShortcutSheetProps) {
         </div>
 
         <footer className="shortcutsheet-footer">
-          <span>Language / Taal</span>
+          <span>{t('settings.language')}</span>
           <LanguageSwitcher />
         </footer>
       </div>

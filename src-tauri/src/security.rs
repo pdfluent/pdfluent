@@ -19,6 +19,13 @@ pub fn validate_pdf_input_path(raw: &str) -> Result<String, String> {
     validate_existing_file(raw, PDF_EXTENSIONS)
 }
 
+/// Whether `raw` names a file ending in `.pdf` (any case). Lets the open path
+/// tell a wrong extension apart from the other refusals of
+/// [`validate_pdf_input_path`].
+pub fn has_pdf_extension(raw: &str) -> bool {
+    extension_lower(Path::new(raw)).is_some_and(|ext| PDF_EXTENSIONS.contains(&ext.as_str()))
+}
+
 pub fn validate_pdf_source_path(raw: &str) -> Result<String, String> {
     validate_existing_file(raw, PDF_EXTENSIONS)
 }

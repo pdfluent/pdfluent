@@ -17,6 +17,9 @@ use pdf_annot::{
 };
 use pdf_compliance::{ComplianceReport, PdfALevel, Severity};
 use pdf_engine::{PdfDocument, RenderOptions, ThumbnailOptions};
+use crate::open_error::{
+    classify_engine_error, classify_lopdf_error, read_within_limits, OpenError, OpenErrorCode, OpenLimits,
+};
 
 // Re-export the SDK's canonical TextSpanInfo so the rest of the backend (and
 // lib.rs's `use crate::pdf_engine::TextSpanInfo`) consumes the SDK's SSOT
@@ -56,6 +59,58 @@ pub struct DocumentInfo {
     pub xfa_detected: bool,
     pub xfa_notice: Option<String>,
     pub active_content: ActiveContentInfo,
+    pub access: DocumentAccess,
+    /// The open-document session this describes (J-90). Set by the commands
+    /// that open or switch to a document; `OpenDocument` does not know it.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub session_id: Option<u64>,
+}
+
+/// See `OpenDocument::password_removal`. Serialised as kebab-case for the UI.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum PasswordRemoval {
+    NotProtected,
+    NeedsOwnerPassword,
+    Ready,
+}
+
+/// What an encrypted document lets this session do (J-18).
+///
+/// A PDF can be protected two ways: a user password, without which it does not
+/// open at all, and an owner password, which guards the permission flags. A
+/// file with only an owner password opens without asking, and then its flags
+/// apply unless the session proved it knows the owner password. When they
+/// forbid changes the document is read-only: it can be read and, if allowed,
+/// printed, but `save_to` refuses with [`DOCUMENT_READ_ONLY`].
+#[derive(Debug, Serialize, Clone)]
+pub struct DocumentAccess {
+    pub encrypted: bool,
+    /// Opened with the owner password (or not encrypted): no restrictions.
+    pub owner: bool,
+    pub can_print: bool,
+    pub can_modify: bool,
+    pub can_copy: bool,
+    pub can_annotate: bool,
+    pub can_fill_forms: bool,
+    pub can_assemble: bool,
+    pub read_only: bool,
+}
+
+impl DocumentAccess {
+    pub fn unrestricted() -> Self {
+        Self {
+            encrypted: false,
+            owner: true,
+            can_print: true,
+            can_modify: true,
+            can_copy: true,
+            can_annotate: true,
+            can_fill_forms: true,
+            can_assemble: true,
+            read_only: false,
+        }
+    }
 }
 
 #[derive(Debug, Serialize, Clone, Default)]
@@ -113,6 +168,8 @@ pub struct AnnotationInfo {
     pub author: Option<String>,
     /// RGB color components in [0.0, 1.0] range, if present.
     pub color: Option<[f32; 3]>,
+    /// `/Name` of a stamp or note (`Approved`, `Draft`, `Image`, `Comment`).
+    pub name: Option<String>,
 }
 
 
@@ -316,6 +373,319 @@ fn parse_rect_f32(dict: &lopdf::Dictionary) -> Option<[f32; 4]> {
     Some([r[0].min(r[2]), r[1].min(r[3]), r[0].max(r[2]), r[1].max(r[3])])
 }
 
+pub const FLATTEN_NO_FORM: &str = "This document has no form fields to flatten.";
+pub const FLATTEN_SIGNED: &str =
+    "This document is signed. Flattening its form would change the signed pages and break the signature.";
+pub const FLATTEN_XFA: &str =
+    "This is an XFA form. Convert it to a standard PDF first, then flatten that form.";
+
+fn deref_obj<'a>(doc: &'a lopdf::Document, o: &'a lopdf::Object) -> Option<&'a lopdf::Object> {
+    match o {
+        lopdf::Object::Reference(id) => doc.get_object(*id).ok(),
+        other => Some(other),
+    }
+}
+
+fn acroform_dict(doc: &lopdf::Document) -> Option<&lopdf::Dictionary> {
+    let root = doc.trailer.get(b"Root").ok()?;
+    let catalog = deref_obj(doc, root)?.as_dict().ok()?;
+    deref_obj(doc, catalog.get(b"AcroForm").ok()?)?.as_dict().ok()
+}
+
+fn acroform_need_appearances(doc: &lopdf::Document) -> bool {
+    acroform_dict(doc)
+        .and_then(|a| a.get(b"NeedAppearances").ok())
+        .and_then(|o| o.as_bool().ok())
+        .unwrap_or(false)
+}
+
+/// `/FT` of a widget, inherited through `/Parent`.
+fn widget_field_type(doc: &lopdf::Document, widget: &lopdf::Dictionary) -> Option<Vec<u8>> {
+    let mut dict = widget;
+    for _ in 0..32 {
+        if let Ok(lopdf::Object::Name(ft)) = dict.get(b"FT") {
+            return Some(ft.clone());
+        }
+        dict = deref_obj(doc, dict.get(b"Parent").ok()?)?.as_dict().ok()?;
+    }
+    None
+}
+
+fn number(o: &lopdf::Object) -> Option<f32> {
+    match o {
+        lopdf::Object::Integer(i) => Some(*i as f32),
+        lopdf::Object::Real(r) => Some(*r),
+        _ => None,
+    }
+}
+
+fn numbers<const N: usize>(doc: &lopdf::Document, o: Option<&lopdf::Object>) -> Option<[f32; N]> {
+    let arr = deref_obj(doc, o?)?.as_array().ok()?;
+    if arr.len() != N {
+        return None;
+    }
+    let mut out = [0f32; N];
+    for (i, v) in arr.iter().enumerate() {
+        out[i] = number(deref_obj(doc, v)?)?;
+    }
+    Some(out)
+}
+
+/// The object id of a widget's current normal appearance stream: `/AP /N`
+/// itself, or the `/AS` entry of an `/AP /N` state dictionary. A stream
+/// stored inline is moved into its own object so a page can reference it.
+fn widget_normal_appearance(
+    doc: &mut lopdf::Document,
+    widget: &lopdf::Dictionary,
+) -> Option<lopdf::ObjectId> {
+    let ap = deref_obj(doc, widget.get(b"AP").ok()?)?.as_dict().ok()?;
+    let normal = ap.get(b"N").ok()?;
+    let chosen = match deref_obj(doc, normal)? {
+        lopdf::Object::Stream(_) => normal.clone(),
+        lopdf::Object::Dictionary(states) => {
+            let state = widget.get(b"AS").ok()?.as_name().ok()?;
+            states.get(state).ok()?.clone()
+        }
+        _ => return None,
+    };
+    match chosen {
+        lopdf::Object::Reference(id) => match doc.get_object(id) {
+            Ok(lopdf::Object::Stream(_)) => Some(id),
+            _ => None,
+        },
+        lopdf::Object::Stream(st) => Some(doc.add_object(st)),
+        _ => None,
+    }
+}
+
+/// `[a b c d e f]` that maps an appearance (its `/BBox` through its `/Matrix`)
+/// onto the widget's `/Rect` — PDF 32000-1 §12.5.5, algorithm 8.1.
+fn appearance_placement(
+    doc: &lopdf::Document,
+    ap_id: lopdf::ObjectId,
+    rect: [f32; 4],
+) -> Option<[f32; 6]> {
+    let lopdf::Object::Stream(st) = doc.get_object(ap_id).ok()? else { return None };
+    let bbox: [f32; 4] = numbers(doc, st.dict.get(b"BBox").ok())?;
+    let m: [f32; 6] = numbers(doc, st.dict.get(b"Matrix").ok()).unwrap_or([1.0, 0.0, 0.0, 1.0, 0.0, 0.0]);
+    let corners = [(bbox[0], bbox[1]), (bbox[2], bbox[1]), (bbox[0], bbox[3]), (bbox[2], bbox[3])];
+    let pts: Vec<(f32, f32)> = corners
+        .iter()
+        .map(|&(x, y)| (m[0] * x + m[2] * y + m[4], m[1] * x + m[3] * y + m[5]))
+        .collect();
+    let bx0 = pts.iter().map(|p| p.0).fold(f32::INFINITY, f32::min);
+    let bx1 = pts.iter().map(|p| p.0).fold(f32::NEG_INFINITY, f32::max);
+    let by0 = pts.iter().map(|p| p.1).fold(f32::INFINITY, f32::min);
+    let by1 = pts.iter().map(|p| p.1).fold(f32::NEG_INFINITY, f32::max);
+    let (bw, bh) = (bx1 - bx0, by1 - by0);
+    if bw.abs() < f32::EPSILON || bh.abs() < f32::EPSILON {
+        return None;
+    }
+    let (rx0, ry0) = (rect[0].min(rect[2]), rect[1].min(rect[3]));
+    let sx = (rect[2] - rect[0]).abs() / bw;
+    let sy = (rect[3] - rect[1]).abs() / bh;
+    Some([sx, 0.0, 0.0, sy, rx0 - bx0 * sx, ry0 - by0 * sy])
+}
+
+/// The page's own `/Resources` dictionary, made direct on the page when it is
+/// inherited from the page tree, so adding to it changes this page only.
+fn page_xobjects_mut(
+    doc: &mut lopdf::Document,
+    page_id: lopdf::ObjectId,
+) -> Result<&mut lopdf::Dictionary, String> {
+    let err = || "Failed to flatten the form: a page has no usable resources".to_string();
+    let page = doc.get_object(page_id).and_then(|o| o.as_dict()).map_err(|_| err())?;
+    let resources_ref = match page.get(b"Resources") {
+        Ok(lopdf::Object::Reference(id)) => Some(*id),
+        Ok(_) => None,
+        Err(_) => {
+            // Inherited: copy the nearest ancestor's resources onto the page.
+            let mut inherited = lopdf::Dictionary::new();
+            let mut parent = page.get(b"Parent").ok().and_then(|p| p.as_reference().ok());
+            while let Some(pid) = parent {
+                let Ok(pd) = doc.get_object(pid).and_then(|o| o.as_dict()) else { break };
+                if let Ok(r) = pd.get(b"Resources") {
+                    if let Some(lopdf::Object::Dictionary(d)) = deref_obj(doc, r) {
+                        inherited = d.clone();
+                    }
+                    break;
+                }
+                parent = pd.get(b"Parent").ok().and_then(|p| p.as_reference().ok());
+            }
+            let page = doc.get_object_mut(page_id).and_then(|o| o.as_dict_mut()).map_err(|_| err())?;
+            page.set("Resources", lopdf::Object::Dictionary(inherited));
+            None
+        }
+    };
+    let xobject_ref = {
+        let res = match resources_ref {
+            Some(id) => doc.get_object(id).and_then(|o| o.as_dict()).map_err(|_| err())?,
+            None => doc
+                .get_object(page_id)
+                .and_then(|o| o.as_dict())
+                .and_then(|p| p.get(b"Resources"))
+                .and_then(|r| r.as_dict())
+                .map_err(|_| err())?,
+        };
+        match res.get(b"XObject") {
+            Ok(lopdf::Object::Reference(id)) => Some(*id),
+            _ => None,
+        }
+    };
+    if let Some(id) = xobject_ref {
+        return doc.get_object_mut(id).and_then(|o| o.as_dict_mut()).map_err(|_| err());
+    }
+    let res = match resources_ref {
+        Some(id) => doc.get_object_mut(id).and_then(|o| o.as_dict_mut()).map_err(|_| err())?,
+        None => doc
+            .get_object_mut(page_id)
+            .and_then(|o| o.as_dict_mut())
+            .and_then(|p| p.get_mut(b"Resources"))
+            .and_then(|r| r.as_dict_mut())
+            .map_err(|_| err())?,
+    };
+    if !matches!(res.get(b"XObject"), Ok(lopdf::Object::Dictionary(_))) {
+        res.set("XObject", lopdf::Object::Dictionary(lopdf::Dictionary::new()));
+    }
+    res.get_mut(b"XObject").and_then(|x| x.as_dict_mut()).map_err(|_| err())
+}
+
+/// Draw every visible non-signature widget's appearance into its page and
+/// remove the widgets and the fields. Returns the number of widgets drawn.
+fn flatten_widgets_into_pages(doc: &mut lopdf::Document) -> Result<usize, String> {
+    let mut drawn = 0usize;
+    let mut kept_signature_fields = false;
+    let pages: Vec<lopdf::ObjectId> = doc.get_pages().into_values().collect();
+    for page_id in pages {
+        let annots: Vec<lopdf::Object> = {
+            let page = doc
+                .get_object(page_id)
+                .and_then(|o| o.as_dict())
+                .map_err(|_| "Failed to flatten the form: a page is not a dictionary".to_string())?;
+            match page.get(b"Annots").ok().and_then(|a| deref_obj(doc, a)) {
+                Some(lopdf::Object::Array(arr)) => arr.clone(),
+                _ => continue,
+            }
+        };
+        let mut keep = Vec::with_capacity(annots.len());
+        let mut ops = String::new();
+        for annot in annots {
+            let Some(widget) = deref_obj(doc, &annot).and_then(|o| o.as_dict().ok()).cloned() else {
+                keep.push(annot);
+                continue;
+            };
+            if !matches!(widget.get(b"Subtype"), Ok(lopdf::Object::Name(n)) if n == b"Widget") {
+                keep.push(annot);
+                continue;
+            }
+            if widget_field_type(doc, &widget).as_deref() == Some(&b"Sig"[..]) {
+                kept_signature_fields = true;
+                keep.push(annot);
+                continue;
+            }
+            // Hidden (bit 2) and NoView (bit 6) widgets are not shown, so they
+            // leave nothing behind.
+            let flags = widget.get(b"F").ok().and_then(|f| f.as_i64().ok()).unwrap_or(0);
+            if flags & (2 | 32) != 0 {
+                continue;
+            }
+            let Some(rect) = numbers::<4>(doc, widget.get(b"Rect").ok()) else { continue };
+            let Some(ap_id) = widget_normal_appearance(doc, &widget) else { continue };
+            let Some(m) = appearance_placement(doc, ap_id, rect) else { continue };
+            if let Ok(lopdf::Object::Stream(st)) = doc.get_object_mut(ap_id) {
+                st.dict.set("Type", lopdf::Object::Name(b"XObject".to_vec()));
+                st.dict.set("Subtype", lopdf::Object::Name(b"Form".to_vec()));
+            }
+            let name = format!("PdfluentFlat{}_{}", ap_id.0, ap_id.1);
+            page_xobjects_mut(doc, page_id)?.set(name.as_bytes().to_vec(), lopdf::Object::Reference(ap_id));
+            ops.push_str(&format!(
+                "q {} {} {} {} {} {} cm /{} Do Q\n",
+                m[0], m[1], m[2], m[3], m[4], m[5], name
+            ));
+            drawn += 1;
+        }
+        if !ops.is_empty() {
+            // The page's own content may leave the graphics state changed;
+            // wrap it so the appearances land where their rects say.
+            let open = doc.add_object(lopdf::Stream::new(lopdf::Dictionary::new(), b"q\n".to_vec()));
+            let close = doc.add_object(lopdf::Stream::new(
+                lopdf::Dictionary::new(),
+                format!("Q\n{ops}").into_bytes(),
+            ));
+            let existing: Vec<lopdf::Object> = {
+                let page = doc.get_object(page_id).and_then(|o| o.as_dict()).map_err(|e| e.to_string())?;
+                match page.get(b"Contents") {
+                    Ok(lopdf::Object::Reference(id)) => match doc.get_object(*id) {
+                        Ok(lopdf::Object::Array(arr)) => arr.clone(),
+                        _ => vec![lopdf::Object::Reference(*id)],
+                    },
+                    Ok(lopdf::Object::Array(arr)) => arr.clone(),
+                    _ => Vec::new(),
+                }
+            };
+            let mut contents = vec![lopdf::Object::Reference(open)];
+            contents.extend(existing);
+            contents.push(lopdf::Object::Reference(close));
+            let page = doc.get_object_mut(page_id).and_then(|o| o.as_dict_mut()).map_err(|e| e.to_string())?;
+            page.set("Contents", lopdf::Object::Array(contents));
+        }
+        let page = doc.get_object_mut(page_id).and_then(|o| o.as_dict_mut()).map_err(|e| e.to_string())?;
+        if keep.is_empty() {
+            page.remove(b"Annots");
+        } else {
+            page.set("Annots", lopdf::Object::Array(keep));
+        }
+    }
+    remove_flattened_fields(doc, kept_signature_fields);
+    Ok(drawn)
+}
+
+/// Drop the AcroForm, or — when signature fields stay — every field but those.
+fn remove_flattened_fields(doc: &mut lopdf::Document, kept_signature_fields: bool) {
+    let Some(catalog_id) = doc.trailer.get(b"Root").ok().and_then(|r| r.as_reference().ok()) else {
+        return;
+    };
+    if !kept_signature_fields {
+        if let Ok(cat) = doc.get_object_mut(catalog_id).and_then(|o| o.as_dict_mut()) {
+            cat.remove(b"AcroForm");
+        }
+        return;
+    }
+    let Some(form) = acroform_dict(doc) else { return };
+    let fields: Vec<lopdf::Object> = match form.get(b"Fields").ok().and_then(|f| deref_obj(doc, f)) {
+        Some(lopdf::Object::Array(arr)) => arr
+            .iter()
+            .filter(|f| {
+                deref_obj(doc, f)
+                    .and_then(|o| o.as_dict().ok())
+                    .and_then(|d| widget_field_type(doc, d))
+                    .as_deref()
+                    == Some(&b"Sig"[..])
+            })
+            .cloned()
+            .collect(),
+        _ => Vec::new(),
+    };
+    let form_ref = doc
+        .get_object(catalog_id)
+        .ok()
+        .and_then(|c| c.as_dict().ok())
+        .and_then(|c| c.get(b"AcroForm").ok())
+        .and_then(|a| a.as_reference().ok());
+    let form = match form_ref {
+        Some(id) => doc.get_object_mut(id).and_then(|o| o.as_dict_mut()),
+        None => doc
+            .get_object_mut(catalog_id)
+            .and_then(|o| o.as_dict_mut())
+            .and_then(|c| c.get_mut(b"AcroForm"))
+            .and_then(|a| a.as_dict_mut()),
+    };
+    if let Ok(form) = form {
+        form.set("Fields", lopdf::Object::Array(fields));
+        form.remove(b"NeedAppearances");
+    }
+}
+
 /// A typed write request from the editor: the field family decides which
 /// `pdf_forms::WriteValue` is applied.
 #[derive(Debug, Deserialize)]
@@ -331,6 +701,32 @@ pub enum FormWriteRequest {
     Choice { name: String, value: String },
     /// Multi-select list box: zero or more selected export values.
     MultiChoice { name: String, values: Vec<String> },
+}
+
+/// A field whose value a recalculation set.
+#[derive(Debug, Serialize, Clone, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct FormCalcUpdate {
+    pub name: String,
+    pub value: String,
+}
+
+/// A calculation that did not complete. `name` is empty when the form as a
+/// whole could not be recalculated.
+#[derive(Debug, Serialize, Clone, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct FormCalcFailure {
+    pub name: String,
+    pub message: String,
+}
+
+/// What the recalculation after a field change did. The editor shows the
+/// updated values; the failures are reported, never swallowed.
+#[derive(Debug, Serialize, Clone, Default, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct FormCalcReport {
+    pub updated: Vec<FormCalcUpdate>,
+    pub failed: Vec<FormCalcFailure>,
 }
 
 /// A `/Link` annotation with a URI action — the clickable-link layer's data.
@@ -416,6 +812,65 @@ pub struct XfaFieldDto {
 pub struct XfaFormModelDto {
     pub page_count: usize,
     pub fields: Vec<XfaFieldDto>,
+    /// Scripts the form was due to run that this build cannot: FormCalc, and any
+    /// script with no declared language (which XFA reads as FormCalc). The
+    /// sandboxed runtime runs JavaScript only. The count is the engine's script
+    /// report for this call, so a script counts once it was due: at open for
+    /// the open lifecycle and calculate scripts, at the commit for a change
+    /// script. The overlay says so instead of leaving a stale total looking like
+    /// a result.
+    pub unsupported_scripts: usize,
+    /// Scripts that ran and threw, timed out or were refused, from the same
+    /// report. The overlay names the field and the kind once per document.
+    pub script_errors: Vec<XfaScriptErrorDto>,
+}
+
+/// One script that did not complete (`script_id` is `<field>:<activity>#<n>`).
+#[derive(Debug, Serialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct XfaScriptErrorDto {
+    pub script_id: String,
+    /// `threw`, `timeout` or `refused`.
+    pub kind: String,
+}
+
+fn xfa_script_errors(session: &pdf_engine::xfa::XfaSession) -> Vec<XfaScriptErrorDto> {
+    use pdf_engine::xfa::XfaScriptErrorKind as K;
+    session
+        .script_report()
+        .runtime_errors
+        .iter()
+        .map(|e| XfaScriptErrorDto {
+            script_id: e.script_id.clone(),
+            kind: match e.kind {
+                K::Threw => "threw",
+                K::Timeout => "timeout",
+                // Refused, and any kind a later engine adds: the script did not run.
+                _ => "refused",
+            }
+            .to_string(),
+        })
+        .collect()
+}
+
+/// A refused XFA write as a coded message the frontend shows in the user's
+/// language (`XFA_FIELD_*` → `xfa.commit*` in the locale files). The code comes
+/// first, then the field, then (for a rejected value) the engine's reason.
+fn xfa_commit_error(name: &str, error: &pdf_engine::xfa::XfaError) -> String {
+    use pdf_engine::xfa::XfaError as E;
+    match error {
+        E::FieldReadOnly(_) => format!("XFA_FIELD_READ_ONLY: {name}"),
+        E::InvalidFieldValue { reason, .. } => format!("XFA_FIELD_REJECTED: {name}: {reason}"),
+        E::FieldNotFound(_) => format!("XFA_FIELD_NOT_FOUND: {name}"),
+        other => format!("Could not commit XFA field '{name}': {other}"),
+    }
+}
+
+/// Scripts the session was due to run and could not: FormCalc and any other
+/// non-JavaScript language, as the engine's script report counts them.
+fn xfa_unsupported_scripts(session: &pdf_engine::xfa::XfaSession) -> usize {
+    let skipped = &session.script_report().skipped;
+    skipped.formcalc + skipped.other
 }
 
 /// Stable string tag for an XFA field type (matches the frontend union).
@@ -565,6 +1020,9 @@ pub struct CompressResult {
     pub streams_compressed: usize,
     pub duplicates_merged: usize,
     pub unused_removed: usize,
+    /// Size of the open document as loaded or last saved, and of the file written.
+    pub bytes_before: usize,
+    pub bytes_after: usize,
 }
 
 #[derive(Debug, Serialize, Clone)]
@@ -573,6 +1031,79 @@ pub struct RedactReport {
     pub operations_removed: usize,
     pub pages_affected: usize,
     pub metadata_cleaned: bool,
+}
+
+/// One distinct piece of personal data proposed for review (J-66): the text
+/// as it is written, where, how often, and how sure we are. The user reviews
+/// these before anything is redacted.
+#[derive(Debug, Serialize, Clone, PartialEq, Eq)]
+pub struct PiiCandidate {
+    pub kind: crate::pii::PiiKind,
+    pub text: String,
+    /// 0-based pages the text appears on, ascending.
+    pub pages: Vec<u32>,
+    pub occurrences: usize,
+    /// What sort of identifier ("BSN", "NINO", ...) when the kind has several.
+    pub detail: Option<String>,
+    /// Found by a checksum/context rule, by the model, or by both.
+    pub source: crate::pii_model::Source,
+    /// The model's score as a percentage; 100 for a validated pattern.
+    pub score_pct: u8,
+    /// A checksum or context rule proved it.
+    pub validated: bool,
+    /// Ticked by default in the review list. Ticking is not redacting.
+    pub preselected: bool,
+}
+
+/// Merge the suggestions of every page into distinct candidates, in reading
+/// order. `ner` is the model, when the component is installed.
+pub fn pii_candidates_from_pages(
+    pages: &[String],
+    ner: Option<&dyn crate::pii_model::NerBackend>,
+) -> Result<Vec<PiiCandidate>, String> {
+    use crate::pii_model::Source;
+    let mut found: Vec<PiiCandidate> = Vec::new();
+    for (page, text) in pages.iter().enumerate() {
+        let page = page as u32;
+        for s in crate::pii_model::analyse(text, ner)? {
+            let surface = s.text(text).to_string();
+            let pct = (s.score.clamp(0.0, 1.0) * 100.0).round() as u8;
+            match found.iter_mut().find(|c| c.kind == s.kind && c.text == surface) {
+                Some(c) => {
+                    c.occurrences += 1;
+                    if c.pages.last() != Some(&page) {
+                        c.pages.push(page);
+                    }
+                    c.validated |= s.validated;
+                    c.score_pct = c.score_pct.max(pct);
+                    if c.source != s.source {
+                        c.source = Source::Both;
+                    }
+                    c.preselected = c.validated || c.score_pct >= (crate::pii_model::MODEL_PRESELECT_SCORE * 100.0) as u8;
+                }
+                None => found.push(PiiCandidate {
+                    kind: s.kind,
+                    text: surface,
+                    pages: vec![page],
+                    occurrences: 1,
+                    detail: s.detail.clone(),
+                    source: s.source,
+                    score_pct: pct,
+                    validated: s.validated,
+                    preselected: s.preselected(),
+                }),
+            }
+        }
+    }
+    Ok(found)
+}
+
+#[derive(Debug, Serialize, Clone)]
+pub struct PiiRedactReport {
+    pub texts_redacted: usize,
+    pub matches_found: usize,
+    pub operations_removed: usize,
+    pub pages_affected: usize,
 }
 
 #[derive(Debug, Serialize, Clone)]
@@ -595,6 +1126,25 @@ pub struct SpanAnchor {
     pub y: f64,
     pub width: f64,
     pub height: f64,
+}
+
+/// A text block the extraction engine found on a page (#640): a paragraph,
+/// heading, list item, caption, table cell region… The editor groups its
+/// selectable paragraphs inside these, so a column or a table cell is never
+/// joined with its neighbour.
+#[derive(Debug, Serialize, Clone)]
+pub struct TextBlockDto {
+    pub kind: String,
+    /// `[x0, y0, x1, y1]`, PDF user space, y up.
+    pub bbox: [f64; 4],
+}
+
+/// One line of a paragraph the user edited as a whole (J-42): the line's text
+/// as shown and where it is, to tell it apart from the same words elsewhere.
+#[derive(Debug, Deserialize, Clone)]
+pub struct ParagraphLine {
+    pub text: String,
+    pub anchor: Option<SpanAnchor>,
 }
 
 /// One coded observation the writer made about an edit.
@@ -752,6 +1302,132 @@ impl TextReplaceResult {
         }
         self
     }
+}
+
+/// The run a paragraph line was read from: the one with the line's text,
+/// nearest the anchor when the text occurs more than once.
+fn locate_line_run<'a>(
+    runs: &'a [pdf_manip::text_run::TextRun],
+    line: &ParagraphLine,
+) -> Option<&'a pdf_manip::text_run::TextRun> {
+    let wanted = line.text.trim();
+    let same = runs.iter().filter(|r| r.text.trim() == wanted);
+    match line.anchor {
+        None => same.into_iter().next(),
+        Some(a) => same.min_by(|r, s| {
+            let d = |t: &pdf_manip::text_run::TextRun| (t.x - a.x).abs() + (t.y - a.y).abs();
+            d(r).partial_cmp(&d(s)).unwrap_or(std::cmp::Ordering::Equal)
+        }),
+    }
+}
+
+/// The lines `flowing` was broken into, read back from the runs of the page
+/// after a reflow: from the first line's position downwards, in the same
+/// column, at the same size, taking only runs that continue `flowing` word
+/// for word. `None` when the runs do not add up to exactly `flowing`; the
+/// reflow is then not understood well enough to build on.
+fn wrapped_lines_from(
+    runs: &[pdf_manip::text_run::TextRun],
+    first: (f64, f64),
+    font_size: f64,
+    flowing: &str,
+) -> Option<Vec<String>> {
+    let mut candidates: Vec<&pdf_manip::text_run::TextRun> = runs
+        .iter()
+        .filter(|r| {
+            !r.text.trim().is_empty()
+                && (r.x - first.0).abs() <= 1.0
+                && r.y <= first.1 + 0.5
+                && (r.font_size - font_size).abs() <= font_size * 0.05
+        })
+        .collect();
+    candidates.sort_by(|a, b| b.y.partial_cmp(&a.y).unwrap_or(std::cmp::Ordering::Equal));
+    let mut taken: Vec<String> = Vec::new();
+    let mut so_far = String::new();
+    for run in candidates {
+        let text = run.text.split_whitespace().collect::<Vec<_>>().join(" ");
+        let next = if so_far.is_empty() { text.clone() } else { format!("{so_far} {text}") };
+        if next == flowing {
+            taken.push(text);
+            return Some(taken);
+        }
+        if flowing.starts_with(&format!("{next} ")) {
+            so_far = next;
+            taken.push(text);
+        }
+    }
+    None
+}
+
+/// The whole text into the first line with the SDK's reflow, every other
+/// line emptied: the reflowed text takes their place at the SDK's own line
+/// advance.
+fn reflow_in_first_line(line_count: usize, flowing: &str) -> Vec<(String, pdf_manip::text_edit::FitPolicy)> {
+    use pdf_manip::text_edit::FitPolicy;
+    (0..line_count)
+        .map(|i| if i == 0 { (flowing.to_string(), FitPolicy::ReflowInBounds) } else { (String::new(), FitPolicy::Exact) })
+        .collect()
+}
+
+/// Put the broken lines into the original lines, in order. Fewer lines than
+/// the paragraph had: the rest are emptied. More: the last original line takes
+/// all the remaining text and the SDK reflows it downwards.
+fn texts_per_original_line(
+    original: usize,
+    wrapped: Vec<String>,
+) -> Vec<(String, pdf_manip::text_edit::FitPolicy)> {
+    use pdf_manip::text_edit::FitPolicy;
+    (0..original)
+        .map(|i| match wrapped.get(i) {
+            None => (String::new(), FitPolicy::Exact),
+            Some(_) if i + 1 == original && wrapped.len() > original => {
+                (wrapped[i..].join(" "), FitPolicy::ReflowInBounds)
+            }
+            Some(line) => (line.clone(), FitPolicy::Exact),
+        })
+        .collect()
+}
+
+/// Stage one replacement per paragraph line and commit them as one
+/// transaction (all or nothing). The refusal is the result to hand back.
+// The refusal is the finished answer for the caller, not an error to bubble up,
+// and this runs once per paragraph edit: boxing it would only add a layer.
+#[allow(clippy::result_large_err)]
+fn stage_paragraph(
+    doc: &mut lopdf::Document,
+    page_num: u32,
+    lines: &[&ParagraphLine],
+    texts: &[(String, pdf_manip::text_edit::FitPolicy)],
+) -> Result<pdf_manip::text_edit::TextReplacementReport, TextReplaceResult> {
+    use pdf_manip::text_edit::{
+        begin_text_edit, CommitPolicy, DocumentRevision, FontFallback, ReplaceOptions, SignaturePolicy,
+        TaggedTextPolicy, TextQuery,
+    };
+    let mut session =
+        begin_text_edit(doc, DocumentRevision::from_source_bytes(&[])).map_err(|e| TextReplaceResult::refused(&e))?;
+    for (i, (line, (text, fit))) in lines.iter().zip(texts).enumerate() {
+        let matches = session
+            .find_text(TextQuery::exact(line.text.trim()).pages(page_num..=page_num))
+            .map_err(|e| TextReplaceResult::refused(&e))?;
+        if matches.is_empty() {
+            return Err(TextReplaceResult::reason("text-not-found-in-content-stream")
+                .with_detail(format!("line {} of the paragraph was not found", i + 1)));
+        }
+        let target = matches[pick_occurrence(&matches, line.anchor)].id.clone();
+        let options = ReplaceOptions {
+            fit: *fit,
+            font_fallback: FontFallback::InjectStandard,
+            commit_policy: CommitPolicy::AllOrNothing,
+            signature_policy: SignaturePolicy::RejectSignedDocuments,
+            tagged_text_policy: TaggedTextPolicy::Reject,
+        };
+        session.stage_replace(&target, text, options).map_err(|e| {
+            TextReplaceResult::refused(&e).with_detail(format!("line {} of the paragraph cannot be edited", i + 1))
+        })?;
+    }
+    session
+        .commit()
+        .map_err(|commit| TextReplaceResult::refused(&commit.error).with_detail_from(&commit.results))
 }
 
 /// Which of the page's matches the user meant.
@@ -1049,6 +1725,23 @@ pub struct PdfAConvertResult {
     pub elapsed_ms: u64,
 }
 
+/// A copy of the document for an OCR run outside the lock (see
+/// [`OpenDocument::ocr_inputs`]).
+pub struct OcrInputs {
+    pub document: lopdf::Document,
+    pub render: Arc<PdfDocument>,
+    pub fingerprint: OcrFingerprint,
+}
+
+/// The document generation an OCR run started from, plus the render source
+/// it read, so a change that landed meanwhile is noticed instead of being
+/// overwritten by the run's copy.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct OcrFingerprint {
+    pdf_doc: usize,
+    generation: u64,
+}
+
 /// Wraps a `pdf_engine::PdfDocument` and a `lopdf::Document` for mutation operations.
 pub struct OpenDocument {
     /// Read-only PDF handle for rendering, text extraction, compliance checking.
@@ -1064,10 +1757,54 @@ pub struct OpenDocument {
     pub raw_bytes: Vec<u8>,
     /// Whether the document has unsaved changes.
     pub modified: bool,
+    /// Bumped by every change to the document, saved or not. An OCR run
+    /// started from one generation may only land on that same generation.
+    generation: u64,
+    /// The bytes of the last revision read from or written to disk, kept only
+    /// when that revision carries a signature (an author signature or Reader
+    /// usage rights). A save then appends an incremental update to exactly
+    /// these bytes, so the ranges the signatures were computed over stay
+    /// byte-for-byte what was signed (J-19, J-64). `None` for an unsigned
+    /// document, which is rewritten whole as before.
+    signed_revision: Option<Vec<u8>>,
+    /// An operation ran whose whole point is that the old content is gone:
+    /// redaction, metadata removal. An incremental update would keep the old
+    /// revision in the file, so the next save must be a full rewrite with the
+    /// unreferenced objects pruned — and a signed document cannot have one
+    /// without losing its signatures, so that save is refused (see
+    /// [`SIGNED_NEEDS_FULL_REWRITE`]).
+    requires_full_rewrite: bool,
+    /// Permissions of an encrypted document for this session.
+    pub access: DocumentAccess,
     /// Content-stream text runs per page, valid until the next mutation.
     runs_cache: PageCache<Vec<pdf_manip::text_run::TextRun>>,
     /// Rendered text spans per page, valid until the next mutation.
     spans_cache: PageCache<Vec<TextSpanInfo>>,
+    /// Undo/redo steps of this document (J-85); see [`Self::edit`].
+    history: crate::history::History<DocSnapshot>,
+    /// Identity of the current content. Every change gets a new one; undo and
+    /// redo put an earlier one back. `modified` is "differs from the saved
+    /// identity", so undoing back to what was saved is clean again.
+    state_id: u64,
+    next_state_id: u64,
+    saved_state_id: Option<u64>,
+    /// Whether this document's scripts may run. Closed until the user allows
+    /// them (script_consent.rs); not part of an undo snapshot.
+    scripts: crate::script_consent::ScriptGuard,
+    /// SHA-256 of the file as opened, the key a script choice is remembered by.
+    content_hash: String,
+}
+
+/// What an undo step restores: the editable document and the session facts
+/// an edit can change (decrypting changes `access`).
+pub(crate) struct DocSnapshot {
+    lopdf_doc: lopdf::Document,
+    access: DocumentAccess,
+    state_id: u64,
+    requires_full_rewrite: bool,
+    /// Only kept for a signed document, and only used when the current state
+    /// has lost it (an edit that replaced the whole document, XFA flatten).
+    signed_revision: Option<Vec<u8>>,
 }
 
 /// Per-page memo, thrown away whole on any mutation.
@@ -1213,7 +1950,8 @@ pub fn convert_doc_to_pdfa(
     let (converted, report) = pdf_manip::pdfa::convert_bytes_with_report(&input, &opts)
         .map_err(|e| format!("PDF/A conversion failed: {e}"))?;
 
-    std::fs::write(output_path, &converted)
+    // Replace, not truncate-and-write: a failure must leave the previous file whole (#925).
+    crate::atomic_file::replace(Path::new(output_path), &converted)
         .map_err(|e| format!("Failed to save PDF/A document: {e}"))?;
 
     let input_bytes = input.len() as u64;
@@ -1278,12 +2016,32 @@ fn write_export_bytes(
     kind: &str,
     empty_hint: &str,
 ) -> Result<(), String> {
+    write_export_bytes_with(bytes, output_path, kind, empty_hint, |file, bytes| {
+        std::io::Write::write_all(file, bytes)
+    })
+}
+
+/// [`write_export_bytes`] with the write itself injectable, so a test can fail it
+/// halfway the way a full disk does.
+fn write_export_bytes_with<W>(
+    bytes: &[u8],
+    output_path: &str,
+    kind: &str,
+    empty_hint: &str,
+    write: W,
+) -> Result<(), String>
+where
+    W: FnOnce(&mut std::fs::File, &[u8]) -> std::io::Result<()>,
+{
     if bytes.is_empty() {
         return Err(format!(
             "Conversion produced an empty {kind} file. {empty_hint}"
         ));
     }
-    std::fs::write(output_path, bytes).map_err(|e| format!("Failed to save {kind} file: {e}"))?;
+    // Replace, not truncate-and-write (#925): `std::fs::write` empties the target first, so a
+    // stall or failure after that left the user a 0-byte file where an export used to be.
+    crate::atomic_file::replace_with_writer(Path::new(output_path), bytes, write)
+        .map_err(|e| format!("Failed to save {kind} file: {e}"))?;
     let written =
         std::fs::metadata(output_path).map_err(|e| format!("Failed to verify {kind} output: {e}"))?;
     if written.len() == 0 {
@@ -1292,21 +2050,321 @@ fn write_export_bytes(
     Ok(())
 }
 
+/// Typed answers of [`OpenDocument::open_bytes_with_password`] and
+/// [`OpenDocument::save_to`] for protected documents. The frontend matches the
+/// leading code and shows its own (translated) text.
+/// The typed refusal for printing a protected document whose permissions do
+/// not allow it.
+pub const PRINT_NOT_PERMITTED: &str = "print-not-permitted: this PDF's permissions do not allow \
+     printing.";
+
+pub const PASSWORD_REQUIRED: &str = "password-required: this PDF is protected with a password.";
+pub const PASSWORD_INCORRECT: &str = "password-incorrect: that password does not open this PDF.";
+pub const DOCUMENT_READ_ONLY: &str = "document-read-only: this PDF's permissions do not allow \
+     changes. Open it with the owner password to save changes.";
+
+/// Whether `password` is the owner password of the document `doc` was
+/// decrypted from. lopdf drops `/Encrypt` from the trailer once it has
+/// decrypted, so the check runs against a probe document holding the
+/// encryption dictionary re-encoded from the state and the original `/ID`.
+fn opened_as_owner(doc: &lopdf::Document, state: &lopdf::EncryptionState, password: &str) -> bool {
+    let Ok(dict) = state.encode() else {
+        return false;
+    };
+    let mut probe = lopdf::Document::new();
+    if let Ok(id) = doc.trailer.get(b"ID") {
+        probe.trailer.set("ID", id.clone());
+    }
+    let encrypt_id = probe.add_object(dict);
+    probe.trailer.set("Encrypt", Object::Reference(encrypt_id));
+    probe.authenticate_owner_password(password).is_ok()
+}
+
+fn document_access(doc: &lopdf::Document, password: &str) -> DocumentAccess {
+    let Some(state) = doc.encryption_state.as_ref() else {
+        return DocumentAccess::unrestricted();
+    };
+    if opened_as_owner(doc, state, password) {
+        return DocumentAccess { encrypted: true, ..DocumentAccess::unrestricted() };
+    }
+    let p = state.permissions();
+    let can_modify = p.contains(lopdf::Permissions::MODIFIABLE);
+    let can_annotate = p.contains(lopdf::Permissions::ANNOTABLE);
+    let can_fill_forms = p.contains(lopdf::Permissions::FILLABLE);
+    DocumentAccess {
+        encrypted: true,
+        owner: false,
+        can_print: p.contains(lopdf::Permissions::PRINTABLE),
+        can_modify,
+        can_copy: p.contains(lopdf::Permissions::COPYABLE),
+        can_annotate,
+        can_fill_forms,
+        can_assemble: p.contains(lopdf::Permissions::ASSEMBLABLE),
+        // Read-only means no change of any kind is permitted. Most protected
+        // government forms forbid content changes and allow filling; those
+        // stay savable, or filling them in would be impossible.
+        read_only: !(can_modify || can_annotate || can_fill_forms),
+    }
+}
+
+/// The typed refusal for an area redaction the engine did not carry out.
+/// See the check in [`OpenDocument::redact_text`]; search redaction locates
+/// text the way the renderer does and is not affected.
+pub const REDACTION_INCOMPLETE: &str = "redaction-incomplete: the text under the box could not \
+     be removed from this page, so nothing was changed. Redact it by searching for the text \
+     instead.";
+
+/// The typed refusal for redacting an XFA form. The page content of an XFA
+/// form is a rendering; the form's own text lives in the XFA packet, which a
+/// page redaction does not reach, so the redacted words would ship anyway
+/// (J-65). Flattening first turns the form into page content the redactor can
+/// remove, and drops the packet.
+pub const XFA_REDACTION_NEEDS_FLATTEN: &str = "xfa-redaction-needs-flatten: this is an XFA \
+     form, which keeps a second copy of its text that a redaction cannot reach. Flatten the \
+     form first, then redact the flattened document.";
+
+/// The typed refusal for saving a signed document over itself when its
+/// changes cannot be appended. The frontend recognises the leading code.
+pub const SIGNED_NEEDS_FULL_REWRITE: &str = "signed-document-needs-full-rewrite: this document is \
+     signed, and the redaction removes content the signature covers. Saving it over the \
+     original would break the signature. Save a copy without the signature instead.";
+
+/// Whether any object is a signature dictionary: a `/ByteRange` beside a
+/// `/Contents`. That covers author signatures, document timestamps and the
+/// `/UR3` usage-rights signature alike — all of them are broken by a rewrite.
+fn carries_signature(doc: &lopdf::Document) -> bool {
+    doc.objects.values().any(|obj| match obj {
+        Object::Dictionary(d) => d.has(b"ByteRange") && d.has(b"Contents"),
+        _ => false,
+    })
+}
+
+/// Mark every string in `object` (dictionary values, arrays and stream
+/// dictionaries included) as hexadecimal, so its written length depends only
+/// on its byte count.
+fn hex_encode_strings(object: &mut Object) {
+    match object {
+        Object::String(_, format) => *format = lopdf::StringFormat::Hexadecimal,
+        Object::Array(items) => items.iter_mut().for_each(hex_encode_strings),
+        Object::Dictionary(dict) => dict.iter_mut().for_each(|(_, v)| hex_encode_strings(v)),
+        Object::Stream(stream) => stream.dict.iter_mut().for_each(|(_, v)| hex_encode_strings(v)),
+        _ => {}
+    }
+}
+
+/// A stable lower-case name for a block kind; the enum is non-exhaustive.
+fn block_kind_name(kind: &pdf_engine::BlockKind) -> &'static str {
+    use pdf_engine::BlockKind as K;
+    match kind {
+        K::Paragraph => "paragraph",
+        K::Heading { .. } => "heading",
+        _ => "other",
+    }
+}
+
+/// Page-tree attributes a page may inherit from its ancestors (ISO 32000-2
+/// §7.7.3.4). Moving a page to a new parent must take them along.
+const INHERITABLE_PAGE_KEYS: [&[u8]; 4] = [b"Resources", b"MediaBox", b"CropBox", b"Rotate"];
+
+/// Put the pages in `new_order` (0-based indices, a permutation of all pages)
+/// under the root `/Pages` node, in that order.
+fn reorder_page_tree(doc: &mut lopdf::Document, new_order: &[u32]) -> Result<(), String> {
+    let pages = doc.get_pages();
+    let count = pages.len();
+    let mut seen = vec![false; count];
+    if new_order.len() != count
+        || new_order.iter().any(|&i| (i as usize) >= count || std::mem::replace(&mut seen[i as usize], true))
+    {
+        return Err(format!(
+            "Failed to reorder pages: the new order must name each of the {count} pages once"
+        ));
+    }
+    let ids: Vec<ObjectId> = pages.values().copied().collect();
+    let root_pages = doc
+        .catalog()
+        .and_then(|c| c.get(b"Pages"))
+        .and_then(Object::as_reference)
+        .map_err(|e| format!("Failed to reorder pages: no page tree ({e})"))?;
+
+    for &id in &ids {
+        // Resolve inherited attributes before the page leaves its parent.
+        let mut inherited: Vec<(&[u8], Object)> = Vec::new();
+        for key in INHERITABLE_PAGE_KEYS {
+            let own = doc.get_dictionary(id).map(|d| d.has(key)).unwrap_or(false);
+            if own {
+                continue;
+            }
+            let mut parent = doc.get_dictionary(id).ok().and_then(|d| d.get(b"Parent").ok()).and_then(|o| o.as_reference().ok());
+            let mut guard = 0;
+            while let Some(pid) = parent {
+                guard += 1;
+                if guard > 64 {
+                    break;
+                }
+                let Ok(node) = doc.get_dictionary(pid) else { break };
+                if let Ok(v) = node.get(key) {
+                    inherited.push((key, v.clone()));
+                    break;
+                }
+                parent = node.get(b"Parent").ok().and_then(|o| o.as_reference().ok());
+            }
+        }
+        let page = doc
+            .get_dictionary_mut(id)
+            .map_err(|e| format!("Failed to reorder pages: {e}"))?;
+        for (key, value) in inherited {
+            page.set(key, value);
+        }
+        page.set("Parent", Object::Reference(root_pages));
+    }
+
+    let kids: Vec<Object> = new_order.iter().map(|&i| Object::Reference(ids[i as usize])).collect();
+    let root = doc
+        .get_dictionary_mut(root_pages)
+        .map_err(|e| format!("Failed to reorder pages: {e}"))?;
+    root.set("Kids", Object::Array(kids));
+    root.set("Count", Object::Integer(count as i64));
+    Ok(())
+}
+
+
+/// Append the difference between `base` (the signed bytes on disk) and
+/// `current` as an incremental update (ISO 32000-2 §7.5.6).
+///
+/// Every object of `current` that `base` does not hold identically is written
+/// after the old `%%EOF`; nothing before it changes, so each signature's
+/// `/ByteRange` still covers exactly the bytes that were signed. Objects that
+/// were deleted are simply no longer referenced from the new revision.
+fn incremental_update(base: &[u8], current: &lopdf::Document) -> Result<Vec<u8>, String> {
+    let prev = lopdf::Document::load_mem(base)
+        .map_err(|e| format!("Failed to save PDF: could not re-read the signed revision: {e}"))?;
+    let mut inc = lopdf::IncrementalDocument::create_from(base.to_vec(), prev);
+    let changed: Vec<(ObjectId, Object)> = current
+        .objects
+        .iter()
+        .filter(|(id, obj)| inc.get_prev_documents().objects.get(*id) != Some(*obj))
+        .map(|(id, obj)| (*id, obj.clone()))
+        .collect();
+    for (id, obj) in changed {
+        inc.new_document.objects.insert(id, obj);
+    }
+    for key in [b"Root".as_ref(), b"Info".as_ref()] {
+        if let Ok(value) = current.trailer.get(key) {
+            inc.new_document.trailer.set(key, value.clone());
+        }
+    }
+    inc.new_document.max_id = inc.new_document.max_id.max(current.max_id);
+    let mut out = Vec::with_capacity(base.len() + 4096);
+    inc.save_to(&mut out)
+        .map_err(|e| format!("Failed to save PDF: could not append the incremental update: {e}"))?;
+    Ok(out)
+}
+
+/// Remove every signature from the document: the signature fields' values,
+/// the catalog's `/Perms` (usage rights, DocMDP) and the AcroForm
+/// `/SigFlags`. The dictionaries themselves become unreferenced and are pruned
+/// by the full rewrite that follows.
+fn strip_signatures(doc: &mut lopdf::Document) {
+    let ids: Vec<ObjectId> = doc.objects.keys().copied().collect();
+    for id in ids {
+        let Ok(Object::Dictionary(dict)) = doc.get_object_mut(id) else {
+            continue;
+        };
+        let is_sig_field = dict
+            .get(b"FT")
+            .ok()
+            .and_then(|v| v.as_name().ok())
+            .is_some_and(|n| n == b"Sig");
+        if is_sig_field {
+            dict.remove(b"V");
+        }
+        if dict.has(b"Fields") {
+            dict.remove(b"SigFlags");
+        }
+        let is_catalog = dict
+            .get(b"Type")
+            .ok()
+            .and_then(|v| v.as_name().ok())
+            .is_some_and(|n| n == b"Catalog");
+        if is_catalog {
+            dict.remove(b"Perms");
+        }
+    }
+}
+
 impl OpenDocument {
     pub fn open(path: &str) -> Result<Self, String> {
-        let raw_bytes = std::fs::read(path).map_err(|e| format!("Failed to read file: {e}"))?;
-        Self::open_bytes(raw_bytes)
+        Self::open_with_password(path, None)
     }
 
     pub fn open_bytes(bytes: Vec<u8>) -> Result<Self, String> {
-        let pdf_doc = Arc::new(
-            PdfDocument::open(bytes.clone()).map_err(|e| format!("Failed to parse PDF: {e}"))?,
-        );
+        Self::open_bytes_with_password(bytes, None)
+    }
 
-        let lopdf_doc = lopdf::Document::load_mem(&bytes)
-            .map_err(|e| format!("Failed to load PDF for editing: {e}"))?;
+    /// Open a document that may be password-protected.
+    ///
+    /// A document that needs a user password answers [`PASSWORD_REQUIRED`]
+    /// when none is given and [`PASSWORD_INCORRECT`] when the one given does
+    /// not open it, so the app can ask, and ask again, instead of showing a
+    /// parser error. The password is used and dropped; it is never stored.
+    pub fn open_with_password(path: &str, password: Option<&str>) -> Result<Self, String> {
+        Self::open_checked(path, password, &OpenLimits::default()).map_err(|e| e.to_string())
+    }
+
+    pub fn open_bytes_with_password(bytes: Vec<u8>, password: Option<&str>) -> Result<Self, String> {
+        Self::open_bytes_checked(bytes, password, &OpenLimits::default()).map_err(|e| e.to_string())
+    }
+
+    /// [`Self::open_with_password`], answering why it failed as an
+    /// [`OpenError`] the app can explain (J-17), and refusing a file beyond
+    /// `limits` before it is read (J-16).
+    pub fn open_checked(path: &str, password: Option<&str>, limits: &OpenLimits) -> Result<Self, OpenError> {
+        let raw_bytes = read_within_limits(path, limits)?;
+        Self::open_bytes_checked(raw_bytes, password, limits).map_err(|e| e.scrubbed(path))
+    }
+
+    pub fn open_bytes_checked(
+        bytes: Vec<u8>,
+        password: Option<&str>,
+        limits: &OpenLimits,
+    ) -> Result<Self, OpenError> {
+        if bytes.is_empty() {
+            return Err(OpenError::new(OpenErrorCode::Empty, "the file is 0 bytes"));
+        }
+        if bytes.len() as u64 > limits.max_bytes {
+            return Err(OpenError::new(
+                OpenErrorCode::TooLarge,
+                format!("the file is {} bytes; the limit is {}", bytes.len(), limits.max_bytes),
+            ));
+        }
+        let password = password.filter(|p| !p.is_empty());
+        let parsed = match password {
+            None => PdfDocument::open(bytes.clone()),
+            Some(pw) => PdfDocument::open_with_password(bytes.clone(), pw),
+        };
+        let pdf_doc = Arc::new(parsed.map_err(|e| classify_engine_error(&e, password.is_some(), &bytes))?);
+        // Checked before the editing parser, which loads every object.
+        let pages = pdf_doc.page_count();
+        if pages > limits.max_pages {
+            return Err(OpenError::new(
+                OpenErrorCode::TooManyPages,
+                format!("the document has {pages} pages; the limit is {}", limits.max_pages),
+            ));
+        }
+
+        let lopdf_doc = match password {
+            None => lopdf::Document::load_mem(&bytes),
+            Some(pw) => lopdf::Document::load_mem_with_options(&bytes, lopdf::LoadOptions::with_password(pw)),
+        }
+        .map_err(|e| classify_lopdf_error(&e))?;
+        let access = document_access(&lopdf_doc, password.unwrap_or(""));
 
         let render_doc = Self::make_render_doc(&pdf_doc);
+        let signed_revision = carries_signature(&lopdf_doc).then(|| bytes.clone());
+        let content_hash = {
+            use sha2::{Digest, Sha256};
+            Sha256::digest(&bytes).iter().map(|b| format!("{b:02x}")).collect::<String>()
+        };
 
         Ok(Self {
             pdf_doc,
@@ -1314,9 +2372,220 @@ impl OpenDocument {
             lopdf_doc,
             raw_bytes: bytes,
             modified: false,
+            generation: 0,
+            signed_revision,
+            requires_full_rewrite: false,
+            access,
             runs_cache: PageCache::default(),
             spans_cache: PageCache::default(),
+            history: crate::history::History::default(),
+            state_id: 0,
+            next_state_id: 0,
+            saved_state_id: Some(0),
+            scripts: crate::script_consent::ScriptGuard::closed(),
+            content_hash,
         })
+    }
+
+    /// What the document's scripts are and whether they may run. Reads the
+    /// document; runs nothing.
+    pub fn form_scripts_status(&self) -> crate::script_consent::FormScriptsStatus {
+        let s = crate::script_consent::scan_scripts(&self.lopdf_doc);
+        crate::script_consent::FormScriptsStatus {
+            javascript: s.javascript,
+            formcalc: s.formcalc,
+            acroform: s.acroform,
+            total: s.total(),
+            allowed: self.scripts.is_open(),
+            content_hash: self.content_hash.clone(),
+        }
+    }
+
+    /// Give or take back the permission to run this document's scripts. On a
+    /// grant the document's initial scripts run once (see
+    /// [`Self::run_granted_scripts`]); a refusal changes nothing in the file.
+    pub fn set_scripts_allowed(
+        &mut self,
+        allowed: bool,
+    ) -> Result<crate::script_consent::FormScriptsRunReport, String> {
+        if !allowed {
+            self.scripts.revoke();
+            return Ok(crate::script_consent::FormScriptsRunReport::default());
+        }
+        let was_open = self.scripts.is_open();
+        self.scripts.grant();
+        if was_open {
+            return Ok(crate::script_consent::FormScriptsRunReport::default());
+        }
+        self.run_granted_scripts()
+    }
+
+    /// The scripts that run once, the moment permission is given: the form's
+    /// initialize / docReady / calculate events. Every engine entry that
+    /// executes a script is called from behind `self.scripts` (see
+    /// `script_entry_points_sit_behind_the_guard`).
+    ///
+    /// Here: the XFA open lifecycle (docReady, calculate) runs once for an XFA
+    /// form, and the AcroForm calculations run once for any other, so a total the
+    /// file stores stale is recomputed the moment the user agrees.
+    fn run_granted_scripts(&mut self) -> Result<crate::script_consent::FormScriptsRunReport, String> {
+        #[cfg(feature = "xfa-interactive")]
+        {
+            if pdf_engine::xfa::has_xfa(&self.pdf_doc) {
+                let mut buf = Vec::new();
+                self.lopdf_doc
+                    .save_to(&mut buf)
+                    .map_err(|e| format!("Could not serialize the XFA document: {e}"))?;
+                let values = |s: &pdf_engine::xfa::XfaSession| -> Vec<(String, String)> {
+                    s.fields().iter().map(XfaFieldDto::from).map(|f| (f.name, f.value)).collect()
+                };
+                let stored = pdf_engine::xfa::XfaSession::open(&buf)
+                    .map_err(|e| format!("The XFA form could not be opened: {e}"))?;
+                let before = values(&stored);
+                // The guard is open: this is the interactive open.
+                let session = self.xfa_session()?;
+                let after = values(&session);
+                // A script that hit its time limit may already have written a
+                // value; the engine keeps those writes. They are not a result the
+                // user asked for, so a timed-out open leaves the document as it
+                // was and opening a form then closing it does not offer to save.
+                let timed_out = xfa_script_errors(&session).iter().any(|e| e.kind == "timeout");
+                let fields_changed = if timed_out {
+                    0
+                } else {
+                    before.iter().zip(&after).filter(|(b, a)| b != a).count()
+                };
+                if fields_changed > 0 {
+                    session
+                        .write_into_document(&mut self.lopdf_doc)
+                        .map_err(|e| format!("Could not write the XFA value: {e}"))?;
+                    self.sync_after_mutation()?;
+                }
+                return Ok(crate::script_consent::FormScriptsRunReport { ran: true, fields_changed });
+            }
+        }
+        // An AcroForm: its calculations run once over the form.
+        let report = self.recalculate_forms();
+        for failure in &report.failed {
+            crate::applog(&format!(
+                "form calculation failed for '{}': {}",
+                failure.name, failure.message
+            ));
+        }
+        let fields_changed = report.updated.len();
+        if fields_changed > 0 {
+            self.sync_after_mutation()?;
+        }
+        Ok(crate::script_consent::FormScriptsRunReport { ran: true, fields_changed })
+    }
+
+    /// The document as a save would write it now, for the recovery copy
+    /// (`recovery.rs`): appended to the signed revision when signed, encrypted
+    /// with its own state when protected. Nothing is written and nothing is
+    /// marked saved.
+    pub fn recovery_bytes(&mut self) -> Result<Vec<u8>, String> {
+        match (&self.signed_revision, self.requires_full_rewrite) {
+            (Some(base), false) => incremental_update(base, &self.lopdf_doc),
+            _ => self.serialize_full(),
+        }
+    }
+
+    /// The document as it is now, unsaved changes included, as the bytes of a
+    /// PDF to hand to the system's print path (J-34).
+    ///
+    /// Until 1.0.1 Print called `window.print()`, which prints the webview —
+    /// the toolbar and the canvas, not the document — or, in the old shell,
+    /// opened the file on disk in another viewer, without the changes made
+    /// since the last save. An XFA form prints as it is shown: flattened.
+    /// The copy is plaintext; the caller keeps it in the app's own cache.
+    pub fn print_copy(&self) -> Result<Vec<u8>, String> {
+        if self.access.encrypted && !self.access.owner && !self.access.can_print {
+            return Err(PRINT_NOT_PERMITTED.to_string());
+        }
+        if pdf_engine::xfa::has_xfa(&self.pdf_doc) {
+            return pdf_engine::xfa::flatten(&self.pdf_doc)
+                .map_err(|e| format!("Failed to prepare the form for printing: {e}"));
+        }
+        let mut copy = self.lopdf_doc.clone();
+        copy.encryption_state = None;
+        let mut bytes = Vec::new();
+        copy.save_to(&mut bytes)
+            .map_err(|e| format!("Failed to prepare the document for printing: {e}"))?;
+        Ok(bytes)
+    }
+
+    /// What an OCR run works on, taken under the document lock so the run
+    /// itself can go without it: a copy of the editable document, the render
+    /// source, and a fingerprint to check on the way back that nothing else
+    /// changed the document meanwhile (J-60).
+    ///
+    /// Refused for a signed document -- a text layer changes the page content
+    /// the signature covers -- and for one whose permissions forbid changes.
+    pub fn ocr_inputs(&self) -> Result<OcrInputs, String> {
+        if self.is_signed() {
+            return Err(crate::ocr::ERR_SIGNED.to_string());
+        }
+        if self.access.encrypted && !self.access.owner && !self.access.can_modify {
+            return Err(crate::ocr::ERR_NOT_PERMITTED.to_string());
+        }
+        Ok(OcrInputs {
+            document: self.lopdf_doc.clone(),
+            render: Arc::clone(&self.pdf_doc),
+            fingerprint: self.ocr_fingerprint(),
+        })
+    }
+
+    /// Names this state of this document: it changes with every edit and with
+    /// every reload. A cached result made from the document is valid only for
+    /// the key it was made under.
+    pub fn revision_key(&self) -> (usize, u64) {
+        (Arc::as_ptr(&self.pdf_doc) as usize, self.generation)
+    }
+
+    fn ocr_fingerprint(&self) -> OcrFingerprint {
+        OcrFingerprint {
+            pdf_doc: Arc::as_ptr(&self.pdf_doc) as usize,
+            generation: self.generation,
+        }
+    }
+
+    /// Put the document an OCR run produced in place of the current one, if
+    /// the current one is still the one the run started from. The text layer
+    /// is then part of the document: the next save writes it.
+    pub fn apply_ocr_result(
+        &mut self,
+        document: lopdf::Document,
+        fingerprint: OcrFingerprint,
+    ) -> Result<(), String> {
+        if self.ocr_fingerprint() != fingerprint {
+            return Err(crate::ocr::ERR_CHANGED.to_string());
+        }
+        self.lopdf_doc = document;
+        self.sync_after_mutation()
+    }
+
+    /// Recognise the scanned pages among `pages` (1-based; empty is all) with
+    /// `engine` and add the text layer, in one call. The app splits this in
+    /// two around the lock (see `ocr_inputs`); tests and anything that already
+    /// owns the document use this.
+    pub fn add_ocr_text_layer<E: pdf_ocr::OcrEngine>(
+        &mut self,
+        engine: &E,
+        pages: &[u32],
+        language: &str,
+    ) -> Result<crate::ocr::OcrTextLayerReport, String> {
+        let OcrInputs { mut document, render, fingerprint } = self.ocr_inputs()?;
+        let report = crate::ocr::add_text_layer(&mut document, &render, engine, pages, language, &|_, _| {})?;
+        if report.pages_recognised > 0 {
+            self.apply_ocr_result(document, fingerprint)?;
+        }
+        Ok(report)
+    }
+
+    /// Whether the revision on disk carries a signature, so that a save
+    /// appends to it instead of rewriting it.
+    pub fn is_signed(&self) -> bool {
+        self.signed_revision.is_some()
     }
 
     /// Build the render source for a freshly parsed document: XFA documents are
@@ -1358,14 +2627,19 @@ impl OpenDocument {
 
     pub fn flatten_xfa(&mut self) -> Result<(), String> {
         if !pdf_engine::xfa::has_xfa(&self.pdf_doc) {
-            return Err("Dit document bevat geen actieve XFA-template om om te zetten.".to_string());
+            return Err("This document has no active XFA template to convert.".to_string());
         }
 
         let flattened = pdf_engine::xfa::flatten(&self.pdf_doc)
-            .map_err(|e| format!("XFA omzetten naar statische PDF is mislukt: {e}"))?;
+            .map_err(|e| format!("Converting XFA to a static PDF failed: {e}"))?;
         let mut replacement = Self::open_bytes(flattened)?;
-        replacement.modified = true;
+        // The flattened document continues this one's session: its history,
+        // so the flatten itself can be undone, and its identities.
+        replacement.history = std::mem::take(&mut self.history);
+        replacement.next_state_id = self.next_state_id;
+        replacement.saved_state_id = self.saved_state_id;
         *self = replacement;
+        self.mark_mutated();
         Ok(())
     }
 
@@ -1392,9 +2666,29 @@ impl OpenDocument {
         let mut buf = Vec::new();
         self.lopdf_doc
             .save_to(&mut buf)
-            .map_err(|e| format!("Kon XFA-document niet serialiseren: {e}"))?;
-        pdf_engine::xfa::XfaSession::open(&buf)
-            .map_err(|e| format!("XFA-formulier kon niet worden geopend: {e}"))
+            .map_err(|e| format!("Could not serialize the XFA document: {e}"))?;
+        // With the commit loop compiled in, open through the interactive
+        // lifecycle (docReady, calculate) so a reopened form shows its
+        // calculated totals the way a viewer does. A script's result is
+        // recomputed on open, not stored: only the typed values are in the
+        // datasets packet.
+        //
+        // The lifecycle scripts are the document's code, so they run only once
+        // the user has allowed them (script_consent.rs): until then the form
+        // opens with its stored values, as in a build without the loop.
+        #[cfg(feature = "xfa-interactive")]
+        let session = if self
+            .scripts
+            .check(crate::script_consent::ScriptKind::XfaJavaScript)
+            .is_ok()
+        {
+            pdf_engine::xfa::XfaSession::open_interactive(&buf)
+        } else {
+            pdf_engine::xfa::XfaSession::open(&buf)
+        };
+        #[cfg(not(feature = "xfa-interactive"))]
+        let session = pdf_engine::xfa::XfaSession::open(&buf);
+        session.map_err(|e| format!("The XFA form could not be opened: {e}"))
     }
 
     /// The XFA form model: layout page count plus one entry per logical field
@@ -1405,6 +2699,8 @@ impl OpenDocument {
         Ok(XfaFormModelDto {
             page_count: session.page_count(),
             fields: session.fields().iter().map(XfaFieldDto::from).collect(),
+            unsupported_scripts: xfa_unsupported_scripts(&session),
+            script_errors: xfa_script_errors(&session),
         })
     }
 
@@ -1418,11 +2714,11 @@ impl OpenDocument {
         let (name, value) = xfa_request_parts(request);
         session
             .set_value(name, value)
-            .map_err(|e| format!("Kon XFA-veld '{name}' niet invullen: {e}"))?;
+            .map_err(|e| xfa_commit_error(name, &e))?;
         session
             .write_into_document(&mut self.lopdf_doc)
-            .map_err(|e| format!("Kon XFA-waarde niet wegschrijven: {e}"))?;
-        self.modified = true;
+            .map_err(|e| format!("Could not write the XFA value: {e}"))?;
+        self.mark_mutated();
         Ok(())
     }
 
@@ -1440,21 +2736,30 @@ impl OpenDocument {
         &mut self,
         request: &XfaWriteRequest,
     ) -> Result<XfaCommitResultDto, String> {
+        // The commit loop executes the form's change/click/calculate scripts.
+        // Without the user's permission the value is written statically, the
+        // same as a build without the loop.
         #[cfg(feature = "xfa-interactive")]
+        if self
+            .scripts
+            .check(crate::script_consent::ScriptKind::XfaJavaScript)
+            .is_ok()
         {
             let mut session = self.xfa_session()?;
             let (name, value) = xfa_request_parts(request);
             let outcome = session
                 .commit_value(name, value)
-                .map_err(|e| format!("Kon XFA-veld '{name}' niet interactief vastleggen: {e}"))?;
+                .map_err(|e| xfa_commit_error(name, &e))?;
             session
                 .write_into_document(&mut self.lopdf_doc)
-                .map_err(|e| format!("Kon XFA-waarde niet wegschrijven: {e}"))?;
+                .map_err(|e| format!("Could not write the XFA value: {e}"))?;
             // Snapshot the post-commit model (revealed/hidden fields, new
             // geometry) before the session is dropped.
             let model = XfaFormModelDto {
                 page_count: session.page_count(),
                 fields: session.fields().iter().map(XfaFieldDto::from).collect(),
+                unsupported_scripts: xfa_unsupported_scripts(&session),
+            script_errors: xfa_script_errors(&session),
             };
             let presence_changes = outcome
                 .presence_changes
@@ -1468,7 +2773,7 @@ impl OpenDocument {
             // Re-layout changed the document: re-parse + re-flatten so the
             // rendered pages reflect the new datasets and page count.
             self.sync_after_mutation()?;
-            Ok(XfaCommitResultDto {
+            return Ok(XfaCommitResultDto {
                 raw_value: outcome.set.raw_value,
                 persisted_to_datasets: outcome.set.persisted_to_datasets,
                 interactive: outcome.interactive,
@@ -1477,25 +2782,27 @@ impl OpenDocument {
                 page_count_after: outcome.page_count_after,
                 presence_changes,
                 model,
-            })
+            });
         }
-        #[cfg(not(feature = "xfa-interactive"))]
+        // Static value write, no scripts, no reflow: a build without the
+        // commit loop, or a document whose scripts the user has not allowed.
         {
-            // Phase 1 fallback: static value write, no scripts, no reflow.
             let mut session = self.xfa_session()?;
             let (name, value) = xfa_request_parts(request);
             let outcome = session
                 .set_value(name, value)
-                .map_err(|e| format!("Kon XFA-veld '{name}' niet invullen: {e}"))?;
+                .map_err(|e| xfa_commit_error(name, &e))?;
             session
                 .write_into_document(&mut self.lopdf_doc)
-                .map_err(|e| format!("Kon XFA-waarde niet wegschrijven: {e}"))?;
+                .map_err(|e| format!("Could not write the XFA value: {e}"))?;
             let page_count = session.page_count();
             let model = XfaFormModelDto {
                 page_count,
                 fields: session.fields().iter().map(XfaFieldDto::from).collect(),
+                unsupported_scripts: xfa_unsupported_scripts(&session),
+            script_errors: xfa_script_errors(&session),
             };
-            self.modified = true;
+            self.mark_mutated();
             Ok(XfaCommitResultDto {
                 raw_value: outcome.raw_value,
                 persisted_to_datasets: outcome.persisted_to_datasets,
@@ -1571,8 +2878,8 @@ impl OpenDocument {
 
         let xfa_notice = if xfa_detected {
             Some(
-                "XFA-document: alle pagina's worden alleen-lezen weergegeven. \
-                 Zet om naar standaard PDF om te bewerken en te zoeken."
+                "XFA document: all pages are shown read-only. \
+                 Convert to a standard PDF to edit and search."
                     .to_string(),
             )
         } else {
@@ -1588,6 +2895,8 @@ impl OpenDocument {
             xfa_detected,
             xfa_notice,
             active_content,
+            access: self.access.clone(),
+            session_id: None,
         }
     }
 
@@ -1780,7 +3089,7 @@ impl OpenDocument {
                     PdfAnnotationType::Highlight => "highlight",
                     PdfAnnotationType::Underline => "underline",
                     PdfAnnotationType::StrikeOut => "strikeout",
-                    PdfAnnotationType::Squiggly => "strikeout",
+                    PdfAnnotationType::Squiggly => "squiggly",
                     PdfAnnotationType::Ink => "ink",
                     PdfAnnotationType::Line => "line",
                     PdfAnnotationType::Square => "square",
@@ -1792,8 +3101,12 @@ impl OpenDocument {
                     PdfAnnotationType::Sound => "sound",
                     PdfAnnotationType::Widget => "widget",
                     PdfAnnotationType::Watermark => "watermark",
-                    PdfAnnotationType::FreeText => "freehand",
-                    _ => "text",
+                    PdfAnnotationType::FreeText => "freetext",
+                    PdfAnnotationType::Redact => "redaction",
+                    PdfAnnotationType::Link => "link",
+                    PdfAnnotationType::Popup => "popup",
+                    PdfAnnotationType::Caret => "caret",
+                    _ => "unknown",
                 };
 
                 let color = annot.color().and_then(|c| match c {
@@ -1802,14 +3115,24 @@ impl OpenDocument {
                     _ => None,
                 });
 
+                let id = format!("annot-p{page_index}-{i}");
+                let name = self
+                    .resolve_annotation_obj_id(&id)
+                    .ok()
+                    .and_then(|obj| self.lopdf_doc.get_object(obj).ok())
+                    .and_then(|o| o.as_dict().ok())
+                    .and_then(|d| d.get(b"Name").ok())
+                    .and_then(|n| n.as_name().ok())
+                    .map(|n| String::from_utf8_lossy(n).into_owned());
                 AnnotationInfo {
-                    id: format!("annot-p{page_index}-{i}"),
+                    id,
                     page_index,
                     annotation_type: annotation_type.to_string(),
                     rect,
                     contents: annot.contents(),
                     author: annot.author(),
                     color,
+                    name,
                 }
             })
             .collect()
@@ -1963,6 +3286,13 @@ impl OpenDocument {
                     lopdf::Object::String(value.as_bytes().to_vec(), lopdf::StringFormat::Literal),
                 );
             }
+            let report = self.recalculate_forms();
+            for failure in &report.failed {
+                crate::applog(&format!(
+                    "form calculation failed for '{}': {}",
+                    failure.name, failure.message
+                ));
+            }
             self.sync_after_mutation()?;
         }
         Ok(())
@@ -1984,11 +3314,11 @@ impl OpenDocument {
     /// Apply a typed form value through the SDK writeback chain (`/V` + `/AS` +
     /// `/AP` + `NeedAppearances` fallback), then re-sync so our own renderer
     /// shows the filled value. This is the single save-pariteit write path.
-    pub fn apply_form_value(&mut self, request: &FormWriteRequest) -> Result<(), String> {
+    pub fn apply_form_value(&mut self, request: &FormWriteRequest) -> Result<FormCalcReport, String> {
         match request {
             FormWriteRequest::MultiChoice { name, values } => {
                 apply_choice_multi(&mut self.lopdf_doc, name, values)
-                    .map_err(|e| format!("Kon veld '{name}' niet invullen: {e}"))?;
+                    .map_err(|e| format!("Could not fill field '{name}': {e}"))?;
             }
             _ => {
                 let (name, write): (&str, WriteValue<'_>) = match request {
@@ -2001,10 +3331,106 @@ impl OpenDocument {
                     FormWriteRequest::MultiChoice { .. } => unreachable!(),
                 };
                 apply_field_value(&mut self.lopdf_doc, name, write)
-                    .map_err(|e| format!("Kon veld '{name}' niet invullen: {e}"))?;
+                    .map_err(|e| format!("Could not fill field '{name}': {e}"))?;
+                if let FormWriteRequest::Text { value, .. } = request {
+                    if value.contains(['\n', '\r']) {
+                        self.store_value_as_utf16(name, value);
+                    }
+                }
             }
         }
-        self.sync_after_mutation()
+        let report = self.recalculate_forms();
+        self.sync_after_mutation()?;
+        Ok(report)
+    }
+
+    /// Run the AcroForm calculate actions (`/AA /C`, in `/CO` order) after a
+    /// field changed, and write the results into `/V` and the appearances.
+    ///
+    /// XFA forms are recalculated by their own session, so a document with an
+    /// XFA packet is left alone. A failing script is reported with its field
+    /// and cause; it never undoes the edit that triggered it.
+    fn recalculate_forms(&mut self) -> FormCalcReport {
+        if pdf_engine::xfa::has_xfa(&self.pdf_doc) {
+            return FormCalcReport::default();
+        }
+        // The calculate actions are the document's code: they run only with
+        // the user's permission (script_consent.rs). Without it the typed
+        // value stays and nothing is calculated.
+        if self
+            .scripts
+            .check(crate::script_consent::ScriptKind::AcroFormAction)
+            .is_err()
+        {
+            return FormCalcReport::default();
+        }
+        match pdf_forms::calculate::recalculate(&mut self.lopdf_doc) {
+            Ok(out) => FormCalcReport {
+                updated: out
+                    .updated
+                    .into_iter()
+                    .map(|u| FormCalcUpdate { name: u.name, value: u.value })
+                    .collect(),
+                failed: out
+                    .failed
+                    .into_iter()
+                    .map(|f| FormCalcFailure { name: f.name, message: f.message })
+                    .collect(),
+            },
+            Err(e) => FormCalcReport {
+                updated: Vec::new(),
+                failed: vec![FormCalcFailure {
+                    name: String::new(),
+                    message: format!("The form could not be recalculated: {e}"),
+                }],
+            },
+        }
+    }
+
+    /// A line break in a PDFDocEncoded text string is lost on the way back:
+    /// the engine's decoder drops the control byte, so "Line one\nLine two"
+    /// read back as "Line oneLine two" after save and reopen (J-56). The same
+    /// text as UTF-16BE (BOM + code units) keeps it.
+    fn store_value_as_utf16(&mut self, name: &str, value: &str) {
+        let Some(tree) = parse_acroform(self.pdf_doc.pdf()) else { return };
+        let Some((num, gen)) = tree.find_by_name(name).and_then(|id| tree.get(id).object_id) else {
+            return;
+        };
+        if let Ok(lopdf::Object::Dictionary(dict)) = self.lopdf_doc.get_object_mut((num as u32, gen as u16)) {
+            if matches!(dict.get(b"V"), Ok(lopdf::Object::String(..))) {
+                let mut bytes = vec![0xFE, 0xFF];
+                bytes.extend(value.encode_utf16().flat_map(u16::to_be_bytes));
+                dict.set("V", lopdf::Object::String(bytes, lopdf::StringFormat::Hexadecimal));
+            }
+        }
+    }
+
+    /// Flatten the AcroForm (J-58): each visible widget's normal appearance —
+    /// the one a viewer shows now — is drawn into its page as a Form XObject,
+    /// then the widgets and the form are removed. Values stay visible and become
+    /// page text; nothing is left to fill. Signature fields are kept: drawing a
+    /// signature into the page would show a signature that no longer verifies.
+    ///
+    /// Returns the number of widgets drawn into the pages.
+    pub fn flatten_acroform(&mut self) -> Result<usize, String> {
+        if self.signed_revision.is_some() {
+            return Err(FLATTEN_SIGNED.to_string());
+        }
+        if pdf_engine::xfa::has_xfa(&self.pdf_doc) {
+            return Err(FLATTEN_XFA.to_string());
+        }
+        if self.get_form_model().is_empty() {
+            return Err(FLATTEN_NO_FORM.to_string());
+        }
+        // A form that asks the viewer to build its appearances has values no
+        // appearance shows yet; build them first, or flatten would drop them.
+        if acroform_need_appearances(&self.lopdf_doc) {
+            pdf_forms::regenerate_appearances(&mut self.lopdf_doc)
+                .map_err(|e| format!("Failed to flatten the form: could not build its appearances: {e}"))?;
+        }
+        let drawn = flatten_widgets_into_pages(&mut self.lopdf_doc)?;
+        self.sync_after_mutation()?;
+        Ok(drawn)
     }
 
     /// All `/Link` annotations carrying a `/URI` action, with page + rect, for
@@ -2252,34 +3678,76 @@ impl OpenDocument {
     }
 
     /// Reorder pages. `new_order` contains 0-based page indices in the desired order.
+    ///
+    /// `pdf_manip::pages::rearrange_pages` (#703) keeps the pages it is given in the
+    /// document's own order (it is `extract_pages`), so every reorder the
+    /// editor sent came back unchanged and the Organise view reverted on the
+    /// next render. The page tree is rewritten here instead: one root `/Pages`
+    /// node whose `/Kids` are the pages in the new order, each page carrying the
+    /// attributes it used to inherit from the intermediate nodes.
     pub fn reorder_pages(&mut self, new_order: &[u32]) -> Result<(), String> {
-        let one_based: Vec<u32> = new_order.iter().map(|&i| i + 1).collect();
-        let reordered = pages::rearrange_pages(&self.lopdf_doc, &one_based)
-            .map_err(|e| format!("Failed to reorder pages: {e}"))?;
-        self.lopdf_doc = reordered;
+        reorder_page_tree(&mut self.lopdf_doc, new_order)?;
         self.sync_after_mutation()
     }
 
     /// Compress/optimize the document and save to output_path.
+    ///
+    /// The optimiser runs on a copy and the bytes are put in place through
+    /// [`crate::atomic_file::replace`], as [`Self::save_to`] does. It used to
+    /// optimise the open document in place and then `lopdf::Document::save`
+    /// straight onto the target: a failed write left a half-written file
+    /// there, and an open document that had changed without the state that
+    /// tracks changes knowing it. The open document takes the compressed
+    /// version only once the file is written.
     pub fn compress(&mut self, output_path: &str) -> Result<CompressResult, String> {
+        let (optimized, result) = self.compress_to(output_path)?;
+        self.lopdf_doc = optimized;
+        self.sync_after_mutation()?;
+        Ok(result)
+    }
+
+    /// Write a compressed copy and leave the open document and the file it
+    /// came from exactly as they were (#724). This is the default in the UI:
+    /// "make a smaller file" must not silently turn the session into the
+    /// compressed version.
+    pub fn compress_copy(&self, output_path: &str) -> Result<CompressResult, String> {
+        self.compress_to(output_path).map(|(_, result)| result)
+    }
+
+    fn compress_to(&self, output_path: &str) -> Result<(lopdf::Document, CompressResult), String> {
         let config = OptimizeConfig::default();
-        let result = pdf_manip::optimize::optimize(&mut self.lopdf_doc, &config)
+        let mut optimized = self.lopdf_doc.clone();
+        let result = pdf_manip::optimize::optimize(&mut optimized, &config)
             .map_err(|e| format!("Failed to compress PDF: {e}"))?;
 
-        self.lopdf_doc
-            .save(output_path)
+        let mut bytes = Vec::new();
+        // As in serialize_full: lopdf writes plaintext, and a compressed copy
+        // of a protected document must keep its passwords.
+        if let Some(state) = optimized.encryption_state.clone() {
+            let mut copy = optimized.clone();
+            copy.encryption_state = None;
+            copy.encrypt(&state)
+                .map_err(|e| format!("Failed to save compressed PDF: could not keep its encryption: {e}"))?;
+            copy.save_to(&mut bytes)
+        } else {
+            optimized.save_to(&mut bytes)
+        }
+        .map_err(|e| format!("Failed to save compressed PDF: {e}"))?;
+        crate::atomic_file::replace(Path::new(output_path), &bytes)
             .map_err(|e| format!("Failed to save compressed PDF: {e}"))?;
 
-        // Sync internal state after optimization
-        self.sync_after_mutation()?;
-
-        Ok(CompressResult {
-            objects_before: result.objects_before,
-            objects_after: result.objects_after,
-            streams_compressed: result.streams_compressed,
-            duplicates_merged: result.duplicates_merged,
-            unused_removed: result.unused_removed,
-        })
+        Ok((
+            optimized,
+            CompressResult {
+                objects_before: result.objects_before,
+                objects_after: result.objects_after,
+                streams_compressed: result.streams_compressed,
+                duplicates_merged: result.duplicates_merged,
+                unused_removed: result.unused_removed,
+                bytes_before: self.raw_bytes.len(),
+                bytes_after: bytes.len(),
+            },
+        ))
     }
 
     /// Add a text watermark to all pages.
@@ -2453,6 +3921,10 @@ impl OpenDocument {
             .contents(text)
             .build(&mut self.lopdf_doc)
             .map_err(|e| format!("Failed to build comment annotation: {e}"))?;
+        // The builder writes UTF-8 bytes, which a reader takes for PDFDocEncoding.
+        if let Ok(Object::Dictionary(dict)) = self.lopdf_doc.get_object_mut(annot_id) {
+            dict.set("Contents", crate::annot_write::text_string(text));
+        }
 
         add_annotation_to_page(&mut self.lopdf_doc, page_index + 1, annot_id)
             .map_err(|e| format!("Failed to add annotation to page: {e}"))?;
@@ -2536,6 +4008,8 @@ impl OpenDocument {
             _ => return Err("Unexpected /Annots value type".to_string()),
         }
 
+        // A deleted picture must not stay in an unsigned file (J-45).
+        self.prune_unreferenced_if_unsigned();
         self.sync_after_mutation()
     }
 
@@ -2607,11 +4081,10 @@ impl OpenDocument {
         if let Ok(lopdf::Object::Dictionary(ref mut dict)) =
             self.lopdf_doc.get_object_mut(annot_obj_id)
         {
-            dict.set(
-                b"Contents",
-                lopdf::Object::String(contents.as_bytes().to_vec(), lopdf::StringFormat::Literal),
-            );
+            dict.set(b"Contents", crate::annot_write::text_string(contents));
         }
+        // A text box draws its contents: the appearance follows the new text.
+        crate::annot_write::refresh_after_edit(&mut self.lopdf_doc, annot_obj_id, None)?;
 
         self.sync_after_mutation()
     }
@@ -2636,6 +4109,8 @@ impl OpenDocument {
                 ]),
             );
         }
+        // /C alone changes nothing a viewer draws: the appearance is redrawn.
+        crate::annot_write::refresh_after_edit(&mut self.lopdf_doc, annot_obj_id, None)?;
         self.sync_after_mutation()
     }
 
@@ -2647,6 +4122,17 @@ impl OpenDocument {
         rect: [f32; 4],
     ) -> Result<(), String> {
         let annot_obj_id = self.resolve_annotation_obj_id(annotation_id)?;
+        if !rect.iter().all(|v| v.is_finite()) || (rect[2] - rect[0]).abs() < 1.0 || (rect[3] - rect[1]).abs() < 1.0 {
+            return Err("The annotation rectangle is too small".to_string());
+        }
+        let old_rect = self
+            .lopdf_doc
+            .get_object(annot_obj_id)
+            .ok()
+            .and_then(|o| o.as_dict().ok())
+            .and_then(parse_rect_f32)
+            .map(|r| [r[0].min(r[2]), r[1].min(r[3]), r[0].max(r[2]), r[1].max(r[3])]);
+        let rect = [rect[0].min(rect[2]), rect[1].min(rect[3]), rect[0].max(rect[2]), rect[1].max(rect[3])];
         if let Ok(lopdf::Object::Dictionary(ref mut dict)) =
             self.lopdf_doc.get_object_mut(annot_obj_id)
         {
@@ -2660,6 +4146,133 @@ impl OpenDocument {
                 ]),
             );
         }
+        // Moving or resizing carries /L, /InkList, /QuadPoints along and redraws.
+        crate::annot_write::refresh_after_edit(&mut self.lopdf_doc, annot_obj_id, old_rect)?;
+        self.sync_after_mutation()
+    }
+
+    /// Add a text box (`/FreeText`) with its own appearance stream (J-44).
+    /// `rect` is `[x1, y1, x2, y2]` in PDF space; `color` is the text colour.
+    pub fn add_free_text_annotation(
+        &mut self,
+        page_index: u32,
+        rect: [f32; 4],
+        text: &str,
+        font_size: f32,
+        color: [f32; 3],
+    ) -> Result<(), String> {
+        let id = crate::annot_write::free_text(&mut self.lopdf_doc, rect, text, font_size, color)?;
+        add_annotation_to_page(&mut self.lopdf_doc, page_index + 1, id)
+            .map_err(|e| format!("Failed to add text box to page: {e}"))?;
+        self.sync_after_mutation()
+    }
+
+    /// Add a standard rubber stamp (`Approved`, `Draft`, `Confidential`, ...)
+    /// with a visible appearance (J-53).
+    pub fn add_stamp_annotation(&mut self, page_index: u32, rect: [f32; 4], name: &str) -> Result<(), String> {
+        let id = crate::annot_write::stamp(&mut self.lopdf_doc, rect, name)?;
+        add_annotation_to_page(&mut self.lopdf_doc, page_index + 1, id)
+            .map_err(|e| format!("Failed to add stamp to page: {e}"))?;
+        self.sync_after_mutation()
+    }
+
+    /// Place a PNG or JPEG image on a page, fitted inside `rect` (J-45). It is
+    /// a stamp annotation with the image as its appearance, so it moves and
+    /// resizes with [`Self::update_annotation_rect`] and can be swapped with
+    /// [`Self::replace_annotation_image`].
+    pub fn add_image_annotation(&mut self, page_index: u32, rect: [f32; 4], image: &[u8]) -> Result<(), String> {
+        let id = crate::annot_write::image_stamp(&mut self.lopdf_doc, rect, image)?;
+        add_annotation_to_page(&mut self.lopdf_doc, page_index + 1, id)
+            .map_err(|e| format!("Failed to add image to page: {e}"))?;
+        self.sync_after_mutation()
+    }
+
+    /// Place a visible signature (J-62): a framed stamp holding the drawn
+    /// strokes (page coordinates inside `rect`) or the typed name, captioned
+    /// "Signed by <signer> · <date>". `date` is `YYYY-MM-DD`.
+    pub fn add_signature_annotation(
+        &mut self,
+        page_index: u32,
+        rect: [f32; 4],
+        signer: &str,
+        date: &str,
+        paths: Option<&[Vec<[f32; 2]>]>,
+        text: Option<&str>,
+    ) -> Result<(), String> {
+        self.add_signature_annotation_with_font(page_index, rect, signer, date, paths, text, None)
+    }
+
+    /// [`Self::add_signature_annotation`] with the typed name set in the
+    /// bundled signature font `font_id` (#725). An unknown id, a font without
+    /// a glyph for a letter or one whose licence forbids embedding is a
+    /// refusal; nothing is drawn in another font instead.
+    #[allow(clippy::too_many_arguments)]
+    pub fn add_signature_annotation_with_font(
+        &mut self,
+        page_index: u32,
+        rect: [f32; 4],
+        signer: &str,
+        date: &str,
+        paths: Option<&[Vec<[f32; 2]>]>,
+        text: Option<&str>,
+        font_id: Option<&str>,
+    ) -> Result<(), String> {
+        let face = match font_id {
+            Some(id) => Some(crate::signature_fonts::load(id).map_err(|e| e.to_string())?),
+            None => None,
+        };
+        self.add_signature_annotation_with_face(page_index, rect, signer, date, paths, text, face.as_ref())
+    }
+
+    /// The typed name set in `face`, subset and embedded in the signature's
+    /// appearance so the file shows it without the font being installed. The
+    /// writer is the one the system font picker uses.
+    #[allow(clippy::too_many_arguments)]
+    pub fn add_signature_annotation_with_face(
+        &mut self,
+        page_index: u32,
+        rect: [f32; 4],
+        signer: &str,
+        date: &str,
+        paths: Option<&[Vec<[f32; 2]>]>,
+        text: Option<&str>,
+        face: Option<&crate::system_fonts::LoadedFace>,
+    ) -> Result<(), String> {
+        let drawn = paths.filter(|p| p.iter().any(|s| !s.is_empty()));
+        let embedded = match (drawn, text, face) {
+            (None, Some(t), Some(face)) if !t.trim().is_empty() => Some(
+                crate::text_font::embed_text_for_appearance(&mut self.lopdf_doc, page_index + 1, t.trim(), face)
+                    .map_err(|e| e.to_string())?,
+            ),
+            _ => None,
+        };
+        let mark = match (drawn, text) {
+            (Some(p), _) => crate::annot_write::SignatureMark::Drawn(p),
+            (_, Some(t)) => match &embedded {
+                Some(e) => crate::annot_write::SignatureMark::TypedEmbedded {
+                    text: t,
+                    font: e.font,
+                    codes: &e.codes,
+                    width_em: e.width_em,
+                },
+                None => crate::annot_write::SignatureMark::Typed(t),
+            },
+            _ => return Err("Draw or type the signature first".to_string()),
+        };
+        let id = crate::annot_write::signature(&mut self.lopdf_doc, rect, signer, date, mark)?;
+        add_annotation_to_page(&mut self.lopdf_doc, page_index + 1, id)
+            .map_err(|e| format!("Failed to add signature to page: {e}"))?;
+        self.sync_after_mutation()
+    }
+
+    /// Swap the image of a placed image for another one.
+    pub fn replace_annotation_image(&mut self, annotation_id: &str, image: &[u8]) -> Result<(), String> {
+        let id = self.resolve_annotation_obj_id(annotation_id)?;
+        crate::annot_write::replace_image(&mut self.lopdf_doc, id, image)?;
+        // The old picture's streams are unreferenced now; an unsigned file must
+        // not keep the picture that was replaced (J-45). A signed one is saved
+        // as an incremental update, which keeps earlier revisions by design.
+        self.prune_unreferenced_if_unsigned();
         self.sync_after_mutation()
     }
 
@@ -2916,7 +4529,7 @@ impl OpenDocument {
         let signed_bytes = sign_pdf(&self.raw_bytes, &signer, &options)
             .map_err(|e| format!("Failed to sign PDF: {e}"))?;
 
-        std::fs::write(output_path, &signed_bytes)
+        crate::atomic_file::replace(Path::new(output_path), &signed_bytes)
             .map_err(|e| format!("Failed to write signed PDF: {e}"))?;
 
         // Reload the signed document as the new active document.
@@ -2927,10 +4540,16 @@ impl OpenDocument {
                 .map_err(|e| format!("Failed to re-parse signed PDF: {e}"))?,
         );
         self.render_doc = Self::make_render_doc(&self.pdf_doc);
+        self.signed_revision = Some(signed_bytes.clone());
+        self.requires_full_rewrite = false;
         self.raw_bytes = signed_bytes;
         self.modified = false;
         // Replaces both documents without going through sync_after_mutation.
         self.invalidate_page_caches();
+        // Signing wrote a new file and made it the open document; the steps
+        // before it belong to the unsigned one. Undo starts again here.
+        self.history.clear();
+        self.mark_saved_fresh();
 
         Ok(())
     }
@@ -3106,27 +4725,54 @@ impl OpenDocument {
         };
 
         let mut output_bytes: Vec<u8> = Vec::new();
-        encrypt::encrypt_and_save(&mut self.lopdf_doc, &config, &mut output_bytes)
+        // encrypt_and_save encrypts the document it is given in place; doing
+        // that to the open document left every later edit and save working on
+        // ciphertext. The copy is what gets encrypted.
+        let mut copy = self.lopdf_doc.clone();
+        copy.encryption_state = None;
+        encrypt::encrypt_and_save(&mut copy, &config, &mut output_bytes)
             .map_err(|e| format!("Failed to encrypt PDF: {e}"))?;
 
-        std::fs::write(output_path, &output_bytes)
+        crate::atomic_file::replace(Path::new(output_path), &output_bytes)
             .map_err(|e| format!("Failed to write encrypted PDF: {e}"))?;
 
         Ok(())
     }
 
-    /// Decrypt the document with the given password.
-    pub fn decrypt(&mut self, password: &str) -> Result<(), String> {
-        if !encrypt::is_encrypted(&self.lopdf_doc) {
-            return Err("Document is not encrypted".to_string());
+    /// What removing the password needs from the user (#726).
+    ///
+    /// Removing protection is an owner operation. A document that was opened
+    /// with the owner password has already proved it, so asking again is noise;
+    /// one opened with only the user password (or none) must be given the owner
+    /// password, which is a different secret from the one that opened it.
+    pub fn password_removal(&self) -> PasswordRemoval {
+        if self.lopdf_doc.encryption_state.is_none() {
+            PasswordRemoval::NotProtected
+        } else if self.access.encrypted && self.access.owner {
+            PasswordRemoval::Ready
+        } else {
+            PasswordRemoval::NeedsOwnerPassword
         }
+    }
 
-        encrypt::decrypt(&mut self.lopdf_doc, password)
-            .map_err(|e| format!("Failed to decrypt PDF: {e}"))?;
-
-        // Remove encryption dictionary so subsequent saves are unencrypted.
-        encrypt::remove_encryption(&mut self.lopdf_doc);
-
+    /// Remove the document's password protection.
+    ///
+    /// The document arrives decrypted (lopdf decrypts on load and keeps the
+    /// state to re-encrypt with on save), so removing the protection means
+    /// proving the owner password and dropping that state, unless the document
+    /// was already opened as owner (see `password_removal`). The check on
+    /// `/Encrypt` this replaced never held after a load, so the command
+    /// always answered "not encrypted".
+    pub fn decrypt(&mut self, password: &str) -> Result<(), String> {
+        let Some(state) = self.lopdf_doc.encryption_state.clone() else {
+            return Err("Document is not encrypted".to_string());
+        };
+        let already_owner = self.password_removal() == PasswordRemoval::Ready;
+        if !already_owner && !opened_as_owner(&self.lopdf_doc, &state, password) {
+            return Err(PASSWORD_INCORRECT.to_string());
+        }
+        self.lopdf_doc.encryption_state = None;
+        self.access = DocumentAccess::unrestricted();
         self.sync_after_mutation()
     }
 
@@ -3143,6 +4789,15 @@ impl OpenDocument {
         if rects.is_empty() {
             return Err("At least one rectangle is required".to_string());
         }
+        self.refuse_redaction_of_xfa()?;
+        // The text the user can see under the boxes, located by the renderer,
+        // which positions text through the full CTM. Taken before, to judge
+        // the result after: see REDACTION_INCOMPLETE.
+        let under_boxes = self.span_texts_under(page_index, rects)?;
+        let backup = self.lopdf_doc.clone();
+        let was_modified = self.modified;
+        let was_full_rewrite = self.requires_full_rewrite;
+        let was_state_id = self.state_id;
 
         let page_num = page_index + 1; // pdf-redact uses 1-based pages
         let mut redactor = Redactor::new();
@@ -3159,7 +4814,29 @@ impl OpenDocument {
             .apply(&mut self.lopdf_doc)
             .map_err(|e| format!("Redaction failed: {e}"))?;
 
+        self.requires_full_rewrite = true;
         self.sync_after_mutation()?;
+
+        // Fail closed. The engine's area filter places text by its text
+        // matrix without the page's `cm`, so on most real pages (any content
+        // drawn under a translated CTM) it removes nothing while drawing the
+        // black box: the text stays in the file, extractable, under a box
+        // that says it is gone. A redaction that removed no operation while
+        // there was text under the box, or after which that text is still
+        // extracted there, is undone and refused.
+        let survivors = self.span_texts_under(page_index, rects)?;
+        let incomplete = !under_boxes.is_empty()
+            && (report.operations_removed == 0
+                || survivors.iter().any(|t| under_boxes.contains(t)));
+        if incomplete {
+            self.lopdf_doc = backup;
+            self.sync_after_mutation()?;
+            self.modified = was_modified;
+            self.requires_full_rewrite = was_full_rewrite;
+            // A refused redaction changed nothing: no undo step for it.
+            self.state_id = was_state_id;
+            return Err(REDACTION_INCOMPLETE.to_string());
+        }
 
         Ok(RedactReport {
             areas_redacted: report.areas_redacted,
@@ -3169,13 +4846,71 @@ impl OpenDocument {
         })
     }
 
+    /// The trimmed text of every span on `page_index` whose box intersects one
+    /// of `rects` (PDF user space, `[x0, y0, x1, y1]` in any corner order).
+    fn span_texts_under(&mut self, page_index: u32, rects: &[[f32; 4]]) -> Result<Vec<String>, String> {
+        let spans = self.extract_page_text_spans(page_index)?;
+        Ok(spans
+            .iter()
+            .filter(|span| {
+                let (sx0, sx1) = (span.x, span.x + span.width);
+                let (sy0, sy1) = (span.y - span.height * 0.25, span.y + span.height * 0.85);
+                rects.iter().any(|r| {
+                    let (rx0, rx1) = (r[0].min(r[2]) as f64, r[0].max(r[2]) as f64);
+                    let (ry0, ry1) = (r[1].min(r[3]) as f64, r[1].max(r[3]) as f64);
+                    sx0 < rx1 && rx0 < sx1 && sy0 < ry1 && ry0 < sy1
+                })
+            })
+            .map(|span| span.text.trim().to_string())
+            .filter(|t| !t.is_empty())
+            .collect())
+    }
+
+    /// See [`XFA_REDACTION_NEEDS_FLATTEN`].
+    fn refuse_redaction_of_xfa(&self) -> Result<(), String> {
+        if pdf_engine::xfa::has_xfa(&self.pdf_doc) {
+            return Err(XFA_REDACTION_NEEDS_FLATTEN.to_string());
+        }
+        Ok(())
+    }
+
     /// Search for text matching `query` and redact all occurrences.
     pub fn redact_search(&mut self, query: &str) -> Result<SearchRedactReport, String> {
+        self.refuse_redaction_of_xfa()?;
+        let backup = self.lopdf_doc.clone();
+        let was_modified = self.modified;
+        let was_full_rewrite = self.requires_full_rewrite;
+        let was_state_id = self.state_id;
         let options = pdf_redact::RedactSearchOptions::default();
         let report = pdf_redact::search_and_redact(&mut self.lopdf_doc, query, &options)
             .map_err(|e| format!("Search redaction failed: {e}"))?;
+        // A note written on the redacted words quotes them; it goes too.
+        crate::redact_notes::drop_notes_quoting(&mut self.lopdf_doc, query);
 
+        self.requires_full_rewrite = true;
         self.sync_after_mutation()?;
+
+        // Fail closed. The engine matches inside one text operator; a term
+        // split across operators (kerning arrays, one show-text per word) is
+        // not found, or found only in part, and the box drawn over the rest
+        // would say the text is gone while it stays extractable. Whatever the
+        // report says, the term must not be in the page text any more.
+        let mut survives = false;
+        for page in 0..self.page_count() as u32 {
+            if self.extract_page_text(page)?.contains(query) {
+                survives = true;
+                break;
+            }
+        }
+        if survives {
+            self.lopdf_doc = backup;
+            self.sync_after_mutation()?;
+            self.modified = was_modified;
+            self.requires_full_rewrite = was_full_rewrite;
+            // A refused redaction changed nothing: no undo step for it.
+            self.state_id = was_state_id;
+            return Err(REDACTION_INCOMPLETE.to_string());
+        }
 
         Ok(SearchRedactReport {
             matches_found: report.matches_found,
@@ -3184,6 +4919,85 @@ impl OpenDocument {
             pages_affected: report.pages_affected,
             metadata_cleaned: report.metadata_cleaned,
         })
+    }
+
+    /// The extracted text of every page, in order. The model runs on this
+    /// outside the document lock, so a slow scan never blocks editing.
+    pub fn page_texts(&self) -> Result<Vec<String>, String> {
+        (0..self.page_count() as u32).map(|p| self.extract_page_text(p)).collect()
+    }
+
+    /// Personal data the validator layer can prove in the document's text
+    /// (IBANs, cards, national IDs, birth dates, e-mail addresses, phone
+    /// numbers), each distinct text once, in reading order. Read-only; nothing
+    /// is marked or removed until [`Self::redact_pii`]. The model-assisted
+    /// scan is `pii_candidates_from_pages` with the model passed in.
+    pub fn detect_pii(&self) -> Result<Vec<PiiCandidate>, String> {
+        pii_candidates_from_pages(&self.page_texts()?, None)
+    }
+
+    /// Redact reviewed candidates that the validator layer itself reports.
+    pub fn redact_pii(&mut self, texts: &[String]) -> Result<PiiRedactReport, String> {
+        self.redact_pii_reviewed(texts, &|t| {
+            let ms = crate::pii::detect(t);
+            ms.len() == 1 && ms[0].start == 0 && ms[0].end == t.len()
+        })
+    }
+
+    /// Redact the reviewed candidates through the search redaction, which
+    /// removes the text from the page content, and check the result: all or
+    /// nothing. Every text must be one the detector itself proposed
+    /// (`is_proposed`; this is not a free-form search), and after the
+    /// redaction none of them may still be extractable, or the document is put
+    /// back as it was.
+    pub fn redact_pii_reviewed(
+        &mut self,
+        texts: &[String],
+        is_proposed: &dyn Fn(&str) -> bool,
+    ) -> Result<PiiRedactReport, String> {
+        if texts.is_empty() {
+            return Err("Select at least one item to redact".to_string());
+        }
+        for t in texts {
+            if t.trim().is_empty() || !is_proposed(t) {
+                return Err(format!("Not a detected item: {t:?}"));
+            }
+        }
+        self.refuse_redaction_of_xfa()?;
+        let backup = self.lopdf_doc.clone();
+        let was_modified = self.modified;
+        let was_full_rewrite = self.requires_full_rewrite;
+        let was_state_id = self.state_id;
+
+        let mut report = PiiRedactReport { texts_redacted: 0, matches_found: 0, operations_removed: 0, pages_affected: 0 };
+        let outcome = (|| -> Result<(), String> {
+            for t in texts {
+                let r = self.redact_search(t)?;
+                if r.matches_found == 0 {
+                    return Err(format!("redaction-incomplete: {t:?} was not found in the page content"));
+                }
+                report.texts_redacted += 1;
+                report.matches_found += r.matches_found;
+                report.operations_removed += r.operations_removed;
+                report.pages_affected = report.pages_affected.max(r.pages_affected);
+            }
+            for page in 0..self.page_count() as u32 {
+                let text = self.extract_page_text(page)?;
+                if texts.iter().any(|t| text.contains(t.as_str())) {
+                    return Err(REDACTION_INCOMPLETE.to_string());
+                }
+            }
+            Ok(())
+        })();
+        if let Err(e) = outcome {
+            self.lopdf_doc = backup;
+            self.sync_after_mutation()?;
+            self.modified = was_modified;
+            self.requires_full_rewrite = was_full_rewrite;
+            self.state_id = was_state_id;
+            return Err(e);
+        }
+        Ok(report)
     }
 
     /// Permanently apply all pending `/Subtype /Redact` annotations.
@@ -3278,6 +5092,26 @@ impl OpenDocument {
                 metadata_cleaned: false,
             });
         }
+        self.refuse_redaction_of_xfa()?;
+
+        // Same fail-closed check as redact_text: what text is under the boxes
+        // now, per page, to judge the result against.
+        let mut boxes_per_page: std::collections::BTreeMap<u32, Vec<[f32; 4]>> =
+            std::collections::BTreeMap::new();
+        for e in &entries {
+            boxes_per_page
+                .entry(e.page_num - 1)
+                .or_default()
+                .push([e.rect[0] as f32, e.rect[1] as f32, e.rect[2] as f32, e.rect[3] as f32]);
+        }
+        let mut under_boxes: Vec<(u32, Vec<String>)> = Vec::new();
+        for (page_index, rects) in &boxes_per_page {
+            under_boxes.push((*page_index, self.span_texts_under(*page_index, rects)?));
+        }
+        let backup = self.lopdf_doc.clone();
+        let was_modified = self.modified;
+        let was_full_rewrite = self.requires_full_rewrite;
+        let was_state_id = self.state_id;
 
         // Step 2 — permanently burn all rectangles into the PDF content.
         let mut redactor = Redactor::new();
@@ -3287,6 +5121,7 @@ impl OpenDocument {
         let report = redactor
             .apply(&mut self.lopdf_doc)
             .map_err(|e| format!("apply_redactions: {e}"))?;
+        self.requires_full_rewrite = true;
 
         // Step 3 — remove Redact annotation objects from all /Annots arrays.
         let redact_ids: std::collections::HashSet<lopdf::ObjectId> =
@@ -3337,6 +5172,22 @@ impl OpenDocument {
         }
 
         self.sync_after_mutation()?;
+
+        let had_text = under_boxes.iter().any(|(_, texts)| !texts.is_empty());
+        let mut survived = false;
+        for (page_index, texts) in &under_boxes {
+            let now = self.span_texts_under(*page_index, &boxes_per_page[page_index])?;
+            survived |= now.iter().any(|t| texts.contains(t));
+        }
+        if had_text && (report.operations_removed == 0 || survived) {
+            self.lopdf_doc = backup;
+            self.sync_after_mutation()?;
+            self.modified = was_modified;
+            self.requires_full_rewrite = was_full_rewrite;
+            // A refused redaction changed nothing: no undo step for it.
+            self.state_id = was_state_id;
+            return Err(REDACTION_INCOMPLETE.to_string());
+        }
 
         Ok(RedactReport {
             areas_redacted: report.areas_redacted,
@@ -3469,8 +5320,23 @@ impl OpenDocument {
             }
         };
 
-        img.save_with_format(output_path, image_format)
-            .map_err(|e| format!("Failed to save image: {e}"))?;
+        // JPEG has no alpha channel, and the encoder refuses an RGBA buffer
+        // outright: every "Export as JPG" failed with "does not support the
+        // color type Rgba8" until this flattened the page onto white first.
+        // tests/exports_keep_their_content.rs exports a JPEG and decodes it.
+        let saved = if image_format == ImageFormat::Jpeg {
+            let mut rgb = image::RgbImage::new(img.width(), img.height());
+            for (dst, src) in rgb.pixels_mut().zip(img.pixels()) {
+                let [r, g, b, a] = src.0;
+                let a = u16::from(a);
+                let over_white = |c: u8| ((u16::from(c) * a + 255 * (255 - a)) / 255) as u8;
+                *dst = image::Rgb([over_white(r), over_white(g), over_white(b)]);
+            }
+            rgb.save_with_format(output_path, image_format)
+        } else {
+            img.save_with_format(output_path, image_format)
+        };
+        saved.map_err(|e| format!("Failed to save image: {e}"))?;
 
         Ok(())
     }
@@ -3689,8 +5555,9 @@ impl OpenDocument {
             }
         }
 
-        self.modified = true;
-        Ok(())
+        // Through the sync, so the metadata and attachment readers (which
+        // read the re-parsed view) see the change at once.
+        self.sync_after_mutation()
     }
 
     /// Remove sensitive metadata from the document.
@@ -3699,9 +5566,14 @@ impl OpenDocument {
     /// `/Info` dictionary and removes the document-level XMP metadata stream
     /// from the document catalog.  Useful before sharing a redacted document.
     pub fn redact_metadata(&mut self) -> Result<(), String> {
-        const FIELDS: &[&[u8]] = &[b"Author", b"Creator", b"Subject", b"Keywords"];
+        const FIELDS: &[&[u8]] = &[
+            b"Author", b"Title", b"Subject", b"Keywords", b"Creator", b"Producer",
+        ];
+        // The old /Info and XMP must not survive in an earlier revision.
+        self.requires_full_rewrite = true;
 
-        // Strip the four fields from the /Info dictionary.
+        // Strip the personal fields from the /Info dictionary. The title goes
+        // too: "Salary review J. Jansen" is as personal as the author (J-66).
         if let Some(lopdf::Object::Reference(info_id)) =
             self.lopdf_doc.trailer.get(b"Info").ok().cloned()
         {
@@ -3841,6 +5713,107 @@ impl OpenDocument {
         }
     }
 
+    /// The extraction engine's blocks on one page (#640), for the editor's
+    /// paragraph grouping. Read-only.
+    pub fn page_text_blocks(&self, page_index: u32) -> Result<Vec<TextBlockDto>, String> {
+        let blocks = self
+            .pdf_doc
+            .extract_page_blocks(page_index as usize, 0)
+            .map_err(|e| format!("Failed to segment page {page_index}: {e}"))?;
+        Ok(blocks
+            .into_iter()
+            .map(|b| TextBlockDto { kind: block_kind_name(&b.kind).to_string(), bbox: b.bbox })
+            .collect())
+    }
+
+    /// Replace a whole paragraph of several lines with `replacement` (J-42).
+    ///
+    /// The SDK edits one text run at a time and can reflow a replacement
+    /// inside the width of the block it sits in (`FitPolicy::ReflowInBounds`,
+    /// Acrobat's text-box behaviour). A paragraph edit is therefore one
+    /// transaction of N staged edits, `AllOrNothing`: if any line cannot be
+    /// found or edited, nothing changes.
+    ///
+    /// The SDK breaks the text into lines; this keeps the lines it breaks in
+    /// the paragraph's own lines (same positions, same line spacing) and only
+    /// hands lines beyond the original count to the SDK's reflow, which adds
+    /// them at the block's measured line spacing. See
+    /// [`Self::planned_paragraph_texts`]. If the breaks cannot be read back,
+    /// the first line takes the whole text and the SDK places every line.
+    ///
+    /// Hard line breaks the user typed are kept as spaces: the reflow decides
+    /// where lines break, inside the paragraph's width.
+    pub fn replace_paragraph(
+        &mut self,
+        page_index: u32,
+        lines: &[ParagraphLine],
+        replacement_text: &str,
+    ) -> Result<TextReplaceResult, String> {
+        let lines: Vec<&ParagraphLine> = lines.iter().filter(|l| !l.text.trim().is_empty()).collect();
+        match lines.len() {
+            0 => return Ok(TextReplaceResult::reason("empty-original-text")),
+            1 => {
+                let only = lines[0];
+                return self.replace_text_span(page_index, &only.text, replacement_text, only.anchor);
+            }
+            _ => {}
+        }
+        let page_num = page_index + 1;
+        let pages = self.lopdf_doc.get_pages();
+        let Some(&page_id) = pages.get(&page_num) else {
+            return Ok(TextReplaceResult::reason("page-not-found"));
+        };
+        if self.lopdf_doc.get_page_contents(page_id).is_empty() {
+            return Ok(TextReplaceResult::reason("no-content-stream"));
+        }
+        let usage_rights = self.has_usage_rights_signature();
+        let flowing: String = replacement_text.split_whitespace().collect::<Vec<_>>().join(" ");
+
+        let texts = self
+            .planned_paragraph_texts(page_num, &lines, &flowing)
+            .unwrap_or_else(|| reflow_in_first_line(lines.len(), &flowing));
+        let report = match stage_paragraph(&mut self.lopdf_doc, page_num, &lines, &texts) {
+            Ok(report) => report,
+            Err(refused) => return Ok(refused),
+        };
+        if report.replacements_applied != lines.len() {
+            return Ok(TextReplaceResult::reason("internal-error").with_detail(format!(
+                "the writer staged {} edits and reported {} applied",
+                lines.len(),
+                report.replacements_applied
+            )));
+        }
+        self.sync_after_mutation()?;
+        Ok(TextReplaceResult::applied(&report, 0, 1, usage_rights))
+    }
+
+    /// One text per paragraph line that keeps the paragraph's own line
+    /// spacing, or `None` when that cannot be worked out (the caller then
+    /// leaves the whole reflow to the SDK).
+    ///
+    /// A run carries no leading, so the SDK reflow used to add lines at a fixed
+    /// 1.2 x font size; it now measures the block's own spacing, but only for
+    /// the lines it adds. The lines the paragraph already has are not the
+    /// SDK's to place, so the SDK's reflow is run on a scratch copy, only to
+    /// learn where it breaks the lines; the real edit then puts each broken line into the original line it replaces, which
+    /// keeps position and spacing by construction. Only lines beyond the
+    /// original count have no line to go to; those are left to the SDK's
+    /// reflow from the last original line, at the block's measured spacing.
+    fn planned_paragraph_texts(
+        &mut self,
+        page_num: u32,
+        lines: &[&ParagraphLine],
+        flowing: &str,
+    ) -> Option<Vec<(String, pdf_manip::text_edit::FitPolicy)>> {
+        let before = self.page_runs(page_num).ok()?;
+        let first = locate_line_run(&before, lines[0])?;
+        let mut scratch = self.lopdf_doc.clone();
+        stage_paragraph(&mut scratch, page_num, lines, &reflow_in_first_line(lines.len(), flowing)).ok()?;
+        let after = pdf_manip::text_run::extract_page_text_runs(&scratch, page_num).ok()?;
+        let wrapped = wrapped_lines_from(&after, (first.x, first.y), first.font_size, flowing)?;
+        Some(texts_per_original_line(lines.len(), wrapped))
+    }
+
     // ── Text formatting (G5) ─────────────────────────────────────────
 
     /// Change the font size and/or fill color of the first content-stream
@@ -3915,22 +5888,226 @@ impl OpenDocument {
         Ok(true)
     }
 
+    // ── Typeface (system fonts) ─────────────────────────────────────
+
+    /// Write the first content-stream run whose text is `original_text` on
+    /// `page_index` (0-based) in the installed face `font_id`, embedding a
+    /// subset of it. Refusals are typed ([`crate::system_fonts::FontRefusal`]):
+    /// a licence that forbids embedding, a face that lacks glyphs, text that is
+    /// not on the page. Nothing is substituted.
+    pub fn set_text_run_font(
+        &mut self,
+        page_index: u32,
+        original_text: &str,
+        font_id: &str,
+    ) -> Result<Result<String, crate::system_fonts::FontRefusal>, String> {
+        use crate::system_fonts::{find_face, FontRefusal};
+        let Some(face) = find_face(font_id) else {
+            return Ok(Err(FontRefusal::FontNotFound { font_id: font_id.to_string() }));
+        };
+        self.set_text_run_font_from_path(page_index, original_text, &face.path, face.index, &face.family)
+    }
+
+    /// [`Self::set_text_run_font`] for face `face_index` of the font file at
+    /// `path`: the licence check, the glyph check and the write.
+    pub fn set_text_run_font_from_path(
+        &mut self,
+        page_index: u32,
+        original_text: &str,
+        path: &Path,
+        face_index: u32,
+        family: &str,
+    ) -> Result<Result<String, crate::system_fonts::FontRefusal>, String> {
+        use crate::system_fonts::{load_face, FontRefusal};
+        if self.access.read_only {
+            return Err(DOCUMENT_READ_ONLY.to_string());
+        }
+        let face = match load_face(path, face_index, family) {
+            Ok(face) => face,
+            Err(refusal) => return Ok(Err(refusal)),
+        };
+        let page_num = page_index + 1;
+        let runs = self.page_runs(page_num)?;
+        let Some(run) = runs.iter().find(|r| r.text == original_text).cloned() else {
+            return Ok(Err(FontRefusal::TextNotFound { page_index }));
+        };
+        match crate::text_font::apply_face_to_run(&mut self.lopdf_doc, page_num, &run, &face) {
+            Ok(change) => {
+                self.sync_after_mutation()?;
+                Ok(Ok(change.resource))
+            }
+            Err(refusal) => Ok(Err(refusal)),
+        }
+    }
+
+    // ── Images already in the page content (#723) ───────────────────
+
+    /// The image placements in the content of `page_index` (0-based).
+    pub fn list_page_images(&self, page_index: u32) -> Result<Vec<crate::page_images::PageImage>, String> {
+        crate::page_images::list_page_images(&self.lopdf_doc, page_index + 1).map_err(|e| e.to_string())
+    }
+
+    /// Move or resize placement `image_index` so its box becomes `rect`
+    /// (`[x0, y0, x1, y1]`, PDF space).
+    /// Returns the placement's index afterwards (a wrapped placement moves
+    /// two operators down).
+    pub fn move_page_image(&mut self, page_index: u32, image_index: usize, rect: [f64; 4]) -> Result<usize, String> {
+        self.guard_writable()?;
+        let new_index = crate::page_images::set_image_rect(&mut self.lopdf_doc, page_index + 1, image_index, rect)
+            .map_err(|e| e.to_string())?;
+        self.sync_after_mutation()?;
+        Ok(new_index)
+    }
+
+    /// Remove placement `image_index`. An unsigned document also drops the
+    /// image bytes nothing refers to any more: a deleted picture must not stay
+    /// in the file. A signed one is saved as an incremental update, which
+    /// keeps the earlier revision by design.
+    pub fn delete_page_image(&mut self, page_index: u32, image_index: usize) -> Result<(), String> {
+        self.guard_writable()?;
+        crate::page_images::delete_image(&mut self.lopdf_doc, page_index + 1, image_index)
+            .map_err(|e| e.to_string())?;
+        self.prune_unreferenced_if_unsigned();
+        self.sync_after_mutation()
+    }
+
+    /// Swap the picture of placement `image_index` for PNG or JPEG `data`.
+    pub fn replace_page_image(&mut self, page_index: u32, image_index: usize, data: &[u8]) -> Result<usize, String> {
+        self.guard_writable()?;
+        let new_index = crate::page_images::replace_image(&mut self.lopdf_doc, page_index + 1, image_index, data)
+            .map_err(|e| e.to_string())?;
+        self.prune_unreferenced_if_unsigned();
+        self.sync_after_mutation()?;
+        Ok(new_index)
+    }
+
+    fn guard_writable(&self) -> Result<(), String> {
+        if self.access.read_only {
+            return Err(DOCUMENT_READ_ONLY.to_string());
+        }
+        Ok(())
+    }
+
+    fn prune_unreferenced_if_unsigned(&mut self) {
+        if self.signed_revision.is_none() {
+            self.lopdf_doc.prune_objects();
+        }
+    }
+
     // ── File operations ───────────────────────────────────────────────
 
+    /// Write the document to `path`.
+    ///
+    /// The bytes are produced in memory first and then put in place by
+    /// [`crate::atomic_file::replace`]: a failure anywhere — serialising, a
+    /// full disk, a share that drops — leaves the file at `path` exactly as it
+    /// was, and the document stays marked as modified so nothing pretends the
+    /// save happened.
+    ///
+    /// A signed document is saved as an incremental update appended to the
+    /// signed revision, which leaves every signature verifying. A signed
+    /// document that needs a full rewrite (after a redaction) is refused with
+    /// [`SIGNED_NEEDS_FULL_REWRITE`]; [`Self::save_unsigned_copy`] is the way
+    /// out the app offers.
     pub fn save_to(&mut self, path: &str) -> Result<(), String> {
-        self.lopdf_doc
-            .save(path)
+        if self.access.read_only {
+            return Err(DOCUMENT_READ_ONLY.to_string());
+        }
+        let bytes = match (&self.signed_revision, self.requires_full_rewrite) {
+            (Some(_), true) => return Err(SIGNED_NEEDS_FULL_REWRITE.to_string()),
+            (Some(base), false) => incremental_update(base, &self.lopdf_doc)?,
+            (None, _) => self.serialize_full()?,
+        };
+        crate::atomic_file::replace(Path::new(path), &bytes)
             .map_err(|e| format!("Failed to save PDF: {e}"))?;
+        if self.signed_revision.is_some() {
+            self.signed_revision = Some(bytes.clone());
+        }
+        self.requires_full_rewrite = false;
         self.modified = false;
-        // Re-read saved bytes for consistency
-        self.raw_bytes =
-            std::fs::read(path).map_err(|e| format!("Failed to re-read saved PDF: {e}"))?;
+        self.saved_state_id = Some(self.state_id);
+        self.raw_bytes = bytes;
+        Ok(())
+    }
+
+    /// The whole document, written from scratch. After a redaction the
+    /// objects nothing refers to any more — the content streams the redactor
+    /// replaced — are pruned first: lopdf writes every object it holds, and
+    /// the replaced stream still carries the text that was redacted.
+    fn serialize_full(&mut self) -> Result<Vec<u8>, String> {
+        if self.requires_full_rewrite {
+            self.lopdf_doc.prune_objects();
+        }
+        let mut bytes = Vec::new();
+        // lopdf decrypts on load and writes plaintext on save: a protected
+        // document came back out unprotected, silently. Encrypt a copy with
+        // the state it was opened with, so the same passwords still apply.
+        if let Some(state) = self.lopdf_doc.encryption_state.clone() {
+            let mut copy = self.lopdf_doc.clone();
+            copy.encryption_state = None;
+            copy.encrypt(&state)
+                .map_err(|e| format!("Failed to save PDF: could not keep its encryption: {e}"))?;
+            // Encrypted strings are random bytes. Written as literals, each
+            // `(`, `)`, `\` or CR among them costs an escape byte, so the same
+            // document came out a few bytes longer or shorter on every save
+            // (the size axis flipped on a rounding boundary). Hex is fixed width.
+            for object in copy.objects.values_mut() {
+                hex_encode_strings(object);
+            }
+            copy.save_to(&mut bytes)
+                .map_err(|e| format!("Failed to save PDF: {e}"))?;
+            return Ok(bytes);
+        }
+        self.lopdf_doc
+            .save_to(&mut bytes)
+            .map_err(|e| format!("Failed to save PDF: {e}"))?;
+        Ok(bytes)
+    }
+
+    /// Save a copy without any signature, for a signed document whose changes
+    /// cannot be appended (a redaction). The signature values, the usage-rights
+    /// entry and the signature flags are removed, so the copy does not carry a
+    /// signature that no longer verifies; the copy becomes the open document.
+    pub fn save_unsigned_copy(&mut self, path: &str) -> Result<(), String> {
+        strip_signatures(&mut self.lopdf_doc);
+        self.signed_revision = None;
+        self.requires_full_rewrite = true;
+        let bytes = self.serialize_full()?;
+        crate::atomic_file::replace(Path::new(path), &bytes)
+            .map_err(|e| format!("Failed to save PDF: {e}"))?;
+        self.requires_full_rewrite = false;
+        self.modified = false;
+        self.raw_bytes = bytes;
+        self.sync_render_from_raw()?;
+        // The copy dropped the signatures and is now the open document; an
+        // earlier step would bring back a signed state the file no longer has.
+        self.history.clear();
+        self.mark_saved_fresh();
+        Ok(())
+    }
+
+    /// Re-parse the render view from `raw_bytes` without marking the document
+    /// modified (unlike [`Self::sync_after_mutation`]).
+    fn sync_render_from_raw(&mut self) -> Result<(), String> {
+        self.invalidate_page_caches();
+        self.pdf_doc = Arc::new(
+            PdfDocument::open(self.raw_bytes.clone())
+                .map_err(|e| format!("Failed to re-parse saved PDF: {e}"))?,
+        );
+        self.render_doc = Self::make_render_doc(&self.pdf_doc);
         Ok(())
     }
 
     /// Re-parse the pdf-syntax document from the current lopdf state.
     /// Call this after mutations to keep the rendering view in sync.
     pub fn sync_after_mutation(&mut self) -> Result<(), String> {
+        self.rebuild_views()?;
+        self.mark_mutated();
+        Ok(())
+    }
+
+    /// Re-derive the render view and `raw_bytes` from `lopdf_doc`.
+    fn rebuild_views(&mut self) -> Result<(), String> {
         self.invalidate_page_caches();
         let mut buf = Vec::new();
         self.lopdf_doc
@@ -3942,8 +6119,144 @@ impl OpenDocument {
         );
         self.render_doc = Self::make_render_doc(&self.pdf_doc);
         self.raw_bytes = buf;
-        self.modified = true;
+        // New content, new OCR identity. The unsaved flag and the state id are
+        // the caller's: an undo rebuilds the views and then restores them.
+        self.generation = self.generation.wrapping_add(1);
         Ok(())
+    }
+
+    // ── Undo / redo (J-85) ────────────────────────────────────────────
+
+    /// The content changed: give it a new identity and mark it unsaved.
+    /// Every mutation reaches this, through [`Self::sync_after_mutation`] or
+    /// directly where a mutation deliberately skips the re-parse.
+    fn mark_mutated(&mut self) {
+        self.next_state_id += 1;
+        self.state_id = self.next_state_id;
+        self.modified = true;
+        // The OCR fingerprint: a run that started from an older generation
+        // must not be applied to this content.
+        self.generation = self.generation.wrapping_add(1);
+    }
+
+    /// The open document was just replaced by a file on disk (signing, an
+    /// unsigned copy): that content is the saved one.
+    fn mark_saved_fresh(&mut self) {
+        self.next_state_id += 1;
+        self.state_id = self.next_state_id;
+        self.saved_state_id = Some(self.state_id);
+        self.modified = false;
+    }
+
+    /// The content is not what is on disk at the path Save writes to (an
+    /// adopted recovery copy): no state of this session counts as saved, so
+    /// undoing every step still leaves the document unsaved.
+    pub fn mark_unsaved(&mut self) {
+        self.saved_state_id = None;
+        self.modified = true;
+    }
+
+    fn snapshot(&self) -> DocSnapshot {
+        DocSnapshot {
+            lopdf_doc: self.lopdf_doc.clone(),
+            access: self.access.clone(),
+            state_id: self.state_id,
+            requires_full_rewrite: self.requires_full_rewrite,
+            signed_revision: self.signed_revision.clone(),
+        }
+    }
+
+    fn snapshot_bytes(&self) -> usize {
+        self.raw_bytes.len() + self.signed_revision.as_ref().map_or(0, Vec::len)
+    }
+
+    /// Put `snap` back as the current content, and return the state it
+    /// replaced (for the opposite stack).
+    fn restore(&mut self, snap: DocSnapshot) -> Result<DocSnapshot, String> {
+        let current = self.snapshot();
+        self.invalidate_page_caches();
+        self.lopdf_doc = snap.lopdf_doc;
+        self.access = snap.access;
+        self.state_id = snap.state_id;
+        self.requires_full_rewrite = snap.requires_full_rewrite;
+        // The signed revision is the file on disk, which a save after the
+        // snapshot moved forward: the current one is right. Only an edit that
+        // replaced the whole document can have lost it.
+        if self.signed_revision.is_none() {
+            self.signed_revision = snap.signed_revision;
+        }
+        if let Err(e) = self.rebuild_views() {
+            // Never leave a half-restored document: put the current one back.
+            self.lopdf_doc = current.lopdf_doc;
+            self.access = current.access;
+            self.state_id = current.state_id;
+            self.requires_full_rewrite = current.requires_full_rewrite;
+            self.rebuild_views()?;
+            return Err(e);
+        }
+        self.modified = self.saved_state_id != Some(self.state_id);
+        Ok(current)
+    }
+
+    /// Run one user action on the document and keep the state before it as
+    /// an undo step, if the action changed anything. Every mutating command
+    /// goes through here (`AppState::with_document_edit` in lib.rs).
+    pub fn edit<R>(
+        &mut self,
+        label: &str,
+        f: impl FnOnce(&mut Self) -> Result<R, String>,
+    ) -> Result<R, String> {
+        if self.history.group_already_recorded() {
+            return f(self);
+        }
+        let before = self.state_id;
+        let bytes = self.snapshot_bytes();
+        let snap = self.snapshot();
+        let result = f(self);
+        if self.state_id != before {
+            self.history.record(label, snap, bytes);
+        }
+        result
+    }
+
+    /// Steps run between these two are one undo step (a text commit is a
+    /// replacement plus a size/colour change plus a weight change).
+    pub fn begin_edit_group(&mut self, label: &str) {
+        self.history.begin_group(label);
+    }
+
+    pub fn end_edit_group(&mut self) {
+        self.history.end_group();
+    }
+
+    pub fn undo(&mut self) -> Result<bool, String> {
+        let Some(entry) = self.history.pop_undo() else { return Ok(false) };
+        let bytes = entry.bytes;
+        let label = entry.label;
+        match self.restore(entry.state) {
+            Ok(replaced) => {
+                self.history.push_redo(crate::history::Entry { label, state: replaced, bytes });
+                Ok(true)
+            }
+            Err(e) => Err(format!("Undo failed: {e}")),
+        }
+    }
+
+    pub fn redo(&mut self) -> Result<bool, String> {
+        let Some(entry) = self.history.pop_redo() else { return Ok(false) };
+        let bytes = entry.bytes;
+        let label = entry.label;
+        match self.restore(entry.state) {
+            Ok(replaced) => {
+                self.history.push_undo(crate::history::Entry { label, state: replaced, bytes });
+                Ok(true)
+            }
+            Err(e) => Err(format!("Redo failed: {e}")),
+        }
+    }
+
+    pub fn history_state(&self) -> crate::history::HistoryState {
+        self.history.state(self.modified)
     }
 
     /// Drop every memoised page. Called from `sync_after_mutation`, which every
@@ -4559,8 +6872,9 @@ impl OpenDocument {
             names_dict.set("EmbeddedFiles", Object::Reference(new_ef_id));
         }
 
-        self.modified = true;
-        Ok(())
+        // Through the sync, so the metadata and attachment readers (which
+        // read the re-parsed view) see the change at once.
+        self.sync_after_mutation()
     }
 
     /// Remove an embedded file from the /Names/EmbeddedFiles name tree by filename.
@@ -4629,8 +6943,9 @@ impl OpenDocument {
             _ => return Err("EmbeddedFiles /Names is not an array".to_owned()),
         }
 
-        self.modified = true;
-        Ok(())
+        // Through the sync, so the metadata and attachment readers (which
+        // read the re-parsed view) see the change at once.
+        self.sync_after_mutation()
     }
 
     // ── Layer methods ──────────────────────────────────────────────────────
@@ -4964,6 +7279,71 @@ mod tests {
         );
 
         let _ = std::fs::remove_file(&tmp);
+    }
+
+    fn run(text: &str, x: f64, y: f64) -> pdf_manip::text_run::TextRun {
+        pdf_manip::text_run::TextRun {
+            text: text.to_string(),
+            ops_range: 0..1,
+            font_name: "F1".to_string(),
+            font_size: 12.0,
+            x,
+            y,
+            width: 100.0,
+        }
+    }
+
+    #[test]
+    fn wrapped_lines_are_read_back_in_order_and_stop_at_the_text() {
+        let runs = vec![
+            run("Heading", 72.0, 740.0),
+            run("one two three", 72.0, 700.0),
+            run("four five six", 72.0, 685.6),
+            run("seven", 72.0, 671.2),
+            // Another paragraph in the same column, below: never part of it.
+            run("seven", 72.0, 600.0),
+            // Another column: never part of it.
+            run("one two three", 300.0, 699.0),
+        ];
+        let got = wrapped_lines_from(&runs, (72.0, 700.0), 12.0, "one two three four five six seven");
+        assert_eq!(got, Some(vec!["one two three".into(), "four five six".into(), "seven".into()]));
+    }
+
+    #[test]
+    fn wrapped_lines_that_do_not_add_up_are_not_trusted() {
+        let runs = vec![run("one two", 72.0, 700.0), run("three", 72.0, 686.0)];
+        assert_eq!(wrapped_lines_from(&runs, (72.0, 700.0), 12.0, "one two three four"), None);
+        assert_eq!(wrapped_lines_from(&runs, (72.0, 700.0), 12.0, "uno dos tres"), None);
+    }
+
+    #[test]
+    fn broken_lines_go_into_the_original_lines() {
+        use pdf_manip::text_edit::FitPolicy::{Exact, ReflowInBounds};
+        let w = |v: &[&str]| v.iter().map(|s| s.to_string()).collect::<Vec<_>>();
+        // Fewer lines than the paragraph had: the rest are emptied.
+        assert_eq!(
+            texts_per_original_line(3, w(&["a b", "c d"])),
+            vec![("a b".to_string(), Exact), ("c d".to_string(), Exact), (String::new(), Exact)]
+        );
+        // As many: one each, nothing left to the SDK.
+        assert_eq!(
+            texts_per_original_line(2, w(&["a b", "c d"])),
+            vec![("a b".to_string(), Exact), ("c d".to_string(), Exact)]
+        );
+        // More: the last original line carries the rest and the SDK reflows it.
+        assert_eq!(
+            texts_per_original_line(2, w(&["a b", "c d", "e f", "g"])),
+            vec![("a b".to_string(), Exact), ("c d e f g".to_string(), ReflowInBounds)]
+        );
+    }
+
+    #[test]
+    fn the_fallback_hands_the_whole_text_to_the_first_line() {
+        use pdf_manip::text_edit::FitPolicy::{Exact, ReflowInBounds};
+        assert_eq!(
+            reflow_in_first_line(3, "x y z"),
+            vec![("x y z".to_string(), ReflowInBounds), (String::new(), Exact), (String::new(), Exact)]
+        );
     }
 
     #[test]
@@ -6461,10 +8841,11 @@ mod tests {
             "/../../../XFA/test-data/xfa-golden/xfa_test_input.pdf"
         );
         let Ok(bytes) = std::fs::read(uea) else {
-            eprintln!("SKIP xfa_commit_reveals_conditional_section_on_uea: UEA fixture not at {uea}");
+            eprintln!("SKIPPED (not a pass): xfa_commit_reveals_conditional_section_on_uea: UEA fixture not at {uea}");
             return;
         };
         let mut doc = OpenDocument::open_bytes(bytes).expect("open UEA");
+        doc.set_scripts_allowed(true).expect("allow scripts");
 
         let result = doc
             .commit_xfa_field_value(&XfaWriteRequest::Radio {
@@ -6508,6 +8889,7 @@ mod tests {
     fn xfa_commit_returns_refreshed_model_and_persists() {
         let mut doc = OpenDocument::open_bytes(DYNAMIC_XFA_PDF.to_vec())
             .expect("open dynamic XFA");
+        doc.set_scripts_allowed(true).expect("allow scripts");
         let model = doc.xfa_form_model().expect("build XFA form model");
         let target = model
             .fields
@@ -6561,6 +8943,232 @@ mod tests {
             "committed XFA value persists across save/reopen"
         );
         let _ = std::fs::remove_file(&out_str);
+    }
+
+    // ── XFA scripts: recalculation, refusal, and the scripts that cannot run ──
+    //
+    // `xfa_calc_order.pdf` is generated (tests/fixtures/make_xfa_calc.py): a
+    // `total` field whose JavaScript `calculate` multiplies `quantity` by
+    // `unit_price`, a FormCalc `change` script on `discount_code` that the
+    // sandboxed runtime does not run, and a read-only `internal_ref`.
+    const XFA_CALC_PDF: &[u8] = include_bytes!("../tests/fixtures/xfa_calc_order.pdf");
+    #[cfg(feature = "xfa-interactive")]
+    const XFA_QUANTITY: &str = "order.lines.quantity";
+    #[cfg(feature = "xfa-interactive")]
+    const XFA_TOTAL: &str = "order.lines.total";
+
+    #[cfg(feature = "xfa-interactive")]
+    fn xfa_value(model: &XfaFormModelDto, name: &str) -> String {
+        model
+            .fields
+            .iter()
+            .find(|f| f.name == name)
+            .unwrap_or_else(|| panic!("field {name} in the model"))
+            .value
+            .clone()
+    }
+
+    // Needs the commit loop: without `xfa-interactive` nothing recalculates, and
+    // that is the very promise this test holds. CI runs it with the feature on.
+    // ── Export writer (#925) ────────────────────────────────────────────────
+
+    fn export_scratch(name: &str) -> std::path::PathBuf {
+        let dir = std::env::temp_dir().join(format!("pdfluent-export-writer-{}-{name}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).expect("scratch dir");
+        dir
+    }
+
+    #[test]
+    fn an_export_replaces_the_target_whole() {
+        let dir = export_scratch("replace");
+        let target = dir.join("out.docx");
+        std::fs::write(&target, b"old contents").unwrap();
+        write_export_bytes(b"new contents", target.to_str().unwrap(), "DOCX", "hint").expect("export");
+        assert_eq!(std::fs::read(&target).unwrap(), b"new contents");
+        let names: Vec<_> = std::fs::read_dir(&dir).unwrap().map(|e| e.unwrap().file_name()).collect();
+        assert_eq!(names.len(), 1, "no temporary file is left next to the export: {names:?}");
+    }
+
+    #[test]
+    fn a_failed_export_leaves_the_previous_file_and_no_empty_one() {
+        let dir = export_scratch("failed");
+        let target = dir.join("out.docx");
+        std::fs::write(&target, b"the only copy").unwrap();
+        // The write dies halfway, the way a full disk does: the old file must be whole.
+        let err = write_export_bytes_with(b"new contents", target.to_str().unwrap(), "DOCX", "hint", |file, bytes| {
+            std::io::Write::write_all(file, &bytes[..4])?;
+            Err(std::io::Error::other("disk full"))
+        })
+        .unwrap_err();
+        assert!(err.contains("Failed to save DOCX file"), "{err}");
+        assert_eq!(std::fs::read(&target).unwrap(), b"the only copy");
+        // The write is refused (the target is read-only): the old file must be untouched.
+        let mut perms = std::fs::metadata(&target).unwrap().permissions();
+        perms.set_readonly(true);
+        std::fs::set_permissions(&target, perms).unwrap();
+        let err = write_export_bytes(b"new contents", target.to_str().unwrap(), "DOCX", "hint").unwrap_err();
+        assert!(err.contains("Failed to save DOCX file"), "{err}");
+        assert_eq!(std::fs::read(&target).unwrap(), b"the only copy");
+        // Empty conversions are refused before anything is written.
+        let mut perms = std::fs::metadata(&target).unwrap().permissions();
+        #[allow(clippy::permissions_set_readonly_false)]
+        perms.set_readonly(false);
+        std::fs::set_permissions(&target, perms).unwrap();
+        assert!(write_export_bytes(b"", target.to_str().unwrap(), "DOCX", "hint").is_err());
+        assert_eq!(std::fs::read(&target).unwrap(), b"the only copy");
+        // A target in a folder that does not exist leaves nothing behind.
+        let missing = dir.join("nope").join("out.docx");
+        assert!(write_export_bytes(b"x", missing.to_str().unwrap(), "DOCX", "hint").is_err());
+        assert!(!missing.exists());
+        let names: Vec<_> = std::fs::read_dir(&dir).unwrap().map(|e| e.unwrap().file_name()).collect();
+        assert_eq!(names.len(), 1, "only the original file remains: {names:?}");
+    }
+
+    #[cfg(feature = "xfa-interactive")]
+    #[test]
+    fn xfa_commit_recalculates_a_dependent_field() {
+        let mut doc = OpenDocument::open_bytes(XFA_CALC_PDF.to_vec()).expect("open calc form");
+        doc.set_scripts_allowed(true).expect("allow scripts");
+        let before = xfa_value(&doc.xfa_form_model().expect("model"), XFA_TOTAL);
+
+        let result = doc
+            .commit_xfa_field_value(&XfaWriteRequest::Text {
+                name: XFA_QUANTITY.to_string(),
+                value: "4".to_string(),
+            })
+            .expect("commit quantity");
+
+        assert!(result.interactive, "the commit ran the scripts");
+        assert!(result.scripts_executed > 0, "the calculate script executed");
+        assert_eq!(xfa_value(&result.model, XFA_QUANTITY), "4");
+        let after = xfa_value(&result.model, XFA_TOTAL);
+        assert_eq!(after, "20", "total = quantity 4 x unit price 5");
+        assert_ne!(before, after, "the commit changed the dependent field");
+
+        // Save, reopen: the typed value is in the file and the total is
+        // recomputed on open (a script's result is not stored).
+        let mut out = std::env::temp_dir();
+        out.push("pdfluent_xfa_calc_roundtrip.pdf");
+        let out_str = out.to_string_lossy().to_string();
+        doc.save_to(&out_str).expect("save calc form");
+        let mut reopened =
+            OpenDocument::open_bytes(std::fs::read(&out_str).expect("re-read")).expect("reopen");
+        // Permission belongs to the open document, not to the file.
+        reopened.set_scripts_allowed(true).expect("allow scripts");
+        let model = reopened.xfa_form_model().expect("model after reopen");
+        assert_eq!(xfa_value(&model, XFA_QUANTITY), "4", "typed value survives save and reopen");
+        assert_eq!(xfa_value(&model, XFA_TOTAL), "20", "total is recalculated on reopen");
+        let _ = std::fs::remove_file(&out_str);
+    }
+
+    #[cfg(not(feature = "xfa-interactive"))]
+    #[test]
+    fn xfa_commit_recalculates_a_dependent_field_needs_the_commit_loop() {
+        eprintln!(
+            "SKIPPED (not a pass): xfa_commit_recalculates_a_dependent_field: \
+             built without the `xfa-interactive` feature"
+        );
+    }
+
+    #[test]
+    fn xfa_commit_to_a_read_only_field_is_refused_with_a_code() {
+        let mut doc = OpenDocument::open_bytes(XFA_CALC_PDF.to_vec()).expect("open calc form");
+        doc.set_scripts_allowed(true).expect("allow scripts");
+        // Granting runs the open lifecycle, which recalculates `total` and so
+        // legitimately marks the document modified (the value is written back).
+        // What this test holds is that the refused write adds nothing to that.
+        let modified_after_grant = doc.modified;
+        let err = doc
+            .commit_xfa_field_value(&XfaWriteRequest::Text {
+                name: "order.lines.internal_ref".to_string(),
+                value: "tampered".to_string(),
+            })
+            .expect_err("a read-only field refuses the write");
+        assert_eq!(err, "XFA_FIELD_READ_ONLY: order.lines.internal_ref");
+        assert_eq!(doc.modified, modified_after_grant, "a refused write leaves the document state as it was");
+
+        let missing = doc
+            .commit_xfa_field_value(&XfaWriteRequest::Text {
+                name: "order.lines.nothing".to_string(),
+                value: "x".to_string(),
+            })
+            .expect_err("an unknown field is refused");
+        assert_eq!(missing, "XFA_FIELD_NOT_FOUND: order.lines.nothing");
+    }
+
+    // The count is the engine's script report: a script counts once it was due.
+    // `discount_code` has a FormCalc change script, so it is due when that field
+    // is committed, not at open. Without the commit loop nothing is reported.
+    #[cfg(feature = "xfa-interactive")]
+    #[test]
+    fn xfa_model_counts_the_formcalc_scripts_that_were_due() {
+        let mut doc = OpenDocument::open_bytes(XFA_CALC_PDF.to_vec()).expect("open calc form");
+        doc.set_scripts_allowed(true).expect("allow scripts");
+        let at_open = doc.xfa_form_model().expect("model");
+        assert_eq!(at_open.unsupported_scripts, 0, "no FormCalc script is due at open");
+
+        let result = doc
+            .commit_xfa_field_value(&XfaWriteRequest::Text {
+                name: "order.lines.discount_code".to_string(),
+                value: "save10".to_string(),
+            })
+            .expect("commit discount code");
+        assert_eq!(result.model.unsupported_scripts, 1, "the FormCalc change script was due and not run");
+
+        // A commit that triggers no FormCalc script reports none.
+        let other = doc
+            .commit_xfa_field_value(&XfaWriteRequest::Text {
+                name: XFA_QUANTITY.to_string(),
+                value: "2".to_string(),
+            })
+            .expect("commit quantity");
+        assert_eq!(other.model.unsupported_scripts, 0);
+    }
+
+    #[cfg(feature = "xfa-interactive")]
+    #[test]
+    fn xfa_commit_names_the_script_that_threw() {
+        let mut doc = OpenDocument::open_bytes(XFA_CALC_PDF.to_vec()).expect("open calc form");
+        doc.set_scripts_allowed(true).expect("allow scripts");
+        assert!(doc.xfa_form_model().expect("model").script_errors.is_empty());
+        let result = doc
+            .commit_xfa_field_value(&XfaWriteRequest::Text {
+                name: "order.lines.broken_hook".to_string(),
+                value: "x".to_string(),
+            })
+            .expect("a throwing script does not fail the commit");
+        let errors: Vec<(&str, &str)> = result
+            .model
+            .script_errors
+            .iter()
+            .map(|e| (e.script_id.as_str(), e.kind.as_str()))
+            .collect();
+        assert_eq!(errors, vec![("broken_hook:change#0", "threw")]);
+        assert!(doc.modified, "the typed value still landed");
+    }
+
+    // The open lifecycle of `xfa_calc_runaway.pdf` writes `total` and then never
+    // returns, so it always ends in the script time limit. A script that did not
+    // finish has no result the user asked for: the document stays as it was, so
+    // opening the form and closing it does not offer to save.
+    #[cfg(feature = "xfa-interactive")]
+    #[test]
+    fn a_script_that_times_out_on_open_leaves_the_document_clean() {
+        let mut doc = OpenDocument::open_bytes(include_bytes!("../tests/fixtures/xfa_calc_runaway.pdf").to_vec())
+            .expect("open runaway form");
+        let report = doc.set_scripts_allowed(true).expect("allow scripts");
+        assert!(report.ran, "the open lifecycle ran");
+        let errors: Vec<(String, String)> = doc
+            .xfa_form_model()
+            .expect("model")
+            .script_errors
+            .iter()
+            .map(|e| (e.script_id.clone(), e.kind.clone()))
+            .collect();
+        assert_eq!(errors, vec![("total:calculate#0".to_string(), "timeout".to_string())]);
+        assert_eq!(report.fields_changed, 0, "a timed-out script changes nothing");
+        assert!(!doc.modified, "a timed-out script on open does not mark the document modified");
     }
 
     // === Digital signature: the Sign panel's backend, end to end ===
@@ -6692,5 +9300,139 @@ mod tests {
             doc.verify_signatures().is_empty(),
             "a failed signature must leave the open document alone"
         );
+    }
+
+    // ── Form scripts run only with the user's permission ─────────────────────
+
+    #[test]
+    fn a_freshly_opened_document_has_its_scripts_blocked() {
+        let doc = OpenDocument::open_bytes(DYNAMIC_XFA_PDF.to_vec()).expect("open dynamic XFA");
+        let status = doc.form_scripts_status();
+        assert!(!status.allowed, "scripts are closed by default");
+        assert_eq!(status.content_hash.len(), 64, "the choice is keyed by a SHA-256");
+        assert!(!doc.scripts.is_open());
+    }
+
+    #[test]
+    fn the_content_hash_follows_the_file_and_not_the_edits() {
+        let a = OpenDocument::open_bytes(DYNAMIC_XFA_PDF.to_vec()).expect("open");
+        let b = OpenDocument::open_bytes(DYNAMIC_XFA_PDF.to_vec()).expect("open");
+        let other = OpenDocument::open_bytes(include_bytes!("../tests/fixtures/two_pages.pdf").to_vec()).expect("open");
+        assert_eq!(a.form_scripts_status().content_hash, b.form_scripts_status().content_hash);
+        assert_ne!(a.form_scripts_status().content_hash, other.form_scripts_status().content_hash);
+    }
+
+    #[test]
+    fn an_xfa_commit_without_permission_writes_the_value_and_runs_no_script() {
+        let mut doc = OpenDocument::open_bytes(DYNAMIC_XFA_PDF.to_vec()).expect("open dynamic XFA");
+        let model = doc.xfa_form_model().expect("model");
+        let target = model
+            .fields
+            .iter()
+            .find(|f| f.field_type == "text" && !f.read_only && !f.bind_none)
+            .expect("a fillable text field");
+        let result = doc
+            .commit_xfa_field_value(&XfaWriteRequest::Text {
+                name: target.name.clone(),
+                value: "consent".to_string(),
+            })
+            .expect("commit");
+        assert!(!result.interactive, "no script loop without permission");
+        assert_eq!(result.scripts_executed, 0);
+        assert!(result.presence_changes.is_empty());
+        assert!(doc.modified, "the typed value itself is kept");
+    }
+
+    #[test]
+    fn permission_belongs_to_the_document_and_survives_undo_and_redo() {
+        let mut doc = OpenDocument::open_bytes(include_bytes!("../tests/fixtures/two_pages.pdf").to_vec()).expect("open");
+        doc.set_scripts_allowed(true).expect("grant");
+        assert!(doc.form_scripts_status().allowed);
+        doc.edit("some edit", |d| {
+            d.mark_mutated();
+            Ok(())
+        })
+        .expect("edit");
+        assert!(doc.undo().expect("undo"));
+        assert!(doc.form_scripts_status().allowed, "undo does not take a permission back");
+        assert!(doc.redo().expect("redo"));
+        doc.set_scripts_allowed(false).expect("withdraw");
+        assert!(!doc.form_scripts_status().allowed);
+        assert!(doc.undo().expect("undo"));
+        assert!(!doc.form_scripts_status().allowed, "undo does not give a permission either");
+    }
+
+    #[test]
+    fn print_and_save_leave_the_document_alone_without_permission() {
+        let mut doc = OpenDocument::open_bytes(DYNAMIC_XFA_PDF.to_vec()).expect("open dynamic XFA");
+        let before = doc.xfa_form_model().expect("model");
+        let _ = doc.print_copy().expect("print copy");
+        let mut out = std::env::temp_dir();
+        out.push("pdfluent_script_consent_save.pdf");
+        let out_str = out.to_string_lossy().to_string();
+        doc.save_to(&out_str).expect("save");
+        let after = doc.xfa_form_model().expect("model after");
+        let values = |m: &XfaFormModelDto| m.fields.iter().map(|f| (f.name.clone(), f.value.clone())).collect::<Vec<_>>();
+        assert_eq!(values(&before), values(&after), "print and save run no script");
+        assert!(!doc.form_scripts_status().allowed);
+        let _ = std::fs::remove_file(&out_str);
+    }
+
+    /// Every call that hands a script to an interpreter sits behind the guard.
+    /// A new entry point added without one fails here, in the same change.
+    #[test]
+    fn script_entry_points_sit_behind_the_guard() {
+        const ENTRY_POINTS: &[&str] = &[".commit_value(", ".open_interactive(", "calculate::recalculate(", ".run_script("];
+        let src = include_str!("pdf_engine.rs");
+        let body = &src[..src.find("\nmod tests {").expect("tests module")];
+        let lines: Vec<&str> = body.lines().collect();
+        let mut offenders = Vec::new();
+        for (i, line) in lines.iter().enumerate() {
+            let t = line.trim_start();
+            if t.starts_with("//") || !ENTRY_POINTS.iter().any(|e| t.contains(e)) {
+                continue;
+            }
+            let from = i.saturating_sub(40);
+            // rustfmt may split `self\n.scripts\n.check(`: compare without space.
+            let above: String = lines[from..i].concat().split_whitespace().collect();
+            if !above.contains("self.scripts.check(") {
+                offenders.push(format!("line {}: {}", i + 1, t));
+            }
+        }
+        assert!(offenders.is_empty(), "script entry points without a guard check in the 40 lines above: {offenders:?}");
+    }
+
+    // The scripted order form: `total` has a JavaScript calculate script. With
+    // the commit loop in the build, the typed value lands either way; the
+    // calculation waits for the user, then runs once and shows.
+    #[cfg(feature = "xfa-interactive")]
+    #[test]
+    fn xfa_scripts_wait_for_permission_then_calculate_once() {
+        let mut doc = OpenDocument::open_bytes(XFA_CALC_PDF.to_vec()).expect("open calc form");
+        let at_open = xfa_value(&doc.xfa_form_model().expect("model"), XFA_TOTAL);
+        assert!(!doc.form_scripts_status().allowed);
+        assert!(doc.form_scripts_status().total > 0, "the form carries scripts");
+
+        let typed = doc
+            .commit_xfa_field_value(&XfaWriteRequest::Text {
+                name: XFA_QUANTITY.to_string(),
+                value: "4".to_string(),
+            })
+            .expect("commit without permission");
+        assert!(!typed.interactive && typed.scripts_executed == 0, "no script ran");
+        assert_eq!(xfa_value(&typed.model, XFA_QUANTITY), "4", "the value landed");
+        assert_eq!(xfa_value(&typed.model, XFA_TOTAL), at_open, "nothing was calculated");
+        assert_eq!(
+            xfa_value(&doc.xfa_form_model().expect("model"), XFA_TOTAL),
+            at_open,
+            "not on a later read either"
+        );
+
+        let ran = doc
+            .edit("run-form-scripts", |d| d.set_scripts_allowed(true))
+            .expect("allow scripts");
+        assert!(ran.ran);
+        assert!(ran.fields_changed >= 1, "the calculation changed a field");
+        assert_eq!(xfa_value(&doc.xfa_form_model().expect("model"), XFA_TOTAL), "20", "total = 4 x 5");
     }
 }

@@ -110,13 +110,13 @@ describe('safety matrix — individual target shapes', () => {
     expect(result.constraints!.maxLength).toBeNull();
   });
 
-  it('multi-line paragraph → non_writable_digital_text', () => {
+  it('multi-line paragraph of single-run lines → writable_digital_text (J-42)', () => {
     const entry = TEXT_MUTATION_SAFETY_MATRIX.find(e =>
       e.description.includes('Multi-line')
     )!;
     const result = getMutationSupport(entry.target);
-    expect(result.supportClass).toBe('non_writable_digital_text');
-    expect(result.writable).toBe(false);
+    expect(result.supportClass).toBe('writable_digital_text');
+    expect(result.writable).toBe(true);
   });
 
   it('multi-span line → non_writable_digital_text', () => {

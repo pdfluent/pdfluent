@@ -10,15 +10,17 @@ import { useState, useEffect, useRef } from 'react';
 import { XIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useTaskQueueContext } from '../context/TaskQueueContext';
+import { useFocusTrap } from '../hooks/useFocusTrap';
 import type { PdfDocument } from '../../core/document';
 import type { PdfEngine } from '../../core/engine/PdfEngine';
 import { downloadPdfBytesInBrowser } from '../export/browserPdfDownload';
+import { isStructuredExportFormat, NO_TABLES_FOUND_CODE, runStructuredExport } from '../export/structuredExport';
 
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
 
-export type ExportFormat = 'pdf' | 'compressed_pdf' | 'png' | 'jpeg' | 'docx' | 'xlsx' | 'pptx';
+export type ExportFormat = 'pdf' | 'compressed_pdf' | 'png' | 'jpeg' | 'docx' | 'xlsx' | 'pptx' | 'markdown' | 'tables_xlsx';
 type ImagePageRange = 'current' | 'all';
 
 export const FORMAT_LABEL_KEYS: Record<ExportFormat, string> = {
@@ -29,6 +31,9 @@ export const FORMAT_LABEL_KEYS: Record<ExportFormat, string> = {
   docx: 'exportDialog.formatDocx',
   xlsx: 'exportDialog.formatXlsx',
   pptx: 'exportDialog.formatPptx',
+  // Preview: the SDK's structured extraction, labelled as such in the text.
+  markdown: 'exportDialog.formatMarkdown',
+  tables_xlsx: 'exportDialog.formatTablesXlsx',
 };
 
 export const IMAGE_FORMATS: ReadonlySet<ExportFormat> = new Set(['png', 'jpeg']);
@@ -72,6 +77,10 @@ export function ExportDialog({ isOpen, onClose, onExportComplete, pageIndex, pag
       setExporting(false);
     }
   }, [isOpen, initialFormat]);
+
+  // Keyboard focus stays inside the open dialog (WAI-ARIA dialog pattern).
+  const dialogRef = useRef<HTMLDivElement | null>(null);
+  useFocusTrap(dialogRef, isOpen);
 
   // Close on Escape key
   const onCloseRef = useRef(onClose);
@@ -220,10 +229,35 @@ export function ExportDialog({ isOpen, onClose, onExportComplete, pageIndex, pag
         const { invokeCommand: invoke } = await import('../../lib/commandBridge');
         await invoke('convert_to_pptx', { outputPath: path });
         update(taskId, { status: 'done', label: t('tasks.exportPowerpointDone') });
+      } else if (isStructuredExportFormat(format)) {
+        const { save } = await import('@tauri-apps/plugin-dialog');
+        const { invokeCommand: invoke } = await import('../../lib/commandBridge');
+        const running = format === 'markdown' ? t('tasks.exportMarkdownRunning') : t('tasks.exportTablesRunning');
+        const outcome = await runStructuredExport(format, {
+          pickPath: (filter) => save({ filters: [{ name: filter.name, extensions: [...filter.extensions] }] }),
+          invoke: (command, args) => invoke<unknown>(command, args),
+          onStart: () => {
+            push({ id: taskId, label: running, progress: null, status: 'running' });
+            onClose();
+          },
+        });
+        if (outcome.status === 'cancelled') { setExporting(false); return; }
+        update(taskId, {
+          status: 'done',
+          label: outcome.tables === null
+            ? t('tasks.exportMarkdownDone')
+            : t('tasks.exportTablesDone', { count: outcome.tables }),
+        });
       }
     } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
-      update(taskId, { status: 'error', label: `${t('tasks.exportFailed', { format: t(FORMAT_LABEL_KEYS[format]) })}: ${message}` });
+      const raw = err instanceof Error ? err.message : String(err);
+      const message = raw.startsWith(NO_TABLES_FOUND_CODE) ? t('exportDialog.noTablesFound') : raw;
+      const label = `${t('tasks.exportFailed', { format: t(FORMAT_LABEL_KEYS[format]) })}: ${message}`;
+      // A refusal before the save dialog (a document without a table) comes
+      // before any task was pushed; `update` alone would change nothing and the
+      // person would see no reason. `push` ignores an id that is already there.
+      push({ id: taskId, label, progress: null, status: 'error' });
+      update(taskId, { status: 'error', label });
     }
 
     setExporting(false);
@@ -242,7 +276,9 @@ export function ExportDialog({ isOpen, onClose, onExportComplete, pageIndex, pag
 
       {/* Dialog */}
       <div
+        ref={dialogRef}
         role="dialog"
+        aria-modal="true"
         aria-labelledby="export-dialog-title"
         data-testid="export-dialog"
         className="fixed left-1/2 top-[20vh] -translate-x-1/2 w-full max-w-sm bg-background border border-border rounded-xl shadow-2xl z-50"

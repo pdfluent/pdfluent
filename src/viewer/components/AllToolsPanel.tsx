@@ -50,6 +50,20 @@ const MODES: ViewerMode[] = ['read', 'review', 'edit', 'sign', 'organize', 'form
 
 const isTauri = isTauriRuntime();
 
+/**
+ * What clicking a tile does: open the panel the tool lives in, or switch to its
+ * mode, then close the modal. Kept out of the JSX so it is tested without a DOM.
+ */
+export function activateTile(
+  tool: Pick<ToolDefinition, 'opensPanel'>,
+  modeId: ViewerMode,
+  actions: { onOpenPanel?: (panel: NonNullable<ToolDefinition['opensPanel']>) => void; onModeSelect: (mode: ViewerMode) => void; onClose: () => void },
+): void {
+  if (tool.opensPanel !== undefined) actions.onOpenPanel?.(tool.opensPanel);
+  else actions.onModeSelect(modeId);
+  actions.onClose();
+}
+
 export function AllToolsPanel({ isOpen, onClose, onModeSelect, onOpenPanel }: AllToolsPanelProps) {
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<ToolTab>('alle');
@@ -146,14 +160,10 @@ export function AllToolsPanel({ isOpen, onClose, onModeSelect, onOpenPanel }: Al
                       <button
                         key={`${modeId}-${idx}`}
                         data-testid={`all-tools-${tool.label}`}
-                        onClick={() => {
-                          if (tool.opensPanel !== undefined) onOpenPanel?.(tool.opensPanel);
-                          else onModeSelect(modeId);
-                          onClose();
-                        }}
+                        onClick={() => { activateTile(tool, modeId, { onOpenPanel, onModeSelect, onClose }); }}
                         className="w-full flex items-center gap-4 px-5 py-3 text-left transition-colors group hover:bg-muted/60"
                       >
-                        <div className={`shrink-0 ${tool.color ?? 'text-muted-foreground'}`}>
+                        <div className={'shrink-0 text-muted-foreground'}>
                           <Icon className="w-5 h-5" />
                         </div>
                         <span className="text-sm text-foreground group-hover:text-foreground font-medium">

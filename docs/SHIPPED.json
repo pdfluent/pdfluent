@@ -2,23 +2,24 @@
   "$comment": [
     "Which commit the binaries people are downloading were built from.",
     "",
-    "1.0.0 is tagged v1.0.0 on this commit; scripts/ci/repo-truth.mjs checks that the commit is on the release branch and that the public repository carries it."
+    "1.1.1 is tagged v1.1.1 (annotated) on this commit; scripts/ci/repo-truth.mjs checks that the commit is on the release branch and that the public repository carries it."
   ],
-  "version": "1.0.0",
-  "commit": "73b907cf8e5b5d33d1acec6fb675a4cc61b79581",
+  "version": "1.1.1",
+  "commit": "1479f44bc2b9ef219ca58e1fcb74cd58fe871b6a",
   "artifacts": [
-    "PDFluent_1.0.0_universal.dmg (notarised, stapled, on pdfluent.com; sha256 d72813b71d764723788534f2c19a2b0be5257f148df859a8ffdd3489c2ccdf10)",
-    "PDFluent_1.0.0_x64_en-US.msi (Authenticode-signed, on pdfluent.com; sha256 27244d5742954ee8b493be7ad0c21dcd2f63157d43ff031bf1a63967063db769)"
+    "PDFluent_1.1.1_universal.dmg (on pdfluent.com/releases/1.1.1/; sha256 b0785b1fa1964a1a1f2fd85fdee202c244124f12f6ac828a2eaeb34db4f28aae)",
+    "PDFluent_1.1.1_x64_en-US.msi (on pdfluent.com/releases/1.1.1/; sha256 17d8385b7b63a9a31e0960299397f17d5761d0714bb1ccf01b676abdfc9df7da)"
   ],
   "evidence": [
-    "Built from the detached checkout of 73b907cf (tag v1.0.0) on 2026-09-17; DMG Info.plist reads CFBundleShortVersionString 1.0.0; MSI product version 1.0.0.",
-    "Quality run dev-macbook-m1pro-2026-09-18-macos-73b907c: S0\u2013S4 PASS, S5 skipped (a release build has no inspectable web view).",
-    "Quality run build-desktop-windows-2026-09-18-windows-73b907c: S1 PASS (authenticode, version, msi_install); S2/S3 could not be observed over the ssh lane, as in the 2026-09-08 rehearsal."
+    "Tag v1.1.1 is on 1479f44b. The Windows MSI was built from 1479f44b; the macOS DMG was built from 23f8bdcc, an ancestor of 1479f44b (git diff --stat between the two: 9 files, 262 insertions, 13 deletions).",
+    "Both sha256 values above were recomputed on 2026-10-26 from the files served at pdfluent.com/releases/1.1.1/ and match the quality reports; the published updater manifest https://pdfluent.com/releases/latest.json names 1.1.1 (pub_date 2026-10-24T07:17:39Z).",
+    "Quality run dev-macbook-m1pro-2026-10-23-macos-23f8bdc: verdict PASS, exit 0 (S0-S3 PASS; S4 and S5 not applicable).",
+    "Quality run build-desktop-windows-2026-10-24-windows-1479f44: verdict PASS, exit 0 (S0-S4 PASS; S5 not applicable).",
+    "CI Quality run 40012442344 on 1479f44b ended cancelled: its repo-truth job failed on the unpublished-commit window and its journeys:windows job did not pass. The release suite reports above are the record of the binaries being judged, not that run."
   ],
   "quality_reports": {
-    "macos": "quality/reports/1.0.0-macos.override.json",
-    "windows": "quality/reports/1.0.0-windows.override.json",
-    "note": "Both platforms were published under the recorded override (ticket #427). The suite did run on exactly these bytes: quality/reports/1.0.0-macos.json is INCOMPLETE (S0-S4 PASS, S5 skipped because a release build has no inspectable web view) and quality/reports/1.0.0-windows.json is FAIL (S1 PASS; S2/S3 not observable over the ssh lane, as in the 2026-09-08 rehearsal). Closing that gap is tracked on #427."
+    "macos": "quality/reports/1.1.1-macos.json",
+    "windows": "quality/reports/1.1.1-windows.json"
   },
-  "recorded": "2026-09-18"
+  "recorded": "2026-10-26"
 }

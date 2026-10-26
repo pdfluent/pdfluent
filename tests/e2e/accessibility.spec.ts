@@ -23,7 +23,7 @@
 // live.
 
 import AxeBuilder from '@axe-core/playwright';
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test, type Page } from './helpers/guarded-test';
 
 import { gotoViewer, loadMockDocument } from './helpers/app';
 
@@ -68,6 +68,25 @@ test('the shell with a document open is axe-clean', async ({ page }) => {
   await gotoViewer(page);
   await loadMockDocument(page);
   await scan(page, 'open document');
+});
+
+// Dark mode is a different page as far as contrast goes: the tokens flip
+// (src/styles/tokens.css) and the primary action becomes near-white. The
+// monochrome migration moved every active state, tab and button fill onto
+// those tokens, so the dark shell is scanned on its own. The token pairs are
+// also checked in vitest (tests/monochrome-guard.test.ts); this is the same
+// promise measured on the rendered page.
+test('the empty state is axe-clean in dark mode', async ({ page }) => {
+  await page.emulateMedia({ colorScheme: 'dark' });
+  await gotoViewer(page);
+  await scan(page, 'empty state (dark)');
+});
+
+test('the shell with a document open is axe-clean in dark mode', async ({ page }) => {
+  await page.emulateMedia({ colorScheme: 'dark' });
+  await gotoViewer(page);
+  await loadMockDocument(page);
+  await scan(page, 'open document (dark)');
 });
 
 // axe checks that a control which HAS a name has a usable one. It does not walk

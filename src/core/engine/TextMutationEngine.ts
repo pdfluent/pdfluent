@@ -62,6 +62,12 @@ export interface ReplaceTextSpanRequest {
   /** New text to write. */
   replacementText: string;
   /**
+   * The paragraph's lines, top to bottom, when the edited target spans more
+   * than one line (J-42). The backend replaces them in one transaction and
+   * reflows the new text inside the paragraph's width.
+   */
+  paragraphLines?: ReadonlyArray<{ text: string; rect: { x: number; y: number; width: number; height: number } }>;
+  /**
    * PDF-space metadata about the span the user pointed at.
    *
    * `rect` is the anchor: when the page shows the same text more than once,
@@ -322,4 +328,44 @@ export interface TextMutationEngineWithFormatting extends TextMutationEngine {
    * - Document is left unmodified when the variant is absent
    */
   setTextRunStyle(request: SetTextRunStyleRequest): AsyncEngineResult<SetTextRunStyleResult>;
+
+  /**
+   * Write a text span in an installed system typeface. The engine embeds a
+   * subset of the font; a face whose licence forbids embedding is refused with
+   * a typed reason and the document is left as it was.
+   */
+  setTextRunFont(request: SetTextRunFontRequest): AsyncEngineResult<SetTextRunFontResult>;
+}
+
+export interface SetTextRunFontRequest {
+  /** 0-based page index. */
+  pageIndex: number;
+  /** Exact text of the span (search key, as for replaceTextSpan). */
+  originalText: string;
+  /** `SystemFontFace.id` from `list_system_fonts`. */
+  fontId: string;
+}
+
+/** Why a typeface was refused; `code` is what the UI picks its sentence by. */
+export type FontRefusalCode =
+  | 'embedding-not-permitted'
+  | 'missing-glyphs'
+  | 'font-not-found'
+  | 'font-unusable'
+  | 'text-not-found';
+
+export interface FontRefusal {
+  readonly code: FontRefusalCode;
+  /** Present for embedding-not-permitted, missing-glyphs and font-unusable. */
+  readonly family?: string;
+  /** Why the licence refuses: restricted, bitmap-only, no-subsetting, no-licence-information. */
+  readonly reason?: string;
+  /** missing-glyphs: the characters the face lacks. */
+  readonly characters?: string;
+  readonly detail?: string;
+}
+
+export interface SetTextRunFontResult {
+  readonly applied: boolean;
+  readonly refusal: FontRefusal | null;
 }

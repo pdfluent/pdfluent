@@ -84,6 +84,7 @@ export type TextMutationSupportClass =
 /** Machine-readable reason for a mutation support decision. */
 export type MutationSupportReason =
   | 'single-span-digital'     // → writable_digital_text
+  | 'multi-line-digital'      // → writable_digital_text (paragraph edit, J-42)
   | 'multi-span-unsupported'  // → non_writable_digital_text
   | 'multi-line-unsupported'  // → non_writable_digital_text
   | 'empty-content'           // → non_writable_digital_text / unknown_structure
@@ -163,15 +164,15 @@ export interface ReplacementValidation {
 
 const SUPPORT_LABELS: Record<TextMutationSupportClass, string> = {
   'writable_digital_text':
-    'Tekst kan worden bewerkt en opgeslagen in de PDF',
+    'Text can be edited and saved to the PDF',
   'non_writable_digital_text':
-    'Digitale tekst met een te complexe structuur voor directe bewerking',
+    'Digital text with a structure too complex for direct editing',
   'ocr_read_only':
-    'OCR-tekst kan niet worden teruggeschreven naar de PDF',
+    'OCR text cannot be written back to the PDF',
   'protected_or_locked':
     i18n.t('textMutation.protectedLocked'),
   'unknown_structure':
-    'Tekststructuur kon niet worden geclassificeerd — bewerking niet beschikbaar',
+    'The text structure could not be classified — editing not available',
 };
 
 // ---------------------------------------------------------------------------
@@ -204,20 +205,27 @@ export function getMutationSupport(target: TextParagraphTarget): TextMutationSup
     return unsupported('unknown_structure', 'empty-content');
   }
 
-  // MVP constraint: exactly one line
-  // Multi-line paragraphs have reflow implications that Phase 4 cannot
-  // safely handle. Each line may have independent font metrics and spacing.
-  if (target.lines.length !== 1) {
-    return unsupported('non_writable_digital_text', 'multi-line-unsupported');
+  // Every line must be one span: a line with several font runs is a styled
+  // line, and replacing a subset of its runs without the layout engine risks
+  // corrupting glyph positions.
+  if (target.lines.some(l => l.spans.length !== 1)) {
+    return unsupported('non_writable_digital_text', 'multi-span-unsupported');
   }
 
-  const line = target.lines[0]!;
-
-  // MVP constraint: exactly one span
-  // Multi-span lines contain multiple font runs. Replacing a subset of spans
-  // without access to the full layout engine risks corrupting glyph positions.
-  if (line.spans.length !== 1) {
-    return unsupported('non_writable_digital_text', 'multi-span-unsupported');
+  // A paragraph of several single-run lines is edited as one text: the
+  // backend replaces it in one transaction and reflows the new text inside
+  // the paragraph's width (J-42, replace_text_paragraph).
+  if (target.lines.length > 1) {
+    return {
+      supportClass: 'writable_digital_text',
+      reasonCode: 'multi-line-digital',
+      label: SUPPORT_LABELS['writable_digital_text'],
+      writable: true,
+      constraints: {
+        maxLength: null,
+        assumedEncoding: 'unknown',
+      },
+    };
   }
 
   // Single-span, single-line digital text — parser-backed writable target.
@@ -258,7 +266,7 @@ export function validateReplacement(
     return {
       valid: true,
       reasonCode: 'no-change',
-      message: 'Geen wijzigingen — tekst is identiek aan het origineel.',
+      message: 'No changes — the text is identical to the original.',
     };
   }
 
@@ -269,7 +277,7 @@ export function validateReplacement(
       valid: false,
       reasonCode: 'empty-replacement',
       message:
-        'Vervangende tekst mag niet leeg zijn. Gebruik het redactiegereedschap om inhoud te verwijderen.',
+        'The replacement text must not be empty. Use the redaction tool to remove content.',
     };
   }
 
@@ -284,15 +292,15 @@ export function validateReplacement(
       valid: false,
       reasonCode: 'replacement-too-long',
       message:
-        `Vervangende tekst (${replacementText.length} tekens) is te lang (maximaal ${effectiveMax} tekens). ` +
-        `Verkort de tekst om overlap in het document te voorkomen.`,
+        `The replacement text (${replacementText.length} characters) is too long (maximum ${effectiveMax} characters). ` +
+        `Shorten the text to avoid overlap in the document.`,
     };
   }
 
   return {
     valid: true,
     reasonCode: 'valid',
-    message: 'Vervangende tekst voldoet aan alle eisen.',
+    message: 'The replacement text meets all requirements.',
   };
 }
 

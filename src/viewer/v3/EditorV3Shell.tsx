@@ -3,8 +3,8 @@
 
 import { isTauriRuntime } from '../../lib/tauri-detection';
 import { useTranslation } from 'react-i18next';
-import { createPortal } from 'react-dom';
 import {
+  useCallback,
   useEffect,
   useRef,
   useState,
@@ -54,14 +54,15 @@ import {
   ReceiptTextIcon,
   RefreshCwIcon,
   RotateCcwIcon,
-  RulerIcon,
   SaveIcon,
   ScissorsIcon,
   SearchIcon,
   Share2Icon,
   ShieldCheckIcon,
   SignatureIcon,
+  SquareIcon,
   StampIcon,
+  Trash2Icon,
   StrikethroughIcon,
   TypeIcon,
   UnderlineIcon,
@@ -73,20 +74,25 @@ import {
 import type { AnnotationAppearance, ViewerMode } from '../types';
 import type { Annotation, FormField, FormFieldValue, OutlineNode, PdfDocument } from '../../core/document';
 import type { AnnotationTool } from '../components/ModeToolbar';
-import type { AttachmentInfo, LayerInfo } from '../components/LeftNavRail';
+import type { AttachmentInfo, LayerInfo } from '../types';
 import type { ExportFormat } from '../components/ExportDialog';
 import type { TextParagraphTarget } from '../text/textInteractionModel';
+import type { FlattenFormOutcome } from '../state/flattenForm';
 import type {
   InvoiceData,
   InvoiceValidationResult,
+  OcrTextLayerReport,
   PdfAConvertResult,
   PdfAValidationResult,
   SignatureVerifyResult,
 } from '../../lib/tauri-api';
 import { ZoomPresetsPopover } from '../components/ZoomPresetsPopover';
+import { ShellToast } from '../components/Notices';
 import { LanguageSwitcher } from '../components/LanguageSwitcher';
 import { pickPdfPath } from '../../platform/native/fileDialogs';
 import { useTaskQueueContext } from '../context/TaskQueueContext';
+import { PiiControls } from './PiiControls';
+import { PII_ENABLED } from '../pii/enabled';
 import { Settings } from '../../components/Settings';
 import {
   detectNativeCapabilities,
@@ -97,12 +103,29 @@ import {
   type NativeCapabilities,
   type NativeFeatureCapability,
 } from '../../platform/native/nativeServices';
+import { printDocument } from '../state/printFlow';
+import { TypefacePicker } from '../components/TypefacePicker';
+import { nextFontSize, FONT_SIZE_BUTTONS } from '../text/fontSizeStep';
+import { clickToPdfPoint, localIsoDate, STAMP_NAMES, type PadStroke, type Placement, type PageSize } from './placement';
+import { compressToastKey, compressToastParams, replacesOpenDocument, type CompressMode } from '../state/compressReport';
+import { AllToolsButton } from './AllToolsButton';
+import { removePasswordForm, type PasswordRemovalState } from '../state/removePassword';
+import { SignaturePad, SIGNATURE_PAD_HEIGHT, SIGNATURE_PAD_WIDTH } from './SignaturePad';
+import { hexToPdfColor, isMovableAnnotation } from '../interaction/annotationGeometry';
+import { onShellToast } from './shellToast';
+import { pickImage } from './imagePick';
+import { ARM_HINT, armFromControl, selectionActions, signDialogFor, type ArmControl, type Armed, type SignControl } from './placementControls';
+import { useFocusTrap } from '../hooks/useFocusTrap';
 type V3Panel = 'tools' | 'edit' | 'convert' | 'esign' | 'protect' | 'watermark' | 'compress' | 'split' | 'merge' | 'redact' | 'pdfa' | 'metadata' | 'invoice';
 type RailTool = 'select' | 'hand' | 'comment' | 'highlight' | 'draw' | 'text' | 'sign' | 'more';
 type V3Modal = 'privacy' | 'author' | 'native';
 
 interface EditorV3ShellProps {
   children: ReactNode;
+  /** The row of open documents (J-90), shown between the top bar and the workspace. */
+  documentTabs?: ReactNode;
+  themeDark: boolean;
+  onToggleTheme: () => void;
   canvasRef: RefObject<HTMLDivElement | null>;
   fileName: string | null;
   pageIndex: number;
@@ -142,6 +165,11 @@ interface EditorV3ShellProps {
   onSetFieldValue: (fieldId: string, value: FormFieldValue) => void;
   formValidationErrors: Array<{ fieldId: string; errors: string[] }>;
   onFormSubmit: () => Promise<void>;
+  /** Logical AcroForm fields the backend reports; 0 for XFA or no form. */
+  formFieldCount: number;
+  /** Flatten the AcroForm (J-58); resolves with what to tell the user. */
+  onFlattenForm: () => Promise<FlattenFormOutcome>;
+  flattenFormBusy: boolean;
   pdfDoc: PdfDocument | null;
   onMetadataChange: (key: 'title' | 'author' | 'subject' | 'keywords', value: string) => void;
   selectedAnnotation: Annotation | null;
@@ -149,6 +177,14 @@ interface EditorV3ShellProps {
   onAnnotationAppearanceChange: (appearance: AnnotationAppearance | ((prev: AnnotationAppearance) => AnnotationAppearance)) => void;
   onDeleteSelectedAnnotation: (annotationId: string) => void;
   onUpdateAnnotationColor: (annotationId: string, color: [number, number, number]) => void;
+  /** Rewrite the text of a text box (J-44). */
+  onUpdateAnnotationText?: (annotationId: string, text: string) => Promise<void>;
+  /** Swap the picture of a placed image (J-45). */
+  onReplaceAnnotationImage?: (annotationId: string, dataUrl: string) => Promise<void>;
+  /** Write an armed placement into the PDF; resolves true when it landed. */
+  onPlaceAnnotation?: (placement: Placement, pageIndex: number, point: { x: number; y: number }, page: PageSize) => Promise<boolean>;
+  /** Write a sticky note with its comment at a point on a page (J-51); resolves true when it landed. */
+  onAddNote?: (pageIndex: number, point: { x: number; y: number }, text: string) => Promise<boolean>;
   redactions: Annotation[];
   documentIssues: unknown[];
   onApplyRedactions: () => void;
@@ -158,10 +194,12 @@ interface EditorV3ShellProps {
   onRedactMetadata: () => Promise<boolean>;
   scannedPageIndices: Set<number>;
   ocrRunning: boolean;
-  ocrVisible: boolean;
-  onOcrVisibleChange: (visible: boolean | ((prev: boolean) => boolean)) => void;
-  ocrConfidenceThreshold: number;
-  onOcrConfidenceChange: (threshold: number | ((prev: number) => number)) => void;
+  /** Pages done of the OCR run in progress, or null. */
+  ocrProgress: { done: number; total: number } | null;
+  /** What the last OCR run did, or null before the first run. */
+  ocrLastReport: OcrTextLayerReport | null;
+  /** Whether the OCR component is installed; null while unknown or outside the app. */
+  ocrComponentInstalled: boolean | null;
   attachments: AttachmentInfo[];
   onExtractAttachment: (name: string) => void;
   onAddAttachment: () => void;
@@ -194,8 +232,14 @@ interface EditorV3ShellProps {
   onAnnotationToolChange: (tool: AnnotationTool) => void;
   onAddComment: () => void;
   onFormatCommand: (command: string, value?: string) => void;
+  /** Size of the text being edited, in pt; null when no text editor is open (J-43). */
+  editFontSize?: number | null;
+  /** Installed typeface for the line being edited (null keeps the document's font); absent when no text editor is open. */
+  editTypeface?: { value: string | null; onChange: (fontId: string | null) => void } | null;
   onNavigatePage: (pageIndex: number) => void;
   onZoomChange: (zoom: number | ((prev: number) => number)) => void;
+  /** Fit width (or Fit page where that is clearly better) for the window as it is now. */
+  onFitToView: () => void;
   zoomPresetsOpen: boolean;
   setZoomPresetsOpen: (open: boolean | ((prev: boolean) => boolean)) => void;
   onOpenGoToPage: () => void;
@@ -216,6 +260,10 @@ interface EditorV3ShellProps {
     isStrikethrough: boolean;
   };
   onDocumentMutated?: () => void;
+  /** The open document changed in memory and is not saved yet. */
+  onDocumentEdited?: () => void;
+  /** The open document now lives at another path (signing writes a new file). */
+  onDocumentPathChanged?: (path: string) => void;
   /** Counts content mutations. The Sign panel re-checks on it, because an edit
    *  is exactly what turns a valid usage-rights signature into a dead one. */
   contentRevision?: number;
@@ -223,12 +271,20 @@ interface EditorV3ShellProps {
 
 const isTauri = isTauriRuntime();
 
-// Phase 1 release gate: these controls only create React overlays and do not
-// persist into the PDF. Phase 2 can enable them after native write-through lands.
-const LOCAL_OVERLAY_CONTROLS_ENABLED = false;
+/** What a pending signature or initials placement carries: typed text, or
+ *  the strokes drawn on the pad (which win when there are any). */
+interface PendingSignature {
+  type: 'signature' | 'initials';
+  /** Printed under the mark: "Signed by <name> · <date>". */
+  signerName: string;
+  content: string;
+  /** Bundled signature font for the typed name (#725). */
+  fontId?: string;
+  strokes?: PadStroke[];
+}
 
 /** The items the rail's "More" popover offers, each with a branch that runs. */
-type MoreTool = 'strikeout' | 'underline' | 'attachment';
+type MoreTool = 'strikeout' | 'underline' | 'rectangle' | 'attachment';
 
 const PANEL_TO_MODE: Record<V3Panel, ViewerMode> = {
   tools: 'read',
@@ -242,13 +298,14 @@ const PANEL_TO_MODE: Record<V3Panel, ViewerMode> = {
   merge: 'read',
   redact: 'review',
   pdfa: 'convert',
-  metadata: 'edit',
+  metadata: 'read',
   invoice: 'convert',
 };
 
 export function EditorV3Shell(props: EditorV3ShellProps) {
   const {
     children,
+    themeDark,
     canvasRef,
     fileName,
     pageIndex,
@@ -267,6 +324,8 @@ export function EditorV3Shell(props: EditorV3ShellProps) {
     comments,
     activeCommentIdx,
     onCommentSelect,
+    onDeleteComment,
+    onUpdateComment,
     onNextComment,
     onPrevComment,
     onResolveAll,
@@ -275,16 +334,25 @@ export function EditorV3Shell(props: EditorV3ShellProps) {
     onFieldSelect,
     formValidationErrors,
     onFormSubmit,
+    formFieldCount,
+    onFlattenForm,
+    flattenFormBusy,
     selectedAnnotation,
+    onDeleteSelectedAnnotation,
+    onUpdateAnnotationColor,
+    onUpdateAnnotationText,
+    onReplaceAnnotationImage,
+    onPlaceAnnotation,
+    onAddNote,
     redactions,
     documentIssues,
     onApplyRedactions,
+    onRedactMetadata,
     scannedPageIndices,
     ocrRunning,
-    ocrVisible,
-    onOcrVisibleChange,
-    ocrConfidenceThreshold,
-    onOcrConfidenceChange,
+    ocrProgress,
+    ocrLastReport,
+    ocrComponentInstalled,
     attachments,
     onExtractAttachment,
     onAddAttachment,
@@ -316,8 +384,11 @@ export function EditorV3Shell(props: EditorV3ShellProps) {
     onPrevSearchResult,
     onAnnotationToolChange,
     onFormatCommand,
+    editFontSize,
+    editTypeface,
     onNavigatePage,
     onZoomChange,
+    onFitToView,
     zoomPresetsOpen,
     setZoomPresetsOpen,
     onOpenGoToPage,
@@ -328,6 +399,8 @@ export function EditorV3Shell(props: EditorV3ShellProps) {
     onRedactSearch,
     onAuthorChange,
     onDocumentMutated,
+    onDocumentEdited,
+    onDocumentPathChanged,
     contentRevision,
     onReorderPages,
     onTtsBoundary,
@@ -360,27 +433,61 @@ export function EditorV3Shell(props: EditorV3ShellProps) {
   const [showSignModal, setShowSignModal] = useState(false);
   const [showInitialsModal, setShowInitialsModal] = useState(false);
   const [signType, setSignType] = useState<'type' | 'draw'>('type');
-  const [signatureName, setSignatureName] = useState('');
-  const [signatureFont, setSignatureFont] = useState('font-signature-1');
+  // The signer's name starts as the author name from the settings.
+  const [signatureName, setSignatureName] = useState(authorName);
+  useEffect(() => { setSignatureName(prev => prev || authorName); }, [authorName]);
   const [typedInitials, setTypedInitials] = useState('');
+  // The handwriting fonts a typed signature can use (#725), the one picked,
+  // and its CSS family once the preview has loaded it.
+  const [signatureFonts, setSignatureFonts] = useState<Array<{ id: string; family: string }>>([]);
+  const [signatureFontId, setSignatureFontId] = useState('');
+  const [signatureFontCss, setSignatureFontCss] = useState<string | null>(null);
+  useEffect(() => {
+    if (!showSignModal || !isTauri) return;
+    let cancelled = false;
+    void (async () => {
+      try {
+        const { invokeCommand: invoke } = await import('../../lib/commandBridge');
+        const fonts = await invoke<Array<{ id: string; family: string }>>('list_signature_fonts');
+        if (cancelled) return;
+        setSignatureFonts(fonts);
+        setSignatureFontId(prev => prev || fonts[0]?.id || '');
+      } catch (err) {
+        if (err instanceof Error) showToast(err.message);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [showSignModal]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    if (!signatureFontId || !isTauri) { setSignatureFontCss(null); return; }
+    let cancelled = false;
+    void (async () => {
+      try {
+        const { invokeCommand: invoke } = await import('../../lib/commandBridge');
+        const data = await invoke<string>('get_signature_font_data', { fontId: signatureFontId });
+        const face = new FontFace(`PdfluentSignature-${signatureFontId}`, Uint8Array.from(atob(data), c => c.charCodeAt(0)));
+        await face.load();
+        document.fonts.add(face);
+        if (!cancelled) setSignatureFontCss(face.family);
+      } catch (err) {
+        if (!cancelled) {
+          setSignatureFontCss(null);
+          if (err instanceof Error) showToast(err.message);
+        }
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [signatureFontId]); // eslint-disable-line react-hooks/exhaustive-deps
+  const [drawnStrokes, setDrawnStrokes] = useState<PadStroke[]>([]);
 
-  const [isInsertingText, setIsInsertingText] = useState(false);
-  const [isInsertingImage, setIsInsertingImage] = useState(false);
-  const [pendingSignature, setPendingSignature] = useState<{
-    type: 'signature' | 'initials';
-    content: string;
-    font?: string;
-  } | null>(null);
+  // One placement at a time: a click on the page places what is armed.
+  const [armed, setArmed] = useState<Armed>(null);
+  const isInsertingText = armed?.kind === 'text';
+  const isInsertingImage = armed?.kind === 'image';
+  const pendingStamp = armed?.kind === 'stamp' ? armed.name : null;
+  const [pendingSignature, setPendingSignature] = useState<PendingSignature | null>(null);
 
-  const [localOverlays, setLocalOverlays] = useState<Array<{
-    id: string;
-    pageIndex: number;
-    x: number;
-    y: number;
-    type: 'text' | 'image' | 'signature' | 'initials';
-    content: string;
-    font?: string;
-  }>>([]);
+  // A text box being written (x, y in PDF space) or rewritten (`id`).
   const [textOverlayDraft, setTextOverlayDraft] = useState<{
     id?: string;
     pageIndex: number;
@@ -389,15 +496,30 @@ export function EditorV3Shell(props: EditorV3ShellProps) {
     value: string;
   } | null>(null);
 
-  // Non-persistent placement state is strictly document-scoped. Clear both
-  // armed tools and rendered overlays before a replacement document can use it.
+  // A sticky note being written (x, y in PDF space) or rewritten (`id`).
+  const [noteDraft, setNoteDraft] = useState<{
+    id?: string;
+    pageIndex: number;
+    x: number;
+    y: number;
+    value: string;
+  } | null>(null);
+  // The Note tool is armed: a click on the page asks for the comment text.
+  const noteToolActive = mode === 'review' && passiveRailTool === 'comment' && !activeAnnotationTool;
+
+  // An armed placement belongs to the document it was armed on.
   useEffect(() => {
-    setIsInsertingText(false);
-    setIsInsertingImage(false);
+    setArmed(null);
     setPendingSignature(null);
-    setLocalOverlays([]);
     setTextOverlayDraft(null);
+    setNoteDraft(null);
   }, [pdfDoc?.id]);
+
+  // Selecting a shape, stamp, image or text box opens the panel that edits it
+  // (J-46): colour, text, image and delete live in the Edit panel.
+  useEffect(() => {
+    if (selectedAnnotation && selectedAnnotation.type !== 'text') setActivePanel('edit');
+  }, [selectedAnnotation?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Persist thumbnail sidebar visibility to localStorage
   useEffect(() => {
@@ -423,72 +545,82 @@ export function EditorV3Shell(props: EditorV3ShellProps) {
     };
   }, [moreOpen, shareOpen]);
 
-  // Click handler to place text, images, or signature on canvas
+  // A click on the page with a placement armed writes it into the PDF.
   useEffect(() => {
     const canvasEl = canvasRef.current;
     if (!canvasEl) return;
 
     const handleCanvasClick = (e: MouseEvent) => {
-      const pageEl = (e.target as HTMLElement).closest('.page') as HTMLElement;
+      if (!pendingSignature && !isInsertingText && !isInsertingImage && !pendingStamp && !noteToolActive) return;
+      const clicked = e.target as HTMLElement;
+      const pageEl = clicked.closest('.page') as HTMLElement;
       if (!pageEl) return;
 
+      if (noteToolActive) {
+        // The end of a text selection and a press on a floating control are
+        // not a request for a note.
+        if (clicked.closest('button, a, input, textarea, select, [role="toolbar"]')) return;
+        const selection = window.getSelection();
+        if (selection && !selection.isCollapsed) return;
+        const noteSize = pdfDoc?.pages[parseInt(pageEl.getAttribute('data-page-index') || '0', 10)]?.size;
+        if (!noteSize) return;
+        const noteRect = pageEl.getBoundingClientRect();
+        const notePage = parseInt(pageEl.getAttribute('data-page-index') || '0', 10);
+        const notePoint = clickToPdfPoint(e.clientX - noteRect.left, e.clientY - noteRect.top, zoom, noteSize);
+        setPassiveRailTool('select');
+        onModeChange('read');
+        setNoteDraft({ pageIndex: notePage, x: notePoint.x, y: notePoint.y, value: '' });
+        return;
+      }
+
       const pageIdx = parseInt(pageEl.getAttribute('data-page-index') || '0', 10);
+      const size = pdfDoc?.pages[pageIdx]?.size;
+      if (!size || !onPlaceAnnotation) return;
       const rect = pageEl.getBoundingClientRect();
-      const clickX = e.clientX - rect.left;
-      const clickY = e.clientY - rect.top;
+      const point = clickToPdfPoint(e.clientX - rect.left, e.clientY - rect.top, zoom, size);
+      const place = (placement: Placement, done: string) => {
+        void onPlaceAnnotation(placement, pageIdx, point, size).then(ok => { if (ok) showToast(done); });
+      };
 
       if (pendingSignature) {
         const sig = pendingSignature;
         setPendingSignature(null);
-        setLocalOverlays(prev => [...prev, {
-          id: `local-sig-${Date.now()}`,
-          pageIndex: pageIdx,
-          x: clickX / zoom,
-          y: clickY / zoom,
-          type: sig.type,
-          content: sig.content,
-          font: sig.font
-        }]);
-        showToast(sig.type === 'signature' ? t('editorV3.overlay.signaturePlaced') : t('editorV3.overlay.initialsPlaced'));
+        place(
+          {
+            kind: 'signature',
+            role: sig.type,
+            signerName: sig.signerName,
+            date: localIsoDate(new Date()),
+            text: sig.content,
+            fontId: sig.fontId,
+            strokes: sig.strokes,
+            padWidth: SIGNATURE_PAD_WIDTH,
+            padHeight: SIGNATURE_PAD_HEIGHT,
+          },
+          sig.type === 'signature' ? t('editorV3.overlay.signaturePlaced') : t('editorV3.overlay.initialsPlaced'),
+        );
+        return;
+      }
+
+      if (pendingStamp) {
+        const name = pendingStamp;
+        setArmed(null);
+        place({ kind: 'stamp', name }, t('editorV3.edit.stampPlaced'));
         return;
       }
 
       if (isInsertingText) {
-        setIsInsertingText(false);
-        setTextOverlayDraft({
-          pageIndex: pageIdx,
-          x: clickX / zoom,
-          y: clickY / zoom,
-          value: '',
-        });
+        setArmed(null);
+        setTextOverlayDraft({ pageIndex: pageIdx, x: point.x, y: point.y, value: '' });
         return;
       }
 
       if (isInsertingImage) {
-        setIsInsertingImage(false);
-        const input = document.createElement('input');
-        input.type = 'file';
-        input.accept = 'image/*';
-        input.onchange = (ev) => {
-          const file = (ev.target as HTMLInputElement).files?.[0];
-          if (file) {
-            const reader = new FileReader();
-            reader.onload = (readEv) => {
-              const src = readEv.target?.result as string;
-              setLocalOverlays(prev => [...prev, {
-                id: `local-img-${Date.now()}`,
-                pageIndex: pageIdx,
-                x: clickX / zoom,
-                y: clickY / zoom,
-                type: 'image',
-                content: src
-              }]);
-              showToast(t('editorV3.overlay.imagePlaced'));
-            };
-            reader.readAsDataURL(file);
-          }
-        };
-        input.click();
+        setArmed(null);
+        void pickImage().then(dataUrl => {
+          if (!dataUrl) return;
+          place({ kind: 'image', dataUrl }, t('editorV3.overlay.imagePlaced'));
+        });
       }
     };
 
@@ -499,53 +631,55 @@ export function EditorV3Shell(props: EditorV3ShellProps) {
     // showToast and t are intentionally omitted: both are render-local helpers,
     // while this listener should only be rebound when placement state changes.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [canvasRef, isInsertingText, isInsertingImage, pendingSignature, zoom]);
+  }, [canvasRef, isInsertingText, isInsertingImage, pendingSignature, pendingStamp, noteToolActive, zoom, pdfDoc, onPlaceAnnotation]);
+
+  const commitNoteDraft = () => {
+    if (!noteDraft) return;
+    const draft = noteDraft;
+    const value = draft.value.trim();
+    setNoteDraft(null);
+    if (draft.id) {
+      onUpdateComment(draft.id, value);
+      return;
+    }
+    if (!value || !onAddNote) return;
+    void onAddNote(draft.pageIndex, { x: draft.x, y: draft.y }, value);
+  };
 
   const commitTextOverlayDraft = () => {
     if (!textOverlayDraft) return;
-    const value = textOverlayDraft.value.trim();
-    if (!value) {
-      if (textOverlayDraft.id) {
-        setLocalOverlays(prev => prev.filter(overlay => overlay.id !== textOverlayDraft.id));
+    const draft = textOverlayDraft;
+    const value = draft.value.trim();
+    setTextOverlayDraft(null);
+    if (draft.id) {
+      // Saving an existing box empty deletes it, as the dialog says.
+      if (!value) {
+        onDeleteSelectedAnnotation(draft.id);
         showToast(t('editorV3.textbox.deleted'));
+        return;
       }
-      setTextOverlayDraft(null);
+      void onUpdateAnnotationText?.(draft.id, value).then(() => showToast(t('editorV3.textbox.updated')));
       return;
     }
-
-    if (textOverlayDraft.id) {
-      setLocalOverlays(prev => prev.map(overlay => (
-        overlay.id === textOverlayDraft.id ? { ...overlay, content: value } : overlay
-      )));
-      showToast(t('editorV3.textbox.updated'));
-    } else {
-      setLocalOverlays(prev => [...prev, {
-        id: `local-txt-${Date.now()}`,
-        pageIndex: textOverlayDraft.pageIndex,
-        x: textOverlayDraft.x,
-        y: textOverlayDraft.y,
-        type: 'text',
-        content: value,
-      }]);
-      showToast(t('editorV3.textbox.added'));
-    }
-    setTextOverlayDraft(null);
+    const size = pdfDoc?.pages[draft.pageIndex]?.size;
+    if (!value || !size || !onPlaceAnnotation) return;
+    void onPlaceAnnotation({ kind: 'text', text: value }, draft.pageIndex, { x: draft.x, y: draft.y }, size)
+      .then(ok => { if (ok) showToast(t('editorV3.textbox.added')); });
   };
 
   useEffect(() => {
     const canvasEl = canvasRef.current;
     if (!canvasEl) return;
     
-    if (isInsertingText || isInsertingImage || pendingSignature) {
+    if (isInsertingText || isInsertingImage || pendingSignature || pendingStamp) {
       canvasEl.style.cursor = 'crosshair';
     } else {
       canvasEl.style.cursor = '';
     }
-  }, [canvasRef, isInsertingText, isInsertingImage, pendingSignature]);
+  }, [canvasRef, isInsertingText, isInsertingImage, pendingSignature, pendingStamp]);
 
   const [readPaused, setReadPaused] = useState(false);
   const [moreToolsOpen, setMoreToolsOpen] = useState(false);
-  const [themeDark, setThemeDark] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const [activeModal, setActiveModal] = useState<V3Modal | null>(null);
   const [showSettings, setShowSettings] = useState(false);
@@ -557,6 +691,11 @@ export function EditorV3Shell(props: EditorV3ShellProps) {
     window.clearTimeout((showToast as unknown as { timer?: number }).timer);
     (showToast as unknown as { timer?: number }).timer = window.setTimeout(() => setToast(null), 2600);
   };
+
+  // Lines from inside the page (the selection toolbar's Copy) land here.
+  const showToastRef = useRef(showToast);
+  showToastRef.current = showToast;
+  useEffect(() => onShellToast(message => { showToastRef.current(message); }), []);
 
   // Track previous pageCount so we only collapse UI when a document is CLOSED,
   // not on initial mount (where pageCount is already 0).
@@ -589,14 +728,15 @@ export function EditorV3Shell(props: EditorV3ShellProps) {
   }, []);
 
   useEffect(() => {
+    // A panel that belongs to the current mode stays. Document properties,
+    // PDF/A and E-invoice share a mode with the Edit and Convert tabs; without
+    // this the effect swapped them for that tab's own panel the moment they
+    // opened, so "Document properties" showed the Edit panel (J-66, J-78).
+    if (activePanel !== null && PANEL_TO_MODE[activePanel] === mode) return;
     if (mode === 'edit') setActivePanel('edit');
     if (mode === 'convert') setActivePanel('convert');
     if (mode === 'sign') setActivePanel('esign');
-    if (mode === 'protect') {
-      if (activePanel !== 'watermark') {
-        setActivePanel('protect');
-      }
-    }
+    if (mode === 'protect') setActivePanel('protect');
   }, [mode, activePanel]);
 
   useEffect(() => {
@@ -690,8 +830,8 @@ export function EditorV3Shell(props: EditorV3ShellProps) {
   // and "Ruler" fell through to the end of this function; "Stamps" opened the
   // All-tools panel with a toast pointing at a stamp tile that is hidden for
   // having no handler; "Insert text box" opened the edit panel, whose text-box
-  // control is behind LOCAL_OVERLAY_CONTROLS_ENABLED. A menu item that cannot
-  // do the thing it is named after is not offered.
+  // control was then fenced off for only drawing an overlay. A menu item that
+  // cannot do the thing it is named after is not offered.
   function handleMoreTool(action: MoreTool) {
     setMoreToolsOpen(false);
     if (action === 'strikeout') {
@@ -704,6 +844,14 @@ export function EditorV3Shell(props: EditorV3ShellProps) {
       onModeChange('review');
       onAnnotationToolChange('underline');
       showToast(t('editorV3.railToasts.underline'));
+      return;
+    }
+    if (action === 'rectangle') {
+      // A drawn rectangle is a /Square annotation; select it afterwards to
+      // move, resize, recolour or delete it (J-46).
+      onModeChange('review');
+      onAnnotationToolChange('rectangle');
+      showToast(t('editorV3.railToasts.rectangle'));
       return;
     }
     if (action === 'attachment') {
@@ -780,6 +928,7 @@ export function EditorV3Shell(props: EditorV3ShellProps) {
         activeSearchResultIndex={activeSearchResultIndex}
         nativeCapabilities={nativeCapabilities}
         onOpenFile={onOpenFile}
+        onOpenAllTools={onOpenAllTools}
         onSaveAs={onSaveAs}
         onSaveComplete={onSaveComplete}
         onCloseDocument={onCloseDocument}
@@ -804,12 +953,14 @@ export function EditorV3Shell(props: EditorV3ShellProps) {
         onShowAuthor={() => { setActiveModal('author'); setMoreOpen(false); }}
         onShowNative={() => { setActiveModal('native'); setMoreOpen(false); }}
         onShowSettings={() => { setShowSettings(true); setMoreOpen(false); }}
-        onToggleTheme={() => { setThemeDark(dark => !dark); }}
+        onToggleTheme={props.onToggleTheme}
         onProtectDocument={onProtectDocument}
         onCheckForUpdates={() => { onCheckForUpdates(); setMoreOpen(false); }}
         onShowToast={showToast}
         themeDark={themeDark}
       />
+
+      {props.documentTabs}
 
       <div className="workspace">
         <V3Thumbnails
@@ -836,16 +987,39 @@ export function EditorV3Shell(props: EditorV3ShellProps) {
             onWatermark={onWatermark}
             currentFilePath={currentFilePath}
             onFormatCommand={onFormatCommand}
+            editFontSize={editFontSize}
+            editTypeface={editTypeface}
             onModeChange={onModeChange}
-            isInsertingText={isInsertingText}
-            setIsInsertingText={setIsInsertingText}
-            isInsertingImage={isInsertingImage}
-            setIsInsertingImage={setIsInsertingImage}
+            armed={armed}
+            onArm={(control, stampChoice) => {
+              const next = armFromControl(control, armed, stampChoice);
+              setArmed(next);
+              if (next) showToast(t(ARM_HINT[next.kind]));
+            }}
+            onDisarm={() => setArmed(null)}
             pendingSignature={pendingSignature}
             setPendingSignature={setPendingSignature}
+            onDeleteSelectedAnnotation={onDeleteSelectedAnnotation}
+            onUpdateAnnotationColor={onUpdateAnnotationColor}
+            onEditAnnotationText={(annotation) => setTextOverlayDraft({
+              id: annotation.id,
+              pageIndex: annotation.pageIndex,
+              x: annotation.rect.x,
+              y: annotation.rect.y + annotation.rect.height,
+              value: annotation.contents ?? '',
+            })}
+            onReplaceAnnotationImage={(annotationId) => {
+              void pickImage().then(async dataUrl => {
+                if (!dataUrl || !onReplaceAnnotationImage) return;
+                await onReplaceAnnotationImage(annotationId, dataUrl);
+                showToast(t('editorV3.edit.imageReplaced'));
+              });
+            }}
             comments={comments}
             activeCommentIdx={activeCommentIdx}
             onCommentSelect={onCommentSelect}
+            onEditComment={(comment) => setNoteDraft({ id: comment.id, pageIndex: comment.pageIndex, x: 0, y: 0, value: comment.contents ?? '' })}
+            onDeleteComment={onDeleteComment}
             onNextComment={onNextComment}
             onPrevComment={onPrevComment}
             onResolveAll={onResolveAll}
@@ -854,17 +1028,20 @@ export function EditorV3Shell(props: EditorV3ShellProps) {
             onFieldSelect={onFieldSelect}
             formValidationErrors={formValidationErrors}
             onFormSubmit={onFormSubmit}
+            formFieldCount={formFieldCount}
+            onFlattenForm={onFlattenForm}
+            flattenFormBusy={flattenFormBusy}
             selectedAnnotation={selectedAnnotation}
             redactions={redactions}
             documentIssues={documentIssues}
             onApplyRedactions={onApplyRedactions}
             onRedactSearch={onRedactSearch}
+            onRedactMetadata={onRedactMetadata}
             scannedPageIndices={scannedPageIndices}
             ocrRunning={ocrRunning}
-            ocrVisible={ocrVisible}
-            onOcrVisibleChange={onOcrVisibleChange}
-            ocrConfidenceThreshold={ocrConfidenceThreshold}
-            onOcrConfidenceChange={onOcrConfidenceChange}
+            ocrProgress={ocrProgress}
+            ocrLastReport={ocrLastReport}
+            ocrComponentInstalled={ocrComponentInstalled}
             attachments={attachments}
             onExtractAttachment={onExtractAttachment}
             onAddAttachment={onAddAttachment}
@@ -873,6 +1050,8 @@ export function EditorV3Shell(props: EditorV3ShellProps) {
             layerVisibility={layerVisibility}
             onShowToast={showToast}
             onDocumentMutated={onDocumentMutated}
+            onDocumentEdited={onDocumentEdited}
+            onDocumentPathChanged={onDocumentPathChanged}
             contentRevision={contentRevision}
             onOpenSignModal={() => setShowSignModal(true)}
             onOpenInitialsModal={() => setShowInitialsModal(true)}
@@ -919,15 +1098,15 @@ export function EditorV3Shell(props: EditorV3ShellProps) {
                   <ChevronDownIcon aria-hidden="true" />
                 </button>
                 <div className="rail-sep" />
-                <button className="rail-btn" data-tip={t('editorV3.nav.fitToView')} onClick={() => { onZoomChange(1.0); }} aria-label={t('editorV3.nav.fitToView')}>
+                <button className="rail-btn" data-tip={t('editorV3.nav.fitToView')} onClick={() => { onFitToView(); }} aria-label={t('editorV3.nav.fitToView')}>
                   <MaximizeIcon aria-hidden="true" />
                 </button>
               </div>
 
               {/* Floating zoom controls */}
               <div className="bottombar">
-                <button className="bb-btn" onClick={() => onNavigatePage(Math.max(0, pageIndex - 1))} disabled={pageIndex <= 0} title={t('editorV3.common.previous')}>
-                  <ChevronLeftIcon aria-hidden="true" />
+                <button className="bb-btn" data-testid="bb-prev-page-btn" onClick={() => onNavigatePage(Math.max(0, pageIndex - 1))} disabled={pageIndex <= 0} title={t('editorV3.common.previous')} aria-label={t('editorV3.nav.prevPage')}>
+                  <ChevronLeftIcon className="rtl-mirror" aria-hidden="true" />
                 </button>
                 <button
                   className="bb-page tabular-nums"
@@ -939,8 +1118,8 @@ export function EditorV3Shell(props: EditorV3ShellProps) {
                 >
                   {pageIndex + 1} / {pageCount}
                 </button>
-                <button className="bb-btn" onClick={() => onNavigatePage(Math.min(pageCount - 1, pageIndex + 1))} disabled={pageIndex >= pageCount - 1} title={t('editorV3.common.next')}>
-                  <ChevronRightIcon aria-hidden="true" />
+                <button className="bb-btn" data-testid="bb-next-page-btn" onClick={() => onNavigatePage(Math.min(pageCount - 1, pageIndex + 1))} disabled={pageIndex >= pageCount - 1} title={t('editorV3.common.next')} aria-label={t('editorV3.nav.nextPage')}>
+                  <ChevronRightIcon className="rtl-mirror" aria-hidden="true" />
                 </button>
                 <div className="bb-sep" aria-hidden="true" />
                 <button
@@ -949,6 +1128,7 @@ export function EditorV3Shell(props: EditorV3ShellProps) {
                   onClick={() => onZoomChange(z => Math.max(0.25, Number((z - 0.25).toFixed(2))))}
                   disabled={zoom <= 0.25}
                   title={t('editorV3.zoom.zoomOut')}
+                  aria-label={t('editorV3.zoom.zoomOut')}
                 >
                   −
                 </button>
@@ -968,13 +1148,14 @@ export function EditorV3Shell(props: EditorV3ShellProps) {
                   onClick={() => onZoomChange(z => Math.min(4, Number((z + 0.25).toFixed(2))))}
                   disabled={zoom >= 4}
                   title={t('editorV3.zoom.zoomIn')}
+                  aria-label={t('editorV3.zoom.zoomIn')}
                 >
                   +
                 </button>
                 <button
                   className="bb-btn"
                   data-testid="zoom-fit-width-btn"
-                  onClick={() => { onZoomChange(1.0); }}
+                  onClick={() => { onFitToView(); }}
                   aria-label={t('editorV3.nav.fitToView')}
                   title={t('editorV3.nav.fitToView')}
                 >
@@ -995,13 +1176,13 @@ export function EditorV3Shell(props: EditorV3ShellProps) {
       {readOpen && (
         <div className={readPaused ? 'read-bar show paused' : 'read-bar show'}>
           <span className="label"><span className="eq"><i /><i /><i /><i /></span>{t('editorV3.read.readAloud')}</span>
-          <button className="read-btn" onClick={handleReadRestart} title={t('editorV3.read.restart')}>
+          <button className="read-btn" onClick={handleReadRestart} title={t('editorV3.read.restart')} aria-label={t('editorV3.read.restart')}>
             <RotateCcwIcon aria-hidden="true" />
           </button>
-          <button className="read-btn primary" onClick={handleReadPauseToggle} title={readPaused ? t('editorV3.read.play') : t('editorV3.read.pause')}>
+          <button className="read-btn primary" onClick={handleReadPauseToggle} title={readPaused ? t('editorV3.read.play') : t('editorV3.read.pause')} aria-label={readPaused ? t('editorV3.read.play') : t('editorV3.read.pause')}>
             {readPaused ? <PlayIcon aria-hidden="true" /> : <PauseIcon aria-hidden="true" />}
           </button>
-          <button className="read-btn" onClick={handleReadStop} title={t('editorV3.read.stop')}>
+          <button className="read-btn" onClick={handleReadStop} title={t('editorV3.read.stop')} aria-label={t('editorV3.read.stop')}>
             <XIcon aria-hidden="true" />
           </button>
         </div>
@@ -1047,82 +1228,79 @@ export function EditorV3Shell(props: EditorV3ShellProps) {
 
       {showSignModal && (
         <EditorV3Modal title={t('editorV3.sign.addSignature')} onClose={() => setShowSignModal(false)}>
+          {/* The name is printed under the placed signature ("Signed by <name>
+              · <date>"), drawn or typed, so it is asked for either way. */}
+          <label className="modal-field" style={{ marginBottom: 16 }}>
+            <span>{t('editorV3.sign.signatureName')}</span>
+            <input
+              data-testid="signature-name-input"
+              value={signatureName}
+              onChange={(e) => setSignatureName(e.target.value)}
+              placeholder={t('editorV3.sign.typeName')}
+              autoFocus
+            />
+          </label>
           <div className="esign-tabs" style={{ display: 'flex', gap: 12, marginBottom: 16 }}>
-            <button className={`btn-ghost ${signType === 'type' ? 'active' : ''}`} style={{ flex: 1, borderBottom: signType === 'type' ? '2px solid var(--accent)' : 'none', borderRadius: 0, paddingBottom: 8 }} onClick={() => setSignType('type')}>{t('editorV3.sign.type')}</button>
-            <button className={`btn-ghost ${signType === 'draw' ? 'active' : ''}`} style={{ flex: 1, borderBottom: signType === 'draw' ? '2px solid var(--accent)' : 'none', borderRadius: 0, paddingBottom: 8 }} onClick={() => setSignType('draw')}>{t('editorV3.sign.draw')}</button>
+            <button className={`btn-ghost ${signType === 'type' ? 'active' : ''}`} style={{ flex: 1, borderBottom: signType === 'type' ? '2px solid var(--emphasis)' : 'none', borderRadius: 0, paddingBottom: 8 }} onClick={() => setSignType('type')}>{t('editorV3.sign.type')}</button>
+            <button className={`btn-ghost ${signType === 'draw' ? 'active' : ''}`} style={{ flex: 1, borderBottom: signType === 'draw' ? '2px solid var(--emphasis)' : 'none', borderRadius: 0, paddingBottom: 8 }} onClick={() => setSignType('draw')}>{t('editorV3.sign.draw')}</button>
           </div>
 
+          {signType === 'type' && signatureFonts.length > 0 && (
+            <label className="modal-field" style={{ marginBottom: 12 }}>
+              <span>{t('editorV3.sign.signatureFont')}</span>
+              <select
+                data-testid="signature-font-select"
+                value={signatureFontId}
+                onChange={(e) => setSignatureFontId(e.target.value)}
+              >
+                {signatureFonts.map(f => <option key={f.id} value={f.id}>{f.family}</option>)}
+                <option value="">{t('editorV3.sign.plainItalic')}</option>
+              </select>
+            </label>
+          )}
+
           {signType === 'type' ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              <label className="modal-field">
-                <span>{t('editorV3.sign.signatureName')}</span>
-                <input
-                  value={signatureName}
-                  onChange={(e) => setSignatureName(e.target.value)}
-                  placeholder={t('editorV3.sign.typeName')}
-                  autoFocus
-                />
-              </label>
-              <div className="panel-section-label">{t('editorV3.sign.selectStyle')}</div>
-              <label className="select-wrap" style={{ width: '100%' }}>
-                <select className="select native-select" value={signatureFont} onChange={e => setSignatureFont(e.target.value)}>
-                  <option value="font-signature-1">{t('editorV3.sign.styleClassic')}</option>
-                  <option value="font-signature-2">{t('editorV3.sign.styleElegant')}</option>
-                  <option value="font-signature-3">{t('editorV3.sign.styleBrush')}</option>
-                  <option value="font-signature-4">{t('editorV3.sign.styleModern')}</option>
-                </select>
-                <ChevronDownIcon aria-hidden="true" />
-              </label>
-              {signatureName && (
-                <div style={{
-                  padding: '24px',
-                  background: 'rgba(30,31,36,0.02)',
-                  border: '1px solid var(--border)',
-                  borderRadius: 8,
-                  textAlign: 'center',
-                  fontSize: 28,
-                  color: 'rgb(22, 101, 52)',
-                  fontFamily: 
-                    signatureFont === 'font-signature-1' ? 'Brush Script MT, cursive' :
-                    signatureFont === 'font-signature-2' ? 'Caveat, cursive' :
-                    signatureFont === 'font-signature-3' ? 'Satisfy, cursive' : 'Lucida Handwriting, cursive'
-                }}>
-                  {signatureName}
-                </div>
-              )}
-            </div>
+            signatureName.trim() && (
+              // The preview uses the face the PDF gets: the chosen signature
+              // font, or Helvetica Oblique when none is chosen.
+              <div data-testid="signature-preview" style={{
+                padding: '24px',
+                background: 'rgba(30,31,36,0.02)',
+                border: '1px solid var(--border)',
+                borderRadius: 8,
+                textAlign: 'center',
+                fontSize: 28,
+                color: 'rgb(13, 38, 115)',  // monochrome-allow: signature ink is blue like a pen (document content)
+                fontFamily: signatureFontId && signatureFontCss ? `"${signatureFontCss}", cursive` : 'Helvetica, Arial, sans-serif',
+                fontStyle: signatureFontId ? 'normal' : 'italic',
+              }}>
+                {signatureName}
+              </div>
+            )
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              <div style={{
-                height: 180,
-                background: 'rgba(30,31,36,0.02)',
-                border: '1px dashed var(--border)',
-                borderRadius: 8,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: 'var(--text-muted)',
-                fontSize: 13,
-                cursor: 'crosshair',
-                position: 'relative'
-              }}>
-                <span>{t('editorV3.sign.drawHere')}</span>
-                <div style={{ position: 'absolute', bottom: 10, right: 10, fontSize: 10 }}>{t('editorV3.sign.clear')}</div>
-              </div>
+              <SignaturePad onChange={setDrawnStrokes} />
             </div>
           )}
 
           <div className="modal-actions" style={{ marginTop: 20 }}>
             <button className="modal-secondary" type="button" onClick={() => setShowSignModal(false)}>{t('editorV3.common.cancel')}</button>
-            <button className="modal-primary" type="button" onClick={() => {
-              setShowSignModal(false);
-              setPendingSignature({
-                type: 'signature',
-                content: signatureName || t('editorV3.sign.defaultSignature'),
-                font: signatureFont
-              });
-              showToast(t('editorV3.sign.clickToPlaceSignature'));
-            }}>{t('editorV3.sign.apply')}</button>
+            <button
+              className="modal-primary"
+              type="button"
+              disabled={!signatureName.trim() || (signType === 'draw' && !drawnStrokes.some(s => s.length > 0))}
+              onClick={() => {
+                setShowSignModal(false);
+                setPendingSignature({
+                  type: 'signature',
+                  signerName: signatureName.trim(),
+                  content: signatureName.trim(),
+                  fontId: signType === 'type' && signatureFontId ? signatureFontId : undefined,
+                  strokes: signType === 'draw' ? drawnStrokes : undefined,
+                });
+                showToast(t('editorV3.sign.clickToPlaceSignature'));
+              }}
+            >{t('editorV3.sign.apply')}</button>
           </div>
         </EditorV3Modal>
       )}
@@ -1140,6 +1318,14 @@ export function EditorV3Shell(props: EditorV3ShellProps) {
               autoFocus
             />
           </label>
+          <label className="modal-field" style={{ marginTop: 12 }}>
+            <span>{t('editorV3.sign.signatureName')}</span>
+            <input
+              value={signatureName}
+              onChange={(e) => setSignatureName(e.target.value)}
+              placeholder={t('editorV3.sign.typeName')}
+            />
+          </label>
           {typedInitials && (
             <div style={{
               marginTop: 16,
@@ -1149,22 +1335,29 @@ export function EditorV3Shell(props: EditorV3ShellProps) {
               borderRadius: 8,
               textAlign: 'center',
               fontSize: 24,
-              color: 'rgb(22, 101, 52)',
-              fontFamily: 'Caveat, cursive'
+              color: 'rgb(13, 38, 115)',  // monochrome-allow: signature ink is blue like a pen (document content)
+              fontFamily: 'Helvetica, Arial, sans-serif',
+              fontStyle: 'italic',
             }}>
               {typedInitials}
             </div>
           )}
           <div className="modal-actions" style={{ marginTop: 20 }}>
             <button className="modal-secondary" type="button" onClick={() => setShowInitialsModal(false)}>{t('editorV3.common.cancel')}</button>
-            <button className="modal-primary" type="button" onClick={() => {
-              setShowInitialsModal(false);
-              setPendingSignature({
-                type: 'initials',
-                content: typedInitials || t('editorV3.sign.defaultInitials')
-              });
-              showToast(t('editorV3.sign.clickToPlaceInitials'));
-            }}>{t('editorV3.sign.apply')}</button>
+            <button
+              className="modal-primary"
+              type="button"
+              disabled={!typedInitials.trim() || !signatureName.trim()}
+              onClick={() => {
+                setShowInitialsModal(false);
+                setPendingSignature({
+                  type: 'initials',
+                  signerName: signatureName.trim(),
+                  content: typedInitials.trim(),
+                });
+                showToast(t('editorV3.sign.clickToPlaceInitials'));
+              }}
+            >{t('editorV3.sign.apply')}</button>
           </div>
         </EditorV3Modal>
       )}
@@ -1175,7 +1368,7 @@ export function EditorV3Shell(props: EditorV3ShellProps) {
           onClose={() => setTextOverlayDraft(null)}
         >
           <p style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 16 }}>
-            {t('editorV3.textbox.intro')}
+            {t('editorV3.textbox.introPdf')}
           </p>
           <label className="modal-field">
             <span>{t('editorV3.textbox.label')}</span>
@@ -1183,6 +1376,7 @@ export function EditorV3Shell(props: EditorV3ShellProps) {
               value={textOverlayDraft.value}
               onChange={(event) => setTextOverlayDraft(prev => prev ? { ...prev, value: event.target.value } : prev)}
               placeholder={t('editorV3.textbox.placeholder')}
+              data-testid="text-box-input"
               autoFocus
               style={{
                 width: '100%',
@@ -1203,7 +1397,7 @@ export function EditorV3Shell(props: EditorV3ShellProps) {
                 className="modal-secondary"
                 type="button"
                 onClick={() => {
-                  setLocalOverlays(prev => prev.filter(overlay => overlay.id !== textOverlayDraft.id));
+                  if (textOverlayDraft.id) onDeleteSelectedAnnotation(textOverlayDraft.id);
                   setTextOverlayDraft(null);
                   showToast(t('editorV3.textbox.deleted'));
                 }}
@@ -1212,105 +1406,45 @@ export function EditorV3Shell(props: EditorV3ShellProps) {
               </button>
             )}
             <button className="modal-secondary" type="button" onClick={() => setTextOverlayDraft(null)}>{t('editorV3.common.cancel')}</button>
-            <button className="modal-primary" type="button" onClick={commitTextOverlayDraft}>{t('editorV3.common.save')}</button>
+            <button className="modal-primary" type="button" data-testid="text-box-save" onClick={commitTextOverlayDraft}>{t('editorV3.common.save')}</button>
           </div>
         </EditorV3Modal>
       )}
 
-      {localOverlays.map(overlay => {
-        const pageContainer = canvasRef.current?.querySelector(`[data-page-index="${overlay.pageIndex}"]`);
-        if (!pageContainer) return null;
-
-        const style: React.CSSProperties = {
-          position: 'absolute',
-          left: overlay.x * zoom,
-          top: overlay.y * zoom,
-          transform: 'translate(-50%, -50%)',
-          zIndex: 40,
-          pointerEvents: 'auto',
-        };
-
-        return createPortal(
-          <div key={overlay.id} style={style} className="local-overlay-item">
-            {overlay.type === 'text' ? (
-              <div style={{
-                padding: '4px 8px',
-                background: 'transparent',
-                color: 'var(--text-primary)',
-                fontSize: 14 * zoom,
-                fontFamily: 'Helvetica, Arial, sans-serif',
-                whiteSpace: 'pre',
-                border: '1px dashed transparent',
-                cursor: 'pointer'
+      {noteDraft && (
+        <EditorV3Modal
+          title={noteDraft.id ? t('review.editCommentAriaLabel') : t('review.addComment')}
+          onClose={() => setNoteDraft(null)}
+        >
+          <label className="modal-field">
+            <span>{t('review.addComment')}</span>
+            <textarea
+              value={noteDraft.value}
+              onChange={(event) => setNoteDraft(prev => prev ? { ...prev, value: event.target.value } : prev)}
+              data-testid="comment-edit-textarea"
+              autoFocus
+              style={{
+                width: '100%',
+                minHeight: 96,
+                padding: 10,
+                border: '1px solid var(--border)',
+                borderRadius: 6,
+                fontSize: 13,
+                lineHeight: 1.4,
+                outline: 'none',
+                resize: 'vertical',
               }}
-              onClick={(e) => {
-                e.stopPropagation();
-                setTextOverlayDraft({
-                  id: overlay.id,
-                  pageIndex: overlay.pageIndex,
-                  x: overlay.x,
-                  y: overlay.y,
-                  value: overlay.content,
-                });
-              }}
-              title={t('editorV3.overlay.clickToEdit')}
-              >
-                {overlay.content}
-              </div>
-            ) : overlay.type === 'image' ? (
-              <img
-                src={overlay.content}
-                alt={t('editorV3.overlay.placed')}
-                style={{
-                  maxWidth: 150 * zoom,
-                  maxHeight: 150 * zoom,
-                  border: '1px dashed transparent',
-                  cursor: 'pointer'
-                }}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setLocalOverlays(prev => prev.filter(o => o.id !== overlay.id));
-                  showToast(t('editorV3.overlay.imageRemoved'));
-                }}
-                title={t('editorV3.overlay.clickToRemove')}
-              />
-            ) : (
-              <div style={{
-                padding: '6px 12px',
-                background: 'rgba(239, 246, 255, 0.95)',
-                border: '1.5px dashed var(--accent)',
-                borderRadius: 4,
-                color: 'rgb(22, 101, 52)',
-                fontSize: overlay.type === 'signature' ? 24 * zoom : 18 * zoom,
-                fontFamily: 
-                  overlay.font === 'font-signature-1' ? 'Brush Script MT, cursive' :
-                  overlay.font === 'font-signature-2' ? 'Caveat, cursive' :
-                  overlay.font === 'font-signature-3' ? 'Satisfy, cursive' : 
-                  overlay.type === 'initials' ? 'Caveat, cursive' : 'Lucida Handwriting, cursive',
-                whiteSpace: 'nowrap',
-                boxShadow: '0 4px 12px rgba(10, 102, 255, 0.15)',
-                cursor: 'pointer',
-                userSelect: 'none'
-              }}
-              onClick={(e) => {
-                e.stopPropagation();
-                setLocalOverlays(prev => prev.filter(o => o.id !== overlay.id));
-                showToast(t('editorV3.overlay.signatureRemoved'));
-              }}
-              title={t('editorV3.overlay.clickToRemove')}
-              >
-                {overlay.content}
-              </div>
-            )}
-          </div>,
-          pageContainer
-        );
-      })}
+            />
+          </label>
+          <div className="modal-actions" style={{ marginTop: 20 }}>
+            <button className="modal-secondary" type="button" onClick={() => setNoteDraft(null)}>{t('editorV3.common.cancel')}</button>
+            <button className="modal-primary" type="button" data-testid="comment-edit-confirm-btn" onClick={commitNoteDraft}>{t('editorV3.common.save')}</button>
+          </div>
+        </EditorV3Modal>
+      )}
 
       {toast && (
-        <div className="toast-wrap">
-          <div className="toast show"><ShieldCheckIcon className="ok" aria-hidden="true" /><span>{toast}</span></div>
-        </div>
+        <ShellToast message={toast} />
       )}
 
       <Settings
@@ -1331,13 +1465,37 @@ function EditorV3Modal({
   onClose: () => void;
 }) {
   const { t } = useTranslation();
+  const dialogRef = useRef<HTMLElement | null>(null);
+  const onCloseRef = useRef(onClose);
+  useEffect(() => { onCloseRef.current = onClose; });
+  // A modal dialog keeps keyboard focus inside itself and closes on Escape
+  // (WAI-ARIA dialog pattern). Focus starts on the dialog so a screen reader
+  // announces its title, and Tab moves into its controls from there.
+  useFocusTrap(dialogRef, true);
+  useEffect(() => {
+    const previous = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    dialogRef.current?.focus();
+    function handleKey(event: KeyboardEvent): void {
+      if (event.key !== 'Escape') return;
+      event.preventDefault();
+      onCloseRef.current();
+    }
+    window.addEventListener('keydown', handleKey);
+    return () => {
+      window.removeEventListener('keydown', handleKey);
+      previous?.focus();
+    };
+  }, []);
   return (
     <div className="modal-backdrop" role="presentation" onMouseDown={onClose}>
       <section
+        ref={dialogRef}
         className="v3-modal"
         role="dialog"
         aria-modal="true"
         aria-label={title}
+        tabIndex={-1}
+        data-testid="v3-modal"
         onMouseDown={(event) => event.stopPropagation()}
       >
         <div className="modal-head">
@@ -1442,6 +1600,7 @@ interface TopBarProps {
   onShowNative: () => void;
   onShowSettings: () => void;
   onToggleTheme: () => void;
+  onOpenAllTools: () => void;
   onProtectDocument: () => void;
   onCheckForUpdates: () => void;
   onShowToast: (message: string) => void;
@@ -1460,10 +1619,14 @@ function EditorV3TopBar(props: TopBarProps) {
     const el = menuTabsRef.current;
     if (!el || !hasDocument) return;
 
+    // `left`/`right` are the start and end buttons. In a right-to-left UI
+    // scrollLeft runs from 0 down to negative values, so the distance from
+    // the start is its magnitude, whichever way the tabs read.
     const updateOverflow = () => {
+      const fromStart = Math.abs(el.scrollLeft);
       setTabOverflow({
-        left: el.scrollLeft > 2,
-        right: el.scrollLeft + el.clientWidth < el.scrollWidth - 2,
+        left: fromStart > 2,
+        right: fromStart + el.clientWidth < el.scrollWidth - 2,
       });
     };
 
@@ -1477,8 +1640,27 @@ function EditorV3TopBar(props: TopBarProps) {
     };
   }, [hasDocument]);
 
+  /** -1 scrolls toward the first tab, 1 toward the last, in either direction. */
   function scrollTabs(direction: -1 | 1) {
-    menuTabsRef.current?.scrollBy({ left: direction * 156, behavior: 'smooth' });
+    const el = menuTabsRef.current;
+    if (!el) return;
+    const physical = getComputedStyle(el).direction === 'rtl' ? -1 : 1;
+    el.scrollBy({ left: direction * physical * 156, behavior: 'smooth' });
+  }
+
+  /**
+   * The Share menu's Save as. `onSaveAs` rejects when the file cannot be
+   * written; handed straight to onClick that rejection was unhandled and the
+   * crash reporter turned a refused Save As (a folder that does not exist)
+   * into a crash dialog (J-83). It is said on screen instead.
+   */
+  async function handleSaveAsClick(): Promise<void> {
+    try {
+      await props.onSaveAs();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      props.onShowToast(t('editorV3.toasts.saveFailed', { message }));
+    }
   }
 
   async function handleSave(): Promise<void> {
@@ -1571,7 +1753,7 @@ function EditorV3TopBar(props: TopBarProps) {
                 aria-label={t('editorV3.topbar.scrollLeft')}
                 tabIndex={tabOverflow.left ? 0 : -1}
               >
-                <ChevronLeftIcon aria-hidden="true" />
+                <ChevronLeftIcon className="rtl-mirror" aria-hidden="true" />
               </button>
               <nav ref={menuTabsRef} className="menu-tabs" aria-label={t('editorV3.topbar.workMode')}>
                 {modeTabs.map(tab => {
@@ -1580,6 +1762,7 @@ function EditorV3TopBar(props: TopBarProps) {
                     <button
                       key={tab.id}
                       type="button"
+                      data-mode-tab={tab.id}
                       className={props.activePanel === tab.id ? 'menu-tab active' : 'menu-tab'}
                       onClick={() => props.onPanelToggle(tab.id)}
                     >
@@ -1596,7 +1779,7 @@ function EditorV3TopBar(props: TopBarProps) {
                 aria-label={t('editorV3.topbar.scrollRight')}
                 tabIndex={tabOverflow.right ? 0 : -1}
               >
-                <ChevronRightIcon aria-hidden="true" />
+                <ChevronRightIcon className="rtl-mirror" aria-hidden="true" />
               </button>
             </div>
           ) : (
@@ -1615,40 +1798,41 @@ function EditorV3TopBar(props: TopBarProps) {
             <span className="file" title={props.fileName ?? t('editorV3.topbar.noDocument')}>{props.fileName ?? t('editorV3.topbar.noDocument')}</span>
             {hasDocument && <span className="badge">PDF</span>}
             {props.isDirty && <span className="dirty-dot" title={t('editorV3.topbar.unsaved')} />}
-            {hasDocument && <ChevronDownIcon className="chev" aria-hidden="true" />}
           </div>
         </div>
 
         <div className="tb-right">
           {hasDocument && (
             <>
+              <AllToolsButton onOpen={props.onOpenAllTools} />
               <div className="tb-group">
-                <button className="iconbtn" disabled={!props.canUndo} onClick={props.onUndo} title={t('editorV3.topbar.undo')} data-testid="undo-btn">
+                <button className="iconbtn" disabled={!props.canUndo} onClick={props.onUndo} title={t('editorV3.topbar.undo')} aria-label={t('editorV3.topbar.undo')} data-testid="undo-btn">
                   <Undo2Icon aria-hidden="true" />
                 </button>
-                <button className="iconbtn" disabled={!props.canRedo} onClick={props.onRedo} title={t('editorV3.topbar.redo')} data-testid="redo-btn">
+                <button className="iconbtn" disabled={!props.canRedo} onClick={props.onRedo} title={t('editorV3.topbar.redo')} aria-label={t('editorV3.topbar.redo')} data-testid="redo-btn">
                   <Redo2Icon aria-hidden="true" />
                 </button>
               </div>
               <div className="brand-divider" />
-              <button className={props.searchOpen ? 'iconbtn on' : 'iconbtn'} onClick={props.onOpenSearch} title={t('editorV3.topbar.search')} data-testid="search-btn">
+              <button className={props.searchOpen ? 'iconbtn on' : 'iconbtn'} onClick={props.onOpenSearch} title={t('editorV3.topbar.search')} aria-label={t('editorV3.topbar.search')} aria-expanded={props.searchOpen} data-testid="search-btn">
                 <SearchIcon aria-hidden="true" />
               </button>
               <button
                 className={props.readOpen ? 'iconbtn live' : 'iconbtn'}
                 onClick={props.onReadToggle}
                 title={ttsAvailable ? t('editorV3.read.readAloud') : t('editorV3.read.notAvailable')}
+                aria-label={ttsAvailable ? t('editorV3.read.readAloud') : t('editorV3.read.notAvailable')}
                 disabled={!ttsAvailable}
                 data-testid="read-aloud-btn"
               >
                 <HeadphonesIcon aria-hidden="true" />
               </button>
-              <button className="iconbtn" onClick={() => { void handleSave(); }} disabled={!canSave} title={t('editorV3.topbar.save')} data-testid="save-btn">
+              <button className="iconbtn" onClick={() => { void handleSave(); }} disabled={!canSave} title={t('editorV3.topbar.save')} aria-label={t('editorV3.topbar.save')} data-testid="save-btn">
                 <SaveIcon aria-hidden="true" />
               </button>
             </>
           )}
-          <button className={props.moreOpen ? 'iconbtn on more-trigger' : 'iconbtn more-trigger'} onClick={props.onMoreToggle} title={t('editorV3.topbar.more')}>
+          <button className={props.moreOpen ? 'iconbtn on more-trigger' : 'iconbtn more-trigger'} onClick={props.onMoreToggle} title={t('editorV3.topbar.more')} aria-label={t('editorV3.topbar.more')} aria-haspopup="menu" aria-expanded={props.moreOpen} data-testid="more-menu-btn">
             <MoreHorizontalIcon aria-hidden="true" />
           </button>
           {hasDocument && (
@@ -1672,6 +1856,8 @@ function EditorV3TopBar(props: TopBarProps) {
               <input
                 type="text"
                 placeholder={t('editorV3.topbar.searchPlaceholder')}
+                aria-label={t('editorV3.topbar.searchPlaceholder')}
+                data-testid="v3-search-input"
                 value={props.searchQuery}
                 autoFocus
                 onChange={(event) => {
@@ -1680,8 +1866,8 @@ function EditorV3TopBar(props: TopBarProps) {
                 }}
               />
               <span className="count">{props.searchResultCount ? `${props.activeSearchResultIndex + 1}/${props.searchResultCount}` : ''}</span>
-              <button className="iconbtn" style={{ width: 32, height: 32 }} onClick={props.onPrevSearchResult}><ChevronUpIcon aria-hidden="true" /></button>
-              <button className="iconbtn" style={{ width: 32, height: 32 }} onClick={props.onNextSearchResult}><ChevronDownIcon aria-hidden="true" /></button>
+              <button className="iconbtn" style={{ width: 32, height: 32 }} onClick={props.onPrevSearchResult} aria-label={t('a11y.searchPrevResult')} title={t('a11y.searchPrevResult')}><ChevronUpIcon aria-hidden="true" /></button>
+              <button className="iconbtn" style={{ width: 32, height: 32 }} onClick={props.onNextSearchResult} aria-label={t('a11y.searchNextResult')} title={t('a11y.searchNextResult')}><ChevronDownIcon aria-hidden="true" /></button>
             </div>
           </div>
         )}
@@ -1690,7 +1876,7 @@ function EditorV3TopBar(props: TopBarProps) {
       {props.moreOpen && (
         <div className="dropdown show topbar-more-menu">
           {hasDocument && (
-            <button className="dd-item" onClick={() => window.print()}><PrinterIcon aria-hidden="true" />{t('editorV3.menu.print')}<span className="sc">⌘P</span></button>
+            <button className="dd-item" onClick={() => { void printDocument(); }}><PrinterIcon aria-hidden="true" />{t('editorV3.menu.print')}<span className="sc">⌘P</span></button>
           )}
           <button className="dd-item" onClick={props.onOpenCommandPalette}><InfoIcon aria-hidden="true" />{t('editorV3.menu.commandPalette')}<span className="sc">⌘K</span></button>
           <div className="dd-sep" />
@@ -1724,7 +1910,7 @@ function EditorV3TopBar(props: TopBarProps) {
           <div className="dd-label">{t('editorV3.share.localHeading')}</div>
           <button className="dd-item" onClick={() => { void handleSave(); }} disabled={!canSave}><SaveIcon aria-hidden="true" />{t('editorV3.share.saveCopy')}</button>
           <button className="dd-item" onClick={() => props.onOpenExport()} data-testid="export-btn"><DownloadIcon aria-hidden="true" />{t('editorV3.share.exportAs')}<span className="val">{t('editorV3.share.exportFormats')}</span></button>
-          <button className="dd-item" onClick={props.onSaveAs} data-testid="save-as-btn"><SaveIcon aria-hidden="true" />{t('editorV3.share.saveAs')}</button>
+          <button className="dd-item" onClick={() => { void handleSaveAsClick(); }} data-testid="save-as-btn"><SaveIcon aria-hidden="true" />{t('editorV3.share.saveAs')}</button>
           <button className="dd-item" onClick={props.onProtectDocument}><LockIcon aria-hidden="true" />{t('editorV3.share.protectedCopy')}</button>
           <button className="dd-item" onClick={() => { window.location.href = `mailto:?subject=${encodeURIComponent(props.fileName ?? 'PDF')}&body=${encodeURIComponent(t('editorV3.share.emailBody'))}`; }}><MailIcon aria-hidden="true" />{t('editorV3.share.sendByEmail')}</button>
           <button className="dd-item" onClick={() => props.onOpenExport()}><LayersIcon aria-hidden="true" />{t('editorV3.share.flatCopy')}</button>
@@ -1750,10 +1936,14 @@ function EditorV3Panel({
   onWatermark: _onWatermark,
   currentFilePath,
   onFormatCommand,
+  editFontSize,
+  editTypeface,
   onModeChange,
   comments,
   activeCommentIdx: _activeCommentIdx,
   onCommentSelect: _onCommentSelect,
+  onEditComment,
+  onDeleteComment,
   onNextComment,
   onPrevComment,
   onResolveAll,
@@ -1762,17 +1952,20 @@ function EditorV3Panel({
   onFieldSelect: _onFieldSelect,
   formValidationErrors,
   onFormSubmit,
+  formFieldCount,
+  onFlattenForm,
+  flattenFormBusy,
   selectedAnnotation,
   redactions,
   documentIssues: _documentIssues,
   onApplyRedactions,
   onRedactSearch,
+  onRedactMetadata,
   scannedPageIndices,
   ocrRunning,
-  ocrVisible,
-  onOcrVisibleChange,
-  ocrConfidenceThreshold,
-  onOcrConfidenceChange,
+  ocrProgress,
+  ocrLastReport,
+  ocrComponentInstalled,
   attachments,
   onExtractAttachment,
   onAddAttachment,
@@ -1781,13 +1974,18 @@ function EditorV3Panel({
   layerVisibility,
   onShowToast,
   onDocumentMutated,
+  onDocumentEdited,
+  onDocumentPathChanged,
   contentRevision = 0,
-  isInsertingText: _isInsertingText,
-  setIsInsertingText,
-  isInsertingImage: _isInsertingImage,
-  setIsInsertingImage,
+  armed,
+  onArm,
+  onDisarm,
   pendingSignature,
   setPendingSignature,
+  onDeleteSelectedAnnotation,
+  onUpdateAnnotationColor,
+  onEditAnnotationText,
+  onReplaceAnnotationImage,
 }: {
   panel: V3Panel;
   onClose: () => void;
@@ -1795,12 +1993,15 @@ function EditorV3Panel({
   onAnnotationToolChange: (tool: AnnotationTool) => void;
   onOpenSignModal?: () => void;
   onOpenInitialsModal?: () => void;
-  isInsertingText: boolean;
-  setIsInsertingText: (val: boolean) => void;
-  isInsertingImage: boolean;
-  setIsInsertingImage: (val: boolean) => void;
-  pendingSignature: { type: 'signature' | 'initials'; content: string; font?: string } | null;
-  setPendingSignature: (val: { type: 'signature' | 'initials'; content: string; font?: string } | null) => void;
+  armed: Armed;
+  onArm: (control: ArmControl, stampChoice: string) => void;
+  onDisarm: () => void;
+  pendingSignature: PendingSignature | null;
+  setPendingSignature: (val: PendingSignature | null) => void;
+  onDeleteSelectedAnnotation: (annotationId: string) => void;
+  onUpdateAnnotationColor: (annotationId: string, color: [number, number, number]) => void;
+  onEditAnnotationText: (annotation: Annotation) => void;
+  onReplaceAnnotationImage: (annotationId: string) => void;
   onOpenAllTools: () => void;
   onOpenExport: (format?: ExportFormat) => void;
   onRunOcr: () => void;
@@ -1808,10 +2009,16 @@ function EditorV3Panel({
   onWatermark: () => void;
   currentFilePath: string | null;
   onFormatCommand: (command: string, value?: string) => void;
+  /** Size of the text being edited, in pt; null when no text editor is open (J-43). */
+  editFontSize?: number | null;
+  /** Installed typeface for the line being edited (null keeps the document's font); absent when no text editor is open. */
+  editTypeface?: { value: string | null; onChange: (fontId: string | null) => void } | null;
   onModeChange: (mode: ViewerMode) => void;
   comments: Annotation[];
   activeCommentIdx: number;
   onCommentSelect: (idx: number) => void;
+  onEditComment: (comment: Annotation) => void;
+  onDeleteComment: (annotationId: string) => void;
   onNextComment: () => void;
   onPrevComment: () => void;
   onResolveAll: () => void;
@@ -1820,17 +2027,25 @@ function EditorV3Panel({
   onFieldSelect: (idx: number) => void;
   formValidationErrors: Array<{ fieldId: string; errors: string[] }>;
   onFormSubmit: () => Promise<void>;
+  /** Logical AcroForm fields the backend reports; 0 for XFA or no form. */
+  formFieldCount: number;
+  /** Flatten the AcroForm (J-58); resolves with what to tell the user. */
+  onFlattenForm: () => Promise<FlattenFormOutcome>;
+  flattenFormBusy: boolean;
   selectedAnnotation: Annotation | null;
   redactions: Annotation[];
   documentIssues: unknown[];
   onApplyRedactions: () => void;
   onRedactSearch: (query: string) => Promise<{ matchesFound: number; areasRedacted: number } | null>;
+  onRedactMetadata: () => Promise<boolean>;
   scannedPageIndices: Set<number>;
   ocrRunning: boolean;
-  ocrVisible: boolean;
-  onOcrVisibleChange: (visible: boolean | ((prev: boolean) => boolean)) => void;
-  ocrConfidenceThreshold: number;
-  onOcrConfidenceChange: (threshold: number | ((prev: number) => number)) => void;
+  /** Pages done of the OCR run in progress, or null. */
+  ocrProgress: { done: number; total: number } | null;
+  /** What the last OCR run did, or null before the first run. */
+  ocrLastReport: OcrTextLayerReport | null;
+  /** Whether the OCR component is installed; null while unknown or outside the app. */
+  ocrComponentInstalled: boolean | null;
   attachments: AttachmentInfo[];
   onExtractAttachment: (name: string) => void;
   onAddAttachment: () => void;
@@ -1839,10 +2054,17 @@ function EditorV3Panel({
   layerVisibility: Map<string, boolean>;
   onShowToast: (message: string) => void;
   onDocumentMutated?: () => void;
+  /** The open document changed in memory and is not saved yet. */
+  onDocumentEdited?: () => void;
+  onDocumentPathChanged?: (path: string) => void;
   contentRevision?: number;
 }) {
   const { t } = useTranslation();
   const { push, update } = useTaskQueueContext();
+  const [stampChoice, setStampChoice] = useState<string>(STAMP_NAMES[0]);
+  const openSignDialog = (control: SignControl) => {
+    (signDialogFor(control) === 'signature' ? onOpenSignModal : onOpenInitialsModal)?.();
+  };
   const title =
     panel === 'tools' ? t('modes.allTools') :
     panel === 'edit' ? t('modes.edit') :
@@ -1899,7 +2121,7 @@ function EditorV3Panel({
     }
   }, [panel, onAnnotationToolChange]);
 
-  const handleCompress = async () => {
+  const handleCompress = async (mode: CompressMode) => {
     if (!isTauri || compressBusy) return;
     setCompressBusy(true);
     setCompressProgress(10);
@@ -1927,12 +2149,15 @@ function EditorV3Panel({
         streams_compressed: number;
         duplicates_merged: number;
         unused_removed: number;
-      }>('compress_pdf', { outputPath });
+        bytes_before: number;
+        bytes_after: number;
+      }>('compress_pdf', { outputPath, replaceOpen: replacesOpenDocument(mode) });
       setCompressProgress(100);
       update(taskId, { status: 'done', label: t('editorV3.toasts.pdfCompressedTask', { count: result.streams_compressed }) });
-      onShowToast(t('editorV3.toasts.pdfCompressedToast', { name: basenameFromPath(outputPath) }));
+      onShowToast(t(compressToastKey(mode), compressToastParams(result, basenameFromPath(outputPath))));
       onPanelChange('tools');
-      onDocumentMutated?.();
+      // A copy leaves the open document alone; only a replace re-renders it.
+      if (replacesOpenDocument(mode)) onDocumentMutated?.();
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       update(taskId, { status: 'error', label: t('editorV3.toasts.compressFailed', { message }) });
@@ -2045,12 +2270,13 @@ function EditorV3Panel({
     setRedactSearchBusy(true);
     try {
       const result = await onRedactSearch(redactSearchQuery.trim());
-      if (result) {
-        onShowToast(t('editorV3.toasts.redactMatches', { matches: result.matchesFound, areas: result.areasRedacted }));
+      if (result && result.matchesFound > 0) {
+        onShowToast(t('editorV3.toasts.redactSearchDone', { count: result.matchesFound }));
       } else {
         onShowToast(t('editorV3.toasts.noRedactMatches'));
       }
-      setRedactSearchQuery('');
+      // Keep the term when nothing was redacted, so a typo can be fixed.
+      if (result && result.matchesFound > 0) setRedactSearchQuery('');
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       onShowToast(t('editorV3.toasts.redactSearchFailed', { message }));
@@ -2093,7 +2319,7 @@ function EditorV3Panel({
   };
 
   return (
-    <aside className="panel">
+    <aside className="panel" data-panel-open={panel}>
       <div className="panel-head">
         <div className="panel-title-row">
           {panel !== 'tools' && (
@@ -2115,11 +2341,11 @@ function EditorV3Panel({
           <>
             <p className="panel-lede">{t('editorV3.tools.lede')}</p>
             <div className="panel-section-label">{t('editorV3.tools.maybeUseful')}</div>
-            <ToolRow icon={Minimize2Icon} title={t('editorV3.tools.compress')} sub={t('editorV3.tools.compressSub')} onClick={() => onPanelChange('compress')} />
+            <ToolRow icon={Minimize2Icon} title={t('editorV3.tools.compress')} sub={t('editorV3.tools.compressSub')} target="compress" onClick={() => onPanelChange('compress')} />
             <div className="panel-section-label">{t('editorV3.tools.pages')}</div>
             <ToolRow icon={LayoutGridIcon} title={t('editorV3.tools.organize')} sub={t('editorV3.tools.organizeSub')} onClick={() => onModeChange('organize')} />
-            <ToolRow icon={ScissorsIcon} title={t('editorV3.tools.split')} sub={t('editorV3.tools.splitSub')} onClick={() => onPanelChange('split')} />
-            <ToolRow icon={CombineIcon} title={t('editorV3.tools.merge')} sub={t('editorV3.tools.mergeSub')} onClick={() => onPanelChange('merge')} />
+            <ToolRow icon={ScissorsIcon} title={t('editorV3.tools.split')} sub={t('editorV3.tools.splitSub')} target="split" onClick={() => onPanelChange('split')} />
+            <ToolRow icon={CombineIcon} title={t('editorV3.tools.merge')} sub={t('editorV3.tools.mergeSub')} target="merge" onClick={() => onPanelChange('merge')} />
             <div className="panel-section-label">{t('editorV3.tools.contentSecurity')}</div>
             <ToolRow
               icon={EraserIcon}
@@ -2130,13 +2356,13 @@ function EditorV3Panel({
                 onAnnotationToolChange('redaction');
               }}
             />
-            <ToolRow icon={ShieldCheckIcon} title={t('editorV3.tools.protect')} sub={t('editorV3.tools.protectSub')} onClick={() => onPanelChange('protect')} />
-            <ToolRow icon={StampIcon} title={t('editorV3.tools.watermark')} sub={t('editorV3.tools.watermarkSub')} onClick={() => onPanelChange('watermark')} />
+            <ToolRow icon={ShieldCheckIcon} title={t('editorV3.tools.protect')} sub={t('editorV3.tools.protectSub')} target="protect" onClick={() => onPanelChange('protect')} />
+            <ToolRow icon={StampIcon} title={t('editorV3.tools.watermark')} sub={t('editorV3.tools.watermarkSub')} target="watermark" onClick={() => onPanelChange('watermark')} />
             <ToolRow icon={ImageIcon} title={t('editorV3.tools.convert')} sub={t('editorV3.tools.convertSub')} onClick={() => onModeChange('convert')} />
             <div className="panel-section-label">{t('editorV3.tools.archiveAndData')}</div>
-            <ToolRow icon={FileCheckIcon} title={t('toolbar.pdfa')} sub={t('editorV3.tools.pdfaSub')} onClick={() => onPanelChange('pdfa')} />
-            <ToolRow icon={ReceiptTextIcon} title={t('toolbar.invoice')} sub={t('editorV3.tools.invoiceSub')} onClick={() => onPanelChange('invoice')} />
-            <ToolRow icon={InfoIcon} title={t('toolbar.metadata')} sub={t('editorV3.tools.metadataSub')} onClick={() => onPanelChange('metadata')} />
+            <ToolRow icon={FileCheckIcon} title={t('toolbar.pdfa')} sub={t('editorV3.tools.pdfaSub')} target="pdfa" onClick={() => onPanelChange('pdfa')} />
+            <ToolRow icon={ReceiptTextIcon} title={t('toolbar.invoice')} sub={t('editorV3.tools.invoiceSub')} target="invoice" onClick={() => onPanelChange('invoice')} />
+            <ToolRow icon={InfoIcon} title={t('toolbar.metadata')} sub={t('editorV3.tools.metadataSub')} target="metadata" onClick={() => onPanelChange('metadata')} />
             <div className="panel-section-label">{t('editorV3.tools.documentStatus')}</div>
             <div className="flex flex-col gap-2" style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {/* Opmerkingen */}
@@ -2151,16 +2377,59 @@ function EditorV3Panel({
                     </div>
                   )}
                 </div>
+                {comments.length > 0 && (
+                  <ul data-testid="comment-list" style={{ listStyle: 'none', margin: '8px 0 0', padding: 0, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    {comments.map(comment => (
+                      <li
+                        key={comment.id}
+                        data-testid="comment-item"
+                        style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) auto auto', gap: 6, alignItems: 'center', paddingTop: 6, borderTop: '1px solid var(--border)' }}
+                      >
+                        <span title={comment.contents ?? ''} style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: 11 }}>
+                          {t('review.commentPage', { page: comment.pageIndex + 1 })}{comment.contents ? `: ${comment.contents}` : ''}
+                        </span>
+                        <button className="ep-fmt" type="button" data-testid="edit-comment-btn" title={t('review.editCommentAriaLabel')} aria-label={t('review.editCommentAriaLabel')} onClick={() => onEditComment(comment)}>
+                          <PencilIcon aria-hidden="true" />
+                        </button>
+                        <button className="ep-fmt" type="button" data-testid="delete-comment-btn" title={t('review.deleteComment')} aria-label={t('review.deleteComment')} onClick={() => onDeleteComment(comment.id)}>
+                          <XIcon aria-hidden="true" />
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </div>
 
               {/* Formuliervelden */}
-              {formFields.length > 0 && (
+              {(formFields.length > 0 || formFieldCount > 0) && (
                 <div className="esign-card">
                   <div className="row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><FileTextIcon aria-hidden="true" style={{ width: 16, height: 16 }} />{t('editorV3.tools.fields', { count: formFields.length })}</span>
-                    <button className="btn-primary accent" type="button" style={{ height: 24, fontSize: 10, padding: '0 8px', minHeight: 'unset', width: 'auto' }} onClick={() => { void onFormSubmit(); }}>
-                      <SaveIcon aria-hidden="true" style={{ width: 12, height: 12, marginRight: 4 }} /><span>Check ({formValidationErrors.length})</span>
-                    </button>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><FileTextIcon aria-hidden="true" style={{ width: 16, height: 16 }} />{t('editorV3.tools.fields', { count: formFieldCount || formFields.length })}</span>
+                    <div style={{ display: 'flex', gap: 4 }}>
+                      {formFieldCount > 0 && (
+                        <button
+                          className="btn-ghost"
+                          type="button"
+                          data-testid="flatten-form-btn"
+                          title={t('editorV3.tools.flattenFormTitle')}
+                          disabled={flattenFormBusy}
+                          style={{ height: 24, fontSize: 10, padding: '0 8px', minHeight: 'unset', width: 'auto' }}
+                          onClick={() => {
+                            void onFlattenForm().then(outcome => {
+                              if (outcome.ok) onShowToast(t('editorV3.tools.flattenFormDone'));
+                              else onShowToast(t('editorV3.tools.flattenFormFailed', { message: outcome.message }));
+                            });
+                          }}
+                        >
+                          <span>{t('editorV3.tools.flattenForm')}</span>
+                        </button>
+                      )}
+                      {formFields.length > 0 && (
+                        <button className="btn-primary accent" type="button" style={{ height: 24, fontSize: 10, padding: '0 8px', minHeight: 'unset', width: 'auto' }} onClick={() => { void onFormSubmit(); }}>
+                          <SaveIcon aria-hidden="true" style={{ width: 12, height: 12, marginRight: 4 }} /><span>Check ({formValidationErrors.length})</span>
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
               )}
@@ -2169,7 +2438,7 @@ function EditorV3Panel({
               <div className="esign-card">
                 <div className="row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
                   <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><LinkIcon aria-hidden="true" style={{ width: 16, height: 16 }} />{t('editorV3.tools.attachments', { count: attachments.length })}</span>
-                  <button className="btn-ghost" style={{ height: 24, fontSize: 10, padding: '0 8px', minHeight: 'unset', width: 'auto' }} onClick={onAddAttachment}>
+                  <button data-testid="add-attachment-btn" className="btn-ghost" style={{ height: 24, fontSize: 10, padding: '0 8px', minHeight: 'unset', width: 'auto' }} onClick={onAddAttachment}>
                     <span>{t('editorV3.tools.addAttachment')}</span>
                   </button>
                 </div>
@@ -2178,6 +2447,7 @@ function EditorV3Panel({
                     {attachments.slice(0, 4).map(attachment => (
                       <div
                         key={attachment.name}
+                        data-testid="attachment-item"
                         style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) auto auto', gap: 6, alignItems: 'center', paddingTop: 6, borderTop: '1px solid var(--border)' }}
                       >
                         <span title={attachment.name} style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: 11 }}>
@@ -2211,77 +2481,104 @@ function EditorV3Panel({
           <>
             <p className="panel-lede">{t('editorV3.edit.lede')}</p>
             <div className="panel-section-label">{t('editorV3.edit.formatText')}</div>
-            <label className="select-wrap">
-              <span className="sr-only">{t('editorV3.edit.fontLabel')}</span>
-              <select
-                className="select native-select"
-                defaultValue="embedded"
-                onChange={(event) => {
-                  if (event.target.value === 'embedded') return;
-                  onShowToast(t('editorV3.edit.fontHint', { font: event.target.value }));
-                  event.target.value = 'embedded';
-                }}
-              >
-                <option value="embedded">{t('editorV3.edit.fontEmbedded')}</option>
-                <option value="Helvetica, Arial, sans-serif">Helvetica / Arial (Sans-Serif)</option>
-                <option value="Times New Roman, Times, serif">Times New Roman / Georgia (Serif)</option>
-                <option value="Courier New, Courier, monospace">Courier New / Consolas (Monospace)</option>
-                <option value="Georgia, serif">Georgia (Classic Serif)</option>
-                <option value="Garamond, serif">Garamond (Elegant Serif)</option>
-                <option value="Verdana, sans-serif">Verdana (Readable Sans)</option>
-                <option value="Calibri, sans-serif">Calibri (Office Standard)</option>
-              </select>
-              <ChevronDownIcon aria-hidden="true" />
-            </label>
+            {/* Only while a line is being edited: the choice is applied to that line
+                on save, embedded as a subset (set_text_run_font). */}
+            {editTypeface && <TypefacePicker value={editTypeface.value} onChange={editTypeface.onChange} />}
             <div className="format-grid">
               <button className="ep-fmt" onMouseDown={(event) => { event.preventDefault(); onFormatCommand('bold'); }}><BoldIcon aria-hidden="true" /></button>
               <button className="ep-fmt" onMouseDown={(event) => { event.preventDefault(); onFormatCommand('italic'); }}><ItalicIcon aria-hidden="true" /></button>
               <button className="ep-fmt" onMouseDown={(event) => { event.preventDefault(); onFormatCommand('underline'); }}><UnderlineIcon aria-hidden="true" /></button>
               <button className="ep-fmt" onMouseDown={(event) => { event.preventDefault(); onFormatCommand('strikeThrough'); }}><StrikethroughIcon aria-hidden="true" /></button>
             </div>
+            {editFontSize != null && (
+              <>
+                <div className="panel-section-label">{t('edit.fontSize')}</div>
+                <div className="format-grid" data-testid="edit-font-size">
+                  <button className="ep-fmt" data-testid="edit-font-size-smaller" title={t('edit.smaller')} aria-label={t('edit.smaller')} onMouseDown={(event) => { event.preventDefault(); }} onClick={() => { onFormatCommand('fontSize', String(nextFontSize(editFontSize, FONT_SIZE_BUTTONS['edit-font-size-smaller']))); }}>−</button>
+                  <span className="ep-fmt" data-testid="edit-font-size-value" aria-live="polite">{Math.round(editFontSize)} pt</span>
+                  <button className="ep-fmt" data-testid="edit-font-size-larger" title={t('edit.larger')} aria-label={t('edit.larger')} onMouseDown={(event) => { event.preventDefault(); }} onClick={() => { onFormatCommand('fontSize', String(nextFontSize(editFontSize, FONT_SIZE_BUTTONS['edit-font-size-larger']))); }}>+</button>
+                </div>
+              </>
+            )}
             <div className="panel-section-label">{t('editorV3.edit.color')}</div>
             <div className="color-row">
-              {['#141414', '#0a66ff', '#dc2626', '#16a34a', '#8a8f9c'].map(color => (
+              {['#141414', '#0a66ff', '#dc2626', '#16a34a', '#8a8f9c'].map(color => (  // monochrome-allow: signature ink colour choices (document content)
                 <button key={color} className="ep-color" style={{ background: color }} onMouseDown={(event) => { event.preventDefault(); onFormatCommand('foreColor', color); }} aria-label={t('editorV3.edit.colorLabel', { color })} />
               ))}
             </div>
-            {LOCAL_OVERLAY_CONTROLS_ENABLED && (
-              <>
-                <div className="divider" />
-                <div className="panel-section-label">{t('editorV3.edit.addContent')}</div>
-                <button className="btn-ghost" onClick={() => { setIsInsertingText(true); setIsInsertingImage(false); onShowToast(t('editorV3.edit.clickToPlaceTextBox')); }}><span><TypeIcon aria-hidden="true" />{t('editorV3.edit.insertTextBox')}</span><TypeIcon aria-hidden="true" /></button>
-                <button className="btn-ghost" onClick={() => { setIsInsertingImage(true); setIsInsertingText(false); onShowToast(t('editorV3.edit.clickToPlaceImage')); }}><span><ImageIcon aria-hidden="true" />{t('editorV3.edit.placeImage')}</span><ImageIcon aria-hidden="true" /></button>
+            <div className="divider" />
+            <div className="panel-section-label">{t('editorV3.edit.addContent')}</div>
+            <button className="btn-ghost" data-testid="insert-text-box-btn" onClick={() => onArm('insert-text-box-btn', stampChoice)}><span><TypeIcon aria-hidden="true" />{t('editorV3.edit.insertTextBox')}</span><TypeIcon aria-hidden="true" /></button>
+            <button className="btn-ghost" data-testid="place-image-btn" onClick={() => onArm('place-image-btn', stampChoice)}><span><ImageIcon aria-hidden="true" />{t('editorV3.edit.placeImage')}</span><ImageIcon aria-hidden="true" /></button>
+            <label className="select-wrap" style={{ width: '100%' }}>
+              <select
+                className="select native-select"
+                data-testid="stamp-choice"
+                aria-label={t('editorV3.edit.stampLabel')}
+                value={stampChoice}
+                onChange={(event) => setStampChoice(event.target.value)}
+              >
+                {STAMP_NAMES.map(name => <option key={name} value={name}>{t(`editorV3.stamps.${name}`)}</option>)}
+              </select>
+              <ChevronDownIcon aria-hidden="true" />
+            </label>
+            <button className="btn-ghost" data-testid="place-stamp-btn" onClick={() => onArm('place-stamp-btn', stampChoice)}><span><StampIcon aria-hidden="true" />{t('editorV3.edit.placeStamp')}</span><StampIcon aria-hidden="true" /></button>
 
-                {(_isInsertingText || _isInsertingImage) && (
-                  <div className="esign-card" style={{ marginTop: 12, border: '1px dashed var(--accent)', background: 'rgba(10,102,255,0.02)', padding: '10px 12px' }}>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                      <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--accent)' }}>
-                        {_isInsertingText ? t('editorV3.edit.placementModeTextBox') : t('editorV3.edit.placementModeImage')}
-                      </span>
-                      <span style={{ fontSize: 10, color: 'var(--text-secondary)' }}>
-                        {_isInsertingText ? t('editorV3.edit.clickAnywhereTextBox') : t('editorV3.edit.clickAnywhereImage')}
-                      </span>
-                      <button
-                        className="btn-ghost"
-                        style={{ height: 26, minHeight: 'unset', width: '100%', marginTop: 4, display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: 10 }}
-                        onClick={() => {
-                          setIsInsertingText(false);
-                          setIsInsertingImage(false);
-                        }}
-                      >
-                        {t('editorV3.common.cancel')}
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </>
+            {armed && (
+              <div className="esign-card" style={{ marginTop: 12, border: '1px dashed var(--border-strong)', background: 'var(--state-hover-bg)', padding: '10px 12px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)' }}>
+                    {armed.kind === 'text' ? t('editorV3.edit.placementModeTextBox') : armed.kind === 'image' ? t('editorV3.edit.placementModeImage') : t('editorV3.edit.placementModeStamp')}
+                  </span>
+                  <span style={{ fontSize: 10, color: 'var(--text-secondary)' }}>
+                    {armed.kind === 'text' ? t('editorV3.edit.clickAnywhereTextBox') : armed.kind === 'image' ? t('editorV3.edit.clickAnywhereImage') : t('editorV3.edit.clickToPlaceStamp')}
+                  </span>
+                  <button
+                    className="btn-ghost"
+                    style={{ height: 26, minHeight: 'unset', width: '100%', marginTop: 4, display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: 10 }}
+                    onClick={onDisarm}
+                  >
+                    {t('editorV3.common.cancel')}
+                  </button>
+                </div>
+              </div>
             )}
             {selectedAnnotation && (
               <>
                 <div className="panel-section-label">{t('editorV3.edit.selection')}</div>
-                <div className="esign-card">
-                  <div className="row"><HighlighterIcon aria-hidden="true" />{t('editorV3.edit.annotationOnPage', { type: selectedAnnotation.type, page: selectedAnnotation.pageIndex + 1 })}</div>
+                <div className="esign-card" data-testid="selected-annotation-card">
+                  <div className="row"><HighlighterIcon aria-hidden="true" />{t('editorV3.edit.annotationOnPage', { type: selectedAnnotation.name ?? selectedAnnotation.type, page: selectedAnnotation.pageIndex + 1 })}</div>
+                  {isMovableAnnotation(selectedAnnotation.type) && (
+                    <div className="row" style={{ fontSize: 10, color: 'var(--text-secondary)' }}>{t('editorV3.edit.moveHint')}</div>
+                  )}
                 </div>
+                {selectionActions(selectedAnnotation).includes('annotation-color') && (
+                  <>
+                    <div className="panel-section-label">{t('editorV3.edit.annotationColor')}</div>
+                    <div className="color-row">
+                      {['#141414', '#0a66ff', '#dc2626', '#16a34a', '#f5c400'].map(color => (  // monochrome-allow: signature ink colour choices (document content)
+                        <button
+                          key={color}
+                          className="ep-color"
+                          data-testid={`annotation-color-${color.slice(1)}`}
+                          style={{ background: color }}
+                          onClick={() => {
+                            const rgb = hexToPdfColor(color);
+                            if (rgb) onUpdateAnnotationColor(selectedAnnotation.id, rgb);
+                          }}
+                          aria-label={t('editorV3.edit.colorLabel', { color })}
+                        />
+                      ))}
+                    </div>
+                  </>
+                )}
+                {selectionActions(selectedAnnotation).includes('edit-text-box-btn') && (
+                  <button className="btn-ghost" data-testid="edit-text-box-btn" onClick={() => onEditAnnotationText(selectedAnnotation)}><span><TypeIcon aria-hidden="true" />{t('editorV3.edit.editTextBox')}</span><TypeIcon aria-hidden="true" /></button>
+                )}
+                {selectionActions(selectedAnnotation).includes('replace-image-btn') && (
+                  <button className="btn-ghost" data-testid="replace-image-btn" onClick={() => onReplaceAnnotationImage(selectedAnnotation.id)}><span><ImageIcon aria-hidden="true" />{t('editorV3.edit.replaceImage')}</span><ImageIcon aria-hidden="true" /></button>
+                )}
+                <button className="btn-ghost" data-testid="delete-selected-annotation-btn" onClick={() => onDeleteSelectedAnnotation(selectedAnnotation.id)}><span><Trash2Icon aria-hidden="true" />{t('editorV3.edit.deleteAnnotation')}</span><Trash2Icon aria-hidden="true" /></button>
               </>
             )}
           </>
@@ -2302,6 +2599,8 @@ function EditorV3Panel({
               { name: 'Microsoft Excel', ext: 'XLSX', val: 'xlsx' as const },
               { name: 'Microsoft PowerPoint', ext: 'PPTX', val: 'pptx' as const },
               { name: t('editorV3.convert.image'), ext: 'JPG', val: 'jpeg' as const },
+              { name: t('editorV3.convert.markdown'), ext: 'MD', val: 'markdown' as const },
+              { name: t('editorV3.convert.tablesToExcel'), ext: 'XLSX', val: 'tables_xlsx' as const },
               { name: t('editorV3.convert.archive'), ext: 'PDF/A-2b', val: 'pdfa' as const }
             ].map((item, index) => {
               return (
@@ -2322,20 +2621,29 @@ function EditorV3Panel({
             <button className="btn-primary accent" onClick={() => onOpenExport('docx')}><RefreshCwIcon aria-hidden="true" /><span>{t('editorV3.convert.convertToDocx')}</span></button>
             <div className="divider" />
             <div className="panel-section-label">{t('editorV3.convert.otherOptions')}</div>
-            <ToolRow icon={Minimize2Icon} title={t('editorV3.tools.compress')} sub={t('editorV3.tools.compressSub')} onClick={() => onPanelChange('compress')} />
-            <ToolRow icon={FileTextIcon} title={t('editorV3.convert.runOcr')} sub={t('editorV3.convert.runOcrSub')} onClick={onRunOcr} />
+            <ToolRow icon={Minimize2Icon} title={t('editorV3.tools.compress')} sub={t('editorV3.tools.compressSub')} target="compress" onClick={() => onPanelChange('compress')} />
+            <ToolRow icon={FileTextIcon} title={t('editorV3.convert.runOcr')} sub={t('editorV3.convert.runOcrSub')} action="ocr-run" onClick={onRunOcr} />
             <div className="panel-section-label">{t('editorV3.convert.ocrStatus')}</div>
-            <div className="esign-card">
+            <div className="esign-card" data-testid="ocr-status-card">
               <div className="row"><FileTextIcon aria-hidden="true" />{t('editorV3.convert.possibleScanPages', { count: scannedPageIndices.size })}</div>
-              <div className="row"><BadgeCheckIcon aria-hidden="true" />{t('editorV3.convert.ocrOverlay', { state: ocrVisible ? t('editorV3.convert.overlayVisible') : t('editorV3.convert.overlayHidden') })}</div>
-              <div className="row"><RulerIcon aria-hidden="true" />{t('editorV3.convert.confidenceFrom', { value: Math.round(ocrConfidenceThreshold * 100) })}</div>
+              <div className="row"><BadgeCheckIcon aria-hidden="true" />{
+                ocrComponentInstalled === null
+                  ? t('editorV3.convert.ocrComponentUnknown')
+                  : ocrComponentInstalled
+                    ? t('editorV3.convert.ocrComponentInstalled')
+                    : t('ocr.unavailable.missing')
+              }</div>
+              {ocrLastReport && (
+                <div className="row" data-testid="ocr-last-report"><BadgeCheckIcon aria-hidden="true" />{t('editorV3.convert.ocrLastRun', { pages: ocrLastReport.pages_recognised, words: ocrLastReport.words })}</div>
+              )}
             </div>
-            <div className="format-grid">
-              <button className="ep-fmt" type="button" onClick={() => onOcrVisibleChange(v => !v)}>{ocrVisible ? t('editorV3.convert.ocrOff') : t('editorV3.convert.ocrOn')}</button>
-              <button className="ep-fmt" type="button" onClick={() => onOcrConfidenceChange(v => Math.max(0, Number((v - 0.1).toFixed(2))))}>-</button>
-              <button className="ep-fmt" type="button" onClick={() => onOcrConfidenceChange(v => Math.min(1, Number((v + 0.1).toFixed(2))))}>+</button>
-            </div>
-            {ocrRunning && <p className="panel-lede">{t('editorV3.convert.ocrRunning')}</p>}
+            {ocrRunning && (
+              <p className="panel-lede" role="status">
+                {ocrProgress
+                  ? t('editorV3.convert.ocrRunningProgress', { done: ocrProgress.done, total: ocrProgress.total })
+                  : t('editorV3.convert.ocrRunning')}
+              </p>
+            )}
           </>
         )}
 
@@ -2353,25 +2661,22 @@ function EditorV3Panel({
             <CertificateSignControls
               currentFilePath={currentFilePath}
               onShowToast={onShowToast}
-              onSigned={() => {
+              onSigned={(outputPath) => {
                 setSignedRevision(revision => revision + 1);
                 onDocumentMutated?.();
+                onDocumentPathChanged?.(outputPath);
               }}
             />
             <div className="panel-section-label">{t('editorV3.esign.verifySection')}</div>
             <SignatureVerifyControls signedRevision={signedRevision} contentRevision={contentRevision} />
-            {LOCAL_OVERLAY_CONTROLS_ENABLED && (
-              <>
-                <div className="panel-section-label">{t('editorV3.esign.fillAndSign')}</div>
-                <button className="btn-ghost" onClick={onOpenSignModal}><span><PenLineIcon aria-hidden="true" />{t('editorV3.esign.addSignature')}</span><PenLineIcon aria-hidden="true" /></button>
-                <button className="btn-ghost" onClick={onOpenInitialsModal}><span><TypeIcon aria-hidden="true" />{t('editorV3.esign.addInitials')}</span><TypeIcon aria-hidden="true" /></button>
-              </>
-            )}
+            <div className="panel-section-label">{t('editorV3.esign.fillAndSign')}</div>
+            <button className="btn-ghost" data-testid="add-signature-btn" onClick={() => openSignDialog('add-signature-btn')}><span><PenLineIcon aria-hidden="true" />{t('editorV3.esign.addSignature')}</span><PenLineIcon aria-hidden="true" /></button>
+            <button className="btn-ghost" data-testid="add-initials-btn" onClick={() => openSignDialog('add-initials-btn')}><span><TypeIcon aria-hidden="true" />{t('editorV3.esign.addInitials')}</span><TypeIcon aria-hidden="true" /></button>
 
-            {LOCAL_OVERLAY_CONTROLS_ENABLED && pendingSignature && (
-              <div className="esign-card" style={{ marginTop: 12, border: '1px dashed var(--accent)', background: 'rgba(10,102,255,0.02)', padding: '10px 12px' }}>
+            {pendingSignature && (
+              <div className="esign-card" style={{ marginTop: 12, border: '1px dashed var(--border-strong)', background: 'var(--state-hover-bg)', padding: '10px 12px' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                  <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--accent)' }}>
+                  <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)' }}>
                     {pendingSignature.type === 'signature' ? t('editorV3.esign.placementModeSignature') : t('editorV3.esign.placementModeInitials')}
                   </span>
                   <span style={{ fontSize: 10, color: 'var(--text-secondary)' }}>
@@ -2396,7 +2701,7 @@ function EditorV3Panel({
           <>
             <p className="panel-lede">{t('editorV3.protect.lede')}</p>
             <div className="panel-section-label">{t('editorV3.protect.passwordProtection')}</div>
-            <EncryptDecryptControls onApplied={onDocumentMutated} />
+            <EncryptDecryptControls onApplied={onDocumentMutated} onDecrypted={onDocumentEdited} />
             <div className="esign-card" style={{ marginTop: 12, padding: '10px 12px', fontSize: 11, background: 'rgba(30,31,36,0.02)', border: '1px solid var(--border)' }}>
               <div style={{ fontWeight: 'bold', marginBottom: 4, color: 'var(--text-primary)' }}>{t('editorV3.protect.passwordDifference')}</div>
               <p style={{ color: 'var(--text-secondary)', lineHeight: 1.4 }}>
@@ -2413,7 +2718,7 @@ function EditorV3Panel({
           <>
             <p className="panel-lede">{t('editorV3.watermark.lede')}</p>
             <div className="panel-section-label">{t('editorV3.watermark.settings')}</div>
-            <WatermarkControls onApplied={onDocumentMutated} />
+            <WatermarkControls onApplied={() => { onDocumentMutated?.(); onDocumentEdited?.(); }} />
           </>
         )}
 
@@ -2430,15 +2735,25 @@ function EditorV3Panel({
               <div style={{ marginTop: 16 }}>
                 <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 6 }}>{t('editorV3.compress.compressingImages')}</div>
                 <div style={{ height: 6, background: 'var(--border)', borderRadius: 3, overflow: 'hidden' }}>
-                  <div style={{ height: '100%', width: `${compressProgress}%`, background: 'var(--accent)', transition: 'width 0.2s' }} />
+                  <div style={{ height: '100%', width: `${compressProgress}%`, background: 'var(--emphasis)', transition: 'width 0.2s' }} />
                 </div>
                 <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 4, textAlign: 'right' }}>{t('editorV3.compress.percentComplete', { percent: compressProgress })}</div>
               </div>
             ) : (
-              <button className="btn-primary accent" style={{ marginTop: 16 }} onClick={handleCompress} disabled={!isTauri}>
-                <Minimize2Icon aria-hidden="true" />
-                <span>{isTauri ? t('editorV3.compress.compressPdf') : t('editorV3.compress.desktopOnly')}</span>
-              </button>
+              <>
+                <button className="btn-primary accent" style={{ marginTop: 16 }} data-panel-action="compress" onClick={() => { void handleCompress('copy'); }} disabled={!isTauri}>
+                  <Minimize2Icon aria-hidden="true" />
+                  <span>{isTauri ? t('editorV3.compress.saveCopy') : t('editorV3.compress.desktopOnly')}</span>
+                </button>
+                {isTauri && (
+                  <>
+                    <button className="btn-ghost" style={{ marginTop: 8 }} onClick={() => { void handleCompress('replace'); }}>
+                      {t('editorV3.compress.replaceOpen')}
+                    </button>
+                    <p className="panel-lede" style={{ marginTop: 8 }}>{t('editorV3.compress.replaceNote')}</p>
+                  </>
+                )}
+              </>
             )}
             <div className="divider" style={{ margin: '16px 0' }} />
             <button className="btn-ghost" onClick={() => onPanelChange('tools')}>{t('editorV3.compress.backToTools')}</button>
@@ -2482,11 +2797,11 @@ function EditorV3Panel({
 
             {splitBusy ? (
               <div style={{ marginTop: 16, display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'var(--text-secondary)' }}>
-                <div className="animate-spin" style={{ width: 14, height: 14, borderRadius: '50%', border: '2px solid var(--accent)', borderTopColor: 'transparent' }} />
+                <div className="animate-spin" style={{ width: 14, height: 14, borderRadius: '50%', border: '2px solid var(--text-secondary)', borderTopColor: 'transparent' }} />
                 {t('editorV3.split.splitting')}
               </div>
             ) : (
-              <button className="btn-primary accent" style={{ marginTop: 16 }} onClick={handleSplit}>
+              <button className="btn-primary accent" style={{ marginTop: 16 }} data-panel-action="split" onClick={handleSplit}>
                 <ScissorsIcon aria-hidden="true" />
                 <span>{t('editorV3.split.splitPdf')}</span>
               </button>
@@ -2516,18 +2831,18 @@ function EditorV3Panel({
               ))}
             </div>
 
-            <button className="btn-ghost" style={{ marginBottom: 16 }} onClick={handleAddMergeFile} disabled={!isTauri}>
+            <button className="btn-ghost" style={{ marginBottom: 16 }} data-panel-action="merge-add" onClick={handleAddMergeFile} disabled={!isTauri}>
               <LinkIcon aria-hidden="true" />
               <span>{isTauri ? t('editorV3.merge.addFile') : t('editorV3.merge.desktopOnly')}</span>
             </button>
 
             {mergeBusy ? (
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'var(--text-secondary)' }}>
-                <div className="animate-spin" style={{ width: 14, height: 14, borderRadius: '50%', border: '2px solid var(--accent)', borderTopColor: 'transparent' }} />
+                <div className="animate-spin" style={{ width: 14, height: 14, borderRadius: '50%', border: '2px solid var(--text-secondary)', borderTopColor: 'transparent' }} />
                 {t('editorV3.merge.merging')}
               </div>
             ) : (
-              <button className="btn-primary accent" onClick={handleMerge} disabled={!isTauri || filesToMerge.length <= 1}>
+              <button className="btn-primary accent" data-panel-action="merge" onClick={handleMerge} disabled={!isTauri || filesToMerge.length <= 1}>
                 <CombineIcon aria-hidden="true" />
                 <span>{t('editorV3.merge.mergeFiles')}</span>
               </button>
@@ -2551,7 +2866,7 @@ function EditorV3Panel({
           <>
             <p className="panel-lede">{t('editorV3.metadata.lede')}</p>
             <div className="panel-section-label">{t('editorV3.metadata.section')}</div>
-            <MetadataControls onApplied={onDocumentMutated} />
+            <MetadataControls onApplied={() => { onDocumentMutated?.(); onDocumentEdited?.(); }} />
             <div className="divider" style={{ margin: '16px 0' }} />
             <button className="btn-ghost" onClick={() => onPanelChange('tools')}>{t('editorV3.common.backToTools')}</button>
           </>
@@ -2596,6 +2911,8 @@ function EditorV3Panel({
               </button>
             </div>
 
+            {PII_ENABLED ? <PiiControls onApplied={onDocumentMutated} /> : null}
+
             {redactions.length > 0 ? (
               <div style={{ marginBottom: 16 }}>
                 <div className="panel-section-label">{t('editorV3.redact.draftRedactions', { count: redactions.length })}</div>
@@ -2609,6 +2926,23 @@ function EditorV3Panel({
                 {t('editorV3.redact.noActiveMarkings')}
               </div>
             )}
+            {/* "Strip hidden metadata in one click" (homepage, J-66). The
+                command and its handler existed; only the retired right-hand
+                panel had a button for it, so the V3 shell could not reach it. */}
+            <div className="panel-section-label">{t('protect.redactMetadataTitle')}</div>
+            <p className="panel-lede">{t('protect.redactMetadataDesc')}</p>
+            <button
+              className="btn-ghost"
+              type="button"
+              data-testid="redact-metadata-btn"
+              onClick={() => {
+                void onRedactMetadata().then((ok) => {
+                  onShowToast(ok ? t('tasks.redactMetadataDone') : t('tasks.redactMetadataFailed'));
+                });
+              }}
+            >
+              {t('protect.redactMetadataBtn')}
+            </button>
             <div className="divider" style={{ margin: '16px 0' }} />
             <button
               className="btn-ghost"
@@ -2631,16 +2965,22 @@ function ToolRow({
   title,
   sub,
   tag,
+  target,
+  action,
   onClick,
 }: {
   icon: typeof FileTextIcon;
   title: string;
   sub: string;
   tag?: string;
+  /** The panel this row opens; a stable handle for the ui-walk build. */
+  target?: string;
+  /** What this row does, for the ui-walk build (data-panel-action). */
+  action?: string;
   onClick: () => void;
 }) {
   return (
-    <button className="tool-row" onClick={onClick}>
+    <button className="tool-row" data-panel-target={target} data-panel-action={action} onClick={onClick}>
       <span className="ic"><Icon aria-hidden="true" /></span>
       <span className="tx"><b>{title}</b><span>{sub}</span></span>
       {tag && <span className="tag">{tag}</span>}
@@ -2680,6 +3020,7 @@ function EditorV3ToolRail({
         <div className="more-pop show">
           <button className="more-item" onClick={() => onMoreTool('strikeout')} data-testid="annotation-tool-strikeout"><StrikethroughIcon aria-hidden="true" />{t('editorV3.rail.strikeText')}</button>
           <button className="more-item" onClick={() => onMoreTool('underline')} data-testid="annotation-tool-underline"><UnderlineIcon aria-hidden="true" />{t('editorV3.rail.underlineText')}</button>
+          <button className="more-item" onClick={() => onMoreTool('rectangle')} data-testid="annotation-tool-rectangle"><SquareIcon aria-hidden="true" />{t('editorV3.rail.drawRectangle')}</button>
           <button className="more-item" onClick={() => onMoreTool('attachment')} data-testid="annotation-tool-attachment"><LinkIcon aria-hidden="true" />{t('editorV3.rail.addAttachment')}</button>
         </div>
       )}
@@ -2705,7 +3046,7 @@ function RailButton({
   badge?: number;
 }) {
   return (
-    <button className={activeTool === tool ? 'rail-btn active' : 'rail-btn'} data-tip={label} onClick={() => onToolSelect(tool)} aria-label={label}>
+    <button className={activeTool === tool ? 'rail-btn active' : 'rail-btn'} data-rail-tool={tool} data-tip={label} onClick={() => onToolSelect(tool)} aria-label={label}>
       <Icon aria-hidden="true" />
       {caret && <span className="caret" />}
       {!!badge && <span className="rail-badge">{badge}</span>}
@@ -2805,7 +3146,7 @@ function V3Thumbnails({
           ))}
         </div>
       ) : (
-        <div className="thumbs-body">
+        <div className="thumbs-body" data-testid="thumbnail-scroll-container">
           {Array.from({ length: pageCount }, (_, index) => {
             const src = thumbnails.get(index);
             return (
@@ -2829,13 +3170,30 @@ function V3Thumbnails({
   );
 }
 
-function EncryptDecryptControls({ onApplied }: { onApplied?: () => void }) {
+function EncryptDecryptControls({ onApplied, onDecrypted }: { onApplied?: () => void; onDecrypted?: () => void }) {
   const { t } = useTranslation();
   const { push, update } = useTaskQueueContext();
   const [userPassword, setUserPassword] = useState('');
   const [ownerPassword, setOwnerPassword] = useState('');
   const [decryptPassword, setDecryptPassword] = useState('');
   const [busy, setBusy] = useState(false);
+  // What removing the password needs: the owner password, or nothing when the
+  // document was opened as owner (#726). Asked of the backend, not guessed.
+  const [removal, setRemoval] = useState<PasswordRemovalState | null>(null);
+  const removalForm = removePasswordForm(removal);
+  const refreshRemoval = useCallback(async (): Promise<void> => {
+    if (!isTauri) return;
+    try {
+      const { invokeCommand: invoke } = await import('../../lib/commandBridge');
+      setRemoval(await invoke<PasswordRemovalState>('password_removal_state'));
+    } catch (error) {
+      // The bridge has already reported it. Without an answer, ask for the owner
+      // password: that is the case that always works.
+      console.warn('password_removal_state failed:', error);
+      setRemoval(null);
+    }
+  }, []);
+  useEffect(() => { void refreshRemoval(); }, [refreshRemoval]);
 
   async function handleEncrypt(): Promise<void> {
     if (busy || !isTauri || !userPassword) return;
@@ -2863,7 +3221,7 @@ function EncryptDecryptControls({ onApplied }: { onApplied?: () => void }) {
   }
 
   async function handleDecrypt(): Promise<void> {
-    if (busy || !isTauri || !decryptPassword) return;
+    if (busy || !isTauri || !removalForm.canSubmit(decryptPassword)) return;
     setBusy(true);
 
     const taskId = `decrypt-${Date.now()}`;
@@ -2871,14 +3229,16 @@ function EncryptDecryptControls({ onApplied }: { onApplied?: () => void }) {
 
     try {
       const { invokeCommand: invoke } = await import('../../lib/commandBridge');
-      await invoke('decrypt_pdf', { password: decryptPassword });
+      await invoke('decrypt_pdf', removalForm.askForPassword ? { password: decryptPassword } : {});
       update(taskId, { status: 'done', label: t('tasks.decryptDone') });
       setDecryptPassword('');
       onApplied?.();
+      onDecrypted?.();
     } catch {
       update(taskId, { status: 'error', label: t('tasks.decryptFailed') });
     }
 
+    await refreshRemoval();
     setBusy(false);
   }
 
@@ -2896,6 +3256,7 @@ function EncryptDecryptControls({ onApplied }: { onApplied?: () => void }) {
           value={userPassword}
           onChange={e => { setUserPassword(e.target.value); }}
           className={inputClass}
+          data-panel-input="encrypt-user-password"
           aria-label={t('protect.userPasswordPlaceholder')}
         />
         <input
@@ -2907,7 +3268,7 @@ function EncryptDecryptControls({ onApplied }: { onApplied?: () => void }) {
           aria-label={t('protect.ownerPasswordPlaceholder')}
         />
         <button
-          onClick={() => { void handleEncrypt(); }}
+          data-panel-action="encrypt" onClick={() => { void handleEncrypt(); }}
           disabled={busy || !userPassword || !isTauri}
           className={buttonClass}
           style={{ marginTop: 8, height: 36 }}
@@ -2919,17 +3280,20 @@ function EncryptDecryptControls({ onApplied }: { onApplied?: () => void }) {
       {/* Decrypt */}
       <div className="flex flex-col gap-1" style={{ marginTop: 12 }}>
         <span className="panel-label">{t('protect.decrypt')}</span>
-        <input
-          type="password"
-          placeholder={t('protect.currentPasswordPlaceholder')}
-          value={decryptPassword}
-          onChange={e => { setDecryptPassword(e.target.value); }}
-          className={inputClass}
-          aria-label={t('protect.currentPasswordPlaceholder')}
-        />
+        <span className="panel-lede" data-testid="remove-password-help">{t(removalForm.helpKey)}</span>
+        {removalForm.askForPassword && (
+          <input
+            type="password"
+            placeholder={t(removalForm.fieldKey)}
+            value={decryptPassword}
+            onChange={e => { setDecryptPassword(e.target.value); }}
+            className={inputClass}
+            aria-label={t(removalForm.fieldKey)}
+          />
+        )}
         <button
           onClick={() => { void handleDecrypt(); }}
-          disabled={busy || !decryptPassword || !isTauri}
+          disabled={busy || !removalForm.canSubmit(decryptPassword) || !isTauri}
           className={buttonClass}
           style={{ marginTop: 8, height: 36 }}
         >
@@ -3023,7 +3387,7 @@ function PdfaControls() {
       <button
         className="btn-ghost"
         data-testid="validate-pdfa-btn"
-        onClick={() => { void validatePdfaDocument(); }}
+        data-panel-action="pdfa-validate" onClick={() => { void validatePdfaDocument(); }}
         disabled={busy || !isTauri}
       >
         <FileCheckIcon aria-hidden="true" />
@@ -3033,7 +3397,7 @@ function PdfaControls() {
       <button
         className="btn-primary accent"
         data-testid="convert-pdfa-btn"
-        onClick={() => { void convertToPdfaFile(); }}
+        data-panel-action="pdfa-convert" onClick={() => { void convertToPdfaFile(); }}
         disabled={busy || !isTauri}
         style={{ height: 36 }}
       >
@@ -3188,6 +3552,7 @@ function MetadataControls({ onApplied }: { onApplied?: () => void }) {
           className="panel-input"
           value={title}
           onChange={e => { setTitle(e.target.value); }}
+          data-panel-input="metadata-title"
           aria-label={t('editorV3.metadata.title')}
         />
       </div>
@@ -3203,7 +3568,7 @@ function MetadataControls({ onApplied }: { onApplied?: () => void }) {
       </div>
       <button
         className="btn-primary accent"
-        onClick={() => { void applyMetadata(); }}
+        data-panel-action="metadata" onClick={() => { void applyMetadata(); }}
         disabled={busy || !isTauri || (title.trim().length === 0 && author.trim().length === 0)}
         style={{ height: 36 }}
       >
@@ -3248,7 +3613,7 @@ function InvoiceControls() {
     <div className="flex flex-col gap-3">
       <button
         className="btn-primary accent"
-        onClick={() => { void readEmbeddedInvoice(); }}
+        data-panel-action="invoice" onClick={() => { void readEmbeddedInvoice(); }}
         disabled={busy || !isTauri}
         style={{ height: 36 }}
       >
@@ -3317,7 +3682,8 @@ function CertificateSignControls({
 }: {
   currentFilePath: string | null;
   onShowToast: (message: string) => void;
-  onSigned: () => void;
+  /** Called with the signed file's path: it is the open document now. */
+  onSigned: (outputPath: string) => void;
 }) {
   const { t } = useTranslation();
   const { push, update } = useTaskQueueContext();
@@ -3368,7 +3734,7 @@ function CertificateSignControls({
       update(taskId, { status: 'done', label: t('tasks.signDone') });
       const savedName = outputPath.split(/[\\/]/).filter(Boolean).pop() ?? outputPath;
       onShowToast(t('editorV3.esign.signSaved', { name: savedName }));
-      onSigned();
+      onSigned(outputPath);
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       update(taskId, { status: 'error', label: t('tasks.signFailed') });
@@ -3503,6 +3869,7 @@ function SignatureVerifyControls({
     <div className="flex flex-col gap-3">
       <button
         className="btn-ghost"
+        data-panel-action="verify-signatures"
         onClick={() => { void verifyDocumentSignatures(); }}
         disabled={busy || !isTauri}
       >
@@ -3578,6 +3945,7 @@ function WatermarkControls({ onApplied }: { onApplied?: () => void }) {
         value={text}
         onChange={e => { setText(e.target.value); }}
         className={inputClass}
+        data-panel-input="watermark-text"
         aria-label={t('toolbar.watermark')}
       />
       <div className="flex flex-col gap-1">
@@ -3596,7 +3964,7 @@ function WatermarkControls({ onApplied }: { onApplied?: () => void }) {
         />
       </div>
       <button
-        onClick={() => { void handleApply(); }}
+        data-panel-action="watermark" onClick={() => { void handleApply(); }}
         disabled={busy || !isTauri || text.trim().length === 0}
         className={buttonClass}
         style={{ marginTop: 8, height: 36 }}

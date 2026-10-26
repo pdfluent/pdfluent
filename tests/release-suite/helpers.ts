@@ -16,7 +16,8 @@ import { cpSync, mkdtempSync, mkdirSync, readdirSync, statSync, writeFileSync, r
 import { createHash } from "node:crypto";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { walkTargets } from "../../scripts/quality/suite/ui_walk.mjs";
+import { execFileSync } from "node:child_process";
+import { walkTargets, WALK_BUILD_MARKER } from "../../scripts/quality/suite/ui_walk.mjs";
 
 export const REPO_ROOT = process.cwd();
 export const SUITE = path.join(REPO_ROOT, "scripts", "quality", "release_suite.sh");
@@ -128,12 +129,20 @@ export function row(json: Record<string, unknown>, id: string): Row | undefined 
  * from a fixture nobody has read in months.
  */
 export function writeFullWalk(probesDir: string): void {
+  // A walk is only read as one when it says it came from the ui-walk build of
+  // this commit (#471); the fake driver stands in for that build.
+  const head = execFileSync("git", ["rev-parse", "HEAD"], { cwd: REPO_ROOT, encoding: "utf8" }).trim();
   const walk = {
     driver: "fake",
+    build: "ui-walk",
+    marker: WALK_BUILD_MARKER,
+    built_from: head,
     walked: walkTargets(REPO_ROOT).map((t: { id: string; commands: string[] }) => ({
       id: t.id, found: true, activated: true, reached: t.commands,
     })),
     not_probed: [] as { id: string; reason: string }[],
+    // The walk build reports what it saw; none is a clean walk, absent is "not measured".
+    faults: [] as { control: string; kind: string; text: string }[],
   };
   writeFileSync(path.join(probesDir, "ui_walk.out"), JSON.stringify(walk, null, 2) + "\n", "utf8");
   writeFileSync(path.join(probesDir, "ui_walk.rc"), "0\n", "utf8");

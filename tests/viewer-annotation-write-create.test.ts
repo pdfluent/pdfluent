@@ -107,14 +107,14 @@ describe('ViewerApp — handleAddComment', () => {
 
   it('calls createAnnotation with type text', () => {
     const fnStart = viewerAppSource.indexOf('handleAddComment');
-    const fnEnd = viewerAppSource.indexOf('[pdfDoc, engine, pageIndex]', fnStart) + 30;
+    const fnEnd = viewerAppSource.indexOf('[pdfDoc, engine, pageIndex, markDirty]', fnStart) + 30;
     const fnBody = viewerAppSource.slice(fnStart, fnEnd);
     expect(fnBody).toContain("'text'");
   });
 
   it('uses page center as annotation position', () => {
     const fnStart = viewerAppSource.indexOf('handleAddComment');
-    const fnEnd = viewerAppSource.indexOf('[pdfDoc, engine, pageIndex]', fnStart) + 30;
+    const fnEnd = viewerAppSource.indexOf('[pdfDoc, engine, pageIndex, markDirty]', fnStart) + 30;
     const fnBody = viewerAppSource.slice(fnStart, fnEnd);
     expect(fnBody).toContain('page.size.width / 2');
     expect(fnBody).toContain('page.size.height / 2');
@@ -122,7 +122,7 @@ describe('ViewerApp — handleAddComment', () => {
 
   it('calls loadAnnotations after createAnnotation succeeds', () => {
     const fnStart = viewerAppSource.indexOf('handleAddComment');
-    const fnEnd = viewerAppSource.indexOf('[pdfDoc, engine, pageIndex]', fnStart) + 30;
+    const fnEnd = viewerAppSource.indexOf('[pdfDoc, engine, pageIndex, markDirty]', fnStart) + 30;
     const fnBody = viewerAppSource.slice(fnStart, fnEnd);
     expect(fnBody).toContain('result.success');
     expect(fnBody).toContain('loadAnnotations(pdfDoc)');
@@ -131,14 +131,14 @@ describe('ViewerApp — handleAddComment', () => {
   it('calls setAllAnnotations with the full re-fetched annotations list', () => {
     // Filtering to text-only happens in the comments useMemo, not in handleAddComment.
     const fnStart = viewerAppSource.indexOf('handleAddComment');
-    const fnEnd = viewerAppSource.indexOf('[pdfDoc, engine, pageIndex]', fnStart) + 30;
+    const fnEnd = viewerAppSource.indexOf('[pdfDoc, engine, pageIndex, markDirty]', fnStart) + 30;
     const fnBody = viewerAppSource.slice(fnStart, fnEnd);
     expect(fnBody).toContain('setAllAnnotations(annotResult.value)');
   });
 
   it('re-fetches all annotations (not just text) after creating a comment', () => {
     const fnStart = viewerAppSource.indexOf('handleAddComment');
-    const fnEnd = viewerAppSource.indexOf('[pdfDoc, engine, pageIndex]', fnStart) + 30;
+    const fnEnd = viewerAppSource.indexOf('[pdfDoc, engine, pageIndex, markDirty]', fnStart) + 30;
     const fnBody = viewerAppSource.slice(fnStart, fnEnd);
     expect(fnBody).toContain('setAllAnnotations(');
   });

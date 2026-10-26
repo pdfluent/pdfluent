@@ -120,7 +120,7 @@ export function commitDraft(
       {
         success: false,
         reason: 'no-active-draft',
-        message: 'Geen actieve bewerking om op te slaan.',
+        message: 'No active edit to save.',
       },
     ];
   }
@@ -145,7 +145,7 @@ export function commitDraft(
       {
         success: true,
         reason: 'no-change',
-        message: 'Geen wijzigingen om op te slaan.',
+        message: 'No changes to save.',
       },
     ];
   }
@@ -161,7 +161,7 @@ export function commitDraft(
       {
         success: true,
         reason: 'mutation-pending',
-        message: 'Bewerking gereed voor opslaan in PDF.',
+        message: 'Edit ready to save to the PDF.',
       },
     ];
   }

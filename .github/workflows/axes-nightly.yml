@@ -1,0 +1,72 @@
+# SPDX-License-Identifier: LicenseRef-PDFluent-Proprietary
+
+name: Axes (quiet slot)
+
+# The four-axes job measures speed, and a speed number taken while other work runs
+# measures the load (#730). It left the shared desktop runners (133a70b0); this is
+# its fixed place: a nightly window, with a load check before anything is measured.
+# When the check fails the job fails with the reason, red and not skipped, and it
+# measures nothing. scripts/ci/quiet-slot.mjs is the check; tests/ci/quiet-slot.test.ts
+# holds it, including that it runs before the measurement.
+#
+# Runs on our own runner like everything else here
+# (scripts/ci/no-hosted-ci-on-auto-triggers.mjs).
+on:
+  schedule:
+    - cron: "17 2 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  # Must equal the pin in the other workflows; tests/sdk-pin-guard.test.ts fails
+  # when they disagree.
+  XFA_SDK_REV: bd658c93d16f4a73dc77041e9dbe10902b26b4c3
+  PDFLUENT_MACHINE_CLASS: runner-desktop-wsl-4core
+  PDFLUENT_AXES_REQUIRE_RUN: "1"
+
+concurrency:
+  group: axes-nightly
+  cancel-in-progress: false
+
+jobs:
+  axes:
+    name: quality:axes (quiet slot)
+    runs-on: [self-hosted, linux, pdfluent-editor]
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      # Before the build, not after it: the build is the loudest thing this job
+      # does, and the check has to see the machine as the other jobs left it.
+      - name: The machine is quiet enough to measure
+        run: node scripts/ci/quiet-slot.mjs --max-per-core 0.25 --wait-s 900
+      - run: npm ci
+      - run: npm run build
+      - run: rustc --version && cargo --version
+      - uses: ./.github/actions/sdk-pin
+        with:
+          deploy-key: ${{ secrets.ENGINE_DEPLOY_KEY }}
+          revision: ${{ env.XFA_SDK_REV }}
+      - run: python3 scripts/quality/test_ratchet.py
+      # Checked again right before the measurement: building takes long enough for
+      # another job to have started.
+      - name: Still quiet, right before the measurement
+        run: node scripts/ci/quiet-slot.mjs --max-per-core 0.5 --wait-s 0
+      - run: cargo test --release --manifest-path src-tauri/Cargo.toml --test golden_axes -- --nocapture
+      - name: Judge the run against the baselines
+        run: |
+          RUN_ID="${PDFLUENT_MACHINE_CLASS}-$(date -u +%Y-%m-%d)-linux-$(echo "$GITHUB_SHA" | cut -c1-7)"
+          python3 scripts/quality/ratchet.py --all --run "quality/runs/$RUN_ID.json" --platform linux
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: axes-run
+          path: quality/runs/
+          if-no-files-found: warn
+      # Removed by the job, not by the action: .github/actions/sdk-pin says why.
+      - name: Remove the engine deploy key
+        if: always()
+        run: rm -rf "${ENGINE_SSH_DIR:-}"

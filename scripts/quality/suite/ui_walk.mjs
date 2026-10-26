@@ -100,15 +100,47 @@ export function readWalk(text) {
   if (!raw || typeof raw !== "object") return { error: "the walk output is not an object" };
   const list = (v) => (Array.isArray(v) ? v : []);
   return {
+    build: typeof raw.build === "string" ? raw.build : "",
+    marker: typeof raw.marker === "string" ? raw.marker : "",
+    builtFrom: typeof raw.built_from === "string" ? raw.built_from : "",
     gap: typeof raw.gap === "string" ? raw.gap : "",
+    // null: the walk build did not watch for faults. That is "not measured", never "none".
+    faults: Array.isArray(raw.faults)
+      ? raw.faults.filter((f) => f && typeof f.text === "string").map((f) => ({
+        control: String(f.control ?? ""), kind: String(f.kind ?? ""), text: f.text, command: typeof f.command === "string" ? f.command : "",
+      }))
+      : null,
     walked: new Map(list(raw.walked).filter((w) => w && typeof w.id === "string").map((w) => [w.id, w])),
     notProbed: new Map(list(raw.not_probed).filter((w) => w && typeof w.id === "string").map((w) => [w.id, String(w.reason ?? "")])),
   };
 }
 
-function judgeTarget(target, walk) {
+/**
+ * The walk drives a build of the same commit with a walker compiled in (#471),
+ * not the shipped bytes, and every row says so. A row that did not would read as
+ * a statement about the artefact, which is worse than no row.
+ */
+export const WALK_BUILD_MARKER = "pdfluent-ui-walk-build";
+export const walkLabel = (builtFrom) =>
+  `measured on the ui-walk build of ${builtFrom ? builtFrom.slice(0, 12) : "an unrecorded commit"}, not on the shipped bytes`;
+
+/** Why a probe cannot be trusted as a walk of this suite's commit, or "". */
+function walkProvenanceProblem(walk, commit) {
+  if (walk.error || walk.gap) return "";
+  if (walk.build !== "ui-walk" || walk.marker !== WALK_BUILD_MARKER) {
+    return "the probe does not say it was measured on the ui-walk build, so it cannot be read as a walk of anything";
+  }
+  if (commit && walk.builtFrom && !commit.startsWith(walk.builtFrom.slice(0, 7)) && !walk.builtFrom.startsWith(commit.slice(0, 7))) {
+    return `the walk build is from ${walk.builtFrom.slice(0, 12)} and the artefact from ${commit.slice(0, 12)}; a walk against another commit proves nothing about this one`;
+  }
+  if (commit && !walk.builtFrom) return "the probe does not record which commit the walk build came from";
+  return "";
+}
+
+function judgeTarget(target, walk, problem = "") {
   const row = (status, reason, numbers = {}) => ({ status, reason, numbers });
   if (walk.error) return row("SKIPPED", walk.error);
+  if (problem) return row("SKIPPED", problem);
   const stated = walk.notProbed.get(target.id);
   if (stated !== undefined) return row("SKIPPED", stated || "the walk named no reason for leaving this control out");
   const hit = walk.walked.get(target.id);
@@ -126,23 +158,78 @@ function judgeTarget(target, walk) {
 }
 
 /**
+ * Faults the walk is allowed to see, each with a reason in words. Empty, and it
+ * stays empty for anything that is a bug: the walk drives the real controls on a
+ * real document, so an error toast ("'<command>' did not complete"), a
+ * console.error or an uncaught exception is something a person using the same
+ * control would have seen. An entry names the control being walked and/or the
+ * command and/or text, and says why that control is SUPPOSED to fail.
+ * tests/release-suite/ui-walk.test.ts holds the rules.
+ *
+ *   { control: "button:x", command: "some_command", match: "text", reason: "..." }
+ */
+export const EXPECTED_WALK_FAULTS = [];
+
+export const MIN_FAULT_REASON = 20;
+
+/** Problems with the expectations themselves. */
+export function checkExpectedFaults(expected) {
+  const problems = [];
+  expected.forEach((e, i) => {
+    const where = `expected walk fault #${i + 1}`;
+    if (typeof e.reason !== "string" || e.reason.trim().length < MIN_FAULT_REASON) problems.push(`${where}: needs a written reason`);
+    if (!e.control && !e.command && !e.match) problems.push(`${where}: names no control, command or text, so it would allow every fault`);
+  });
+  return problems;
+}
+
+/** Split the walk's faults into the ones nothing expected and the ones something did. */
+export function judgeWalkFaults(faults, expected = EXPECTED_WALK_FAULTS) {
+  const unexpected = [];
+  const allowed = [];
+  for (const f of faults) {
+    const hit = expected.find((e) => (!e.control || e.control === f.control)
+      && (!e.command || e.command === f.command)
+      && (!e.match || f.text.includes(e.match)));
+    if (hit) allowed.push(f); else unexpected.push(f);
+  }
+  return { unexpected, allowed };
+}
+
+function faultsRow(walk, problem, expected) {
+  const row = (status, reason, numbers = {}) => ({ status, reason, numbers });
+  if (walk.error) return row("SKIPPED", walk.error);
+  if (problem) return row("SKIPPED", problem);
+  if (walk.faults === null) {
+    return row("SKIPPED", walk.gap || "the walk build did not report the errors it saw (no `faults` in the probe), so a clean walk cannot be told from a blind one");
+  }
+  const { unexpected, allowed } = judgeWalkFaults(walk.faults, expected);
+  if (unexpected.length === 0) return row("PASS", "", { faults: 0, expected: allowed.length });
+  const shown = unexpected.slice(0, 5).map((f) => `${f.control}: ${f.kind}${f.command ? ` [${f.command}]` : ""} ${f.text.slice(0, 200)}`);
+  return row("FAIL", `the walk saw ${unexpected.length} error(s) a person using the same controls would have seen: ${shown.join(" | ")}${unexpected.length > 5 ? " | ..." : ""}`, { faults: unexpected.length, expected: allowed.length });
+}
+
+/**
  * One row per registered control, plus one for the walk's own coverage.
  *
  * The coverage row is not bookkeeping. A walk that reports controls nobody
  * registered has drifted from the register, and every count it prints is then
  * about a different set than the one the report claims to have judged.
  */
-export function judgeWalk(targets, walkText, { missingProbe = false, missingReason = "" } = {}) {
+export function judgeWalk(targets, walkText, { missingProbe = false, missingReason = "", commit = "", expectedFaults = EXPECTED_WALK_FAULTS } = {}) {
   const walk = missingProbe
-    ? { gap: missingReason || "the walk did not run on this platform", walked: new Map(), notProbed: new Map(), error: null }
+    ? { gap: missingReason || "the walk did not run on this platform", walked: new Map(), notProbed: new Map(), faults: null, error: null }
     : readWalk(walkText);
   const known = new Set(targets.map((t) => t.id));
+  const problem = walkProvenanceProblem(walk, commit);
+  const label = walkLabel(walk.builtFrom);
+  const said = (reason) => (reason ? `${label} — ${reason}` : label);
   const out = [];
   for (const t of targets) {
-    const v = judgeTarget(t, walk);
+    const v = judgeTarget(t, walk, problem);
     out.push({
       step: "S5", id: `ui:${t.id}`, capability: "ui", status: v.status, ms: 0,
-      numbers: v.numbers, reason: v.reason, evidence: v.status === "SKIPPED" ? [] : ["probes/ui_walk.out"],
+      numbers: v.numbers, reason: said(v.reason), evidence: v.status === "SKIPPED" ? [] : ["probes/ui_walk.out"],
     });
   }
   const strangers = walk.error ? [] : [...walk.walked.keys()].filter((id) => !known.has(id));
@@ -152,11 +239,19 @@ export function judgeWalk(targets, walkText, { missingProbe = false, missingReas
     status: strangers.length ? "FAIL" : covered === targets.length ? "PASS" : "SKIPPED",
     ms: 0,
     numbers: { registered: targets.length, walked: covered },
-    reason: strangers.length
+    reason: said(strangers.length
       ? `the walk reported ${strangers.length} control(s) the register does not list: ${strangers.slice(0, 5).join(", ")}`
       : covered === targets.length ? ""
-      : `${targets.length - covered} of ${targets.length} registered controls were not walked`,
+      : `${targets.length - covered} of ${targets.length} registered controls were not walked`),
     evidence: [],
+  });
+  // The walk presses every control the register lists; whatever the app answered
+  // with an error on screen or in the console is a finding, however the control's
+  // own row came out.
+  const fv = faultsRow(walk, problem, expectedFaults);
+  out.push({
+    step: "S5", id: "ui:walk-faults", capability: "ui", status: fv.status, ms: 0,
+    numbers: fv.numbers, reason: said(fv.reason), evidence: fv.status === "SKIPPED" ? [] : ["probes/ui_walk.out"],
   });
   return out;
 }

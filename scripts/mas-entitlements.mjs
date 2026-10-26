@@ -21,6 +21,14 @@
 //   node scripts/mas-entitlements.mjs --app <path.app> [--expected <plist>]
 //   node scripts/mas-entitlements.mjs --pkg <path.pkg> [--expected <plist>]
 //   node scripts/mas-entitlements.mjs --actual <plist> --expected <plist>
+//   node scripts/mas-entitlements.mjs --pkg <path.pkg> --helpers
+//
+// --helpers: after the app itself, also read the signature of every nested
+// Mach-O executable (the bundled Tesseract among them) and compare it with
+// src-tauri/Entitlements.appstore.inherit.plist. A helper signed without
+// `com.apple.security.inherit` is killed by the sandbox the first time the app
+// starts it -- OCR would work on the build machine and nowhere else. The
+// bundled OCR binary must be among the helpers found.
 //
 // --app/--pkg need macOS (codesign, pkgutil); --actual works anywhere, which is
 // what the unit tests drive.
@@ -28,11 +36,14 @@
 import { execFileSync, spawnSync } from 'node:child_process';
 import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join, resolve } from 'node:path';
+import { join, resolve, posix } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = resolve(fileURLToPath(new URL('.', import.meta.url)), '..');
 export const DEFAULT_EXPECTED = join(ROOT, 'src-tauri', 'Entitlements.appstore.plist');
+export const INHERIT_EXPECTED = join(ROOT, 'src-tauri', 'Entitlements.appstore.inherit.plist');
+/** The bundled OCR binary, relative to the .app. */
+export const OCR_HELPER = 'Contents/Resources/resources/ocr/bin/tesseract';
 
 /**
  * Parse the flat entitlements dict of a plist into a Map of key -> value.
@@ -154,12 +165,59 @@ export function diffEntitlements(expected, actual) {
  * App Store keys are among the things a bad MAS build gets wrong, so they
  * cannot also be what decides whether to look.
  */
-export function signedForTheAppStore(app) {
-  const run = spawnSync('codesign', ['-dvv', app], { encoding: 'utf8' });
+export function signedForTheAppStore(
+  app,
+  // Injectable so the judgement is testable where codesign does not exist and a
+  // stub script cannot be put on PATH (Windows, #731).
+  describeSignature = (path) => spawnSync('codesign', ['-dvv', path], { encoding: 'utf8' }),
+) {
+  const run = describeSignature(app);
   // codesign writes its description to stderr.
   return /^Authority=(Apple Distribution|3rd Party Mac Developer Application)/m.test(
     `${run.stdout ?? ''}${run.stderr ?? ''}`,
   );
+}
+
+/**
+ * Paths (relative to the .app) of every nested Mach-O the build signs with the
+ * inherit entitlements: all executables and libraries under Contents except
+ * the app's own main executable. `describe` is injectable for tests.
+ */
+export function nestedHelpers(
+  app,
+  list = (dir) =>
+    execFileSync('/usr/bin/find', [dir, '-type', 'f', '(', '-perm', '-u+x', '-o', '-name', '*.dylib', '-o', '-name', '*.so', ')'], {
+      encoding: 'utf8',
+    })
+      .split('\n')
+      .filter(Boolean),
+  isMachO = (path) => /Mach-O/.test(execFileSync('file', ['-b', path], { encoding: 'utf8' })),
+) {
+  // An app bundle is a POSIX tree whatever machine inspects it.
+  const macos = posix.join(app, 'Contents', 'MacOS') + '/';
+  return list(posix.join(app, 'Contents'))
+    .filter((p) => !p.startsWith(macos) && isMachO(p))
+    .map((p) => p.slice(app.length + 1))
+    .sort();
+}
+
+/**
+ * What is wrong with the helpers' signatures. `read(relPath)` returns the
+ * entitlements XML of one helper.
+ */
+export function helperProblems(helpers, expected, read, required = [OCR_HELPER]) {
+  const problems = [];
+  for (const need of required) {
+    if (!helpers.includes(need)) problems.push(`${need}: not in the app (the store build bundles OCR)`);
+  }
+  for (const h of helpers) {
+    try {
+      for (const p of diffEntitlements(expected, parseEntitlements(read(h)))) problems.push(`${h}: ${p}`);
+    } catch (e) {
+      problems.push(`${h}: ${e.message}`);
+    }
+  }
+  return problems;
 }
 
 function entitlementsOfApp(app) {
@@ -199,9 +257,11 @@ function main() {
     process.exit(2);
   }
 
+  const checkHelpers = process.argv.includes('--helpers');
   let actualXml;
   let subject;
   let scratch = null;
+  let helperApp = null;
   try {
     if (actualPath) {
       subject = actualPath;
@@ -209,12 +269,14 @@ function main() {
     } else if (app) {
       if (!existsSync(app)) throw new Error(`no app bundle at ${app}`);
       subject = app;
+      helperApp = app;
       actualXml = entitlementsOfApp(app);
     } else {
       if (!existsSync(pkg)) throw new Error(`no package at ${pkg}`);
       scratch = mkdtempSync(join(tmpdir(), 'mas-ent-'));
       const inner = appInsidePkg(pkg, join(scratch, 'x'));
       subject = `${pkg} → ${inner.slice(scratch.length)}`;
+      helperApp = inner;
       actualXml = entitlementsOfApp(inner);
     }
   } catch (e) {
@@ -231,14 +293,35 @@ function main() {
     if (scratch) rmSync(scratch, { recursive: true, force: true });
     process.exit(1);
   }
+  let helperIssues = [];
+  if (checkHelpers) {
+    if (!helperApp) {
+      console.error('✘ MAS ENTITLEMENTS: --helpers needs --app or --pkg');
+      process.exit(2);
+    }
+    try {
+      helperIssues = helperProblems(
+        nestedHelpers(helperApp),
+        parseEntitlements(readFileSync(INHERIT_EXPECTED, 'utf8')),
+        (h) => entitlementsOfApp(join(helperApp, h)),
+      );
+    } catch (e) {
+      helperIssues = [`could not read the helpers: ${e.message}`];
+    }
+  }
   if (scratch) rmSync(scratch, { recursive: true, force: true });
 
+  if (helperIssues.length) {
+    console.error(`✘ MAS HELPER ENTITLEMENTS differ from ${INHERIT_EXPECTED.slice(ROOT.length + 1)}:`);
+    for (const p of helperIssues) console.error(`   ${p}`);
+    process.exit(1);
+  }
   if (problems.length) {
     console.error(`✘ MAS ENTITLEMENTS differ from ${expectedPath.slice(ROOT.length + 1)}:`);
     for (const p of problems) console.error(`   ${p}`);
     process.exit(1);
   }
-  console.log(`✅ MAS ENTITLEMENTS OK — signature of ${subject} equals ${expectedPath.slice(ROOT.length + 1)}`);
+  console.log(`✅ MAS ENTITLEMENTS OK — signature of ${subject} equals ${expectedPath.slice(ROOT.length + 1)}${checkHelpers ? ' (nested helpers too)' : ''}`);
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === resolve(fileURLToPath(import.meta.url))) main();

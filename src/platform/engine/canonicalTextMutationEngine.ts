@@ -26,6 +26,8 @@ import type {
   FormatTextSpanResult,
   SetTextRunStyleRequest,
   SetTextRunStyleResult,
+  SetTextRunFontRequest,
+  SetTextRunFontResult,
 } from '../../core/engine/TextMutationEngine';
 import type { AsyncEngineResult } from '../../core/engine/types';
 import { getTauriTextMutationEngine } from './tauri/TauriTextMutationEngine';
@@ -45,6 +47,10 @@ class DesktopRequiredTextMutationEngine implements TextMutationEngineWithFormatt
 
   async setTextRunStyle(_request: SetTextRunStyleRequest): AsyncEngineResult<SetTextRunStyleResult> {
     return { success: true, value: { styled: false, reason: REASON_DESKTOP_REQUIRED, code: E_ENV_UNSUPPORTED } };
+  }
+
+  async setTextRunFont(_request: SetTextRunFontRequest): AsyncEngineResult<SetTextRunFontResult> {
+    return { success: false, error: { code: 'runtime-unavailable', message: REASON_DESKTOP_REQUIRED } };
   }
 }
 

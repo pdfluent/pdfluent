@@ -5,7 +5,7 @@
 # of its components (including the embedded PDF engine), requires a licence.
 # See https://pdfluent.com/license for terms.
 #
-# Isolated objc2 crate for macOS security-scoped bookmarks. Lives outside the
+# Isolated objc2 crate for macOS security-scoped bookmarks and PDFKit printing. Lives outside the
 # main `pdfluent-desktop` crate (which keeps `#![forbid(unsafe_code)]`) so the
 # small amount of required `unsafe` objc2 interop is contained here. Non-macOS
 # targets compile to no-op stubs.
@@ -28,6 +28,24 @@ base64 = "0.22"
 
 [target.'cfg(target_os = "macos")'.dependencies]
 objc2 = "0.5"
+# Managed-preference read (managed_prefs.rs). Both are already in the lock
+# through the webview stack; this adds an edge, not a crate.
+core-foundation = "0.10"
+core-foundation-sys = "0.8"
+# Printing through PDFKit (print.rs). The 0.6 / 0.3 family is the one the
+# webview stack already links, so these add no crate to the build, only
+# features of crates that are in it.
+objc2_06 = { package = "objc2", version = "0.6" }
+objc2-app-kit-03 = { package = "objc2-app-kit", version = "0.3", default-features = false, features = [
+    "std",
+    "NSPrintInfo",
+    "NSPrintOperation",
+] }
+objc2-foundation-03 = { package = "objc2-foundation", version = "0.3", default-features = false, features = [
+    "std",
+    "NSString",
+    "NSURL",
+] }
 objc2-foundation = { version = "0.2", features = [
     "NSString",
     "NSData",

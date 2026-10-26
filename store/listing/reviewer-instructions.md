@@ -11,10 +11,9 @@ Paste into Partner Center → **Submission options → Notes for certification**
 
 **About PDFluent**
 
-PDFluent is a privacy-first desktop PDF editor. It runs entirely on the local
-device — no account, no sign-in, and no internet connection is required to use any
-core feature (viewing, editing text, converting to Office formats, organizing
-pages, redacting, watermarking, OCR, and digitally signing PDFs).
+PDFluent is a privacy-first desktop PDF editor. Opening, editing, converting,
+organizing pages, redacting, watermarking, OCR and signing all run on the local
+device, and documents are not uploaded. There is no account and no sign-in.
 
 **No login needed to test.** Launch the app and either drag in any PDF or use
 **"PDF openen" / "Open PDF"**. To exercise the main flows:
@@ -26,15 +25,16 @@ pages, redacting, watermarking, OCR, and digitally signing PDFs).
    /Image/PDF-A; a Save dialog writes the file locally.
 4. **All tools:** click **Alle tools / All tools** for compress, organize pages,
    merge, split, redact, protect, watermark, OCR.
-5. **Sign:** click **Ondertekenen / Sign** for a local PAdES digital signature.
+5. **Sign:** click **Ondertekenen / Sign** to sign with your own .p12 or .pfx certificate.
 
-**Licensing:** PDFluent is completely free, including for business use. There is
+**Licensing:** PDFluent is free for everyone, including business and commercial use. There is
 no licence prompt, no account, and no in-app purchase — the app is fully
 functional immediately after install.
 
 **Network / privacy:** the only optional network calls are an auto-update check
-(`pdfluent.com/releases/latest.json`) and optional, off-by-default diagnostics.
-No documents leave the device. Privacy policy: https://pdfluent.com/privacy
+(`pdfluent.com/releases/latest.json`) and optional, off-by-default crash and feedback reports, sent only when the user
+presses Send. A feedback report can include the open document only if the user
+ticks a box and confirms a second dialog that names the file. Privacy policy: https://pdfluent.com/privacy
 
 **Installer:** Authenticode-signed MSI (Azure Trusted Signing,
 CN=Innovation Trigger B.V.), offline, silent-install/uninstall clean.

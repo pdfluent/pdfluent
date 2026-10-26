@@ -43,8 +43,11 @@ import { basename } from "node:path";
 import { fileURLToPath } from "node:url";
 
 function identity(path) {
-  const s = statSync(path);
-  // dev and ino are numbers or BigInts depending on the call; stringify both.
+  // BigInt, not Number: an NTFS or ReFS file id is 64 bits wide and a Number keeps
+  // 53. Two files created one after the other have neighbouring ids, and after
+  // the rounding they compared equal -- on the Windows runner a different file
+  // with the guard's name was taken for the guard (tests/ci/guards-are-never-silent).
+  const s = statSync(path, { bigint: true });
   return `${s.dev}:${s.ino}`;
 }
 

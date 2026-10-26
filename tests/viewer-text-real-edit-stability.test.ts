@@ -162,7 +162,9 @@ describe('stability — unsupported cases are never silently successful', () => 
       ...makeWritableParagraph(),
       lines: [
         { ...makeWritableParagraph().lines[0]!, id: 'l0' },
-        { ...makeWritableParagraph().lines[0]!, id: 'l1' },
+        // A styled second line (two runs) keeps the paragraph non-writable;
+        // single-run multi-line paragraphs are writable since J-42.
+        { ...makeWritableParagraph().lines[0]!, id: 'l1', spans: [...makeWritableParagraph().lines[0]!.spans, ...makeWritableParagraph().lines[0]!.spans] },
       ],
     };
     const state = startDraft(multiLine, 'Hello world', 'edit', null)!;
@@ -272,12 +274,12 @@ describe('stability — dirty state wiring', () => {
 
 describe('stability — event log coherence', () => {
   it('page_mutated event has all required fields', () => {
-    const event = makeDocumentEvent('page_mutated', 'jan', 0, 'p0:s0', 'Tekst bewerkt');
+    const event = makeDocumentEvent('page_mutated', 'jan', 0, 'p0:s0', 'Text edited');
     expect(event.type).toBe('page_mutated');
     expect(event.user).toBe('jan');
     expect(event.page).toBe(0);
     expect(event.objectId).toBe('p0:s0');
-    expect(event.description).toBe('Tekst bewerkt');
+    expect(event.description).toBe('Text edited');
     expect(event.timestamp instanceof Date).toBe(true);
   });
 

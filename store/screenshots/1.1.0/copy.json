@@ -1,0 +1,62 @@
+{
+  "draft": true,
+  "source": "external-text model route (OpenRouter), 2026-10-19; model id kept in the owner notes, not here",
+  "humanizer": "pending",
+  "claims": "unchecked: each headline and caption still needs its CLAIMS.md ID (or no claim in it) before it ships",
+  "frames": {
+    "10": {
+      "headline": "All tools in a list",
+      "sub": "Find every editing tool in the panel",
+      "caption": "The All tools panel shows every tool in a list."
+    },
+    "01": {
+      "headline": "Open PDFs on your desktop",
+      "sub": "Edit files locally in a black-and-white interface",
+      "caption": "A PDF is open in the editor with page thumbnails and a black-and-white interface."
+    },
+    "02": {
+      "headline": "Edit text in place",
+      "sub": "Click a line, rewrite it, choose an installed font",
+      "caption": "A line of text is being edited in place with a system font selected in the font picker."
+    },
+    "03": {
+      "headline": "Export to Markdown",
+      "sub": "Save the document as a Markdown file",
+      "caption": "The export dialog shows Markdown selected as a Preview feature."
+    },
+    "04": {
+      "headline": "Export tables to Excel",
+      "sub": "Save document tables as an Excel workbook",
+      "caption": "The export dialog shows tables-to-Excel selected as a Preview feature."
+    },
+    "05": {
+      "headline": "Make scans searchable",
+      "sub": "OCR is built in and works offline",
+      "caption": "A scanned report after OCR: the page has a text layer you can search and copy.",
+      "blockedBy": "journey J-60 gap ocr-text-layer; the built-in OCR claim is not registered yet (CLAIMS B63 is obsolete, proposal in the pull request)"
+    },
+    "06": {
+      "headline": "Place and adjust images",
+      "sub": "Add, move or replace pictures on a page",
+      "caption": "A picture is placed on a page and selected in the editor.",
+      "blockedBy": "journey J-45 gap page-images-767"
+    },
+    "07": {
+      "headline": "Add a typed signature",
+      "sub": "Type your name, choose a style, place it",
+      "caption": "A typed signature appears in a chosen signature font on the page.",
+      "blockedBy": "journey J-62 gap typed-signature-767"
+    },
+    "08": {
+      "headline": "Fill XFA forms",
+      "sub": "Open legacy XFA forms and complete the fields",
+      "caption": "An XFA form is open and its fields are being filled in the app.",
+      "blockedBy": "journey J-59 gap xfa-fill-in-place"
+    },
+    "09": {
+      "headline": "Organise PDF pages",
+      "sub": "Reorder, rotate, delete and extract pages",
+      "caption": "The page organiser shows a selected page with options to reorder, rotate, delete and extract."
+    }
+  }
+}

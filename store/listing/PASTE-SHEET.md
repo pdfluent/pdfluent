@@ -1,81 +1,151 @@
 <!--
 Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 See https://pdfluent.com/license for terms.
-Paste-ready Microsoft Store listing (en-US). Copy each block into the matching
-Partner Center field. Only ONE language listing (English) is required to launch.
+Paste-ready Microsoft Store listing (en-US), v2 search-optimised pass of 2026-10-23.
+Copy each block into the matching Partner Center field. Only ONE language listing
+(English) is required to launch.
 -->
 
-# Partner Center — Store listing paste sheet (English, en-US)
+# Partner Center: Store listing paste sheet (English, en-US), v2
 
 The listing is live (Store ID `XPDBXJ6XRLFQK2`). These blocks are what the English
-listing **should** say; paste the ones that changed on
-Partner Center → PDFluent → **Update** → *Store listing*, then Submit. See
+listing **should** say for the 1.1.0 update; paste them on
+Partner Center, PDFluent, **Update**, *Store listing*, then Submit. See
 [`../update-runbook.md`](../update-runbook.md) for when each field needs touching.
 
-> The **Description** block below has not been pasted into Partner Center yet. The
-> live description still carries the abolished paid-app grant — see
-> [`../OWNER-BRIEF.md`](../OWNER-BRIEF.md) §1.
-
-One English listing is enough; a listing per language is not required.
+> The Description block below has not been pasted into Partner Center yet. The live
+> description still carries the abolished paid-app grant, see
+> [`../OWNER-BRIEF.md`](../OWNER-BRIEF.md) section 1.
+>
+> Privacy wording: B30 and B67 are verified for macOS only, so this sheet uses the
+> B09/B08 wording. Swap blocks for after the Windows offline check are in
+> [`listing-copy.md`](listing-copy.md).
 
 ---
 
-## Description  (field: "Description", max 10,000 chars)
+## Product name  (field: "Product name")
 
 ```
-PDFluent is a PDF editor that runs on your computer, not in the cloud. There is no account and no sign-in. Open a file and it opens. Whatever you do with it stays on your device.
-
-Edit text straight in the PDF. Click a line, type, and the change goes into the document with the font and colour preserved. It even handles the awkward cases, like white text on a dark, coloured slide.
-
-Convert a PDF to Word, Excel, PowerPoint, an image, or PDF/A. You get a real Office file you can keep working in, not a flat picture of the page.
-
-Everything else is one click away in the tools panel: compress a heavy file, reorder or rotate pages, merge several PDFs into one, split one apart, redact text so it is actually removed, add a watermark, and run OCR to make a scan searchable.
-
-Sign documents on your own machine. PDFluent produces a PAdES digital signature locally. It does not send your file to a signing service.
-
-This is the point of PDFluent. Your contracts, IDs, and financial documents never leave your computer, because the app makes no network request to do any of the work above. It can check for an update, and it can send a crash or feedback report if you switch reporting on. Both are off the document path and reporting is off until you enable it.
-
-The interface is available in 27 languages and follows your Windows display language.
-
-PDFluent is completely free, including for business use. No account, no subscription, no licence file.
-
-Under the hood it uses a pure-Rust PDF engine, so it starts fast and stays light.
+PDFluent: PDF Editor
 ```
 
-## Short description  (field: "Short description", max 1,000 chars)
+## Short description  (field: "Short description", max 1,000 chars; 175 used)
 
 ```
-A PDF editor that runs entirely on your PC. Edit text, convert to Word or Excel, merge, redact, OCR, and sign documents locally. No account, no upload, nothing leaves your device.
+PDF editor for Windows that edits text, signs, fills in forms, redacts and runs OCR on scans. Free for everyone, including business and commercial use. No account, no sign-in.
 ```
 
-## What's new in this version  (field: "What's new in this version")
+## Description  (field: "Description", max 10,000 chars; 2840 used)
 
 ```
-Editing white text on a coloured page now shows the text while you type, and exporting to Word opens cleanly with its images intact. PDFluent still does the rest on your own PC: edit text in the PDF, convert to Word, Excel and PowerPoint, run OCR, and sign documents locally. No account, no upload. The interface follows your Windows display language.
+Edit, sign, redact and OCR your contracts, invoices and ID scans in a PDF editor for Windows that is free for everyone, including business and commercial use. There is no account to create and no sign-in. Open a file, make the change and save it.
+
+Edit PDF text on the page
+Fix a typo or rewrite a whole paragraph right where it sits. Double-click a line or a paragraph, type, save. Choose any font installed on your PC, plus size and colour, and move, replace or delete a picture that is already on a page.
+
+Sign PDF with your own certificate
+Sign with your own .p12 or .pfx certificate on your PC, and check the signatures a file already carries.
+
+Fill in PDF forms
+Click into the fields, type, save. Totals and other calculations work once you allow them, and when a form carries scripts the app asks before anything runs. Older XFA forms take your answers and keep the values when you reopen the file.
+
+OCR scanned PDFs
+Run OCR on a scanned PDF and its text becomes searchable and copyable. OCR is built in, so there is nothing to download. It reads six languages: English, Dutch, German, French, Spanish and Italian.
+
+Annotate and highlight PDFs
+Highlight, underline and strike through text. Add sticky-note comments, draw freehand or attach a file, then edit or delete any annotation later.
+
+Merge and split PDFs
+Combine several files into one, split a file apart and extract the pages you need. Rotate, delete, reorder and insert pages.
+
+Compress PDFs and set a password
+Compress a heavy file, set or remove a password, add a watermark and edit the document properties. A password-protected PDF asks for its password when you open it.
+
+Convert PDF to Word and PowerPoint
+Get a real Word or PowerPoint file you can work with, not a picture of the page.
+
+Save PDF as JPG, PNG or PDF/A
+Export pages as JPG or PNG images, or convert a file to PDF/A. Markdown export and tables to Excel are there too, both labelled Preview in the app.
+
+Redact PDF text for good
+Redact by search term or by area. Once you apply the redaction and save, the text is gone from the file.
+
+Work on several PDFs in tabs
+Each PDF opens in its own tab, fitted to the window. Search, select and copy text, print, and jump by thumbnail. Dark mode is remembered, and after a crash the app offers your unsaved work back.
+
+Free for business, no account
+The editor is free for everyone, including business and commercial use. No account, no sign-in. The interface comes in 27 languages.
+
+What the app sends
+The PDF engine in the app has no network connection of its own. The only thing the app does by itself is an optional update check, which you can switch off in Settings. Crash and feedback reports are sent only if you choose to send one.
+
+The editor is built on the PDFluent SDK, the same engine developers embed in their own products. Learn more at pdfluent.com.
 ```
 
-## Product features  (field: "Product features" — add each as a separate bullet, max 20, ≤200 chars each)
+## Product features  (field: "Product features", one bullet each, max 20, max 200 chars each)
 
 ```
-Edit text directly inside the PDF, including white text on coloured pages
-Convert to Word, Excel, PowerPoint, image, or PDF/A
-Merge, split, reorder, rotate, and compress pages
-Redact text permanently and add watermarks
-OCR to make scanned PDFs searchable
-Sign locally with a PAdES digital signature
-Runs fully offline. No account, no upload, no tracking
+Edit PDF text on the page: double-click a line or a paragraph, rewrite it and save
+Choose any font installed on your PC, with the size and colour you want
+Move, replace or delete a picture that is already on a page
+Sign PDFs with your own .p12 or .pfx certificate and check the signatures already in a file
+Fill in PDF forms, with totals and other calculations working once you allow them
+Open older XFA forms, fill in the fields and keep the values when you reopen the file
+Run OCR on scanned PDFs so the text is searchable and copyable, in six languages
+Annotate PDFs: highlight, underline, strike through, add sticky notes, draw freehand, attach a file
+Merge several PDFs into one, split a file and extract the pages you need
+Rotate, delete, reorder and insert pages
+Compress a heavy PDF, set or remove a password, add a watermark, edit document properties
+Convert PDF to Word or PowerPoint as a real Office file
+Save pages as JPG or PNG images, or convert a PDF to PDF/A
+Redact PDF text by search term or by area, and it is gone from the file once you save
+Open several PDFs at once, each in its own tab and fitted to the window
+Search, select and copy text, print, and jump by thumbnail
+Recover after a crash: the app offers your unsaved work back, and dark mode is remembered
+Use PDFluent free for everyone, including business and commercial use, with no account
+Switch the interface between 27 languages
+Built on the PDFluent SDK, the same engine developers embed in their own products
 ```
 
-## Search terms  (field: "Search terms" — add each separately, ≤30 chars each, up to 7)
+## Search terms  (field: "Search terms", one each, max 30 chars, up to 7; 20 of 21 words)
 
 ```
-pdf editor
-edit pdf
-convert pdf
-pdf converter
+pdf to word
+edit pdf text
+merge combine pdf
+compress reduce pdf
 sign pdf
-pdf ocr
-offline pdf
+ocr scanned pdf
+fill pdf form
+```
+
+## What's new in this version  (field: "What's new in this version", 728 / 1,500)
+
+```
+Several PDFs in tabs
+Open as many PDFs as you need, each in its own tab and fitted to the window. Dark mode is remembered, and after a crash the app offers your unsaved work back.
+
+Built-in OCR for scans
+Run OCR on a scanned PDF and it becomes searchable and copyable. Six languages are included, with nothing to download.
+
+Forms that do the maths
+Fill in PDF forms and let totals and other calculations work once you allow them. Older XFA forms keep their values when you reopen the file.
+
+Pictures on the page
+Move, replace or delete a picture that is already on a page.
+
+The PDF engine has no network connection of its own, and the only thing the app does by itself is an optional update check you can switch off in Settings.
+```
+
+## Screenshot captions  (optional, one per screenshot, in the order below)
+
+```
+1. Edit, sign, redact and OCR your PDFs. Free for everyone, including business use.
+2. Convert PDF to Word or PowerPoint, or save pages as JPG or PNG images.
+3. Sign PDFs with your own .p12 or .pfx certificate and check existing signatures.
+4. Open several PDFs in tabs. Search, copy text and jump by thumbnail.
+5. Edit text, fill in forms, annotate and organise pages in one PDF editor.
+6. Read in dark mode, search and copy text, and print.
 ```
 
 ## Copyright and trademark info  (optional field)
@@ -94,25 +164,24 @@ https://pdfluent.com/license
 
 ## Images to upload (in the Store listing page)
 
-**Screenshots** (Screenshots section — upload in this order; drag to reorder):
-Source: the designer's set, exported from Figma on 2026-08-20 at 3840×2160 and
-kept outside this repository with the other brand assets. That set is what the
-live listing shows. The older raw captures under `../screenshots/en/final/`
-must not be uploaded again: one of them shows an "Invite to sign" button that
-was removed from the app in `993990d`. See `../BLOCKER-screenshots.md`.
+**Screenshots** (upload in this order; drag to reorder):
+Source: the designer's set, exported from Figma on 2026-08-20 at 3840x2160 and
+kept outside this repository with the other brand assets. The older raw captures
+under `../screenshots/en/final/` must not be uploaded again: one of them shows an
+"Invite to sign" button that was removed from the app in `993990d`. See
+`../BLOCKER-screenshots.md`. Check the text printed on each image against the claim
+register before uploading.
 
-1. `01.png` — The free private PDF editor (free, private, Rust, no account)
-2. `02.png` — Convert PDFs without compromise (Word, images)
-3. `03.png` — Sign PDFs in seconds (digital signatures, offline)
-4. `04.png` — Open any PDF instantly (large documents included)
-5. `05.png` — Everything you need in one PDF editor
-6. `06.png` — Read PDFs without distractions
-
-Captions are optional; the headline on each image already carries the message.
+1. `01.png`, the free private PDF editor
+2. `02.png`, convert PDFs to Word and images
+3. `03.png`, sign PDFs
+4. `04.png`, open and navigate PDFs
+5. `05.png`, the editor's tools together
+6. `06.png`, read PDFs
 
 **Store logos:**
-- 1:1 Box art (required) → `store/assets/store-logo-1080.png` (1080×1080)
-- 2:3 Poster art (recommended) → `store/assets/store-poster-720x1080.png` (720×1080)
+- 1:1 Box art (required): `store/assets/store-logo-1080.png` (1080x1080)
+- 2:3 Poster art (recommended): `store/assets/store-poster-720x1080.png` (720x1080)
 
 ---
 
@@ -121,6 +190,6 @@ Captions are optional; the headline on each image already carries the message.
 - Reviewer notes are on the **Properties/Submission options** step (from
   [`reviewer-instructions.md`](reviewer-instructions.md)).
 - **Review** (top-right) to catch any missing required field.
-- **Submit** — the listing is live, so this is an Update submission and goes
+- **Submit**. The listing is live, so this is an Update submission and goes
   through certification again. Track it to "In the Store", then refresh
   `../live-listing.json` with `../scripts/check-live-listing.sh`.

@@ -1,0 +1,9 @@
+# The compiler and clippy this repository builds and lints with. Bump it on
+# purpose, in its own commit: a floating toolchain brought a new clippy lint
+# into a release branch with no code change (clippy 0.1.99 -> 0.1.101,
+# manual_range_patterns). scripts/ci/rust-toolchain-pinned.mjs checks that
+# this stays an exact version and that no workflow overrides it.
+[toolchain]
+channel = "1.99.1"
+components = ["clippy", "rustfmt"]
+profile = "minimal"

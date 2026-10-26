@@ -10,6 +10,14 @@ import { useTranslation } from 'react-i18next';
 import { XIcon } from 'lucide-react';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import type { AppSettings } from '../state/appSettings';
+import type { OcrComponentStatus } from '../../lib/tauri-api';
+import { SentCrashReports } from '../../components/telemetry/SentCrashReports';
+import { effectiveFormScriptsMode, pinnedFormScriptsMode } from '../state/scriptConsent';
+
+/** The OCR component line: OCR is built in; this says whether the build is whole. */
+export interface OcrSettingsProps {
+  status: OcrComponentStatus | null;
+}
 
 interface SettingsPanelProps {
   /** Whether the panel is currently visible. */
@@ -20,6 +28,8 @@ interface SettingsPanelProps {
   settings: AppSettings;
   /** Called with the full updated settings whenever a value changes. */
   onSettingsChange: (settings: AppSettings) => void;
+  /** The OCR component; absent outside the desktop app. */
+  ocr?: OcrSettingsProps;
 }
 
 /**
@@ -33,6 +43,7 @@ export function SettingsPanel({
   onClose,
   settings,
   onSettingsChange,
+  ocr,
 }: SettingsPanelProps) {
   const { t } = useTranslation();
   const firstInputRef = useRef<HTMLInputElement | null>(null);
@@ -150,7 +161,7 @@ export function SettingsPanel({
           {/* ── Autosave ──────────────────────────────────────────────── */}
           <section className="settings-section">
             <h3 className="settings-section-title">
-              {t('settings.autosave')}
+              {t('settings.recoveryCopy')}
             </h3>
             <label className="settings-toggle-row" htmlFor="settings-autosave-toggle">
               <input
@@ -164,7 +175,7 @@ export function SettingsPanel({
                 className="settings-checkbox"
               />
               <span>
-                {t('settings.autosaveEnable')}
+                {t('settings.recoveryCopyEnable')}
               </span>
             </label>
           </section>
@@ -195,6 +206,33 @@ export function SettingsPanel({
             </select>
           </section>
 
+          {/* ── View ──────────────────────────────────────────────────── */}
+          <section className="settings-section">
+            <h3 className="settings-section-title">
+              {t('settings.view')}
+            </h3>
+            <label className="settings-row-label" htmlFor="settings-default-zoom">
+              {t('settings.defaultZoomLabel')}
+            </label>
+            <select
+              id="settings-default-zoom"
+              data-testid="settings-default-zoom"
+              value={settings.defaultZoom}
+              onChange={(e) => {
+                handleChange('defaultZoom', e.target.value as AppSettings['defaultZoom']);
+              }}
+              className="settings-select"
+            >
+              <option value="fit-width">{t('settings.defaultZoomFitWidth')}</option>
+              <option value="fit-page">{t('settings.defaultZoomFitPage')}</option>
+              <option value="actual-size">{t('settings.defaultZoomActualSize')}</option>
+              <option value="last-used">{t('settings.defaultZoomLastUsed')}</option>
+            </select>
+            <p className="settings-help-text">
+              {t('settings.defaultZoomHint')}
+            </p>
+          </section>
+
           {/* ── OCR defaults ──────────────────────────────────────────── */}
           <section className="settings-section">
             <h3 className="settings-section-title">
@@ -214,6 +252,17 @@ export function SettingsPanel({
               placeholder={t('settings.ocrLanguagePlaceholder')}
               className="settings-input"
             />
+            {ocr && (
+              <div data-testid="settings-ocr-component">
+                <p className="settings-help-text" data-testid="settings-ocr-component-status">
+                  {ocr.status === null
+                    ? t('ocr.settings.unknown')
+                    : ocr.status.installed
+                      ? t('ocr.settings.installed', { version: ocr.status.version })
+                      : t('ocr.unavailable.missing')}
+                </p>
+              </div>
+            )}
           </section>
 
           {/* ── Updates (default ON, and switchable — see LICENSE.md §4) ──── */}
@@ -239,6 +288,33 @@ export function SettingsPanel({
             </label>
             <p className="settings-help-text">
               {t('settings.automaticUpdateCheckHint')}
+            </p>
+          </section>
+
+          {/* ── Security: a form's scripts run only with permission ───────── */}
+          <section className="settings-section" data-testid="settings-security">
+            <h3 className="settings-section-title">{t('settings.securityTitle')}</h3>
+            <label className="settings-row-label" htmlFor="settings-form-scripts">
+              {t('settings.formScriptsLabel')}
+            </label>
+            <select
+              id="settings-form-scripts"
+              data-testid="settings-form-scripts"
+              value={effectiveFormScriptsMode(settings.formScriptsMode, pinnedFormScriptsMode())}
+              disabled={pinnedFormScriptsMode() !== null}
+              onChange={(e) => {
+                handleChange('formScriptsMode', e.target.value as AppSettings['formScriptsMode']);
+              }}
+              className="settings-select"
+            >
+              <option value="ask">{t('settings.formScriptsAsk')}</option>
+              <option value="always">{t('settings.formScriptsAlways')}</option>
+              <option value="never">{t('settings.formScriptsNever')}</option>
+            </select>
+            <p className="settings-help-text">
+              {pinnedFormScriptsMode() !== null
+                ? t('settings.formScriptsPinned')
+                : t('settings.formScriptsHint')}
             </p>
           </section>
 
@@ -289,6 +365,7 @@ export function SettingsPanel({
                 </p>
               </>
             )}
+            <SentCrashReports />
           </section>
         </div>
       </div>

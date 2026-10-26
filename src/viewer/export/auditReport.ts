@@ -119,7 +119,7 @@ export function buildAuditReportMarkdown(data: AuditReportData): string {
 
   lines.push(i18n.t('auditReport.activityOverview'));
   if (data.activityTimeline.length === 0) {
-    lines.push('_Geen activiteiten._');
+    lines.push('_No activity._');
   } else {
     for (const ev of data.activityTimeline) {
       const ts = ev.timestamp instanceof Date ? ev.timestamp.toISOString() : String(ev.timestamp);
@@ -130,7 +130,7 @@ export function buildAuditReportMarkdown(data: AuditReportData): string {
 
   lines.push('## Reviewer acties');
   if (data.reviewerActions.length === 0) {
-    lines.push('_Geen acties._');
+    lines.push('_No actions._');
   } else {
     for (const r of data.reviewerActions) {
       lines.push(`- **${r.reviewer}**: ${r.eventCount} actie(s) — ${r.eventTypes.join(', ')}`);
@@ -140,7 +140,7 @@ export function buildAuditReportMarkdown(data: AuditReportData): string {
 
   lines.push('## Redacties');
   if (data.redactionsApplied.length === 0) {
-    lines.push('_Geen redacties._');
+    lines.push('_No redactions._');
   } else {
     for (const r of data.redactionsApplied) {
       lines.push(`- p.${r.page + 1} — ${r.author || '—'}`);
@@ -150,7 +150,7 @@ export function buildAuditReportMarkdown(data: AuditReportData): string {
 
   lines.push(i18n.t('auditReport.annotationOverview'));
   if (data.annotationSummary.length === 0) {
-    lines.push('_Geen annotaties._');
+    lines.push('_No annotations._');
   } else {
     for (const s of data.annotationSummary) {
       lines.push(`- ${s.type}: ${s.count}`);
@@ -158,9 +158,9 @@ export function buildAuditReportMarkdown(data: AuditReportData): string {
   }
   lines.push('');
 
-  lines.push('## Metadata wijzigingen');
+  lines.push('## Metadata changes');
   if (data.metadataChanges.length === 0) {
-    lines.push('_Geen wijzigingen._');
+    lines.push('_No changes._');
   } else {
     for (const m of data.metadataChanges) {
       lines.push(`- ${m.field} door ${m.user} op ${m.timestamp}`);

@@ -61,7 +61,7 @@ export function LinkOverlay({
               padding: 0,
               margin: 0,
               border: 'none',
-              background: highlight ? 'rgba(37,99,235,0.12)' : 'transparent',
+              background: highlight ? 'var(--selection-on-page-fill)' : 'transparent',
               cursor: 'pointer',
               pointerEvents: 'auto',
             }}

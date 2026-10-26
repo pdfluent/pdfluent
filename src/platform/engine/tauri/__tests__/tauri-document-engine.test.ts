@@ -203,7 +203,10 @@ describe('TauriDocumentEngine — loadDocument mapping', () => {
       expect(result.success).toBe(false);
       if (result.success) return;
       expect(result.error.code).toBe('internal-error');
-      expect(result.error.message).toContain('file not found');
+      // The raw text is kept for the log, not in the message the UI may print
+      // (viewer/state/openError.ts).
+      expect(result.error.message).toBe('open.unknown');
+      expect(result.error.openFailure?.detail).toContain('file not found');
     });
 
     it('returns not-implemented for ArrayBuffer input', async () => {
@@ -307,5 +310,59 @@ describe('TauriDocumentEngine — getOutline mapping', () => {
     if (result.success) return;
     expect(result.error.code).toBe('internal-error');
     expect(result.error.message).toContain('outline parse failed');
+  });
+});
+
+// J-90: a document the backend already has open is shown by session, not read
+// from its file again.
+describe('TauriDocumentEngine — several open documents', () => {
+  let engine: TauriDocumentEngine;
+
+  beforeEach(() => {
+    engine = new TauriDocumentEngine();
+    vi.clearAllMocks();
+  });
+
+  it('carries the session the backend opened the file in', async () => {
+    mockedInvoke.mockResolvedValue({ ...MOCK_DOCUMENT_INFO, session_id: 7 });
+    const result = await engine.loadDocument('/docs/test.pdf');
+    expect(result.success && result.value.backendSession).toBe(7);
+    expect(result.success && result.value.isModified).toBe(false);
+  });
+
+  it('switches to an open session with activate_session and keeps its unsaved state', async () => {
+    mockedInvoke.mockResolvedValue({ ...MOCK_DOCUMENT_INFO, session_id: 7, modified: true, path: '/docs/test.pdf' });
+    const result = await engine.loadDocument('/docs/test.pdf', { attachSession: 7 });
+    expect(mockedInvoke).toHaveBeenCalledTimes(1);
+    expect(mockedInvoke).toHaveBeenCalledWith('activate_session', { sessionId: 7 });
+    expect(result.success).toBe(true);
+    if (!result.success) return;
+    expect(result.value.backendSession).toBe(7);
+    expect(result.value.isModified).toBe(true);
+    expect(result.value.pages).toHaveLength(2);
+  });
+
+  it('never asks for a password when it switches to an open session', async () => {
+    mockedInvoke.mockResolvedValue({ ...MOCK_DOCUMENT_INFO, session_id: 3, modified: false, path: null });
+    await engine.loadDocument('/docs/locked.pdf', { attachSession: 3 });
+    expect(mockedInvoke.mock.calls.map(([command]) => command)).toEqual(['activate_session']);
+  });
+
+  it('fails with the backend\'s session-gone message, for the caller to open the file instead', async () => {
+    mockedInvoke.mockRejectedValue('session-gone: no open document with session id 9');
+    const result = await engine.loadDocument('/docs/test.pdf', { attachSession: 9 });
+    expect(result.success).toBe(false);
+    if (result.success) return;
+    expect(result.error.message).toContain('session-gone');
+  });
+
+  it('marks a protected document so a tab does not free it', async () => {
+    mockedInvoke.mockResolvedValue({
+      ...MOCK_DOCUMENT_INFO,
+      session_id: 2,
+      access: { encrypted: true, owner: false, can_print: true, read_only: false },
+    });
+    const result = await engine.loadDocument('/docs/locked.pdf');
+    expect(result.success && result.value.encrypted).toBe(true);
   });
 });

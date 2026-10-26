@@ -10,10 +10,25 @@ import type { DocumentMetadata } from '../../document/metadata';
 import type { DocumentLoadOptions, SaveOptions, EngineResult, AsyncEngineResult } from '../types';
 import { createEmptyDocument } from '../../document';
 
+/** Prefix of a source that makes the mock open fail; see loadDocument. */
+export const MOCK_OPEN_FAILURE_PREFIX = 'mock-open-failure:';
+/** What the engine says about a damaged file; must never reach the screen. */
+export const MOCK_RAW_ENGINE_TEXT = 'Failed to parse PDF: invalid PDF: Invalid';
+
 export class MockDocumentEngine {
   private documents = new Map<string, PdfDocument>();
 
   async loadDocument(source: string | ArrayBuffer | Uint8Array, _options?: DocumentLoadOptions): AsyncEngineResult<PdfDocument> {
+    // `mock-open-failure:<code>` fails the open the way open_pdf rejects
+    // (src-tauri/src/open_error.rs): a code, and the engine's raw text as the
+    // detail, so a browser test can check that only the code's message shows.
+    if (typeof source === 'string' && source.startsWith(MOCK_OPEN_FAILURE_PREFIX)) {
+      const code = source.slice(MOCK_OPEN_FAILURE_PREFIX.length);
+      return {
+        success: false,
+        error: { code: 'internal-error', message: code, openFailure: { code, detail: MOCK_RAW_ENGINE_TEXT } },
+      };
+    }
     const fileName = typeof source === 'string' ? source : 'mock.pdf';
     const base = createEmptyDocument(fileName);
 

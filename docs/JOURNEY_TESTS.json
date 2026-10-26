@@ -1,0 +1,1042 @@
+{
+  "schema": 1,
+  "about": "Journey -> real-app test mapping (EDITOR-PLAN-2026-Q4 §2, §4.2). One entry per journey in the plan's catalogue. `spec` is the test file that proves it on the real app (null: no real-app test yet). `gaps` are steps that fail today, each with its owner; a journey with a gap is NOT proven. Results per run: journey-results/<platform>/<id>.json, checked by scripts/quality/journey-results.mjs. Read by editor-features.json v2 (stream D).",
+  "platforms": {
+    "macos-arm64": "journeys:macos (mac-editor, file bridge, e2e build)",
+    "windows-x64": "journeys:windows (windows-editor, tauri-driver + msedgedriver, e2e build)"
+  },
+  "journeys": {
+    "J-01": {
+      "title": "Install from the DMG and start (Gatekeeper)",
+      "priority": "P1",
+      "spec": null,
+      "platforms": [
+        "macos-arm64",
+        "windows-x64"
+      ],
+      "gaps": [],
+      "proof": "release suite: macOS notarization and `spctl --assess` step on the built DMG (release.yml)"
+    },
+    "J-02": {
+      "title": "Install the MSI (SmartScreen)",
+      "priority": "P1",
+      "spec": null,
+      "platforms": [
+        "macos-arm64",
+        "windows-x64"
+      ],
+      "gaps": [],
+      "proof": "release suite: MSI install and uninstall with msiexec on the Windows runner, plus signtool verify (release.yml)"
+    },
+    "J-03": {
+      "title": "First start in the OS language",
+      "priority": "P1",
+      "spec": null,
+      "platforms": [
+        "macos-arm64",
+        "windows-x64"
+      ],
+      "gaps": [],
+      "proof": "vitest: locale resolution from navigator.language for each of the 27 locales (tests/i18n-detect.test.ts, to write)"
+    },
+    "J-04": {
+      "title": "Empty state / first-run screen",
+      "priority": "P2",
+      "spec": null,
+      "platforms": [
+        "macos-arm64",
+        "windows-x64"
+      ],
+      "gaps": []
+    },
+    "J-05": {
+      "title": "Install from a store (Microsoft Store, Mac App Store)",
+      "priority": "P1",
+      "spec": null,
+      "platforms": [
+        "macos-arm64",
+        "windows-x64"
+      ],
+      "gaps": [],
+      "proof": "release suite: store validation step (Windows App Cert Kit; Transporter/altool validate for the Mac App Store build)"
+    },
+    "J-10": {
+      "title": "Double-click a PDF (cold start)",
+      "priority": "P1",
+      "spec": "tests/journeys/J-10-cold-start-opens-the-file.e2e.ts",
+      "platforms": [
+        "macos-arm64",
+        "windows-x64"
+      ],
+      "gaps": []
+    },
+    "J-11": {
+      "title": "Double-click a PDF while the app runs",
+      "priority": "P1",
+      "spec": "tests/journeys/J-11-second-open-reuses-the-running-app.e2e.ts",
+      "platforms": [
+        "windows-x64"
+      ],
+      "gaps": []
+    },
+    "J-12": {
+      "title": "Open with / set as default app",
+      "priority": "P2",
+      "spec": null,
+      "platforms": [
+        "macos-arm64",
+        "windows-x64"
+      ],
+      "gaps": [],
+      "proof": "release suite: file association check (MSI registry table, Info.plist CFBundleDocumentTypes) on the built installers"
+    },
+    "J-13": {
+      "title": "Drag a PDF onto the window",
+      "priority": "P1",
+      "spec": null,
+      "platforms": [
+        "macos-arm64",
+        "windows-x64"
+      ],
+      "gaps": [],
+      "proof": "vitest: useDragDrop with a mocked Tauri drag-drop event (the OS drag itself is not drivable); no more can be proven"
+    },
+    "J-14": {
+      "title": "Recent files",
+      "priority": "P1",
+      "spec": "tests/journeys/J-14-recent-files.e2e.ts",
+      "platforms": [
+        "macos-arm64",
+        "windows-x64"
+      ],
+      "gaps": []
+    },
+    "J-15": {
+      "title": "Open another file while the document has unsaved changes",
+      "priority": "P0",
+      "spec": "tests/journeys/J-15-open-while-dirty.e2e.ts",
+      "platforms": [
+        "macos-arm64",
+        "windows-x64"
+      ],
+      "gaps": []
+    },
+    "J-16": {
+      "title": "Large file (500+ pages, 200 MB)",
+      "priority": "P1",
+      "spec": null,
+      "platforms": [
+        "macos-arm64",
+        "windows-x64"
+      ],
+      "gaps": [],
+      "proof": "cargo perf test: generated 500-page, 200 MB PDF opened, first page and page 500 rendered under a time budget (src-tauri/tests/perf_text_paths.rs, extend)"
+    },
+    "J-17": {
+      "title": "Damaged PDF",
+      "priority": "P1",
+      "spec": "tests/journeys/J-17-damaged-pdf.e2e.ts",
+      "platforms": [
+        "macos-arm64",
+        "windows-x64"
+      ],
+      "gaps": []
+    },
+    "J-18": {
+      "title": "Encrypted PDF (user password)",
+      "priority": "P0",
+      "spec": "tests/journeys/J-18-encrypted-pdf-asks-for-the-password.e2e.ts",
+      "platforms": [
+        "macos-arm64",
+        "windows-x64"
+      ],
+      "gaps": []
+    },
+    "J-19": {
+      "title": "Open and edit a signed PDF",
+      "priority": "P0",
+      "spec": "tests/journeys/J-19-edit-a-signed-pdf.e2e.ts",
+      "platforms": [
+        "macos-arm64",
+        "windows-x64"
+      ],
+      "gaps": []
+    },
+    "J-20": {
+      "title": "Edit a Reader-enabled document",
+      "priority": "P1",
+      "spec": null,
+      "platforms": [
+        "macos-arm64",
+        "windows-x64"
+      ],
+      "gaps": []
+    },
+    "J-21": {
+      "title": "Open an XFA form",
+      "priority": "P0",
+      "spec": "tests/journeys/J-21-open-an-xfa-form.e2e.ts",
+      "platforms": [
+        "macos-arm64",
+        "windows-x64"
+      ],
+      "gaps": []
+    },
+    "J-22": {
+      "title": "Open a scanned PDF",
+      "priority": "P1",
+      "spec": null,
+      "platforms": [
+        "macos-arm64",
+        "windows-x64"
+      ],
+      "gaps": []
+    },
+    "J-23": {
+      "title": "PDF/A input",
+      "priority": "P2",
+      "spec": null,
+      "platforms": [
+        "macos-arm64",
+        "windows-x64"
+      ],
+      "gaps": []
+    },
+    "J-24": {
+      "title": "Network share / UNC path",
+      "priority": "P1",
+      "spec": null,
+      "platforms": [
+        "macos-arm64",
+        "windows-x64"
+      ],
+      "gaps": [],
+      "proof": "cargo test on the Windows runner: open a PDF through \\\\localhost\\c$ (UNC) path"
+    },
+    "J-25": {
+      "title": "Unicode and long paths",
+      "priority": "P1",
+      "spec": "tests/journeys/J-25-unicode-paths.e2e.ts",
+      "platforms": [
+        "macos-arm64",
+        "windows-x64"
+      ],
+      "gaps": []
+    },
+    "J-26": {
+      "title": "File in a read-only location",
+      "priority": "P1",
+      "spec": "tests/journeys/J-26-read-only-file.e2e.ts",
+      "platforms": [
+        "macos-arm64",
+        "windows-x64"
+      ],
+      "gaps": []
+    },
+    "J-30": {
+      "title": "Zoom, fit, page through, shortcuts",
+      "priority": "P1",
+      "spec": "tests/journeys/J-30-zoom.e2e.ts",
+      "platforms": [
+        "macos-arm64",
+        "windows-x64"
+      ],
+      "gaps": []
+    },
+    "J-31": {
+      "title": "Thumbnails, bookmarks, links",
+      "priority": "P1",
+      "spec": "tests/journeys/J-31-thumbnails-and-pages.e2e.ts",
+      "platforms": [
+        "macos-arm64",
+        "windows-x64"
+      ],
+      "gaps": []
+    },
+    "J-32": {
+      "title": "Search text, step through hits",
+      "priority": "P1",
+      "spec": "tests/journeys/J-32-search-text.e2e.ts",
+      "platforms": [
+        "macos-arm64",
+        "windows-x64"
+      ],
+      "gaps": []
+    },
+    "J-33": {
+      "title": "Select and copy text",
+      "priority": "P1",
+      "spec": "tests/journeys/J-33-select-and-copy-text.e2e.ts",
+      "platforms": [
+        "macos-arm64",
+        "windows-x64"
+      ],
+      "gaps": []
+    },
+    "J-34": {
+      "title": "Print",
+      "priority": "P0",
+      "spec": "tests/journeys/J-34-print-the-pdf-with-unsaved-changes.e2e.ts",
+      "platforms": [
+        "macos-arm64",
+        "windows-x64"
+      ],
+      "gaps": []
+    },
+    "J-35": {
+      "title": "Full screen, read aloud",
+      "priority": "P2",
+      "spec": null,
+      "platforms": [
+        "macos-arm64",
+        "windows-x64"
+      ],
+      "gaps": [],
+      "proof": "vitest: read-aloud text order (readAloudText); the spoken audio cannot be judged. Downgrade or remove any claim about how it sounds"
+    },
+    "J-36": {
+      "title": "Rotate the view",
+      "priority": "P2",
+      "spec": "tests/journeys/J-36-rotate-the-view.e2e.ts",
+      "platforms": [
+        "macos-arm64",
+        "windows-x64"
+      ],
+      "gaps": [
+        {
+          "id": "view-rotation-missing",
+          "owner": "stream-D",
+          "reason": "There is no control that rotates the view; only the file's pages can be rotated. Build it or take the promise down.",
+          "tracker": "#733"
+        }
+      ]
+    },
+    "J-37": {
+      "title": "Dark mode follows system / setting",
+      "priority": "P1",
+      "spec": "tests/journeys/J-37-dark-mode-is-remembered.e2e.ts",
+      "platforms": [
+        "macos-arm64",
+        "windows-x64"
+      ],
+      "gaps": []
+    },
+    "J-38": {
+      "title": "Command palette",
+      "priority": "P2",
+      "spec": "tests/journeys/J-38-command-palette.e2e.ts",
+      "platforms": [
+        "macos-arm64",
+        "windows-x64"
+      ],
+      "gaps": []
+    },
+    "J-40": {
+      "title": "Edit one line of text, save, reopen",
+      "priority": "P0",
+      "spec": "tests/journeys/J-40-edit-a-line-of-text.e2e.ts",
+      "platforms": [
+        "macos-arm64",
+        "windows-x64"
+      ],
+      "gaps": []
+    },
+    "J-41": {
+      "title": "Type digits while editing text",
+      "priority": "P0",
+      "spec": "tests/journeys/J-41-type-digits-while-editing-text.e2e.ts",
+      "platforms": [
+        "macos-arm64",
+        "windows-x64"
+      ],
+      "gaps": [
+        {
+          "id": "digits-switch-mode",
+          "owner": "stream-B",
+          "reason": "Digits typed in the inline text editor are taken as mode shortcuts: the editor closes and the mode changes (measured: typing '2026' switched to forms).",
+          "tracker": "pdfluent-internal#642"
+        }
+      ]
+    },
+    "J-42": {
+      "title": "Edit a multi-line paragraph",
+      "priority": "P1",
+      "spec": "tests/journeys/J-42-edit-a-multi-line-paragraph.e2e.ts",
+      "platforms": [
+        "macos-arm64",
+        "windows-x64"
+      ],
+      "gaps": []
+    },
+    "J-43": {
+      "title": "Change font, size, colour",
+      "priority": "P1",
+      "spec": "tests/journeys/J-43-change-font-size-colour.e2e.ts",
+      "platforms": [
+        "macos-arm64",
+        "windows-x64"
+      ],
+      "gaps": []
+    },
+    "J-44": {
+      "title": "Add a text box",
+      "priority": "P1",
+      "spec": "tests/journeys/J-44-add-a-text-box.e2e.ts",
+      "platforms": [
+        "macos-arm64",
+        "windows-x64"
+      ],
+      "gaps": []
+    },
+    "J-45": {
+      "title": "Add, replace, move an image",
+      "priority": "P1",
+      "spec": "tests/journeys/J-45-page-images.e2e.ts",
+      "platforms": [
+        "macos-arm64",
+        "windows-x64"
+      ],
+      "gaps": []
+    },
+    "J-46": {
+      "title": "Add shapes",
+      "priority": "P1",
+      "spec": "tests/journeys/J-46-add-shapes.e2e.ts",
+      "platforms": [
+        "macos-arm64",
+        "windows-x64"
+      ],
+      "gaps": [
+        {
+          "id": "shapes-missing",
+          "owner": "stream-D",
+          "reason": "There is no shape tool (rectangle, ellipse, line). Build it or take the promise down.",
+          "tracker": "#733"
+        }
+      ]
+    },
+    "J-50": {
+      "title": "Highlight, underline, strike out, save, reopen",
+      "priority": "P1",
+      "spec": "tests/journeys/J-50-highlight-underline-strike-out.e2e.ts",
+      "platforms": [
+        "macos-arm64",
+        "windows-x64"
+      ],
+      "gaps": []
+    },
+    "J-51": {
+      "title": "Comment / sticky note",
+      "priority": "P1",
+      "spec": "tests/journeys/J-51-comment-note.e2e.ts",
+      "platforms": [
+        "macos-arm64",
+        "windows-x64"
+      ],
+      "gaps": []
+    },
+    "J-52": {
+      "title": "Freehand ink",
+      "priority": "P1",
+      "spec": "tests/journeys/J-52-freehand-ink.e2e.ts",
+      "platforms": [
+        "macos-arm64",
+        "windows-x64"
+      ],
+      "gaps": []
+    },
+    "J-53": {
+      "title": "Stamp",
+      "priority": "P1",
+      "spec": "tests/journeys/J-53-stamp.e2e.ts",
+      "platforms": [
+        "macos-arm64",
+        "windows-x64"
+      ],
+      "gaps": [
+        {
+          "id": "stamps-missing",
+          "owner": "stream-D",
+          "reason": "There is no stamp tool; the All-tools tile is hidden for having no handler. Build it or take the promise down.",
+          "tracker": "#733"
+        }
+      ]
+    },
+    "J-54": {
+      "title": "Add an attachment",
+      "priority": "P2",
+      "spec": "tests/journeys/J-54-add-an-attachment.e2e.ts",
+      "platforms": [
+        "macos-arm64",
+        "windows-x64"
+      ],
+      "gaps": []
+    },
+    "J-55": {
+      "title": "Delete or edit an annotation",
+      "priority": "P1",
+      "spec": "tests/journeys/J-55-delete-an-annotation.e2e.ts",
+      "platforms": [
+        "macos-arm64",
+        "windows-x64"
+      ],
+      "gaps": []
+    },
+    "J-56": {
+      "title": "Fill an AcroForm (all field types), save, reopen",
+      "priority": "P0",
+      "spec": "tests/journeys/J-56-fill-every-acroform-field-type.e2e.ts",
+      "platforms": [
+        "macos-arm64",
+        "windows-x64"
+      ],
+      "gaps": []
+    },
+    "J-57": {
+      "title": "AcroForm calculations, formatting, validation",
+      "priority": "P1",
+      "spec": "tests/journeys/J-57-form-calculations.e2e.ts",
+      "platforms": [
+        "macos-arm64",
+        "windows-x64"
+      ],
+      "gaps": []
+    },
+    "J-58": {
+      "title": "Flatten an AcroForm",
+      "priority": "P2",
+      "spec": "tests/journeys/J-58-flatten-a-form.e2e.ts",
+      "platforms": [
+        "macos-arm64",
+        "windows-x64"
+      ],
+      "gaps": [
+        {
+          "id": "acroform-flatten-missing",
+          "owner": "stream-D",
+          "reason": "Only XFA forms can be flattened; an AcroForm has no flatten control. Build it or take the promise down.",
+          "tracker": "#733"
+        }
+      ]
+    },
+    "J-59": {
+      "title": "Fill, save, flatten an XFA form",
+      "priority": "P0",
+      "spec": "tests/journeys/J-59-fill-and-flatten-an-xfa-form.e2e.ts",
+      "platforms": [
+        "macos-arm64",
+        "windows-x64"
+      ],
+      "gaps": []
+    },
+    "J-5A": {
+      "title": "Signature field in a form",
+      "priority": "P2",
+      "spec": null,
+      "platforms": [
+        "macos-arm64",
+        "windows-x64"
+      ],
+      "gaps": []
+    },
+    "J-60": {
+      "title": "OCR a scan, then search and copy",
+      "priority": "P0",
+      "spec": "tests/journeys/J-60-ocr-a-scan.e2e.ts",
+      "platforms": [
+        "macos-arm64",
+        "windows-x64"
+      ],
+      "gaps": []
+    },
+    "J-61": {
+      "title": "Sign with a .p12/.pfx certificate",
+      "priority": "P0",
+      "spec": "tests/journeys/J-61-sign-with-a-certificate.e2e.ts",
+      "platforms": [
+        "macos-arm64",
+        "windows-x64"
+      ],
+      "gaps": []
+    },
+    "J-62": {
+      "title": "Place a visible signature",
+      "priority": "P1",
+      "spec": "tests/journeys/J-62-typed-signature.e2e.ts",
+      "platforms": [
+        "macos-arm64",
+        "windows-x64"
+      ],
+      "gaps": [
+        {
+          "id": "typed-signature-767",
+          "owner": "feat/1.2-images-signature-font",
+          "reason": "The typed signature in Dancing Script, embedded and extractable, is PR #767 (#725), not on the trunk yet. Remove this gap when #767 has landed and the journey passes.",
+          "tracker": "PR #767, #725"
+        }
+      ]
+    },
+    "J-63": {
+      "title": "Verify signatures",
+      "priority": "P1",
+      "spec": "tests/journeys/J-63-verify-signatures.e2e.ts",
+      "platforms": [
+        "macos-arm64",
+        "windows-x64"
+      ],
+      "gaps": []
+    },
+    "J-64": {
+      "title": "Save after signing",
+      "priority": "P0",
+      "spec": "tests/journeys/J-64-save-after-signing.e2e.ts",
+      "platforms": [
+        "macos-arm64",
+        "windows-x64"
+      ],
+      "gaps": []
+    },
+    "J-65": {
+      "title": "Redact by area and by search term, apply",
+      "priority": "P0",
+      "spec": "tests/journeys/J-65-redaction-removes-the-text.e2e.ts",
+      "platforms": [
+        "macos-arm64",
+        "windows-x64"
+      ],
+      "gaps": []
+    },
+    "J-66": {
+      "title": "Strip metadata; PII detection",
+      "priority": "P0",
+      "spec": "tests/journeys/J-66-strip-metadata.e2e.ts",
+      "platforms": [
+        "macos-arm64",
+        "windows-x64"
+      ],
+      "gaps": [
+        {
+          "id": "pii-detection",
+          "owner": "stream-D",
+          "reason": "The homepage promises automatic detection of SSNs, IBANs and names; the editor has no PII detection (plan §2.7, §3.1 P7). Build it or take the promise down.",
+          "tracker": "EDITOR-PLAN-2026-Q4 §3.1 P7"
+        }
+      ]
+    },
+    "J-70": {
+      "title": "Export to DOCX, XLSX, PPTX",
+      "priority": "P0",
+      "spec": "tests/journeys/J-70-export-to-office.e2e.ts",
+      "platforms": [
+        "macos-arm64",
+        "windows-x64"
+      ],
+      "gaps": [
+        {
+          "id": "xlsx-drops-running-text",
+          "owner": "stream-D",
+          "reason": "Export to Excel of a PDF without tables writes an empty sheet: none of the words reach the file. Word and PowerPoint keep them. Tables are the only thing the spreadsheet export carries (see also #408).",
+          "tracker": "EDITOR-PLAN-2026-Q4 J-70"
+        }
+      ]
+    },
+    "J-71": {
+      "title": "Export to image (PNG/JPEG)",
+      "priority": "P2",
+      "spec": "tests/journeys/J-71-export-to-image.e2e.ts",
+      "platforms": [
+        "macos-arm64",
+        "windows-x64"
+      ],
+      "gaps": []
+    },
+    "J-72": {
+      "title": "PDF/A conversion and validation",
+      "priority": "P1",
+      "spec": "tests/journeys/J-72-pdfa-conversion.e2e.ts",
+      "platforms": [
+        "macos-arm64",
+        "windows-x64"
+      ],
+      "gaps": []
+    },
+    "J-73": {
+      "title": "Rotate, delete, reorder, insert pages",
+      "priority": "P1",
+      "spec": "tests/journeys/J-73-organize-pages.e2e.ts",
+      "platforms": [
+        "macos-arm64",
+        "windows-x64"
+      ],
+      "gaps": []
+    },
+    "J-74": {
+      "title": "Merge, split, extract",
+      "priority": "P1",
+      "spec": "tests/journeys/J-74-split-and-merge.e2e.ts",
+      "platforms": [
+        "macos-arm64",
+        "windows-x64"
+      ],
+      "gaps": []
+    },
+    "J-75": {
+      "title": "Compress",
+      "priority": "P1",
+      "spec": "tests/journeys/J-75-compress.e2e.ts",
+      "platforms": [
+        "macos-arm64",
+        "windows-x64"
+      ],
+      "gaps": []
+    },
+    "J-76": {
+      "title": "Set or remove a password",
+      "priority": "P0",
+      "spec": "tests/journeys/J-76-set-and-remove-a-password.e2e.ts",
+      "platforms": [
+        "macos-arm64",
+        "windows-x64"
+      ],
+      "gaps": []
+    },
+    "J-77": {
+      "title": "Watermark",
+      "priority": "P2",
+      "spec": "tests/journeys/J-77-watermark.e2e.ts",
+      "platforms": [
+        "macos-arm64",
+        "windows-x64"
+      ],
+      "gaps": []
+    },
+    "J-78": {
+      "title": "Edit metadata",
+      "priority": "P2",
+      "spec": "tests/journeys/J-78-edit-metadata.e2e.ts",
+      "platforms": [
+        "macos-arm64",
+        "windows-x64"
+      ],
+      "gaps": []
+    },
+    "J-79": {
+      "title": "Create a PDF from other formats",
+      "priority": "P0",
+      "spec": "tests/journeys/J-79-create-a-pdf-from-another-format.e2e.ts",
+      "platforms": [
+        "macos-arm64",
+        "windows-x64"
+      ],
+      "gaps": [
+        {
+          "id": "no-create-from-other-formats",
+          "owner": "stream-D",
+          "reason": "The editor converts out of PDF only; /vs-adobe-acrobat promises 'Convert files to PDF'. Build it or take the promise down (plan §3.1 P16).",
+          "tracker": "EDITOR-PLAN-2026-Q4 §3.1 P16"
+        }
+      ]
+    },
+    "J-7A": {
+      "title": "Compare two versions",
+      "priority": "P0",
+      "spec": "tests/journeys/J-7A-compare-two-versions.e2e.ts",
+      "platforms": [
+        "macos-arm64",
+        "windows-x64"
+      ],
+      "gaps": [
+        {
+          "id": "no-compare",
+          "owner": "stream-D",
+          "reason": "There is no compare feature; /vs-adobe-acrobat ticks it (plan §3.1 P15).",
+          "tracker": "EDITOR-PLAN-2026-Q4 §3.1 P15"
+        }
+      ]
+    },
+    "J-80": {
+      "title": "Save (overwrite)",
+      "priority": "P0",
+      "spec": "tests/journeys/J-80-save-overwrites-atomically.e2e.ts",
+      "platforms": [
+        "macos-arm64",
+        "windows-x64"
+      ],
+      "gaps": []
+    },
+    "J-81": {
+      "title": "Close the window / quit with unsaved changes",
+      "priority": "P0",
+      "spec": "tests/journeys/J-81-close-with-unsaved-changes.e2e.ts",
+      "platforms": [
+        "macos-arm64",
+        "windows-x64"
+      ],
+      "gaps": []
+    },
+    "J-82": {
+      "title": "Save fails in the unsaved-changes dialog",
+      "priority": "P0",
+      "spec": "tests/journeys/J-82-save-fails-in-the-unsaved-dialog.e2e.ts",
+      "platforms": [
+        "macos-arm64",
+        "windows-x64"
+      ],
+      "gaps": []
+    },
+    "J-83": {
+      "title": "Save As",
+      "priority": "P0",
+      "spec": "tests/journeys/J-83-save-as.e2e.ts",
+      "platforms": [
+        "macos-arm64",
+        "windows-x64"
+      ],
+      "gaps": []
+    },
+    "J-84": {
+      "title": "Autosave / recovery after a crash",
+      "priority": "P0",
+      "spec": "tests/journeys/J-84-recovery-after-a-crash.e2e.ts",
+      "platforms": [
+        "macos-arm64",
+        "windows-x64"
+      ],
+      "gaps": []
+    },
+    "J-85": {
+      "title": "Undo/redo for every action",
+      "priority": "P1",
+      "spec": "tests/journeys/J-85-undo-every-action.e2e.ts",
+      "platforms": [
+        "macos-arm64",
+        "windows-x64"
+      ],
+      "gaps": []
+    },
+    "J-86": {
+      "title": "Save, then reopen in other viewers",
+      "priority": "P1",
+      "spec": null,
+      "platforms": [
+        "macos-arm64",
+        "windows-x64"
+      ],
+      "gaps": []
+    },
+    "J-90": {
+      "title": "Two documents at once",
+      "priority": "P1",
+      "spec": "tests/journeys/J-90-two-documents-at-once.e2e.ts",
+      "platforms": [
+        "macos-arm64",
+        "windows-x64"
+      ],
+      "gaps": []
+    },
+    "J-91": {
+      "title": "Everything by keyboard alone",
+      "priority": "P1",
+      "spec": null,
+      "platforms": [
+        "macos-arm64",
+        "windows-x64"
+      ],
+      "gaps": [],
+      "proof": "vitest: axe plus a focus-order test over the shell (tests/a11y-keyboard.test.tsx, to write)"
+    },
+    "J-92": {
+      "title": "Screen reader",
+      "priority": "P1",
+      "spec": null,
+      "platforms": [
+        "macos-arm64",
+        "windows-x64"
+      ],
+      "gaps": [],
+      "proof": "vitest: axe test over the shell for names, roles and live regions (tests/a11y-axe.test.tsx, to write). Real VoiceOver/NVDA use has no CI proof: downgrade or remove 'works with screen readers'",
+      "note": "downgrade or remove (owner decision): part of this promise has no possible proof"
+    },
+    "J-93": {
+      "title": "27 languages, every string translated",
+      "priority": "P1",
+      "spec": "tests/journeys/J-93-every-language-is-complete.e2e.ts",
+      "platforms": [
+        "macos-arm64",
+        "windows-x64"
+      ],
+      "gaps": []
+    },
+    "J-94": {
+      "title": "Arabic and Hebrew: right to left",
+      "priority": "P1",
+      "spec": null,
+      "platforms": [
+        "macos-arm64",
+        "windows-x64"
+      ],
+      "gaps": [],
+      "proof": "journey with PDFLUENT_E2E_LANG=ar and =he asserting dir=rtl on the shell, plus a vitest layout test"
+    },
+    "J-95": {
+      "title": "High DPI, 4K, 200% scaling, mixed-DPI screens",
+      "priority": "P1",
+      "spec": null,
+      "platforms": [
+        "macos-arm64",
+        "windows-x64"
+      ],
+      "gaps": [],
+      "proof": "vitest/Playwright render at devicePixelRatio 2 and 3; cargo render test at scale 2. Mixed-DPI screens: downgrade or remove",
+      "note": "downgrade or remove (owner decision): part of this promise has no possible proof"
+    },
+    "J-96": {
+      "title": "Small window (1024x640)",
+      "priority": "P2",
+      "spec": "tests/journeys/J-96-small-window.e2e.ts",
+      "platforms": [
+        "macos-arm64",
+        "windows-x64"
+      ],
+      "gaps": []
+    },
+    "J-97": {
+      "title": "Form scripts wait for permission",
+      "priority": "P0",
+      "spec": "tests/journeys/J-97-form-scripts-wait-for-permission.e2e.ts",
+      "platforms": [
+        "macos-arm64",
+        "windows-x64"
+      ],
+      "gaps": []
+    },
+    "J-98": {
+      "title": "Export as Markdown (Preview)",
+      "priority": "P1",
+      "spec": "tests/journeys/J-98-export-as-markdown.e2e.ts",
+      "platforms": [
+        "macos-arm64",
+        "windows-x64"
+      ],
+      "gaps": []
+    },
+    "J-99": {
+      "title": "Export tables to Excel (Preview)",
+      "priority": "P1",
+      "spec": "tests/journeys/J-99-export-tables-to-excel.e2e.ts",
+      "platforms": [
+        "macos-arm64",
+        "windows-x64"
+      ],
+      "gaps": []
+    },
+    "J-A0": {
+      "title": "Work fully offline",
+      "priority": "P0",
+      "spec": "tests/journeys/J-A0-works-offline.e2e.ts",
+      "platforms": [
+        "macos-arm64",
+        "windows-x64"
+      ],
+      "gaps": []
+    },
+    "J-A1": {
+      "title": "Update check, download, install, restart",
+      "priority": "P1",
+      "spec": null,
+      "platforms": [
+        "macos-arm64",
+        "windows-x64"
+      ],
+      "gaps": [],
+      "proof": "vitest: updater against a mocked endpoint (check, signature refused, download) plus release suite: signed update manifest verified"
+    },
+    "J-A2": {
+      "title": "Turn the update check off",
+      "priority": "P1",
+      "spec": null,
+      "platforms": [
+        "macos-arm64",
+        "windows-x64"
+      ],
+      "gaps": [],
+      "proof": "vitest: with the setting off no update request is made"
+    },
+    "J-A3": {
+      "title": "Mac App Store build: sandbox paths",
+      "priority": "P1",
+      "spec": null,
+      "platforms": [
+        "macos-arm64",
+        "windows-x64"
+      ],
+      "gaps": [],
+      "proof": "release suite: `codesign -d --entitlements` of the Mac App Store build and a cargo test of the sandbox path handling"
+    },
+    "J-A4": {
+      "title": "Uninstall",
+      "priority": "P2",
+      "spec": null,
+      "platforms": [
+        "macos-arm64",
+        "windows-x64"
+      ],
+      "gaps": [],
+      "proof": "release suite: `msiexec /x` leaves no program files behind. macOS drag-to-trash has no proof: downgrade or remove",
+      "note": "downgrade or remove (owner decision): part of this promise has no possible proof"
+    },
+    "J-A5": {
+      "title": "Silent and managed rollout (msiexec, Intune, MDM)",
+      "priority": "P1",
+      "spec": null,
+      "platforms": [
+        "macos-arm64",
+        "windows-x64"
+      ],
+      "gaps": [],
+      "proof": "release suite: `msiexec /qn` silent install with properties. Intune and MDM rollout have no CI proof: downgrade or remove",
+      "note": "downgrade or remove (owner decision): part of this promise has no possible proof"
+    },
+    "J-A6": {
+      "title": "Report a crash (opt-in)",
+      "priority": "P0",
+      "spec": "tests/journeys/J-A6-report-a-crash.e2e.ts",
+      "platforms": [
+        "macos-arm64",
+        "windows-x64"
+      ],
+      "gaps": []
+    },
+    "J-A7": {
+      "title": "Send feedback from the app",
+      "priority": "P1",
+      "spec": null,
+      "platforms": [
+        "macos-arm64",
+        "windows-x64"
+      ],
+      "gaps": []
+    },
+    "J-A8": {
+      "title": "Webview freezes after start",
+      "priority": "P2",
+      "spec": null,
+      "platforms": [
+        "macos-arm64",
+        "windows-x64"
+      ],
+      "gaps": [],
+      "proof": "cargo test: the startup watchdog (frontend_ready ping and recovery attempts) in src-tauri"
+    },
+    "J-A9": {
+      "title": "Start the app: no error toast, no console error",
+      "priority": "P1",
+      "spec": "tests/journeys/J-A9-clean-start.e2e.ts",
+      "platforms": [
+        "macos-arm64",
+        "windows-x64"
+      ],
+      "gaps": []
+    }
+  }
+}

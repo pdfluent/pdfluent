@@ -94,6 +94,29 @@ driver_kill_leftovers() {
 driver_os_string() { printf 'macOS %s' "$(sw_vers -productVersion 2>/dev/null || echo unknown)"; }
 driver_load1() { sysctl -n vm.loadavg 2>/dev/null | awk '{print $2}'; }
 
+# _mount_artefact <mountpoint>: attach ARTEFACT there, at most three tries.
+_mount_artefact() {
+  local mnt="$1"
+  # 23-10: an attach failed with "Resource temporarily unavailable" while no
+  # image was attached at all -- diskarbitrationd was busy. Three bounded tries;
+  # the last failure still fails the step, and mount.out keeps every attempt.
+  local try
+  for try in 1 2 3; do
+    _run mount hdiutil attach -nobrowse -readonly -mountpoint "${mnt}" "${ARTEFACT}"
+    cat "${WORK}/probes/mount.out" >> "${WORK}/probes/mount.attempts" 2>/dev/null
+    [ "$(cat "${WORK}/probes/mount.rc" 2>/dev/null)" = "0" ] && break
+    # A failed attach can leave the image attached and unmounted; the next run
+    # then fails on "resource temporarily unavailable". Detach it by image path.
+    hdiutil info 2>/dev/null | awk -v img="${ARTEFACT}" '
+      /^image-path/ { on = (index($0, img) > 0) }
+      on && /^\/dev\/disk[0-9]+[ \t]/ { print $1; on = 0 }' | while read -r dev; do
+      hdiutil detach "${dev}" >/dev/null 2>&1 || true
+    done
+    [ "${try}" -lt 3 ] && sleep 10
+  done
+  return 0
+}
+
 driver_s1_probes() {
   # The mount point lives on the internal disk, always. hdiutil refuses to
   # mount onto a directory of a volume with ownership disabled ("insufficient
@@ -107,16 +130,7 @@ driver_s1_probes() {
     mnt="$(/usr/bin/mktemp -d /private/tmp/pdfluent-suite-mnt.XXXXXX)" && made_mnt=1
   fi
   mkdir -p "${WORK}/Applications"
-  _run mount hdiutil attach -nobrowse -readonly -mountpoint "${mnt}" "${ARTEFACT}"
-  # A failed attach can leave the image attached and unmounted; the next run
-  # then fails on "resource temporarily unavailable". Detach it by image path.
-  if [ "$(cat "${WORK}/probes/mount.rc" 2>/dev/null)" != "0" ]; then
-    hdiutil info 2>/dev/null | awk -v img="${ARTEFACT}" '
-      /^image-path/ { on = (index($0, img) > 0) }
-      on && /^\/dev\/disk[0-9]+[ \t]/ { print $1; on = 0 }' | while read -r dev; do
-      hdiutil detach "${dev}" >/dev/null 2>&1 || true
-    done
-  fi
+  _mount_artefact "${mnt}"
   local src
   src="$(/usr/bin/find "${mnt}" -maxdepth 1 -name '*.app' | head -1)"
   if [ -n "${src}" ]; then
@@ -450,19 +464,32 @@ driver_s4_probes() {
   echo $? > "${WORK}/probes/updater_payload.rc"
 }
 
-# The UI walk has no way in on this platform.
+# The UI walk (S5) drives a ui-walk build of the same commit, never the installed
+# application (#471). A release build ships no inspectable web view and no
+# automation surface, and adding one to reach this step would ship it to every
+# user in order to test it. So scripts/build-ui-walk.sh builds the same commit a
+# second time with the in-page walker compiled in, the workflow passes that .app as
+# UI_WALK_APP, and this runs it on a copy of a golden document. Every row the judge
+# writes says "measured on the ui-walk build of <sha>, not on the shipped bytes".
 #
-# Driving the interface from outside needs a debuggable web view, and a release
-# build does not ship one: the `devtools` feature is off, so WKWebView is not
-# inspectable and there is no protocol to attach to. The product has no headless
-# mode and no automation surface either, and adding one to reach this step would
-# ship an automation surface to every user in order to test it.
-#
-# So the walk is not done here, and every registered control gets a SKIPPED row
-# with this reason rather than no row at all. The report is INCOMPLETE and says
-# why, which is the honest state until the platform gets a way in.
+# No UI_WALK_APP, or a walk that did not produce a probe, leaves the probe absent:
+# every registered control gets a SKIPPED row with the reason and the report is
+# INCOMPLETE, as it was for 1.0.0.
 driver_ui_walk() {
-  UI_WALK_GAP="a release build ships no inspectable web view, so there is no way in to drive the interface of the installed application from outside"
+  local app="${UI_WALK_APP:-}"
+  if [ -z "${app}" ] || [ ! -d "${app}" ]; then
+    UI_WALK_GAP="no ui-walk build was given to this run (UI_WALK_APP), so no control was driven; the installed application has no inspectable web view"
+    return 0
+  fi
+  local exe doc="${WORK}/ui-walk-doc.pdf"
+  exe="$(ls "${app}"/Contents/MacOS/* 2>/dev/null | head -1)"
+  cp "${REPO_ROOT}/src-tauri/tests/fixtures/ui-walk-doc.pdf" "${doc}" 2>/dev/null || true
+  mkdir -p "${WORK}/probes"
+  if ! node "${SUITE_DIR}/ui_walk_run.mjs" --binary "${exe}" --fixture "${doc}" --work "${WORK}" \
+        --built-from "${UI_WALK_BUILT_FROM:-}" --repo "${REPO_ROOT}" 2> "${WORK}/probes/ui_walk.err"; then
+    UI_WALK_GAP="$(tail -n 1 "${WORK}/probes/ui_walk.err" | tr -d '\r' | sed 's/^SKIPPED (not a pass): //')"
+    rm -f "${WORK}/probes/ui_walk.out" "${WORK}/probes/ui_walk.rc"
+  fi
 }
 
 driver_gaps() {

@@ -172,6 +172,7 @@ import type {
   EnterpriseSettings,
   IntegrationProvider,
 } from "../lib/enterprise";
+import { enterpriseAccentTokens } from "../lib/enterpriseTheme";
 import {
   appendAuditEntry,
   exportAuditEntriesAsJsonl,
@@ -982,18 +983,6 @@ function normalizeSearchQuery(value: string): string {
   return value.trim().toLowerCase();
 }
 
-function hexToRgba(hex: string, alpha: number): string {
-  const normalized = hex.replace("#", "").trim();
-  if (!/^[0-9a-fA-F]{6}$/.test(normalized)) {
-    return `rgba(74, 158, 255, ${alpha})`;
-  }
-
-  const red = Number.parseInt(normalized.slice(0, 2), 16);
-  const green = Number.parseInt(normalized.slice(2, 4), 16);
-  const blue = Number.parseInt(normalized.slice(4, 6), 16);
-  return `rgba(${red}, ${green}, ${blue}, ${alpha})`;
-}
-
 export function App() {
   const [filePath, setFilePath] = useState<string | null>(null);
   const [docInfo, setDocInfo] = useState<DocumentInfo | null>(null);
@@ -1505,12 +1494,14 @@ export function App() {
   );
 
   useEffect(() => {
+    // The enterprise accent colours focus and selection only (see
+    // lib/enterpriseTheme.ts); buttons, tabs and tools stay monochrome.
     const root = document.documentElement;
-    root.style.setProperty("--accent", enterpriseSettings.branding.accentColor);
-    root.style.setProperty(
-      "--accent-dim",
-      hexToRgba(enterpriseSettings.branding.accentColor, 0.18),
-    );
+    const tokens = enterpriseAccentTokens(enterpriseSettings.branding.accentColor);
+    for (const [name, value] of Object.entries(tokens)) root.style.setProperty(name, value);
+    return () => {
+      for (const name of Object.keys(tokens)) root.style.removeProperty(name);
+    };
   }, [enterpriseSettings.branding.accentColor]);
 
   const openPdfFromPath = useCallback(

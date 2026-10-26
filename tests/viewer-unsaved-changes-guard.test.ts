@@ -31,9 +31,11 @@ const viewerAppSource = [
 // Locate the three guard sites for scoped assertions
 // ---------------------------------------------------------------------------
 
-// 1. handleLoadDocument — open-new-file guard
+// 1. handleLoadDocument — open-new-file guard. In the desktop app a file opens
+// in a tab (J-90) and nothing is replaced; the guard below is the path that is
+// left for a build without tabs, where one document is open at a time.
 const loadDocStart = viewerAppSource.indexOf('handleLoadDocument = useCallback');
-const loadDocEnd   = viewerAppSource.indexOf('}, [isDirty, loadDocument])', loadDocStart) + 26;
+const loadDocEnd   = viewerAppSource.indexOf('}, [isDirty, loadDocument, beginAccess])', loadDocStart) + 40;
 const loadDocBody  = viewerAppSource.slice(loadDocStart, loadDocEnd);
 
 // 2. beforeunload effect
@@ -41,9 +43,11 @@ const beforeUnloadStart = viewerAppSource.indexOf('handleBeforeUnload');
 const beforeUnloadEnd   = viewerAppSource.indexOf('}, [isDirty]);', beforeUnloadStart) + 14;
 const beforeUnloadBody  = viewerAppSource.slice(beforeUnloadStart, beforeUnloadEnd);
 
-// 3. onCloseDocument inline handler
-const closeDocStart = viewerAppSource.indexOf('onCloseDocument={() => {');
-const closeDocEnd   = viewerAppSource.indexOf('}}', closeDocStart) + 2;
+// 3. The close handler the top bar, the menu and the palette share. With
+// documents in tabs it closes the tab on screen and asks first (J-90); the
+// branch after that is the single-document guard.
+const closeDocStart = viewerAppSource.indexOf('handleCloseDocumentWithGuard = useCallback(');
+const closeDocEnd   = viewerAppSource.indexOf('}, [isDirty, closeDocument', closeDocStart) + 30;
 const closeDocBody  = viewerAppSource.slice(closeDocStart, closeDocEnd);
 
 // ---------------------------------------------------------------------------
@@ -70,7 +74,7 @@ describe('ViewerApp — unsaved-changes guard: open new file', () => {
   });
 
   it('isDirty is in the useCallback dependency array', () => {
-    expect(loadDocBody).toContain('[isDirty, loadDocument]');
+    expect(loadDocBody).toContain('[isDirty, loadDocument, beginAccess]');
   });
 });
 

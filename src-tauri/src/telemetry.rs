@@ -24,11 +24,6 @@ use serde::{Deserialize, Serialize};
 /// that have not yet been offered to the user ("detect on next launch").
 pub const CRASH_FILE_NAME: &str = "pending-crashes.ndjson";
 
-/// Our own feedback address (plan §9). The app bakes in only this pdfluent.com
-/// URL; Cloudflare controls where it actually points (website form now,
-/// Featurebase later) so released versions are always re-routable.
-pub const FEEDBACK_URL: &str = "https://feedback.pdfluent.com";
-
 /// Minimal, non-identifying runtime environment for a report payload.
 /// Locale is intentionally omitted — the frontend supplies the active UI
 /// language it already knows, rather than us guessing it here.
@@ -37,6 +32,9 @@ pub struct Environment {
     pub app_version: String,
     pub os: String,
     pub os_version: Option<String>,
+    /// CPU architecture as Rust names it (`aarch64`, `x86_64`). Shown in the
+    /// feedback form before sending, like every other field.
+    pub arch: String,
 }
 
 /// One locally-recorded crash. `stack` holds the raw backtrace; it is scrubbed
@@ -105,6 +103,7 @@ pub fn get_environment() -> Environment {
         // OS version detection is deliberately omitted in Fase 0 to avoid an
         // extra dependency; the field is nullable in the schema.
         os_version: None,
+        arch: std::env::consts::ARCH.to_string(),
     }
 }
 

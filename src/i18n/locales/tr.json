@@ -114,9 +114,9 @@
     "allTools": "Tüm araçlar",
     "contextualBar": "Mod araç çubuğu",
     "pdfa": "PDF/A",
-    "metadata": "Document properties",
-    "invoice": "E-invoice",
-    "bookmarks": "Bookmarks"
+    "metadata": "Belge özellikleri",
+    "invoice": "E-fatura",
+    "bookmarks": "Yer imleri"
   },
   "topbar": {
     "openPdf": "PDF aç",
@@ -242,7 +242,6 @@
     "ownerPasswordPlaceholder": "Sahip şifresi",
     "encryptBtn": "Şifrele…",
     "decrypt": "Şifre çöz",
-    "currentPasswordPlaceholder": "Mevcut şifre",
     "decryptBtn": "Şifre çöz",
     "noDocument": "Açık belge yok.",
     "permCanPrint": "Yazdır",
@@ -258,7 +257,11 @@
     "searchRedactBtn": "Bul ve sansürle",
     "redactMetadataTitle": "Meta veri",
     "redactMetadataDesc": "Yazar, başlık ve diğer tanımlayıcı meta verileri sil.",
-    "redactMetadataBtn": "Meta veriyi sil"
+    "redactMetadataBtn": "Meta veriyi sil",
+    "ownerPasswordForRemoval": "Sahip (izinler) parolası",
+    "removePasswordHelp": "Parolayı kaldırmak için izinleri koruyan sahip parolası gerekir. Dosyayı açtığınız parola, aynı zamanda sahip parolası değilse yeterli olmaz.",
+    "removePasswordReady": "Bu dosyayı sahip parolasıyla açtınız, bu nedenle koruma parolayı yeniden yazmadan kaldırılabilir.",
+    "removePasswordNotProtected": "Bu belgede parola koruması yok."
   },
   "organize": {
     "thumbnails": "Küçük resimler",
@@ -287,33 +290,34 @@
     "combine": "Dosyaları birleştir",
     "splitRange": "Aralığa göre böl",
     "splitRangeHint": "Önce sayfaları seçin",
-    "moveLeft": "Move selected page left",
-    "moveRight": "Move selected page right",
-    "moveLeftShort": "Left",
-    "moveRightShort": "Right",
-    "rotateLeft": "Rotate left",
-    "rotateRight": "Rotate right",
-    "rotateLeftShort": "Left",
-    "rotateRightShort": "Right",
-    "addingPdf": "Adding PDF…",
-    "pdfAdded": "PDF added",
-    "combiningFiles": "Combining {{count}} file(s)…",
-    "filesCombined": "{{count}} file(s) combined",
-    "insertingPdf": "Inserting PDF before page {{page}}…",
-    "pdfInserted": "PDF inserted",
-    "exportingPages": "Exporting {{count}} page(s)…",
-    "selectionExported": "Selection exported to {{name}}",
-    "splittingPages": "Splitting into individual pages…",
-    "pagesSaved": "{{count}} pages saved",
-    "splittingRanges": "Splitting {{count}} range(s)…",
-    "filesSaved": "{{count}} file(s) saved"
+    "moveLeft": "Seçili sayfayı sola taşı",
+    "moveRight": "Seçili sayfayı sağa taşı",
+    "moveLeftShort": "Sola",
+    "moveRightShort": "Sağa",
+    "rotateLeft": "Sola döndür",
+    "rotateRight": "Sağa döndür",
+    "rotateLeftShort": "Sola",
+    "rotateRightShort": "Sağa",
+    "addingPdf": "PDF ekleniyor…",
+    "pdfAdded": "PDF eklendi",
+    "combiningFiles": "{{count}} dosya birleştiriliyor…",
+    "filesCombined": "{{count}} dosya birleştirildi",
+    "insertingPdf": "PDF, {{page}}. sayfanın önüne ekleniyor…",
+    "pdfInserted": "PDF araya eklendi",
+    "exportingPages": "{{count}} sayfa dışa aktarılıyor…",
+    "selectionExported": "Seçim {{name}} olarak dışa aktarıldı",
+    "splittingPages": "Tek tek sayfalara bölünüyor…",
+    "pagesSaved": "{{count}} sayfa kaydedildi",
+    "splittingRanges": "{{count}} aralık bölünüyor…",
+    "filesSaved": "{{count}} dosya kaydedildi"
   },
   "unsavedChanges": {
     "title": "Kaydedilmemiş değişiklikler",
     "message": "Devam etmeden önce değişikliklerinizi kaydetmek ister misiniz?",
     "save": "Kaydet",
     "discard": "Değişiklikleri at",
-    "cancel": "İptal"
+    "cancel": "İptal",
+    "messageNamed": "Devam etmeden önce değişikliklerinizi {{name}} dosyasına kaydetmek ister misiniz?"
   },
   "welcome": {
     "title": "Başlamak için bir PDF açın",
@@ -327,13 +331,13 @@
     "lede": "Okuyun, düzenleyin, dönüştürün, doldurun ve imzalayın — tamamen cihazınızda.",
     "privacyPromise": "Yerel-öncelikli · belgeler bu cihazı asla terk etmez",
     "dropPdfHere": "PDF'i buraya bırakın",
-    "v3Subtitle": "Open a PDF to read, edit, convert or sign it locally.",
-    "openFileAria": "Choose a PDF file to open",
-    "clearRecent": "Clear recent",
-    "recentShort": "Recent",
-    "removeRecentAria": "Remove {{name}}",
-    "backToDocument": "Back to document",
-    "loadingDocument": "Loading document…"
+    "v3Subtitle": "Yerel olarak okumak, düzenlemek, dönüştürmek veya imzalamak için bir PDF açın.",
+    "openFileAria": "Açılacak bir PDF dosyası seçin",
+    "clearRecent": "Son dosyaları temizle",
+    "recentShort": "Son",
+    "removeRecentAria": "{{name}} öğesini kaldır",
+    "backToDocument": "Belgeye dön",
+    "loadingDocument": "Belge yükleniyor…"
   },
   "settings": {
     "language": "Dil",
@@ -350,15 +354,29 @@
     "reviewerNamePlaceholder": "Açıklamalarda kullanılan ad",
     "exportPreferences": "Dışa aktarma tercihleri",
     "exportFormatLabel": "Varsayılan dışa aktarma biçimi",
-    "autosave": "Otomatik kaydetme",
-    "autosaveEnable": "Değişiklikleri otomatik kaydet",
     "themeLabel": "Tema",
     "ocrDefaults": "OCR varsayılanları",
     "ocrLanguageLabel": "Varsayılan dil (ISO-639-2)",
     "ocrLanguagePlaceholder": "örn. eng, nld, deu",
-    "updates": "Updates",
-    "automaticUpdateCheck": "Check for a new version at startup",
-    "automaticUpdateCheckHint": "PDFluent asks pdfluent.com whether a newer version exists, a few seconds after it starts. Nothing from your documents is sent. Turn this off and the app never checks on its own — \"Check for updates\" still works whenever you ask for it."
+    "updates": "Güncellemeler",
+    "automaticUpdateCheck": "Başlangıçta yeni sürümü denetle",
+    "automaticUpdateCheckHint": "PDFluent, başladıktan birkaç saniye sonra pdfluent.com'a daha yeni bir sürüm olup olmadığını sorar. Belgelerinizden hiçbir şey gönderilmez. Bunu kapatırsanız uygulama kendi başına asla denetlemez — \"Güncellemeleri denetle\" siz istediğinizde yine çalışır.",
+    "recoveryCopy": "Kurtarma kopyası",
+    "recoveryCopyEnable": "Kaydedilmemiş değişikliklerin kurtarma kopyasını tut; çökmeden sonra sunulur",
+    "view": "Görünüm",
+    "defaultZoomLabel": "Varsayılan yakınlaştırma",
+    "defaultZoomFitWidth": "Genişliğe sığdır (varsayılan)",
+    "defaultZoomFitPage": "Sayfaya sığdır",
+    "defaultZoomActualSize": "Gerçek boyut (%100)",
+    "defaultZoomLastUsed": "Son kullanılan",
+    "defaultZoomHint": "Bir belge bu yakınlaştırma düzeyinde açılır ve siz kendiniz yakınlaştırana kadar pencereyi takip eder. Genişliğe sığdır, açıkça daha iyi uyduğunda onun yerine tüm sayfayı gösterir.",
+    "securityTitle": "Güvenlik",
+    "formScriptsLabel": "Form betikleri",
+    "formScriptsAsk": "Sor",
+    "formScriptsAlways": "Her zaman",
+    "formScriptsNever": "Asla",
+    "formScriptsHint": "Formlar betikler içerebilir, örneğin hesaplamalar. Varsayılan Sor'dur: bir form kayıtlı değerleriyle açılır ve siz onaylayana kadar hiçbir şey çalışmaz.",
+    "formScriptsPinned": "Kuruluşunuz bu seçeneği ayarladı. Burada değiştirilemez."
   },
   "errors": {
     "loadFailed": "Belge yüklenemedi",
@@ -381,7 +399,8 @@
     "addPageFailed": "PDF ekleme başarısız",
     "insertFailed": "PDF ekleme başarısız",
     "splitFailed": "Bölme başarısız",
-    "commandFailedTitle": "'{{command}}' did not complete"
+    "commandFailedTitle": "'{{command}}' tamamlanamadı",
+    "commandRetrying": "{{command}} içinde geçici hata — yeniden deneniyor"
   },
   "events": {
     "formFieldUpdated": "Form alanı güncellendi",
@@ -430,9 +449,9 @@
     "pageNotFound": "Sayfa bulunamadı",
     "requiresFontInspection": "Metin düzenleme için yazı tipi incelemesi gereklidir (6. aşamada planlandı).",
     "rejection": {
-      "bannerTitle": "This text was not changed",
-      "bannerDetail": "Reason reported by the PDF engine: {{detail}}",
-      "bannerDismiss": "Dismiss",
+      "bannerTitle": "Bu metin değiştirilmedi",
+      "bannerDetail": "PDF motorunun bildirdiği neden: {{detail}}",
+      "bannerDismiss": "Kapat",
       "replacement-too-long": {
         "tooltip": "Replacement is too long",
         "explanation": "The replacement is longer than the text it replaces. Keep it the same length or shorter so the surrounding layout stays intact."
@@ -491,8 +510,8 @@
       }
     },
     "fallback": {
-      "fontSubstitutedTitle": "A standard font wrote the new text",
-      "fontSubstitutedMessage": "The original font of this text has no glyph for one or more characters you typed, so Helvetica was used for the replacement. The text is correct; it may look slightly different from the rest of the line."
+      "fontSubstitutedTitle": "Yeni metni standart bir yazı tipi yazdı",
+      "fontSubstitutedMessage": "Bu metnin özgün yazı tipinde yazdığınız bir veya daha fazla karakter için glif yok, bu nedenle değiştirme için Helvetica kullanıldı. Metin doğru; satırın geri kalanından biraz farklı görünebilir."
     }
   },
   "validation": {
@@ -566,12 +585,16 @@
     "watermarkDone": "Filigran eklendi",
     "watermarkFailed": "Filigran eklenemedi",
     "watermarkRunning": "Filigran ekleniyor…",
-    "pdfaRunning": "Converting to PDF/A…",
-    "pdfaDone": "PDF/A written",
-    "pdfaFailed": "PDF/A conversion failed",
-    "metadataRunning": "Saving properties…",
-    "metadataDone": "Properties saved",
-    "metadataFailed": "Could not save properties"
+    "pdfaRunning": "PDF/A'ya dönüştürülüyor…",
+    "pdfaDone": "PDF/A yazıldı",
+    "pdfaFailed": "PDF/A dönüştürmesi başarısız",
+    "metadataRunning": "Özellikler kaydediliyor…",
+    "metadataDone": "Özellikler kaydedildi",
+    "metadataFailed": "Özellikler kaydedilemedi",
+    "exportMarkdownRunning": "Markdown olarak dışa aktarılıyor…",
+    "exportMarkdownDone": "Markdown dışa aktarıldı",
+    "exportTablesRunning": "Tablolar Excel'e aktarılıyor…",
+    "exportTablesDone": "Tablolar Excel'e aktarıldı ({{count}})"
   },
   "panels": {
     "search": "Ara",
@@ -714,7 +737,10 @@
     "formatJpeg": "JPEG (resim)",
     "formatDocx": "Word belgesi (.docx)",
     "formatXlsx": "Excel tablosu (.xlsx)",
-    "formatPptx": "PowerPoint sunumu (.pptx)"
+    "formatPptx": "PowerPoint sunumu (.pptx)",
+    "formatMarkdown": "Markdown (.md) - Önizleme",
+    "formatTablesXlsx": "Tabloları Excel'e (.xlsx) - Önizleme",
+    "noTablesFound": "Bu belgede tablo tanınmadı."
   },
   "goToPage": {
     "title": "Sayfaya git",
@@ -729,7 +755,9 @@
     "documentLabel": "Belge:",
     "savedLabel": "Kaydedildi:",
     "recoveryPath": "Kurtarma yolu:",
-    "restore": "Geri yükle"
+    "restore": "Geri yükle",
+    "untitled": "Adsız belge",
+    "andMore": "{{name}} ve {{count}} daha"
   },
   "emptyStates": {
     "noDocument": "Açık belge yok",
@@ -839,7 +867,26 @@
     "statusUnavailableWithReason": "OCR çalışma zamanı kullanılamıyor: {{reason}}",
     "statusRetry": "Tekrar denetle",
     "runtimePath": "Çalışma zamanı: {{path}}",
-    "missingPackages": "Eksik: {{packages}}"
+    "missingPackages": "Eksik: {{packages}}",
+    "noScannedPagesTitle": "Tanınacak bir şey yok",
+    "unavailable": {
+      "platform": "OCR bu platform için sunulmuyor.",
+      "missing": "Bu sürüme ait OCR dosyaları eksik veya tamamlanmamış. Geri yüklemek için PDFluent'i yeniden yükleyin."
+    },
+    "settings": {
+      "unknown": "OCR bileşeni: denetleniyor…",
+      "installed": "OCR bileşeni: Tesseract {{version}} yüklü"
+    },
+    "errors": {
+      "OCR_COMPONENT_UNSUPPORTED_PLATFORM": "OCR bileşeni bu platform için sunulmuyor.",
+      "OCR_COMPONENT_NOT_INSTALLED": "OCR bileşeni yüklü değil.",
+      "OCR_LANGUAGE_MISSING": "OCR için bir dil paketi yüklü değil.",
+      "OCR_SIGNED_DOCUMENT": "Bu belge imzalı. OCR imzalı sayfaları değiştireceğinden çalıştırılmaz.",
+      "OCR_NOT_PERMITTED": "Belgenin izinleri içeriğinin değiştirilmesine izin vermiyor.",
+      "OCR_DOCUMENT_CHANGED": "OCR çalışırken belge değişti. OCR'ı yeniden çalıştırın.",
+      "OCR_ENGINE_FAILED": "OCR bir hatayla durdu.",
+      "OCR_PAGE_OUT_OF_RANGE": "Tanınacak bir sayfa belgede yok."
+    }
   },
   "docInfo": {
     "title": "Başlık",
@@ -879,7 +926,17 @@
     "italicComingSoon": "İtalik biçimlendirme yakında",
     "sourceDigital": "PDF metin katmanı",
     "sourceOcr": "OCR",
-    "browserLimitedNote": "Desteklenen PDF metnini düzenlemek için sayfadaki metne tıklayın. Resimler ve bağlantılar masaüstü uygulamasında kullanılabilir."
+    "browserLimitedNote": "Desteklenen PDF metnini düzenlemek için sayfadaki metne tıklayın. Resimler ve bağlantılar masaüstü uygulamasında kullanılabilir.",
+    "typeface": {
+      "label": "Yazı tipi",
+      "default": "Belge yazı tipi",
+      "noEmbed": "{{family}}: yazı tipinin lisansı PDF'e gömülmesine izin vermiyor",
+      "refusedLicence": "{{family}} kullanılamıyor: lisansı PDF'e gömülmesine izin vermiyor. Başka bir yazı tipi seçin.",
+      "refusedGlyphs": "{{family}} için {{characters}} karakterinin glifi yok. Başka bir yazı tipi seçin.",
+      "refusedGone": "Bu yazı tipi artık yüklü değil. Başka bir tane seçin.",
+      "refusedText": "Yeniden biçimlendirilecek metin artık sayfada değil.",
+      "refusedUnusable": "{{family}} bir yazı tipi olarak okunamadı. Başka bir yazı tipi seçin."
+    }
   },
   "rightPanel": {
     "properties": "Özellikler",
@@ -944,9 +1001,12 @@
     "flatten": "XFA'yı düzleştir",
     "flattenDone": "XFA düzleştirildi. Statik sürümü indirmek için PDF'yi dışa aktarın.",
     "flattenFailed": "XFA düzleştirme başarısız",
-    "convertToStandard": "Convert to standard PDF",
-    "convertedToStandard": "XFA converted to standard PDF",
-    "convertFailed": "Conversion failed: {{message}}"
+    "convertToStandard": "Standart PDF'ye dönüştür",
+    "convertedToStandard": "XFA standart PDF'ye dönüştürüldü",
+    "convertFailed": "Dönüştürme başarısız: {{message}}",
+    "bannerTitle": "XFA formu",
+    "bannerBody": "Bu XFA formu olduğu gibi gösteriliyor. Alanlarını doldurmak, düzenlemek veya aramak için standart bir PDF'e dönüştürün.",
+    "bannerBodyExperimental": "Bu XFA formu olduğu gibi gösteriliyor. Alanları doldurma özelliği deneyseldir. Güvenilir şekilde doldurmak, düzenlemek ve aramak için standart bir PDF'e dönüştürün."
   },
   "security": {
     "activeContentBadge": "Engellendi",
@@ -970,7 +1030,8 @@
     "highlight": "Vurgula",
     "strikethrough": "Üstünü çiz",
     "underline": "Altını çiz",
-    "copyText": "Metni kopyala"
+    "copyText": "Metni kopyala",
+    "copied": "Kopyalandı"
   },
   "update": {
     "available": "Güncelleme mevcut",
@@ -980,10 +1041,10 @@
     "installing": "Yükleniyor…",
     "checkFailed": "Güncelleme denetimi başarısız",
     "upToDate": "En son sürümü kullanıyorsunuz",
-    "installed": "Update installed",
-    "restartNow": "Restart now",
-    "restartUnsaved": "Save your changes before restarting.",
-    "restartManual": "If it doesn't restart automatically, quit and reopen PDFluent to finish."
+    "installed": "Güncelleme yüklendi",
+    "restartNow": "Şimdi yeniden başlat",
+    "restartUnsaved": "Yeniden başlatmadan önce değişikliklerinizi kaydedin.",
+    "restartManual": "Otomatik olarak yeniden başlamazsa, tamamlamak için PDFluent'ten çıkıp yeniden açın."
   },
   "telemetry": {
     "addNoteLabel": "Eklemek istediğiniz bir şey var mı? (isteğe bağlı)",
@@ -1012,6 +1073,11 @@
     "sentTitle": "Gönderildi. Teşekkürler.",
     "settingsAutoSend": "Sormadan otomatik gönder",
     "settingsAutoSendNote": "Otomatik raporlar, elle incelediklerinizle aynı şekilde kişisel verilerden arındırılmıştır.",
+    "settingsSentReports": "Bu bilgisayardan gönderilen çökme raporları: {{count}}. Bunları {{days}} gün sonra sunucumuzdan otomatik olarak sileriz.",
+    "settingsDeleteReports": "Çökme raporlarımı sil",
+    "settingsDeleting": "Siliniyor…",
+    "settingsDeleted": "Silinen çökme raporları: {{count}}",
+    "settingsDeleteFailed": "{{count}} rapor silinemedi. Bağlantınızı kontrol edip yeniden deneyin.",
     "settingsDescription": "Raporlar hiçbir zaman kişisel bilgi veya belge içeriği içermez. Göndermeden önce her şey temizlenir ve her raporu önce siz görürsünüz. Varsayılan olarak kapalıdır.",
     "settingsTitle": "Çökme ve hata raporları",
     "settingsToggle": "Çökme ve hata raporlarını gönder",
@@ -1019,7 +1085,11 @@
     "typeBug": "Hata",
     "typeCrash": "Çökme",
     "typeFeedback": "Geri bildirim",
-    "whatGetsSent": "Gönderilenler"
+    "whatGetsSent": "Gönderilenler",
+    "settingsSentFeedback": "Bu bilgisayardan gönderilen geri bildirim raporları: {{count}}. Bunları sunucumuzdan {{days}} gün sonra otomatik olarak sileriz.",
+    "settingsDeleteFeedback": "Geri bildirim raporlarımı sil",
+    "settingsFeedbackDeleted": "Geri bildirim raporları silindi: {{count}}",
+    "settingsFeedbackDeleteFailed": "{{count}} geri bildirim raporu silinemedi. Bağlantınızı kontrol edip tekrar deneyin."
   },
   "ai": {
     "summaryInstruction": "Aşağıdaki belgenin kısa bir özetini Türkçe olarak sunun. Her rol için işveren, pozisyon ve dönemi belirtin. Madde işaretleri kullanın.",
@@ -1076,7 +1146,8 @@
       "scrollLeft": "Scroll modlarını sola kaydır",
       "scrollRight": "Scroll modlarını sağa kaydır",
       "workMode": "Çalışma modu",
-      "searchPlaceholder": "Belgede ara"
+      "searchPlaceholder": "Belgede ara",
+      "allTools": "Tüm araçlar"
     },
     "menu": {
       "about": "Hakkında",
@@ -1147,22 +1218,17 @@
       "draw": "Çiz",
       "signatureName": "İmza adı",
       "typeName": "Adınızı yazın…",
-      "selectStyle": "Stil seçin",
-      "styleClassic": "Kursif Klasik",
-      "styleElegant": "Kursif Zarif",
-      "styleBrush": "Fırça İmzası",
-      "styleModern": "Modern El Yazısı",
       "drawHere": "Fare, trackpad veya stylus ile buraya çizin",
       "clear": "Temizle",
       "apply": "Uygula",
-      "defaultSignature": "İmza",
       "clickToPlaceSignature": "İmzayı yerleştirmek için sayfaya tıklayın.",
       "addInitials": "İnisyal ekle",
       "initialsIntro": "Başlangıç alanlarına hızlı yerleştirme için baş harflerinizi yazın.",
       "initials": "İnisyallar",
       "initialsPlaceholder": "örn. AB",
-      "defaultInitials": "AB",
-      "clickToPlaceInitials": "İnisyalları yerleştirmek için sayfaya tıklayın."
+      "clickToPlaceInitials": "İnisyalları yerleştirmek için sayfaya tıklayın.",
+      "signatureFont": "İmza yazı tipi",
+      "plainItalic": "Düz italik"
     },
     "overlay": {
       "signaturePlaced": "İmza yerleştirildi!",
@@ -1177,13 +1243,13 @@
     "textbox": {
       "editTitle": "Metin kutusunu düzenle",
       "newTitle": "Yeni metin kutusu",
-      "intro": "Bu metin geçerli sayfaya yer paylaşımı olarak yerleştirilir. Boş olarak kaydetmek mevcut bir metin kutusunu kaldırır.",
       "label": "Metin",
       "placeholder": "Metni yazın…",
       "delete": "Sil",
       "deleted": "Metin kutusu silindi.",
       "updated": "Metin kutusu güncellendi.",
-      "added": "Yeni metin kutusu eklendi."
+      "added": "Yeni metin kutusu eklendi.",
+      "introPdf": "Metin kutusu PDF’ye yazılır ve her PDF görüntüleyicide görünür. Boş kaydetmek mevcut bir metin kutusunu kaldırır."
     },
     "rail": {
       "tools": "PDF araçları",
@@ -1197,12 +1263,14 @@
       "more": "Daha fazla araç",
       "strikeText": "Metni üzerine çiz",
       "underlineText": "Metni altını çiz",
-      "addAttachment": "Ek ekle"
+      "addAttachment": "Ek ekle",
+      "drawRectangle": "Dikdörtgen çiz"
     },
     "railToasts": {
-      "commentMode": "Not modu etkindir. Metni seçin ve Not'u seçin veya notlar listesini kullanarak bir not ekleyin.",
+      "commentMode": "Not modu. Notun yer alacağı sayfadaki noktaya tıklayın.",
       "strikeout": "Üzerine çizme etkindir — uygulamak için metni seçin.",
-      "underline": "Altını çizme etkindir — uygulamak için metni seçin."
+      "underline": "Altını çizme etkindir — uygulamak için metni seçin.",
+      "rectangle": "Dikdörtgen etkin — çizmek için sayfada sürükleyin."
     },
     "tools": {
       "lede": "Başlamak için bir araç seçin. Her şey bu cihazda yerel olarak çalışır.",
@@ -1238,17 +1306,18 @@
       "layers": "{{count}} katman",
       "manageLayers": "Katmanları yönet",
       "layersVisible": "{{count}} katman görünür.",
-      "archiveAndData": "Archiving and data",
-      "pdfaSub": "Check or convert for long-term archiving",
-      "invoiceSub": "Read the ZUGFeRD/Factur-X invoice inside",
-      "metadataSub": "Title and author of this document"
+      "archiveAndData": "Arşivleme ve veriler",
+      "pdfaSub": "Uzun süreli arşivleme için denetle veya dönüştür",
+      "invoiceSub": "İçindeki ZUGFeRD/Factur-X faturasını oku",
+      "metadataSub": "Bu belgenin başlığı ve yazarı",
+      "flattenForm": "Düzleştir",
+      "flattenFormTitle": "Formu düzleştir: doldurulan değerler sayfanın bir parçası olur ve alanlar kaldırılır",
+      "flattenFormDone": "Form düzleştirildi. Geri al, alanları geri getirir.",
+      "flattenFormFailed": "Form düzleştirilemedi: {{message}}"
     },
     "edit": {
       "lede": "Belgede metni satır içi düzenlemek için tıklayın. Biçimlendirme çubuğu seçimin hemen üstünde görünür.",
       "formatText": "Metni biçimlendir",
-      "fontLabel": "Yazı tipi",
-      "fontHint": "Mevcut PDF metni gömülü PDF yazı tiplerini kullanır. \"{{font}}\" yazı tipi yeni eklenen metin kutuları için kullanılacak.",
-      "fontEmbedded": "Gömülü PDF yazı tipi",
       "color": "Renk",
       "colorLabel": "Renk {{color}}",
       "addContent": "İçerik ekle",
@@ -1261,7 +1330,18 @@
       "clickAnywhereTextBox": "Metin kutusunu yerleştirmek için sayfada herhangi bir yere tıklayın.",
       "clickAnywhereImage": "Görüntüyü yerleştirmek için sayfada herhangi bir yere tıklayın.",
       "selection": "Seçim",
-      "annotationOnPage": "{{type}} (sayfa {{page}})"
+      "annotationOnPage": "{{type}} (sayfa {{page}})",
+      "placeStamp": "Damga yerleştir",
+      "stampLabel": "Damga",
+      "clickToPlaceStamp": "Damgayı yerleştirmek için sayfaya tıklayın.",
+      "placementModeStamp": "Yerleştirme modu: damga",
+      "stampPlaced": "Damga yerleştirildi.",
+      "deleteAnnotation": "Ek açıklamayı sil",
+      "annotationColor": "Ek açıklama rengi",
+      "editTextBox": "Metni düzenle",
+      "replaceImage": "Görüntüyü değiştir",
+      "imageReplaced": "Görüntü değiştirildi.",
+      "moveHint": "Taşımak için sürükleyin, boyutlandırmak için bir köşeyi sürükleyin veya ok tuşlarıyla kaydırın."
     },
     "convert": {
       "exportPdfTo": "PDF'yi şuraya dışa aktar",
@@ -1279,10 +1359,16 @@
       "confidenceFrom": "{{value}}% güvenilirlik",
       "ocrOff": "OCR kapalı",
       "ocrOn": "OCR açık",
-      "ocrRunning": "OCR yerel olarak çalışıyor…"
+      "ocrRunning": "OCR yerel olarak çalışıyor…",
+      "ocrComponentUnknown": "OCR bileşeni: denetleniyor…",
+      "ocrComponentInstalled": "OCR bileşeni yüklü",
+      "ocrLastRun": "Son çalıştırma: {{pages}} sayfa, {{words}} sözcük aranabilir metin olarak eklendi",
+      "ocrRunningProgress": "Sayfa {{done}}/{{total}} tanınıyor…",
+      "markdown": "Markdown (Önizleme)",
+      "tablesToExcel": "Tabloları Excel'e (Önizleme)"
     },
     "esign": {
-      "lede": "Sign with a certificate of your own, and check the signatures a document already carries. Both happen on this device.",
+      "lede": "Kendi sertifikanızla imzalayın ve bir belgenin zaten taşıdığı imzaları denetleyin. İkisi de bu cihazda gerçekleşir.",
       "fillAndSign": "Belgelerinizi doldurun ve imzalayın",
       "addSignature": "İmza ekle",
       "addInitials": "İnisyal ekle",
@@ -1290,25 +1376,25 @@
       "placementModeInitials": "Yerleştirme modu: İnisyallar",
       "clickToPlaceSignature": "İmzanızı yerleştirmek için sayfada herhangi bir yere tıklayın.",
       "clickToPlaceInitials": "İnisyallarınızı yerleştirmek için sayfada herhangi bir yere tıklayın.",
-      "verifySection": "Signatures",
-      "verify": "Check signatures",
-      "desktopOnly": "Available in the desktop app",
-      "unsigned": "This document carries no signatures.",
-      "signSection": "Sign with a certificate",
-      "padesLevel": "Produces a PAdES B-B signature: your certificate over the whole file, no timestamp server involved.",
-      "certificate": "Certificate (.p12 or .pfx)",
-      "certificateNone": "No certificate chosen",
-      "chooseCertificate": "Choose certificate",
-      "certificatePassword": "Certificate password",
-      "reason": "Reason (optional)",
-      "reasonPlaceholder": "Why you are signing",
-      "sign": "Sign and save a copy",
-      "signing": "Signing…",
-      "signNeedsCertificate": "Choose a certificate and enter its password first.",
-      "signSaved": "Signed copy saved as {{name}}",
-      "signFailed": "Signing failed: {{message}}",
-      "usageRights": "Reader enablement (usage rights)",
-      "usageRightsInvalidated": "Usage rights invalidated — this file was edited, so Adobe Reader no longer treats it as an enabled form."
+      "verifySection": "İmzalar",
+      "verify": "İmzaları denetle",
+      "desktopOnly": "Masaüstü uygulamasında kullanılabilir",
+      "unsigned": "Bu belgede imza yok.",
+      "signSection": "Sertifikayla imzala",
+      "padesLevel": "PAdES B-B imzası üretir: sertifikanız tüm dosyaya uygulanır, zaman damgası sunucusu kullanılmaz.",
+      "certificate": "Sertifika (.p12 veya .pfx)",
+      "certificateNone": "Sertifika seçilmedi",
+      "chooseCertificate": "Sertifika seç",
+      "certificatePassword": "Sertifika şifresi",
+      "reason": "Neden (isteğe bağlı)",
+      "reasonPlaceholder": "Neden imzaladığınız",
+      "sign": "İmzala ve kopyasını kaydet",
+      "signing": "İmzalanıyor…",
+      "signNeedsCertificate": "Önce bir sertifika seçin ve şifresini girin.",
+      "signSaved": "İmzalı kopya {{name}} olarak kaydedildi",
+      "signFailed": "İmzalama başarısız: {{message}}",
+      "usageRights": "Reader etkinleştirme (kullanım hakları)",
+      "usageRightsInvalidated": "Kullanım hakları geçersiz kılındı — bu dosya düzenlendi, bu nedenle Adobe Reader artık onu etkinleştirilmiş bir form olarak görmüyor."
     },
     "protect": {
       "lede": "PDF belgenizi güçlü şifreleme şifreleriyle koruyun. Değişiklikler hemen yerel olarak uygulanır.",
@@ -1330,9 +1416,11 @@
       "localViaTauri": "Tauri komutu aracılığıyla yerel, tarayıcı çalışma zamanı yok",
       "compressingImages": "Görüntüler sıkıştırılıyor…",
       "percentComplete": "%{{percent}} tamamlandı",
-      "compressPdf": "PDF'yi sıkıştır",
       "desktopOnly": "Yalnızca masaüstü uygulamasında kullanılabilir",
-      "backToTools": "Araçlara geri dön"
+      "backToTools": "Araçlara geri dön",
+      "saveCopy": "Sıkıştırılmış kopyayı farklı kaydet…",
+      "replaceOpen": "Açık belgeyi sıkıştır ve değiştir",
+      "replaceNote": "Kopya, açık belgeyi ve dosyasını olduğu gibi bırakır. Değiştirme yalnızca açık belgeyi değiştirir; Geri Al orijinali geri getirir."
     },
     "split": {
       "lede": "Belgenizi sayfa başına veya belirli bir sayfa aralığına göre ayrı PDF dosyalarına bölün.",
@@ -1369,7 +1457,52 @@
       "applying": "Uygulanıyor…",
       "applyPermanently": "Redaksiyonları kalıcı olarak uygula",
       "noActiveMarkings": "Etkin redaksiyon işareti yok.",
-      "backToTools": "Araçlara geri dön"
+      "backToTools": "Araçlara geri dön",
+      "pii": {
+        "title": "Kişisel veriler",
+        "lede": "Find personal data in the text of this document: IBANs, card numbers, national ID numbers, birth dates, e-mail addresses and phone numbers, and names and addresses when the model is installed. Review the list, then redact the ones you choose.",
+        "find": "Kişisel verileri bul",
+        "scanning": "Taranıyor…",
+        "none": "Nothing found.",
+        "kind": {
+          "iban": "IBAN",
+          "email": "E-posta adresi",
+          "phone": "Telefon numarası",
+          "credit_card": "Kart numarası",
+          "national_id": "Ulusal kimlik numarası",
+          "date_of_birth": "Doğum tarihi",
+          "bank_account": "Banka hesap numarası",
+          "person": "Ad",
+          "address": "Adres"
+        },
+        "where": "Sayfa {{pages}} · {{count}}×",
+        "selectAll": "Tümünü seç",
+        "selectNone": "Hiçbirini seçme",
+        "redactSelected": "Seçili {{count}} öğeyi karart",
+        "redacting": "Karartılıyor…",
+        "done": "{{count}} öğe karartıldı. Sonucu korumak için dosyayı kaydedin.",
+        "failed": "Karartma başarısız: {{message}}",
+        "detectFailed": "Arama başarısız: {{message}}",
+        "patternsOnly": "Without the model this finds only items it can check, such as IBANs, cards, ID numbers, birth dates, e-mail addresses and phone numbers. Names and addresses are not detected, so check every page yourself.",
+        "suggestionsOnly": "Bunlar önerilerdir. Algılayıcı bazı şeyleri kaçırabilir, bu yüzden kaydetmeden önce her sayfayı kontrol edin.",
+        "source": {
+          "verified": "Doğrulandı {{detail}}",
+          "model": "Model önerisi, %{{score}}"
+        },
+        "model": {
+          "use": "Ad ve adresleri modelle de bul",
+          "languages": "Şunlar için denetlendi: {{languages}}",
+          "remove": "Modeli kaldır",
+          "removeFailed": "Model kaldırılamadı: {{message}}",
+          "failed": "Model çalıştırılamadı ({{code}}). Yalnızca denetlenebilen öğeler gösterilir.",
+          "consentTitle": "Kişisel veri modeli indirilsin mi?",
+          "consentBody": "Ad ve adres bulmak için bir dil modeli gerekir ({{size}}). {{host}} üzerinden bir kez indirilir, sabit bir sağlama toplamıyla doğrulanır ve ardından bu bilgisayarda çalışır. Belgeleriniz asla buradan ayrılmaz.",
+          "download": "İndir",
+          "downloading": "İndiriliyor…",
+          "downloadFailed": "İndirme başarısız: {{message}}",
+          "notInBuild": "İndirme bu sürümde henüz kullanılamıyor."
+        }
+      }
     },
     "toasts": {
       "saving": "Kaydediliyor…",
@@ -1399,7 +1532,7 @@
       "pdfsMerged": "{{count}} PDF dosyası birleştirildi",
       "mergedSaved": "Birleştirilmiş PDF {{name}} olarak kaydedildi.",
       "mergeFailed": "Birleştirme başarısız: {{message}}",
-      "redactMatches": "{{matches}} eşleşme bulundu, {{areas}} redaksiyon işareti yerleştirildi.",
+      "redactSearchDone": "Karartılan eşleşmeler: {{count}}. Değişikliği korumak için kaydedin.",
       "noRedactMatches": "Redakt edilecek metin eşleşmesi bulunamadı.",
       "redactSearchFailed": "Arama redaksiyonu başarısız: {{message}}",
       "applyRedactConfirm": "{{count}} redaksiyon işareti kalıcı olarak uygulanır mı? Bu içeriği PDF'den iyi bir şekilde kaldırır.",
@@ -1408,108 +1541,328 @@
       "applyRedactRunning": "Redaksiyonlar kalıcı olarak uygulanıyor…",
       "applyRedactDone": "Redaksiyonlar kalıcı olarak uygulandı",
       "redactionsApplied": "Redaksiyonlar kalıcı olarak uygulanmıştır.",
-      "redactFailed": "Redaksiyon başarısız: {{message}}"
+      "redactFailed": "Redaksiyon başarısız: {{message}}",
+      "compressedCopyToast": "{{name}} kaydedildi: {{before}} → {{after}}. Açık belge değişmedi.",
+      "compressedReplacedToast": "Açık belge sıkıştırıldı: {{before}} → {{after}}. Geri al, orijinali geri getirir. Sıkıştırılmış sürümü saklamak için kaydedin."
     },
     "thumbnails": {
       "pages": "Sayfalar",
       "pageAlt": "Sayfa {{page}}",
-      "bookmarks": "Bookmarks"
+      "bookmarks": "Yer imleri"
     },
     "pdfa": {
-      "lede": "PDF/A is the archival form of PDF: fonts embedded, colours defined, nothing that depends on the outside world.",
-      "section": "Conformance",
-      "level": "Level",
-      "validate": "Check this document",
-      "convert": "Save as PDF/A…",
-      "desktopOnly": "Available in the desktop app",
-      "compliant": "Conforms to {{level}}",
-      "notCompliant": "Does not conform: {{errors}} errors, {{warnings}} warnings",
-      "moreIssues": "{{count}} more",
+      "lede": "PDF/A, PDF'nin arşiv biçimidir: yazı tipleri gömülü, renkler tanımlı, dış dünyaya bağlı hiçbir şey yok.",
+      "section": "Uyumluluk",
+      "level": "Düzey",
+      "validate": "Bu belgeyi denetle",
+      "convert": "PDF/A olarak kaydet…",
+      "desktopOnly": "Masaüstü uygulamasında kullanılabilir",
+      "compliant": "{{level}} ile uyumlu",
+      "notCompliant": "Uyumlu değil: {{errors}} hata, {{warnings}} uyarı",
+      "moreIssues": "{{count}} tane daha",
       "report": {
-        "title": "What the conversion did",
-        "written": "Written to {{path}}",
-        "size": "{{out}} out of {{in}} ({{ratio}}×), in {{seconds}} s",
-        "pages": "{{count}} pages",
-        "fontsEmbedded": "{{embedded}} of {{found}} unembedded fonts embedded",
-        "fontsFailed": "Could not embed: {{fonts}}",
-        "removed": "Removed: {{count}} items that PDF/A does not allow",
-        "subset": "{{count}} font programs reduced, {{bytes}} kB saved",
-        "outputIntent": "Output intent added",
-        "unchangedDocument": "The open document was not changed.",
+        "title": "Dönüştürme ne yaptı",
+        "written": "{{path}} konumuna yazıldı",
+        "size": "{{in}} içinden {{out}} ({{ratio}}×), {{seconds}} sn içinde",
+        "pages": "{{count}} sayfa",
+        "fontsEmbedded": "Gömülü olmayan {{found}} yazı tipinden {{embedded}} tanesi gömüldü",
+        "fontsFailed": "Gömülemedi: {{fonts}}",
+        "removed": "Kaldırıldı: PDF/A'nın izin vermediği {{count}} öğe",
+        "subset": "{{count}} yazı tipi programı küçültüldü, {{bytes}} kB tasarruf edildi",
+        "outputIntent": "Çıktı amacı eklendi",
+        "unchangedDocument": "Açık belge değiştirilmedi.",
         "warning": "{{message}}",
-        "moreWarnings": "{{count}} more"
+        "moreWarnings": "{{count}} tane daha"
       }
     },
     "metadata": {
-      "lede": "The title and author stored inside the file, which is what other readers and search show.",
-      "section": "Properties",
-      "title": "Title",
-      "author": "Author",
-      "apply": "Save properties",
-      "desktopOnly": "Available in the desktop app"
+      "lede": "Dosyanın içinde saklanan başlık ve yazar; diğer okuyucular ve arama bunu gösterir.",
+      "section": "Özellikler",
+      "title": "Başlık",
+      "author": "Yazar",
+      "apply": "Özellikleri kaydet",
+      "desktopOnly": "Masaüstü uygulamasında kullanılabilir"
     },
     "invoice": {
-      "lede": "A ZUGFeRD or Factur-X invoice travels as XML inside the PDF. This reads it and checks it against EN 16931.",
-      "section": "Embedded invoice",
-      "read": "Read invoice",
-      "desktopOnly": "Available in the desktop app",
-      "none": "This document carries no e-invoice.",
-      "number": "Number: {{number}}",
-      "issued": "Issued: {{date}}",
-      "seller": "Seller: {{name}}",
-      "buyer": "Buyer: {{name}}",
-      "total": "Total: {{total}} {{currency}}",
-      "lines": "Line items: {{count}}",
-      "valid": "Valid against {{profile}}",
-      "invalid": "Not valid: {{errors}} errors, {{warnings}} warnings"
+      "lede": "ZUGFeRD veya Factur-X faturası PDF içinde XML olarak taşınır. Bu, onu okur ve EN 16931'e göre denetler.",
+      "section": "Gömülü fatura",
+      "read": "Faturayı oku",
+      "desktopOnly": "Masaüstü uygulamasında kullanılabilir",
+      "none": "Bu belgede e-fatura yok.",
+      "number": "Numara: {{number}}",
+      "issued": "Düzenlenme: {{date}}",
+      "seller": "Satıcı: {{name}}",
+      "buyer": "Alıcı: {{name}}",
+      "total": "Toplam: {{total}} {{currency}}",
+      "lines": "Kalemler: {{count}}",
+      "valid": "{{profile}} profiline göre geçerli",
+      "invalid": "Geçersiz: {{errors}} hata, {{warnings}} uyarı"
     },
     "canvas": {
-      "document": "PDF document"
+      "document": "PDF belgesi"
+    },
+    "stamps": {
+      "Approved": "Onaylandı",
+      "NotApproved": "Onaylanmadı",
+      "Draft": "Taslak",
+      "Confidential": "Gizli",
+      "Final": "Son",
+      "ForComment": "Yorum için",
+      "Expired": "Süresi doldu"
     }
   },
   "about": {
-    "section": "About",
-    "app": "App",
-    "version": "Version",
-    "privacy": "Privacy",
-    "privacyValue": "All processing happens locally",
-    "website": "Website"
+    "section": "Hakkında",
+    "app": "Uygulama",
+    "version": "Sürüm",
+    "privacy": "Gizlilik",
+    "privacyValue": "Tüm işlemler yerel olarak gerçekleşir",
+    "website": "Web sitesi"
   },
   "reviewSummary": {
-    "title": "Review summary",
-    "generatedAt": "Generated on",
-    "comments": "Comments",
-    "noComments": "No comments.",
-    "replies": "Replies:",
-    "empty": "empty",
-    "redactions": "Redactions",
-    "noRedactions": "No redactions.",
-    "noIssues": "No issues.",
-    "metadataChanges": "Metadata changes",
-    "noMetadataChanges": "No changes.",
-    "changedBy": "by",
-    "on": "on"
+    "title": "İnceleme özeti",
+    "generatedAt": "Oluşturulma tarihi",
+    "comments": "Yorumlar",
+    "noComments": "Yorum yok.",
+    "replies": "Yanıtlar:",
+    "empty": "boş",
+    "redactions": "Sansürler",
+    "noRedactions": "Sansür yok.",
+    "noIssues": "Sorun yok.",
+    "metadataChanges": "Meta veri değişiklikleri",
+    "noMetadataChanges": "Değişiklik yok.",
+    "changedBy": "değiştiren:",
+    "on": "tarih:"
   },
   "externalLink": {
-    "askMessage": "This PDF wants to open an external link:\n\n{{label}}\n\nURL:\n{{href}}\n\nDo you want to continue?",
-    "title": "Open external link?",
-    "openLink": "Open link",
-    "dialogBody": "This PDF wants to open an external website. Check the URL before continuing."
+    "askMessage": "Bu PDF harici bir bağlantı açmak istiyor:\n\n{{label}}\n\nURL:\n{{href}}\n\nDevam etmek istiyor musunuz?",
+    "title": "Harici bağlantı açılsın mı?",
+    "openLink": "Bağlantıyı aç",
+    "dialogBody": "Bu PDF harici bir web sitesi açmak istiyor. Devam etmeden önce URL'yi kontrol edin."
   },
   "linkChoice": {
-    "title": "Open link in your browser?",
-    "body": "This document wants to open an external website. Are you opening it from a trusted source?",
-    "alwaysAllow": "Always allow",
-    "openOnce": "Open once"
+    "title": "Bağlantı tarayıcınızda açılsın mı?",
+    "body": "Bu belge harici bir web sitesi açmak istiyor. Belgeyi güvenilir bir kaynaktan mı açıyorsunuz?",
+    "alwaysAllow": "Her zaman izin ver",
+    "openOnce": "Bir kez aç"
   },
   "fallbacks": {
-    "ocrUnavailableTitle": "OCR is not available on this computer",
-    "ocrUnavailableMessage": "PDFluent could not start the text-recognition engine. {{reason}}",
-    "ocrFailedMessage": "Text recognition stopped on page {{page}}: {{reason}}",
-    "xfaStaticTitle": "Form filled without recalculation",
-    "xfaStaticMessage": "This build writes XFA field values straight into the form. Field scripts do not run, so calculated totals and fields that appear or hide based on your answer stay as they are.",
-    "featureUnavailableTitle": "'{{feature}}' is not available in this build",
-    "usageRightsInvalidatedTitle": "This document is no longer Reader-enabled",
-    "usageRightsInvalidatedMessage": "Your change was made. It also invalidated the usage-rights signature this PDF carried, which let Adobe Reader fill in and save the form. The text edit stands; the extended rights are gone and cannot be restored by undoing it."
+    "ocrUnavailableTitle": "OCR bu bilgisayarda kullanılamıyor",
+    "ocrUnavailableMessage": "PDFluent metin tanıma motorunu başlatamadı. {{reason}}",
+    "ocrFailedMessage": "Metin tanıma {{page}}. sayfada durdu: {{reason}}",
+    "xfaStaticTitle": "Form yeniden hesaplanmadan dolduruldu",
+    "xfaStaticMessage": "Bu sürüm, XFA alan değerlerini doğrudan forma yazar. Alan betikleri çalışmaz; bu nedenle hesaplanan toplamlar ve yanıtınıza göre görünen veya gizlenen alanlar olduğu gibi kalır.",
+    "xfaScriptsNotRunTitle": "Formdaki bazı betikler çalıştırılmıyor",
+    "xfaScriptsNotRunMessage": "Yanıtınız kaydedildi. Bu formda FormCalc betikleri var ({{count}} bulundu) ve PDFluent yalnızca JavaScript betiklerini çalıştırır. Bu betiklerin güncelleyeceği toplamlar ve alanlar, form Adobe Reader'da açılana kadar kaydedilmiş değerlerini korur.",
+    "xfaFieldRefusedTitle": "Form değeri kabul etmedi",
+    "xfaFieldReadOnly": "“{{field}}” alanı bu formda salt okunurdur ve değiştirilemez.",
+    "xfaFieldRejected": "“{{field}}” alanı bu değeri kabul etmiyor: {{reason}}",
+    "xfaFieldNotFound": "“{{field}}” alanı artık formda yok. Form yeniden yüklendi.",
+    "featureUnavailableTitle": "'{{feature}}' bu sürümde kullanılamıyor",
+    "usageRightsInvalidatedTitle": "Bu belge artık Reader etkin değil",
+    "usageRightsInvalidatedMessage": "Değişikliğiniz yapıldı. Ayrıca bu PDF'nin taşıdığı ve Adobe Reader'ın formu doldurup kaydetmesini sağlayan kullanım hakları imzasını geçersiz kıldı. Metin düzenlemesi geçerli; genişletilmiş haklar gitti ve geri alınarak geri getirilemez.",
+    "xfaScriptsFailedTitle": "Bazı form betikleri tamamlanmadı",
+    "xfaScriptsFailedMessage": "Yanıtınız kaydedildi, ancak bu betikler tamamlanmadı, bu nedenle ayarladıkları değerler eksik olabilir: {{details}}.",
+    "xfaScriptKind_threw": "hata verdi",
+    "xfaScriptKind_timeout": "zaman aşımına uğradı",
+    "xfaScriptKind_refused": "sandbox tarafından reddedildi"
+  },
+  "signedSave": {
+    "title": "Bu belge imzalı",
+    "message": "Redaksiyon, imzanın kapsadığı içeriği kaldırır; bu nedenle imza bozulmadan imzalı özgün dosyanın üzerine kaydedilemez. Bunun yerine bir kopya kaydedin: kopya redaksiyonu korur ve imzayı taşımaz.",
+    "saveCopy": "Kopyayı imzasız kaydet…",
+    "cancel": "İptal"
+  },
+  "passwordPrompt": {
+    "title": "Bu PDF korumalı",
+    "message": "{{name}} dosyasını açmak için parolayı girin.",
+    "incorrect": "Bu parola bu PDF'i açmıyor. Yeniden deneyin.",
+    "label": "Parola",
+    "open": "Aç",
+    "cancel": "İptal",
+    "readOnlyTitle": "Salt okunur açıldı",
+    "readOnlyMessage": "Bu PDF'in izinleri değişikliğe izin vermiyor. Okuyabilirsiniz ve izinler buna izin veriyorsa yazdırabilirsiniz. Değişiklikleri kaydetmek için korumayı sahip parolasıyla kaldırın."
+  },
+  "a11y": {
+    "searchNextResult": "Sonraki sonuç",
+    "searchPrevResult": "Önceki sonuç"
+  },
+  "feedback": {
+    "title": "PDFluent'i geliştirmemize yardım edin",
+    "intro": "Ne yapmaya çalıştığınızı bize anlatın. Her bildirimi okuyoruz.",
+    "menuLabel": "PDFluent'i geliştirmemize yardım edin…",
+    "fromError": "Az önce karşılaştığınız sorunu bize bildirebilirsiniz.",
+    "areaLabel": "Ne yapmaya çalışıyordunuz?",
+    "area": {
+      "open-view": "Belge açmak veya okumak",
+      "search-copy": "Metin aramak veya kopyalamak",
+      "print": "Yazdırmak",
+      "edit-text": "Metin düzenlemek",
+      "annotate": "Vurgulamak, yorum eklemek veya çizmek",
+      "forms": "Form doldurmak",
+      "sign": "İmzalamak veya imzayı denetlemek",
+      "redact": "Sansürlemek",
+      "pages-organize": "Sayfaları döndürmek, yeniden sıralamak, birleştirmek veya bölmek",
+      "convert-export": "Dönüştürmek veya dışa aktarmak",
+      "ocr": "Taranmış belgedeki metni tanımak (OCR)",
+      "pdfa-compliance": "PDF/A",
+      "protect": "Parola veya izinler",
+      "save": "Kaydetmek",
+      "install-update": "PDFluent'i kurmak veya güncellemek",
+      "other": "Başka bir şey"
+    },
+    "tryingToPlaceholder": "Kendi sözlerinizle (isteğe bağlı)",
+    "whatHappenedLabel": "Ne oldu?",
+    "whatHappenedPlaceholder": "Ne gördünüz?",
+    "whatHappenedRequired": "Ne olduğunu anlatın, nereye bakacağımızı bilelim.",
+    "expectedLabel": "Ne bekliyordunuz?",
+    "expectedPlaceholder": "İsteğe bağlı",
+    "docTypeLabel": "Ne tür bir belgeydi?",
+    "docType": {
+      "none": "Belge söz konusu değil",
+      "form": "Bir form",
+      "scanned": "Bir tarama",
+      "signed": "İmzalı bir belge",
+      "protected": "Parola korumalı",
+      "large": "Büyük (100 sayfadan fazla)",
+      "xfa": "Resmî bir form veya XFA formu",
+      "other": "Başka bir şey"
+    },
+    "docTypeUnset": "Seçin…",
+    "pageCountLabel": "Sayfa sayısı",
+    "contextTitle": "Bildiriminizle birlikte gönderilir",
+    "contextToggle": "Sistem ayrıntılarını ekle",
+    "contextHint": "Sürüm, sistem, dil ve son hata sorunu yeniden üretmemize yardımcı olur. Dosya adı, yol veya belge içeriği yok.",
+    "fieldVersion": "PDFluent sürümü",
+    "fieldSystem": "Sistem",
+    "fieldLanguage": "Dil",
+    "fieldLastError": "Son hata",
+    "fieldSessions": "Oturumlar",
+    "notIncluded": "eklenmedi",
+    "documentTitle": "Belgeyi paylaşın (isteğe bağlı)",
+    "documentToggle": "Açık belgeyi bu bildirimle paylaş",
+    "documentNone": "Açık belge yok.",
+    "documentTooLarge": "Bu belge 20 MB'tan büyük olduğu için bildirimle paylaşılamaz.",
+    "documentShared": "Bu belge paylaşılacak.",
+    "documentConfirmTitle": "Bu belge paylaşılsın mı?",
+    "documentConfirmText": "Bu dosya PDFluent'e (Innovation Trigger B.V.) gönderilecek. Yalnızca bu raporu incelemek için kullanılır; asla yayımlanmaz, eğitim için asla kullanılmaz ve sorun düzeltildikten en geç 90 gün sonra, her durumda 12 ay içinde silinir.",
+    "documentConfirmFile": "{{name}} ({{size}})",
+    "documentConfirmYes": "Bu belgeyi paylaş",
+    "documentConfirmNo": "Paylaşma",
+    "contactTitle": "İletişimde kalalım (isteğe bağlı)",
+    "emailLabel": "E-posta adresi",
+    "emailInvalid": "Bu bir e-posta adresine benzemiyor.",
+    "consentContact": "PDFluent bu raporla ilgili sorular için bana e-posta gönderebilir.",
+    "consentFixed": "Bu düzeltildiğinde bana e-posta gönder.",
+    "contactHint": "Adresiniz raporunuzdan ayrı saklanır, yalnızca bu rapor için kullanılır; bülten veya pazarlama için asla kullanılmaz.",
+    "noEmailHint": "E-posta adresi vermeseniz de haberdar olursunuz: bir güncelleme bildiriminizi giderdiğinde PDFluent size uygulama içinde haber verir.",
+    "privacyNotice": "Innovation Trigger B.V. bu raporu PDFluent'i geliştirmek için alır. Raporlar en fazla 24 ay saklanır. Kendi raporunuzu istediğiniz zaman sildirebilirsiniz.",
+    "privacyLink": "Gizlilik bildirimi",
+    "send": "Gönder",
+    "sending": "Gönderiliyor…",
+    "cancel": "İptal",
+    "sentTitle": "Teşekkürler!",
+    "sentBody": "Bildiriminiz bize ulaştı. Numarası şu:",
+    "sentIdHint": "Bildiriminiz hakkında soru sormak veya silinmesini istemek için bu numarayı saklayın.",
+    "sentNoLocalCopy": "PDFluent bu numarayı bu bilgisayarda saklayamadı, lütfen not edin.",
+    "sentDocumentFailed": "Bildiriminiz ulaştı ama belge yüklenemedi. Belge önemliyse bildirimi belgeyle birlikte yeniden gönderebilirsiniz.",
+    "removeReport": "Bu bildirimi sil",
+    "removing": "Siliniyor…",
+    "removed": "Bildiriminiz silindi.",
+    "removeFailed": "Bildiriminiz şu anda silinemedi. Daha sonra tekrar deneyin veya numarayı bize e-postayla gönderin.",
+    "failedTitle": "Gönderilemedi",
+    "failedNetwork": "PDFluent sunucuya ulaşamadı. Hiçbir şey gönderilmedi, metniniz hâlâ burada.",
+    "failedRateLimited": "Bu bağlantıdan bugün çok fazla bildirim geldi. Lütfen yarın tekrar deneyin.",
+    "failedRejected": "Bildirim kabul edilmedi. Formu kontrol edip tekrar deneyin.",
+    "failedServer": "Bizim tarafımızda bir sorun oldu. Metniniz hâlâ burada; birazdan tekrar deneyin.",
+    "tryAgain": "Tekrar dene",
+    "fixedTitle": "Düzeldi!",
+    "fixedOffered": "{{version}} sürümü {{ids}} numaralı bildiriminizi düzeltiyor. Bize bildirdiğiniz için teşekkürler.",
+    "fixedAfterUpdate": "{{ids}} numaralı bildiriminiz bu sürümde düzeltildi. Bize bildirdiğiniz için teşekkürler.",
+    "dismiss": "Kapat"
+  },
+  "openError": {
+    "corrupt": {
+      "title": "Bu PDF hasarlı",
+      "body": "PDFluent bu dosyayı okuyamadı. Dosya indirilirken veya kopyalanırken hasar görmüş olabilir ya da onu oluşturan uygulama yanlış kaydetmiş olabilir. Dosyayı yeniden indirin veya kopyalayın ya da aslını açıp PDF olarak yeniden dışa aktarın.",
+      "action": "Başka dosya aç"
+    },
+    "not_pdf": {
+      "title": "Bu bir PDF değil",
+      "body": "PDFluent PDF dosyalarını açar. Bu dosya başka bir türde ya da adı .pdf ile bitmiyor. Bir PDF seçin. Bu dosya bir PDF ise adı .pdf ile bitecek şekilde yeniden adlandırın.",
+      "action": "Başka dosya aç"
+    },
+    "empty": {
+      "title": "Bu dosya boş",
+      "body": "Dosyanın içeriği yok (0 bayt). İndirme veya kopyalama tamamlanmamış olabilir. Dosyayı yeniden indirin veya kopyalayın, ardından açın.",
+      "action": "Başka dosya aç"
+    },
+    "encrypted_needs_password": {
+      "title": "Bu PDF için şifre gerekiyor",
+      "body": "Bu PDF şifreyle korunuyor. Dosyayı yeniden açıp şifreyi girin. Şifreyi bilmiyorsanız dosyayı size gönderen kişiye sorun.",
+      "action": "Şifre gir"
+    },
+    "wrong_password": {
+      "title": "Bu şifre çalışmadı",
+      "body": "Bu şifre PDF'i açmıyor. Yazım hatası olup olmadığını ve Caps Lock'un açık olup olmadığını kontrol edip tekrar deneyin.",
+      "action": "Tekrar dene"
+    },
+    "unsupported_encryption": {
+      "title": "PDFluent bu tür bir korumayı açamıyor",
+      "body": "Bu PDF, PDFluent'in desteklemediği bir sertifika veya güvenlik yöntemiyle korunuyor; bu yüzden burada hiçbir şifre onu açamaz. Göndericiden korumasız bir kopya veya şifreyle korunan bir kopya isteyin.",
+      "action": "Başka dosya aç"
+    },
+    "too_large": {
+      "title": "Bu dosya çok büyük",
+      "body": "Bu dosya, PDFluent'in güvenle açabileceğinden büyük. Dosyayı oluşturan uygulamada bölün veya sıkıştırın, ardından parçaları açın.",
+      "action": "Başka dosya aç"
+    },
+    "too_many_pages": {
+      "title": "Bu PDF'in çok fazla sayfası var",
+      "body": "Bu belgenin sayfa sayısı, PDFluent'in aynı anda açabileceğinden fazla. Belgeyi oluşturan uygulamada daha küçük belgelere bölün, ardından parçaları açın.",
+      "action": "Başka dosya aç"
+    },
+    "io_denied": {
+      "title": "PDFluent bu dosyayı okuyamıyor",
+      "body": "Bilgisayarınız PDFluent'e bu dosyayı okuma izni vermedi. Dosyanın izinlerini kontrol edin veya Belgeler gibi bir klasöre taşıyıp tekrar deneyin.",
+      "action": "Tekrar dene"
+    },
+    "not_found": {
+      "title": "Bu dosya bulunamadı",
+      "body": "Dosya taşınmış, yeniden adlandırılmış veya silinmiş olabilir ya da artık bağlı olmayan bir sürücüde olabilir. Dosyayı bulup yeniden açın.",
+      "action": "Başka dosya aç"
+    },
+    "unknown": {
+      "title": "Bu dosya açılamadı",
+      "body": "Dosya açılırken bir sorun oluştu. Tekrar deneyin. Sorun devam ederse bize bildirin, düzeltelim.",
+      "action": "Tekrar dene"
+    },
+    "feedback": "PDFluent'i geliştirmemize yardım edin"
+  },
+  "formBar": {
+    "title": "Doldurulabilir form",
+    "fields": "Alanlar: {{count}}",
+    "clickToFill": "Doldurmak için bir alana tıklayın.",
+    "noCalculations": "Adobe formlarındaki otomatik hesaplamalar çalıştırılmaz.",
+    "autoLinks": "Bağlantıları otomatik aç",
+    "autoLinksTitle": "Bağlantılar tarayıcınızda otomatik olarak açılır. Kapatmak için tıklayın.",
+    "highlight": "Alanları vurgula",
+    "firstField": "İlk alan"
+  },
+  "tabs": {
+    "label": "Açık belgeler",
+    "close": "{{name}} Kapat",
+    "unsaved": "Kaydedilmemiş değişiklikler",
+    "new": "Başka bir belge aç",
+    "tooManyTitle": "Çok fazla belge açık",
+    "tooManyMessage": "{{max}} belge açık. Başka bir belge açmak için birini kapat."
+  },
+  "formScripts": {
+    "barLabel": "Form betikleri",
+    "barMessage": "Bu form betikler içeriyor (örneğin hesaplamalar). Çalıştırılsın mı?",
+    "barDetail": "Bulunan betikler: {{count}}.",
+    "runOnce": "Bu belge için çalıştır",
+    "runAlways": "Betikleri her zaman çalıştır",
+    "dontRun": "Çalıştırma"
   }
 }

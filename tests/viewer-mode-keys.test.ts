@@ -5,155 +5,53 @@
 // of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
-import { readFileSync } from 'node:fs';
+// Mode switching keys 1–8. This file used to slice the handler's source and
+// look for strings; it now calls the decision the handler makes
+// (modeForKeyEvent). The wiring into the real hook is proved by
+// src/viewer/hooks/__tests__/useKeyboardShortcuts.typing.test.ts.
+
 import { describe, it, expect } from 'vitest';
+import { modeForKeyEvent, MODE_KEYS } from '../src/viewer/hooks/keyTargets';
 
-const viewerAppSource = [
-  '../src/viewer/hooks/usePageNavigation.ts',
-  '../src/viewer/hooks/useZoomControls.ts',
-  '../src/viewer/hooks/useSidebarState.ts',
-  '../src/viewer/hooks/useUndoRedo.ts',
-  '../src/viewer/hooks/useSearch.ts',
-  '../src/viewer/hooks/useFormFields.ts',
-  '../src/viewer/hooks/useModeManager.ts',
-  '../src/viewer/hooks/useDocumentLifecycle.ts',
-  '../src/viewer/hooks/useCommands.ts',
-  '../src/viewer/hooks/useDragDrop.ts',
-  '../src/viewer/ViewerSidePanels.tsx',
-  '../src/viewer/hooks/useAnnotations.ts',
-  '../src/viewer/hooks/useTextInteraction.ts',
-  '../src/viewer/hooks/useKeyboardShortcuts.ts',
-  '../src/viewer/ViewerApp.tsx',
-  '../src/viewer/WelcomeSection.tsx',
-].map(p => readFileSync(new URL(p, import.meta.url), 'utf8')).join('\n\n');
+function key(k: string, init: Partial<{ metaKey: boolean; ctrlKey: boolean; altKey: boolean; target: unknown }> = {}) {
+  return {
+    key: k,
+    metaKey: false,
+    ctrlKey: false,
+    altKey: false,
+    shiftKey: false,
+    target: { tagName: 'BODY', isContentEditable: false },
+    ...init,
+  } as Parameters<typeof modeForKeyEvent>[0];
+}
 
-// Locate the mode-key effect for scoped assertions
-const effectStart = viewerAppSource.indexOf('Mode switching keyboard shortcuts');
-const effectEnd = viewerAppSource.indexOf('// Zoom keyboard shortcuts', effectStart);
-const effectBody = viewerAppSource.slice(effectStart, effectEnd);
-
-// ---------------------------------------------------------------------------
-// Key → mode mappings
-// ---------------------------------------------------------------------------
-
-describe('ViewerApp — mode switching key mappings', () => {
-  it("maps '1' to read", () => {
-    expect(effectBody).toContain("'1': 'read'");
-  });
-
-  it("maps '2' to review", () => {
-    expect(effectBody).toContain("'2': 'review'");
-  });
-
-  it("maps '3' to edit", () => {
-    expect(effectBody).toContain("'3': 'edit'");
-  });
-
-  it("maps '4' to sign", () => {
-    expect(effectBody).toContain("'4': 'sign'");
-  });
-
-  it("maps '5' to organize", () => {
-    expect(effectBody).toContain("'5': 'organize'");
-  });
-
-  it("maps '6' to forms", () => {
-    expect(effectBody).toContain("'6': 'forms'");
-  });
-
-  it("maps '7' to protect", () => {
-    expect(effectBody).toContain("'7': 'protect'");
-  });
-
-  it("maps '8' to convert", () => {
-    expect(effectBody).toContain("'8': 'convert'");
-  });
-
-  it('calls setMode with the resolved mode', () => {
-    expect(effectBody).toContain('setMode(mode)');
+describe('mode switching key mappings', () => {
+  const expected = { '1': 'read', '2': 'review', '3': 'edit', '4': 'sign', '5': 'organize', '6': 'forms', '7': 'protect', '8': 'convert' } as const;
+  for (const [k, mode] of Object.entries(expected)) {
+    it(`maps '${k}' to ${mode}`, () => {
+      expect(modeForKeyEvent(key(k), null)).toBe(mode);
+    });
+  }
+  it('covers exactly the eight viewer modes', () => {
+    expect(Object.keys(MODE_KEYS).sort()).toEqual(Object.keys(expected).sort());
   });
 });
 
-// ---------------------------------------------------------------------------
-// Guard: modifier keys
-// ---------------------------------------------------------------------------
-
-describe('ViewerApp — mode key guard: modifier keys', () => {
-  it('ignores when metaKey is held', () => {
-    expect(effectBody).toContain('e.metaKey');
+describe('mode key guard', () => {
+  for (const mod of ['metaKey', 'ctrlKey', 'altKey'] as const) {
+    it(`ignores the key when ${mod} is held`, () => {
+      expect(modeForKeyEvent(key('2', { [mod]: true }), null)).toBeNull();
+    });
+  }
+  for (const tagName of ['INPUT', 'TEXTAREA', 'SELECT']) {
+    it(`ignores the key inside a ${tagName}`, () => {
+      expect(modeForKeyEvent(key('2', { target: { tagName } }), null)).toBeNull();
+    });
+  }
+  it('ignores the key inside the contentEditable inline editor (#642)', () => {
+    expect(modeForKeyEvent(key('2', { target: { tagName: 'DIV', isContentEditable: true } }), null)).toBeNull();
   });
-
-  it('ignores when ctrlKey is held', () => {
-    expect(effectBody).toContain('e.ctrlKey');
-  });
-
-  it('ignores when altKey is held', () => {
-    expect(effectBody).toContain('e.altKey');
-  });
-
-  it('returns early when any modifier is active', () => {
-    expect(effectBody).toContain('if (e.metaKey || e.ctrlKey || e.altKey) return');
-  });
-});
-
-// ---------------------------------------------------------------------------
-// Guard: focused form elements
-// ---------------------------------------------------------------------------
-
-describe('ViewerApp — mode key guard: input focus', () => {
-  it('reads tagName from the event target', () => {
-    expect(effectBody).toContain('e.target');
-    expect(effectBody).toContain('tagName');
-  });
-
-  it('ignores keys when focus is inside an INPUT', () => {
-    expect(effectBody).toContain("tag === 'INPUT'");
-  });
-
-  it('ignores keys when focus is inside a TEXTAREA', () => {
-    expect(effectBody).toContain("tag === 'TEXTAREA'");
-  });
-
-  it('ignores keys when focus is inside a SELECT', () => {
-    expect(effectBody).toContain("tag === 'SELECT'");
-  });
-});
-
-// ---------------------------------------------------------------------------
-// No regression with existing keyboard handlers
-// ---------------------------------------------------------------------------
-
-describe('ViewerApp — mode keys do not conflict with existing shortcuts', () => {
-  it('mode key handler does not call e.preventDefault()', () => {
-    // Number keys have no browser default to suppress
-    expect(effectBody).not.toContain('e.preventDefault()');
-  });
-
-  it('mode key useEffect uses empty dependency array (stable setMode)', () => {
-    expect(effectBody).toContain('}, [])');
-  });
-
-  it('existing ⌘K handler is unaffected (still present in source)', () => {
-    expect(viewerAppSource).toContain("e.key === 'k'");
-    expect(viewerAppSource).toContain('setCommandPaletteOpen');
-  });
-
-  it('existing page nav handler is unaffected (still present in source)', () => {
-    expect(viewerAppSource).toContain("case 'ArrowRight'");
-    expect(viewerAppSource).toContain('setPageIndex');
-  });
-});
-
-// ---------------------------------------------------------------------------
-// Listener cleanup
-// ---------------------------------------------------------------------------
-
-describe('ViewerApp — mode key listener cleanup', () => {
-  it('registers keydown listener for mode switching', () => {
-    expect(effectBody).toContain("window.addEventListener('keydown', handleModeKey)");
-  });
-
-  it('removes listener on cleanup', () => {
-    expect(effectBody).toContain("window.removeEventListener('keydown', handleModeKey)");
+  it('ignores the key while a text edit is open', () => {
+    expect(modeForKeyEvent(key('2'), 'p0:par1')).toBeNull();
   });
 });

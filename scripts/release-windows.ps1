@@ -81,10 +81,64 @@ $cfg = Join-Path $RepoRoot "tauri.winbuild.json"
 ('{"version":"' + $MsiVersion + '","bundle":{"createUpdaterArtifacts":' + $updater + ',"windows":' + $windowsOverride + '}}') |
   Set-Content -Path $cfg -Encoding ascii -NoNewline
 
+# ── Stage the OCR component ──────────────────────────────────────────────────
+# OCR is bundled in every build (owner decision 19-10): nothing is downloaded.
+# PDFLUENT_OCR_COMPONENT_BUILD is the --out folder of
+# scripts/ocr-component/build-tesseract.sh (windows-x86_64\ and tessdata\; built
+# in Git Bash with MSVC + CMake, signed with PDFLUENT_SIGN_WINDOWS=1 BEFORE the
+# manifest pins it). ocr-bundle.mjs refuses anything the committed manifest does
+# not pin (SHA-256 and size) and copies the pinned tesseract.exe as it is, so the
+# Authenticode signature it carries is the one that ships. Steps: docs/BUNDLED_OCR.md.
+if (-not $env:PDFLUENT_OCR_COMPONENT_BUILD) {
+  throw "Set PDFLUENT_OCR_COMPONENT_BUILD to the build-tesseract.sh --out folder (windows-x86_64 + tessdata); every build bundles OCR."
+}
+$ocrBundle = Join-Path $RepoRoot "src-tauri/resources/ocr-bundle"
+# Sign the component's tesseract.exe with the same Azure Trusted Signing step as the
+# app (src-tauri/scripts/sign-windows.ps1), verify the signature, then pin the
+# SIGNED bytes in the manifest the app is compiled with. Order matters: a signature
+# changes the file (and every signing run changes it again, the timestamp is part of
+# it), so a hash pinned before signing can never match what ships. Tauri signs the
+# app and the installer, not resource executables, which is why this is done here.
+# The re-pin is written to the working tree; the release leaves it uncommitted on
+# purpose and prints the commit to make (docs/BUNDLED_OCR.md, "Signing and re-pinning").
+$ocrExe = Join-Path $env:PDFLUENT_OCR_COMPONENT_BUILD "windows-x86_64/bin/tesseract.exe"
+if ($signing) {
+  if (-not (Test-Path $ocrExe)) { throw "No tesseract.exe at $ocrExe (build it with build-tesseract.sh --platform windows-x86_64)." }
+  if ((Get-AuthenticodeSignature $ocrExe).Status -ne 'Valid') {
+    & (Join-Path $RepoRoot "src-tauri/scripts/sign-windows.ps1") $ocrExe
+    if ($LASTEXITCODE -ne 0) { throw "signing tesseract.exe failed (exit $LASTEXITCODE)" }
+  }
+  $ocrSigned = Get-AuthenticodeSignature $ocrExe
+  if ($ocrSigned.Status -ne 'Valid') {
+    throw ("tesseract.exe is not validly Authenticode-signed after the signing step (" + $ocrSigned.Status + ").")
+  }
+  Write-Host ("   OCR: tesseract.exe signed by " + $ocrSigned.SignerCertificate.Subject)
+  node scripts/ocr-component/write-manifest.mjs --platform windows-x86_64 --dir (Join-Path $env:PDFLUENT_OCR_COMPONENT_BUILD "windows-x86_64")
+  if ($LASTEXITCODE -ne 0) { throw "re-pinning the signed tesseract.exe failed (exit $LASTEXITCODE)" }
+  $ocrHash = (Get-FileHash -Algorithm SHA256 $ocrExe).Hash.ToLower()
+  Write-Host "   OCR: pinned the SIGNED tesseract.exe: sha256 $ocrHash, $((Get-Item $ocrExe).Length) bytes"
+  Write-Host "   OCR: commit the re-pinned manifest after this release: git add src-tauri/resources/ocr/tesseract-component.json; git commit -s -m 'build(ocr): pin the signed Windows tesseract.exe'"
+}
+node scripts/ocr-component/ocr-bundle.mjs --stage $env:PDFLUENT_OCR_COMPONENT_BUILD --platform windows-x86_64 --out $ocrBundle
+if ($LASTEXITCODE -ne 0) { throw "staging the OCR bundle failed (exit $LASTEXITCODE)" }
+if ($signing) {
+  $ocrSig = Get-AuthenticodeSignature (Join-Path $ocrBundle "bin/tesseract.exe")
+  if ($ocrSig.Status -ne 'Valid') {
+    throw ("The bundled tesseract.exe is not Authenticode-signed (" + $ocrSig.Status + "). Rebuild it with PDFLUENT_SIGN_WINDOWS=1, pin it again (write-manifest.mjs) and commit the manifest.")
+  }
+}
+# src-tauri/build.rs refuses to build an app without the staged bundle.
+$env:PDFLUENT_REQUIRE_OCR_BUNDLE = "1"
+
 Write-Host ("   signing: " + $(if ($signing) { "ENABLED (sign command preserved)" } else { "disabled (unsigned build)" }))
 Write-Host ("   updater: " + $(if ($updater -eq 'true') { "ENABLED (TAURI_SIGNING_PRIVATE_KEY present)" } else { "disabled (direct-download only)" }))
 npm run tauri build -- --bundles msi,nsis --config $cfg
 if ($LASTEXITCODE -ne 0) { throw "tauri build failed (exit $LASTEXITCODE)" }
+
+# The bundle that goes into the MSI (Tauri lays resources out beside the exe) is
+# the pinned component, tesseract.exe as pinned.
+node scripts/ocr-component/ocr-bundle.mjs --verify "src-tauri/target/release/resources/ocr" --platform windows-x86_64
+if ($LASTEXITCODE -ne 0) { throw "the OCR bundle in the build is not the pinned component (exit $LASTEXITCODE)" }
 
 $msi = Get-ChildItem -Path "src-tauri/target/release/bundle/msi" -Filter *.msi -Recurse |
        Sort-Object LastWriteTime -Descending | Select-Object -First 1

@@ -5,7 +5,10 @@
 // of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
-import { invokeCommand as invoke } from '../../../lib/commandBridge';
+import { invokeCommand as invoke, reportFallback, describeError } from '../../../lib/commandBridge';
+import { openWithPasswordPrompt, OPEN_CANCELLED } from '../../../viewer/state/passwordPrompt';
+import { openFailureFromRejection } from '../../../viewer/state/openError';
+import i18n from '../../../i18n';
 import type { PdfDocument, DocumentState, Page, OutlineNode } from '../../../core/document';
 import type { DocumentMetadata } from '../../../core/document/metadata';
 import type { EngineResult, AsyncEngineResult, DocumentLoadOptions, SaveOptions } from '../../../core/engine/types';
@@ -29,6 +32,16 @@ interface TauriDocumentInfo {
   xfa_detected: boolean;
   xfa_notice: string | null;
   active_content?: TauriActiveContentInfo | null;
+  /** Permissions of an encrypted document (pdf_engine::DocumentAccess). */
+  access?: { encrypted: boolean; owner: boolean; can_print: boolean; read_only: boolean } | null;
+  /** The session the backend holds the document in (J-90). */
+  session_id?: number;
+}
+
+/** What `activate_session` answers: the document's shape and its unsaved state. */
+interface TauriSessionActivation extends TauriDocumentInfo {
+  modified: boolean;
+  path: string | null;
 }
 
 interface TauriActiveContentInfo {
@@ -63,7 +76,7 @@ function notImpl(msg: string): { success: false; error: { code: 'not-implemented
   return { success: false, error: { code: 'not-implemented', message: msg } };
 }
 
-function documentInfoToPdfDocument(info: TauriDocumentInfo, fileName: string): PdfDocument {
+function documentInfoToPdfDocument(info: TauriDocumentInfo, fileName: string, modified = false): PdfDocument {
   const base = createEmptyDocument(fileName);
   const pages: Page[] = info.pages.map(p => ({
     index: p.index,
@@ -88,6 +101,9 @@ function documentInfoToPdfDocument(info: TauriDocumentInfo, fileName: string): P
       title: info.title ?? fileName,
       ...(info.author != null ? { author: info.author } : {}),
     },
+    isModified: modified,
+    ...(info.session_id !== undefined ? { backendSession: info.session_id } : {}),
+    ...(info.access?.encrypted ? { encrypted: true } : {}),
     xfaDetected: info.xfa_detected,
     xfaNotice: info.xfa_notice,
     activeContent: info.active_content
@@ -117,18 +133,46 @@ export class TauriDocumentEngine implements DocumentEngine {
 
   async loadDocument(
     source: string | ArrayBuffer | Uint8Array,
-    _options?: DocumentLoadOptions
+    options?: DocumentLoadOptions
   ): AsyncEngineResult<PdfDocument> {
     if (typeof source !== 'string') {
       return { success: false, error: { code: 'not-implemented', message: 'loadDocument from binary data not supported' } };
     }
+    const segments = source.replace(/\\/g, '/').split('/');
+    const fileName = segments[segments.length - 1] ?? source;
+    if (options?.attachSession !== undefined) {
+      // A document that is already open (J-90): switch the backend to it. No
+      // file is read, no password asked; unsaved changes come with it.
+      try {
+        const activation = await invoke<TauriSessionActivation>('activate_session', { sessionId: options.attachSession });
+        return { success: true, value: documentInfoToPdfDocument(activation, fileName, activation.modified) };
+      } catch (e) {
+        return { success: false, error: { code: 'internal-error', message: describeError(e) } };
+      }
+    }
     try {
-      const info = await invoke<TauriDocumentInfo>('open_pdf', { path: source });
-      const segments = source.replace(/\\/g, '/').split('/');
-      const fileName = segments[segments.length - 1] ?? source;
+      const info = await openWithPasswordPrompt(
+        (password) => invoke<TauriDocumentInfo>('open_pdf', password === undefined ? { path: source } : { path: source, password }),
+        fileName,
+      );
+      if (info === OPEN_CANCELLED) {
+        return { success: false, error: { code: 'cancelled', message: 'Opening was cancelled at the password prompt' } };
+      }
+      if (info.access?.read_only) {
+        reportFallback({
+          source: 'open_pdf',
+          title: i18n.t('passwordPrompt.readOnlyTitle'),
+          message: i18n.t('passwordPrompt.readOnlyMessage'),
+          code: 'DOCUMENT_READ_ONLY',
+          taxonomy: 'tauri_runtime_failure.fs_permission',
+        });
+      }
       return { success: true, value: documentInfoToPdfDocument(info, fileName) };
     } catch (e) {
-      return { success: false, error: { code: 'internal-error', message: String(e) } };
+      // open_pdf rejects with { code, detail }. The message carries the code,
+      // not the engine text, so nothing that prints it shows raw parser output.
+      const openFailure = openFailureFromRejection(e);
+      return { success: false, error: { code: 'internal-error', message: openFailure.code, openFailure } };
     }
   }
 

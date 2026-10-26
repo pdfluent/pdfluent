@@ -92,30 +92,48 @@ for (;;) {
 closeSync(out);
 `);
 
-// The left-hand side of a pipeline is a subshell, so its status is written to a
-// file rather than read from $? -- which would be the reader's.
-const PIPED = 'exec 3>&1; { "$@" 2> "$SLOW_ERR"; echo $? > "$SLOW_STATUS"; } | "$SLOW_NODE" "$SLOW_READER"';
-// The same, with the two streams swapped: stderr through the reader instead.
-const PIPED_ERR = 'exec 3>&1; { "$@" 2>&1 1> "$SLOW_ERR"; echo $? > "$SLOW_STATUS"; } | "$SLOW_NODE" "$SLOW_READER"';
+// The pipeline is built by a node driver, not by `sh`, so it runs the same on
+// Windows (#731). It starts the command with one stream going into the slow
+// reader and the other into a file, relays through a pipe so backpressure
+// reaches the command, and writes the command's status to a file.
+const driver = join(dir, "pipe-driver.mjs");
+writeFileSync(driver, `
+import { spawn } from "node:child_process";
+import { openSync, writeFileSync } from "node:fs";
+
+const [, , reader, which, ...cmd] = process.argv;
+const { SLOW_ERR, SLOW_STATUS } = process.env;
+const file = openSync(SLOW_ERR, "w");
+const sink = spawn(process.execPath, [reader], { stdio: ["pipe", "inherit", "inherit"], env: process.env });
+const child = spawn(cmd[0], cmd.slice(1), {
+  stdio: which === "stderr" ? ["ignore", file, "pipe"] : ["ignore", "pipe", file],
+});
+const relayed = which === "stderr" ? child.stderr : child.stdout;
+relayed.pipe(sink.stdin);
+let status = null;
+let sunk = false;
+const done = () => { if (status !== null && sunk) { writeFileSync(SLOW_STATUS, String(status)); } };
+child.on("close", (code) => { status = code ?? 1; done(); });
+sink.on("close", () => { sunk = true; done(); });
+`);
 
 interface Ran { status: number; out: string; err: string }
 
 function throughSlowReader(
   command: string,
   args: string[],
-  options: { cwd: string; env?: NodeJS.ProcessEnv; script?: string },
+  options: { cwd: string; env?: NodeJS.ProcessEnv; stream?: "stdout" | "stderr" },
 ): Ran {
   const box = mkdtempSync(join(tmpdir(), "guards-flush-run-"));
   const out = join(box, "out");
   const err = join(box, "err");
   const status = join(box, "status");
   try {
-    spawnSync("sh", ["-c", options.script ?? PIPED, "sh", command, ...args], {
+    spawnSync(process.execPath, [driver, reader, options.stream ?? "stdout", command, ...args], {
       cwd: options.cwd,
       env: {
         ...(options.env ?? process.env),
         SLOW_OUT: out, SLOW_ERR: err, SLOW_STATUS: status,
-        SLOW_NODE: process.execPath, SLOW_READER: reader,
       },
     });
     return {
@@ -198,7 +216,7 @@ describe("every guard says the same into a slow pipe as it does into a file", ()
 // guards happen to write less than the pipe holds.
 const fixtures = join(dir, "fixtures");
 mkdirSync(fixtures);
-const PAYLOAD = 200_000;
+const PAYLOAD = 4_000_000;
 
 function fixture(name: string, stream: "stdout" | "stderr", ending: string) {
   const file = join(fixtures, name);
@@ -217,7 +235,12 @@ const exitCode = fixture("zzq-exit-code.mjs", "stdout", "process.exitCode = 0;")
 const hardExitErr = fixture("zzq-hard-exit-stderr.mjs", "stderr", "process.exit(0);");
 const exitCodeErr = fixture("zzq-exit-code-stderr.mjs", "stderr", "process.exitCode = 0;");
 
-describe("the ending this replaces really does drop output", () => {
+// Windows keeps the output of a hard exit, so the premise that these two fixtures
+// differ does not hold there; the cases above and the lint below still run.
+if (process.platform === "win32") {
+  process.stderr.write("SKIPPED (not a pass): the hard-exit proof cases on win32 — a hard exit keeps its output there\n");
+}
+describe.skipIf(process.platform === "win32")("the ending this replaces really does drop output", () => {
   it("process.exit() after a write to stdout arrives short", () => {
     const whole = runToFile(process.execPath, [hardExit], { cwd: dir, env: cleanEnv() });
     expect(whole.out.length).toBeGreaterThanOrEqual(PAYLOAD);
@@ -239,10 +262,10 @@ describe("the ending this replaces really does drop output", () => {
   // different number, the defect is the same one.
   it("stderr is not the safe stream either", () => {
     const whole = runToFile(process.execPath, [hardExitErr], { cwd: dir, env: cleanEnv() });
-    const lost = throughSlowReader(process.execPath, [hardExitErr], { cwd: dir, env: cleanEnv(), script: PIPED_ERR });
+    const lost = throughSlowReader(process.execPath, [hardExitErr], { cwd: dir, env: cleanEnv(), stream: "stderr" });
     expect(lost.out.length).toBeLessThan(whole.err.length);
 
-    const kept = throughSlowReader(process.execPath, [exitCodeErr], { cwd: dir, env: cleanEnv(), script: PIPED_ERR });
+    const kept = throughSlowReader(process.execPath, [exitCodeErr], { cwd: dir, env: cleanEnv(), stream: "stderr" });
     expect(kept.out).toBe(runToFile(process.execPath, [exitCodeErr], { cwd: dir, env: cleanEnv() }).err);
   }, 60_000);
 });

@@ -165,6 +165,7 @@ export function CommandPalette({ isOpen, onClose, commands, recentIds = [], onRu
                     <button
                       type="button"
                       data-testid="recent-command-item"
+                      data-command-id={cmd.id}
                       className="cmdpalette-item"
                       onClick={() => {
                         onRun?.(cmd.id);
@@ -186,12 +187,15 @@ export function CommandPalette({ isOpen, onClose, commands, recentIds = [], onRu
               <p>{t('commandPalette.empty')}</p>
             </div>
           ) : (
-            <ul>
+            <ul role="listbox" aria-label={t('commandPalette.placeholder')}>
               {filtered.map((cmd, i) => (
-                <li key={cmd.id}>
+                <li key={cmd.id} role="presentation">
                   <button
                     type="button"
+                    role="option"
+                    aria-selected={i === selectedIndex}
                     data-testid="command-item"
+                    data-command-id={cmd.id}
                     className={
                       i === selectedIndex
                         ? 'cmdpalette-item cmdpalette-item-active'

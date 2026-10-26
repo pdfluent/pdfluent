@@ -161,3 +161,61 @@ describe('Microsoft Store dossier matches the live listing', () => {
     expect(runbook).toContain('scripts/validate-store-candidate.sh');
   });
 });
+
+/**
+ * Wording the release owner withdrew for 1.1.0 because no registered claim backs
+ * it. The listing fields and the reviewer text are the places a stranger reads
+ * first, so these must not creep back in through a copy-paste from an older
+ * dossier. HTML comments are stripped first: a file may say what it forbids.
+ */
+const WITHDRAWN: { phrase: RegExp; why: string }[] = [
+  { phrase: /pure[- ]rust/i, why: '"pure-Rust" is not a registered claim' },
+  { phrase: /runs? fully offline|fully offline/i, why: 'offline wording must be "works without internet" (B67), not "fully offline"' },
+  { phrase: /\bPAdES\b/, why: 'PAdES is not provable; say "sign with your own .p12 or .pfx certificate" (B27)' },
+  { phrase: /memory-safe/i, why: '"memory-safe" is forbidden (B31)' },
+  { phrase: /no tracking/i, why: '"no tracking" is not a registered claim' },
+  { phrase: /completely free/i, why: 'say "free for everyone, including business and commercial use" (B01)' },
+  { phrase: /licen[cs]e file/i, why: 'the app has no licence file to mention' },
+  { phrase: /never includes a document/i, why: 'a feedback report can include the document after a checkbox and a second confirmation (B64)' },
+];
+
+describe('the listing text carries no withdrawn wording', () => {
+  const stripComments = (t: string) => t.replace(/<!--[\s\S]*?-->/g, '');
+  const files = [
+    ...markdownFiles(join(STORE, 'listing')),
+    join(STORE, 'mas', 'listing.md'),
+    join(STORE, 'mas', 'review-notes.md'),
+    join(STORE, 'mas', 'privacy.md'),
+  ];
+
+  it('covers the listing fields and the reviewer text', () => {
+    // Dropping a file from the scan would pass the case below by measuring less.
+    const names = files.map(relPath);
+    expect(names).toContain('store/listing/listing-copy.md');
+    expect(names).toContain('store/listing/PASTE-SHEET.md');
+    expect(names).toContain('store/mas/listing.md');
+  });
+
+  it.each(WITHDRAWN.map((w) => [w.phrase.source, w] as const))('has no %s', (_label, w) => {
+    for (const abs of files) {
+      expect(stripComments(read(abs)), `${relPath(abs)}: ${w.why}`).not.toMatch(w.phrase);
+    }
+  });
+
+  it('can fail: the guard flags each withdrawn phrase in a sample', () => {
+    const samples = [
+      'a pure-Rust engine',
+      'Runs fully offline.',
+      'a PAdES signature',
+      'memory-safe by design',
+      'no tracking',
+      'completely free',
+      'no licence file',
+      'it never includes a document',
+    ];
+    expect(samples.map((t) => WITHDRAWN.filter((w) => w.phrase.test(t)).length)).toEqual(
+      samples.map(() => 1),
+    );
+  });
+});
+

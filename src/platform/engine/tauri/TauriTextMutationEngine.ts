@@ -39,6 +39,9 @@ import type {
   FormatTextSpanResult,
   SetTextRunStyleRequest,
   SetTextRunStyleResult,
+  SetTextRunFontRequest,
+  SetTextRunFontResult,
+  FontRefusal,
 } from '../../../core/engine/TextMutationEngine';
 
 // ---------------------------------------------------------------------------
@@ -91,6 +94,13 @@ interface TauriSetTextRunStyleResult {
   reason: string | null;
 }
 
+// set_text_run_font (installed system typefaces)
+
+interface TauriSetTextRunFontResult {
+  applied: boolean;
+  refusal: FontRefusal | null;
+}
+
 // ---------------------------------------------------------------------------
 // Implementation
 // ---------------------------------------------------------------------------
@@ -123,9 +133,18 @@ export class TauriTextMutationEngine implements TextMutationEngineWithFormatting
       ...(request.target?.rect && { anchor: request.target.rect }),
     };
     try {
-      const result = await invoke<TauriReplaceTextSpanResult>('replace_text_span', {
-        request: tauriRequest,
-      });
+      const paragraph = request.paragraphLines && request.paragraphLines.length > 1 ? request.paragraphLines : null;
+      const result = paragraph
+        ? await invoke<TauriReplaceTextSpanResult>('replace_text_paragraph', {
+            request: {
+              page_index: request.pageIndex,
+              lines: paragraph.map(l => ({ text: l.text, anchor: l.rect })),
+              replacement_text: request.replacementText,
+            },
+          })
+        : await invoke<TauriReplaceTextSpanResult>('replace_text_span', {
+            request: tauriRequest,
+          });
       return {
         success: true,
         value: {
@@ -199,6 +218,26 @@ export class TauriTextMutationEngine implements TextMutationEngineWithFormatting
           reason: result.reason,
         },
       };
+    } catch (e) {
+      return {
+        success: false,
+        error: { code: 'internal-error', message: String(e) },
+      };
+    }
+  }
+
+  // ---- Installed system typefaces (embedded as a subset) ----
+
+  async setTextRunFont(request: SetTextRunFontRequest): AsyncEngineResult<SetTextRunFontResult> {
+    try {
+      const result = await invoke<TauriSetTextRunFontResult>('set_text_run_font', {
+        request: {
+          page_index: request.pageIndex,
+          original_text: request.originalText,
+          font_id: request.fontId,
+        },
+      });
+      return { success: true, value: { applied: result.applied, refusal: result.refusal } };
     } catch (e) {
       return {
         success: false,

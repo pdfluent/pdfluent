@@ -169,10 +169,6 @@ describe('errorRecoveryStrategies readiness', () => {
     expect(recoverySource).toContain('export function isRetryableError(');
   });
 
-  it('exports getDocumentLoadRecovery', () => {
-    expect(recoverySource).toContain('export function getDocumentLoadRecovery(');
-  });
-
   it('exports getAnnotationLoadRecovery', () => {
     expect(recoverySource).toContain('export function getAnnotationLoadRecovery(');
   });

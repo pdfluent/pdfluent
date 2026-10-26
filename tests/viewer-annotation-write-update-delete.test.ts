@@ -148,7 +148,8 @@ describe('Rust — OpenDocument::update_annotation_contents', () => {
     const fnEnd = rustEngineSource.indexOf('\n    }', fnStart) + 6;
     const fnBody = rustEngineSource.slice(fnStart, fnEnd);
     expect(fnBody).toContain('b"Contents"');
-    expect(fnBody).toContain('contents.as_bytes()');
+    // Written as a PDF text string, so non-ASCII text reads back the same.
+    expect(fnBody).toContain('text_string(contents)');
   });
 
   it('calls sync_after_mutation', () => {
@@ -295,21 +296,21 @@ describe('ViewerApp — refetchComments helper', () => {
 
   it('calls loadAnnotations on refetch', () => {
     const fnStart = viewerAppSource.indexOf('const refetchComments = useCallback');
-    const fnEnd = viewerAppSource.indexOf('[pdfDoc, engine]', fnStart) + 20;
+    const fnEnd = viewerAppSource.indexOf('[pdfDoc, engine, loadPageImages]', fnStart) + 36;
     const fnBody = viewerAppSource.slice(fnStart, fnEnd);
     expect(fnBody).toContain('loadAnnotations(pdfDoc)');
   });
 
   it('calls setAllAnnotations with all re-fetched annotations (filter happens in useMemo)', () => {
     const fnStart = viewerAppSource.indexOf('const refetchComments = useCallback');
-    const fnEnd = viewerAppSource.indexOf('[pdfDoc, engine]', fnStart) + 20;
+    const fnEnd = viewerAppSource.indexOf('[pdfDoc, engine, loadPageImages]', fnStart) + 36;
     const fnBody = viewerAppSource.slice(fnStart, fnEnd);
     expect(fnBody).toContain('setAllAnnotations(annotResult.value)');
   });
 
   it('calls setAllAnnotations on successful re-fetch', () => {
     const fnStart = viewerAppSource.indexOf('const refetchComments = useCallback');
-    const fnEnd = viewerAppSource.indexOf('[pdfDoc, engine]', fnStart) + 20;
+    const fnEnd = viewerAppSource.indexOf('[pdfDoc, engine, loadPageImages]', fnStart) + 36;
     const fnBody = viewerAppSource.slice(fnStart, fnEnd);
     expect(fnBody).toContain('setAllAnnotations(');
   });

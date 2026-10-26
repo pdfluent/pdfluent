@@ -204,10 +204,10 @@ export const TEXT_MUTATION_SAFETY_MATRIX: readonly SafetyMatrixEntry[] = [
     expectedWritable: true,
   },
   {
-    description: 'Multi-line paragraph (wraps to 2 lines)',
+    description: 'Multi-line paragraph of single-run lines (paragraph edit with reflow, J-42)',
     target: multiLineParagraph,
-    expectedClass: 'non_writable_digital_text',
-    expectedWritable: false,
+    expectedClass: 'writable_digital_text',
+    expectedWritable: true,
   },
   {
     description: 'Single-line with multiple spans (mixed font/size)',

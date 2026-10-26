@@ -78,17 +78,6 @@ export const INTERACTION_AUDIT: ReadonlyArray<ComponentInteractionCoverage> = [
       'Active tool button lacks a visual "selected" ring distinct from hover.',
   },
   {
-    name: 'LeftNavRail',
-    sourcePath: 'components/LeftNavRail.tsx',
-    covered: ['hover', 'active', 'disabled'],
-    gaps: ['focus', 'selected'],
-    gapSeverity: ['important', 'nice-to-have'],
-    notes:
-      'Panel tab active state uses bg-accent. ' +
-      'No visible keyboard focus ring on icon buttons. ' +
-      'thumbnail buttons missing explicit selected outline.',
-  },
-  {
     name: 'RightContextPanel — Comments section',
     sourcePath: 'components/RightContextPanel.tsx',
     covered: ['hover', 'focus'],
@@ -150,17 +139,6 @@ export const INTERACTION_AUDIT: ReadonlyArray<ComponentInteractionCoverage> = [
     notes:
       'Open button and recent file items have hover states. ' +
       'No active-press feedback on open button.',
-  },
-  {
-    name: 'ModeSwitcher',
-    sourcePath: 'components/ModeSwitcher.tsx',
-    covered: ['hover', 'active'],
-    gaps: ['focus', 'selected', 'disabled'],
-    gapSeverity: ['important', 'important', 'nice-to-have'],
-    notes:
-      'Active mode tab uses border-primary underline. ' +
-      'No explicit :focus-visible ring on mode tabs. ' +
-      'Disabled modes not yet expressed (all modes currently enabled).',
   },
   {
     name: 'OrganizeGrid',

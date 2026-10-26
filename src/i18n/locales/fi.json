@@ -114,9 +114,9 @@
     "allTools": "Kaikki työkalut",
     "contextualBar": "Tilatyökalupalkki",
     "pdfa": "PDF/A",
-    "metadata": "Document properties",
-    "invoice": "E-invoice",
-    "bookmarks": "Bookmarks"
+    "metadata": "Asiakirjan ominaisuudet",
+    "invoice": "E-lasku",
+    "bookmarks": "Kirjanmerkit"
   },
   "topbar": {
     "openPdf": "Avaa PDF",
@@ -242,7 +242,6 @@
     "ownerPasswordPlaceholder": "Omistajan salasana",
     "encryptBtn": "Salaa…",
     "decrypt": "Pura salaus",
-    "currentPasswordPlaceholder": "Nykyinen salasana",
     "decryptBtn": "Pura salaus",
     "noDocument": "Ei avointa asiakirjaa.",
     "permCanPrint": "Tulostus",
@@ -258,7 +257,11 @@
     "searchRedactBtn": "Etsi ja poista tiedot",
     "redactMetadataTitle": "Metatiedot",
     "redactMetadataDesc": "Poista tekijä, otsikko ja muut tunnistevat metatiedot.",
-    "redactMetadataBtn": "Poista metatiedot"
+    "redactMetadataBtn": "Poista metatiedot",
+    "ownerPasswordForRemoval": "Omistajan salasana (käyttöoikeudet)",
+    "removePasswordHelp": "Salasanan poistaminen vaatii omistajan salasanan, sen joka suojaa käyttöoikeuksia. Avaamiseen käyttämäsi salasana ei riitä, ellei se ole myös omistajan salasana.",
+    "removePasswordReady": "Avasit tämän tiedoston omistajan salasanalla, joten suojaus voidaan poistaa kirjoittamatta sitä uudelleen.",
+    "removePasswordNotProtected": "Tässä asiakirjassa ei ole salasanasuojausta."
   },
   "organize": {
     "thumbnails": "Esikatselukuvat",
@@ -287,33 +290,34 @@
     "combine": "Yhdistä tiedostot",
     "splitRange": "Jaa alueen mukaan",
     "splitRangeHint": "Valitse sivut ensin",
-    "moveLeft": "Move selected page left",
-    "moveRight": "Move selected page right",
-    "moveLeftShort": "Left",
-    "moveRightShort": "Right",
-    "rotateLeft": "Rotate left",
-    "rotateRight": "Rotate right",
-    "rotateLeftShort": "Left",
-    "rotateRightShort": "Right",
-    "addingPdf": "Adding PDF…",
-    "pdfAdded": "PDF added",
-    "combiningFiles": "Combining {{count}} file(s)…",
-    "filesCombined": "{{count}} file(s) combined",
-    "insertingPdf": "Inserting PDF before page {{page}}…",
-    "pdfInserted": "PDF inserted",
-    "exportingPages": "Exporting {{count}} page(s)…",
-    "selectionExported": "Selection exported to {{name}}",
-    "splittingPages": "Splitting into individual pages…",
-    "pagesSaved": "{{count}} pages saved",
-    "splittingRanges": "Splitting {{count}} range(s)…",
-    "filesSaved": "{{count}} file(s) saved"
+    "moveLeft": "Siirrä valittua sivua vasemmalle",
+    "moveRight": "Siirrä valittua sivua oikealle",
+    "moveLeftShort": "Vasemmalle",
+    "moveRightShort": "Oikealle",
+    "rotateLeft": "Kierrä vasemmalle",
+    "rotateRight": "Kierrä oikealle",
+    "rotateLeftShort": "Vasemmalle",
+    "rotateRightShort": "Oikealle",
+    "addingPdf": "Lisätään PDF:ää…",
+    "pdfAdded": "PDF lisätty",
+    "combiningFiles": "Yhdistetään tiedostoja: {{count}}…",
+    "filesCombined": "Tiedostoja yhdistetty: {{count}}",
+    "insertingPdf": "Lisätään PDF ennen sivua {{page}}…",
+    "pdfInserted": "PDF lisätty",
+    "exportingPages": "Viedään sivuja: {{count}}…",
+    "selectionExported": "Valinta viety tiedostoon {{name}}",
+    "splittingPages": "Jaetaan yksittäisiksi sivuiksi…",
+    "pagesSaved": "{{count}} sivua tallennettu",
+    "splittingRanges": "Jaetaan alueita: {{count}}…",
+    "filesSaved": "Tiedostoja tallennettu: {{count}}"
   },
   "unsavedChanges": {
     "title": "Tallentamattomat muutokset",
     "message": "Haluatko tallentaa muutokset ennen jatkamista?",
     "save": "Tallenna",
     "discard": "Hylkää muutokset",
-    "cancel": "Peruuta"
+    "cancel": "Peruuta",
+    "messageNamed": "Haluatko tallentaa muutoksesi kohteeseen {{name}} ennen jatkamista?"
   },
   "welcome": {
     "title": "Avaa PDF aloittaaksesi",
@@ -327,13 +331,13 @@
     "lede": "Lue, muokkaa, muunna, täytä ja allekirjoita — kokonaan omalla laitteellasi.",
     "privacyPromise": "Paikallinen ensin · asiakirjat eivät koskaan poistu tältä laitteelta",
     "dropPdfHere": "Pudota PDF tähän",
-    "v3Subtitle": "Open a PDF to read, edit, convert or sign it locally.",
-    "openFileAria": "Choose a PDF file to open",
-    "clearRecent": "Clear recent",
-    "recentShort": "Recent",
-    "removeRecentAria": "Remove {{name}}",
-    "backToDocument": "Back to document",
-    "loadingDocument": "Loading document…"
+    "v3Subtitle": "Avaa PDF, niin voit lukea, muokata, muuntaa tai allekirjoittaa sen paikallisesti.",
+    "openFileAria": "Valitse avattava PDF-tiedosto",
+    "clearRecent": "Tyhjennä viimeisimmät",
+    "recentShort": "Viimeisimmät",
+    "removeRecentAria": "Poista {{name}}",
+    "backToDocument": "Takaisin asiakirjaan",
+    "loadingDocument": "Ladataan asiakirjaa…"
   },
   "settings": {
     "language": "Kieli",
@@ -350,15 +354,29 @@
     "reviewerNamePlaceholder": "Merkinnöissä käytetty nimi",
     "exportPreferences": "Vientiasetukset",
     "exportFormatLabel": "Oletusvientimuoto",
-    "autosave": "Automaattitallennus",
-    "autosaveEnable": "Tallenna muutokset automaattisesti",
     "themeLabel": "Teema",
     "ocrDefaults": "OCR-oletusasetukset",
     "ocrLanguageLabel": "Oletuskieli (ISO-639-2)",
     "ocrLanguagePlaceholder": "esim. eng, nld, deu",
-    "updates": "Updates",
-    "automaticUpdateCheck": "Check for a new version at startup",
-    "automaticUpdateCheckHint": "PDFluent asks pdfluent.com whether a newer version exists, a few seconds after it starts. Nothing from your documents is sent. Turn this off and the app never checks on its own — \"Check for updates\" still works whenever you ask for it."
+    "updates": "Päivitykset",
+    "automaticUpdateCheck": "Tarkista uusi versio käynnistyksen yhteydessä",
+    "automaticUpdateCheckHint": "PDFluent kysyy pdfluent.com-sivustolta, onko uudempaa versiota, muutama sekunti käynnistymisen jälkeen. Asiakirjoistasi ei lähetetä mitään. Jos poistat tämän käytöstä, sovellus ei tarkista itsestään — \"Tarkista päivitykset\" toimii edelleen, kun pyydät sitä.",
+    "recoveryCopy": "Palautuskopio",
+    "recoveryCopyEnable": "Säilytä tallentamattomista muutoksista palautuskopio, joka tarjotaan kaatumisen jälkeen",
+    "view": "Näkymä",
+    "defaultZoomLabel": "Oletuszoomaus",
+    "defaultZoomFitWidth": "Sovita leveys (oletus)",
+    "defaultZoomFitPage": "Sovita sivu",
+    "defaultZoomActualSize": "Todellinen koko (100 %)",
+    "defaultZoomLastUsed": "Viimeksi käytetty",
+    "defaultZoomHint": "Asiakirja avautuu tällä zoomilla ja seuraa ikkunan kokoa, kunnes zoomaat sitä itse. Sovita leveys näyttää sen sijaan koko sivun, kun se on selvästi parempi.",
+    "securityTitle": "Tietoturva",
+    "formScriptsLabel": "Lomakeskriptit",
+    "formScriptsAsk": "Kysy",
+    "formScriptsAlways": "Aina",
+    "formScriptsNever": "Ei koskaan",
+    "formScriptsHint": "Lomakkeet voivat sisältää skriptejä, esimerkiksi laskutoimituksia. Kysy on oletus: lomake avautuu tallennetuilla arvoillaan, eikä mitään suoriteta ennen kuin hyväksyt.",
+    "formScriptsPinned": "Organisaatiosi on asettanut tämän valinnan. Sitä ei voi muuttaa tässä."
   },
   "errors": {
     "loadFailed": "Asiakirjan lataaminen epäonnistui",
@@ -381,7 +399,8 @@
     "addPageFailed": "PDF:n lisääminen epäonnistui",
     "insertFailed": "PDF:n lisäys epäonnistui",
     "splitFailed": "Jakaminen epäonnistui",
-    "commandFailedTitle": "'{{command}}' did not complete"
+    "commandFailedTitle": "'{{command}}' ei suoritettu loppuun",
+    "commandRetrying": "Tilapäinen virhe: {{command}} — yritetään uudelleen"
   },
   "events": {
     "formFieldUpdated": "Lomakekenttä päivitetty",
@@ -430,9 +449,9 @@
     "pageNotFound": "Sivua ei löydy",
     "requiresFontInspection": "Tekstin muokkaus vaatii fonttitarkastuksen (suunniteltu vaiheeseen 6).",
     "rejection": {
-      "bannerTitle": "This text was not changed",
-      "bannerDetail": "Reason reported by the PDF engine: {{detail}}",
-      "bannerDismiss": "Dismiss",
+      "bannerTitle": "Tätä tekstiä ei muutettu",
+      "bannerDetail": "PDF-moottorin ilmoittama syy: {{detail}}",
+      "bannerDismiss": "Sulje",
       "replacement-too-long": {
         "tooltip": "Replacement is too long",
         "explanation": "The replacement is longer than the text it replaces. Keep it the same length or shorter so the surrounding layout stays intact."
@@ -491,8 +510,8 @@
       }
     },
     "fallback": {
-      "fontSubstitutedTitle": "A standard font wrote the new text",
-      "fontSubstitutedMessage": "The original font of this text has no glyph for one or more characters you typed, so Helvetica was used for the replacement. The text is correct; it may look slightly different from the rest of the line."
+      "fontSubstitutedTitle": "Uusi teksti kirjoitettiin vakiomaisella fontilla",
+      "fontSubstitutedMessage": "Tämän tekstin alkuperäisessä fontissa ei ole merkkiä yhdelle tai useammalle kirjoittamallesi merkille, joten korvaamiseen käytettiin Helveticaa. Teksti on oikein; se voi näyttää hieman erilaiselta kuin muu rivi."
     }
   },
   "validation": {
@@ -566,12 +585,16 @@
     "watermarkDone": "Vesileima lisätty",
     "watermarkFailed": "Vesileiman lisäys epäonnistui",
     "watermarkRunning": "Lisätään vesileimaa…",
-    "pdfaRunning": "Converting to PDF/A…",
-    "pdfaDone": "PDF/A written",
-    "pdfaFailed": "PDF/A conversion failed",
-    "metadataRunning": "Saving properties…",
-    "metadataDone": "Properties saved",
-    "metadataFailed": "Could not save properties"
+    "pdfaRunning": "Muunnetaan PDF/A-muotoon…",
+    "pdfaDone": "PDF/A kirjoitettu",
+    "pdfaFailed": "PDF/A-muunnos epäonnistui",
+    "metadataRunning": "Tallennetaan ominaisuuksia…",
+    "metadataDone": "Ominaisuudet tallennettu",
+    "metadataFailed": "Ominaisuuksien tallennus epäonnistui",
+    "exportMarkdownRunning": "Viedään Markdown-muodossa…",
+    "exportMarkdownDone": "Markdown viety",
+    "exportTablesRunning": "Viedään taulukoita Exceliin…",
+    "exportTablesDone": "Taulukot viety Exceliin ({{count}})"
   },
   "panels": {
     "search": "Hae",
@@ -714,7 +737,10 @@
     "formatJpeg": "JPEG (kuva)",
     "formatDocx": "Word-asiakirja (.docx)",
     "formatXlsx": "Excel-laskentataulukko (.xlsx)",
-    "formatPptx": "PowerPoint-esitys (.pptx)"
+    "formatPptx": "PowerPoint-esitys (.pptx)",
+    "formatMarkdown": "Markdown (.md) - Esikatselu",
+    "formatTablesXlsx": "Taulukot Exceliin (.xlsx) - Esikatselu",
+    "noTablesFound": "Tästä asiakirjasta ei tunnistettu taulukoita."
   },
   "goToPage": {
     "title": "Siirry sivulle",
@@ -729,7 +755,9 @@
     "documentLabel": "Asiakirja:",
     "savedLabel": "Tallennettu:",
     "recoveryPath": "Palautuspolku:",
-    "restore": "Palauta"
+    "restore": "Palauta",
+    "untitled": "Nimetön asiakirja",
+    "andMore": "{{name}} ja {{count}} muuta"
   },
   "emptyStates": {
     "noDocument": "Ei avointa asiakirjaa",
@@ -839,7 +867,26 @@
     "statusUnavailableWithReason": "OCR-suoritusympäristö ei saatavilla: {{reason}}",
     "statusRetry": "Tarkista uudelleen",
     "runtimePath": "Suoritusympäristö: {{path}}",
-    "missingPackages": "Puuttuu: {{packages}}"
+    "missingPackages": "Puuttuu: {{packages}}",
+    "noScannedPagesTitle": "Ei tunnistettavaa",
+    "unavailable": {
+      "platform": "OCR:ää ei tarjota tälle alustalle.",
+      "missing": "Tämän version OCR-tiedostot puuttuvat tai ovat puutteellisia. Asenna PDFluent uudelleen palauttaaksesi ne."
+    },
+    "settings": {
+      "unknown": "OCR-komponentti: tarkistetaan…",
+      "installed": "OCR-komponentti: Tesseract {{version}} asennettu"
+    },
+    "errors": {
+      "OCR_COMPONENT_UNSUPPORTED_PLATFORM": "OCR-komponenttia ei tarjota tälle alustalle.",
+      "OCR_COMPONENT_NOT_INSTALLED": "OCR-komponenttia ei ole asennettu.",
+      "OCR_LANGUAGE_MISSING": "OCR:n kielipakettia ei ole asennettu.",
+      "OCR_SIGNED_DOCUMENT": "Tämä asiakirja on allekirjoitettu. OCR muuttaisi allekirjoitettuja sivuja, joten sitä ei suoriteta.",
+      "OCR_NOT_PERMITTED": "Asiakirjan käyttöoikeudet eivät salli sen sisällön muuttamista.",
+      "OCR_DOCUMENT_CHANGED": "Asiakirja muuttui OCR:n aikana. Suorita OCR uudelleen.",
+      "OCR_ENGINE_FAILED": "OCR pysähtyi virheeseen.",
+      "OCR_PAGE_OUT_OF_RANGE": "Tunnistettavaa sivua ei ole asiakirjassa."
+    }
   },
   "docInfo": {
     "title": "Otsikko",
@@ -879,7 +926,17 @@
     "italicComingSoon": "Kursivointi tulossa pian",
     "sourceDigital": "PDF-tekstikerros",
     "sourceOcr": "OCR",
-    "browserLimitedNote": "Napsauta sivun tekstiä muokataksesi tuettua PDF-tekstiä. Kuvat ja linkit saatavilla työpöytäsovelluksessa."
+    "browserLimitedNote": "Napsauta sivun tekstiä muokataksesi tuettua PDF-tekstiä. Kuvat ja linkit saatavilla työpöytäsovelluksessa.",
+    "typeface": {
+      "label": "Kirjasin",
+      "default": "Asiakirjan kirjasin",
+      "noEmbed": "{{family}}: fontin lisenssi ei salli sen upottamista PDF-tiedostoon",
+      "refusedLicence": "{{family}}-kirjasinta ei voi käyttää: sen lisenssi ei salli sen upottamista PDF-tiedostoon. Valitse toinen kirjasin.",
+      "refusedGlyphs": "{{family}}-kirjasimessa ei ole merkkiä {{characters}}. Valitse toinen kirjasin.",
+      "refusedGone": "Tätä kirjasinta ei ole enää asennettu. Valitse toinen.",
+      "refusedText": "Muotoiltava teksti ei ole enää sivulla.",
+      "refusedUnusable": "{{family}}-kirjasinta ei voitu lukea fonttina. Valitse toinen kirjasin."
+    }
   },
   "rightPanel": {
     "properties": "Ominaisuudet",
@@ -944,9 +1001,12 @@
     "flatten": "Litistä XFA",
     "flattenDone": "XFA litistetty. Vie PDF ladataksesi staattisen version.",
     "flattenFailed": "XFA:n litistäminen epäonnistui",
-    "convertToStandard": "Convert to standard PDF",
-    "convertedToStandard": "XFA converted to standard PDF",
-    "convertFailed": "Conversion failed: {{message}}"
+    "convertToStandard": "Muunna tavalliseksi PDF:ksi",
+    "convertedToStandard": "XFA muunnettu tavalliseksi PDF:ksi",
+    "convertFailed": "Muunnos epäonnistui: {{message}}",
+    "bannerTitle": "XFA-lomake",
+    "bannerBody": "Tämä XFA-lomake näytetään sellaisenaan. Jos haluat täyttää, muokata tai hakea sen kenttiä, muunna se tavalliseksi PDF-tiedostoksi.",
+    "bannerBodyExperimental": "Tämä XFA-lomake näytetään sellaisenaan. Kenttien täyttäminen on kokeellista; muunna lomake tavalliseksi PDF-tiedostoksi, jotta voit täyttää, muokata ja hakea sitä luotettavasti."
   },
   "security": {
     "activeContentBadge": "Estetty",
@@ -970,7 +1030,8 @@
     "highlight": "Korosta",
     "strikethrough": "Yliviivaa",
     "underline": "Alleviivaa",
-    "copyText": "Kopioi teksti"
+    "copyText": "Kopioi teksti",
+    "copied": "Kopioitu"
   },
   "update": {
     "available": "Päivitys saatavilla",
@@ -980,10 +1041,10 @@
     "installing": "Asennetaan…",
     "checkFailed": "Päivitysten tarkistus epäonnistui",
     "upToDate": "Käytät uusinta versiota",
-    "installed": "Update installed",
-    "restartNow": "Restart now",
-    "restartUnsaved": "Save your changes before restarting.",
-    "restartManual": "If it doesn't restart automatically, quit and reopen PDFluent to finish."
+    "installed": "Päivitys asennettu",
+    "restartNow": "Käynnistä uudelleen nyt",
+    "restartUnsaved": "Tallenna muutoksesi ennen uudelleenkäynnistystä.",
+    "restartManual": "Jos sovellus ei käynnisty uudelleen automaattisesti, sulje PDFluent ja avaa se uudelleen viimeistelläksesi."
   },
   "telemetry": {
     "addNoteLabel": "Haluatko lisätä jotain? (valinnainen)",
@@ -1012,6 +1073,11 @@
     "sentTitle": "Lähetetty. Kiitos.",
     "settingsAutoSend": "Lähetä automaattisesti kysymättä",
     "settingsAutoSendNote": "Automaattiset raportit on puhdistettu ja vapaa henkilötiedoista, aivan kuten manuaalisesti tarkistamasi.",
+    "settingsSentReports": "Tältä tietokoneelta lähetetyt kaatumisraportit: {{count}}. Poistamme ne palvelimeltamme automaattisesti {{days}} päivän kuluttua.",
+    "settingsDeleteReports": "Poista kaatumisraporttini",
+    "settingsDeleting": "Poistetaan…",
+    "settingsDeleted": "Poistetut kaatumisraportit: {{count}}",
+    "settingsDeleteFailed": "Poistaminen epäonnistui: {{count}}. Tarkista yhteytesi ja yritä uudelleen.",
     "settingsDescription": "Raportit eivät koskaan sisällä henkilökohtaisia tietoja tai asiakirjan sisältöä. Kaikki puhdistetaan ennen lähetystä ja näet jokaisen raportin ensin. Oletuksena pois päältä.",
     "settingsTitle": "Kaatumis- ja virheraportit",
     "settingsToggle": "Lähetä kaatumis- ja virheraportit",
@@ -1019,7 +1085,11 @@
     "typeBug": "Bugi",
     "typeCrash": "Kaatuminen",
     "typeFeedback": "Palaute",
-    "whatGetsSent": "Mitä lähetetään"
+    "whatGetsSent": "Mitä lähetetään",
+    "settingsSentFeedback": "Tältä tietokoneelta lähetetyt palauteraportit: {{count}}. Poistamme ne palvelimeltamme automaattisesti {{days}} päivän kuluttua.",
+    "settingsDeleteFeedback": "Poista palauteraporttini",
+    "settingsFeedbackDeleted": "Palauteraportit poistettu: {{count}}",
+    "settingsFeedbackDeleteFailed": "Ei voitu poistaa {{count}} palauteraporttia. Tarkista yhteytesi ja yritä uudelleen."
   },
   "ai": {
     "summaryInstruction": "Anna lyhyt yhteenveto alla olevasta asiakirjasta suomeksi. Mainitse kunkin tehtävän kohdalla työnantaja, rooli ja ajanjakso. Käytä luettelomerkkejä.",
@@ -1076,7 +1146,8 @@
       "scrollLeft": "Vieritä tilat vasemmalle",
       "scrollRight": "Vieritä tilat oikealle",
       "workMode": "Työtila",
-      "searchPlaceholder": "Etsi asiakirjasta"
+      "searchPlaceholder": "Etsi asiakirjasta",
+      "allTools": "Kaikki työkalut"
     },
     "menu": {
       "about": "Tietoja",
@@ -1147,22 +1218,17 @@
       "draw": "Piirrä",
       "signatureName": "Allekirjoituksen nimi",
       "typeName": "Kirjoita nimesi…",
-      "selectStyle": "Valitse tyyli",
-      "styleClassic": "Cursive Classic",
-      "styleElegant": "Cursive Elegant",
-      "styleBrush": "Brush Signature",
-      "styleModern": "Modern Handwriting",
       "drawHere": "Piirrä tähän hiirellä, kosketuslevyllä tai styluksella",
       "clear": "Tyhjennä",
       "apply": "Käytä",
-      "defaultSignature": "Allekirjoitus",
       "clickToPlaceSignature": "Napsauta sivua allekirjoituksen sijoittamiseksi.",
       "addInitials": "Lisää nimikirjaimet",
       "initialsIntro": "Kirjoita nimikirjaimesi nopeaa sijoittamista varten alkukenttiin.",
       "initials": "Nimikirjaimet",
       "initialsPlaceholder": "esim. JL",
-      "defaultInitials": "JL",
-      "clickToPlaceInitials": "Napsauta sivua nimikirjainten sijoittamiseksi."
+      "clickToPlaceInitials": "Napsauta sivua nimikirjainten sijoittamiseksi.",
+      "signatureFont": "Allekirjoituksen fontti",
+      "plainItalic": "Tavallinen kursiivi"
     },
     "overlay": {
       "signaturePlaced": "Allekirjoitus sijoitettu!",
@@ -1177,13 +1243,13 @@
     "textbox": {
       "editTitle": "Muokkaa tekstiruutua",
       "newTitle": "Uusi tekstiruutu",
-      "intro": "Tämä teksti sijoitetaan nykyisen sivun päälle. Tyhjän tallentaminen poistaa olemassa olevan tekstiruudun.",
       "label": "Teksti",
       "placeholder": "Kirjoita teksti…",
       "delete": "Poista",
       "deleted": "Tekstiruutu poistettu.",
       "updated": "Tekstiruutu päivitetty.",
-      "added": "Uusi tekstiruutu lisätty."
+      "added": "Uusi tekstiruutu lisätty.",
+      "introPdf": "Tekstiruutu kirjoitetaan PDF-tiedostoon ja näkyy kaikissa PDF-katseluohjelmissa. Tyhjänä tallentaminen poistaa olemassa olevan tekstiruudun."
     },
     "rail": {
       "tools": "PDF-työkalut",
@@ -1197,12 +1263,14 @@
       "more": "Lisää työkaluja",
       "strikeText": "Yliviivaa teksti",
       "underlineText": "Alleviivaa teksti",
-      "addAttachment": "Lisää liite"
+      "addAttachment": "Lisää liite",
+      "drawRectangle": "Piirrä suorakulmio"
     },
     "railToasts": {
-      "commentMode": "Merkintätila aktiivinen. Valitse teksti ja valitse Merkintä, tai käytä merkintäluetteloa merkinnän lisäämiseksi.",
+      "commentMode": "Muistiinpanotila. Napsauta sivua kohdasta, johon muistiinpano kuuluu.",
       "strikeout": "Yliviivaus aktiivinen — valitse teksti soveltaaksesi.",
-      "underline": "Alleviivaus aktiivinen — valitse teksti soveltaaksesi."
+      "underline": "Alleviivaus aktiivinen — valitse teksti soveltaaksesi.",
+      "rectangle": "Suorakulmio käytössä — piirrä vetämällä sivulla."
     },
     "tools": {
       "lede": "Valitse työkalu aloittaksesi. Kaikki toimii paikallisesti tällä laitteella.",
@@ -1238,17 +1306,18 @@
       "layers": "{{count}} tasoa",
       "manageLayers": "Hallitse tasoja",
       "layersVisible": "{{count}} tasoa näkyvissä.",
-      "archiveAndData": "Archiving and data",
-      "pdfaSub": "Check or convert for long-term archiving",
-      "invoiceSub": "Read the ZUGFeRD/Factur-X invoice inside",
-      "metadataSub": "Title and author of this document"
+      "archiveAndData": "Arkistointi ja tiedot",
+      "pdfaSub": "Tarkista tai muunna pitkäaikaisarkistointia varten",
+      "invoiceSub": "Lue tiedoston sisältämä ZUGFeRD/Factur-X-lasku",
+      "metadataSub": "Tämän asiakirjan otsikko ja tekijä",
+      "flattenForm": "Litistä",
+      "flattenFormTitle": "Litistä lomake: täytetyt arvot tulevat osaksi sivua ja kentät poistetaan",
+      "flattenFormDone": "Lomake litistetty. Kumoa palauttaa kentät.",
+      "flattenFormFailed": "Lomaketta ei voitu litistää: {{message}}"
     },
     "edit": {
       "lede": "Napsauta tekstiä asiakirjassa muokataksesi sitä paikan päällä. Muotoilupalkki tulee näkyviin valinnan yläpuolelle.",
       "formatText": "Muotoile teksti",
-      "fontLabel": "Kirjasin",
-      "fontHint": "Olemassa oleva PDF-teksti käyttää upotettuja PDF-kirjasimia. Kirjasin \"{{font}}\" käytetään uusille tekstiruuduille.",
-      "fontEmbedded": "Upotettu PDF-kirjasin",
       "color": "Väri",
       "colorLabel": "Väri {{color}}",
       "addContent": "Lisää sisältöä",
@@ -1261,7 +1330,18 @@
       "clickAnywhereTextBox": "Napsauta missä tahansa sivulla tekstiruudun sijoittamiseksi.",
       "clickAnywhereImage": "Napsauta missä tahansa sivulla kuvan sijoittamiseksi.",
       "selection": "Valinta",
-      "annotationOnPage": "{{type}} sivulla {{page}}"
+      "annotationOnPage": "{{type}} sivulla {{page}}",
+      "placeStamp": "Sijoita leima",
+      "stampLabel": "Leima",
+      "clickToPlaceStamp": "Sijoita leima napsauttamalla sivua.",
+      "placementModeStamp": "Sijoitustila: leima",
+      "stampPlaced": "Leima sijoitettu.",
+      "deleteAnnotation": "Poista merkintä",
+      "annotationColor": "Merkinnän väri",
+      "editTextBox": "Muokkaa tekstiä",
+      "replaceImage": "Korvaa kuva",
+      "imageReplaced": "Kuva korvattu.",
+      "moveHint": "Siirrä vetämällä, muuta kokoa vetämällä kulmasta tai siirrä nuolinäppäimillä."
     },
     "convert": {
       "exportPdfTo": "Vie PDF osoitteeseen",
@@ -1279,10 +1359,16 @@
       "confidenceFrom": "Varmuus {{value}}%:sta",
       "ocrOff": "OCR pois päältä",
       "ocrOn": "OCR päällä",
-      "ocrRunning": "OCR käynnissä paikallisesti…"
+      "ocrRunning": "OCR käynnissä paikallisesti…",
+      "ocrComponentUnknown": "OCR-komponentti: tarkistetaan…",
+      "ocrComponentInstalled": "OCR-komponentti asennettu",
+      "ocrLastRun": "Viimeisin ajo: {{pages}} sivua, {{words}} sanaa lisätty haettavana tekstinä",
+      "ocrRunningProgress": "Tunnistetaan sivu {{done}} / {{total}}…",
+      "markdown": "Markdown (esikatselu)",
+      "tablesToExcel": "Taulukot Exceliin (esikatselu)"
     },
     "esign": {
-      "lede": "Sign with a certificate of your own, and check the signatures a document already carries. Both happen on this device.",
+      "lede": "Allekirjoita omalla varmenteellasi ja tarkista asiakirjan sisältämät allekirjoitukset. Molemmat tapahtuvat tällä laitteella.",
       "fillAndSign": "Täytä asiakirjasi ja allekirjoita",
       "addSignature": "Lisää allekirjoitus",
       "addInitials": "Lisää nimikirjaimet",
@@ -1290,25 +1376,25 @@
       "placementModeInitials": "Sijoitustila: Nimikirjaimet",
       "clickToPlaceSignature": "Napsauta missä tahansa sivulla allekirjoituksesi sijoittamiseksi.",
       "clickToPlaceInitials": "Napsauta missä tahansa sivulla nimikirjaimesi sijoittamiseksi.",
-      "verifySection": "Signatures",
-      "verify": "Check signatures",
-      "desktopOnly": "Available in the desktop app",
-      "unsigned": "This document carries no signatures.",
-      "signSection": "Sign with a certificate",
-      "padesLevel": "Produces a PAdES B-B signature: your certificate over the whole file, no timestamp server involved.",
-      "certificate": "Certificate (.p12 or .pfx)",
-      "certificateNone": "No certificate chosen",
-      "chooseCertificate": "Choose certificate",
-      "certificatePassword": "Certificate password",
-      "reason": "Reason (optional)",
-      "reasonPlaceholder": "Why you are signing",
-      "sign": "Sign and save a copy",
-      "signing": "Signing…",
-      "signNeedsCertificate": "Choose a certificate and enter its password first.",
-      "signSaved": "Signed copy saved as {{name}}",
-      "signFailed": "Signing failed: {{message}}",
-      "usageRights": "Reader enablement (usage rights)",
-      "usageRightsInvalidated": "Usage rights invalidated — this file was edited, so Adobe Reader no longer treats it as an enabled form."
+      "verifySection": "Allekirjoitukset",
+      "verify": "Tarkista allekirjoitukset",
+      "desktopOnly": "Saatavilla työpöytäsovelluksessa",
+      "unsigned": "Tässä asiakirjassa ei ole allekirjoituksia.",
+      "signSection": "Allekirjoita varmenteella",
+      "padesLevel": "Tuottaa PAdES B-B -allekirjoituksen: varmenteesi koko tiedostoon, aikaleimapalvelinta ei tarvita.",
+      "certificate": "Varmenne (.p12 tai .pfx)",
+      "certificateNone": "Varmennetta ei valittu",
+      "chooseCertificate": "Valitse varmenne",
+      "certificatePassword": "Varmenteen salasana",
+      "reason": "Syy (valinnainen)",
+      "reasonPlaceholder": "Miksi allekirjoitat",
+      "sign": "Allekirjoita ja tallenna kopio",
+      "signing": "Allekirjoitetaan…",
+      "signNeedsCertificate": "Valitse ensin varmenne ja anna sen salasana.",
+      "signSaved": "Allekirjoitettu kopio tallennettu nimellä {{name}}",
+      "signFailed": "Allekirjoitus epäonnistui: {{message}}",
+      "usageRights": "Readerin käyttöönotto (käyttöoikeudet)",
+      "usageRightsInvalidated": "Käyttöoikeudet mitätöity — tätä tiedostoa on muokattu, joten Adobe Reader ei enää käsittele sitä käyttöön otettuna lomakkeena."
     },
     "protect": {
       "lede": "Suojaa PDF-asiakirjasi vahvoilla salasanoilla. Muutokset otetaan käyttöön paikallisesti heti.",
@@ -1330,9 +1416,11 @@
       "localViaTauri": "Paikallinen Taurin kautta, ei selainajontaisympäristöä",
       "compressingImages": "Pakataan kuvia…",
       "percentComplete": "{{percent}}% valmis",
-      "compressPdf": "Pakkaa PDF",
       "desktopOnly": "Vain pöytäsovelluksessa käytettävissä",
-      "backToTools": "Takaisin työkaluihin"
+      "backToTools": "Takaisin työkaluihin",
+      "saveCopy": "Tallenna pakattu kopio nimellä…",
+      "replaceOpen": "Pakkaa ja korvaa avoin asiakirja",
+      "replaceNote": "Kopio jättää avoimen asiakirjan ja sen tiedoston ennalleen. Korvaaminen muuttaa vain avointa asiakirjaa; Kumoa palauttaa alkuperäisen."
     },
     "split": {
       "lede": "Jaa asiakirjasi erillisiksi PDF-tiedostoiksi sivua kohti tai tietyllä sivualueella.",
@@ -1369,7 +1457,52 @@
       "applying": "Käytetään…",
       "applyPermanently": "Käytä poistoja pysyvästi",
       "noActiveMarkings": "Ei aktiivisia poistomerkkejä.",
-      "backToTools": "Takaisin työkaluihin"
+      "backToTools": "Takaisin työkaluihin",
+      "pii": {
+        "title": "Henkilötiedot",
+        "lede": "Find personal data in the text of this document: IBANs, card numbers, national ID numbers, birth dates, e-mail addresses and phone numbers, and names and addresses when the model is installed. Review the list, then redact the ones you choose.",
+        "find": "Etsi henkilötietoja",
+        "scanning": "Skannataan…",
+        "none": "Nothing found.",
+        "kind": {
+          "iban": "IBAN",
+          "email": "Sähköpostiosoite",
+          "phone": "Puhelinnumero",
+          "credit_card": "Kortin numero",
+          "national_id": "Henkilötunnus",
+          "date_of_birth": "Syntymäaika",
+          "bank_account": "Pankkitilin numero",
+          "person": "Nimi",
+          "address": "Osoite"
+        },
+        "where": "Sivu {{pages}} · {{count}}×",
+        "selectAll": "Valitse kaikki",
+        "selectNone": "Poista valinnat",
+        "redactSelected": "Sensuroi {{count}} valittua",
+        "redacting": "Sensuroidaan…",
+        "done": "Peitetty {{count}} kohdetta. Tallenna tiedosto säilyttääksesi tuloksen.",
+        "failed": "Peittäminen epäonnistui: {{message}}",
+        "detectFailed": "Haku epäonnistui: {{message}}",
+        "patternsOnly": "Without the model this finds only items it can check, such as IBANs, cards, ID numbers, birth dates, e-mail addresses and phone numbers. Names and addresses are not detected, so check every page yourself.",
+        "suggestionsOnly": "Nämä ovat ehdotuksia. Tunnistin voi jättää asioita huomaamatta, joten tarkista jokainen sivu ennen tallentamista.",
+        "source": {
+          "verified": "Tarkistettu {{detail}}",
+          "model": "Mallin ehdotus, {{score}}%"
+        },
+        "model": {
+          "use": "Etsi myös nimiä ja osoitteita mallin avulla",
+          "languages": "Tarkistettavat kielet: {{languages}}",
+          "remove": "Poista malli",
+          "removeFailed": "Mallia ei voitu poistaa: {{message}}",
+          "failed": "Mallia ei voitu ajaa ({{code}}). Näytetään vain tarkistettavissa olevat kohteet.",
+          "consentTitle": "Ladataanko henkilötietomalli?",
+          "consentBody": "Nimien ja osoitteiden etsiminen vaatii kielimallin ({{size}}). Se ladataan kerran osoitteesta {{host}}, tarkistetaan kiinteällä tarkistussummalla ja ajetaan sen jälkeen tällä tietokoneella. Asiakirjasi eivät koskaan poistu tältä tietokoneelta.",
+          "download": "Lataa",
+          "downloading": "Ladataan…",
+          "downloadFailed": "Lataus epäonnistui: {{message}}",
+          "notInBuild": "Lataus ei ole vielä saatavilla tässä versiossa."
+        }
+      }
     },
     "toasts": {
       "saving": "Tallennetaan…",
@@ -1399,7 +1532,7 @@
       "pdfsMerged": "{{count}} PDF-tiedostoa yhdistetty",
       "mergedSaved": "Yhdistetty PDF tallennettu nimellä {{name}}.",
       "mergeFailed": "Yhdistäminen epäonnistui: {{message}}",
-      "redactMatches": "{{matches}} osumaa löytynyt, {{areas}} poistomerkintöä sijoitettu.",
+      "redactSearchDone": "Mustattuja osumia: {{count}}. Tallenna säilyttääksesi muutoksen.",
       "noRedactMatches": "Tekstiä vastaavia poistettavia kohteita ei löytynyt.",
       "redactSearchFailed": "Hakupoisto epäonnistui: {{message}}",
       "applyRedactConfirm": "Käytetään {{count}} poistomerkkiä pysyvästi? Tämä poistaa sisällön PDF-tiedostosta lopullisesti.",
@@ -1408,108 +1541,328 @@
       "applyRedactRunning": "Käytetään poistoja pysyvästi…",
       "applyRedactDone": "Poistot käytetty pysyvästi",
       "redactionsApplied": "Poistot on käytetty pysyvästi.",
-      "redactFailed": "Poisto epäonnistui: {{message}}"
+      "redactFailed": "Poisto epäonnistui: {{message}}",
+      "compressedCopyToast": "Tallennettu {{name}}: {{before}} → {{after}}. Avoin asiakirja on ennallaan.",
+      "compressedReplacedToast": "Pakattiin avoin asiakirja: {{before}} → {{after}}. Kumoa palauttaa alkuperäisen. Tallenna, jos haluat säilyttää pakatun version."
     },
     "thumbnails": {
       "pages": "Sivut",
       "pageAlt": "Sivu {{page}}",
-      "bookmarks": "Bookmarks"
+      "bookmarks": "Kirjanmerkit"
     },
     "pdfa": {
-      "lede": "PDF/A is the archival form of PDF: fonts embedded, colours defined, nothing that depends on the outside world.",
-      "section": "Conformance",
-      "level": "Level",
-      "validate": "Check this document",
-      "convert": "Save as PDF/A…",
-      "desktopOnly": "Available in the desktop app",
-      "compliant": "Conforms to {{level}}",
-      "notCompliant": "Does not conform: {{errors}} errors, {{warnings}} warnings",
-      "moreIssues": "{{count}} more",
+      "lede": "PDF/A on PDF:n arkistointimuoto: fontit upotettu, värit määritelty, ei mitään ulkoisista tekijöistä riippuvaa.",
+      "section": "Yhdenmukaisuus",
+      "level": "Taso",
+      "validate": "Tarkista tämä asiakirja",
+      "convert": "Tallenna PDF/A-muodossa…",
+      "desktopOnly": "Saatavilla työpöytäsovelluksessa",
+      "compliant": "Täyttää standardin {{level}}",
+      "notCompliant": "Ei täytä vaatimuksia: {{errors}} virhettä, {{warnings}} varoitusta",
+      "moreIssues": "{{count}} lisää",
       "report": {
-        "title": "What the conversion did",
-        "written": "Written to {{path}}",
-        "size": "{{out}} out of {{in}} ({{ratio}}×), in {{seconds}} s",
-        "pages": "{{count}} pages",
-        "fontsEmbedded": "{{embedded}} of {{found}} unembedded fonts embedded",
-        "fontsFailed": "Could not embed: {{fonts}}",
-        "removed": "Removed: {{count}} items that PDF/A does not allow",
-        "subset": "{{count}} font programs reduced, {{bytes}} kB saved",
-        "outputIntent": "Output intent added",
-        "unchangedDocument": "The open document was not changed.",
+        "title": "Mitä muunnos teki",
+        "written": "Kirjoitettu kohteeseen {{path}}",
+        "size": "{{out}} / {{in}} ({{ratio}}×), {{seconds}} s",
+        "pages": "{{count}} sivua",
+        "fontsEmbedded": "{{embedded}} / {{found}} upottamatonta fonttia upotettu",
+        "fontsFailed": "Upotus epäonnistui: {{fonts}}",
+        "removed": "Poistettu: {{count}} kohdetta, joita PDF/A ei salli",
+        "subset": "{{count}} fonttiohjelmaa pienennetty, {{bytes}} kt säästetty",
+        "outputIntent": "Output intent lisätty",
+        "unchangedDocument": "Avoinna olevaa asiakirjaa ei muutettu.",
         "warning": "{{message}}",
-        "moreWarnings": "{{count}} more"
+        "moreWarnings": "{{count}} lisää"
       }
     },
     "metadata": {
-      "lede": "The title and author stored inside the file, which is what other readers and search show.",
-      "section": "Properties",
-      "title": "Title",
-      "author": "Author",
-      "apply": "Save properties",
-      "desktopOnly": "Available in the desktop app"
+      "lede": "Tiedostoon tallennettu otsikko ja tekijä, jotka muut lukuohjelmat ja haku näyttävät.",
+      "section": "Ominaisuudet",
+      "title": "Otsikko",
+      "author": "Tekijä",
+      "apply": "Tallenna ominaisuudet",
+      "desktopOnly": "Saatavilla työpöytäsovelluksessa"
     },
     "invoice": {
-      "lede": "A ZUGFeRD or Factur-X invoice travels as XML inside the PDF. This reads it and checks it against EN 16931.",
-      "section": "Embedded invoice",
-      "read": "Read invoice",
-      "desktopOnly": "Available in the desktop app",
-      "none": "This document carries no e-invoice.",
-      "number": "Number: {{number}}",
-      "issued": "Issued: {{date}}",
-      "seller": "Seller: {{name}}",
-      "buyer": "Buyer: {{name}}",
-      "total": "Total: {{total}} {{currency}}",
-      "lines": "Line items: {{count}}",
-      "valid": "Valid against {{profile}}",
-      "invalid": "Not valid: {{errors}} errors, {{warnings}} warnings"
+      "lede": "ZUGFeRD- tai Factur-X-lasku kulkee XML:nä PDF:n sisällä. Tämä lukee sen ja tarkistaa sen EN 16931 -standardin mukaisesti.",
+      "section": "Upotettu lasku",
+      "read": "Lue lasku",
+      "desktopOnly": "Saatavilla työpöytäsovelluksessa",
+      "none": "Tässä asiakirjassa ei ole e-laskua.",
+      "number": "Numero: {{number}}",
+      "issued": "Päiväys: {{date}}",
+      "seller": "Myyjä: {{name}}",
+      "buyer": "Ostaja: {{name}}",
+      "total": "Yhteensä: {{total}} {{currency}}",
+      "lines": "Laskurivejä: {{count}}",
+      "valid": "Kelvollinen profiilin {{profile}} mukaan",
+      "invalid": "Ei kelvollinen: {{errors}} virhettä, {{warnings}} varoitusta"
     },
     "canvas": {
-      "document": "PDF document"
+      "document": "PDF-asiakirja"
+    },
+    "stamps": {
+      "Approved": "Hyväksytty",
+      "NotApproved": "Ei hyväksytty",
+      "Draft": "Luonnos",
+      "Confidential": "Luottamuksellinen",
+      "Final": "Lopullinen",
+      "ForComment": "Kommentoitavaksi",
+      "Expired": "Vanhentunut"
     }
   },
   "about": {
-    "section": "About",
-    "app": "App",
-    "version": "Version",
-    "privacy": "Privacy",
-    "privacyValue": "All processing happens locally",
-    "website": "Website"
+    "section": "Tietoja",
+    "app": "Sovellus",
+    "version": "Versio",
+    "privacy": "Yksityisyys",
+    "privacyValue": "Kaikki käsittely tapahtuu paikallisesti",
+    "website": "Verkkosivusto"
   },
   "reviewSummary": {
-    "title": "Review summary",
-    "generatedAt": "Generated on",
-    "comments": "Comments",
-    "noComments": "No comments.",
-    "replies": "Replies:",
-    "empty": "empty",
-    "redactions": "Redactions",
-    "noRedactions": "No redactions.",
-    "noIssues": "No issues.",
-    "metadataChanges": "Metadata changes",
-    "noMetadataChanges": "No changes.",
-    "changedBy": "by",
-    "on": "on"
+    "title": "Tarkistuksen yhteenveto",
+    "generatedAt": "Luotu",
+    "comments": "Kommentit",
+    "noComments": "Ei kommentteja.",
+    "replies": "Vastaukset:",
+    "empty": "tyhjä",
+    "redactions": "Poistot",
+    "noRedactions": "Ei poistoja.",
+    "noIssues": "Ei ongelmia.",
+    "metadataChanges": "Metatietojen muutokset",
+    "noMetadataChanges": "Ei muutoksia.",
+    "changedBy": "tekijä",
+    "on": "päivänä"
   },
   "externalLink": {
-    "askMessage": "This PDF wants to open an external link:\n\n{{label}}\n\nURL:\n{{href}}\n\nDo you want to continue?",
-    "title": "Open external link?",
-    "openLink": "Open link",
-    "dialogBody": "This PDF wants to open an external website. Check the URL before continuing."
+    "askMessage": "Tämä PDF haluaa avata ulkoisen linkin:\n\n{{label}}\n\nURL:\n{{href}}\n\nHaluatko jatkaa?",
+    "title": "Avataanko ulkoinen linkki?",
+    "openLink": "Avaa linkki",
+    "dialogBody": "Tämä PDF haluaa avata ulkoisen verkkosivuston. Tarkista URL ennen kuin jatkat."
   },
   "linkChoice": {
-    "title": "Open link in your browser?",
-    "body": "This document wants to open an external website. Are you opening it from a trusted source?",
-    "alwaysAllow": "Always allow",
-    "openOnce": "Open once"
+    "title": "Avataanko linkki selaimessa?",
+    "body": "Tämä asiakirja haluaa avata ulkoisen verkkosivuston. Avaatko sen luotettavasta lähteestä?",
+    "alwaysAllow": "Salli aina",
+    "openOnce": "Avaa kerran"
   },
   "fallbacks": {
-    "ocrUnavailableTitle": "OCR is not available on this computer",
-    "ocrUnavailableMessage": "PDFluent could not start the text-recognition engine. {{reason}}",
-    "ocrFailedMessage": "Text recognition stopped on page {{page}}: {{reason}}",
-    "xfaStaticTitle": "Form filled without recalculation",
-    "xfaStaticMessage": "This build writes XFA field values straight into the form. Field scripts do not run, so calculated totals and fields that appear or hide based on your answer stay as they are.",
-    "featureUnavailableTitle": "'{{feature}}' is not available in this build",
-    "usageRightsInvalidatedTitle": "This document is no longer Reader-enabled",
-    "usageRightsInvalidatedMessage": "Your change was made. It also invalidated the usage-rights signature this PDF carried, which let Adobe Reader fill in and save the form. The text edit stands; the extended rights are gone and cannot be restored by undoing it."
+    "ocrUnavailableTitle": "OCR ei ole saatavilla tällä tietokoneella",
+    "ocrUnavailableMessage": "PDFluent ei voinut käynnistää tekstintunnistusmoottoria. {{reason}}",
+    "ocrFailedMessage": "Tekstintunnistus pysähtyi sivulla {{page}}: {{reason}}",
+    "xfaStaticTitle": "Lomake täytetty ilman uudelleenlaskentaa",
+    "xfaStaticMessage": "Tämä versio kirjoittaa XFA-kenttien arvot suoraan lomakkeeseen. Kenttäskriptejä ei suoriteta, joten lasketut summat ja vastauksesi perusteella näkyvät tai piiloutuvat kentät pysyvät sellaisinaan.",
+    "xfaScriptsNotRunTitle": "Joitakin lomakkeen skriptejä ei suoriteta",
+    "xfaScriptsNotRunMessage": "Vastauksesi on tallennettu. Lomakkeessa on FormCalc-skriptejä ({{count}} löytyi), ja PDFluent suorittaa vain JavaScript-skriptejä. Summat ja kentät, joita nämä skriptit päivittäisivät, säilyttävät tallennetut arvonsa, kunnes lomake avataan Adobe Readerissa.",
+    "xfaFieldRefusedTitle": "Lomake ei hyväksynyt arvoa",
+    "xfaFieldReadOnly": "Kenttä ”{{field}}” on tässä lomakkeessa vain luku -tilassa, eikä sitä voi muuttaa.",
+    "xfaFieldRejected": "Kenttä ”{{field}}” ei hyväksy tätä arvoa: {{reason}}",
+    "xfaFieldNotFound": "Kenttää ”{{field}}” ei ole enää lomakkeessa. Lomake ladattiin uudelleen.",
+    "featureUnavailableTitle": "'{{feature}}' ei ole saatavilla tässä versiossa",
+    "usageRightsInvalidatedTitle": "Tässä asiakirjassa ei ole enää Reader-käyttöoikeuksia",
+    "usageRightsInvalidatedMessage": "Muutoksesi tehtiin. Se mitätöi myös tämän PDF:n mukana tulleen käyttöoikeusallekirjoituksen, joka salli Adobe Readerin täyttää ja tallentaa lomakkeen. Tekstimuokkaus jää voimaan; laajennetut oikeudet ovat poissa eikä niitä voi palauttaa kumoamalla.",
+    "xfaScriptsFailedTitle": "Osa lomakkeen skripteistä ei valmistunut",
+    "xfaScriptsFailedMessage": "Vastauksesi on tallennettu, mutta nämä skriptit eivät valmistuneet, joten niiden asettamat arvot voivat puuttua: {{details}}.",
+    "xfaScriptKind_threw": "törmäsi virheeseen",
+    "xfaScriptKind_timeout": "aika loppui",
+    "xfaScriptKind_refused": "hiekkalaatikko hylkäsi sen"
+  },
+  "signedSave": {
+    "title": "Tämä asiakirja on allekirjoitettu",
+    "message": "Redaktio poistaa sisältöä, jonka allekirjoitus kattaa, joten sitä ei voi tallentaa allekirjoitetun alkuperäisen päälle rikkomatta allekirjoitusta. Tallenna sen sijaan kopio: kopio säilyttää redaktion eikä sisällä allekirjoitusta.",
+    "saveCopy": "Tallenna kopio ilman allekirjoitusta…",
+    "cancel": "Peruuta"
+  },
+  "passwordPrompt": {
+    "title": "Tämä PDF on suojattu",
+    "message": "Anna salasana avataksesi {{name}}.",
+    "incorrect": "Tuo salasana ei avaa tätä PDF:ää. Yritä uudelleen.",
+    "label": "Salasana",
+    "open": "Avaa",
+    "cancel": "Peruuta",
+    "readOnlyTitle": "Avattu vain luku -tilassa",
+    "readOnlyMessage": "Tämän PDF:n käyttöoikeudet eivät salli muutoksia. Voit lukea sitä ja tulostaa sen, jos käyttöoikeudet sallivat. Tallentaaksesi muutokset poista suojaus omistajan salasanalla."
+  },
+  "a11y": {
+    "searchNextResult": "Seuraava tulos",
+    "searchPrevResult": "Edellinen tulos"
+  },
+  "feedback": {
+    "title": "Auta meitä parantamaan PDFluentia",
+    "intro": "Kerro, mitä yritit tehdä. Luemme jokaisen ilmoituksen.",
+    "menuLabel": "Auta meitä parantamaan PDFluentia…",
+    "fromError": "Voit kertoa meille ongelmasta, johon juuri törmäsit.",
+    "areaLabel": "Mitä yritit tehdä?",
+    "area": {
+      "open-view": "Avata tai lukea asiakirja",
+      "search-copy": "Hakea tai kopioida tekstiä",
+      "print": "Tulostaa",
+      "edit-text": "Muokata tekstiä",
+      "annotate": "Korostaa, kommentoida tai piirtää",
+      "forms": "Täyttää lomake",
+      "sign": "Allekirjoittaa tai tarkistaa allekirjoitus",
+      "redact": "Poistaa tietoja",
+      "pages-organize": "Kiertää, järjestää, yhdistää tai jakaa sivuja",
+      "convert-export": "Muuntaa tai viedä",
+      "ocr": "Tunnistaa teksti skannauksesta (OCR)",
+      "pdfa-compliance": "PDF/A",
+      "protect": "Salasana tai käyttöoikeudet",
+      "save": "Tallentaa",
+      "install-update": "Asentaa tai päivittää PDFluent",
+      "other": "Jotain muuta"
+    },
+    "tryingToPlaceholder": "Omin sanoin (valinnainen)",
+    "whatHappenedLabel": "Mitä tapahtui?",
+    "whatHappenedPlaceholder": "Mitä näit?",
+    "whatHappenedRequired": "Kerro, mitä tapahtui, niin tiedämme, mistä etsiä.",
+    "expectedLabel": "Mitä odotit?",
+    "expectedPlaceholder": "Valinnainen",
+    "docTypeLabel": "Millainen asiakirja se oli?",
+    "docType": {
+      "none": "Ei asiakirjaa mukana",
+      "form": "Lomake",
+      "scanned": "Skannaus",
+      "signed": "Allekirjoitettu asiakirja",
+      "protected": "Salasanasuojattu",
+      "large": "Suuri (yli 100 sivua)",
+      "xfa": "Viranomaislomake tai XFA-lomake",
+      "other": "Jotain muuta"
+    },
+    "docTypeUnset": "Valitse…",
+    "pageCountLabel": "Sivujen määrä",
+    "contextTitle": "Lähetetään ilmoituksen mukana",
+    "contextToggle": "Liitä järjestelmätiedot",
+    "contextHint": "Versio, järjestelmä, kieli ja viimeisin virhe auttavat meitä toistamaan ongelman. Ei tiedostonimiä, polkuja eikä asiakirjan sisältöä.",
+    "fieldVersion": "PDFluentin versio",
+    "fieldSystem": "Järjestelmä",
+    "fieldLanguage": "Kieli",
+    "fieldLastError": "Viimeisin virhe",
+    "fieldSessions": "Istunnot",
+    "notIncluded": "ei mukana",
+    "documentTitle": "Jaa asiakirja (valinnainen)",
+    "documentToggle": "Jaa avoin asiakirja tämän ilmoituksen kanssa",
+    "documentNone": "Yhtään asiakirjaa ei ole auki.",
+    "documentTooLarge": "Tämä asiakirja on yli 20 Mt, joten sitä ei voi jakaa ilmoituksen kanssa.",
+    "documentShared": "Tämä asiakirja jaetaan.",
+    "documentConfirmTitle": "Jaetaanko tämä asiakirja?",
+    "documentConfirmText": "Tämä tiedosto lähetetään PDFluentille (Innovation Trigger B.V.). Sitä käytetään vain tämän raportin tutkimiseen, ei koskaan julkaista, ei koskaan käytetä koulutukseen, ja se poistetaan viimeistään 90 päivän kuluttua ongelman korjaamisesta ja joka tapauksessa 12 kuukauden kuluessa.",
+    "documentConfirmFile": "{{name}} ({{size}})",
+    "documentConfirmYes": "Jaa tämä asiakirja",
+    "documentConfirmNo": "Älä jaa",
+    "contactTitle": "Pidetään yhteyttä (valinnainen)",
+    "emailLabel": "Sähköpostiosoite",
+    "emailInvalid": "Tämä ei näytä sähköpostiosoitteelta.",
+    "consentContact": "PDFluent voi lähettää minulle sähköpostia tätä raporttia koskevista kysymyksistä.",
+    "consentFixed": "Lähetä minulle sähköpostia, kun tämä on korjattu.",
+    "contactHint": "Osoitteesi tallennetaan erilleen raportistasi, sitä käytetään vain tähän raporttiin, ei koskaan uutiskirjeisiin tai markkinointiin.",
+    "noEmailHint": "Ilman sähköpostiosoitettakin kuulet meistä: kun päivitys korjaa ilmoituksesi, PDFluent kertoo siitä sovelluksessa.",
+    "privacyNotice": "Innovation Trigger B.V. vastaanottaa tämän raportin PDFluentin parantamiseksi. Raportit säilytetään enintään 24 kuukautta. Voit pyytää oman raporttisi poistettavaksi milloin tahansa.",
+    "privacyLink": "Tietosuojaseloste",
+    "send": "Lähetä",
+    "sending": "Lähetetään…",
+    "cancel": "Peruuta",
+    "sentTitle": "Kiitos!",
+    "sentBody": "Ilmoituksesi on saapunut. Tässä sen numero:",
+    "sentIdHint": "Säilytä tämä numero, jos haluat kysyä ilmoituksestasi tai poistattaa sen.",
+    "sentNoLocalCopy": "PDFluent ei voinut tallentaa tätä numeroa tälle tietokoneelle, joten kirjoita se muistiin.",
+    "sentDocumentFailed": "Ilmoituksesi saapui, mutta asiakirjaa ei voitu ladata. Jos se on tärkeä, voit lähettää ilmoituksen uudelleen asiakirjan kanssa.",
+    "removeReport": "Poista tämä ilmoitus",
+    "removing": "Poistetaan…",
+    "removed": "Ilmoituksesi on poistettu.",
+    "removeFailed": "Ilmoitustasi ei voitu poistaa juuri nyt. Yritä myöhemmin uudelleen tai lähetä meille numero sähköpostilla.",
+    "failedTitle": "Lähetys ei onnistunut",
+    "failedNetwork": "PDFluent ei saanut yhteyttä palvelimeen. Mitään ei lähetetty, ja tekstisi on yhä tallessa.",
+    "failedRateLimited": "Tästä yhteydestä on tänään lähetetty liian monta ilmoitusta. Yritä huomenna uudelleen.",
+    "failedRejected": "Ilmoitusta ei hyväksytty. Tarkista lomake ja yritä uudelleen.",
+    "failedServer": "Meillä meni jotain pieleen. Tekstisi on yhä tallessa; yritä hetken päästä uudelleen.",
+    "tryAgain": "Yritä uudelleen",
+    "fixedTitle": "Korjattu!",
+    "fixedOffered": "Versio {{version}} korjaa ilmoituksesi {{ids}}. Kiitos, että kerroit meille.",
+    "fixedAfterUpdate": "Ilmoituksesi {{ids}} on korjattu tässä versiossa. Kiitos, että kerroit meille.",
+    "dismiss": "Sulje"
+  },
+  "openError": {
+    "corrupt": {
+      "title": "Tämä PDF on vioittunut",
+      "body": "PDFluent ei pystynyt lukemaan tätä tiedostoa. Se on voinut vioittua latauksen tai kopioinnin aikana, tai sen luonut sovellus on kirjoittanut sen virheellisesti. Lataa tai kopioi se uudelleen, tai avaa alkuperäinen ja vie se uudelleen PDF-tiedostoksi.",
+      "action": "Avaa toinen tiedosto"
+    },
+    "not_pdf": {
+      "title": "Tämä ei ole PDF",
+      "body": "PDFluent avaa PDF-tiedostoja. Tämä tiedosto on jotain muuta, tai sen nimi ei pääty tunnisteeseen .pdf. Valitse PDF-tiedosto, tai jos tämä tiedosto on PDF, nimeä se uudelleen niin, että nimi päättyy tunnisteeseen .pdf.",
+      "action": "Avaa toinen tiedosto"
+    },
+    "empty": {
+      "title": "Tämä tiedosto on tyhjä",
+      "body": "Tiedostossa ei ole sisältöä (0 tavua). Lataus tai kopiointi ei ehkä ole valmistunut. Lataa tai kopioi se uudelleen ja avaa se sitten.",
+      "action": "Avaa toinen tiedosto"
+    },
+    "encrypted_needs_password": {
+      "title": "Tämä PDF vaatii salasanan",
+      "body": "Tämä PDF on suojattu salasanalla. Avaa se uudelleen ja anna salasana. Jos et tiedä sitä, kysy sitä tiedoston lähettäjältä.",
+      "action": "Anna salasana"
+    },
+    "wrong_password": {
+      "title": "Salasana ei kelvannut",
+      "body": "Salasana ei avaa tätä PDF-tiedostoa. Tarkista kirjoitusvirheet ja Caps Lock ja yritä sitten uudelleen.",
+      "action": "Yritä uudelleen"
+    },
+    "unsupported_encryption": {
+      "title": "PDFluent ei voi avata tällaista suojausta",
+      "body": "Tämä PDF on suojattu varmenteella tai suojaustavalla, jota PDFluent ei tue, joten mikään salasana ei avaa sitä täällä. Pyydä lähettäjältä kopio ilman suojausta tai salasanalla suojattuna.",
+      "action": "Avaa toinen tiedosto"
+    },
+    "too_large": {
+      "title": "Tämä tiedosto on liian suuri",
+      "body": "Tämä tiedosto on suurempi kuin PDFluent voi avata turvallisesti. Jaa tai pakkaa se sovelluksessa, jolla se tehtiin, ja avaa sitten osat.",
+      "action": "Avaa toinen tiedosto"
+    },
+    "too_many_pages": {
+      "title": "Tässä PDF:ssä on liian monta sivua",
+      "body": "Tässä asiakirjassa on enemmän sivuja kuin PDFluent voi avata kerralla. Jaa se pienempiin asiakirjoihin sovelluksessa, jolla se tehtiin, ja avaa sitten osat.",
+      "action": "Avaa toinen tiedosto"
+    },
+    "io_denied": {
+      "title": "PDFluent ei saa lukea tätä tiedostoa",
+      "body": "Tietokoneesi ei antanut PDFluentille lupaa lukea tätä tiedostoa. Tarkista tiedoston käyttöoikeudet tai siirrä se kansioon, kuten Asiakirjat, ja yritä uudelleen.",
+      "action": "Yritä uudelleen"
+    },
+    "not_found": {
+      "title": "Tiedostoa ei löytynyt",
+      "body": "Tiedosto on voitu siirtää, nimetä uudelleen tai poistaa, tai se on asemalla, jota ei enää ole yhdistetty. Etsi tiedosto ja avaa se uudelleen.",
+      "action": "Avaa toinen tiedosto"
+    },
+    "unknown": {
+      "title": "Tätä tiedostoa ei voitu avata",
+      "body": "Tiedoston avaamisessa tapahtui virhe. Yritä uudelleen. Jos ongelma toistuu, kerro siitä meille, niin voimme korjata sen.",
+      "action": "Yritä uudelleen"
+    },
+    "feedback": "Auta meitä parantamaan PDFluentia"
+  },
+  "formBar": {
+    "title": "Täytettävä lomake",
+    "fields": "Kenttiä: {{count}}",
+    "clickToFill": "Napsauta kenttää täyttääksesi sen.",
+    "noCalculations": "Adobe-lomakkeiden automaattisia laskutoimituksia ei suoriteta.",
+    "autoLinks": "Avaa linkit automaattisesti",
+    "autoLinksTitle": "Linkit aukeavat automaattisesti selaimessasi. Napsauta, jos haluat poistaa tämän käytöstä.",
+    "highlight": "Korosta kentät",
+    "firstField": "Ensimmäinen kenttä"
+  },
+  "tabs": {
+    "label": "Avoimet asiakirjat",
+    "close": "Sulje {{name}}",
+    "unsaved": "Tallentamattomat muutokset",
+    "new": "Avaa toinen asiakirja",
+    "tooManyTitle": "Liian monta asiakirjaa auki",
+    "tooManyMessage": "{{max}} asiakirjaa on auki. Sulje yksi avataksesi toisen."
+  },
+  "formScripts": {
+    "barLabel": "Lomakeskriptit",
+    "barMessage": "Tämä lomake sisältää skriptejä (esimerkiksi laskutoimituksia). Suoritetaanko ne?",
+    "barDetail": "Löydetyt skriptit: {{count}}.",
+    "runOnce": "Suorita tälle asiakirjalle",
+    "runAlways": "Suorita skriptit aina",
+    "dontRun": "Älä suorita"
   }
 }

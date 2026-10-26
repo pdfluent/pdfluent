@@ -72,14 +72,14 @@ describe('ViewerApp — authorName state', () => {
 describe('ViewerApp — handleAddComment uses authorName', () => {
   it('passes authorName (with User fallback) as author when creating annotation', () => {
     const fnStart = viewerAppSource.indexOf('const handleAddComment = useCallback(');
-    const fnEnd = viewerAppSource.indexOf('}, [pdfDoc, engine, pageIndex])', fnStart) + 30;
+    const fnEnd = viewerAppSource.indexOf('}, [pdfDoc, engine, pageIndex, markDirty])', fnStart) + 30;
     const fnBody = viewerAppSource.slice(fnStart, fnEnd);
     expect(fnBody).toContain("author: authorName || 'User'");
   });
 
   it('no longer hardcodes author as plain string User', () => {
     const fnStart = viewerAppSource.indexOf('const handleAddComment = useCallback(');
-    const fnEnd = viewerAppSource.indexOf('}, [pdfDoc, engine, pageIndex])', fnStart) + 30;
+    const fnEnd = viewerAppSource.indexOf('}, [pdfDoc, engine, pageIndex, markDirty])', fnStart) + 30;
     const fnBody = viewerAppSource.slice(fnStart, fnEnd);
     // The exact hardcoded 'User' without authorName must not appear
     expect(fnBody).not.toContain("author: 'User'");

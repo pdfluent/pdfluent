@@ -217,3 +217,13 @@ describe("the trunk exists on the primary too", () => {
     expect(job).toContain("fetch-depth: 0");
   });
 });
+
+describe("credential redaction in quoted git errors (#731)", () => {
+  it("removes a token from a sentence that quotes the Windows file-URL form", async () => {
+    const { redactCredentials } = await import("../../scripts/ci/remotes-agree.mjs");
+    const msg = "fatal: '//oauth2:s3cr3t-token@E:/work/repo.git' does not appear to be a git repository";
+    const out = redactCredentials(msg);
+    expect(out).not.toContain("s3cr3t-token");
+    expect(out).toContain("//***@E:/work/repo.git");
+  });
+});

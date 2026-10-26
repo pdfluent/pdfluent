@@ -36,3 +36,20 @@ export type NavigationPanel =
   | 'layers'
   | 'fields'
   | 'format';
+
+// ── Attachment & Layer types (mirror the Rust structs) ───────────────────────
+
+export interface AttachmentInfo {
+  name: string;
+  size_bytes: number;
+  description: string;
+  mime_type: string;
+  creation_date: string;
+}
+
+export interface LayerInfo {
+  id: string;
+  name: string;
+  visible: boolean;
+  locked: boolean;
+}

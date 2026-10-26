@@ -66,6 +66,8 @@ driver_s2_checks() {
   for probe in applog_missing alive session_delta crash_scan watchdog; do
     if _fake_have "${probe}"; then
       _fake_stage "${probe}"
+      # The per-launch record the Windows driver writes beside the totals.
+      [ "${probe}" = "session_delta" ] && _fake_stage session_launches
       case "${probe}" in
         applog_missing) out="${out}${out:+,}applog" ;;
         alive) out="${out}${out:+,}alive" ;;

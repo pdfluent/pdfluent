@@ -66,13 +66,13 @@ export interface TextEditabilityResult {
 // ---------------------------------------------------------------------------
 
 const STATUS_LABELS: Record<TextEditabilityStatus, string> = {
-  'editable': 'Tekst bewerken',
-  'ocr-read-only': 'OCR-tekst is selecteerbaar maar nog niet bewerkbaar',
-  'protected-mode': 'Schakel over naar bewerkingsmodus om tekst te bewerken',
-  'annotation-tool-active': 'Deactiveer het annotatiegereedschap om tekst te bewerken',
-  'unsupported-structure': 'Complexe tekststructuur — inline bewerking niet beschikbaar',
-  'empty-target': 'Leeg tekstblok — niets te bewerken',
-  'unknown': 'Bewerkbaarheid kon niet worden bepaald',
+  'editable': 'Edit text',
+  'ocr-read-only': 'OCR text is selectable but not yet editable',
+  'protected-mode': 'Switch to edit mode to edit text',
+  'annotation-tool-active': 'Deactivate the annotation tool to edit text',
+  'unsupported-structure': 'Complex text structure — inline editing not available',
+  'empty-target': 'Empty text block — nothing to edit',
+  'unknown': 'Editability could not be determined',
 };
 
 // ---------------------------------------------------------------------------

@@ -51,6 +51,7 @@ const ENGINE_CRATES = [
   'pdf-pptx',
   'pdf-invoice',
   'pdfluent-lopdf',
+  'pdf-ocr',
   'pdf-syntax',
   'pdfluent',
 ];

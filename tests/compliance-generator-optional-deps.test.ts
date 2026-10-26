@@ -535,8 +535,13 @@ function writeCargoFixture(cargoHomeName: string): { workspace: string; bin: str
   return { workspace, bin };
 }
 
+// The cargo stub is a node script run through its shebang, which Windows does
+// not honour; the case says so out loud instead of going quiet.
+if (process.platform === 'win32') {
+  process.stderr.write('SKIPPED (not a pass): the CARGO_HOME inventory case on win32 -- the cargo stub is a shebang script\n');
+}
 describe('third-party notice generator: the inventory does not record CARGO_HOME', () => {
-  it('writes the same rows whichever directory cargo unpacked the crates into', () => {
+  it.skipIf(process.platform === 'win32')('writes the same rows whichever directory cargo unpacked the crates into', () => {
     const run = (cargoHomeName: string): Report => {
       const { workspace, bin } = writeCargoFixture(cargoHomeName);
       const gen = spawnSync(process.execPath, [GENERATE], {

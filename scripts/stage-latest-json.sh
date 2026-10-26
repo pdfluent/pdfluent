@@ -22,12 +22,16 @@
 # a macOS+Windows-only release, include the VPS Linux artifact or relax that
 # requirement first (see docs/GA_UPDATE_READINESS.md).
 #
-#   scripts/stage-latest-json.sh <version>      # e.g. 1.0.0
+#   scripts/stage-latest-json.sh <version> [fixed-feedback.json]   # e.g. 1.0.0
+#
+# fixed-feedback.json: the report IDs fixed in this version, from
+# scripts/release/fixed-feedback.mjs (infra/report-worker/README.md).
 set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 cd "${REPO_ROOT}"
-VERSION="${1:?usage: stage-latest-json.sh <version>   (e.g. 1.0.0)}"
+VERSION="${1:?usage: stage-latest-json.sh <version> [fixed-feedback.json]   (e.g. 1.0.0)}"
+FIXED_FEEDBACK="${2:-}"
 
 echo "== 1/3  verify updater signatures (trusted key only) =="
 bash scripts/verify-updater-sigs.sh
@@ -42,6 +46,7 @@ echo "== 3/3  generate latest.json (LOCAL staging — no upload) =="
 # CF_R2_PUBLIC_URL only sets the URLs written INTO latest.json; the generator
 # performs no network upload. Uploading is a separate, approval-gated wrangler
 # step that this script intentionally does not perform.
+FIXED_FEEDBACK_FILE="${FIXED_FEEDBACK}" \
 CI_COMMIT_TAG="v${VERSION}" \
 CF_R2_PUBLIC_URL="${CF_R2_PUBLIC_URL:-https://pdfluent.com/releases}" \
 CF_R2_BUCKET_NAME="${CF_R2_BUCKET_NAME:-pdfluent-releases}" \

@@ -33,7 +33,7 @@ function treeWith(files: Record<string, string>): string {
     return `100755 blob ${blob}\t${path}`;
   });
   const tree = git(["mktree", "--missing"], `${lines.join("\n")}\n`);
-  return git(["commit-tree", tree, "-m", "fixture"]);
+  return git(["-c", "user.name=fixture", "-c", "user.email=fixture@invalid", "commit-tree", tree, "-m", "fixture"]);
 }
 
 const PASSES = "#!/usr/bin/env python3\nraise SystemExit(0)\n";
@@ -77,7 +77,7 @@ describe("a snapshot is judged by the guards it carries", () => {
     // A check that runs after the push is a report, not a gate.
     const src = execFileSync("cat", [resolve(root, "scripts/ci/publish-public-snapshot.mjs")], { encoding: "utf8" });
     const refuse = src.indexOf("publicGuardsRefuse(commit)");
-    const offer = src.indexOf("Nothing has been pushed. To publish it:");
+    const offer = src.indexOf("Nothing has been pushed. To publish it");
     expect(refuse).toBeGreaterThan(-1);
     expect(offer).toBeGreaterThan(refuse);
   });

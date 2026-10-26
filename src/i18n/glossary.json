@@ -1,0 +1,93 @@
+{
+  "_doc": "The term for \"redact\" per locale. Machine-chosen, pending native-speaker review (#727). tests/i18n-glossary.test.ts enforces it.",
+  "verbKeys": [
+    "toolbar.redact",
+    "textContext.redact",
+    "editorV3.tools.redact"
+  ],
+  "nounKeys": [
+    "rightPanel.redactions",
+    "reviewSummary.redactions"
+  ],
+  "exemptKeys": [
+    "modes.getDesktopAppTitle"
+  ],
+  "locales": {
+    "ru": {
+      "verb": "Зачернить",
+      "noun": "Зачернения",
+      "banned": [
+        "едакт"
+      ]
+    },
+    "vi": {
+      "verb": "Che thông tin",
+      "noun": "Vùng che thông tin",
+      "banned": [
+        "Biên tập",
+        "biên tập"
+      ]
+    },
+    "hi": {
+      "verb": "काला करें",
+      "noun": "काला किए गए अंश",
+      "banned": [
+        "संपाद",
+        "रिडेक्ट",
+        "रिडैक्ट"
+      ]
+    },
+    "hu": {
+      "verb": "Kitakarás",
+      "noun": "Kitakarások",
+      "banned": [
+        "Szerkeszt",
+        "szerkeszt",
+        "Redakci",
+        "redakci"
+      ]
+    },
+    "el": {
+      "verb": "Απόκρυψη",
+      "noun": "Αποκρύψεις",
+      "banned": [
+        "Επεξεργασ",
+        "επεξεργασ"
+      ]
+    },
+    "ko": {
+      "verb": "가리기",
+      "noun": "가리기 항목",
+      "banned": [
+        "편집",
+        "수정"
+      ]
+    },
+    "zh-CN": {
+      "verb": "涂黑",
+      "noun": "涂黑标记",
+      "banned": [
+        "密文",
+        "编辑"
+      ]
+    },
+    "zh-TW": {
+      "verb": "塗黑",
+      "noun": "塗黑標記",
+      "banned": [
+        "密文",
+        "編輯"
+      ]
+    },
+    "fr": {
+      "verb": "Caviarder",
+      "noun": "Caviardages",
+      "banned": [
+        "Rédi",
+        "rédi",
+        "Rédac",
+        "rédac"
+      ]
+    }
+  }
+}

@@ -19,14 +19,16 @@
 // ---------------------------------------------------------------------------
 
 import i18n from '../../i18n';
-import { reportFallback } from '../../lib/commandBridge';
+import { describeError, reportCommandFailure, reportFallback } from '../../lib/commandBridge';
 import type { AppError } from './errorCenter';
+import type { XfaScriptErrorDto } from '../../lib/tauri-api';
 
 /**
- * OCR cannot start: no Python, no `paddleocr`, no bridge script.
+ * OCR cannot start: the Tesseract component cannot be installed in this
+ * build, on this platform, or is not published yet (viewer/hooks/useOcr.ts).
  *
  * An error and not a warning: the user asked for text recognition and is
- * getting none, and `remediation` from `get_ocr_status` names what is missing.
+ * getting none, and `remediation` names why.
  */
 export function announceOcrUnavailable(remediation: string): AppError {
   return reportFallback({
@@ -53,6 +55,100 @@ export function announceXfaStaticWrite(): AppError {
     title: i18n.t('fallbacks.xfaStaticTitle'),
     message: i18n.t('fallbacks.xfaStaticMessage'),
     code: 'XFA_PHASE1_STATIC_WRITE',
+  });
+}
+
+/**
+ * The form carries scripts the sandboxed runtime does not run: FormCalc, and
+ * any script with no declared language (XFA reads that as FormCalc).
+ *
+ * The value the person typed lands and persists. What a FormCalc script would
+ * have done with it -- a total, a field that appears -- does not happen here,
+ * and Adobe Reader will recompute it on open. Saying so beats a stale total
+ * that looks like a result. A warning: the document changed as asked.
+ */
+export function announceXfaScriptsNotRun(count: number): AppError {
+  return reportFallback({
+    source: 'xfa',
+    title: i18n.t('fallbacks.xfaScriptsNotRunTitle'),
+    message: i18n.t('fallbacks.xfaScriptsNotRunMessage', { count }),
+    code: 'XFA_SCRIPTS_NOT_RUN',
+  });
+}
+
+/** The field a script id belongs to: `<field>:<activity>#<n>` -> `<field>`. */
+function scriptField(scriptId: string): string {
+  return scriptId.split(':')[0] || scriptId;
+}
+
+const MAX_NAMED_SCRIPTS = 5;
+
+/**
+ * Scripts of the form ran and failed: one threw, ran out of time, or was
+ * refused by the sandbox. The typed value is saved; what the script would have
+ * set may be missing. Names each field with what happened to its script, once
+ * per document (the caller holds the once). A warning, not an error.
+ */
+export function announceXfaScriptsFailed(errors: XfaScriptErrorDto[]): AppError {
+  const seen = new Set<string>();
+  const named: string[] = [];
+  for (const error of errors) {
+    const entry = `${scriptField(error.scriptId)} (${i18n.t(`fallbacks.xfaScriptKind_${error.kind}`)})`;
+    if (seen.has(entry)) continue;
+    seen.add(entry);
+    named.push(entry);
+  }
+  const shown = named.slice(0, MAX_NAMED_SCRIPTS).join(', ');
+  const details = named.length > MAX_NAMED_SCRIPTS ? `${shown}, …` : shown;
+  return reportFallback({
+    source: 'xfa',
+    title: i18n.t('fallbacks.xfaScriptsFailedTitle'),
+    message: i18n.t('fallbacks.xfaScriptsFailedMessage', { details }),
+    code: 'XFA_SCRIPTS_FAILED',
+  });
+}
+
+/** A write the engine refused, as the backend codes it (`XFA_FIELD_*`). */
+export interface XfaRefusal {
+  code: 'XFA_FIELD_READ_ONLY' | 'XFA_FIELD_REJECTED' | 'XFA_FIELD_NOT_FOUND';
+  field: string;
+  /** The engine's reason, for a rejected value only. */
+  reason: string;
+}
+
+/** Read a coded refusal out of whatever a rejected `commit_xfa_field_value` carries. */
+export function parseXfaRefusal(error: unknown): XfaRefusal | null {
+  const match = /^(XFA_FIELD_(?:READ_ONLY|REJECTED|NOT_FOUND)):\s*([^:]*)(?::\s*([\s\S]*))?$/.exec(
+    describeError(error),
+  );
+  if (!match) return null;
+  return {
+    code: match[1] as XfaRefusal['code'],
+    field: (match[2] ?? '').trim(),
+    reason: (match[3] ?? '').trim(),
+  };
+}
+
+const REFUSAL_KEYS: Record<XfaRefusal['code'], string> = {
+  XFA_FIELD_READ_ONLY: 'fallbacks.xfaFieldReadOnly',
+  XFA_FIELD_REJECTED: 'fallbacks.xfaFieldRejected',
+  XFA_FIELD_NOT_FOUND: 'fallbacks.xfaFieldNotFound',
+};
+
+/**
+ * A value the form would not take. An error, because the document does not
+ * carry what the person typed; the message names the field and why.
+ * Anything that is not a coded refusal goes the ordinary command-failure way.
+ */
+export function reportXfaCommitFailure(error: unknown): AppError {
+  const refusal = parseXfaRefusal(error);
+  if (!refusal) return reportCommandFailure('commit_xfa_field_value', error);
+  return reportFallback({
+    source: 'xfa',
+    title: i18n.t('fallbacks.xfaFieldRefusedTitle'),
+    message: i18n.t(REFUSAL_KEYS[refusal.code], { field: refusal.field, reason: refusal.reason }),
+    code: refusal.code,
+    severity: 'error',
   });
 }
 

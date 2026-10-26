@@ -96,7 +96,7 @@ export function checkMutationFidelity(
     return {
       pass: false,
       failCode: 'empty-replacement',
-      message: 'Vervangtekst mag niet leeg zijn.',
+      message: 'The replacement text must not be empty.',
       checks: {
         baselineAligned: false,
         bboxConsistent: false,
@@ -140,7 +140,7 @@ export function checkMutationFidelity(
     return {
       pass: false,
       failCode: 'replacement-too-long',
-      message: 'Vervangtekst is te lang en zou de lay-out verstoren.',
+      message: 'The replacement text is too long and would break the layout.',
       checks: breakdown,
     };
   }
@@ -149,7 +149,7 @@ export function checkMutationFidelity(
     return {
       pass: false,
       failCode: 'bbox-overflow',
-      message: 'Vervangtekst overschrijdt het tekstkader.',
+      message: 'The replacement text exceeds the text frame.',
       checks: breakdown,
     };
   }
@@ -158,7 +158,7 @@ export function checkMutationFidelity(
     return {
       pass: false,
       failCode: 'line-wrap-risk',
-      message: 'Vervangtekst zou regelafbreking veroorzaken.',
+      message: 'The replacement text would cause line wrapping.',
       checks: breakdown,
     };
   }

@@ -11,7 +11,7 @@
     --background: hsl(220 15% 91%);        /* warm light slate canvas */
     --foreground: hsl(0 0% 10%);
     --muted: hsl(0 0% 91%);               /* surface-container */
-    --muted-foreground: hsl(0 0% 46%);
+    --muted-foreground: hsl(0 0% 33%);
     --popover: hsl(0 0% 100%);
     --popover-foreground: hsl(0 0% 10%);
     --border: hsl(0 0% 88%);
@@ -20,8 +20,8 @@
     --card-foreground: hsl(0 0% 10%);
 
     /* Primary — black */
-    --primary: hsl(0 0% 10%);
-    --primary-foreground: hsl(0 0% 100%);
+    --primary: var(--emphasis);
+    --primary-foreground: var(--on-emphasis);
 
     /* MD3 Secondary */
     --secondary: hsl(0 0% 91%);
@@ -31,9 +31,9 @@
     --accent: hsl(0 0% 91%);
     --accent-foreground: hsl(0 0% 10%);
 
-    --destructive: hsl(0 70% 48%);
+    --destructive: hsl(0 70% 42%);
     --destructive-foreground: hsl(0 0% 100%);
-    --ring: hsl(0 0% 10%);
+    --ring: var(--focus-ring);
 
     /* MD3 shape scale */
     --radius: 0.5rem;         /* 8px — MD3 medium */
@@ -50,8 +50,8 @@
     --pf-surface-4: hsl(0 0% 85%);
 
     /* Accent — black/gray */
-    --pf-accent: hsl(0 0% 10%);
-    --pf-accent-hover: hsl(0 0% 0%);
+    --pf-accent: var(--emphasis);
+    --pf-accent-hover: var(--emphasis-hover);
     --pf-accent-muted: hsl(0 0% 93%);
     --pf-accent-glow: transparent;
 
@@ -67,8 +67,8 @@
 
     /* Text */
     --pf-text-primary: hsl(0 0% 10%);
-    --pf-text-secondary: hsl(0 0% 38%);
-    --pf-text-muted: hsl(0 0% 53%);
+    --pf-text-secondary: hsl(0 0% 36%);
+    --pf-text-muted: hsl(0 0% 42%);
 
     /* Borders */
     --pf-border-subtle: hsl(0 0% 90%);
@@ -87,33 +87,33 @@
     --background: hsl(0 0% 10%);
     --foreground: hsl(0 0% 93%);
     --muted: hsl(0 0% 16%);
-    --muted-foreground: hsl(0 0% 56%);
+    --muted-foreground: hsl(0 0% 62%);
     --popover: hsl(0 0% 14%);
     --popover-foreground: hsl(0 0% 93%);
     --border: hsl(0 0% 22%);
     --input: hsl(0 0% 22%);
     --card: hsl(0 0% 14%);
     --card-foreground: hsl(0 0% 93%);
-    --primary: hsl(215 100% 60%);
-    --primary-foreground: hsl(0 0% 100%);
+    --primary: var(--emphasis);
+    --primary-foreground: var(--on-emphasis);
     --secondary: hsl(0 0% 18%);
     --secondary-foreground: hsl(0 0% 93%);
     --accent: hsl(0 0% 18%);
     --accent-foreground: hsl(0 0% 93%);
-    --destructive: hsl(0 72% 58%);
-    --destructive-foreground: hsl(0 0% 100%);
-    --ring: hsl(215 100% 60%);
+    --destructive: hsl(0 90% 72%);
+    --destructive-foreground: hsl(0 0% 8%);
+    --ring: var(--focus-ring);
     --pf-surface-0: hsl(0 0% 8%);
     --pf-surface-1: hsl(0 0% 13%);
     --pf-surface-2: hsl(0 0% 17%);
     --pf-surface-3: hsl(0 0% 21%);
     --pf-surface-4: hsl(0 0% 25%);
-    --pf-accent: hsl(215 100% 62%);
-    --pf-accent-hover: hsl(215 100% 68%);
-    --pf-accent-muted: hsl(215 40% 20%);
+    --pf-accent: var(--emphasis);
+    --pf-accent-hover: var(--emphasis-hover);
+    --pf-accent-muted: hsl(0 0% 20%);
     --pf-text-primary: hsl(0 0% 93%);
     --pf-text-secondary: hsl(0 0% 62%);
-    --pf-text-muted: hsl(0 0% 46%);
+    --pf-text-muted: hsl(0 0% 60%);
     --pf-border-subtle: hsl(0 0% 20%);
     --pf-border-medium: hsl(0 0% 26%);
     --pf-border-strong: hsl(0 0% 33%);
@@ -128,33 +128,33 @@
       --background: hsl(0 0% 10%);
       --foreground: hsl(0 0% 93%);
       --muted: hsl(0 0% 16%);
-      --muted-foreground: hsl(0 0% 56%);
+      --muted-foreground: hsl(0 0% 62%);
       --popover: hsl(0 0% 14%);
       --popover-foreground: hsl(0 0% 93%);
       --border: hsl(0 0% 22%);
       --input: hsl(0 0% 22%);
       --card: hsl(0 0% 14%);
       --card-foreground: hsl(0 0% 93%);
-      --primary: hsl(215 100% 60%);
-      --primary-foreground: hsl(0 0% 100%);
+      --primary: var(--emphasis);
+      --primary-foreground: var(--on-emphasis);
       --secondary: hsl(0 0% 18%);
       --secondary-foreground: hsl(0 0% 93%);
       --accent: hsl(0 0% 18%);
       --accent-foreground: hsl(0 0% 93%);
-      --destructive: hsl(0 72% 58%);
-      --destructive-foreground: hsl(0 0% 100%);
-      --ring: hsl(215 100% 60%);
+      --destructive: hsl(0 90% 72%);
+      --destructive-foreground: hsl(0 0% 8%);
+      --ring: var(--focus-ring);
       --pf-surface-0: hsl(0 0% 8%);
       --pf-surface-1: hsl(0 0% 13%);
       --pf-surface-2: hsl(0 0% 17%);
       --pf-surface-3: hsl(0 0% 21%);
       --pf-surface-4: hsl(0 0% 25%);
-      --pf-accent: hsl(215 100% 62%);
-      --pf-accent-hover: hsl(215 100% 68%);
-      --pf-accent-muted: hsl(215 40% 20%);
+      --pf-accent: var(--emphasis);
+      --pf-accent-hover: var(--emphasis-hover);
+      --pf-accent-muted: hsl(0 0% 20%);
       --pf-text-primary: hsl(0 0% 93%);
       --pf-text-secondary: hsl(0 0% 62%);
-      --pf-text-muted: hsl(0 0% 46%);
+      --pf-text-muted: hsl(0 0% 60%);
       --pf-border-subtle: hsl(0 0% 20%);
       --pf-border-medium: hsl(0 0% 26%);
       --pf-border-strong: hsl(0 0% 33%);
@@ -236,18 +236,12 @@
   /* Glass surfaces — Tailwind v3 compatible */
   .glass-surface {
     background: rgba(255, 255, 255, 0.80);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
   }
   .glass-surface-subtle {
     background: rgba(255, 255, 255, 0.55);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
   }
   .glass-surface-strong {
     background: rgba(255, 255, 255, 0.92);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
   }
   .glass-border {
     border: 1px solid rgba(255, 255, 255, 0.5);
@@ -259,8 +253,6 @@
   }
   .glass-card {
     background: rgba(255, 255, 255, 0.75);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
     border: 1px solid rgba(255, 255, 255, 0.6);
     box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.8);
   }

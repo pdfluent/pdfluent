@@ -22,12 +22,13 @@ describe('ModeToolbar — print-all-btn', () => {
     expect(toolbarSource).toContain('data-testid="print-all-btn"');
   });
 
-  it('print-all-btn calls window.print()', () => {
+  it('print-all-btn prints the PDF through printDocument(), not the webview', () => {
     const btnPos = toolbarSource.indexOf('print-all-btn');
     const btnStart = toolbarSource.lastIndexOf('<button', btnPos);
     const btnEnd = toolbarSource.indexOf('</button>', btnStart) + 9;
     const btnBlock = toolbarSource.slice(btnStart, btnEnd);
-    expect(btnBlock).toContain('window.print()');
+    expect(btnBlock).toContain('printDocument()');
+    expect(btnBlock).not.toContain('window.print()');
   });
 
   it('print-all-btn has a title', () => {

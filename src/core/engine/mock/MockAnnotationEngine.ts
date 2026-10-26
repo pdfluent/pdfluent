@@ -221,7 +221,7 @@ export class MockAnnotationEngine {
     modifiedCount: number;
   }> {
     const byType: Record<AnnotationType, number> = {
-      text: 0, highlight: 0, underline: 0, strikeout: 0, freehand: 0,
+      text: 0, highlight: 0, underline: 0, strikeout: 0, freehand: 0, freetext: 0, squiggly: 0,
       line: 0, square: 0, circle: 0, polygon: 0, polyline: 0, stamp: 0,
       ink: 0, 'file-attachment': 0, sound: 0, movie: 0, screen: 0,
       widget: 0, 'printer-mark': 0, 'trap-net': 0, watermark: 0,

@@ -15,16 +15,20 @@
 
 /** Tiles whose tool works in every runtime. */
 export const WIRED_TILES_ALL_RUNTIMES: readonly string[] = [
+  'toolbar.addText',
   'toolbar.bookmarks',
   'toolbar.comment',
-  'toolbar.editText',
   'toolbar.exportPdf',
   'toolbar.freeDraw',
   'toolbar.fullscreen',
   'toolbar.highlight',
+  'toolbar.image',
+  'toolbar.initials',
+  'toolbar.note',
   'toolbar.pan',
   'toolbar.searchText',
   'toolbar.select',
+  'toolbar.stamp',
   'toolbar.strikethrough',
   'toolbar.underline',
   'toolbar.zoomIn',
@@ -35,6 +39,7 @@ export const WIRED_TILES_ALL_RUNTIMES: readonly string[] = [
 export const WIRED_TILES_TAURI_ONLY: readonly string[] = [
   'toolbar.compress',
   'toolbar.deletePage',
+  'toolbar.editText',
   'toolbar.insertPage',
   'toolbar.invoice',
   'toolbar.merge',

@@ -46,7 +46,7 @@ describe('V3 native menu and licensing workflow', () => {
     expect(viewerAppSource).toContain('void handleOpenFile()');
     expect(viewerAppSource).toContain('window.setTimeout(() => { void handleOpenFile(); }, 0)');
     expect(viewerAppSource).toContain("case 'file_save'");
-    expect(viewerAppSource).toContain('void handleRuntimeSave()');
+    expect(viewerAppSource).toContain('handleRuntimeSave().catch(');
     expect(viewerAppSource).toContain("case 'view_zoom_in'");
   });
 

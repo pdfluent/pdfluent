@@ -56,7 +56,7 @@
     "fillAndSign": "Kitöltés és aláírás",
     "more": "Több",
     "getDesktopApp": "Asztali alkalmazás",
-    "getDesktopAppTitle": "Szerkesztés, OCR, szerkesztés, oldalrendezés és exportálás az asztali alkalmazásban"
+    "getDesktopAppTitle": "Szerkesztés, OCR, kitakarás, oldalrendezés és exportálás az asztali alkalmazásban"
   },
   "toolbar": {
     "select": "Kijelölés",
@@ -94,7 +94,7 @@
     "date": "Dátum",
     "password": "Jelszó",
     "permissions": "Engedélyek",
-    "redact": "Szerkesztés",
+    "redact": "Kitakarás",
     "hide": "Elrejtés",
     "compare": "Összehasonlítás",
     "accessibility": "Akadálymentesség",
@@ -114,9 +114,9 @@
     "allTools": "Összes eszköz",
     "contextualBar": "Mód eszköztár",
     "pdfa": "PDF/A",
-    "metadata": "Document properties",
-    "invoice": "E-invoice",
-    "bookmarks": "Bookmarks"
+    "metadata": "Dokumentum tulajdonságai",
+    "invoice": "E-számla",
+    "bookmarks": "Könyvjelzők"
   },
   "topbar": {
     "openPdf": "PDF megnyitása",
@@ -233,16 +233,15 @@
     "noFieldsBrowserHint": "Nem találhatók űrlapmezők."
   },
   "protect": {
-    "applyRedactions": "Szerkesztések végleges alkalmazása",
-    "noRedactions": "Nincs függőben lévő szerkesztés.",
-    "redactionsPending": "{{count}} szerkesztés függőben",
-    "redactionsPending_plural": "{{count}} szerkesztés függőben",
+    "applyRedactions": "Kitakarások végleges alkalmazása",
+    "noRedactions": "Nincs függőben lévő kitakarás.",
+    "redactionsPending": "{{count}} kitakarás függőben",
+    "redactionsPending_plural": "{{count}} kitakarás függőben",
     "encrypt": "Titkosítás",
     "userPasswordPlaceholder": "Felhasználói jelszó",
     "ownerPasswordPlaceholder": "Tulajdonosi jelszó",
     "encryptBtn": "Titkosítás…",
     "decrypt": "Visszafejtés",
-    "currentPasswordPlaceholder": "Jelenlegi jelszó",
     "decryptBtn": "Visszafejtés",
     "noDocument": "Nincs nyitott dokumentum.",
     "permCanPrint": "Nyomtatás",
@@ -253,12 +252,16 @@
     "permCanFillForms": "Űrlapok kitöltése",
     "permCanExtractContent": "Tartalom kinyerése",
     "permCanAssemble": "Összeállítás",
-    "searchRedact": "Keresés és szerkesztés",
-    "searchRedactPlaceholder": "Keresendő és szerkesztendő szöveg…",
-    "searchRedactBtn": "Keresés és szerkesztés",
+    "searchRedact": "Keresés és kitakarás",
+    "searchRedactPlaceholder": "Keresendő és kitakarandó szöveg…",
+    "searchRedactBtn": "Keresés és kitakarás",
     "redactMetadataTitle": "Metaadatok",
     "redactMetadataDesc": "Szerző, cím és egyéb azonosító metaadatok eltávolítása.",
-    "redactMetadataBtn": "Metaadatok eltávolítása"
+    "redactMetadataBtn": "Metaadatok eltávolítása",
+    "ownerPasswordForRemoval": "Tulajdonosi (engedély) jelszó",
+    "removePasswordHelp": "A jelszó eltávolításához a tulajdonosi jelszó kell, amely az engedélyeket védi. A fájl megnyitásához használt jelszó nem elég, hacsak nem az a tulajdonosi jelszó is.",
+    "removePasswordReady": "Ezt a fájlt a tulajdonosi jelszóval nyitotta meg, így a védelem újrabeírás nélkül eltávolítható.",
+    "removePasswordNotProtected": "Ez a dokumentum nincs jelszóval védve."
   },
   "organize": {
     "thumbnails": "Miniatűrök",
@@ -287,33 +290,34 @@
     "combine": "Fájlok egyesítése",
     "splitRange": "Felosztás tartomány szerint",
     "splitRangeHint": "Először válassza ki az oldalakat",
-    "moveLeft": "Move selected page left",
-    "moveRight": "Move selected page right",
-    "moveLeftShort": "Left",
-    "moveRightShort": "Right",
-    "rotateLeft": "Rotate left",
-    "rotateRight": "Rotate right",
-    "rotateLeftShort": "Left",
-    "rotateRightShort": "Right",
-    "addingPdf": "Adding PDF…",
-    "pdfAdded": "PDF added",
-    "combiningFiles": "Combining {{count}} file(s)…",
-    "filesCombined": "{{count}} file(s) combined",
-    "insertingPdf": "Inserting PDF before page {{page}}…",
-    "pdfInserted": "PDF inserted",
-    "exportingPages": "Exporting {{count}} page(s)…",
-    "selectionExported": "Selection exported to {{name}}",
-    "splittingPages": "Splitting into individual pages…",
-    "pagesSaved": "{{count}} pages saved",
-    "splittingRanges": "Splitting {{count}} range(s)…",
-    "filesSaved": "{{count}} file(s) saved"
+    "moveLeft": "Kijelölt oldal mozgatása balra",
+    "moveRight": "Kijelölt oldal mozgatása jobbra",
+    "moveLeftShort": "Balra",
+    "moveRightShort": "Jobbra",
+    "rotateLeft": "Forgatás balra",
+    "rotateRight": "Forgatás jobbra",
+    "rotateLeftShort": "Balra",
+    "rotateRightShort": "Jobbra",
+    "addingPdf": "PDF hozzáadása…",
+    "pdfAdded": "PDF hozzáadva",
+    "combiningFiles": "{{count}} fájl egyesítése…",
+    "filesCombined": "{{count}} fájl egyesítve",
+    "insertingPdf": "PDF beszúrása a(z) {{page}}. oldal elé…",
+    "pdfInserted": "PDF beszúrva",
+    "exportingPages": "{{count}} oldal exportálása…",
+    "selectionExported": "Kijelölés exportálva: {{name}}",
+    "splittingPages": "Felosztás egyedi oldalakra…",
+    "pagesSaved": "{{count}} oldal mentve",
+    "splittingRanges": "{{count}} tartomány felosztása…",
+    "filesSaved": "{{count}} fájl mentve"
   },
   "unsavedChanges": {
     "title": "Mentetlen változtatások",
     "message": "Szeretné menteni a változtatásokat a folytatás előtt?",
     "save": "Mentés",
     "discard": "Változtatások elvetése",
-    "cancel": "Mégse"
+    "cancel": "Mégse",
+    "messageNamed": "Szeretné menteni a módosításait a(z) {{name}} fájlba, mielőtt folytatja?"
   },
   "welcome": {
     "title": "Nyisson meg egy PDF-et a kezdéshez",
@@ -327,13 +331,13 @@
     "lede": "Olvasson, szerkesszen, konvertáljon, töltsön ki és írjon alá — teljes egészében az eszközén.",
     "privacyPromise": "Helyi-első · a dokumentumok soha nem hagyják el ezt az eszközt",
     "dropPdfHere": "Húzza ide a PDF-et",
-    "v3Subtitle": "Open a PDF to read, edit, convert or sign it locally.",
-    "openFileAria": "Choose a PDF file to open",
-    "clearRecent": "Clear recent",
-    "recentShort": "Recent",
-    "removeRecentAria": "Remove {{name}}",
-    "backToDocument": "Back to document",
-    "loadingDocument": "Loading document…"
+    "v3Subtitle": "Nyisson meg egy PDF-et helyben olvasáshoz, módosításhoz, konvertáláshoz vagy aláíráshoz.",
+    "openFileAria": "Válassza ki a megnyitandó PDF-fájlt",
+    "clearRecent": "Legutóbbiak törlése",
+    "recentShort": "Legutóbbiak",
+    "removeRecentAria": "{{name}} eltávolítása",
+    "backToDocument": "Vissza a dokumentumhoz",
+    "loadingDocument": "Dokumentum betöltése…"
   },
   "settings": {
     "language": "Nyelv",
@@ -350,15 +354,29 @@
     "reviewerNamePlaceholder": "Megjegyzésekben használt név",
     "exportPreferences": "Exportálási beállítások",
     "exportFormatLabel": "Alapértelmezett exportálási formátum",
-    "autosave": "Automatikus mentés",
-    "autosaveEnable": "Változtatások automatikus mentése",
     "themeLabel": "Téma",
     "ocrDefaults": "OCR alapértelmezések",
     "ocrLanguageLabel": "Alapértelmezett nyelv (ISO-639-2)",
     "ocrLanguagePlaceholder": "pl. eng, nld, deu",
-    "updates": "Updates",
-    "automaticUpdateCheck": "Check for a new version at startup",
-    "automaticUpdateCheckHint": "PDFluent asks pdfluent.com whether a newer version exists, a few seconds after it starts. Nothing from your documents is sent. Turn this off and the app never checks on its own — \"Check for updates\" still works whenever you ask for it."
+    "updates": "Frissítések",
+    "automaticUpdateCheck": "Új verzió keresése indításkor",
+    "automaticUpdateCheckHint": "A PDFluent indítás után néhány másodperccel megkérdezi a pdfluent.com-tól, hogy van-e újabb verzió. A dokumentumaiból semmit nem küld el. Kapcsolja ki ezt, és az alkalmazás soha nem ellenőriz magától — a „Frissítések keresése” továbbra is működik, amikor csak kéri.",
+    "recoveryCopy": "Helyreállítási másolat",
+    "recoveryCopyEnable": "Helyreállítási másolat a nem mentett változtatásokról, összeomlás után felkínálva",
+    "view": "Nézet",
+    "defaultZoomLabel": "Alapértelmezett nagyítás",
+    "defaultZoomFitWidth": "Szélességhez igazítás (alapértelmezett)",
+    "defaultZoomFitPage": "Oldalhoz igazítás",
+    "defaultZoomActualSize": "Tényleges méret (100%)",
+    "defaultZoomLastUsed": "Legutóbb használt",
+    "defaultZoomHint": "A dokumentum ezzel a nagyítással nyílik meg, és az ablakhoz igazodik, amíg Ön nem nagyít rajta. A Szélességhez igazítás ehelyett a teljes oldalt mutatja, amikor az egyértelműen jobban illeszkedik.",
+    "securityTitle": "Biztonság",
+    "formScriptsLabel": "Űrlapszkriptek",
+    "formScriptsAsk": "Kérdezés",
+    "formScriptsAlways": "Mindig",
+    "formScriptsNever": "Soha",
+    "formScriptsHint": "Az űrlapok tartalmazhatnak szkripteket, például számításokat. A Kérdezés az alapértelmezett: az űrlap a tárolt értékeivel nyílik meg, és semmi sem fut, amíg nem járul hozzá.",
+    "formScriptsPinned": "Ezt a választást a szervezete állította be. Itt nem módosítható."
   },
   "errors": {
     "loadFailed": "Dokumentum betöltése sikertelen",
@@ -367,7 +385,7 @@
     "unknownError": "Váratlan hiba történt",
     "ocrFailed": "OCR sikertelen",
     "exportFailed": "Exportálás sikertelen",
-    "redactionFailed": "Szerkesztés sikertelen",
+    "redactionFailed": "A kitakarás sikertelen",
     "textEditFailed": "Szöveg szerkesztése sikertelen",
     "layoutEditFailed": "Elrendezés szerkesztése sikertelen",
     "annotationFailed": "Megjegyzés sikertelen",
@@ -381,7 +399,8 @@
     "addPageFailed": "PDF hozzáadása sikertelen",
     "insertFailed": "PDF beszúrása sikertelen",
     "splitFailed": "Felosztás sikertelen",
-    "commandFailedTitle": "'{{command}}' did not complete"
+    "commandFailedTitle": "'{{command}}' nem fejeződött be",
+    "commandRetrying": "Átmeneti hiba: {{command}} — újrapróbálás"
   },
   "events": {
     "formFieldUpdated": "Űrlapmező frissítve",
@@ -430,9 +449,9 @@
     "pageNotFound": "Az oldal nem található",
     "requiresFontInspection": "A szöveg szerkesztéséhez betűtípus-ellenőrzés szükséges (a 6. fázisban tervezett).",
     "rejection": {
-      "bannerTitle": "This text was not changed",
-      "bannerDetail": "Reason reported by the PDF engine: {{detail}}",
-      "bannerDismiss": "Dismiss",
+      "bannerTitle": "Ez a szöveg nem változott",
+      "bannerDetail": "A PDF-motor által jelentett ok: {{detail}}",
+      "bannerDismiss": "Bezárás",
       "replacement-too-long": {
         "tooltip": "Replacement is too long",
         "explanation": "The replacement is longer than the text it replaces. Keep it the same length or shorter so the surrounding layout stays intact."
@@ -491,8 +510,8 @@
       }
     },
     "fallback": {
-      "fontSubstitutedTitle": "A standard font wrote the new text",
-      "fontSubstitutedMessage": "The original font of this text has no glyph for one or more characters you typed, so Helvetica was used for the replacement. The text is correct; it may look slightly different from the rest of the line."
+      "fontSubstitutedTitle": "Szabványos betűtípus írta az új szöveget",
+      "fontSubstitutedMessage": "A szöveg eredeti betűtípusa nem tartalmaz jelet a beírt karakterek közül egyhez vagy többhöz, ezért a helyettesítéshez Helvetica betűtípust használtunk. A szöveg helyes; kissé eltérhet a sor többi részétől."
     }
   },
   "validation": {
@@ -502,7 +521,7 @@
     "objectInLockedLayer": "Az objektum zárolt rétegben van, és nem módosítható.",
     "formsWithoutFields": "Az űrlapkitöltési mód aktív egy, az űrlapmezők nélküli dokumentumon.",
     "annotationToolbarWrongMode": "A megjegyzési sáv látható a(z) '{{mode}}' módban, de 'annotating' szükséges.",
-    "redactionToolbarWrongMode": "A szerkesztési sáv látható a(z) '{{mode}}' módban, de 'redacting' szükséges."
+    "redactionToolbarWrongMode": "A kitakarási sáv a(z) '{{mode}}' módban látható, de kitakarási módot igényel."
   },
   "revisions": {
     "deletedAnnotations": "## Törölt megjegyzések",
@@ -549,13 +568,13 @@
     "exportExcelDone": "Excel táblázat exportálva",
     "exportPowerpointRunning": "Konvertálás PowerPoint-ba…",
     "exportPowerpointDone": "PowerPoint bemutató exportálva",
-    "applyRedactRunning": "Szerkesztések alkalmazása…",
-    "applyRedactDone": "Szerkesztések alkalmazva",
-    "applyRedactFailed": "Szerkesztések alkalmazása sikertelen",
-    "searchRedactRunning": "Keresés és szerkesztés…",
-    "searchRedactDone": "{{count}} egyezés szerkesztve",
-    "searchRedactDone_plural": "{{count}} egyezés szerkesztve",
-    "searchRedactFailed": "Keresés és szerkesztés sikertelen",
+    "applyRedactRunning": "Kitakarások alkalmazása…",
+    "applyRedactDone": "Kitakarások alkalmazva",
+    "applyRedactFailed": "A kitakarások alkalmazása sikertelen",
+    "searchRedactRunning": "Keresés és kitakarás…",
+    "searchRedactDone": "{{count}} találat kitakarva",
+    "searchRedactDone_plural": "{{count}} találat kitakarva",
+    "searchRedactFailed": "A keresés és kitakarás sikertelen",
     "redactMetadataRunning": "Metaadatok eltávolítása…",
     "redactMetadataDone": "Metaadatok eltávolítva",
     "redactMetadataFailed": "Metaadatok eltávolítása sikertelen",
@@ -566,12 +585,16 @@
     "watermarkDone": "Vízjel hozzáadva",
     "watermarkFailed": "Vízjel hozzáadása sikertelen",
     "watermarkRunning": "Vízjel hozzáadása…",
-    "pdfaRunning": "Converting to PDF/A…",
-    "pdfaDone": "PDF/A written",
-    "pdfaFailed": "PDF/A conversion failed",
-    "metadataRunning": "Saving properties…",
-    "metadataDone": "Properties saved",
-    "metadataFailed": "Could not save properties"
+    "pdfaRunning": "Konvertálás PDF/A-ba…",
+    "pdfaDone": "PDF/A kiírva",
+    "pdfaFailed": "PDF/A-konvertálás sikertelen",
+    "metadataRunning": "Tulajdonságok mentése…",
+    "metadataDone": "Tulajdonságok mentve",
+    "metadataFailed": "Nem sikerült menteni a tulajdonságokat",
+    "exportMarkdownRunning": "Exportálás Markdownként…",
+    "exportMarkdownDone": "Markdown exportálva",
+    "exportTablesRunning": "Táblázatok exportálása Excelbe…",
+    "exportTablesDone": "Táblázatok exportálva Excelbe ({{count}})"
   },
   "panels": {
     "search": "Keresés",
@@ -586,8 +609,8 @@
     "annotationCreated": "Megjegyzés létrehozva",
     "annotationUpdated": "Megjegyzés frissítve",
     "annotationDeleted": "Megjegyzés törölve",
-    "redactionCreated": "Szerkesztés létrehozva",
-    "redactionApplied": "Szerkesztés alkalmazva",
+    "redactionCreated": "Kitakarás létrehozva",
+    "redactionApplied": "Kitakarás alkalmazva",
     "metadataChanged": "Metaadatok megváltoztak",
     "pageMutated": "Oldal módosítva",
     "textEditCommitted": "Szöveg szerkesztése mentve",
@@ -714,7 +737,10 @@
     "formatJpeg": "JPEG (kép)",
     "formatDocx": "Word dokumentum (.docx)",
     "formatXlsx": "Excel táblázat (.xlsx)",
-    "formatPptx": "PowerPoint bemutató (.pptx)"
+    "formatPptx": "PowerPoint bemutató (.pptx)",
+    "formatMarkdown": "Markdown (.md) - Előnézet",
+    "formatTablesXlsx": "Táblázatok Excelbe (.xlsx) - Előnézet",
+    "noTablesFound": "Ebben a dokumentumban nem találhatók táblázatok."
   },
   "goToPage": {
     "title": "Ugrás oldalra",
@@ -729,7 +755,9 @@
     "documentLabel": "Dokumentum:",
     "savedLabel": "Mentve:",
     "recoveryPath": "Helyreállítási útvonal:",
-    "restore": "Visszaállítás"
+    "restore": "Visszaállítás",
+    "untitled": "Névtelen dokumentum",
+    "andMore": "{{name}} és még {{count}}"
   },
   "emptyStates": {
     "noDocument": "Nincs nyitott dokumentum",
@@ -759,7 +787,7 @@
   "textContext": {
     "editText": "Szöveg szerkesztése",
     "annotate": "Megjegyzés hozzáadása",
-    "redact": "Szerkesztés",
+    "redact": "Kitakarás",
     "copy": "Másolás",
     "summarize": "Összefoglalás",
     "explain": "Magyarázat",
@@ -839,7 +867,26 @@
     "statusUnavailableWithReason": "Az OCR futtatókörnyezet nem elérhető: {{reason}}",
     "statusRetry": "Ellenőrzés újra",
     "runtimePath": "Futtatókörnyezet: {{path}}",
-    "missingPackages": "Hiányzó: {{packages}}"
+    "missingPackages": "Hiányzó: {{packages}}",
+    "noScannedPagesTitle": "Nincs mit felismerni",
+    "unavailable": {
+      "platform": "Az OCR nem érhető el ezen a platformon.",
+      "missing": "A verzióhoz tartozó OCR-fájlok hiányoznak vagy hiányosak. A visszaállításhoz telepítse újra a PDFluentet."
+    },
+    "settings": {
+      "unknown": "OCR-összetevő: ellenőrzés…",
+      "installed": "OCR-összetevő: Tesseract {{version}} telepítve"
+    },
+    "errors": {
+      "OCR_COMPONENT_UNSUPPORTED_PLATFORM": "Az OCR összetevő nem érhető el ezen a platformon.",
+      "OCR_COMPONENT_NOT_INSTALLED": "Az OCR összetevő nincs telepítve.",
+      "OCR_LANGUAGE_MISSING": "Az OCR nyelvi csomagja nincs telepítve.",
+      "OCR_SIGNED_DOCUMENT": "Ez a dokumentum alá van írva. Az OCR megváltoztatná az aláírt oldalakat, ezért nem fut le.",
+      "OCR_NOT_PERMITTED": "A dokumentum engedélyei nem teszik lehetővé a tartalom módosítását.",
+      "OCR_DOCUMENT_CHANGED": "A dokumentum megváltozott az OCR futása közben. Futtassa újra az OCR-t.",
+      "OCR_ENGINE_FAILED": "Az OCR hibával leállt.",
+      "OCR_PAGE_OUT_OF_RANGE": "Egy felismerendő oldal nincs a dokumentumban."
+    }
   },
   "docInfo": {
     "title": "Cím",
@@ -879,7 +926,17 @@
     "italicComingSoon": "Dőlt formázás hamarosan",
     "sourceDigital": "PDF szövegréteg",
     "sourceOcr": "OCR",
-    "browserLimitedNote": "Kattintson a szövegre az oldalon a támogatott PDF szöveg szerkesztéséhez. Képek és hivatkozások az asztali alkalmazásban érhetők el."
+    "browserLimitedNote": "Kattintson a szövegre az oldalon a támogatott PDF szöveg szerkesztéséhez. Képek és hivatkozások az asztali alkalmazásban érhetők el.",
+    "typeface": {
+      "label": "Betűtípus",
+      "default": "Dokumentum betűtípusa",
+      "noEmbed": "{{family}}: a betűtípus licence nem teszi lehetővé PDF-be ágyazását",
+      "refusedLicence": "{{family}} nem használható: a licenc nem teszi lehetővé PDF-be ágyazását. Válasszon másik betűtípust.",
+      "refusedGlyphs": "{{family}} nem tartalmaz glifet a következőhöz: {{characters}}. Válasszon másik betűtípust.",
+      "refusedGone": "Ez a betűtípus már nincs telepítve. Válasszon másikat.",
+      "refusedText": "A módosítandó szöveg már nincs az oldalon.",
+      "refusedUnusable": "{{family}} nem olvasható be betűtípusként. Válasszon másik betűtípust."
+    }
   },
   "rightPanel": {
     "properties": "Tulajdonságok",
@@ -891,7 +948,7 @@
     "annotationColorValue": "Megjegyzés színe: {{color}}",
     "strokeWidth": "Vonalvastagság",
     "comments": "Megjegyzések",
-    "redactions": "Szerkesztések",
+    "redactions": "Kitakarások",
     "ocr": "OCR",
     "pdfa": "PDF/A",
     "formFields": "Űrlapmezők",
@@ -900,13 +957,13 @@
     "changeColor": "Szín módosítása",
     "deleteMarkup": "Jelölés törlése",
     "delete": "Törlés",
-    "redactionConfirm": "Véglegesen alkalmazza a(z) {{count}} szerkesztést? Ez nem vonható vissza.",
-    "redactionConfirm_plural": "Véglegesen alkalmazza a(z) {{count}} szerkesztést? Ez nem vonható vissza.",
-    "noRedactions": "Nincs függőben lévő szerkesztés.",
-    "redactionCount": "{{count}} szerkesztés függőben",
-    "redactionCount_plural": "{{count}} szerkesztés függőben",
-    "applyRedactions": "Szerkesztések végleges alkalmazása",
-    "deleteRedaction": "Szerkesztés törlése",
+    "redactionConfirm": "Véglegesen alkalmaz {{count}} kitakarást? Ez nem vonható vissza.",
+    "redactionConfirm_plural": "Véglegesen alkalmaz {{count}} kitakarást? Ez nem vonható vissza.",
+    "noRedactions": "Nincs függőben lévő kitakarás.",
+    "redactionCount": "{{count}} kitakarás függőben",
+    "redactionCount_plural": "{{count}} kitakarás függőben",
+    "applyRedactions": "Kitakarások végleges alkalmazása",
+    "deleteRedaction": "Kitakarás törlése",
     "signatures": "Digitális aláírások",
     "watermarkApply": "Vízjel alkalmazása",
     "watermarkOpacity": "Átlátszatlanság",
@@ -944,9 +1001,12 @@
     "flatten": "XFA egylapúsítása",
     "flattenDone": "XFA egylapúsítva. Exportálja a PDF-et a statikus verzió letöltéséhez.",
     "flattenFailed": "XFA egylapúsítása sikertelen",
-    "convertToStandard": "Convert to standard PDF",
-    "convertedToStandard": "XFA converted to standard PDF",
-    "convertFailed": "Conversion failed: {{message}}"
+    "convertToStandard": "Konvertálás szabványos PDF-be",
+    "convertedToStandard": "XFA konvertálva szabványos PDF-be",
+    "convertFailed": "A konvertálás sikertelen: {{message}}",
+    "bannerTitle": "XFA-űrlap",
+    "bannerBody": "Ez az XFA-űrlap változtatás nélkül jelenik meg. Ha ki szeretné tölteni, szerkeszteni vagy keresni szeretne a mezőiben, alakítsa át szabványos PDF-fé.",
+    "bannerBodyExperimental": "Ez az XFA-űrlap változtatás nélkül jelenik meg. A mezők kitöltése kísérleti funkció; alakítsa át szabványos PDF-fé, hogy megbízhatóan kitölthesse, szerkeszthesse és kereshessen benne."
   },
   "security": {
     "activeContentBadge": "Blokkolva",
@@ -970,7 +1030,8 @@
     "highlight": "Kiemelés",
     "strikethrough": "Áthúzás",
     "underline": "Aláhúzás",
-    "copyText": "Szöveg másolása"
+    "copyText": "Szöveg másolása",
+    "copied": "Másolva"
   },
   "update": {
     "available": "Frissítés elérhető",
@@ -980,10 +1041,10 @@
     "installing": "Telepítés…",
     "checkFailed": "Frissítések ellenőrzése sikertelen",
     "upToDate": "A legújabb verziót használod",
-    "installed": "Update installed",
-    "restartNow": "Restart now",
-    "restartUnsaved": "Save your changes before restarting.",
-    "restartManual": "If it doesn't restart automatically, quit and reopen PDFluent to finish."
+    "installed": "Frissítés telepítve",
+    "restartNow": "Újraindítás most",
+    "restartUnsaved": "Újraindítás előtt mentse a változtatásokat.",
+    "restartManual": "Ha nem indul újra automatikusan, a befejezéshez lépjen ki a PDFluentből, és nyissa meg újra."
   },
   "telemetry": {
     "addNoteLabel": "Szeretne valamit hozzáfűzni? (nem kötelező)",
@@ -1012,6 +1073,11 @@
     "sentTitle": "Elküldve. Köszönjük.",
     "settingsAutoSend": "Automatikus küldés kérdezés nélkül",
     "settingsAutoSendNote": "Az automatikus jelentések megtisztítottak és személyes adatoktól mentesek, pontosan úgy, mint a kézzel ellenőrzöttek.",
+    "settingsSentReports": "Erről a számítógépről elküldött összeomlási jelentések: {{count}}. {{days}} nap után automatikusan töröljük őket a szerverünkről.",
+    "settingsDeleteReports": "Összeomlási jelentéseim törlése",
+    "settingsDeleting": "Törlés…",
+    "settingsDeleted": "Törölt összeomlási jelentések: {{count}}",
+    "settingsDeleteFailed": "{{count}} törlése nem sikerült. Ellenőrizze a kapcsolatot, és próbálja újra.",
     "settingsDescription": "A jelentések soha nem tartalmaznak személyes adatokat vagy dokumentumtartalmat. Küldés előtt minden tisztításra kerül, és minden jelentést előzetesen láthat. Alapértelmezés szerint ki van kapcsolva.",
     "settingsTitle": "Összeomlási és hibajelentések",
     "settingsToggle": "Összeomlási és hibajelentések küldése",
@@ -1019,7 +1085,11 @@
     "typeBug": "Hiba",
     "typeCrash": "Összeomlás",
     "typeFeedback": "Visszajelzés",
-    "whatGetsSent": "Mi kerül elküldésre"
+    "whatGetsSent": "Mi kerül elküldésre",
+    "settingsSentFeedback": "Az erről a számítógépről elküldött visszajelzési jelentések: {{count}}. A szerverünkről {{days}} nap után automatikusan töröljük őket.",
+    "settingsDeleteFeedback": "Visszajelzési jelentéseim törlése",
+    "settingsFeedbackDeleted": "Törölt visszajelzési jelentések: {{count}}",
+    "settingsFeedbackDeleteFailed": "Nem sikerült törölni {{count}} visszajelzési jelentést. Ellenőrizze a kapcsolatot, és próbálja újra."
   },
   "ai": {
     "summaryInstruction": "Adj tömör összefoglalót az alábbi dokumentumról magyarul. Minden pozíciónál tüntesd fel a munkáltatót, a szerepet és az időszakot. Használj felsoroláspontokat.",
@@ -1076,7 +1146,8 @@
       "scrollLeft": "Görgetési módok balra",
       "scrollRight": "Görgetési módok jobbra",
       "workMode": "Munka mód",
-      "searchPlaceholder": "Keresés a dokumentumban"
+      "searchPlaceholder": "Keresés a dokumentumban",
+      "allTools": "Minden eszköz"
     },
     "menu": {
       "about": "Névjegy",
@@ -1147,22 +1218,17 @@
       "draw": "Rajzolás",
       "signatureName": "Aláírás neve",
       "typeName": "Írja be a nevét…",
-      "selectStyle": "Stílus kiválasztása",
-      "styleClassic": "Kurzív klasszikus",
-      "styleElegant": "Kurzív elegáns",
-      "styleBrush": "Ecset aláírás",
-      "styleModern": "Modern kézírás",
       "drawHere": "Rajzoljon itt az egérrel, trackpaddel vagy stílussal",
       "clear": "Törlés",
       "apply": "Alkalmaz",
-      "defaultSignature": "Aláírás",
       "clickToPlaceSignature": "Kattintson az oldalra az aláírás elhelyezéséhez.",
       "addInitials": "Kezdőbetűk hozzáadása",
       "initialsIntro": "Írja be a kezdőbetűket a gyors elhelyezéshez a kezdő mezőkön.",
       "initials": "Kezdőbetűk",
       "initialsPlaceholder": "pl. AB",
-      "defaultInitials": "AB",
-      "clickToPlaceInitials": "Kattintson az oldalra az kezdőbetűk elhelyezéséhez."
+      "clickToPlaceInitials": "Kattintson az oldalra az kezdőbetűk elhelyezéséhez.",
+      "signatureFont": "Aláírás betűtípusa",
+      "plainItalic": "Sima dőlt"
     },
     "overlay": {
       "signaturePlaced": "Aláírás elhelyezve!",
@@ -1177,13 +1243,13 @@
     "textbox": {
       "editTitle": "Szövegmező szerkesztése",
       "newTitle": "Új szövegmező",
-      "intro": "Ez a szöveg az aktuális oldalra helyezve kerül fedőként. Az üres mentése eltávolít egy meglévő szövegmezőt.",
       "label": "Szöveg",
       "placeholder": "Írja be a szöveget…",
       "delete": "Törlés",
       "deleted": "Szövegmező törölve.",
       "updated": "Szövegmező frissítve.",
-      "added": "Új szövegmező hozzáadva."
+      "added": "Új szövegmező hozzáadva.",
+      "introPdf": "A szövegdoboz beíródik a PDF-be, és minden PDF-megjelenítőben látszik. Üresen mentve egy meglévő szövegdoboz törlődik."
     },
     "rail": {
       "tools": "PDF eszközök",
@@ -1197,12 +1263,14 @@
       "more": "További eszközök",
       "strikeText": "Szöveg áthúzása",
       "underlineText": "Szöveg aláhúzása",
-      "addAttachment": "Melléklet hozzáadása"
+      "addAttachment": "Melléklet hozzáadása",
+      "drawRectangle": "Téglalap rajzolása"
     },
     "railToasts": {
-      "commentMode": "Jegyzet mód aktív. Válasszon szöveget és válassza a Jegyzet lehetőséget, vagy használja a megjegyzések listáját egy jegyzet hozzáadásához.",
+      "commentMode": "Jegyzet mód. Kattintson az oldalon arra a helyre, ahová a jegyzet kerüljön.",
       "strikeout": "Áthúzás aktív — válasszon szöveget az alkalmazáshoz.",
-      "underline": "Aláhúzás aktív — válasszon szöveget az alkalmazáshoz."
+      "underline": "Aláhúzás aktív — válasszon szöveget az alkalmazáshoz.",
+      "rectangle": "Téglalap aktív — húzzon az oldalon a rajzoláshoz."
     },
     "tools": {
       "lede": "Válasszon egy eszközt az elkezdéshez. Minden helyileg fut ezen az eszközön.",
@@ -1217,7 +1285,7 @@
       "merge": "Fájlok egyesítése",
       "mergeSub": "PDF-ek összevonása",
       "contentSecurity": "Tartalom és biztonság",
-      "redact": "Redakcióra",
+      "redact": "Kitakarás",
       "redactSub": "Véglegesen kitakart szöveg",
       "protect": "Védelem",
       "protectSub": "Jelszó és jogosultságok",
@@ -1238,17 +1306,18 @@
       "layers": "{{count}} réteg",
       "manageLayers": "Rétegek kezelése",
       "layersVisible": "{{count}} réteg látható.",
-      "archiveAndData": "Archiving and data",
-      "pdfaSub": "Check or convert for long-term archiving",
-      "invoiceSub": "Read the ZUGFeRD/Factur-X invoice inside",
-      "metadataSub": "Title and author of this document"
+      "archiveAndData": "Archiválás és adatok",
+      "pdfaSub": "Ellenőrzés vagy konvertálás hosszú távú archiváláshoz",
+      "invoiceSub": "A beágyazott ZUGFeRD/Factur-X számla beolvasása",
+      "metadataSub": "A dokumentum címe és szerzője",
+      "flattenForm": "Laposítás",
+      "flattenFormTitle": "Az űrlap laposítása: a kitöltött értékek az oldal részévé válnak, és a mezők eltűnnek.",
+      "flattenFormDone": "Az űrlap laposítva. A visszavonás visszahozza a mezőket.",
+      "flattenFormFailed": "Az űrlapot nem sikerült laposítani: {{message}}"
     },
     "edit": {
       "lede": "Kattintson a dokumentum szövegére az beágyazott szerkesztéshez. A formázási sáv közvetlenül a kijelölés felett jelenik meg.",
       "formatText": "Szöveg formázása",
-      "fontLabel": "Betűtípus",
-      "fontHint": "A meglévő PDF-szöveg a beágyazott PDF betűtípusokat használja. A \"{{font}}\" betűtípus az újonnan hozzáadott szövegmezőkhöz lesz használva.",
-      "fontEmbedded": "Beágyazott PDF betűtípus",
       "color": "Szín",
       "colorLabel": "Szín {{color}}",
       "addContent": "Tartalom hozzáadása",
@@ -1261,7 +1330,18 @@
       "clickAnywhereTextBox": "Kattintson bárhol az oldalra a szövegmező elhelyezéséhez.",
       "clickAnywhereImage": "Kattintson bárhol az oldalra a kép elhelyezéséhez.",
       "selection": "Kijelölés",
-      "annotationOnPage": "{{type}} az {{page}}. oldalon"
+      "annotationOnPage": "{{type}} az {{page}}. oldalon",
+      "placeStamp": "Bélyegző elhelyezése",
+      "stampLabel": "Bélyegző",
+      "clickToPlaceStamp": "Kattintson az oldalra a bélyegző elhelyezéséhez.",
+      "placementModeStamp": "Elhelyezési mód: bélyegző",
+      "stampPlaced": "Bélyegző elhelyezve.",
+      "deleteAnnotation": "Megjegyzés törlése",
+      "annotationColor": "Megjegyzés színe",
+      "editTextBox": "Szöveg szerkesztése",
+      "replaceImage": "Kép cseréje",
+      "imageReplaced": "Kép lecserélve.",
+      "moveHint": "Húzza az áthelyezéshez, egy sarkot az átméretezéshez, vagy mozgassa a nyílbillentyűkkel."
     },
     "convert": {
       "exportPdfTo": "PDF exportálása",
@@ -1279,10 +1359,16 @@
       "confidenceFrom": "Megbízhatóság {{value}}%-tól",
       "ocrOff": "OCR ki",
       "ocrOn": "OCR be",
-      "ocrRunning": "OCR helyileg futhat…"
+      "ocrRunning": "OCR helyileg futhat…",
+      "ocrComponentUnknown": "OCR komponens: ellenőrzés…",
+      "ocrComponentInstalled": "OCR komponens telepítve",
+      "ocrLastRun": "Utolsó futás: {{pages}} oldal, {{words}} szó hozzáadva kereshető szövegként",
+      "ocrRunningProgress": "Oldal felismerése: {{done}} / {{total}}…",
+      "markdown": "Markdown (előnézet)",
+      "tablesToExcel": "Táblázatok Excelbe (előnézet)"
     },
     "esign": {
-      "lede": "Sign with a certificate of your own, and check the signatures a document already carries. Both happen on this device.",
+      "lede": "Írjon alá saját tanúsítvánnyal, és ellenőrizze a dokumentumon már szereplő aláírásokat. Mindkettő ezen az eszközön történik.",
       "fillAndSign": "Töltse ki a dokumentumokat és írja alá",
       "addSignature": "Aláírás hozzáadása",
       "addInitials": "Kezdőbetűk hozzáadása",
@@ -1290,25 +1376,25 @@
       "placementModeInitials": "Elhelyezési mód: Kezdőbetűk",
       "clickToPlaceSignature": "Kattintson bárhol az oldalra az aláírás elhelyezéséhez.",
       "clickToPlaceInitials": "Kattintson bárhol az oldalra az kezdőbetűk elhelyezéséhez.",
-      "verifySection": "Signatures",
-      "verify": "Check signatures",
-      "desktopOnly": "Available in the desktop app",
-      "unsigned": "This document carries no signatures.",
-      "signSection": "Sign with a certificate",
-      "padesLevel": "Produces a PAdES B-B signature: your certificate over the whole file, no timestamp server involved.",
-      "certificate": "Certificate (.p12 or .pfx)",
-      "certificateNone": "No certificate chosen",
-      "chooseCertificate": "Choose certificate",
-      "certificatePassword": "Certificate password",
-      "reason": "Reason (optional)",
-      "reasonPlaceholder": "Why you are signing",
-      "sign": "Sign and save a copy",
-      "signing": "Signing…",
-      "signNeedsCertificate": "Choose a certificate and enter its password first.",
-      "signSaved": "Signed copy saved as {{name}}",
-      "signFailed": "Signing failed: {{message}}",
-      "usageRights": "Reader enablement (usage rights)",
-      "usageRightsInvalidated": "Usage rights invalidated — this file was edited, so Adobe Reader no longer treats it as an enabled form."
+      "verifySection": "Aláírások",
+      "verify": "Aláírások ellenőrzése",
+      "desktopOnly": "Az asztali alkalmazásban érhető el",
+      "unsigned": "Ez a dokumentum nem tartalmaz aláírást.",
+      "signSection": "Aláírás tanúsítvánnyal",
+      "padesLevel": "PAdES B-B aláírást hoz létre: a tanúsítványa a teljes fájlra vonatkozik, időbélyeg-szerver bevonása nélkül.",
+      "certificate": "Tanúsítvány (.p12 vagy .pfx)",
+      "certificateNone": "Nincs kiválasztott tanúsítvány",
+      "chooseCertificate": "Tanúsítvány kiválasztása",
+      "certificatePassword": "Tanúsítvány jelszava",
+      "reason": "Ok (nem kötelező)",
+      "reasonPlaceholder": "Miért írja alá",
+      "sign": "Aláírás és másolat mentése",
+      "signing": "Aláírás…",
+      "signNeedsCertificate": "Előbb válasszon tanúsítványt, és adja meg a jelszavát.",
+      "signSaved": "Az aláírt másolat mentve: {{name}}",
+      "signFailed": "Az aláírás sikertelen: {{message}}",
+      "usageRights": "Reader engedélyezése (használati jogok)",
+      "usageRightsInvalidated": "A használati jogok érvénytelenítve — ezt a fájlt módosították, ezért az Adobe Reader már nem kezeli engedélyezett űrlapként."
     },
     "protect": {
       "lede": "Védje meg PDF-dokumentumát erős kriptográfiai jelszavakkal. A módosítások helyileg azonnal alkalmazva lesznek.",
@@ -1330,9 +1416,11 @@
       "localViaTauri": "Helyi Tauri-paranccsal, nincs böngésző futtatás",
       "compressingImages": "Képek tömörítése…",
       "percentComplete": "{{percent}}% kész",
-      "compressPdf": "PDF tömörítése",
       "desktopOnly": "Csak az asztali alkalmazásban elérhető",
-      "backToTools": "Vissza az eszközökhöz"
+      "backToTools": "Vissza az eszközökhöz",
+      "saveCopy": "Tömörített másolat mentése másként…",
+      "replaceOpen": "Tömörítse és cserélje le a megnyitott dokumentumot",
+      "replaceNote": "A másolat változatlanul hagyja a megnyitott dokumentumot és annak fájlját. A csere csak a megnyitott dokumentumot módosítja; a Visszavonás visszahozza az eredetit."
     },
     "split": {
       "lede": "Ossztuk szét a dokumentumot külön PDF-fájlokra oldalanként vagy meghatározott tartomány szerint.",
@@ -1359,17 +1447,62 @@
       "currentDocument": "Aktuális dokumentum"
     },
     "redact": {
-      "lede": "Jelöljön meg és távolítson el véglegesen bizalmas információkat a PDF-ből. Az redakció eltávolítja a tényleges forrásszöveget és vektorokat.",
-      "modeActive": "A redakciós mód aktív",
-      "dragHint": "Húzza az egeret az oldal szövege vagy képei fölött az redakcióra történő megjelöléshez.",
-      "searchAndRedact": "Szöveg keresése és redakciója",
+      "lede": "Jelölje meg és véglegesen távolítsa el az érzékeny adatokat a PDF-ből. A kitakarás magát a forrásszöveget és a vektorokat távolítja el.",
+      "modeActive": "A kitakarási mód aktív",
+      "dragHint": "Húzza az egeret a szövegek vagy képek fölött az oldalon, hogy kitakarásra jelölje őket.",
+      "searchAndRedact": "Keresés és kitakarás",
       "searchPlaceholder": "Keresési kifejezés (pl. társadalombiztosítási szám, telefon)",
       "mark": "Jelölés",
-      "draftRedactions": "Vázlat redakciók ({{count}})",
+      "draftRedactions": "Kitakarási tervezetek ({{count}})",
       "applying": "Alkalmazás…",
-      "applyPermanently": "Redakciók végleges alkalmazása",
-      "noActiveMarkings": "Nincsenek aktív redakciós jelölések.",
-      "backToTools": "Vissza az eszközökhöz"
+      "applyPermanently": "Kitakarások végleges alkalmazása",
+      "noActiveMarkings": "Nincs aktív kitakarási jelölés.",
+      "backToTools": "Vissza az eszközökhöz",
+      "pii": {
+        "title": "Személyes adatok",
+        "lede": "Find personal data in the text of this document: IBANs, card numbers, national ID numbers, birth dates, e-mail addresses and phone numbers, and names and addresses when the model is installed. Review the list, then redact the ones you choose.",
+        "find": "Személyes adatok keresése",
+        "scanning": "Vizsgálat…",
+        "none": "Nothing found.",
+        "kind": {
+          "iban": "IBAN",
+          "email": "E-mail cím",
+          "phone": "Telefonszám",
+          "credit_card": "Kártyaszám",
+          "national_id": "Személyazonosító szám",
+          "date_of_birth": "Születési dátum",
+          "bank_account": "Bankszámlaszám",
+          "person": "Név",
+          "address": "Cím"
+        },
+        "where": "{{pages}}. oldal · {{count}}×",
+        "selectAll": "Összes kijelölése",
+        "selectNone": "Kijelölés törlése",
+        "redactSelected": "{{count}} kijelölt kitakarása",
+        "redacting": "Kitakarás…",
+        "done": "Kitakart {{count}} elemet. A fájl mentésével megőrizheti az eredményt.",
+        "failed": "A kitakarás nem sikerült: {{message}}",
+        "detectFailed": "A keresés nem sikerült: {{message}}",
+        "patternsOnly": "Without the model this finds only items it can check, such as IBANs, cards, ID numbers, birth dates, e-mail addresses and phone numbers. Names and addresses are not detected, so check every page yourself.",
+        "suggestionsOnly": "Ezek javaslatok. A detektor kihagyhat dolgokat, ezért mentés előtt ellenőrizze az összes oldalt.",
+        "source": {
+          "verified": "Ellenőrizve: {{detail}}",
+          "model": "Modell javaslata, {{score}}%"
+        },
+        "model": {
+          "use": "Nevek és címek keresése a modellel is",
+          "languages": "Ellenőrizve: {{languages}}",
+          "remove": "A modell eltávolítása",
+          "removeFailed": "A modellt nem sikerült eltávolítani: {{message}}",
+          "failed": "A modellt nem sikerült futtatni ({{code}}). Csak az ellenőrizhető elemek láthatók.",
+          "consentTitle": "Letölti a személyesadat-modellt?",
+          "consentBody": "A nevek és címek megtalálásához nyelvi modellre van szükség ({{size}}). Egyszer letöltődik a(z) {{host}} címről, egy rögzített ellenőrzőösszeggel ellenőrzik, majd ezen a számítógépen fut. A dokumentumai soha nem hagyják el ezt a számítógépet.",
+          "download": "Letöltés",
+          "downloading": "Letöltés…",
+          "downloadFailed": "A letöltés nem sikerült: {{message}}",
+          "notInBuild": "A letöltés ebben a verzióban még nem érhető el."
+        }
+      }
     },
     "toasts": {
       "saving": "Mentés…",
@@ -1399,117 +1532,337 @@
       "pdfsMerged": "{{count}} PDF-fájl egyesítve",
       "mergedSaved": "Egyesített PDF mentésre került: {{name}}.",
       "mergeFailed": "Egyesítés sikertelen: {{message}}",
-      "redactMatches": "{{matches}} találat található, {{areas}} redakciós jelölés helyezve.",
-      "noRedactMatches": "Nincsenek szövegtalálatok az redakcióhoz.",
-      "redactSearchFailed": "A redakciók keresése sikertelen: {{message}}",
-      "applyRedactConfirm": "{{count}} redakciós jelölés véglegesen alkalmazva? Ez véglegesen eltávolítja a tartalmat a PDF-ből.",
-      "applyRedactConfirm_plural": "{{count}} redakciós jelölés véglegesen alkalmazva? Ez véglegesen eltávolítja a tartalmat a PDF-ből.",
-      "applyRedactTitle": "Redakciók alkalmazása",
-      "applyRedactRunning": "Redakciók véglegesen alkalmazása…",
-      "applyRedactDone": "Redakciók véglegesen alkalmazva",
-      "redactionsApplied": "Az redakciók véglegesen alkalmazva voltak.",
-      "redactFailed": "Redakció sikertelen: {{message}}"
+      "redactSearchDone": "Kitakart találatok: {{count}}. Mentsen a módosítás megtartásához.",
+      "noRedactMatches": "Nem található kitakarandó szöveg.",
+      "redactSearchFailed": "A kitakarandó szöveg keresése sikertelen: {{message}}",
+      "applyRedactConfirm": "Véglegesen alkalmaz {{count}} kitakarási jelölést? A tartalom végleg törlődik a PDF-ből.",
+      "applyRedactConfirm_plural": "Véglegesen alkalmaz {{count}} kitakarási jelölést? A tartalom végleg törlődik a PDF-ből.",
+      "applyRedactTitle": "Kitakarások alkalmazása",
+      "applyRedactRunning": "Kitakarások alkalmazása…",
+      "applyRedactDone": "Kitakarások véglegesen alkalmazva",
+      "redactionsApplied": "A kitakarások véglegesen alkalmazva.",
+      "redactFailed": "A kitakarás sikertelen: {{message}}",
+      "compressedCopyToast": "{{name}} mentve: {{before}} → {{after}}. A megnyitott dokumentum változatlan.",
+      "compressedReplacedToast": "A megnyitott dokumentum tömörítve: {{before}} → {{after}}. A visszavonás visszahozza az eredetit. A tömörített verzió megtartásához mentse el."
     },
     "thumbnails": {
       "pages": "Oldalak",
       "pageAlt": "{{page}}. oldal",
-      "bookmarks": "Bookmarks"
+      "bookmarks": "Könyvjelzők"
     },
     "pdfa": {
-      "lede": "PDF/A is the archival form of PDF: fonts embedded, colours defined, nothing that depends on the outside world.",
-      "section": "Conformance",
-      "level": "Level",
-      "validate": "Check this document",
-      "convert": "Save as PDF/A…",
-      "desktopOnly": "Available in the desktop app",
-      "compliant": "Conforms to {{level}}",
-      "notCompliant": "Does not conform: {{errors}} errors, {{warnings}} warnings",
-      "moreIssues": "{{count}} more",
+      "lede": "A PDF/A a PDF archiválási formátuma: beágyazott betűtípusok, meghatározott színek, semmi, ami a külvilágtól függ.",
+      "section": "Megfelelőség",
+      "level": "Szint",
+      "validate": "Dokumentum ellenőrzése",
+      "convert": "Mentés PDF/A-ként…",
+      "desktopOnly": "Az asztali alkalmazásban érhető el",
+      "compliant": "Megfelel: {{level}}",
+      "notCompliant": "Nem felel meg: {{errors}} hiba, {{warnings}} figyelmeztetés",
+      "moreIssues": "További {{count}}",
       "report": {
-        "title": "What the conversion did",
-        "written": "Written to {{path}}",
-        "size": "{{out}} out of {{in}} ({{ratio}}×), in {{seconds}} s",
-        "pages": "{{count}} pages",
-        "fontsEmbedded": "{{embedded}} of {{found}} unembedded fonts embedded",
-        "fontsFailed": "Could not embed: {{fonts}}",
-        "removed": "Removed: {{count}} items that PDF/A does not allow",
-        "subset": "{{count}} font programs reduced, {{bytes}} kB saved",
-        "outputIntent": "Output intent added",
-        "unchangedDocument": "The open document was not changed.",
+        "title": "Mit végzett a konvertálás",
+        "written": "Kiírva ide: {{path}}",
+        "size": "{{out}} / {{in}} ({{ratio}}×), {{seconds}} s alatt",
+        "pages": "{{count}} oldal",
+        "fontsEmbedded": "{{found}} nem beágyazott betűtípusból {{embedded}} beágyazva",
+        "fontsFailed": "Nem sikerült beágyazni: {{fonts}}",
+        "removed": "Eltávolítva: {{count}} elem, amelyet a PDF/A nem enged",
+        "subset": "{{count}} betűtípusprogram csökkentve, {{bytes}} kB megtakarítva",
+        "outputIntent": "Kimeneti szándék hozzáadva",
+        "unchangedDocument": "A megnyitott dokumentum nem változott.",
         "warning": "{{message}}",
-        "moreWarnings": "{{count}} more"
+        "moreWarnings": "További {{count}}"
       }
     },
     "metadata": {
-      "lede": "The title and author stored inside the file, which is what other readers and search show.",
-      "section": "Properties",
-      "title": "Title",
-      "author": "Author",
-      "apply": "Save properties",
-      "desktopOnly": "Available in the desktop app"
+      "lede": "A fájlban tárolt cím és szerző, amelyet más olvasóprogramok és a keresés megjelenítenek.",
+      "section": "Tulajdonságok",
+      "title": "Cím",
+      "author": "Szerző",
+      "apply": "Tulajdonságok mentése",
+      "desktopOnly": "Az asztali alkalmazásban érhető el"
     },
     "invoice": {
-      "lede": "A ZUGFeRD or Factur-X invoice travels as XML inside the PDF. This reads it and checks it against EN 16931.",
-      "section": "Embedded invoice",
-      "read": "Read invoice",
-      "desktopOnly": "Available in the desktop app",
-      "none": "This document carries no e-invoice.",
-      "number": "Number: {{number}}",
-      "issued": "Issued: {{date}}",
-      "seller": "Seller: {{name}}",
-      "buyer": "Buyer: {{name}}",
-      "total": "Total: {{total}} {{currency}}",
-      "lines": "Line items: {{count}}",
-      "valid": "Valid against {{profile}}",
-      "invalid": "Not valid: {{errors}} errors, {{warnings}} warnings"
+      "lede": "A ZUGFeRD vagy Factur-X számla XML-ként van a PDF-ben. Ez beolvassa és ellenőrzi az EN 16931 szerint.",
+      "section": "Beágyazott számla",
+      "read": "Számla beolvasása",
+      "desktopOnly": "Az asztali alkalmazásban érhető el",
+      "none": "Ez a dokumentum nem tartalmaz e-számlát.",
+      "number": "Szám: {{number}}",
+      "issued": "Kiállítva: {{date}}",
+      "seller": "Eladó: {{name}}",
+      "buyer": "Vevő: {{name}}",
+      "total": "Összesen: {{total}} {{currency}}",
+      "lines": "Tételek: {{count}}",
+      "valid": "Érvényes a következő szerint: {{profile}}",
+      "invalid": "Érvénytelen: {{errors}} hiba, {{warnings}} figyelmeztetés"
     },
     "canvas": {
-      "document": "PDF document"
+      "document": "PDF-dokumentum"
+    },
+    "stamps": {
+      "Approved": "Jóváhagyva",
+      "NotApproved": "Nincs jóváhagyva",
+      "Draft": "Piszkozat",
+      "Confidential": "Bizalmas",
+      "Final": "Végleges",
+      "ForComment": "Véleményezésre",
+      "Expired": "Lejárt"
     }
   },
   "about": {
-    "section": "About",
-    "app": "App",
-    "version": "Version",
-    "privacy": "Privacy",
-    "privacyValue": "All processing happens locally",
-    "website": "Website"
+    "section": "Névjegy",
+    "app": "Alkalmazás",
+    "version": "Verzió",
+    "privacy": "Adatvédelem",
+    "privacyValue": "Minden feldolgozás helyben történik",
+    "website": "Weboldal"
   },
   "reviewSummary": {
-    "title": "Review summary",
-    "generatedAt": "Generated on",
-    "comments": "Comments",
-    "noComments": "No comments.",
-    "replies": "Replies:",
-    "empty": "empty",
-    "redactions": "Redactions",
-    "noRedactions": "No redactions.",
-    "noIssues": "No issues.",
-    "metadataChanges": "Metadata changes",
-    "noMetadataChanges": "No changes.",
-    "changedBy": "by",
-    "on": "on"
+    "title": "Áttekintési összefoglaló",
+    "generatedAt": "Létrehozva",
+    "comments": "Megjegyzések",
+    "noComments": "Nincsenek megjegyzések.",
+    "replies": "Válaszok:",
+    "empty": "üres",
+    "redactions": "Kitakarások",
+    "noRedactions": "Nincs kitakarás.",
+    "noIssues": "Nincsenek problémák.",
+    "metadataChanges": "Metaadat-módosítások",
+    "noMetadataChanges": "Nincsenek módosítások.",
+    "changedBy": "módosította:",
+    "on": "időpont:"
   },
   "externalLink": {
-    "askMessage": "This PDF wants to open an external link:\n\n{{label}}\n\nURL:\n{{href}}\n\nDo you want to continue?",
-    "title": "Open external link?",
-    "openLink": "Open link",
-    "dialogBody": "This PDF wants to open an external website. Check the URL before continuing."
+    "askMessage": "Ez a PDF külső hivatkozást szeretne megnyitni:\n\n{{label}}\n\nURL:\n{{href}}\n\nFolytatja?",
+    "title": "Megnyitja a külső hivatkozást?",
+    "openLink": "Hivatkozás megnyitása",
+    "dialogBody": "Ez a PDF külső weboldalt szeretne megnyitni. Folytatás előtt ellenőrizze az URL-t."
   },
   "linkChoice": {
-    "title": "Open link in your browser?",
-    "body": "This document wants to open an external website. Are you opening it from a trusted source?",
-    "alwaysAllow": "Always allow",
-    "openOnce": "Open once"
+    "title": "Megnyitja a hivatkozást a böngészőben?",
+    "body": "Ez a dokumentum külső weboldalt szeretne megnyitni. Megbízható forrásból nyitja meg?",
+    "alwaysAllow": "Engedélyezés mindig",
+    "openOnce": "Megnyitás egyszer"
   },
   "fallbacks": {
-    "ocrUnavailableTitle": "OCR is not available on this computer",
-    "ocrUnavailableMessage": "PDFluent could not start the text-recognition engine. {{reason}}",
-    "ocrFailedMessage": "Text recognition stopped on page {{page}}: {{reason}}",
-    "xfaStaticTitle": "Form filled without recalculation",
-    "xfaStaticMessage": "This build writes XFA field values straight into the form. Field scripts do not run, so calculated totals and fields that appear or hide based on your answer stay as they are.",
-    "featureUnavailableTitle": "'{{feature}}' is not available in this build",
-    "usageRightsInvalidatedTitle": "This document is no longer Reader-enabled",
-    "usageRightsInvalidatedMessage": "Your change was made. It also invalidated the usage-rights signature this PDF carried, which let Adobe Reader fill in and save the form. The text edit stands; the extended rights are gone and cannot be restored by undoing it."
+    "ocrUnavailableTitle": "Az OCR nem érhető el ezen a számítógépen",
+    "ocrUnavailableMessage": "A PDFluent nem tudta elindítani a szövegfelismerő motort. {{reason}}",
+    "ocrFailedMessage": "A szövegfelismerés leállt a {{page}}. oldalon: {{reason}}",
+    "xfaStaticTitle": "Űrlap kitöltve újraszámítás nélkül",
+    "xfaStaticMessage": "Ez a build közvetlenül az űrlapba írja az XFA mezőértékeket. A mezőszkriptek nem futnak, így a kiszámított összegek és a válaszaitól függően megjelenő vagy elrejtett mezők úgy maradnak, ahogy vannak.",
+    "xfaScriptsNotRunTitle": "Az űrlap egyes szkriptjei nem futnak le",
+    "xfaScriptsNotRunMessage": "A válaszod mentve van. Az űrlap FormCalc-szkripteket tartalmaz ({{count}} található), a PDFluent viszont csak JavaScript-szkripteket futtat. Az összegek és mezők, amelyeket ezek a szkriptek frissítenének, megtartják a mentett értéküket, amíg az űrlapot meg nem nyitják az Adobe Readerben.",
+    "xfaFieldRefusedTitle": "Az űrlap nem fogadta el az értéket",
+    "xfaFieldReadOnly": "A(z) „{{field}}” mező ebben az űrlapban csak olvasható, és nem módosítható.",
+    "xfaFieldRejected": "A(z) „{{field}}” mező nem fogadja el ezt az értéket: {{reason}}",
+    "xfaFieldNotFound": "A(z) „{{field}}” mező már nincs az űrlapon. Az űrlap újratöltődött.",
+    "featureUnavailableTitle": "'{{feature}}' nem érhető el ebben a buildben",
+    "usageRightsInvalidatedTitle": "Ez a dokumentum már nem Reader-kompatibilis",
+    "usageRightsInvalidatedMessage": "A módosítás megtörtént. Ezzel érvénytelenné vált a PDF-hez tartozó használati jogosultsági aláírás is, amely lehetővé tette, hogy az Adobe Reader kitöltse és mentse az űrlapot. A szövegmódosítás érvényben marad; a kiterjesztett jogok eltűntek, és visszavonással sem állíthatók vissza.",
+    "xfaScriptsFailedTitle": "Néhány űrlapszkript nem fejeződött be",
+    "xfaScriptsFailedMessage": "A válasz elmentve, de ezek a szkriptek nem fejeződtek be, ezért előfordulhat, hogy az általuk beállított értékek hiányoznak: {{details}}.",
+    "xfaScriptKind_threw": "hibát dobott",
+    "xfaScriptKind_timeout": "lejárt az idő",
+    "xfaScriptKind_refused": "a sandbox elutasította"
+  },
+  "signedSave": {
+    "title": "Ez a dokumentum alá van írva",
+    "message": "A kitakarás olyan tartalmat távolít el, amelyet az aláírás lefed, ezért nem menthető az aláírt eredeti fölé az aláírás megsértése nélkül. Mentsen másolatot: a másolat megtartja a kitakarást, de nem hordozza az aláírást.",
+    "saveCopy": "Másolat mentése aláírás nélkül…",
+    "cancel": "Mégse"
+  },
+  "passwordPrompt": {
+    "title": "Ez a PDF védett",
+    "message": "Adja meg a jelszót a(z) {{name}} megnyitásához.",
+    "incorrect": "Ez a jelszó nem nyitja meg ezt a PDF-et. Próbálja újra.",
+    "label": "Jelszó",
+    "open": "Megnyitás",
+    "cancel": "Mégse",
+    "readOnlyTitle": "Csak olvashatóként megnyitva",
+    "readOnlyMessage": "A PDF engedélyei nem teszik lehetővé a módosításokat. Olvashatja, és kinyomtathatja, ha az engedélyek ezt lehetővé teszik. A módosítások mentéséhez távolítsa el a védelmet a tulajdonosi jelszóval."
+  },
+  "a11y": {
+    "searchNextResult": "Következő találat",
+    "searchPrevResult": "Előző találat"
+  },
+  "feedback": {
+    "title": "Segítsen a PDFluent fejlesztésében",
+    "intro": "Mondja el, mit szeretett volna csinálni. Minden bejelentést elolvasunk.",
+    "menuLabel": "Segítsen a PDFluent fejlesztésében…",
+    "fromError": "Beszámolhat az imént tapasztalt hibáról.",
+    "areaLabel": "Mit szeretett volna csinálni?",
+    "area": {
+      "open-view": "Dokumentum megnyitása vagy olvasása",
+      "search-copy": "Szöveg keresése vagy másolása",
+      "print": "Nyomtatás",
+      "edit-text": "Szöveg szerkesztése",
+      "annotate": "Kiemelés, megjegyzés vagy rajzolás",
+      "forms": "Űrlap kitöltése",
+      "sign": "Aláírás vagy aláírás ellenőrzése",
+      "redact": "Kitakarás",
+      "pages-organize": "Oldalak forgatása, átrendezése, egyesítése vagy felosztása",
+      "convert-export": "Átalakítás vagy exportálás",
+      "ocr": "Szövegfelismerés beolvasott lapon (OCR)",
+      "pdfa-compliance": "PDF/A",
+      "protect": "Jelszó vagy engedélyek",
+      "save": "Mentés",
+      "install-update": "A PDFluent telepítése vagy frissítése",
+      "other": "Valami más"
+    },
+    "tryingToPlaceholder": "Saját szavaival (nem kötelező)",
+    "whatHappenedLabel": "Mi történt?",
+    "whatHappenedPlaceholder": "Mit látott?",
+    "whatHappenedRequired": "Mondja el, mi történt, hogy tudjuk, hol keressük.",
+    "expectedLabel": "Mit várt?",
+    "expectedPlaceholder": "Nem kötelező",
+    "docTypeLabel": "Milyen dokumentum volt?",
+    "docType": {
+      "none": "Nem volt dokumentum",
+      "form": "Űrlap",
+      "scanned": "Beolvasott lap",
+      "signed": "Aláírt dokumentum",
+      "protected": "Jelszóval védett",
+      "large": "Nagy (több mint 100 oldal)",
+      "xfa": "Hatósági vagy XFA-űrlap",
+      "other": "Valami más"
+    },
+    "docTypeUnset": "Válasszon…",
+    "pageCountLabel": "Oldalak száma",
+    "contextTitle": "A bejelentéssel együtt elküldjük",
+    "contextToggle": "Rendszeradatok mellékelése",
+    "contextHint": "A verzió, a rendszer, a nyelv és az utolsó hiba segít a hiba reprodukálásában. Fájlnevek, elérési utak és dokumentumtartalom nélkül.",
+    "fieldVersion": "PDFluent verziója",
+    "fieldSystem": "Rendszer",
+    "fieldLanguage": "Nyelv",
+    "fieldLastError": "Utolsó hiba",
+    "fieldSessions": "Munkamenetek",
+    "notIncluded": "nincs mellékelve",
+    "documentTitle": "Dokumentum megosztása (nem kötelező)",
+    "documentToggle": "A megnyitott dokumentum megosztása ezzel a bejelentéssel",
+    "documentNone": "Nincs megnyitott dokumentum.",
+    "documentTooLarge": "Ez a dokumentum 20 MB-nál nagyobb, ezért nem osztható meg a bejelentéssel.",
+    "documentShared": "Ez a dokumentum meg lesz osztva.",
+    "documentConfirmTitle": "Megosztja ezt a dokumentumot?",
+    "documentConfirmText": "Ez a fájl elküldésre kerül a PDFluent (Innovation Trigger B.V.) részére. Kizárólag a jelentés kivizsgálására használjuk, soha nem tesszük közzé, soha nem használjuk modellek tanítására, és legkésőbb 90 nappal a probléma javítása után töröljük, de minden esetben 12 hónapon belül.",
+    "documentConfirmFile": "{{name}} ({{size}})",
+    "documentConfirmYes": "Dokumentum megosztása",
+    "documentConfirmNo": "Nem osztom meg",
+    "contactTitle": "Maradjunk kapcsolatban (nem kötelező)",
+    "emailLabel": "E-mail-cím",
+    "emailInvalid": "Ez nem tűnik e-mail-címnek.",
+    "consentContact": "A PDFluent e-mailt küldhet nekem a jelentéssel kapcsolatos kérdésekkel.",
+    "consentFixed": "Értesítsen e-mailben, ha ez javítva lesz.",
+    "contactHint": "Az Ön címe elkülönítve tárolódik a jelentésétől, kizárólag ehhez a jelentéshez használjuk, és soha nem hírlevelekhez vagy marketinghez.",
+    "noEmailHint": "E-mail-cím nélkül is értesítjük: ha egy frissítés javítja a bejelentését, a PDFluent szól az alkalmazásban.",
+    "privacyNotice": "Az Innovation Trigger B.V. megkapja ezt a jelentést a PDFluent fejlesztése érdekében. A jelentéseket legfeljebb 24 hónapig tároljuk. A sajátját bármikor eltávolíttathatja.",
+    "privacyLink": "Adatvédelmi nyilatkozat",
+    "send": "Küldés",
+    "sending": "Küldés…",
+    "cancel": "Mégse",
+    "sentTitle": "Köszönjük!",
+    "sentBody": "A bejelentése megérkezett. Ez a száma:",
+    "sentIdHint": "Őrizze meg ezt a számot, ha kérdezni szeretne a bejelentéséről, vagy törölni szeretné.",
+    "sentNoLocalCopy": "A PDFluent nem tudta megjegyezni ezt a számot ezen a számítógépen, ezért kérjük, írja fel.",
+    "sentDocumentFailed": "A bejelentése megérkezett, de a dokumentumot nem sikerült feltölteni. Ha fontos, elküldheti újra a bejelentést a dokumentummal.",
+    "removeReport": "Bejelentés törlése",
+    "removing": "Törlés…",
+    "removed": "A bejelentése törölve lett.",
+    "removeFailed": "A bejelentést most nem sikerült törölni. Próbálja újra később, vagy küldje el nekünk a számot e-mailben.",
+    "failedTitle": "Ez nem sikerült",
+    "failedNetwork": "A PDFluent nem érte el a szervert. Nem ment el semmi, és a szövege még megvan.",
+    "failedRateLimited": "Ma túl sok bejelentés érkezett erről a kapcsolatról. Kérjük, próbálja újra holnap.",
+    "failedRejected": "A bejelentést nem fogadtuk el. Ellenőrizze az űrlapot, és próbálja újra.",
+    "failedServer": "Nálunk valami hiba történt. A szövege még megvan; próbálja újra egy pillanat múlva.",
+    "tryAgain": "Újra",
+    "fixedTitle": "Javítva!",
+    "fixedOffered": "A(z) {{version}} verzió javítja a(z) {{ids}} bejelentését. Köszönjük, hogy szólt.",
+    "fixedAfterUpdate": "A(z) {{ids}} bejelentése javítva van ebben a verzióban. Köszönjük, hogy szólt.",
+    "dismiss": "Bezárás"
+  },
+  "openError": {
+    "corrupt": {
+      "title": "Ez a PDF sérült",
+      "body": "A PDFluent nem tudta beolvasni ezt a fájlt. Lehet, hogy letöltés vagy másolás közben megsérült, vagy a létrehozó alkalmazás hibásan írta meg. Töltse le vagy másolja újra, esetleg nyissa meg az eredetit, és exportálja újra PDF-ként.",
+      "action": "Másik fájl megnyitása"
+    },
+    "not_pdf": {
+      "title": "Ez nem PDF",
+      "body": "A PDFluent PDF-fájlokat nyit meg. Ez a fájl más típusú, vagy a neve nem .pdf-re végződik. Válasszon egy PDF-fájlt, vagy ha ez a fájl PDF, nevezze át úgy, hogy a neve .pdf-re végződjön.",
+      "action": "Másik fájl megnyitása"
+    },
+    "empty": {
+      "title": "Ez a fájl üres",
+      "body": "A fájlnak nincs tartalma (0 bájt). Lehet, hogy a letöltés vagy a másolás nem fejeződött be. Töltse le vagy másolja újra, majd nyissa meg.",
+      "action": "Másik fájl megnyitása"
+    },
+    "encrypted_needs_password": {
+      "title": "Ehhez a PDF-hez jelszó kell",
+      "body": "Ez a PDF jelszóval védett. Nyissa meg újra, és adja meg a jelszót. Ha nem ismeri, kérdezze meg azt, aki a fájlt küldte.",
+      "action": "Jelszó megadása"
+    },
+    "wrong_password": {
+      "title": "Ez a jelszó nem működött",
+      "body": "A jelszó nem nyitja meg ezt a PDF-et. Ellenőrizze, nincs-e benne elírás, és hogy nincs-e bekapcsolva a Caps Lock, majd próbálja újra.",
+      "action": "Újrapróbálás"
+    },
+    "unsupported_encryption": {
+      "title": "A PDFluent nem tudja megnyitni ezt a védelmet",
+      "body": "Ezt a PDF-et tanúsítvány vagy olyan biztonsági módszer védi, amelyet a PDFluent nem támogat, ezért itt jelszóval sem nyitható meg. Kérjen a feladótól védelem nélküli, vagy jelszóval védett másolatot.",
+      "action": "Másik fájl megnyitása"
+    },
+    "too_large": {
+      "title": "Ez a fájl túl nagy",
+      "body": "Ez a fájl nagyobb, mint amit a PDFluent biztonságosan meg tud nyitni. Ossza fel vagy tömörítse abban az alkalmazásban, amelyben készült, majd nyissa meg a részeket.",
+      "action": "Másik fájl megnyitása"
+    },
+    "too_many_pages": {
+      "title": "Ennek a PDF-nek túl sok oldala van",
+      "body": "Ennek a dokumentumnak több oldala van, mint amennyit a PDFluent egyszerre meg tud nyitni. Ossza fel kisebb dokumentumokra abban az alkalmazásban, amelyben készült, majd nyissa meg a részeket.",
+      "action": "Másik fájl megnyitása"
+    },
+    "io_denied": {
+      "title": "A PDFluent nem olvashatja ezt a fájlt",
+      "body": "A számítógép nem adott engedélyt a PDFluentnek a fájl olvasására. Ellenőrizze a fájl engedélyeit, vagy helyezze át egy olyan mappába, mint a Dokumentumok, majd próbálja újra.",
+      "action": "Újrapróbálás"
+    },
+    "not_found": {
+      "title": "Ez a fájl nem található",
+      "body": "A fájlt lehet, hogy áthelyezték, átnevezték vagy törölték, vagy olyan meghajtón van, amely már nincs csatlakoztatva. Keresse meg a fájlt, és nyissa meg újra.",
+      "action": "Másik fájl megnyitása"
+    },
+    "unknown": {
+      "title": "Ezt a fájlt nem sikerült megnyitni",
+      "body": "Hiba történt a fájl megnyitásakor. Próbálja újra. Ha továbbra is előfordul, jelezze nekünk, hogy kijavíthassuk.",
+      "action": "Újrapróbálás"
+    },
+    "feedback": "Segítsen jobbá tenni a PDFluentet"
+  },
+  "formBar": {
+    "title": "Kitölthető űrlap",
+    "fields": "Mezők: {{count}}",
+    "clickToFill": "Kattintson egy mezőre a kitöltéséhez.",
+    "noCalculations": "Az Adobe-űrlapok automatikus számításai nem futnak le.",
+    "autoLinks": "Hivatkozások automatikus megnyitása",
+    "autoLinksTitle": "A hivatkozások automatikusan megnyílnak a böngészőben. Kattintson a kikapcsoláshoz.",
+    "highlight": "Mezők kiemelése",
+    "firstField": "Első mező"
+  },
+  "tabs": {
+    "label": "Megnyitott dokumentumok",
+    "close": "{{name}} bezárása",
+    "unsaved": "Nem mentett módosítások",
+    "new": "Másik dokumentum megnyitása",
+    "tooManyTitle": "Túl sok megnyitott dokumentum",
+    "tooManyMessage": "{{max}} dokumentum van megnyitva. Zárjon be egyet, hogy másikat nyithasson."
+  },
+  "formScripts": {
+    "barLabel": "Űrlapszkriptek",
+    "barMessage": "Ez az űrlap szkripteket tartalmaz (például számításokat). Futtatja őket?",
+    "barDetail": "{{count}} szkript található.",
+    "runOnce": "Futtatás ehhez a dokumentumhoz",
+    "runAlways": "Szkriptek mindig futtatása",
+    "dontRun": "Ne futtassa"
   }
 }

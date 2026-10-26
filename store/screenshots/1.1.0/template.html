@@ -1,0 +1,46 @@
+<!doctype html>
+<!--
+Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
+See https://pdfluent.com/license for terms.
+
+Frame template for the store screenshots: a raw window shot on a quiet
+monochrome background, optional headline on top. Rebuilt in the repository
+because the Figma file (PDFluent-screenshots) cannot be written from here; it
+mirrors the geometry of the 2026-08 set (headline in the top third, window
+below) so the sets look alike. scripts/screenshots/compose.mjs fills it in.
+-->
+<meta charset="utf-8">
+<style>
+  :root { --bg: #F3F3F2; --ink: #111; --sub: #5B5B5B; }
+  @media (prefers-color-scheme: dark) { :root { --bg: #F3F3F2; } } /* store art is light on purpose */
+  * { box-sizing: border-box; margin: 0; }
+  html, body { width: 100%; height: 100%; background: var(--bg); overflow: hidden; }
+  body { font-family: "Geist", "SF Pro Display", -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; color: var(--ink); }
+  #stage { position: relative; width: 100vw; height: 100vh; }
+  #copy { position: absolute; left: 0; right: 0; text-align: center; }
+  #headline { font-weight: 650; letter-spacing: -0.02em; line-height: 1.06; }
+  #sub { color: var(--sub); margin-top: 0.5em; font-weight: 400; }
+  #shot { position: absolute; border-radius: var(--r); box-shadow: 0 var(--s1) var(--s2) rgba(0,0,0,.22), 0 0 0 1px rgba(0,0,0,.10); }
+</style>
+<div id="stage"><div id="copy"><div id="headline"></div><div id="sub"></div></div><img id="shot" alt=""></div>
+<script>
+  // p = { src, w, h, headline, sub, shotW, shotH } ; all geometry derived from the canvas.
+  window.render = async (p) => {
+    const W = p.w, H = p.h, copyH = p.headline ? Math.round(H * 0.2) : 0;
+    const margin = Math.round(H * 0.045);
+    const hl = document.getElementById('headline'), sub = document.getElementById('sub'), copy = document.getElementById('copy');
+    hl.textContent = p.headline || ''; sub.textContent = p.sub || '';
+    hl.style.fontSize = Math.round(H * 0.052) + 'px'; sub.style.fontSize = Math.round(H * 0.026) + 'px';
+    copy.style.top = Math.round(H * 0.05) + 'px';
+    const img = document.getElementById('shot');
+    await new Promise((res, rej) => { img.onload = res; img.onerror = () => rej(new Error('shot did not load')); img.src = p.src; });
+    const availW = W - 2 * margin * 1.6, availH = H - copyH - 2 * margin;
+    const k = Math.min(availW / p.shotW, availH / p.shotH);
+    const w = Math.round(p.shotW * k), h = Math.round(p.shotH * k);
+    Object.assign(img.style, { width: w + 'px', height: h + 'px', left: Math.round((W - w) / 2) + 'px', top: (copyH + margin + Math.round((availH - h) / 2)) + 'px' });
+    img.style.setProperty('--r', Math.round(H * 0.011) + 'px');
+    img.style.setProperty('--s1', Math.round(H * 0.012) + 'px'); img.style.setProperty('--s2', Math.round(H * 0.04) + 'px');
+    await document.fonts.ready;
+    return { shot: { w, h } };
+  };
+</script>

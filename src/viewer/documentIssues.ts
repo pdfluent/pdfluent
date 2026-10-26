@@ -56,7 +56,7 @@ export function extractDocumentIssues(
       const status = reviewStatuses.get(ann.id) ?? 'open';
       issues.push({
         id: `issue-${ann.id}`,
-        description: ann.contents?.trim() || '(geen inhoud)',
+        description: ann.contents?.trim() || '(no content)',
         page: ann.pageIndex,
         author: ann.author ?? '',
         status,

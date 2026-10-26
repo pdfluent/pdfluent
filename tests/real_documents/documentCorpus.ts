@@ -191,10 +191,10 @@ export const DOCUMENT_CORPUS: readonly CorpusEntry[] = [
   },
   {
     category: 'multi_line_paragraph',
-    description: 'Long wrapped paragraph spanning multiple lines',
+    description: 'Long wrapped paragraph spanning multiple lines (paragraph edit with reflow, J-42)',
     exampleFile: 'multi_line_paragraph/long-paragraph.pdf',
-    expectedClass: 'non_writable_digital_text',
-    expectedWritable: false,
+    expectedClass: 'writable_digital_text',
+    expectedWritable: true,
     representativeTarget: makeMultiLineParagraph('corpus:multi-line', [
       'This is the first line of a long paragraph that wraps',
       'to a second line in the PDF document.',

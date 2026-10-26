@@ -20,7 +20,7 @@
  */
 
 import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { join, win32 } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 import {
@@ -602,5 +602,12 @@ describe("the rail's More menu", () => {
     const affordance = byId.get(`button:${id}`) as { hasEffect: boolean } | undefined;
     expect(affordance, `button:${id} is not in the register`).toBeTruthy();
     expect(affordance?.hasEffect, `More-menu item ${id} reaches nothing`).toBe(true);
+  });
+});
+
+describe('source paths are keyed with forward slashes on every platform (#731)', () => {
+  it('a Windows relative path comes back with "/"', async () => {
+    const { repoRelative } = await import('../scripts/quality/ui-register.mjs');
+    expect(repoRelative('E:\\repo', 'E:\\repo\\src\\viewer\\A.tsx', win32)).toBe('src/viewer/A.tsx');
   });
 });

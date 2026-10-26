@@ -55,6 +55,17 @@ describe('the version this checkout ships', () => {
   });
 });
 
+describe('the Mac App Store overlay of this checkout', () => {
+  it('exists, so the guard above is measuring something', () => {
+    const conf = JSON.parse(readFileSync(join(ROOT, 'src-tauri/tauri.mas.conf.json'), 'utf8')) as {
+      version?: string;
+    };
+    const pkg = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8')) as { version: string };
+    // Either follows tauri.conf.json (no version) or names the shipped one.
+    expect(conf.version === undefined || conf.version === pkg.version).toBe(true);
+  });
+});
+
 describe('what the shell calls this release', () => {
   it('does not call a release without a pre-release label a beta', () => {
     expect(scanBetaWording(ROOT).join('\n'), 'the shipped copy contradicts the version').toBe('');
@@ -89,6 +100,7 @@ interface TreeSpec {
   cargoToml?: string;
   cargoLock?: string;
   tauriConf?: string;
+  masConf?: string | null;
   readmeStatus?: string;
   locales?: Record<string, string>;
 }
@@ -98,6 +110,7 @@ function tree(version: string, spec: TreeSpec = {}): string {
   mkdirSync(join(root, 'src-tauri'), { recursive: true });
   mkdirSync(join(root, 'src/i18n/locales'), { recursive: true });
   const at = (key: keyof TreeSpec): string => (spec[key] as string | undefined) ?? version;
+  const masConf = spec.masConf;
 
   writeFileSync(join(root, 'package.json'), JSON.stringify({ name: 'pdfluent', version: at('pkg') }, null, 2));
   writeFileSync(
@@ -125,6 +138,12 @@ function tree(version: string, spec: TreeSpec = {}): string {
     join(root, 'src-tauri/tauri.conf.json'),
     JSON.stringify({ productName: 'PDFluent', version: at('tauriConf') }, null, 2),
   );
+  if (masConf !== undefined) {
+    writeFileSync(
+      join(root, 'src-tauri/tauri.mas.conf.json'),
+      JSON.stringify(masConf === null ? { bundle: {} } : { version: masConf, bundle: {} }, null, 2),
+    );
+  }
   writeFileSync(
     join(root, 'README.md'),
     ['# PDFluent', '', '## Status', '', spec.readmeStatus ?? 'Available on macOS and Windows.', '', '## Install', '', 'Download it.', ''].join('\n'),
@@ -153,6 +172,19 @@ describe('the version parity guard, on fixtures', () => {
     expect(problems).toHaveLength(3);
     expect(problems[0]).toContain('package-lock.json:3 says 0.9.0');
     expect(problems[2]).toContain('src-tauri/Cargo.lock:7 says 0.9.0');
+  });
+
+  it('catches a Mac App Store overlay pinned to an old version', () => {
+    // build-mas.sh reads the overlay version first, so this is the drift that
+    // ships a 1.1.0 tree as 1.0.0 while every other site agrees.
+    expect(scanReleaseVersion(tree('1.1.0', { masConf: '1.0.0' })).problems).toEqual([
+      'src-tauri/tauri.mas.conf.json:2 says 1.0.0 but package.json:3 says 1.1.0',
+    ]);
+  });
+
+  it('accepts a Mac App Store overlay with no version, or the right one', () => {
+    expect(scanReleaseVersion(tree('1.1.0', { masConf: null })).problems).toEqual([]);
+    expect(scanReleaseVersion(tree('1.1.0', { masConf: '1.1.0' })).problems).toEqual([]);
   });
 
   it('reads the [package] version and not a dependency version', () => {

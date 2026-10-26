@@ -24,7 +24,6 @@ mocked IPC before removing these files.
 | File | Original location | Notes |
 |---|---|---|
 | `smoke.test.ts` | `tests/e2e/` | Pre-V3 legacy expectations |
-| `viewer.test.ts` | `tests/e2e/` | Pre-V3 legacy expectations |
 | `tauri-mock-bootstrap.spec.ts` | `tests/e2e/` | Old bootstrap mechanism |
 | `playwright-smoke.spec.ts` | `tests/e2e/` | Dead helper dependency |
 | `visual-validate.spec.ts` | `tests/e2e/` | No browser PDF engine |

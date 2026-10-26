@@ -114,9 +114,9 @@
     "allTools": "เครื่องมือทั้งหมด",
     "contextualBar": "แถบเครื่องมือโหมด",
     "pdfa": "PDF/A",
-    "metadata": "Document properties",
-    "invoice": "E-invoice",
-    "bookmarks": "Bookmarks"
+    "metadata": "คุณสมบัติเอกสาร",
+    "invoice": "ใบแจ้งหนี้อิเล็กทรอนิกส์",
+    "bookmarks": "บุ๊กมาร์ก"
   },
   "topbar": {
     "openPdf": "เปิด PDF",
@@ -242,7 +242,6 @@
     "ownerPasswordPlaceholder": "รหัสผ่านเจ้าของ",
     "encryptBtn": "เข้ารหัส…",
     "decrypt": "ถอดรหัส",
-    "currentPasswordPlaceholder": "รหัสผ่านปัจจุบัน",
     "decryptBtn": "ถอดรหัส",
     "noDocument": "ไม่มีเอกสารที่เปิดอยู่",
     "permCanPrint": "พิมพ์",
@@ -258,7 +257,11 @@
     "searchRedactBtn": "ค้นหาและปิดบัง",
     "redactMetadataTitle": "ข้อมูลเมตา",
     "redactMetadataDesc": "ลบผู้แต่ง, ชื่อเรื่อง และข้อมูลเมตาที่ระบุตัวตนอื่น ๆ",
-    "redactMetadataBtn": "ลบข้อมูลเมตา"
+    "redactMetadataBtn": "ลบข้อมูลเมตา",
+    "ownerPasswordForRemoval": "รหัสผ่านเจ้าของ (สิทธิ์)",
+    "removePasswordHelp": "การลบรหัสผ่านต้องใช้รหัสผ่านเจ้าของ ซึ่งเป็นรหัสที่ควบคุมสิทธิ์ รหัสผ่านที่คุณใช้เปิดไฟล์ไม่เพียงพอ เว้นแต่จะเป็นรหัสผ่านเจ้าของด้วย.",
+    "removePasswordReady": "คุณเปิดไฟล์นี้ด้วยรหัสผ่านเจ้าของ จึงลบการป้องกันได้โดยไม่ต้องพิมพ์ซ้ำ.",
+    "removePasswordNotProtected": "เอกสารนี้ไม่มีการป้องกันด้วยรหัสผ่าน."
   },
   "organize": {
     "thumbnails": "ภาพย่อ",
@@ -287,33 +290,34 @@
     "combine": "รวมไฟล์",
     "splitRange": "แยกตามช่วง",
     "splitRangeHint": "เลือกหน้าก่อน",
-    "moveLeft": "Move selected page left",
-    "moveRight": "Move selected page right",
-    "moveLeftShort": "Left",
-    "moveRightShort": "Right",
-    "rotateLeft": "Rotate left",
-    "rotateRight": "Rotate right",
-    "rotateLeftShort": "Left",
-    "rotateRightShort": "Right",
-    "addingPdf": "Adding PDF…",
-    "pdfAdded": "PDF added",
-    "combiningFiles": "Combining {{count}} file(s)…",
-    "filesCombined": "{{count}} file(s) combined",
-    "insertingPdf": "Inserting PDF before page {{page}}…",
-    "pdfInserted": "PDF inserted",
-    "exportingPages": "Exporting {{count}} page(s)…",
-    "selectionExported": "Selection exported to {{name}}",
-    "splittingPages": "Splitting into individual pages…",
-    "pagesSaved": "{{count}} pages saved",
-    "splittingRanges": "Splitting {{count}} range(s)…",
-    "filesSaved": "{{count}} file(s) saved"
+    "moveLeft": "ย้ายหน้าที่เลือกไปทางซ้าย",
+    "moveRight": "ย้ายหน้าที่เลือกไปทางขวา",
+    "moveLeftShort": "ซ้าย",
+    "moveRightShort": "ขวา",
+    "rotateLeft": "หมุนซ้าย",
+    "rotateRight": "หมุนขวา",
+    "rotateLeftShort": "ซ้าย",
+    "rotateRightShort": "ขวา",
+    "addingPdf": "กำลังเพิ่ม PDF…",
+    "pdfAdded": "เพิ่ม PDF แล้ว",
+    "combiningFiles": "กำลังรวม {{count}} ไฟล์…",
+    "filesCombined": "รวม {{count}} ไฟล์แล้ว",
+    "insertingPdf": "กำลังแทรก PDF ก่อนหน้า {{page}}…",
+    "pdfInserted": "แทรก PDF แล้ว",
+    "exportingPages": "กำลังส่งออก {{count}} หน้า…",
+    "selectionExported": "ส่งออกส่วนที่เลือกไปยัง {{name}} แล้ว",
+    "splittingPages": "กำลังแยกเป็นหน้าเดี่ยว…",
+    "pagesSaved": "บันทึก {{count}} หน้าแล้ว",
+    "splittingRanges": "กำลังแยก {{count}} ช่วง…",
+    "filesSaved": "บันทึก {{count}} ไฟล์แล้ว"
   },
   "unsavedChanges": {
     "title": "การเปลี่ยนแปลงที่ยังไม่ได้บันทึก",
     "message": "คุณต้องการบันทึกการเปลี่ยนแปลงก่อนดำเนินการต่อหรือไม่?",
     "save": "บันทึก",
     "discard": "ละทิ้งการเปลี่ยนแปลง",
-    "cancel": "ยกเลิก"
+    "cancel": "ยกเลิก",
+    "messageNamed": "คุณต้องการบันทึกการเปลี่ยนแปลงใน {{name}} ก่อนดำเนินการต่อหรือไม่"
   },
   "welcome": {
     "title": "เปิด PDF เพื่อเริ่มต้น",
@@ -327,13 +331,13 @@
     "lede": "อ่าน แก้ไข แปลง กรอกและลงนาม — ทั้งหมดบนอุปกรณ์ของคุณ",
     "privacyPromise": "Local-first · เอกสารไม่เคยออกจากอุปกรณ์นี้",
     "dropPdfHere": "วาง PDF ที่นี่",
-    "v3Subtitle": "Open a PDF to read, edit, convert or sign it locally.",
-    "openFileAria": "Choose a PDF file to open",
-    "clearRecent": "Clear recent",
-    "recentShort": "Recent",
-    "removeRecentAria": "Remove {{name}}",
-    "backToDocument": "Back to document",
-    "loadingDocument": "Loading document…"
+    "v3Subtitle": "เปิด PDF เพื่ออ่าน แก้ไข แปลง หรือลงนามในเครื่อง.",
+    "openFileAria": "เลือกไฟล์ PDF ที่จะเปิด",
+    "clearRecent": "ล้างรายการล่าสุด",
+    "recentShort": "ล่าสุด",
+    "removeRecentAria": "นำ {{name}} ออก",
+    "backToDocument": "กลับไปที่เอกสาร",
+    "loadingDocument": "กำลังโหลดเอกสาร…"
   },
   "settings": {
     "language": "ภาษา",
@@ -350,15 +354,29 @@
     "reviewerNamePlaceholder": "ชื่อที่ใช้ในคำอธิบาย",
     "exportPreferences": "การตั้งค่าการส่งออก",
     "exportFormatLabel": "รูปแบบการส่งออกเริ่มต้น",
-    "autosave": "บันทึกอัตโนมัติ",
-    "autosaveEnable": "บันทึกการเปลี่ยนแปลงอัตโนมัติ",
     "themeLabel": "ธีม",
     "ocrDefaults": "การตั้งค่า OCR เริ่มต้น",
     "ocrLanguageLabel": "ภาษาเริ่มต้น (ISO-639-2)",
     "ocrLanguagePlaceholder": "เช่น eng, nld, deu",
-    "updates": "Updates",
-    "automaticUpdateCheck": "Check for a new version at startup",
-    "automaticUpdateCheckHint": "PDFluent asks pdfluent.com whether a newer version exists, a few seconds after it starts. Nothing from your documents is sent. Turn this off and the app never checks on its own — \"Check for updates\" still works whenever you ask for it."
+    "updates": "การอัปเดต",
+    "automaticUpdateCheck": "ตรวจหาเวอร์ชันใหม่เมื่อเริ่มต้น",
+    "automaticUpdateCheckHint": "PDFluent จะสอบถาม pdfluent.com ว่ามีเวอร์ชันใหม่กว่าหรือไม่ ไม่กี่วินาทีหลังจากเริ่มทำงาน ไม่มีการส่งข้อมูลใด ๆ จากเอกสารของคุณ ปิดตัวเลือกนี้แล้วแอปจะไม่ตรวจสอบเอง — \"ตรวจสอบอัปเดต\" ยังใช้งานได้ทุกครั้งที่คุณสั่ง.",
+    "recoveryCopy": "สำเนากู้คืน",
+    "recoveryCopyEnable": "เก็บสำเนากู้คืนของการเปลี่ยนแปลงที่ยังไม่ได้บันทึก เพื่อเสนอให้หลังโปรแกรมขัดข้อง",
+    "view": "มุมมอง",
+    "defaultZoomLabel": "ซูมเริ่มต้น",
+    "defaultZoomFitWidth": "พอดีความกว้าง (ค่าเริ่มต้น)",
+    "defaultZoomFitPage": "พอดีหน้า",
+    "defaultZoomActualSize": "ขนาดจริง (100%)",
+    "defaultZoomLastUsed": "ใช้ล่าสุด",
+    "defaultZoomHint": "เอกสารจะเปิดที่ระดับซูมนี้และปรับตามหน้าต่างจนกว่าคุณจะซูมเอง. พอดีความกว้างจะแสดงทั้งหน้าแทนเมื่อเห็นชัดว่าพอดีกว่า.",
+    "securityTitle": "ความปลอดภัย",
+    "formScriptsLabel": "สคริปต์ฟอร์ม",
+    "formScriptsAsk": "ถาม",
+    "formScriptsAlways": "เสมอ",
+    "formScriptsNever": "ไม่เลย",
+    "formScriptsHint": "ฟอร์มสามารถมีสคริปต์ได้ เช่น การคำนวณ ค่าเริ่มต้นคือถาม: ฟอร์มจะเปิดด้วยค่าที่บันทึกไว้ และจะไม่มีการเรียกใช้ใดๆ จนกว่าคุณจะยินยอม",
+    "formScriptsPinned": "องค์กรของคุณกำหนดตัวเลือกนี้ไว้ ไม่สามารถเปลี่ยนแปลงได้ที่นี่."
   },
   "errors": {
     "loadFailed": "โหลดเอกสารล้มเหลว",
@@ -381,7 +399,8 @@
     "addPageFailed": "การเพิ่ม PDF ล้มเหลว",
     "insertFailed": "การแทรก PDF ล้มเหลว",
     "splitFailed": "การแยกล้มเหลว",
-    "commandFailedTitle": "'{{command}}' did not complete"
+    "commandFailedTitle": "'{{command}}' ทำงานไม่สำเร็จ",
+    "commandRetrying": "เกิดข้อผิดพลาดชั่วคราวใน {{command}} — กำลังลองอีกครั้ง"
   },
   "events": {
     "formFieldUpdated": "อัปเดตช่องแบบฟอร์มแล้ว",
@@ -430,9 +449,9 @@
     "pageNotFound": "ไม่พบหน้า",
     "requiresFontInspection": "การแก้ไขข้อความต้องใช้การตรวจสอบฟอนต์ (วางแผนสำหรับเฟส 6)",
     "rejection": {
-      "bannerTitle": "This text was not changed",
-      "bannerDetail": "Reason reported by the PDF engine: {{detail}}",
-      "bannerDismiss": "Dismiss",
+      "bannerTitle": "ข้อความนี้ไม่ถูกเปลี่ยนแปลง",
+      "bannerDetail": "เหตุผลที่เอนจิน PDF รายงาน: {{detail}}",
+      "bannerDismiss": "ปิด",
       "replacement-too-long": {
         "tooltip": "Replacement is too long",
         "explanation": "The replacement is longer than the text it replaces. Keep it the same length or shorter so the surrounding layout stays intact."
@@ -491,8 +510,8 @@
       }
     },
     "fallback": {
-      "fontSubstitutedTitle": "A standard font wrote the new text",
-      "fontSubstitutedMessage": "The original font of this text has no glyph for one or more characters you typed, so Helvetica was used for the replacement. The text is correct; it may look slightly different from the rest of the line."
+      "fontSubstitutedTitle": "ข้อความใหม่ถูกเขียนด้วยฟอนต์มาตรฐาน",
+      "fontSubstitutedMessage": "ฟอนต์ต้นฉบับของข้อความนี้ไม่มีรูปอักขระสำหรับอักขระอย่างน้อยหนึ่งตัวที่คุณพิมพ์ จึงใช้ Helvetica แทน ข้อความถูกต้อง แต่อาจดูแตกต่างจากส่วนที่เหลือของบรรทัดเล็กน้อย."
     }
   },
   "validation": {
@@ -566,12 +585,16 @@
     "watermarkDone": "เพิ่มลายน้ำแล้ว",
     "watermarkFailed": "เพิ่มลายน้ำล้มเหลว",
     "watermarkRunning": "กำลังเพิ่มลายน้ำ…",
-    "pdfaRunning": "Converting to PDF/A…",
-    "pdfaDone": "PDF/A written",
-    "pdfaFailed": "PDF/A conversion failed",
-    "metadataRunning": "Saving properties…",
-    "metadataDone": "Properties saved",
-    "metadataFailed": "Could not save properties"
+    "pdfaRunning": "กำลังแปลงเป็น PDF/A…",
+    "pdfaDone": "เขียน PDF/A แล้ว",
+    "pdfaFailed": "การแปลงเป็น PDF/A ล้มเหลว",
+    "metadataRunning": "กำลังบันทึกคุณสมบัติ…",
+    "metadataDone": "บันทึกคุณสมบัติแล้ว",
+    "metadataFailed": "ไม่สามารถบันทึกคุณสมบัติได้",
+    "exportMarkdownRunning": "กำลังส่งออกเป็น Markdown…",
+    "exportMarkdownDone": "ส่งออก Markdown แล้ว",
+    "exportTablesRunning": "กำลังส่งออกตารางไปยัง Excel…",
+    "exportTablesDone": "ส่งออกตารางไปยัง Excel แล้ว ({{count}})"
   },
   "panels": {
     "search": "ค้นหา",
@@ -714,7 +737,10 @@
     "formatJpeg": "JPEG (รูปภาพ)",
     "formatDocx": "เอกสาร Word (.docx)",
     "formatXlsx": "สเปรดชีต Excel (.xlsx)",
-    "formatPptx": "งานนำเสนอ PowerPoint (.pptx)"
+    "formatPptx": "งานนำเสนอ PowerPoint (.pptx)",
+    "formatMarkdown": "Markdown (.md) - ตัวอย่าง",
+    "formatTablesXlsx": "ตารางเป็น Excel (.xlsx) - ตัวอย่าง",
+    "noTablesFound": "ไม่พบตารางในเอกสารนี้"
   },
   "goToPage": {
     "title": "ไปที่หน้า",
@@ -729,7 +755,9 @@
     "documentLabel": "เอกสาร:",
     "savedLabel": "บันทึกแล้ว:",
     "recoveryPath": "เส้นทางกู้คืน:",
-    "restore": "กู้คืน"
+    "restore": "กู้คืน",
+    "untitled": "เอกสารไม่มีชื่อ",
+    "andMore": "{{name}} และอีก {{count}} รายการ"
   },
   "emptyStates": {
     "noDocument": "ไม่มีเอกสารที่เปิดอยู่",
@@ -839,7 +867,26 @@
     "statusUnavailableWithReason": "OCR runtime ไม่พร้อมใช้งาน: {{reason}}",
     "statusRetry": "ตรวจสอบอีกครั้ง",
     "runtimePath": "รันไทม์: {{path}}",
-    "missingPackages": "ขาดหาย: {{packages}}"
+    "missingPackages": "ขาดหาย: {{packages}}",
+    "noScannedPagesTitle": "ไม่มีอะไรให้รู้จำ",
+    "unavailable": {
+      "platform": "ไม่มี OCR ให้ใช้บนแพลตฟอร์มนี้.",
+      "missing": "ไฟล์ OCR ของเวอร์ชันนี้หายไปหรือไม่ครบถ้วน ติดตั้ง PDFluent ใหม่เพื่อกู้คืน"
+    },
+    "settings": {
+      "unknown": "ส่วนประกอบ OCR: กำลังตรวจสอบ…",
+      "installed": "ส่วนประกอบ OCR: ติดตั้ง Tesseract {{version}} แล้ว"
+    },
+    "errors": {
+      "OCR_COMPONENT_UNSUPPORTED_PLATFORM": "คอมโพเนนต์ OCR ไม่มีให้สำหรับแพลตฟอร์มนี้",
+      "OCR_COMPONENT_NOT_INSTALLED": "คอมโพเนนต์ OCR ยังไม่ได้ติดตั้ง",
+      "OCR_LANGUAGE_MISSING": "ยังไม่ได้ติดตั้งชุดภาษาสำหรับ OCR",
+      "OCR_SIGNED_DOCUMENT": "เอกสารนี้ลงลายเซ็นแล้ว OCR จะเปลี่ยนแปลงหน้าที่ลงลายเซ็น ดังนั้นจึงไม่ทำงาน",
+      "OCR_NOT_PERMITTED": "สิทธิ์ของเอกสารไม่อนุญาตให้เปลี่ยนแปลงเนื้อหา",
+      "OCR_DOCUMENT_CHANGED": "เอกสารมีการเปลี่ยนแปลงขณะที่ OCR กำลังทำงาน โปรดรัน OCR อีกครั้ง",
+      "OCR_ENGINE_FAILED": "OCR หยุดทำงานเนื่องจากข้อผิดพลาด",
+      "OCR_PAGE_OUT_OF_RANGE": "หน้าที่จะรู้จำไม่อยู่ในเอกสาร"
+    }
   },
   "docInfo": {
     "title": "ชื่อเรื่อง",
@@ -879,7 +926,17 @@
     "italicComingSoon": "การจัดรูปแบบตัวเอียงเร็ว ๆ นี้",
     "sourceDigital": "ชั้นข้อความ PDF",
     "sourceOcr": "OCR",
-    "browserLimitedNote": "คลิกข้อความในหน้าเพื่อแก้ไขข้อความ PDF ที่รองรับ รูปภาพและลิงก์พร้อมใช้งานในแอปเดสก์ท็อป"
+    "browserLimitedNote": "คลิกข้อความในหน้าเพื่อแก้ไขข้อความ PDF ที่รองรับ รูปภาพและลิงก์พร้อมใช้งานในแอปเดสก์ท็อป",
+    "typeface": {
+      "label": "แบบอักษร",
+      "default": "แบบอักษรของเอกสาร",
+      "noEmbed": "{{family}}: ใบอนุญาตของฟอนต์ไม่อนุญาตให้ฝังใน PDF",
+      "refusedLicence": "{{family}} ใช้ไม่ได้: ใบอนุญาตไม่ให้ฝังใน PDF. เลือกแบบอักษรอื่น.",
+      "refusedGlyphs": "{{family}} ไม่มี glyph สำหรับ {{characters}}. เลือกแบบอักษรอื่น.",
+      "refusedGone": "แบบอักษรนั้นไม่ได้ติดตั้งแล้ว. เลือกแบบอื่น.",
+      "refusedText": "ข้อความที่จะจัดรูปแบบใหม่ไม่อยู่ในหน้าแล้ว.",
+      "refusedUnusable": "{{family}} อ่านเป็นฟอนต์ไม่ได้. เลือกแบบอักษรอื่น."
+    }
   },
   "rightPanel": {
     "properties": "คุณสมบัติ",
@@ -944,9 +1001,12 @@
     "flatten": "แบน XFA",
     "flattenDone": "XFA แบนแล้ว ส่งออก PDF เพื่อดาวน์โหลดเวอร์ชันสถิต",
     "flattenFailed": "การแบน XFA ล้มเหลว",
-    "convertToStandard": "Convert to standard PDF",
-    "convertedToStandard": "XFA converted to standard PDF",
-    "convertFailed": "Conversion failed: {{message}}"
+    "convertToStandard": "แปลงเป็น PDF มาตรฐาน",
+    "convertedToStandard": "แปลง XFA เป็น PDF มาตรฐานแล้ว",
+    "convertFailed": "การแปลงล้มเหลว: {{message}}",
+    "bannerTitle": "แบบฟอร์ม XFA",
+    "bannerBody": "แบบฟอร์ม XFA นี้แสดงตามต้นฉบับ หากต้องการกรอก แก้ไข หรือค้นหาในช่อง ให้แปลงเป็น PDF มาตรฐาน",
+    "bannerBodyExperimental": "แบบฟอร์ม XFA นี้แสดงตามต้นฉบับ การกรอกช่องยังเป็นฟีเจอร์ทดลอง แปลงเป็น PDF มาตรฐานเพื่อกรอก แก้ไข และค้นหาได้อย่างเชื่อถือได้"
   },
   "security": {
     "activeContentBadge": "ถูกบล็อก",
@@ -970,7 +1030,8 @@
     "highlight": "ไฮไลต์",
     "strikethrough": "ขีดทับ",
     "underline": "ขีดเส้นใต้",
-    "copyText": "คัดลอกข้อความ"
+    "copyText": "คัดลอกข้อความ",
+    "copied": "คัดลอกแล้ว"
   },
   "update": {
     "available": "มีการอัปเดต",
@@ -980,10 +1041,10 @@
     "installing": "กำลังติดตั้ง…",
     "checkFailed": "การตรวจสอบการอัปเดตล้มเหลว",
     "upToDate": "คุณใช้เวอร์ชันล่าสุดอยู่แล้ว",
-    "installed": "Update installed",
-    "restartNow": "Restart now",
-    "restartUnsaved": "Save your changes before restarting.",
-    "restartManual": "If it doesn't restart automatically, quit and reopen PDFluent to finish."
+    "installed": "ติดตั้งการอัปเดตแล้ว",
+    "restartNow": "รีสตาร์ทเลย",
+    "restartUnsaved": "บันทึกการเปลี่ยนแปลงก่อนรีสตาร์ท",
+    "restartManual": "หากไม่รีสตาร์ทโดยอัตโนมัติ ให้ปิดและเปิด PDFluent ใหม่เพื่อดำเนินการให้เสร็จ"
   },
   "telemetry": {
     "addNoteLabel": "ต้องการเพิ่มเติมอะไรไหม? (ไม่บังคับ)",
@@ -1012,6 +1073,11 @@
     "sentTitle": "ส่งแล้ว ขอบคุณ",
     "settingsAutoSend": "ส่งอัตโนมัติโดยไม่ถาม",
     "settingsAutoSendNote": "รายงานอัตโนมัติถูกทำให้ปลอดภัยและไม่มีข้อมูลส่วนบุคคล เช่นเดียวกับที่คุณตรวจสอบด้วยตนเอง",
+    "settingsSentReports": "รายงานข้อขัดข้องที่ส่งจากคอมพิวเตอร์เครื่องนี้: {{count}} เราจะลบรายงานเหล่านี้ออกจากเซิร์ฟเวอร์โดยอัตโนมัติหลังจาก {{days}} วัน",
+    "settingsDeleteReports": "ลบรายงานข้อขัดข้องของฉัน",
+    "settingsDeleting": "กำลังลบ…",
+    "settingsDeleted": "ลบรายงานข้อขัดข้องแล้ว: {{count}}",
+    "settingsDeleteFailed": "ลบ {{count}} รายการไม่สำเร็จ ตรวจสอบการเชื่อมต่อแล้วลองอีกครั้ง",
     "settingsDescription": "รายงานไม่มีข้อมูลส่วนบุคคลหรือเนื้อหาเอกสาร ทุกอย่างถูกทำความสะอาดก่อนส่งและคุณจะเห็นรายงานทุกรายการก่อน ปิดโดยค่าเริ่มต้น",
     "settingsTitle": "รายงานการล่มและข้อผิดพลาด",
     "settingsToggle": "ส่งรายงานการล่มและข้อผิดพลาด",
@@ -1019,7 +1085,11 @@
     "typeBug": "จุดบกพร่อง",
     "typeCrash": "การล่ม",
     "typeFeedback": "ความคิดเห็น",
-    "whatGetsSent": "สิ่งที่ถูกส่ง"
+    "whatGetsSent": "สิ่งที่ถูกส่ง",
+    "settingsSentFeedback": "รายงานข้อเสนอแนะที่ส่งจากคอมพิวเตอร์เครื่องนี้: {{count}} เราจะลบออกจากเซิร์ฟเวอร์โดยอัตโนมัติหลังจาก {{days}} วัน",
+    "settingsDeleteFeedback": "ลบรายงานข้อเสนอแนะของฉัน",
+    "settingsFeedbackDeleted": "ลบรายงานข้อเสนอแนะแล้ว: {{count}}",
+    "settingsFeedbackDeleteFailed": "ไม่สามารถลบรายงานข้อเสนอแนะ {{count}} รายการได้ ตรวจสอบการเชื่อมต่อแล้วลองอีกครั้ง"
   },
   "ai": {
     "summaryInstruction": "ให้สรุปเอกสารด้านล่างนี้อย่างกระชับเป็นภาษาไทย สำหรับแต่ละบทบาท ให้ระบุนายจ้าง ตำแหน่ง และระยะเวลา ใช้จุดหัวข้อ",
@@ -1076,7 +1146,8 @@
       "scrollLeft": "เลื่อนโหมดไปทางซ้าย",
       "scrollRight": "เลื่อนโหมดไปทางขวา",
       "workMode": "โหมดการทำงาน",
-      "searchPlaceholder": "ค้นหาในเอกสาร"
+      "searchPlaceholder": "ค้นหาในเอกสาร",
+      "allTools": "เครื่องมือทั้งหมด"
     },
     "menu": {
       "about": "เกี่ยวกับ",
@@ -1147,22 +1218,17 @@
       "draw": "วาด",
       "signatureName": "ชื่อลายเซ็น",
       "typeName": "พิมพ์ชื่อของคุณ…",
-      "selectStyle": "เลือกลักษณะ",
-      "styleClassic": "ลายมือสไตล์คลาสสิก",
-      "styleElegant": "ลายมือสไตล์หรูหรา",
-      "styleBrush": "ลายเซ็นแบบแปรง",
-      "styleModern": "การเขียนลายมืออยากสมัยใหม่",
       "drawHere": "วาดที่นี่ด้วยเมาส์ แทร็กแพด หรือปากกาลูปสไตลัส",
       "clear": "ล้าง",
       "apply": "ใช้",
-      "defaultSignature": "ลายเซ็น",
       "clickToPlaceSignature": "คลิกหน้าเพื่อวางลายเซ็น",
       "addInitials": "เพิ่มตัวย่อชื่อ",
       "initialsIntro": "พิมพ์ตัวย่อชื่อของคุณเพื่อวางอย่างรวดเร็วในฟิลด์ตัวย่อชื่อ",
       "initials": "ตัวย่อชื่อ",
       "initialsPlaceholder": "เช่น AB",
-      "defaultInitials": "AB",
-      "clickToPlaceInitials": "คลิกหน้าเพื่อวางตัวย่อชื่อ"
+      "clickToPlaceInitials": "คลิกหน้าเพื่อวางตัวย่อชื่อ",
+      "signatureFont": "แบบอักษรลายเซ็น",
+      "plainItalic": "ตัวเอียงธรรมดา"
     },
     "overlay": {
       "signaturePlaced": "วางลายเซ็นแล้ว",
@@ -1177,13 +1243,13 @@
     "textbox": {
       "editTitle": "แก้ไขกล่องข้อความ",
       "newTitle": "กล่องข้อความใหม่",
-      "intro": "ข้อความนี้วางเป็นการวางแบบโอเวอร์เลย์บนหน้าปัจจุบัน การบันทึกไฟล์ที่ว่างเปล่าจะลบกล่องข้อความที่มีอยู่",
       "label": "ข้อความ",
       "placeholder": "พิมพ์ข้อความ…",
       "delete": "ลบ",
       "deleted": "ลบกล่องข้อความแล้ว",
       "updated": "อัปเดตกล่องข้อความแล้ว",
-      "added": "เพิ่มกล่องข้อความใหม่แล้ว"
+      "added": "เพิ่มกล่องข้อความใหม่แล้ว",
+      "introPdf": "กล่องข้อความจะถูกเขียนลงใน PDF และแสดงในโปรแกรมดู PDF ทุกตัว การบันทึกแบบว่างจะลบกล่องข้อความที่มีอยู่"
     },
     "rail": {
       "tools": "เครื่องมือ PDF",
@@ -1197,12 +1263,14 @@
       "more": "เครื่องมือเพิ่มเติม",
       "strikeText": "ขีดลบข้อความ",
       "underlineText": "ขีดเส้นใต้ข้อความ",
-      "addAttachment": "เพิ่มไฟล์แนบ"
+      "addAttachment": "เพิ่มไฟล์แนบ",
+      "drawRectangle": "วาดสี่เหลี่ยม"
     },
     "railToasts": {
-      "commentMode": "โหมดหมายเหตุใช้งานอยู่ เลือกข้อความและเลือกหมายเหตุ หรือใช้รายการหมายเหตุเพื่อเพิ่มหมายเหตุ",
+      "commentMode": "โหมดบันทึก คลิกที่หน้าตรงตำแหน่งที่ต้องการวางบันทึก",
       "strikeout": "ขีดลบใช้งานอยู่ — เลือกข้อความเพื่อใช้",
-      "underline": "ขีดเส้นใต้ใช้งานอยู่ — เลือกข้อความเพื่อใช้"
+      "underline": "ขีดเส้นใต้ใช้งานอยู่ — เลือกข้อความเพื่อใช้",
+      "rectangle": "เครื่องมือสี่เหลี่ยมทำงานอยู่ — ลากบนหน้าเพื่อวาด"
     },
     "tools": {
       "lede": "เลือกเครื่องมือเพื่อเริ่มต้น ทุกอย่างทำงานในเครื่องบนอุปกรณ์นี้",
@@ -1238,17 +1306,18 @@
       "layers": "{{count}} เลเยอร์",
       "manageLayers": "จัดการเลเยอร์",
       "layersVisible": "{{count}} เลเยอร์ที่มองเห็นได้",
-      "archiveAndData": "Archiving and data",
-      "pdfaSub": "Check or convert for long-term archiving",
-      "invoiceSub": "Read the ZUGFeRD/Factur-X invoice inside",
-      "metadataSub": "Title and author of this document"
+      "archiveAndData": "การเก็บถาวรและข้อมูล",
+      "pdfaSub": "ตรวจสอบหรือแปลงเพื่อการเก็บถาวรระยะยาว",
+      "invoiceSub": "อ่านใบแจ้งหนี้ ZUGFeRD/Factur-X ที่อยู่ภายใน",
+      "metadataSub": "ชื่อเรื่องและผู้เขียนของเอกสารนี้",
+      "flattenForm": "แบน",
+      "flattenFormTitle": "แบนฟอร์ม: ค่าที่กรอกจะกลายเป็นส่วนหนึ่งของหน้า และฟิลด์จะถูกลบออก",
+      "flattenFormDone": "แบนฟอร์มแล้ว การเลิกทำจะนำฟิลด์กลับมา",
+      "flattenFormFailed": "แบนฟอร์มไม่ได้: {{message}}"
     },
     "edit": {
       "lede": "คลิกข้อความในเอกสารเพื่อแก้ไขในบรรทัด แถบจัดรูปแบบจะปรากฏด้านบนการเลือก",
       "formatText": "จัดรูปแบบข้อความ",
-      "fontLabel": "ฟอนต์",
-      "fontHint": "ข้อความ PDF ที่มีอยู่ใช้ฟอนต์ PDF ที่ฝัง ฟอนต์ \"{{font}}\" จะใช้สำหรับกล่องข้อความที่เพิ่มใหม่",
-      "fontEmbedded": "ฟอนต์ PDF ที่ฝัง",
       "color": "สี",
       "colorLabel": "สี {{color}}",
       "addContent": "เพิ่มเนื้อหา",
@@ -1261,7 +1330,18 @@
       "clickAnywhereTextBox": "คลิกที่ใดก็ได้บนหน้าเพื่อวางกล่องข้อความ",
       "clickAnywhereImage": "คลิกที่ใดก็ได้บนหน้าเพื่อวางรูปภาพ",
       "selection": "การเลือก",
-      "annotationOnPage": "{{type}} บนหน้า {{page}}"
+      "annotationOnPage": "{{type}} บนหน้า {{page}}",
+      "placeStamp": "วางตราประทับ",
+      "stampLabel": "ตราประทับ",
+      "clickToPlaceStamp": "คลิกที่หน้าเพื่อวางตราประทับ",
+      "placementModeStamp": "โหมดการวาง: ตราประทับ",
+      "stampPlaced": "วางตราประทับแล้ว",
+      "deleteAnnotation": "ลบคำอธิบายประกอบ",
+      "annotationColor": "สีของคำอธิบายประกอบ",
+      "editTextBox": "แก้ไขข้อความ",
+      "replaceImage": "แทนที่รูปภาพ",
+      "imageReplaced": "แทนที่รูปภาพแล้ว",
+      "moveHint": "ลากเพื่อย้าย ลากมุมเพื่อปรับขนาด หรือขยับด้วยปุ่มลูกศร"
     },
     "convert": {
       "exportPdfTo": "ส่งออก PDF เป็น",
@@ -1279,10 +1359,16 @@
       "confidenceFrom": "ความเชื่อมั่นตั้งแต่ {{value}}%",
       "ocrOff": "OCR ปิด",
       "ocrOn": "OCR เปิด",
-      "ocrRunning": "OCR ทำงานในเครื่อง…"
+      "ocrRunning": "OCR ทำงานในเครื่อง…",
+      "ocrComponentUnknown": "คอมโพเนนต์ OCR: กำลังตรวจสอบ…",
+      "ocrComponentInstalled": "ติดตั้งคอมโพเนนต์ OCR แล้ว",
+      "ocrLastRun": "ครั้งล่าสุด: {{pages}} หน้า, {{words}} คำ ถูกเพิ่มเป็นข้อความที่ค้นหาได้",
+      "ocrRunningProgress": "กำลังรู้จำหน้า {{done}} จาก {{total}}…",
+      "markdown": "Markdown (ดูตัวอย่าง)",
+      "tablesToExcel": "แปลงตารางเป็น Excel (ดูตัวอย่าง)"
     },
     "esign": {
-      "lede": "Sign with a certificate of your own, and check the signatures a document already carries. Both happen on this device.",
+      "lede": "ลงนามด้วยใบรับรองของคุณเอง และตรวจสอบลายเซ็นที่เอกสารมีอยู่แล้ว ทั้งสองอย่างทำบนเครื่องนี้.",
       "fillAndSign": "กรอกเอกสารของคุณและลงนาม",
       "addSignature": "เพิ่มลายเซ็น",
       "addInitials": "เพิ่มตัวย่อชื่อ",
@@ -1290,25 +1376,25 @@
       "placementModeInitials": "โหมดการวาง: ตัวย่อชื่อ",
       "clickToPlaceSignature": "คลิกที่ใดก็ได้บนหน้าเพื่อวางลายเซ็นของคุณ",
       "clickToPlaceInitials": "คลิกที่ใดก็ได้บนหน้าเพื่อวางตัวย่อชื่อของคุณ",
-      "verifySection": "Signatures",
-      "verify": "Check signatures",
-      "desktopOnly": "Available in the desktop app",
-      "unsigned": "This document carries no signatures.",
-      "signSection": "Sign with a certificate",
-      "padesLevel": "Produces a PAdES B-B signature: your certificate over the whole file, no timestamp server involved.",
-      "certificate": "Certificate (.p12 or .pfx)",
-      "certificateNone": "No certificate chosen",
-      "chooseCertificate": "Choose certificate",
-      "certificatePassword": "Certificate password",
-      "reason": "Reason (optional)",
-      "reasonPlaceholder": "Why you are signing",
-      "sign": "Sign and save a copy",
-      "signing": "Signing…",
-      "signNeedsCertificate": "Choose a certificate and enter its password first.",
-      "signSaved": "Signed copy saved as {{name}}",
-      "signFailed": "Signing failed: {{message}}",
-      "usageRights": "Reader enablement (usage rights)",
-      "usageRightsInvalidated": "Usage rights invalidated — this file was edited, so Adobe Reader no longer treats it as an enabled form."
+      "verifySection": "ลายเซ็น",
+      "verify": "ตรวจสอบลายเซ็น",
+      "desktopOnly": "พร้อมใช้งานในแอปเดสก์ท็อป",
+      "unsigned": "เอกสารนี้ไม่มีลายเซ็น",
+      "signSection": "ลงนามด้วยใบรับรอง",
+      "padesLevel": "สร้างลายเซ็น PAdES B-B: ใบรับรองของคุณครอบคลุมทั้งไฟล์ ไม่ต้องใช้เซิร์ฟเวอร์ประทับเวลา.",
+      "certificate": "ใบรับรอง (.p12 หรือ .pfx)",
+      "certificateNone": "ไม่ได้เลือกใบรับรอง",
+      "chooseCertificate": "เลือกใบรับรอง",
+      "certificatePassword": "รหัสผ่านใบรับรอง",
+      "reason": "เหตุผล (ไม่บังคับ)",
+      "reasonPlaceholder": "เหตุผลที่คุณลงนาม",
+      "sign": "ลงนามและบันทึกสำเนา",
+      "signing": "กำลังลงนาม…",
+      "signNeedsCertificate": "เลือกใบรับรองและป้อนรหัสผ่านก่อน",
+      "signSaved": "บันทึกสำเนาที่ลงนามแล้วเป็น {{name}}",
+      "signFailed": "การลงนามล้มเหลว: {{message}}",
+      "usageRights": "การเปิดใช้งาน Reader (สิทธิ์การใช้งาน)",
+      "usageRightsInvalidated": "สิทธิ์การใช้งานถูกยกเลิก — ไฟล์นี้ถูกแก้ไข ดังนั้น Adobe Reader จะไม่ถือว่าเป็นฟอร์มที่เปิดใช้แล้วอีกต่อไป."
     },
     "protect": {
       "lede": "ป้องกันเอกสาร PDF ของคุณด้วยรหัสผ่านที่เข้มแข็งทางการเข้ารหัสลับ การเปลี่ยนแปลงจะใช้ในเครื่องได้ทันที",
@@ -1330,9 +1416,11 @@
       "localViaTauri": "ท้องถิ่นผ่าน Tauri command ไม่มี runtime เบราว์เซอร์",
       "compressingImages": "กำลังบีบอัดรูปภาพ…",
       "percentComplete": "{{percent}}% เสร็จสิ้น",
-      "compressPdf": "บีบอัด PDF",
       "desktopOnly": "มีเฉพาะในแอปเดสก์ท็อปเท่านั้น",
-      "backToTools": "กลับไปยังเครื่องมือ"
+      "backToTools": "กลับไปยังเครื่องมือ",
+      "saveCopy": "บันทึกสำเนาที่บีบอัดเป็น…",
+      "replaceOpen": "บีบอัดและแทนที่เอกสารที่เปิดอยู่",
+      "replaceNote": "การบันทึกสำเนาจะคงเอกสารที่เปิดอยู่และไฟล์ไว้ตามเดิม. การแทนที่เปลี่ยนเฉพาะเอกสารที่เปิดอยู่; เลิกทำจะนำต้นฉบับกลับมา."
     },
     "split": {
       "lede": "แยกเอกสารของคุณออกเป็นไฟล์ PDF แยกต่างหากต่อหน้าหรือตามช่วงหน้าที่กำหนด",
@@ -1369,7 +1457,52 @@
       "applying": "กำลังใช้…",
       "applyPermanently": "ใช้การลบข้อมูลอย่างถาวร",
       "noActiveMarkings": "ไม่มีการทำเครื่องหมายการลบข้อมูลที่ใช้งานอยู่",
-      "backToTools": "กลับไปยังเครื่องมือ"
+      "backToTools": "กลับไปยังเครื่องมือ",
+      "pii": {
+        "title": "ข้อมูลส่วนบุคคล",
+        "lede": "Find personal data in the text of this document: IBANs, card numbers, national ID numbers, birth dates, e-mail addresses and phone numbers, and names and addresses when the model is installed. Review the list, then redact the ones you choose.",
+        "find": "ค้นหาข้อมูลส่วนบุคคล",
+        "scanning": "กำลังสแกน…",
+        "none": "Nothing found.",
+        "kind": {
+          "iban": "IBAN",
+          "email": "ที่อยู่อีเมล",
+          "phone": "หมายเลขโทรศัพท์",
+          "credit_card": "หมายเลขบัตร",
+          "national_id": "เลขบัตรประชาชน",
+          "date_of_birth": "วันเกิด",
+          "bank_account": "เลขที่บัญชีธนาคาร",
+          "person": "ชื่อ",
+          "address": "ที่อยู่"
+        },
+        "where": "หน้า {{pages}} · {{count}}×",
+        "selectAll": "เลือกทั้งหมด",
+        "selectNone": "ไม่เลือกเลย",
+        "redactSelected": "ปิดข้อมูลที่เลือก {{count}} รายการ",
+        "redacting": "กำลังปิดข้อมูล…",
+        "done": "ปกปิด {{count}} รายการแล้ว. บันทึกไฟล์เพื่อเก็บผลลัพธ์.",
+        "failed": "ปกปิดไม่สำเร็จ: {{message}}",
+        "detectFailed": "ค้นหาไม่สำเร็จ: {{message}}",
+        "patternsOnly": "Without the model this finds only items it can check, such as IBANs, cards, ID numbers, birth dates, e-mail addresses and phone numbers. Names and addresses are not detected, so check every page yourself.",
+        "suggestionsOnly": "สิ่งเหล่านี้เป็นเพียงคำแนะนำ ตัวตรวจจับอาจพลาดบางอย่างได้ โปรดตรวจสอบทุกหน้าก่อนบันทึก",
+        "source": {
+          "verified": "ตรวจสอบแล้ว {{detail}}",
+          "model": "คำแนะนำจากโมเดล {{score}}%"
+        },
+        "model": {
+          "use": "ใช้โมเดลค้นหาชื่อและที่อยู่ด้วย",
+          "languages": "ตรวจสอบสำหรับ: {{languages}}",
+          "remove": "ลบโมเดล",
+          "removeFailed": "ลบโมเดลไม่ได้: {{message}}",
+          "failed": "โมเดลทำงานไม่ได้ ({{code}}) จะแสดงเฉพาะรายการที่ตรวจสอบได้เท่านั้น",
+          "consentTitle": "ดาวน์โหลดโมเดลข้อมูลส่วนบุคคลหรือไม่",
+          "consentBody": "การค้นหาชื่อและที่อยู่ต้องใช้โมเดลภาษา ({{size}}) ดาวน์โหลดครั้งเดียวจาก {{host}} ตรวจสอบกับเช็กซัมแบบคงที่ แล้วทำงานบนคอมพิวเตอร์เครื่องนี้ เอกสารของคุณจะไม่ถูกส่งออกไป",
+          "download": "ดาวน์โหลด",
+          "downloading": "กำลังดาวน์โหลด…",
+          "downloadFailed": "ดาวน์โหลดไม่สำเร็จ: {{message}}",
+          "notInBuild": "ยังไม่มีให้ดาวน์โหลดในเวอร์ชันนี้"
+        }
+      }
     },
     "toasts": {
       "saving": "กำลังบันทึก…",
@@ -1399,7 +1532,7 @@
       "pdfsMerged": "{{count}} ไฟล์ PDF รวมแล้ว",
       "mergedSaved": "PDF ที่รวมบันทึกเป็น {{name}}",
       "mergeFailed": "การรวมล้มเหลว: {{message}}",
-      "redactMatches": "{{matches}} รายการค้นหาพบ {{areas}} การทำเครื่องหมายการลบข้อมูลวาง",
+      "redactSearchDone": "จำนวนรายการที่ปกปิด: {{count}} บันทึกเพื่อเก็บการเปลี่ยนแปลง",
       "noRedactMatches": "ไม่พบแมตช์ข้อความเพื่อลบข้อมูล",
       "redactSearchFailed": "การค้นหาและลบข้อมูลล้มเหลว: {{message}}",
       "applyRedactConfirm": "ใช้{{count}} การทำเครื่องหมายการลบข้อมูลอย่างถาวร ซึ่งจะลบเนื้อหาออกจาก PDF ตลอดไป",
@@ -1408,108 +1541,328 @@
       "applyRedactRunning": "กำลังใช้การลบข้อมูลอย่างถาวร…",
       "applyRedactDone": "ใช้การลบข้อมูลอย่างถาวรแล้ว",
       "redactionsApplied": "ใช้การลบข้อมูลอย่างถาวรแล้ว",
-      "redactFailed": "การลบข้อมูลล้มเหลว: {{message}}"
+      "redactFailed": "การลบข้อมูลล้มเหลว: {{message}}",
+      "compressedCopyToast": "บันทึก {{name}} แล้ว: {{before}} เป็น {{after}} เอกสารที่เปิดอยู่ไม่เปลี่ยนแปลง",
+      "compressedReplacedToast": "บีบอัดเอกสารที่เปิดอยู่แล้ว: {{before}} เป็น {{after}} การเลิกทำจะนำต้นฉบับกลับมา บันทึกเพื่อเก็บเวอร์ชันที่บีบอัดแล้ว"
     },
     "thumbnails": {
       "pages": "หน้า",
       "pageAlt": "หน้า {{page}}",
-      "bookmarks": "Bookmarks"
+      "bookmarks": "บุ๊กมาร์ก"
     },
     "pdfa": {
-      "lede": "PDF/A is the archival form of PDF: fonts embedded, colours defined, nothing that depends on the outside world.",
-      "section": "Conformance",
-      "level": "Level",
-      "validate": "Check this document",
-      "convert": "Save as PDF/A…",
-      "desktopOnly": "Available in the desktop app",
-      "compliant": "Conforms to {{level}}",
-      "notCompliant": "Does not conform: {{errors}} errors, {{warnings}} warnings",
-      "moreIssues": "{{count}} more",
+      "lede": "PDF/A คือรูปแบบเก็บถาวรของ PDF: ฝังฟอนต์ กำหนดสี ไม่มีอะไรที่ต้องพึ่งพาภายนอก.",
+      "section": "ความสอดคล้อง",
+      "level": "ระดับ",
+      "validate": "ตรวจสอบเอกสารนี้",
+      "convert": "บันทึกเป็น PDF/A…",
+      "desktopOnly": "พร้อมใช้งานในแอปเดสก์ท็อป",
+      "compliant": "เป็นไปตาม {{level}}",
+      "notCompliant": "ไม่เป็นไปตามมาตรฐาน: ข้อผิดพลาด {{errors}} รายการ, คำเตือน {{warnings}} รายการ",
+      "moreIssues": "อีก {{count}} รายการ",
       "report": {
-        "title": "What the conversion did",
-        "written": "Written to {{path}}",
-        "size": "{{out}} out of {{in}} ({{ratio}}×), in {{seconds}} s",
-        "pages": "{{count}} pages",
-        "fontsEmbedded": "{{embedded}} of {{found}} unembedded fonts embedded",
-        "fontsFailed": "Could not embed: {{fonts}}",
-        "removed": "Removed: {{count}} items that PDF/A does not allow",
-        "subset": "{{count}} font programs reduced, {{bytes}} kB saved",
-        "outputIntent": "Output intent added",
-        "unchangedDocument": "The open document was not changed.",
+        "title": "สิ่งที่การแปลงได้ทำ",
+        "written": "เขียนไปที่ {{path}}",
+        "size": "{{out}} จาก {{in}} ({{ratio}}×) ใน {{seconds}} วินาที",
+        "pages": "{{count}} หน้า",
+        "fontsEmbedded": "ฝังฟอนต์แล้ว {{embedded}} จาก {{found}} ฟอนต์ที่ยังไม่ได้ฝัง",
+        "fontsFailed": "ฝังไม่ได้: {{fonts}}",
+        "removed": "นำออกแล้ว: {{count}} รายการที่ PDF/A ไม่อนุญาต",
+        "subset": "ลดโปรแกรมฟอนต์ {{count}} รายการ, ประหยัด {{bytes}} kB",
+        "outputIntent": "เพิ่ม Output intent แล้ว",
+        "unchangedDocument": "เอกสารที่เปิดอยู่ไม่ได้ถูกเปลี่ยนแปลง",
         "warning": "{{message}}",
-        "moreWarnings": "{{count}} more"
+        "moreWarnings": "อีก {{count}} รายการ"
       }
     },
     "metadata": {
-      "lede": "The title and author stored inside the file, which is what other readers and search show.",
-      "section": "Properties",
-      "title": "Title",
-      "author": "Author",
-      "apply": "Save properties",
-      "desktopOnly": "Available in the desktop app"
+      "lede": "ชื่อเรื่องและผู้เขียนที่เก็บไว้ในไฟล์ ซึ่งโปรแกรมอ่านอื่นและการค้นหาจะแสดง",
+      "section": "คุณสมบัติ",
+      "title": "ชื่อเรื่อง",
+      "author": "ผู้เขียน",
+      "apply": "บันทึกคุณสมบัติ",
+      "desktopOnly": "พร้อมใช้งานในแอปเดสก์ท็อป"
     },
     "invoice": {
-      "lede": "A ZUGFeRD or Factur-X invoice travels as XML inside the PDF. This reads it and checks it against EN 16931.",
-      "section": "Embedded invoice",
-      "read": "Read invoice",
-      "desktopOnly": "Available in the desktop app",
-      "none": "This document carries no e-invoice.",
-      "number": "Number: {{number}}",
-      "issued": "Issued: {{date}}",
-      "seller": "Seller: {{name}}",
-      "buyer": "Buyer: {{name}}",
-      "total": "Total: {{total}} {{currency}}",
-      "lines": "Line items: {{count}}",
-      "valid": "Valid against {{profile}}",
-      "invalid": "Not valid: {{errors}} errors, {{warnings}} warnings"
+      "lede": "ใบแจ้งหนี้ ZUGFeRD หรือ Factur-X จะอยู่ในรูปแบบ XML ภายใน PDF ตัวโปรแกรมจะอ่านและตรวจสอบกับ EN 16931.",
+      "section": "ใบแจ้งหนี้ที่ฝังไว้",
+      "read": "อ่านใบแจ้งหนี้",
+      "desktopOnly": "พร้อมใช้งานในแอปเดสก์ท็อป",
+      "none": "เอกสารนี้ไม่มีใบแจ้งหนี้อิเล็กทรอนิกส์",
+      "number": "เลขที่: {{number}}",
+      "issued": "วันที่ออก: {{date}}",
+      "seller": "ผู้ขาย: {{name}}",
+      "buyer": "ผู้ซื้อ: {{name}}",
+      "total": "ยอดรวม: {{total}} {{currency}}",
+      "lines": "รายการ: {{count}}",
+      "valid": "ถูกต้องตาม {{profile}}",
+      "invalid": "ไม่ถูกต้อง: ข้อผิดพลาด {{errors}} รายการ, คำเตือน {{warnings}} รายการ"
     },
     "canvas": {
-      "document": "PDF document"
+      "document": "เอกสาร PDF"
+    },
+    "stamps": {
+      "Approved": "อนุมัติแล้ว",
+      "NotApproved": "ไม่อนุมัติ",
+      "Draft": "ฉบับร่าง",
+      "Confidential": "ลับ",
+      "Final": "ฉบับสุดท้าย",
+      "ForComment": "เพื่อแสดงความเห็น",
+      "Expired": "หมดอายุ"
     }
   },
   "about": {
-    "section": "About",
-    "app": "App",
-    "version": "Version",
-    "privacy": "Privacy",
-    "privacyValue": "All processing happens locally",
-    "website": "Website"
+    "section": "เกี่ยวกับ",
+    "app": "แอป",
+    "version": "เวอร์ชัน",
+    "privacy": "ความเป็นส่วนตัว",
+    "privacyValue": "ประมวลผลทั้งหมดในเครื่องนี้",
+    "website": "เว็บไซต์"
   },
   "reviewSummary": {
-    "title": "Review summary",
-    "generatedAt": "Generated on",
-    "comments": "Comments",
-    "noComments": "No comments.",
-    "replies": "Replies:",
-    "empty": "empty",
-    "redactions": "Redactions",
-    "noRedactions": "No redactions.",
-    "noIssues": "No issues.",
-    "metadataChanges": "Metadata changes",
-    "noMetadataChanges": "No changes.",
-    "changedBy": "by",
-    "on": "on"
+    "title": "สรุปการตรวจสอบ",
+    "generatedAt": "สร้างเมื่อ",
+    "comments": "ความคิดเห็น",
+    "noComments": "ไม่มีความคิดเห็น",
+    "replies": "การตอบกลับ:",
+    "empty": "ว่าง",
+    "redactions": "การปิดบัง",
+    "noRedactions": "ไม่มีการปิดบัง",
+    "noIssues": "ไม่มีปัญหา",
+    "metadataChanges": "การเปลี่ยนแปลงข้อมูลเมตา",
+    "noMetadataChanges": "ไม่มีการเปลี่ยนแปลง",
+    "changedBy": "โดย",
+    "on": "เมื่อ"
   },
   "externalLink": {
-    "askMessage": "This PDF wants to open an external link:\n\n{{label}}\n\nURL:\n{{href}}\n\nDo you want to continue?",
-    "title": "Open external link?",
-    "openLink": "Open link",
-    "dialogBody": "This PDF wants to open an external website. Check the URL before continuing."
+    "askMessage": "PDF นี้ต้องการเปิดลิงก์ภายนอก:\n\n{{label}}\n\nURL:\n{{href}}\n\nคุณต้องการดำเนินการต่อหรือไม่?",
+    "title": "เปิดลิงก์ภายนอกหรือไม่?",
+    "openLink": "เปิดลิงก์",
+    "dialogBody": "PDF นี้ต้องการเปิดเว็บไซต์ภายนอก ตรวจสอบ URL ก่อนดำเนินการต่อ"
   },
   "linkChoice": {
-    "title": "Open link in your browser?",
-    "body": "This document wants to open an external website. Are you opening it from a trusted source?",
-    "alwaysAllow": "Always allow",
-    "openOnce": "Open once"
+    "title": "เปิดลิงก์ในเบราว์เซอร์หรือไม่?",
+    "body": "เอกสารนี้ต้องการเปิดเว็บไซต์ภายนอก คุณเปิดเอกสารนี้จากแหล่งที่เชื่อถือได้หรือไม่?",
+    "alwaysAllow": "อนุญาตเสมอ",
+    "openOnce": "เปิดครั้งเดียว"
   },
   "fallbacks": {
-    "ocrUnavailableTitle": "OCR is not available on this computer",
-    "ocrUnavailableMessage": "PDFluent could not start the text-recognition engine. {{reason}}",
-    "ocrFailedMessage": "Text recognition stopped on page {{page}}: {{reason}}",
-    "xfaStaticTitle": "Form filled without recalculation",
-    "xfaStaticMessage": "This build writes XFA field values straight into the form. Field scripts do not run, so calculated totals and fields that appear or hide based on your answer stay as they are.",
-    "featureUnavailableTitle": "'{{feature}}' is not available in this build",
-    "usageRightsInvalidatedTitle": "This document is no longer Reader-enabled",
-    "usageRightsInvalidatedMessage": "Your change was made. It also invalidated the usage-rights signature this PDF carried, which let Adobe Reader fill in and save the form. The text edit stands; the extended rights are gone and cannot be restored by undoing it."
+    "ocrUnavailableTitle": "OCR ไม่พร้อมใช้งานบนคอมพิวเตอร์เครื่องนี้",
+    "ocrUnavailableMessage": "PDFluent เริ่มเอนจินรู้จำข้อความไม่ได้ {{reason}}",
+    "ocrFailedMessage": "การรู้จำข้อความหยุดที่หน้า {{page}}: {{reason}}",
+    "xfaStaticTitle": "กรอกฟอร์มโดยไม่คำนวณใหม่",
+    "xfaStaticMessage": "บิลด์นี้เขียนค่าฟิลด์ XFA ลงในฟอร์มโดยตรง สคริปต์ฟิลด์ไม่ทำงาน ดังนั้นยอดรวมที่คำนวณและฟิลด์ที่แสดงหรือซ่อนตามคำตอบของคุณจะคงอยู่เหมือนเดิม",
+    "xfaScriptsNotRunTitle": "สคริปต์บางส่วนของแบบฟอร์มไม่ได้ทำงาน",
+    "xfaScriptsNotRunMessage": "บันทึกคำตอบของคุณแล้ว แบบฟอร์มนี้มีสคริปต์ FormCalc ({{count}} รายการ) และ PDFluent รันเฉพาะสคริปต์ JavaScript ยอดรวมและช่องที่สคริปต์เหล่านั้นจะอัปเดตจะคงค่าที่บันทึกไว้จนกว่าจะเปิดแบบฟอร์มใน Adobe Reader",
+    "xfaFieldRefusedTitle": "แบบฟอร์มไม่ยอมรับค่านี้",
+    "xfaFieldReadOnly": "ช่อง “{{field}}” ในแบบฟอร์มนี้เป็นแบบอ่านอย่างเดียวและเปลี่ยนแปลงไม่ได้",
+    "xfaFieldRejected": "ช่อง “{{field}}” ไม่ยอมรับค่านั้น: {{reason}}",
+    "xfaFieldNotFound": "ช่อง “{{field}}” ไม่อยู่ในแบบฟอร์มแล้ว โหลดแบบฟอร์มใหม่แล้ว",
+    "featureUnavailableTitle": "'{{feature}}' ไม่พร้อมใช้งานในบิลด์นี้",
+    "usageRightsInvalidatedTitle": "เอกสารนี้ไม่ได้เปิดใช้งาน Reader แล้ว",
+    "usageRightsInvalidatedMessage": "ทำการเปลี่ยนแปลงของคุณแล้ว ยังทำให้ลายเซ็นสิทธิ์การใช้งานที่ PDF นี้มีอยู่ไม่ถูกต้อง ซึ่งทำให้ Adobe Reader กรอกและบันทึกฟอร์มได้ การแก้ไขข้อความยังคงอยู่ สิทธิ์เพิ่มเติมหายไปแล้วและไม่สามารถกู้คืนได้ด้วยการเลิกทำ",
+    "xfaScriptsFailedTitle": "สคริปต์แบบฟอร์มบางรายการทำงานไม่เสร็จ",
+    "xfaScriptsFailedMessage": "บันทึกคำตอบของคุณแล้ว แต่สคริปต์เหล่านี้ทำงานไม่เสร็จ ค่าที่สคริปต์ตั้งไว้อาจหายไป: {{details}}.",
+    "xfaScriptKind_threw": "เกิดข้อผิดพลาด",
+    "xfaScriptKind_timeout": "หมดเวลา",
+    "xfaScriptKind_refused": "ถูกแซนด์บ็อกซ์ปฏิเสธ"
+  },
+  "signedSave": {
+    "title": "เอกสารนี้ลงนามแล้ว",
+    "message": "การปิดทับจะลบเนื้อหาที่ลายเซ็นครอบคลุมอยู่ จึงไม่สามารถบันทึกทับต้นฉบับที่ลงลายเซ็นแล้วได้โดยไม่ทำให้ลายเซ็นเสียหาย ให้บันทึกเป็นสำเนาแทน: สำเนาจะเก็บการปิดทับไว้และไม่มีลายเซ็น.",
+    "saveCopy": "บันทึกสำเนาโดยไม่มีลายเซ็น…",
+    "cancel": "ยกเลิก"
+  },
+  "passwordPrompt": {
+    "title": "PDF นี้มีการป้องกัน",
+    "message": "ป้อนรหัสผ่านเพื่อเปิด {{name}}.",
+    "incorrect": "รหัสผ่านนั้นใช้เปิด PDF นี้ไม่ได้ ลองอีกครั้ง.",
+    "label": "รหัสผ่าน",
+    "open": "เปิด",
+    "cancel": "ยกเลิก",
+    "readOnlyTitle": "เปิดในโหมดอ่านอย่างเดียว",
+    "readOnlyMessage": "สิทธิ์ของ PDF นี้ไม่อนุญาตให้แก้ไข คุณอ่านได้ และพิมพ์ได้หากสิทธิ์อนุญาต หากต้องการบันทึกการเปลี่ยนแปลง ให้ลบการป้องกันด้วยรหัสผ่านเจ้าของ."
+  },
+  "a11y": {
+    "searchNextResult": "ผลลัพธ์ถัดไป",
+    "searchPrevResult": "ผลลัพธ์ก่อนหน้า"
+  },
+  "feedback": {
+    "title": "ช่วยเราปรับปรุง PDFluent",
+    "intro": "บอกเราว่าคุณกำลังพยายามทำอะไร เราอ่านทุกรายงาน",
+    "menuLabel": "ช่วยเราปรับปรุง PDFluent…",
+    "fromError": "คุณบอกเราเกี่ยวกับปัญหาที่เพิ่งเจอได้",
+    "areaLabel": "คุณกำลังพยายามทำอะไร",
+    "area": {
+      "open-view": "เปิดหรืออ่านเอกสาร",
+      "search-copy": "ค้นหาหรือคัดลอกข้อความ",
+      "print": "พิมพ์",
+      "edit-text": "แก้ไขข้อความ",
+      "annotate": "ไฮไลต์ แสดงความคิดเห็น หรือวาด",
+      "forms": "กรอกแบบฟอร์ม",
+      "sign": "ลงนามหรือตรวจสอบลายเซ็น",
+      "redact": "ปิดบังข้อมูล",
+      "pages-organize": "หมุน จัดลำดับ รวม หรือแยกหน้า",
+      "convert-export": "แปลงหรือส่งออก",
+      "ocr": "จดจำข้อความในภาพสแกน (OCR)",
+      "pdfa-compliance": "PDF/A",
+      "protect": "รหัสผ่านหรือสิทธิ์การใช้งาน",
+      "save": "บันทึก",
+      "install-update": "ติดตั้งหรืออัปเดต PDFluent",
+      "other": "อื่น ๆ"
+    },
+    "tryingToPlaceholder": "เล่าด้วยคำของคุณเอง (ไม่บังคับ)",
+    "whatHappenedLabel": "เกิดอะไรขึ้น",
+    "whatHappenedPlaceholder": "คุณเห็นอะไร",
+    "whatHappenedRequired": "บอกเราว่าเกิดอะไรขึ้น เราจะได้รู้ว่าต้องดูตรงไหน",
+    "expectedLabel": "คุณคาดว่าจะเป็นอย่างไร",
+    "expectedPlaceholder": "ไม่บังคับ",
+    "docTypeLabel": "เป็นเอกสารประเภทใด",
+    "docType": {
+      "none": "ไม่เกี่ยวกับเอกสาร",
+      "form": "แบบฟอร์ม",
+      "scanned": "ภาพสแกน",
+      "signed": "เอกสารที่ลงนามแล้ว",
+      "protected": "ป้องกันด้วยรหัสผ่าน",
+      "large": "ขนาดใหญ่ (เกิน 100 หน้า)",
+      "xfa": "แบบฟอร์มของรัฐหรือ XFA",
+      "other": "อื่น ๆ"
+    },
+    "docTypeUnset": "เลือก…",
+    "pageCountLabel": "จำนวนหน้า",
+    "contextTitle": "ส่งไปพร้อมกับรายงานของคุณ",
+    "contextToggle": "รวมรายละเอียดระบบ",
+    "contextHint": "เวอร์ชัน ระบบ ภาษา และข้อผิดพลาดล่าสุดช่วยให้เราจำลองปัญหาได้ ไม่มีชื่อไฟล์ พาธ หรือเนื้อหาเอกสาร",
+    "fieldVersion": "เวอร์ชัน PDFluent",
+    "fieldSystem": "ระบบ",
+    "fieldLanguage": "ภาษา",
+    "fieldLastError": "ข้อผิดพลาดล่าสุด",
+    "fieldSessions": "เซสชัน",
+    "notIncluded": "ไม่รวม",
+    "documentTitle": "แชร์เอกสาร (ไม่บังคับ)",
+    "documentToggle": "แชร์เอกสารที่เปิดอยู่พร้อมกับรายงานนี้",
+    "documentNone": "ไม่มีเอกสารที่เปิดอยู่",
+    "documentTooLarge": "เอกสารนี้ใหญ่กว่า 20 MB จึงแชร์พร้อมรายงานไม่ได้",
+    "documentShared": "เอกสารนี้จะถูกแชร์",
+    "documentConfirmTitle": "แชร์เอกสารนี้หรือไม่",
+    "documentConfirmText": "ไฟล์นี้จะถูกส่งไปยัง PDFluent (Innovation Trigger B.V.) ใช้เพียงเพื่อตรวจสอบรายงานนี้ ไม่เผยแพร่ ไม่ใช้สำหรับการฝึกอบรม และจะถูกลบไม่เกิน 90 วันหลังจากปัญหาได้รับการแก้ไข และภายใน 12 เดือนในทุกกรณี",
+    "documentConfirmFile": "{{name}} ({{size}})",
+    "documentConfirmYes": "แชร์เอกสารนี้",
+    "documentConfirmNo": "ไม่แชร์",
+    "contactTitle": "ติดต่อกับเรา (ไม่บังคับ)",
+    "emailLabel": "ที่อยู่อีเมล",
+    "emailInvalid": "ดูเหมือนไม่ใช่ที่อยู่อีเมล",
+    "consentContact": "PDFluent อาจส่งอีเมลถึงฉันหากมีคำถามเกี่ยวกับรายงานนี้",
+    "consentFixed": "ส่งอีเมลถึงฉันเมื่อแก้ไขแล้ว",
+    "contactHint": "ที่อยู่อีเมลของคุณถูกเก็บแยกจากรายงาน ใช้เฉพาะสำหรับรายงานนี้ และไม่ใช้สำหรับจดหมายข่าวหรือการตลาด",
+    "noEmailHint": "แม้ไม่ระบุอีเมล คุณก็ยังได้รับข่าวจากเรา เมื่อการอัปเดตแก้ไขปัญหาที่คุณรายงาน PDFluent จะแจ้งให้ทราบในแอป",
+    "privacyNotice": "Innovation Trigger B.V. ได้รับรายงานนี้เพื่อปรับปรุง PDFluent รายงานจะถูกเก็บไว้ไม่เกิน 24 เดือน คุณสามารถขอลบรายงานของคุณได้ตลอดเวลา",
+    "privacyLink": "คำชี้แจงความเป็นส่วนตัว",
+    "send": "ส่ง",
+    "sending": "กำลังส่ง…",
+    "cancel": "ยกเลิก",
+    "sentTitle": "ขอบคุณ!",
+    "sentBody": "เราได้รับรายงานของคุณแล้ว นี่คือหมายเลขรายงาน:",
+    "sentIdHint": "เก็บหมายเลขนี้ไว้ หากต้องการสอบถามเกี่ยวกับรายงานหรือขอให้ลบ",
+    "sentNoLocalCopy": "PDFluent จำหมายเลขนี้ไว้ในคอมพิวเตอร์เครื่องนี้ไม่ได้ โปรดจดไว้",
+    "sentDocumentFailed": "เราได้รับรายงานของคุณแล้ว แต่อัปโหลดเอกสารไม่สำเร็จ หากเอกสารสำคัญ คุณส่งรายงานอีกครั้งพร้อมเอกสารได้",
+    "removeReport": "ลบรายงานนี้",
+    "removing": "กำลังลบ…",
+    "removed": "ลบรายงานของคุณแล้ว",
+    "removeFailed": "ตอนนี้ลบรายงานของคุณไม่ได้ ลองใหม่ภายหลัง หรืออีเมลหมายเลขมาให้เรา",
+    "failedTitle": "ส่งไม่สำเร็จ",
+    "failedNetwork": "PDFluent เชื่อมต่อกับเซิร์ฟเวอร์ไม่ได้ ยังไม่มีอะไรถูกส่ง และข้อความของคุณยังอยู่ที่นี่",
+    "failedRateLimited": "วันนี้มีรายงานจากการเชื่อมต่อนี้มากเกินไป โปรดลองใหม่พรุ่งนี้",
+    "failedRejected": "ไม่ได้รับรายงานนี้ โปรดตรวจสอบแบบฟอร์มแล้วลองอีกครั้ง",
+    "failedServer": "ฝั่งเรามีบางอย่างผิดพลาด ข้อความของคุณยังอยู่ที่นี่ โปรดลองใหม่อีกสักครู่",
+    "tryAgain": "ลองอีกครั้ง",
+    "fixedTitle": "แก้ไขแล้ว!",
+    "fixedOffered": "เวอร์ชัน {{version}} แก้ไขรายงาน {{ids}} ของคุณแล้ว ขอบคุณที่แจ้งให้เราทราบ",
+    "fixedAfterUpdate": "รายงาน {{ids}} ของคุณได้รับการแก้ไขในเวอร์ชันนี้ ขอบคุณที่แจ้งให้เราทราบ",
+    "dismiss": "ปิด"
+  },
+  "openError": {
+    "corrupt": {
+      "title": "PDF นี้เสียหาย",
+      "body": "PDFluent อ่านไฟล์นี้ไม่ได้ ไฟล์อาจเสียหายระหว่างดาวน์โหลดหรือคัดลอก หรือแอปที่สร้างไฟล์บันทึกไฟล์ไม่ถูกต้อง ลองดาวน์โหลดหรือคัดลอกใหม่ หรือเปิดไฟล์ต้นฉบับแล้วส่งออกเป็น PDF อีกครั้ง",
+      "action": "เปิดไฟล์อื่น"
+    },
+    "not_pdf": {
+      "title": "ไม่ใช่ไฟล์ PDF",
+      "body": "PDFluent เปิดไฟล์ PDF ไฟล์นี้เป็นไฟล์ชนิดอื่น หรือชื่อไฟล์ไม่ได้ลงท้ายด้วย .pdf โปรดเลือกไฟล์ PDF หากไฟล์นี้เป็น PDF ให้เปลี่ยนชื่อให้ลงท้ายด้วย .pdf",
+      "action": "เปิดไฟล์อื่น"
+    },
+    "empty": {
+      "title": "ไฟล์นี้ว่างเปล่า",
+      "body": "ไฟล์ไม่มีเนื้อหา (0 ไบต์) การดาวน์โหลดหรือการคัดลอกอาจยังไม่เสร็จสมบูรณ์ ลองดาวน์โหลดหรือคัดลอกใหม่ แล้วเปิดอีกครั้ง",
+      "action": "เปิดไฟล์อื่น"
+    },
+    "encrypted_needs_password": {
+      "title": "PDF นี้ต้องใช้รหัสผ่าน",
+      "body": "PDF นี้ป้องกันด้วยรหัสผ่าน เปิดอีกครั้งแล้วป้อนรหัสผ่าน หากไม่ทราบรหัสผ่าน โปรดสอบถามผู้ที่ส่งไฟล์ให้คุณ",
+      "action": "ป้อนรหัสผ่าน"
+    },
+    "wrong_password": {
+      "title": "รหัสผ่านไม่ถูกต้อง",
+      "body": "รหัสผ่านนี้เปิด PDF นี้ไม่ได้ ตรวจสอบว่าพิมพ์ผิดหรือเปิด Caps Lock อยู่หรือไม่ แล้วลองอีกครั้ง",
+      "action": "ลองอีกครั้ง"
+    },
+    "unsupported_encryption": {
+      "title": "PDFluent เปิดการป้องกันแบบนี้ไม่ได้",
+      "body": "PDF นี้ป้องกันด้วยใบรับรองหรือวิธีรักษาความปลอดภัยที่ PDFluent ไม่รองรับ จึงใช้รหัสผ่านเปิดที่นี่ไม่ได้ ขอสำเนาที่ไม่มีการป้องกัน หรือสำเนาที่ป้องกันด้วยรหัสผ่านจากผู้ส่ง",
+      "action": "เปิดไฟล์อื่น"
+    },
+    "too_large": {
+      "title": "ไฟล์นี้ใหญ่เกินไป",
+      "body": "ไฟล์นี้ใหญ่เกินกว่าที่ PDFluent จะเปิดได้อย่างปลอดภัย ลองแยกหรือบีบอัดไฟล์ในแอปที่สร้างไฟล์ แล้วเปิดแต่ละส่วน",
+      "action": "เปิดไฟล์อื่น"
+    },
+    "too_many_pages": {
+      "title": "PDF นี้มีหลายหน้าเกินไป",
+      "body": "เอกสารนี้มีจำนวนหน้ามากกว่าที่ PDFluent จะเปิดได้ในคราวเดียว ลองแยกเป็นเอกสารที่เล็กลงในแอปที่สร้างไฟล์ แล้วเปิดแต่ละส่วน",
+      "action": "เปิดไฟล์อื่น"
+    },
+    "io_denied": {
+      "title": "PDFluent อ่านไฟล์นี้ไม่ได้",
+      "body": "คอมพิวเตอร์ไม่อนุญาตให้ PDFluent อ่านไฟล์นี้ ตรวจสอบสิทธิ์ของไฟล์ หรือย้ายไปไว้ในโฟลเดอร์ เช่น เอกสาร แล้วลองอีกครั้ง",
+      "action": "ลองอีกครั้ง"
+    },
+    "not_found": {
+      "title": "ไม่พบไฟล์นี้",
+      "body": "ไฟล์อาจถูกย้าย เปลี่ยนชื่อ หรือลบ หรืออยู่ในไดรฟ์ที่ไม่ได้เชื่อมต่ออีกแล้ว ค้นหาไฟล์แล้วเปิดอีกครั้ง",
+      "action": "เปิดไฟล์อื่น"
+    },
+    "unknown": {
+      "title": "เปิดไฟล์นี้ไม่ได้",
+      "body": "เกิดข้อผิดพลาดระหว่างเปิดไฟล์นี้ ลองอีกครั้ง หากยังเกิดซ้ำ โปรดแจ้งให้เราทราบเพื่อแก้ไข",
+      "action": "ลองอีกครั้ง"
+    },
+    "feedback": "ช่วยเราปรับปรุง PDFluent"
+  },
+  "formBar": {
+    "title": "แบบฟอร์มที่กรอกได้",
+    "fields": "ช่อง: {{count}}",
+    "clickToFill": "คลิกช่องเพื่อกรอกข้อมูล",
+    "noCalculations": "ระบบจะไม่คำนวณอัตโนมัติในแบบฟอร์ม Adobe",
+    "autoLinks": "เปิดลิงก์อัตโนมัติ",
+    "autoLinksTitle": "ลิงก์จะเปิดในเบราว์เซอร์โดยอัตโนมัติ คลิกเพื่อปิด",
+    "highlight": "ไฮไลต์ช่อง",
+    "firstField": "ช่องแรก"
+  },
+  "tabs": {
+    "label": "เอกสารที่เปิดอยู่",
+    "close": "ปิด {{name}}",
+    "unsaved": "การเปลี่ยนแปลงที่ยังไม่ได้บันทึก",
+    "new": "เปิดเอกสารอื่น",
+    "tooManyTitle": "เปิดเอกสารมากเกินไป",
+    "tooManyMessage": "มีเอกสารเปิดอยู่ {{max}} ฉบับ ปิดหนึ่งฉบับเพื่อเปิดเอกสารอื่น"
+  },
+  "formScripts": {
+    "barLabel": "สคริปต์ฟอร์ม",
+    "barMessage": "ฟอร์มนี้มีสคริปต์ (เช่น การคำนวณ) เรียกใช้หรือไม่?",
+    "barDetail": "พบสคริปต์: {{count}}.",
+    "runOnce": "เรียกใช้สำหรับเอกสารนี้",
+    "runAlways": "เรียกใช้สคริปต์เสมอ",
+    "dontRun": "ไม่เรียกใช้"
   }
 }

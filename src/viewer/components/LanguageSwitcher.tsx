@@ -18,7 +18,7 @@ import {
  * Renders a <select> with EN / NL options; persists choice to localStorage.
  */
 export function LanguageSwitcher() {
-  const { i18n } = useTranslation();
+  const { i18n, t } = useTranslation();
   const current = (i18n.language ?? 'en') as SupportedLanguage;
 
   return (
@@ -27,7 +27,7 @@ export function LanguageSwitcher() {
       value={current}
       onChange={e => { setLanguage(e.target.value as SupportedLanguage); }}
       className="text-xs bg-transparent border border-border rounded px-1.5 py-0.5 text-muted-foreground hover:text-foreground cursor-pointer"
-      aria-label="Language / Taal"
+      aria-label={t('editorV3.menu.language')}
     >
       {SUPPORTED_LANGUAGES.map(lang => (
         <option key={lang} value={lang}>

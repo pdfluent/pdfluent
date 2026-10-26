@@ -76,6 +76,23 @@ echo "   bucket  : ${BUCKET}"
 echo "   url     : ${PUBLIC_BASE}/${KEY}"
 echo
 
+# ── 0. stage the OCR component ───────────────────────────────────────────────
+# OCR is bundled in every build (owner decision 19-10): nothing is downloaded.
+# PDFLUENT_OCR_COMPONENT_BUILD is the --out folder of
+# scripts/ocr-component/build-tesseract.sh (macos-aarch64/, macos-x86_64/,
+# tessdata/). ocr-bundle.mjs checks it against the committed manifest, merges
+# the two binaries and signs the result (hardened runtime, sandbox-inherit
+# entitlements) with PDFLUENT_CODESIGN_IDENTITY, which defaults to the identity
+# Tauri signs the app with. Steps: docs/BUNDLED_OCR.md.
+[ -n "${PDFLUENT_OCR_COMPONENT_BUILD:-}" ] \
+  || { echo "✘ Set PDFLUENT_OCR_COMPONENT_BUILD to the build-tesseract.sh --out folder (arm64 + x86_64 + tessdata); every build bundles OCR"; exit 1; }
+echo "== 0/3  stage OCR component =="
+PDFLUENT_CODESIGN_IDENTITY="${PDFLUENT_CODESIGN_IDENTITY:-${APPLE_SIGNING_IDENTITY:--}}" \
+  node "${REPO_ROOT}/scripts/ocr-component/ocr-bundle.mjs" \
+  --stage "${PDFLUENT_OCR_COMPONENT_BUILD}" --platform macos-universal
+# The merged binary must run on both architectures and read a real image.
+node "${REPO_ROOT}/scripts/ocr-component/ocr-smoke.mjs" "${REPO_ROOT}/src-tauri/resources/ocr-bundle" --universal
+
 # ── 1. build the universal .app ──────────────────────────────────────────────
 # Updater artifacts (.app.tar.gz + .sig) require the production updater key.
 # Produce them ONLY when TAURI_SIGNING_PRIVATE_KEY is present (GA auto-update);
@@ -85,7 +102,7 @@ echo
 # APPLE_API_KEY/APPLE_API_ISSUER/APPLE_API_KEY_PATH) — docs/RELEASE_RUNBOOK_GA.md.
 if [ -n "${TAURI_SIGNING_PRIVATE_KEY:-}" ]; then UPDATER=true; else UPDATER=false; fi
 echo "== 1/3  tauri build (universal .app; updater artifacts: ${UPDATER}) =="
-npm run tauri build -- --target universal-apple-darwin --bundles app \
+PDFLUENT_REQUIRE_OCR_BUNDLE=1 npm run tauri build -- --target universal-apple-darwin --bundles app \
   --config "{\"bundle\":{\"createUpdaterArtifacts\":${UPDATER}}}"
 
 APP="$(/usr/bin/find src-tauri/target/universal-apple-darwin/release/bundle/macos -maxdepth 1 -name '*.app' | head -1)"
@@ -98,6 +115,9 @@ echo "   app: ${APP}"
 # beta.17 behind an old index-*.js). Same check as the post-build CI gate.
 echo "== embed gate (no stale frontend) =="
 node "${REPO_ROOT}/scripts/verify-frontend-embed.mjs" "${APP}"
+
+# The bundled OCR in the finished app is the pinned component.
+node "${REPO_ROOT}/scripts/ocr-component/ocr-bundle.mjs" --verify "${APP}/Contents/Resources/resources/ocr" --platform macos-universal
 
 # Stage the signed updater artifacts for local latest.json generation
 # (scripts/ci-generate-latest-json.mjs reads artifacts/macos/*.app.tar.gz.sig).

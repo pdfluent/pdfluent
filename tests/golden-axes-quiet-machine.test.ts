@@ -37,7 +37,9 @@ describe("the speed axes are measured on a quiet machine", () => {
   });
 
   it("refuses instead of publishing a number the load produced", () => {
-    expect(AXES).toContain("SKIPPED (not a pass): the machine did not settle");
+    // Fails with its cause (ci/axes-load-robust): a silent skip left quality:axes
+    // without a run file and with a Python traceback instead of a reason.
+    expect(AXES).toContain("no run file written because the machine never settled");
   });
 
   // A run without the load it was taken under cannot be told from a

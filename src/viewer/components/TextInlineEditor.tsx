@@ -308,7 +308,7 @@ export const TextInlineEditor = memo(function TextInlineEditor({
           // caret visible on any background.
           background: 'transparent',
           color: textColorCss,
-          caretColor: 'rgb(37, 99, 235)',
+          caretColor: 'var(--caret-on-page)',
           outline: 'none',
           border: 'none',
           boxShadow: 'none',

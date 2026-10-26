@@ -22,7 +22,7 @@ the same place.
    platform **macOS**, bundle id `com.pdfluent.app`, SKU `pdfluent-macos`,
    primary language English (U.S.). If the record already exists, skip this.
 2. **A package to upload.** The one built from this code is
-   `dist-release/PDFluent_1.0.0_mas.pkg`. To rebuild it:
+   `dist-release/PDFluent_1.1.0_mas.pkg`. To rebuild it:
    ```sh
    cd <this repo>
    MAS_DRY_RUN=1 bash scripts/build-mas.sh     # prints the build number it would use
@@ -36,7 +36,7 @@ the same place.
 
 1. Install **Transporter** from the Mac App Store, if it is not there.
 2. Open it and sign in with the Apple ID that owns the developer account.
-3. Drag `dist-release/PDFluent_1.0.0_mas.pkg` onto the window.
+3. Drag `dist-release/PDFluent_1.1.0_mas.pkg` onto the window.
 4. Press **Deliver**. It validates first; a validation error appears in full in
    the window, and the text of it is what to send back here.
 5. The build appears in App Store Connect under TestFlight → macOS after

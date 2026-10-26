@@ -119,6 +119,9 @@ export interface Annotation {
   /** Annotation contents (text content) */
   readonly contents?: string;
 
+  /** `/Name` of a stamp or note: `Approved`, `Draft`, `Image` (a placed image), `Comment`. */
+  readonly name?: string;
+
   /** Whether the annotation is visible */
   readonly visible: boolean;
 
@@ -158,6 +161,8 @@ export type AnnotationType =
   | 'underline'      // Text underline
   | 'strikeout'      // Text strikeout
   | 'freehand'       // Freehand drawing
+  | 'freetext'       // Text box (/FreeText)
+  | 'squiggly'       // Squiggly underline
   | 'line'           // Line
   | 'square'         // Square/rectangle
   | 'circle'         // Circle/ellipse
@@ -415,6 +420,12 @@ export interface PdfDocument {
 
   /** Active PDF features that are detected but intentionally inert in PDFluent */
   readonly activeContent?: DocumentActiveContent | null;
+
+  /** The backend session holding this document (J-90); desktop engine only. */
+  readonly backendSession?: number;
+
+  /** The document is protected by a password; reopening it needs the password. */
+  readonly encrypted?: boolean;
 }
 
 export interface DocumentActiveContent {

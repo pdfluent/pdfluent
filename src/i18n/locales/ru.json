@@ -56,7 +56,7 @@
     "fillAndSign": "Заполнить и подписать",
     "more": "Ещё",
     "getDesktopApp": "Десктопное приложение",
-    "getDesktopAppTitle": "Редактирование, OCR, редактирование, организация страниц и экспорт в десктопном приложении"
+    "getDesktopAppTitle": "Редактирование, OCR, зачернение данных, организация страниц и экспорт в десктопном приложении"
   },
   "toolbar": {
     "select": "Выбрать",
@@ -94,7 +94,7 @@
     "date": "Дата",
     "password": "Пароль",
     "permissions": "Права",
-    "redact": "Редактировать",
+    "redact": "Зачернить",
     "hide": "Скрыть",
     "compare": "Сравнить",
     "accessibility": "Доступность",
@@ -114,9 +114,9 @@
     "allTools": "Все инструменты",
     "contextualBar": "Панель инструментов режима",
     "pdfa": "PDF/A",
-    "metadata": "Document properties",
-    "invoice": "E-invoice",
-    "bookmarks": "Bookmarks"
+    "metadata": "Свойства документа",
+    "invoice": "Электронный счёт",
+    "bookmarks": "Закладки"
   },
   "topbar": {
     "openPdf": "Открыть PDF",
@@ -233,16 +233,15 @@
     "noFieldsBrowserHint": "Поля формы не найдены."
   },
   "protect": {
-    "applyRedactions": "Применить редактирование навсегда",
-    "noRedactions": "Нет ожидающих редактирований.",
-    "redactionsPending": "{{count}} редактирование ожидает",
-    "redactionsPending_plural": "{{count}} редактирований ожидают",
+    "applyRedactions": "Применить зачернения навсегда",
+    "noRedactions": "Нет ожидающих зачернений.",
+    "redactionsPending": "{{count}} зачернение ожидает",
+    "redactionsPending_plural": "{{count}} зачернений ожидают",
     "encrypt": "Зашифровать",
     "userPasswordPlaceholder": "Пароль пользователя",
     "ownerPasswordPlaceholder": "Пароль владельца",
     "encryptBtn": "Зашифровать…",
     "decrypt": "Расшифровать",
-    "currentPasswordPlaceholder": "Текущий пароль",
     "decryptBtn": "Расшифровать",
     "noDocument": "Документ не открыт.",
     "permCanPrint": "Печать",
@@ -253,12 +252,16 @@
     "permCanFillForms": "Заполнение форм",
     "permCanExtractContent": "Извлечение содержимого",
     "permCanAssemble": "Сборка",
-    "searchRedact": "Найти и отредактировать",
-    "searchRedactPlaceholder": "Текст для поиска и редактирования…",
-    "searchRedactBtn": "Найти и отредактировать",
+    "searchRedact": "Найти и зачернить",
+    "searchRedactPlaceholder": "Текст для поиска и зачернения…",
+    "searchRedactBtn": "Найти и зачернить",
     "redactMetadataTitle": "Метаданные",
     "redactMetadataDesc": "Удалить автора, заголовок и другие идентификационные метаданные.",
-    "redactMetadataBtn": "Удалить метаданные"
+    "redactMetadataBtn": "Удалить метаданные",
+    "ownerPasswordForRemoval": "Пароль владельца (разрешений)",
+    "removePasswordHelp": "Для снятия пароля нужен пароль владельца — тот, который защищает разрешения. Пароля, с которым вы открыли файл, недостаточно, если он не является также паролем владельца.",
+    "removePasswordReady": "Вы открыли этот файл с паролем владельца, поэтому защиту можно снять, не вводя его снова.",
+    "removePasswordNotProtected": "Этот документ не защищён паролем."
   },
   "organize": {
     "thumbnails": "Эскизы",
@@ -287,33 +290,34 @@
     "combine": "Объединить файлы",
     "splitRange": "Разделить по диапазону",
     "splitRangeHint": "Сначала выберите страницы",
-    "moveLeft": "Move selected page left",
-    "moveRight": "Move selected page right",
-    "moveLeftShort": "Left",
-    "moveRightShort": "Right",
-    "rotateLeft": "Rotate left",
-    "rotateRight": "Rotate right",
-    "rotateLeftShort": "Left",
-    "rotateRightShort": "Right",
-    "addingPdf": "Adding PDF…",
-    "pdfAdded": "PDF added",
-    "combiningFiles": "Combining {{count}} file(s)…",
-    "filesCombined": "{{count}} file(s) combined",
-    "insertingPdf": "Inserting PDF before page {{page}}…",
-    "pdfInserted": "PDF inserted",
-    "exportingPages": "Exporting {{count}} page(s)…",
-    "selectionExported": "Selection exported to {{name}}",
-    "splittingPages": "Splitting into individual pages…",
-    "pagesSaved": "{{count}} pages saved",
-    "splittingRanges": "Splitting {{count}} range(s)…",
-    "filesSaved": "{{count}} file(s) saved"
+    "moveLeft": "Переместить выбранную страницу влево",
+    "moveRight": "Переместить выбранную страницу вправо",
+    "moveLeftShort": "Влево",
+    "moveRightShort": "Вправо",
+    "rotateLeft": "Повернуть влево",
+    "rotateRight": "Повернуть вправо",
+    "rotateLeftShort": "Влево",
+    "rotateRightShort": "Вправо",
+    "addingPdf": "Добавление PDF…",
+    "pdfAdded": "PDF добавлен",
+    "combiningFiles": "Объединение файлов ({{count}})…",
+    "filesCombined": "Файлов объединено: {{count}}",
+    "insertingPdf": "Вставка PDF перед страницей {{page}}…",
+    "pdfInserted": "PDF вставлен",
+    "exportingPages": "Экспорт страниц ({{count}})…",
+    "selectionExported": "Выбранное экспортировано в {{name}}",
+    "splittingPages": "Разделение на отдельные страницы…",
+    "pagesSaved": "Страниц сохранено: {{count}}",
+    "splittingRanges": "Разделение по диапазонам ({{count}})…",
+    "filesSaved": "Файлов сохранено: {{count}}"
   },
   "unsavedChanges": {
     "title": "Несохранённые изменения",
     "message": "Сохранить изменения перед продолжением?",
     "save": "Сохранить",
     "discard": "Отклонить изменения",
-    "cancel": "Отмена"
+    "cancel": "Отмена",
+    "messageNamed": "Сохранить изменения в {{name}} перед продолжением?"
   },
   "welcome": {
     "title": "Откройте PDF для начала работы",
@@ -327,13 +331,13 @@
     "lede": "Читайте, редактируйте, конвертируйте, заполняйте и подписывайте — полностью на вашем устройстве.",
     "privacyPromise": "Локально · документы никогда не покидают устройство",
     "dropPdfHere": "Перетащите PDF сюда",
-    "v3Subtitle": "Open a PDF to read, edit, convert or sign it locally.",
-    "openFileAria": "Choose a PDF file to open",
-    "clearRecent": "Clear recent",
-    "recentShort": "Recent",
-    "removeRecentAria": "Remove {{name}}",
-    "backToDocument": "Back to document",
-    "loadingDocument": "Loading document…"
+    "v3Subtitle": "Откройте PDF, чтобы читать, изменять, конвертировать или подписывать его локально.",
+    "openFileAria": "Выберите PDF-файл для открытия",
+    "clearRecent": "Очистить последние",
+    "recentShort": "Последние",
+    "removeRecentAria": "Удалить {{name}}",
+    "backToDocument": "Назад к документу",
+    "loadingDocument": "Загрузка документа…"
   },
   "settings": {
     "language": "Язык",
@@ -350,15 +354,29 @@
     "reviewerNamePlaceholder": "Имя, используемое в аннотациях",
     "exportPreferences": "Параметры экспорта",
     "exportFormatLabel": "Формат экспорта по умолчанию",
-    "autosave": "Автосохранение",
-    "autosaveEnable": "Сохранять изменения автоматически",
     "themeLabel": "Тема",
     "ocrDefaults": "Настройки OCR по умолчанию",
     "ocrLanguageLabel": "Язык по умолчанию (ISO-639-2)",
     "ocrLanguagePlaceholder": "напр. eng, nld, deu",
-    "updates": "Updates",
-    "automaticUpdateCheck": "Check for a new version at startup",
-    "automaticUpdateCheckHint": "PDFluent asks pdfluent.com whether a newer version exists, a few seconds after it starts. Nothing from your documents is sent. Turn this off and the app never checks on its own — \"Check for updates\" still works whenever you ask for it."
+    "updates": "Обновления",
+    "automaticUpdateCheck": "Проверять наличие новой версии при запуске",
+    "automaticUpdateCheckHint": "PDFluent через несколько секунд после запуска спрашивает pdfluent.com, есть ли более новая версия. Ничего из ваших документов не отправляется. Отключите это, и приложение больше не будет проверять самостоятельно — «Проверить обновления» по-прежнему работает, когда вы сами попросите.",
+    "recoveryCopy": "Копия для восстановления",
+    "recoveryCopyEnable": "Хранить копию несохранённых изменений для восстановления после сбоя",
+    "view": "Вид",
+    "defaultZoomLabel": "Масштаб по умолчанию",
+    "defaultZoomFitWidth": "По ширине (по умолчанию)",
+    "defaultZoomFitPage": "По размеру страницы",
+    "defaultZoomActualSize": "Реальный размер (100%)",
+    "defaultZoomLastUsed": "Последний использованный",
+    "defaultZoomHint": "Документ открывается с этим масштабом и подстраивается под окно, пока вы не измените масштаб сами. Если так явно лучше, «По ширине» вместо этого показывает всю страницу.",
+    "securityTitle": "Безопасность",
+    "formScriptsLabel": "Скрипты формы",
+    "formScriptsAsk": "Спрашивать",
+    "formScriptsAlways": "Всегда",
+    "formScriptsNever": "Никогда",
+    "formScriptsHint": "Формы могут содержать скрипты, например вычисления. По умолчанию — «Спрашивать»: форма открывается с сохранёнными значениями, и ничего не запускается, пока вы не согласитесь.",
+    "formScriptsPinned": "Ваша организация установила этот выбор. Здесь его нельзя изменить."
   },
   "errors": {
     "loadFailed": "Ошибка загрузки документа",
@@ -367,7 +385,7 @@
     "unknownError": "Произошла непредвиденная ошибка",
     "ocrFailed": "Ошибка OCR",
     "exportFailed": "Ошибка экспорта",
-    "redactionFailed": "Ошибка редактирования",
+    "redactionFailed": "Ошибка зачернения",
     "textEditFailed": "Ошибка редактирования текста",
     "layoutEditFailed": "Ошибка редактирования макета",
     "annotationFailed": "Ошибка аннотирования",
@@ -381,7 +399,8 @@
     "addPageFailed": "Ошибка добавления PDF",
     "insertFailed": "Ошибка вставки PDF",
     "splitFailed": "Ошибка разделения",
-    "commandFailedTitle": "'{{command}}' did not complete"
+    "commandFailedTitle": "'{{command}}' не завершена",
+    "commandRetrying": "Временная ошибка в {{command}} — повторная попытка"
   },
   "events": {
     "formFieldUpdated": "Поле формы обновлено",
@@ -430,9 +449,9 @@
     "pageNotFound": "Страница не найдена",
     "requiresFontInspection": "Редактирование текста требует проверки шрифта (планируется в этапе 6).",
     "rejection": {
-      "bannerTitle": "This text was not changed",
-      "bannerDetail": "Reason reported by the PDF engine: {{detail}}",
-      "bannerDismiss": "Dismiss",
+      "bannerTitle": "Этот текст не изменён",
+      "bannerDetail": "Причина, сообщённая движком PDF: {{detail}}",
+      "bannerDismiss": "Закрыть",
       "replacement-too-long": {
         "tooltip": "Replacement is too long",
         "explanation": "The replacement is longer than the text it replaces. Keep it the same length or shorter so the surrounding layout stays intact."
@@ -491,8 +510,8 @@
       }
     },
     "fallback": {
-      "fontSubstitutedTitle": "A standard font wrote the new text",
-      "fontSubstitutedMessage": "The original font of this text has no glyph for one or more characters you typed, so Helvetica was used for the replacement. The text is correct; it may look slightly different from the rest of the line."
+      "fontSubstitutedTitle": "Новый текст записан стандартным шрифтом",
+      "fontSubstitutedMessage": "В исходном шрифте этого текста нет глифа для одного или нескольких введённых символов, поэтому для замены использован Helvetica. Текст верный; он может немного отличаться от остальной строки."
     }
   },
   "validation": {
@@ -502,7 +521,7 @@
     "objectInLockedLayer": "Объект находится в заблокированном слое и не может быть изменён.",
     "formsWithoutFields": "Режим заполнения форм активен в документе без полей формы.",
     "annotationToolbarWrongMode": "Панель аннотаций отображается в режиме '{{mode}}', но требует режима 'аннотирование'.",
-    "redactionToolbarWrongMode": "Панель редактирования отображается в режиме '{{mode}}', но требует режима 'редактирование'."
+    "redactionToolbarWrongMode": "Панель зачернения отображается в режиме '{{mode}}', но требует режима зачернения."
   },
   "revisions": {
     "deletedAnnotations": "## Удалённые аннотации",
@@ -549,13 +568,13 @@
     "exportExcelDone": "Таблица Excel экспортирована",
     "exportPowerpointRunning": "Конвертация в PowerPoint…",
     "exportPowerpointDone": "Презентация PowerPoint экспортирована",
-    "applyRedactRunning": "Применение редактирований…",
-    "applyRedactDone": "Редактирования применены",
-    "applyRedactFailed": "Ошибка применения редактирований",
-    "searchRedactRunning": "Поиск и редактирование…",
-    "searchRedactDone": "Отредактировано {{count}} совпадение",
-    "searchRedactDone_plural": "Отредактировано {{count}} совпадений",
-    "searchRedactFailed": "Ошибка поиска и редактирования",
+    "applyRedactRunning": "Применение зачернений…",
+    "applyRedactDone": "Зачернения применены",
+    "applyRedactFailed": "Не удалось применить зачернения",
+    "searchRedactRunning": "Поиск и зачернение…",
+    "searchRedactDone": "Зачернено совпадений: {{count}}",
+    "searchRedactDone_plural": "Зачернено совпадений: {{count}}",
+    "searchRedactFailed": "Не удалось найти и зачернить",
     "redactMetadataRunning": "Удаление метаданных…",
     "redactMetadataDone": "Метаданные удалены",
     "redactMetadataFailed": "Ошибка удаления метаданных",
@@ -566,12 +585,16 @@
     "watermarkDone": "Водяной знак добавлен",
     "watermarkFailed": "Не удалось добавить водяной знак",
     "watermarkRunning": "Добавление водяного знака…",
-    "pdfaRunning": "Converting to PDF/A…",
-    "pdfaDone": "PDF/A written",
-    "pdfaFailed": "PDF/A conversion failed",
-    "metadataRunning": "Saving properties…",
-    "metadataDone": "Properties saved",
-    "metadataFailed": "Could not save properties"
+    "pdfaRunning": "Преобразование в PDF/A…",
+    "pdfaDone": "PDF/A записан",
+    "pdfaFailed": "Ошибка преобразования в PDF/A",
+    "metadataRunning": "Сохранение свойств…",
+    "metadataDone": "Свойства сохранены",
+    "metadataFailed": "Не удалось сохранить свойства",
+    "exportMarkdownRunning": "Экспорт в Markdown…",
+    "exportMarkdownDone": "Markdown экспортирован",
+    "exportTablesRunning": "Экспорт таблиц в Excel…",
+    "exportTablesDone": "Таблицы экспортированы в Excel ({{count}})"
   },
   "panels": {
     "search": "Поиск",
@@ -586,8 +609,8 @@
     "annotationCreated": "Аннотация создана",
     "annotationUpdated": "Аннотация обновлена",
     "annotationDeleted": "Аннотация удалена",
-    "redactionCreated": "Редактирование создано",
-    "redactionApplied": "Редактирование применено",
+    "redactionCreated": "Зачернение создано",
+    "redactionApplied": "Зачернение применено",
     "metadataChanged": "Метаданные изменены",
     "pageMutated": "Страница изменена",
     "textEditCommitted": "Правка текста сохранена",
@@ -714,7 +737,10 @@
     "formatJpeg": "JPEG (изображение)",
     "formatDocx": "Документ Word (.docx)",
     "formatXlsx": "Таблица Excel (.xlsx)",
-    "formatPptx": "Презентация PowerPoint (.pptx)"
+    "formatPptx": "Презентация PowerPoint (.pptx)",
+    "formatMarkdown": "Markdown (.md) - Предпросмотр",
+    "formatTablesXlsx": "Таблицы в Excel (.xlsx) - Предпросмотр",
+    "noTablesFound": "В этом документе не найдено таблиц."
   },
   "goToPage": {
     "title": "Перейти к странице",
@@ -729,7 +755,9 @@
     "documentLabel": "Документ:",
     "savedLabel": "Сохранён:",
     "recoveryPath": "Путь восстановления:",
-    "restore": "Восстановить"
+    "restore": "Восстановить",
+    "untitled": "Документ без названия",
+    "andMore": "{{name}} и ещё {{count}}"
   },
   "emptyStates": {
     "noDocument": "Документ не открыт",
@@ -759,7 +787,7 @@
   "textContext": {
     "editText": "Редактировать текст",
     "annotate": "Аннотировать",
-    "redact": "Редактировать",
+    "redact": "Зачернить",
     "copy": "Копировать",
     "summarize": "Резюмировать",
     "explain": "Объяснить",
@@ -839,7 +867,26 @@
     "statusUnavailableWithReason": "Среда выполнения OCR недоступна: {{reason}}",
     "statusRetry": "Проверить снова",
     "runtimePath": "Среда выполнения: {{path}}",
-    "missingPackages": "Отсутствует: {{packages}}"
+    "missingPackages": "Отсутствует: {{packages}}",
+    "noScannedPagesTitle": "Нечего распознавать",
+    "unavailable": {
+      "platform": "Для этой платформы OCR не предлагается.",
+      "missing": "Файлы OCR этой версии отсутствуют или неполны. Переустановите PDFluent, чтобы восстановить их."
+    },
+    "settings": {
+      "unknown": "Компонент OCR: проверка…",
+      "installed": "Компонент OCR: Tesseract {{version}} установлен"
+    },
+    "errors": {
+      "OCR_COMPONENT_UNSUPPORTED_PLATFORM": "Компонент OCR недоступен для этой платформы.",
+      "OCR_COMPONENT_NOT_INSTALLED": "Компонент OCR не установлен.",
+      "OCR_LANGUAGE_MISSING": "Языковой пакет для OCR не установлен.",
+      "OCR_SIGNED_DOCUMENT": "Документ подписан. OCR изменил бы подписанные страницы, поэтому он не запускается.",
+      "OCR_NOT_PERMITTED": "Разрешения документа не позволяют изменять его содержимое.",
+      "OCR_DOCUMENT_CHANGED": "Документ изменился во время работы OCR. Запустите OCR снова.",
+      "OCR_ENGINE_FAILED": "OCR остановился с ошибкой.",
+      "OCR_PAGE_OUT_OF_RANGE": "Страница для распознавания отсутствует в документе."
+    }
   },
   "docInfo": {
     "title": "Заголовок",
@@ -879,7 +926,17 @@
     "italicComingSoon": "Курсивное форматирование скоро появится",
     "sourceDigital": "Текстовый слой PDF",
     "sourceOcr": "OCR",
-    "browserLimitedNote": "Нажмите на текст на странице для редактирования поддерживаемого текста PDF. Изображения и ссылки доступны в десктопном приложении."
+    "browserLimitedNote": "Нажмите на текст на странице для редактирования поддерживаемого текста PDF. Изображения и ссылки доступны в десктопном приложении.",
+    "typeface": {
+      "label": "Гарнитура",
+      "default": "Шрифт документа",
+      "noEmbed": "{{family}}: лицензия шрифта не разрешает встраивать его в PDF",
+      "refusedLicence": "{{family}} нельзя использовать: лицензия не разрешает встраивать эту гарнитуру в PDF. Выберите другую гарнитуру.",
+      "refusedGlyphs": "В {{family}} нет глифов для {{characters}}. Выберите другую гарнитуру.",
+      "refusedGone": "Эта гарнитура больше не установлена. Выберите другую.",
+      "refusedText": "Текст для изменения стиля больше не на странице.",
+      "refusedUnusable": "Не удалось прочитать {{family}} как шрифт. Выберите другую гарнитуру."
+    }
   },
   "rightPanel": {
     "properties": "Свойства",
@@ -891,7 +948,7 @@
     "annotationColorValue": "Цвет аннотации {{color}}",
     "strokeWidth": "Обводка",
     "comments": "Комментарии",
-    "redactions": "Редактирования",
+    "redactions": "Зачернения",
     "ocr": "OCR",
     "pdfa": "PDF/A",
     "formFields": "Поля формы",
@@ -900,13 +957,13 @@
     "changeColor": "Изменить цвет",
     "deleteMarkup": "Удалить разметку",
     "delete": "Удалить",
-    "redactionConfirm": "Применить {{count}} редактирование навсегда? Это нельзя отменить.",
-    "redactionConfirm_plural": "Применить {{count}} редактирований навсегда? Это нельзя отменить.",
-    "noRedactions": "Нет ожидающих редактирований.",
-    "redactionCount": "{{count}} редактирование ожидает",
-    "redactionCount_plural": "{{count}} редактирований ожидают",
-    "applyRedactions": "Применить редактирования навсегда",
-    "deleteRedaction": "Удалить редактирование",
+    "redactionConfirm": "Применить {{count}} зачернение навсегда? Это нельзя отменить.",
+    "redactionConfirm_plural": "Применить зачернений: {{count}} навсегда? Это нельзя отменить.",
+    "noRedactions": "Нет ожидающих зачернений.",
+    "redactionCount": "{{count}} зачернение ожидает",
+    "redactionCount_plural": "{{count}} зачернений ожидают",
+    "applyRedactions": "Применить зачернения навсегда",
+    "deleteRedaction": "Удалить зачернение",
     "signatures": "Цифровые подписи",
     "watermarkApply": "Применить водяной знак",
     "watermarkOpacity": "Непрозрачность",
@@ -944,9 +1001,12 @@
     "flatten": "Сплющить XFA",
     "flattenDone": "XFA сплющен. Экспортируйте PDF для загрузки статической версии.",
     "flattenFailed": "Ошибка сплющивания XFA",
-    "convertToStandard": "Convert to standard PDF",
-    "convertedToStandard": "XFA converted to standard PDF",
-    "convertFailed": "Conversion failed: {{message}}"
+    "convertToStandard": "Преобразовать в стандартный PDF",
+    "convertedToStandard": "XFA преобразован в стандартный PDF",
+    "convertFailed": "Ошибка преобразования: {{message}}",
+    "bannerTitle": "Форма XFA",
+    "bannerBody": "Эта форма XFA показана как есть. Чтобы заполнять и редактировать ее поля или искать по ним, преобразуйте форму в обычный PDF.",
+    "bannerBodyExperimental": "Эта форма XFA показана как есть. Заполнение полей пока экспериментальное. Чтобы надежно заполнять, редактировать и искать, преобразуйте форму в обычный PDF."
   },
   "security": {
     "activeContentBadge": "Заблокировано",
@@ -970,7 +1030,8 @@
     "highlight": "Выделить",
     "strikethrough": "Зачеркнуть",
     "underline": "Подчеркнуть",
-    "copyText": "Копировать текст"
+    "copyText": "Копировать текст",
+    "copied": "Скопировано"
   },
   "update": {
     "available": "Доступно обновление",
@@ -980,10 +1041,10 @@
     "installing": "Установка…",
     "checkFailed": "Ошибка проверки обновлений",
     "upToDate": "Вы используете последнюю версию",
-    "installed": "Update installed",
-    "restartNow": "Restart now",
-    "restartUnsaved": "Save your changes before restarting.",
-    "restartManual": "If it doesn't restart automatically, quit and reopen PDFluent to finish."
+    "installed": "Обновление установлено",
+    "restartNow": "Перезапустить",
+    "restartUnsaved": "Сохраните изменения перед перезапуском.",
+    "restartManual": "Если перезапуск не произойдёт автоматически, закройте и снова откройте PDFluent, чтобы завершить."
   },
   "telemetry": {
     "addNoteLabel": "Хотите что-то добавить? (необязательно)",
@@ -1012,6 +1073,11 @@
     "sentTitle": "Отправлено. Спасибо.",
     "settingsAutoSend": "Отправлять автоматически без запроса",
     "settingsAutoSendNote": "Автоматические отчёты очищены и не содержат личных данных, точно так же, как и те, что вы проверяете вручную.",
+    "settingsSentReports": "Отчётов о сбоях, отправленных с этого компьютера: {{count}}. Мы автоматически удаляем их с нашего сервера через {{days}} дн.",
+    "settingsDeleteReports": "Удалить мои отчёты о сбоях",
+    "settingsDeleting": "Удаление…",
+    "settingsDeleted": "Удалено отчётов о сбоях: {{count}}",
+    "settingsDeleteFailed": "Не удалось удалить: {{count}}. Проверьте подключение и повторите попытку.",
     "settingsDescription": "Отчёты никогда не содержат личную информацию или содержимое документов. Всё очищается перед отправкой, и вы видите каждый отчёт заранее. По умолчанию отключено.",
     "settingsTitle": "Отчёты о сбоях и ошибках",
     "settingsToggle": "Отправлять отчёты о сбоях и ошибках",
@@ -1019,7 +1085,11 @@
     "typeBug": "Ошибка",
     "typeCrash": "Сбой",
     "typeFeedback": "Отзыв",
-    "whatGetsSent": "Что будет отправлено"
+    "whatGetsSent": "Что будет отправлено",
+    "settingsSentFeedback": "Отчёты об обратной связи, отправленные с этого компьютера: {{count}}. Мы автоматически удаляем их с нашего сервера через {{days}} дн.",
+    "settingsDeleteFeedback": "Удалить мои отчёты об обратной связи",
+    "settingsFeedbackDeleted": "Отчёты об обратной связи удалены: {{count}}",
+    "settingsFeedbackDeleteFailed": "Не удалось удалить отчёты об обратной связи: {{count}}. Проверьте подключение и повторите попытку."
   },
   "ai": {
     "summaryInstruction": "Предоставьте краткое резюме документа ниже на русском языке. Для каждой должности укажите работодателя, роль и период. Используйте маркеры.",
@@ -1076,7 +1146,8 @@
       "scrollLeft": "Левая прокрутка режимов",
       "scrollRight": "Правая прокрутка режимов",
       "workMode": "Режим работы",
-      "searchPlaceholder": "Поиск в документе"
+      "searchPlaceholder": "Поиск в документе",
+      "allTools": "Все инструменты"
     },
     "menu": {
       "about": "О программе",
@@ -1147,22 +1218,17 @@
       "draw": "Нарисовать",
       "signatureName": "Имя подписи",
       "typeName": "Введите ваше имя…",
-      "selectStyle": "Выбрать стиль",
-      "styleClassic": "Курсив Классический",
-      "styleElegant": "Курсив Элегантный",
-      "styleBrush": "Подпись кистью",
-      "styleModern": "Современный почерк",
       "drawHere": "Рисуйте здесь мышью, тачпадом или стилусом",
       "clear": "Очистить",
       "apply": "Применить",
-      "defaultSignature": "Подпись",
       "clickToPlaceSignature": "Щёлкните на странице, чтобы поместить подпись.",
       "addInitials": "Добавить инициалы",
       "initialsIntro": "Напечатайте ваши инициалы для быстрого размещения в поля инициалов.",
       "initials": "Инициалы",
       "initialsPlaceholder": "например АБ",
-      "defaultInitials": "АБ",
-      "clickToPlaceInitials": "Щёлкните на странице, чтобы поместить инициалы."
+      "clickToPlaceInitials": "Щёлкните на странице, чтобы поместить инициалы.",
+      "signatureFont": "Шрифт подписи",
+      "plainItalic": "Обычный курсив"
     },
     "overlay": {
       "signaturePlaced": "Подпись размещена!",
@@ -1177,13 +1243,13 @@
     "textbox": {
       "editTitle": "Редактировать текстовое поле",
       "newTitle": "Новое текстовое поле",
-      "intro": "Этот текст размещён как наложение на текущей странице. Сохранение пустого поля удаляет существующее текстовое поле.",
       "label": "Текст",
       "placeholder": "Введите текст…",
       "delete": "Удалить",
       "deleted": "Текстовое поле удалено.",
       "updated": "Текстовое поле обновлено.",
-      "added": "Добавлено новое текстовое поле."
+      "added": "Добавлено новое текстовое поле.",
+      "introPdf": "Текстовое поле записывается в PDF и видно в любом просмотрщике PDF. Сохранение пустого поля удаляет существующее текстовое поле."
     },
     "rail": {
       "tools": "Инструменты PDF",
@@ -1197,12 +1263,14 @@
       "more": "Больше инструментов",
       "strikeText": "Зачеркнуть текст",
       "underlineText": "Подчеркнуть текст",
-      "addAttachment": "Добавить вложение"
+      "addAttachment": "Добавить вложение",
+      "drawRectangle": "Нарисовать прямоугольник"
     },
     "railToasts": {
-      "commentMode": "Режим заметок активен. Выберите текст и выберите «Заметка», или используйте список комментариев для добавления заметки.",
+      "commentMode": "Режим заметок. Щёлкните на странице там, где должна быть заметка.",
       "strikeout": "Зачеркивание активно — выберите текст для применения.",
-      "underline": "Подчеркивание активно — выберите текст для применения."
+      "underline": "Подчеркивание активно — выберите текст для применения.",
+      "rectangle": "Прямоугольник активен — проведите по странице, чтобы нарисовать его."
     },
     "tools": {
       "lede": "Выберите инструмент для начала. Всё работает локально на этом устройстве.",
@@ -1217,7 +1285,7 @@
       "merge": "Объединить файлы",
       "mergeSub": "Объединить PDF",
       "contentSecurity": "Содержание и безопасность",
-      "redact": "Редактировать",
+      "redact": "Зачернить",
       "redactSub": "Окончательно заблокировать текст чёрным",
       "protect": "Защитить",
       "protectSub": "Пароль и разрешения",
@@ -1238,17 +1306,18 @@
       "layers": "{{count}} слоёв",
       "manageLayers": "Управлять слоями",
       "layersVisible": "{{count}} слоёв видимо.",
-      "archiveAndData": "Archiving and data",
-      "pdfaSub": "Check or convert for long-term archiving",
-      "invoiceSub": "Read the ZUGFeRD/Factur-X invoice inside",
-      "metadataSub": "Title and author of this document"
+      "archiveAndData": "Архивирование и данные",
+      "pdfaSub": "Проверка или преобразование для долгосрочного архивирования",
+      "invoiceSub": "Прочитать встроенный счёт ZUGFeRD/Factur-X",
+      "metadataSub": "Название и автор этого документа",
+      "flattenForm": "Объединить",
+      "flattenFormTitle": "Объединить форму: введённые значения становятся частью страницы, а поля удаляются",
+      "flattenFormDone": "Форма объединена. Отмена вернёт поля.",
+      "flattenFormFailed": "Не удалось объединить форму: {{message}}"
     },
     "edit": {
       "lede": "Щёлкните текст в документе для редактирования на месте. Панель форматирования появляется прямо над выделением.",
       "formatText": "Форматировать текст",
-      "fontLabel": "Шрифт",
-      "fontHint": "Существующий текст PDF использует встроенные шрифты PDF. Шрифт «{{font}}» будет использован для вновь добавленных текстовых полей.",
-      "fontEmbedded": "Встроенный шрифт PDF",
       "color": "Цвет",
       "colorLabel": "Цвет {{color}}",
       "addContent": "Добавить содержание",
@@ -1261,7 +1330,18 @@
       "clickAnywhereTextBox": "Щёлкните в любом месте страницы, чтобы разместить текстовое поле.",
       "clickAnywhereImage": "Щёлкните в любом месте страницы, чтобы разместить изображение.",
       "selection": "Выделение",
-      "annotationOnPage": "{{type}} на странице {{page}}"
+      "annotationOnPage": "{{type}} на странице {{page}}",
+      "placeStamp": "Поставить штамп",
+      "stampLabel": "Штамп",
+      "clickToPlaceStamp": "Щёлкните по странице, чтобы поставить штамп.",
+      "placementModeStamp": "Режим размещения: штамп",
+      "stampPlaced": "Штамп поставлен.",
+      "deleteAnnotation": "Удалить аннотацию",
+      "annotationColor": "Цвет аннотации",
+      "editTextBox": "Изменить текст",
+      "replaceImage": "Заменить изображение",
+      "imageReplaced": "Изображение заменено.",
+      "moveHint": "Перетащите, чтобы переместить, потяните за угол, чтобы изменить размер, или сдвиньте стрелками."
     },
     "convert": {
       "exportPdfTo": "Экспортировать PDF в",
@@ -1279,10 +1359,16 @@
       "confidenceFrom": "Уверенность от {{value}}%",
       "ocrOff": "OCR выключен",
       "ocrOn": "OCR включен",
-      "ocrRunning": "OCR работает локально…"
+      "ocrRunning": "OCR работает локально…",
+      "ocrComponentUnknown": "Компонент OCR: проверка…",
+      "ocrComponentInstalled": "Компонент OCR установлен",
+      "ocrLastRun": "Последний запуск: {{pages}} стр., {{words}} слов добавлено как текст для поиска",
+      "ocrRunningProgress": "Распознавание страницы {{done}} из {{total}}…",
+      "markdown": "Markdown (предварительная версия)",
+      "tablesToExcel": "Таблицы в Excel (предварительная версия)"
     },
     "esign": {
-      "lede": "Sign with a certificate of your own, and check the signatures a document already carries. Both happen on this device.",
+      "lede": "Подписывайте своим сертификатом и проверяйте подписи, которые уже есть в документе. И то и другое выполняется на этом устройстве.",
       "fillAndSign": "Заполните ваши документы и подпишите",
       "addSignature": "Добавить подпись",
       "addInitials": "Добавить инициалы",
@@ -1290,25 +1376,25 @@
       "placementModeInitials": "Режим размещения: инициалы",
       "clickToPlaceSignature": "Щёлкните в любом месте страницы, чтобы разместить вашу подпись.",
       "clickToPlaceInitials": "Щёлкните в любом месте страницы, чтобы разместить ваши инициалы.",
-      "verifySection": "Signatures",
-      "verify": "Check signatures",
-      "desktopOnly": "Available in the desktop app",
-      "unsigned": "This document carries no signatures.",
-      "signSection": "Sign with a certificate",
-      "padesLevel": "Produces a PAdES B-B signature: your certificate over the whole file, no timestamp server involved.",
-      "certificate": "Certificate (.p12 or .pfx)",
-      "certificateNone": "No certificate chosen",
-      "chooseCertificate": "Choose certificate",
-      "certificatePassword": "Certificate password",
-      "reason": "Reason (optional)",
-      "reasonPlaceholder": "Why you are signing",
-      "sign": "Sign and save a copy",
-      "signing": "Signing…",
-      "signNeedsCertificate": "Choose a certificate and enter its password first.",
-      "signSaved": "Signed copy saved as {{name}}",
-      "signFailed": "Signing failed: {{message}}",
-      "usageRights": "Reader enablement (usage rights)",
-      "usageRightsInvalidated": "Usage rights invalidated — this file was edited, so Adobe Reader no longer treats it as an enabled form."
+      "verifySection": "Подписи",
+      "verify": "Проверить подписи",
+      "desktopOnly": "Доступно в десктопном приложении",
+      "unsigned": "В этом документе нет подписей.",
+      "signSection": "Подписать сертификатом",
+      "padesLevel": "Создаёт подпись PAdES B-B: ваш сертификат на весь файл, без сервера меток времени.",
+      "certificate": "Сертификат (.p12 или .pfx)",
+      "certificateNone": "Сертификат не выбран",
+      "chooseCertificate": "Выбрать сертификат",
+      "certificatePassword": "Пароль сертификата",
+      "reason": "Причина (необязательно)",
+      "reasonPlaceholder": "Почему вы подписываете",
+      "sign": "Подписать и сохранить копию",
+      "signing": "Подписание…",
+      "signNeedsCertificate": "Сначала выберите сертификат и введите его пароль.",
+      "signSaved": "Подписанная копия сохранена как {{name}}",
+      "signFailed": "Ошибка подписания: {{message}}",
+      "usageRights": "Включение поддержки Reader (права использования)",
+      "usageRightsInvalidated": "Права использования аннулированы — файл был изменён, поэтому Adobe Reader больше не считает его формой с включёнными правами."
     },
     "protect": {
       "lede": "Защитите ваш PDF-документ надёжными криптографическими паролями. Изменения применяются локально сразу же.",
@@ -1330,9 +1416,11 @@
       "localViaTauri": "Локально через команду Tauri, без браузерного во время выполнения",
       "compressingImages": "Сжатие изображений…",
       "percentComplete": "{{percent}}% завершено",
-      "compressPdf": "Сжать PDF",
       "desktopOnly": "Доступно только в десктопном приложении",
-      "backToTools": "Вернуться к инструментам"
+      "backToTools": "Вернуться к инструментам",
+      "saveCopy": "Сохранить сжатую копию как…",
+      "replaceOpen": "Сжать и заменить открытый документ",
+      "replaceNote": "Копия оставляет открытый документ и его файл как есть. Замена изменяет только открытый документ; Отмена возвращает исходный."
     },
     "split": {
       "lede": "Разделите ваш документ на отдельные PDF-файлы по странице или по определённому диапазону страниц.",
@@ -1359,17 +1447,62 @@
       "currentDocument": "Текущий документ"
     },
     "redact": {
-      "lede": "Отметьте и окончательно удалите конфиденциальную информацию из PDF. Редактирование удаляет фактический исходный текст и векторы.",
-      "modeActive": "Режим редактирования активен",
-      "dragHint": "Перетащите мышь над текстом или изображениями на странице, чтобы отметить их для редактирования.",
-      "searchAndRedact": "Поиск и редактирование текста",
+      "lede": "Отмечайте и безвозвратно удаляйте конфиденциальные данные из PDF. Зачернение удаляет сам исходный текст и векторы.",
+      "modeActive": "Режим зачернения включён",
+      "dragHint": "Проведите мышью по тексту или изображениям на странице, чтобы отметить их для зачернения.",
+      "searchAndRedact": "Найти и зачернить",
       "searchPlaceholder": "Поисковый термин (например SSN, телефон)",
       "mark": "Отметить",
-      "draftRedactions": "Черновые редактирования ({{count}})",
+      "draftRedactions": "Черновые зачернения ({{count}})",
       "applying": "Применение…",
-      "applyPermanently": "Применить редактирования окончательно",
-      "noActiveMarkings": "Нет активных отметок редактирования.",
-      "backToTools": "Вернуться к инструментам"
+      "applyPermanently": "Применить зачернения навсегда",
+      "noActiveMarkings": "Нет активных отметок зачернения.",
+      "backToTools": "Вернуться к инструментам",
+      "pii": {
+        "title": "Персональные данные",
+        "lede": "Find personal data in the text of this document: IBANs, card numbers, national ID numbers, birth dates, e-mail addresses and phone numbers, and names and addresses when the model is installed. Review the list, then redact the ones you choose.",
+        "find": "Найти персональные данные",
+        "scanning": "Сканирование…",
+        "none": "Nothing found.",
+        "kind": {
+          "iban": "IBAN",
+          "email": "Адрес электронной почты",
+          "phone": "Номер телефона",
+          "credit_card": "Номер карты",
+          "national_id": "Номер удостоверения личности",
+          "date_of_birth": "Дата рождения",
+          "bank_account": "Номер банковского счёта",
+          "person": "Имя",
+          "address": "Адрес"
+        },
+        "where": "Страница {{pages}} · {{count}}×",
+        "selectAll": "Выбрать все",
+        "selectNone": "Снять выделение",
+        "redactSelected": "Зачернить {{count}} выбранных",
+        "redacting": "Зачернение…",
+        "done": "Зачернено {{count}} элементов. Сохраните файл, чтобы сохранить результат.",
+        "failed": "Ошибка зачернения: {{message}}",
+        "detectFailed": "Не удалось выполнить поиск: {{message}}",
+        "patternsOnly": "Without the model this finds only items it can check, such as IBANs, cards, ID numbers, birth dates, e-mail addresses and phone numbers. Names and addresses are not detected, so check every page yourself.",
+        "suggestionsOnly": "Это предложения. Детектор может что-то пропустить, поэтому проверьте каждую страницу перед сохранением.",
+        "source": {
+          "verified": "Проверено {{detail}}",
+          "model": "Предложение модели, {{score}}%"
+        },
+        "model": {
+          "use": "Также искать имена и адреса с помощью модели",
+          "languages": "Проверка для: {{languages}}",
+          "remove": "Удалить модель",
+          "removeFailed": "Не удалось удалить модель: {{message}}",
+          "failed": "Модель не смогла запуститься ({{code}}). Показаны только элементы, которые можно проверить.",
+          "consentTitle": "Загрузить модель персональных данных?",
+          "consentBody": "Для поиска имён и адресов нужна языковая модель ({{size}}). Она загружается один раз с {{host}}, проверяется по фиксированной контрольной сумме и затем работает на этом компьютере. Ваши документы никогда её не покидают.",
+          "download": "Загрузить",
+          "downloading": "Загрузка…",
+          "downloadFailed": "Не удалось загрузить: {{message}}",
+          "notInBuild": "Загрузка пока недоступна в этой версии."
+        }
+      }
     },
     "toasts": {
       "saving": "Сохранение…",
@@ -1399,117 +1532,337 @@
       "pdfsMerged": "{{count}} PDF-файлов объединено",
       "mergedSaved": "Объединённый PDF сохранён как {{name}}.",
       "mergeFailed": "Объединение не удалось: {{message}}",
-      "redactMatches": "{{matches}} совпадений найдено, {{areas}} отметок редактирования размещено.",
-      "noRedactMatches": "Никаких совпадений текста для редактирования не найдено.",
-      "redactSearchFailed": "Поиск редактирования не удался: {{message}}",
-      "applyRedactConfirm": "Применить {{count}} отметку редактирования окончательно? Это удаляет содержание из PDF навсегда.",
-      "applyRedactConfirm_plural": "Применить {{count}} отметок редактирования окончательно? Это удаляет содержание из PDF навсегда.",
-      "applyRedactTitle": "Применить редактирования",
-      "applyRedactRunning": "Применение редактирований окончательно…",
-      "applyRedactDone": "Редактирования применены окончательно",
-      "redactionsApplied": "Редактирования были применены окончательно.",
-      "redactFailed": "Редактирование не удалось: {{message}}"
+      "redactSearchDone": "Закрашено совпадений: {{count}}. Сохраните, чтобы оставить изменение.",
+      "noRedactMatches": "Не найдено текста для зачернения.",
+      "redactSearchFailed": "Не удалось найти текст для зачернения: {{message}}",
+      "applyRedactConfirm": "Применить {{count}} отметку зачернения навсегда? Содержимое будет удалено из PDF окончательно.",
+      "applyRedactConfirm_plural": "Применить отметок зачернения: {{count}} навсегда? Содержимое будет удалено из PDF окончательно.",
+      "applyRedactTitle": "Применить зачернения",
+      "applyRedactRunning": "Применение зачернений…",
+      "applyRedactDone": "Зачернения применены навсегда",
+      "redactionsApplied": "Зачернения применены навсегда.",
+      "redactFailed": "Не удалось зачернить: {{message}}",
+      "compressedCopyToast": "Сохранено {{name}}: {{before}} – {{after}}. Открытый документ не изменён.",
+      "compressedReplacedToast": "Сжат открытый документ: {{before}} – {{after}}. Отмена вернёт оригинал. Сохраните, чтобы оставить сжатую версию."
     },
     "thumbnails": {
       "pages": "Страницы",
       "pageAlt": "Страница {{page}}",
-      "bookmarks": "Bookmarks"
+      "bookmarks": "Закладки"
     },
     "pdfa": {
-      "lede": "PDF/A is the archival form of PDF: fonts embedded, colours defined, nothing that depends on the outside world.",
-      "section": "Conformance",
-      "level": "Level",
-      "validate": "Check this document",
-      "convert": "Save as PDF/A…",
-      "desktopOnly": "Available in the desktop app",
-      "compliant": "Conforms to {{level}}",
-      "notCompliant": "Does not conform: {{errors}} errors, {{warnings}} warnings",
-      "moreIssues": "{{count}} more",
+      "lede": "PDF/A — архивная форма PDF: шрифты встроены, цвета заданы, ничего не зависит от внешнего мира.",
+      "section": "Соответствие",
+      "level": "Уровень",
+      "validate": "Проверить документ",
+      "convert": "Сохранить как PDF/A…",
+      "desktopOnly": "Доступно в десктопном приложении",
+      "compliant": "Соответствует {{level}}",
+      "notCompliant": "Не соответствует: ошибок — {{errors}}, предупреждений — {{warnings}}",
+      "moreIssues": "Ещё {{count}}",
       "report": {
-        "title": "What the conversion did",
-        "written": "Written to {{path}}",
-        "size": "{{out}} out of {{in}} ({{ratio}}×), in {{seconds}} s",
-        "pages": "{{count}} pages",
-        "fontsEmbedded": "{{embedded}} of {{found}} unembedded fonts embedded",
-        "fontsFailed": "Could not embed: {{fonts}}",
-        "removed": "Removed: {{count}} items that PDF/A does not allow",
-        "subset": "{{count}} font programs reduced, {{bytes}} kB saved",
-        "outputIntent": "Output intent added",
-        "unchangedDocument": "The open document was not changed.",
+        "title": "Что сделало преобразование",
+        "written": "Записано в {{path}}",
+        "size": "{{out}} из {{in}} ({{ratio}}×), за {{seconds}} с",
+        "pages": "Страниц: {{count}}",
+        "fontsEmbedded": "Встроено шрифтов: {{embedded}} из {{found}} невстроенных",
+        "fontsFailed": "Не удалось встроить: {{fonts}}",
+        "removed": "Удалено элементов, недопустимых в PDF/A: {{count}}",
+        "subset": "{{count}} программ шрифтов сокращено, {{bytes}} КБ сэкономлено",
+        "outputIntent": "Добавлен output intent",
+        "unchangedDocument": "Открытый документ не изменён.",
         "warning": "{{message}}",
-        "moreWarnings": "{{count}} more"
+        "moreWarnings": "Ещё {{count}}"
       }
     },
     "metadata": {
-      "lede": "The title and author stored inside the file, which is what other readers and search show.",
-      "section": "Properties",
-      "title": "Title",
-      "author": "Author",
-      "apply": "Save properties",
-      "desktopOnly": "Available in the desktop app"
+      "lede": "Название и автор, сохранённые в файле: их видят другие программы просмотра и поиск.",
+      "section": "Свойства",
+      "title": "Название",
+      "author": "Автор",
+      "apply": "Сохранить свойства",
+      "desktopOnly": "Доступно в десктопном приложении"
     },
     "invoice": {
-      "lede": "A ZUGFeRD or Factur-X invoice travels as XML inside the PDF. This reads it and checks it against EN 16931.",
-      "section": "Embedded invoice",
-      "read": "Read invoice",
-      "desktopOnly": "Available in the desktop app",
-      "none": "This document carries no e-invoice.",
-      "number": "Number: {{number}}",
-      "issued": "Issued: {{date}}",
-      "seller": "Seller: {{name}}",
-      "buyer": "Buyer: {{name}}",
-      "total": "Total: {{total}} {{currency}}",
-      "lines": "Line items: {{count}}",
-      "valid": "Valid against {{profile}}",
-      "invalid": "Not valid: {{errors}} errors, {{warnings}} warnings"
+      "lede": "Счёт ZUGFeRD или Factur-X передаётся как XML внутри PDF. Здесь он читается и проверяется на соответствие EN 16931.",
+      "section": "Встроенный счёт",
+      "read": "Прочитать счёт",
+      "desktopOnly": "Доступно в десктопном приложении",
+      "none": "В этом документе нет электронного счёта.",
+      "number": "Номер: {{number}}",
+      "issued": "Дата выставления: {{date}}",
+      "seller": "Продавец: {{name}}",
+      "buyer": "Покупатель: {{name}}",
+      "total": "Итого: {{total}} {{currency}}",
+      "lines": "Позиций: {{count}}",
+      "valid": "Соответствует {{profile}}",
+      "invalid": "Недействителен: ошибок — {{errors}}, предупреждений — {{warnings}}"
     },
     "canvas": {
-      "document": "PDF document"
+      "document": "Документ PDF"
+    },
+    "stamps": {
+      "Approved": "Утверждено",
+      "NotApproved": "Не утверждено",
+      "Draft": "Черновик",
+      "Confidential": "Конфиденциально",
+      "Final": "Окончательно",
+      "ForComment": "На рассмотрение",
+      "Expired": "Истёк срок"
     }
   },
   "about": {
-    "section": "About",
-    "app": "App",
-    "version": "Version",
-    "privacy": "Privacy",
-    "privacyValue": "All processing happens locally",
-    "website": "Website"
+    "section": "О программе",
+    "app": "Приложение",
+    "version": "Версия",
+    "privacy": "Конфиденциальность",
+    "privacyValue": "Вся обработка выполняется локально",
+    "website": "Веб-сайт"
   },
   "reviewSummary": {
-    "title": "Review summary",
-    "generatedAt": "Generated on",
-    "comments": "Comments",
-    "noComments": "No comments.",
-    "replies": "Replies:",
-    "empty": "empty",
-    "redactions": "Redactions",
-    "noRedactions": "No redactions.",
-    "noIssues": "No issues.",
-    "metadataChanges": "Metadata changes",
-    "noMetadataChanges": "No changes.",
-    "changedBy": "by",
-    "on": "on"
+    "title": "Сводка проверки",
+    "generatedAt": "Создано",
+    "comments": "Комментарии",
+    "noComments": "Комментариев нет.",
+    "replies": "Ответы:",
+    "empty": "пусто",
+    "redactions": "Зачернения",
+    "noRedactions": "Нет зачернений.",
+    "noIssues": "Проблем нет.",
+    "metadataChanges": "Изменения метаданных",
+    "noMetadataChanges": "Изменений нет.",
+    "changedBy": "пользователем",
+    "on": "от"
   },
   "externalLink": {
-    "askMessage": "This PDF wants to open an external link:\n\n{{label}}\n\nURL:\n{{href}}\n\nDo you want to continue?",
-    "title": "Open external link?",
-    "openLink": "Open link",
-    "dialogBody": "This PDF wants to open an external website. Check the URL before continuing."
+    "askMessage": "Этот PDF пытается открыть внешнюю ссылку:\n\n{{label}}\n\nURL:\n{{href}}\n\nПродолжить?",
+    "title": "Открыть внешнюю ссылку?",
+    "openLink": "Открыть ссылку",
+    "dialogBody": "Этот PDF пытается открыть внешний веб-сайт. Проверьте URL, прежде чем продолжить."
   },
   "linkChoice": {
-    "title": "Open link in your browser?",
-    "body": "This document wants to open an external website. Are you opening it from a trusted source?",
-    "alwaysAllow": "Always allow",
-    "openOnce": "Open once"
+    "title": "Открыть ссылку в браузере?",
+    "body": "Этот документ пытается открыть внешний веб-сайт. Документ получен из надёжного источника?",
+    "alwaysAllow": "Всегда разрешать",
+    "openOnce": "Открыть один раз"
   },
   "fallbacks": {
-    "ocrUnavailableTitle": "OCR is not available on this computer",
-    "ocrUnavailableMessage": "PDFluent could not start the text-recognition engine. {{reason}}",
-    "ocrFailedMessage": "Text recognition stopped on page {{page}}: {{reason}}",
-    "xfaStaticTitle": "Form filled without recalculation",
-    "xfaStaticMessage": "This build writes XFA field values straight into the form. Field scripts do not run, so calculated totals and fields that appear or hide based on your answer stay as they are.",
-    "featureUnavailableTitle": "'{{feature}}' is not available in this build",
-    "usageRightsInvalidatedTitle": "This document is no longer Reader-enabled",
-    "usageRightsInvalidatedMessage": "Your change was made. It also invalidated the usage-rights signature this PDF carried, which let Adobe Reader fill in and save the form. The text edit stands; the extended rights are gone and cannot be restored by undoing it."
+    "ocrUnavailableTitle": "OCR недоступен на этом компьютере",
+    "ocrUnavailableMessage": "PDFluent не удалось запустить движок распознавания текста. {{reason}}",
+    "ocrFailedMessage": "Распознавание текста остановлено на странице {{page}}: {{reason}}",
+    "xfaStaticTitle": "Форма заполнена без пересчёта",
+    "xfaStaticMessage": "Эта сборка записывает значения полей XFA прямо в форму. Скрипты полей не выполняются, поэтому вычисляемые итоги и поля, которые появляются или скрываются в зависимости от вашего ответа, остаются как есть.",
+    "xfaScriptsNotRunTitle": "Некоторые сценарии формы не выполняются",
+    "xfaScriptsNotRunMessage": "Ваш ответ сохранён. В форме есть сценарии FormCalc (найдено: {{count}}), а PDFluent выполняет только сценарии JavaScript. Итоги и поля, которые обновили бы эти сценарии, сохраняют прежние значения, пока форма не будет открыта в Adobe Reader.",
+    "xfaFieldRefusedTitle": "Форма не приняла значение",
+    "xfaFieldReadOnly": "Поле «{{field}}» в этой форме доступно только для чтения и не может быть изменено.",
+    "xfaFieldRejected": "Поле «{{field}}» не принимает это значение: {{reason}}",
+    "xfaFieldNotFound": "Поля «{{field}}» больше нет в форме. Форма была перезагружена.",
+    "featureUnavailableTitle": "'{{feature}}' недоступна в этой сборке",
+    "usageRightsInvalidatedTitle": "Этот документ больше не поддерживает Reader",
+    "usageRightsInvalidatedMessage": "Ваше изменение внесено. Оно также аннулировало подпись прав использования, которую нёс этот PDF, что позволяло Adobe Reader заполнять и сохранять форму. Изменение текста остаётся; расширенные права утеряны и не могут быть восстановлены отменой.",
+    "xfaScriptsFailedTitle": "Некоторые скрипты формы не завершились",
+    "xfaScriptsFailedMessage": "Ваш ответ сохранён, но эти скрипты не завершились, поэтому значения, которые они задали, могут отсутствовать: {{details}}.",
+    "xfaScriptKind_threw": "выдал ошибку",
+    "xfaScriptKind_timeout": "истекло время",
+    "xfaScriptKind_refused": "был отклонён песочницей"
+  },
+  "signedSave": {
+    "title": "Этот документ подписан",
+    "message": "Зачернение удаляет содержимое, которое охватывает подпись, поэтому сохранить его поверх подписанного оригинала нельзя: подпись перестанет быть действительной. Сохраните копию: в ней зачернение останется, а подписи не будет.",
+    "saveCopy": "Сохранить копию без подписи…",
+    "cancel": "Отмена"
+  },
+  "passwordPrompt": {
+    "title": "Этот PDF защищён",
+    "message": "Введите пароль, чтобы открыть {{name}}.",
+    "incorrect": "Этот пароль не открывает этот PDF. Попробуйте ещё раз.",
+    "label": "Пароль",
+    "open": "Открыть",
+    "cancel": "Отмена",
+    "readOnlyTitle": "Открыт только для чтения",
+    "readOnlyMessage": "Разрешения этого PDF не позволяют вносить изменения. Его можно читать и печатать, если разрешения это позволяют. Чтобы сохранить изменения, снимите защиту с помощью пароля владельца."
+  },
+  "a11y": {
+    "searchNextResult": "Следующий результат",
+    "searchPrevResult": "Предыдущий результат"
+  },
+  "feedback": {
+    "title": "Помогите нам улучшить PDFluent",
+    "intro": "Расскажите, что вы пытались сделать. Мы читаем каждое сообщение.",
+    "menuLabel": "Помочь улучшить PDFluent…",
+    "fromError": "Вы можете рассказать нам о проблеме, с которой только что столкнулись.",
+    "areaLabel": "Что вы пытались сделать?",
+    "area": {
+      "open-view": "Открыть или прочитать документ",
+      "search-copy": "Найти или скопировать текст",
+      "print": "Печать",
+      "edit-text": "Редактировать текст",
+      "annotate": "Выделить, прокомментировать или нарисовать",
+      "forms": "Заполнить форму",
+      "sign": "Подписать или проверить подпись",
+      "redact": "Redact",
+      "pages-organize": "Повернуть, переупорядочить, объединить или разделить страницы",
+      "convert-export": "Преобразовать или экспортировать",
+      "ocr": "Распознать текст в скане (OCR)",
+      "pdfa-compliance": "PDF/A",
+      "protect": "Пароль или разрешения",
+      "save": "Сохранить",
+      "install-update": "Установить или обновить PDFluent",
+      "other": "Что-то другое"
+    },
+    "tryingToPlaceholder": "Своими словами (необязательно)",
+    "whatHappenedLabel": "Что произошло?",
+    "whatHappenedPlaceholder": "Что вы увидели?",
+    "whatHappenedRequired": "Расскажите, что произошло, чтобы мы знали, где искать.",
+    "expectedLabel": "Что вы ожидали?",
+    "expectedPlaceholder": "Необязательно",
+    "docTypeLabel": "Какой это был документ?",
+    "docType": {
+      "none": "Документ не использовался",
+      "form": "Форма",
+      "scanned": "Скан",
+      "signed": "Подписанный документ",
+      "protected": "Защищён паролем",
+      "large": "Большой (более 100 страниц)",
+      "xfa": "Государственная форма или форма XFA",
+      "other": "Что-то другое"
+    },
+    "docTypeUnset": "Выберите…",
+    "pageCountLabel": "Количество страниц",
+    "contextTitle": "Отправляется вместе с сообщением",
+    "contextToggle": "Приложить сведения о системе",
+    "contextHint": "Версия, система, язык и последняя ошибка помогают нам воспроизвести проблему. Без имён файлов, путей и содержимого документа.",
+    "fieldVersion": "Версия PDFluent",
+    "fieldSystem": "Система",
+    "fieldLanguage": "Язык",
+    "fieldLastError": "Последняя ошибка",
+    "fieldSessions": "Сеансы",
+    "notIncluded": "не включено",
+    "documentTitle": "Поделиться документом (необязательно)",
+    "documentToggle": "Отправить открытый документ вместе с сообщением",
+    "documentNone": "Нет открытого документа.",
+    "documentTooLarge": "Документ больше 20 MB, поэтому его нельзя отправить вместе с сообщением.",
+    "documentShared": "Этот документ будет отправлен.",
+    "documentConfirmTitle": "Отправить этот документ?",
+    "documentConfirmText": "Этот файл будет отправлен в PDFluent (Innovation Trigger B.V.). Он используется только для изучения этого отчёта, никогда не публикуется, не используется для обучения и удаляется не позднее чем через 90 дней после исправления проблемы, а в любом случае — в течение 12 месяцев.",
+    "documentConfirmFile": "{{name}} ({{size}})",
+    "documentConfirmYes": "Отправить документ",
+    "documentConfirmNo": "Не отправлять",
+    "contactTitle": "Оставайтесь на связи (необязательно)",
+    "emailLabel": "Адрес электронной почты",
+    "emailInvalid": "Это не похоже на адрес электронной почты.",
+    "consentContact": "PDFluent может написать мне, если появятся вопросы по этому отчёту.",
+    "consentFixed": "Напишите мне, когда это исправят.",
+    "contactHint": "Ваш адрес хранится отдельно от отчёта, используется только для этого отчёта и никогда — для рассылок или маркетинга.",
+    "noEmailHint": "Даже без адреса электронной почты вы получите от нас весточку: когда обновление исправит вашу проблему, PDFluent сообщит об этом в приложении.",
+    "privacyNotice": "Innovation Trigger B.V. получает этот отчёт, чтобы улучшить PDFluent. Отчёты хранятся до 24 месяцев. Вы можете в любой момент попросить удалить ваш.",
+    "privacyLink": "Заявление о конфиденциальности",
+    "send": "Отправить",
+    "sending": "Отправка…",
+    "cancel": "Отмена",
+    "sentTitle": "Спасибо!",
+    "sentBody": "Ваше сообщение получено. Вот его номер:",
+    "sentIdHint": "Сохраните этот номер, если захотите уточнить что-то по сообщению или удалить его.",
+    "sentNoLocalCopy": "PDFluent не смог запомнить этот номер на этом компьютере, поэтому запишите его.",
+    "sentDocumentFailed": "Сообщение получено, но документ загрузить не удалось. Если документ важен, отправьте сообщение ещё раз вместе с ним.",
+    "removeReport": "Удалить это сообщение",
+    "removing": "Удаление…",
+    "removed": "Ваше сообщение удалено.",
+    "removeFailed": "Сейчас не удалось удалить сообщение. Попробуйте позже или пришлите нам номер по электронной почте.",
+    "failedTitle": "Не получилось отправить",
+    "failedNetwork": "PDFluent не смог связаться с сервером. Ничего не отправлено, ваш текст сохранён.",
+    "failedRateLimited": "Сегодня с этого подключения отправлено слишком много сообщений. Попробуйте завтра.",
+    "failedRejected": "Сообщение не принято. Проверьте форму и попробуйте ещё раз.",
+    "failedServer": "На нашей стороне что-то пошло не так. Ваш текст сохранён, попробуйте ещё раз чуть позже.",
+    "tryAgain": "Повторить",
+    "fixedTitle": "Исправлено!",
+    "fixedOffered": "В версии {{version}} исправлена проблема из вашего сообщения {{ids}}. Спасибо, что рассказали нам.",
+    "fixedAfterUpdate": "В этой версии исправлена проблема из вашего сообщения {{ids}}. Спасибо, что рассказали нам.",
+    "dismiss": "Закрыть"
+  },
+  "openError": {
+    "corrupt": {
+      "title": "Этот PDF поврежден",
+      "body": "PDFluent не удалось прочитать этот файл. Он мог повредиться при скачивании или копировании, либо программа, создавшая его, записала файл неправильно. Скачайте или скопируйте файл заново либо откройте оригинал и снова экспортируйте его в PDF.",
+      "action": "Открыть другой файл"
+    },
+    "not_pdf": {
+      "title": "Это не PDF-файл",
+      "body": "PDFluent открывает PDF-файлы. Этот файл другого типа, или его имя не заканчивается на .pdf. Выберите PDF-файл. Если это PDF, переименуйте файл так, чтобы имя заканчивалось на .pdf.",
+      "action": "Открыть другой файл"
+    },
+    "empty": {
+      "title": "Файл пуст",
+      "body": "В файле нет данных (0 байт). Возможно, скачивание или копирование не завершилось. Скачайте или скопируйте файл заново и откройте его.",
+      "action": "Открыть другой файл"
+    },
+    "encrypted_needs_password": {
+      "title": "Для этого PDF нужен пароль",
+      "body": "Этот PDF защищен паролем. Откройте его снова и введите пароль. Если вы его не знаете, спросите у человека, приславшего файл.",
+      "action": "Ввести пароль"
+    },
+    "wrong_password": {
+      "title": "Пароль не подошел",
+      "body": "Этот пароль не открывает данный PDF. Проверьте, нет ли опечаток и не включен ли Caps Lock, и повторите попытку.",
+      "action": "Повторить"
+    },
+    "unsupported_encryption": {
+      "title": "PDFluent не может открыть файл с такой защитой",
+      "body": "Этот PDF защищен сертификатом или методом безопасности, которые PDFluent не поддерживает, поэтому открыть его паролем здесь нельзя. Попросите отправителя прислать копию без защиты или защищенную паролем.",
+      "action": "Открыть другой файл"
+    },
+    "too_large": {
+      "title": "Файл слишком большой",
+      "body": "Размер файла больше того, который PDFluent может безопасно открыть. Разделите или сожмите его в программе, где он был создан, и откройте части.",
+      "action": "Открыть другой файл"
+    },
+    "too_many_pages": {
+      "title": "В этом PDF слишком много страниц",
+      "body": "В документе больше страниц, чем PDFluent может открыть за один раз. Разделите его на более мелкие документы в программе, где он был создан, и откройте части.",
+      "action": "Открыть другой файл"
+    },
+    "io_denied": {
+      "title": "PDFluent не может прочитать этот файл",
+      "body": "Компьютер не дал PDFluent разрешения на чтение этого файла. Проверьте права доступа к файлу или переместите его в папку, например «Документы», и повторите попытку.",
+      "action": "Повторить"
+    },
+    "not_found": {
+      "title": "Файл не найден",
+      "body": "Возможно, файл был перемещен, переименован или удален либо находится на диске, который больше не подключен. Найдите файл и откройте его снова.",
+      "action": "Открыть другой файл"
+    },
+    "unknown": {
+      "title": "Не удалось открыть файл",
+      "body": "При открытии файла что-то пошло не так. Повторите попытку. Если ошибка повторяется, сообщите нам, и мы ее исправим.",
+      "action": "Повторить"
+    },
+    "feedback": "Помогите нам улучшить PDFluent"
+  },
+  "formBar": {
+    "title": "Заполняемая форма",
+    "fields": "Полей: {{count}}",
+    "clickToFill": "Нажмите на поле, чтобы заполнить его.",
+    "noCalculations": "Автоматические вычисления в формах Adobe не выполняются.",
+    "autoLinks": "Открывать ссылки автоматически",
+    "autoLinksTitle": "Ссылки автоматически открываются в браузере. Нажмите, чтобы отключить.",
+    "highlight": "Выделять поля",
+    "firstField": "Первое поле"
+  },
+  "tabs": {
+    "label": "Открытые документы",
+    "close": "Закрыть {{name}}",
+    "unsaved": "Несохранённые изменения",
+    "new": "Открыть другой документ",
+    "tooManyTitle": "Открыто слишком много документов",
+    "tooManyMessage": "Открыто документов: {{max}}. Закройте один, чтобы открыть другой."
+  },
+  "formScripts": {
+    "barLabel": "Скрипты формы",
+    "barMessage": "Эта форма содержит скрипты (например, вычисления). Запустить их?",
+    "barDetail": "Найдено скриптов: {{count}}.",
+    "runOnce": "Запустить для этого документа",
+    "runAlways": "Всегда запускать скрипты",
+    "dontRun": "Не запускать"
   }
 }

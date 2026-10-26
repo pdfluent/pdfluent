@@ -50,6 +50,7 @@ import { execFileSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { requireQualityReport, overrideOr } from './quality/require-report.mjs';
+import { walkBuilds } from './lib/walk-build.mjs';
 
 const BUCKET = process.env.CF_R2_BUCKET_NAME || 'pdfluent-releases';
 const RELEASES_BASE = (process.env.CF_RELEASES_BASE || 'https://pdfluent.com/releases').replace(/\/$/, '');
@@ -220,6 +221,15 @@ if (args['register-dir']) {
   toRegister.push({ platform: String(args.platform), filename: String(args.filename), size: Number(args.size) });
 } else {
   die('provide one of: --file <path> | --register-dir <dir> | (--platform --filename --size)');
+}
+
+// A ui-walk build is measured and discarded; it is never published, on any
+// platform and with no override (#471). Refused before anything is uploaded.
+{
+  const walk = walkBuilds(toRegister.map((r) => r.filename));
+  if (walk.length) {
+    die(`${walk.join(', ')} is a ui-walk build (an in-page walker is compiled in). It is measured, never published, and no override applies.`);
+  }
 }
 
 for (const r of toRegister) {

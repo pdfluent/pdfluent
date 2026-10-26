@@ -7,6 +7,31 @@
 
 import { check } from "@tauri-apps/plugin-updater";
 import { loadAppSettings } from "../viewer/state/appSettings";
+import { myFixedReports, rememberPendingFixed } from "./feedback/fixedFeedback";
+
+/** Window event the feedback host listens for: reports of this user fixed in an offered update. */
+export const FIXED_FEEDBACK_EVENT = "pdfluent:fixed-feedback";
+
+export interface FixedFeedbackDetail {
+  version: string;
+  ids: string[];
+}
+
+/**
+ * The update feed lists the feedback IDs fixed in this version. If any of them
+ * were sent from this machine, say so with the offer, and remember it for the
+ * first start after the update. Reads only the feed the check already fetched.
+ */
+export function announceFixedFeedback(version: string, rawJson: unknown): FixedFeedbackDetail | null {
+  const ids = myFixedReports(rawJson, version);
+  if (ids.length === 0) return null;
+  const detail: FixedFeedbackDetail = { version, ids };
+  rememberPendingFixed(detail);
+  if (typeof window !== "undefined" && typeof window.dispatchEvent === "function") {
+    window.dispatchEvent(new CustomEvent<FixedFeedbackDetail>(FIXED_FEEDBACK_EVENT, { detail }));
+  }
+  return detail;
+}
 
 // ---------------------------------------------------------------------------
 // Types
@@ -43,6 +68,7 @@ export async function checkForUpdate(): Promise<UpdateCheckResult> {
   }
 
   const version = update.version;
+  announceFixedFeedback(version, update.rawJson);
   await update.close();
   return { available: true, version };
 }
@@ -62,6 +88,7 @@ export async function checkAndInstallUpdate(
       return;
     }
 
+    announceFixedFeedback(update.version, update.rawJson);
     const shouldInstall = await callbacks.onUpdateAvailable(update.version);
     if (!shouldInstall) {
       await update.close();

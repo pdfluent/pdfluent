@@ -8,6 +8,12 @@
       be signed for the sandbox. `inherit` makes the helper run inside the parent
       app's sandbox container rather than declaring its own entitlements — the
       required pattern for sandboxed helper tools spawned by the main app.
+
+      The bundled Tesseract (Resources/resources/ocr/bin/tesseract) is such a
+      helper. It takes the page as PNG on stdin and answers on stdout, reads its
+      language data from the signed bundle and writes no file, so inheriting the
+      sandbox is all it needs; its container temp folder is writable if it ever
+      does. scripts/mas-entitlements.mjs (helpers mode) reads this signature back.
     -->
     <key>com.apple.security.app-sandbox</key>
     <true/>

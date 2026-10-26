@@ -113,9 +113,11 @@ function makeMultiLineParagraph(): TextParagraphTarget {
     pageIndex: 0,
     source: 'digital',
     rect: { x: 0, y: 0, width: 200, height: 28 },
+    // The second line is styled (two runs): a paragraph with such a line is
+    // not writable. A paragraph of single-run lines is (J-42).
     lines: [
       { ...lineTemplate, id: 'p0:l0' },
-      { ...lineTemplate, id: 'p0:l1' },
+      { ...lineTemplate, id: 'p0:l1', spans: [...lineTemplate.spans, { ...lineTemplate.spans[0]!, id: 'p0:s1' }] },
     ],
   };
 }

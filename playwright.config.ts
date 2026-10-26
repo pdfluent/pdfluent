@@ -40,6 +40,16 @@ export default defineConfig({
     command: 'npm run dev',
     url: 'http://localhost:1420',
     reuseExistingServer: !process.env.CI,
-    timeout: 30_000,
+    // The dev server's own output goes into the job log, so a start that times out
+    // says why (native-smoke timed out at 120 s on the WSL runner, 21-10, silently).
+    stdout: 'pipe',
+    stderr: 'pipe',
+    // The dev server's start time on the shared WSL runner is not a constant: 10 s
+    // in the run of 00:35Z, about 140 s at 02:51Z (the first goto then ran into its
+    // own 30 s limit and passed on retry), and over 120 s at 10:57Z (native-smoke
+    // died with "Timed out waiting 120000ms from config.webServer", 21-10). A
+    // limit of 5 minutes covers that; a server that really does not start still
+    // fails, and its own output is in the log (stdout/stderr below).
+    timeout: 300_000,
   },
 });

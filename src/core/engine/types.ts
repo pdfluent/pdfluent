@@ -27,12 +27,21 @@ export type EngineErrorCode =
   | 'network-error'
   | 'internal-error'
   | 'runtime-unavailable'
-  | 'not-implemented';
+  | 'not-implemented'
+  /** The user cancelled (e.g. the password prompt); not an error to show. */
+  | 'cancelled';
 
 export interface EngineError {
   code: EngineErrorCode;
   message: string;
   details?: Record<string, unknown>;
+  /**
+   * Why a document did not open: a stable code from
+   * src-tauri/src/open_error.rs and the engine's text for the log. The screen
+   * shows the code's translated message (viewer/state/openError.ts), never
+   * `message` or `detail`.
+   */
+  openFailure?: { code: string; detail: string };
 }
 
 export type EngineResult<T> = Result<T, EngineError>;
@@ -78,6 +87,14 @@ export interface DocumentLoadOptions {
 
   /** Custom load options */
   options?: Record<string, unknown>;
+
+  /**
+   * Show a document the backend already has open (J-90) instead of opening a
+   * file: the id of its session. The document keeps its unsaved changes and
+   * undo steps. The load fails with a `session-gone` message when the session
+   * no longer exists, and the caller opens the file again.
+   */
+  attachSession?: number;
 }
 
 // ---------------------------------------------------------------------------

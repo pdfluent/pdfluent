@@ -13,4 +13,3 @@ export { TauriFormEngine } from './TauriFormEngine';
 export { TauriQueryEngine } from './TauriQueryEngine';
 export { TauriTransformEngine } from './TauriTransformEngine';
 export { TauriValidationEngine } from './TauriValidationEngine';
-export { TauriOcrEngine } from './TauriOcrEngine';

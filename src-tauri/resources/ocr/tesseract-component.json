@@ -1,0 +1,207 @@
+{
+  "schema": 2,
+  "component": "tesseract-ocr",
+  "version": "5.5.1",
+  "revision": 1,
+  "published": true,
+  "notices": [
+    {
+      "name": "Tesseract OCR",
+      "version": "5.5.1",
+      "license": "Apache-2.0",
+      "source": "github.com/tesseract-ocr/tesseract",
+      "file": "LICENSES/tesseract-LICENSE.txt"
+    },
+    {
+      "name": "Leptonica",
+      "version": "1.85.0",
+      "license": "BSD-2-Clause",
+      "source": "github.com/DanBloomberg/leptonica",
+      "file": "LICENSES/leptonica-LICENSE.txt"
+    },
+    {
+      "name": "libpng",
+      "version": "1.6.59",
+      "license": "libpng-2.0",
+      "source": "github.com/pnggroup/libpng",
+      "file": "LICENSES/libpng-LICENSE.txt"
+    },
+    {
+      "name": "zlib",
+      "version": "1.3.1",
+      "license": "Zlib",
+      "source": "zlib.net",
+      "file": "LICENSES/zlib-LICENSE.txt"
+    },
+    {
+      "name": "tessdata_fast language data",
+      "version": "4.1.0",
+      "license": "Apache-2.0",
+      "source": "github.com/tesseract-ocr/tessdata_fast",
+      "file": "LICENSES/tessdata_fast-LICENSE.txt"
+    }
+  ],
+  "platforms": {
+    "macos-aarch64": {
+      "binary": "bin/tesseract",
+      "files": [
+        {
+          "path": "bin/tesseract",
+          "sha256": "9211613f4a653334fb3d30e089c1aa3705bf494ef3ca0807799ccccba003e317",
+          "size": 5354720,
+          "executable": true
+        },
+        {
+          "path": "LICENSES/tesseract-LICENSE.txt",
+          "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+          "size": 11358,
+          "executable": false
+        },
+        {
+          "path": "LICENSES/leptonica-LICENSE.txt",
+          "sha256": "87829abb5bbb00b55a107365da89e9a33f86c4250169e5a1e5588505be7d5806",
+          "size": 1521,
+          "executable": false
+        },
+        {
+          "path": "LICENSES/libpng-LICENSE.txt",
+          "sha256": "bdb0a645ea18c60507d0368379b1ac5474b92255fcc2d115e07486a7672ba526",
+          "size": 5345,
+          "executable": false
+        },
+        {
+          "path": "LICENSES/zlib-LICENSE.txt",
+          "sha256": "845efc77857d485d91fb3e0b884aaa929368c717ae8186b66fe1ed2495753243",
+          "size": 1002,
+          "executable": false
+        },
+        {
+          "path": "LICENSES/tessdata_fast-LICENSE.txt",
+          "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+          "size": 11358,
+          "executable": false
+        }
+      ]
+    },
+    "macos-x86_64": {
+      "binary": "bin/tesseract",
+      "files": [
+        {
+          "path": "bin/tesseract",
+          "sha256": "be2fbfd4d78bc46e8aae19cf620575aeac4aa8fbd10a0fbdbc383c3a043e281c",
+          "size": 5622544,
+          "executable": true
+        },
+        {
+          "path": "LICENSES/tesseract-LICENSE.txt",
+          "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+          "size": 11358,
+          "executable": false
+        },
+        {
+          "path": "LICENSES/leptonica-LICENSE.txt",
+          "sha256": "87829abb5bbb00b55a107365da89e9a33f86c4250169e5a1e5588505be7d5806",
+          "size": 1521,
+          "executable": false
+        },
+        {
+          "path": "LICENSES/libpng-LICENSE.txt",
+          "sha256": "bdb0a645ea18c60507d0368379b1ac5474b92255fcc2d115e07486a7672ba526",
+          "size": 5345,
+          "executable": false
+        },
+        {
+          "path": "LICENSES/zlib-LICENSE.txt",
+          "sha256": "845efc77857d485d91fb3e0b884aaa929368c717ae8186b66fe1ed2495753243",
+          "size": 1002,
+          "executable": false
+        },
+        {
+          "path": "LICENSES/tessdata_fast-LICENSE.txt",
+          "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+          "size": 11358,
+          "executable": false
+        }
+      ]
+    },
+    "windows-x86_64": {
+      "binary": "bin/tesseract.exe",
+      "files": [
+        {
+          "path": "bin/tesseract.exe",
+          "sha256": "f9b183002daaecf3e57eca7d4c95eebcfd9eb5ab96b631ba95d77d197f17b990",
+          "size": 5225984,
+          "executable": true
+        },
+        {
+          "path": "LICENSES/tesseract-LICENSE.txt",
+          "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+          "size": 11358,
+          "executable": false
+        },
+        {
+          "path": "LICENSES/leptonica-LICENSE.txt",
+          "sha256": "87829abb5bbb00b55a107365da89e9a33f86c4250169e5a1e5588505be7d5806",
+          "size": 1521,
+          "executable": false
+        },
+        {
+          "path": "LICENSES/libpng-LICENSE.txt",
+          "sha256": "bdb0a645ea18c60507d0368379b1ac5474b92255fcc2d115e07486a7672ba526",
+          "size": 5345,
+          "executable": false
+        },
+        {
+          "path": "LICENSES/zlib-LICENSE.txt",
+          "sha256": "845efc77857d485d91fb3e0b884aaa929368c717ae8186b66fe1ed2495753243",
+          "size": 1002,
+          "executable": false
+        },
+        {
+          "path": "LICENSES/tessdata_fast-LICENSE.txt",
+          "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+          "size": 11358,
+          "executable": false
+        }
+      ]
+    }
+  },
+  "languages": {
+    "eng": {
+      "name": "English",
+      "path": "eng.traineddata",
+      "sha256": "7d4322bd2a7749724879683fc3912cb542f19906c83bcc1a52132556427170b2",
+      "size": 4113088
+    },
+    "nld": {
+      "name": "Nederlands",
+      "path": "nld.traineddata",
+      "sha256": "ced0e5e046a84c908a6aa7accbef9a232c4a5d9a8276691b81c6ee64d02963f6",
+      "size": 6050296
+    },
+    "deu": {
+      "name": "Deutsch",
+      "path": "deu.traineddata",
+      "sha256": "19d219bbb6672c869d20a9636c6816a81eb9a71796cb93ebe0cb1530e2cdb22d",
+      "size": 1525436
+    },
+    "fra": {
+      "name": "Français",
+      "path": "fra.traineddata",
+      "sha256": "ced037562e8c80c13122dece28dd477d399af80911a28791a66a63ac1e3445ca",
+      "size": 1130365
+    },
+    "spa": {
+      "name": "Español",
+      "path": "spa.traineddata",
+      "sha256": "6f2e04d02774a18f01bed44b1111f2cd7f3ba7ac9dc4373cd3f898a40ea6b464",
+      "size": 2294433
+    },
+    "ita": {
+      "name": "Italiano",
+      "path": "ita.traineddata",
+      "sha256": "b8f89e1e785118dac4d51ae042c029a64edb5c3ee42ef73027a6d412748d8827",
+      "size": 2701314
+    }
+  }
+}

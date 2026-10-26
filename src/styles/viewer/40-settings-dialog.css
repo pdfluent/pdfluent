@@ -88,8 +88,8 @@
 .settings-input:focus,
 .settings-select:focus {
   outline: none;
-  border-color: var(--accent);
-  box-shadow: 0 0 0 2px var(--accent-soft);
+  border-color: var(--focus-ring);
+  box-shadow: 0 0 0 2px var(--focus-halo);
 }
 
 /* Toggle row — checkbox + label inline, comfortable click target. */
@@ -106,7 +106,7 @@
 .settings-checkbox {
   width: 16px;
   height: 16px;
-  accent-color: var(--accent);
+  accent-color: var(--emphasis);
   cursor: pointer;
 }
 

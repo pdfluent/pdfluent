@@ -103,12 +103,12 @@ export function formatSnapshotDiffMarkdown(
   const lines: string[] = [];
 
   lines.push(`# Revisieverlijking`);
-  lines.push(`Van: ${before.label} (${before.capturedAt})`);
-  lines.push(`Naar: ${after.label} (${after.capturedAt})`);
+  lines.push(`From: ${before.label} (${before.capturedAt})`);
+  lines.push(`To: ${after.label} (${after.capturedAt})`);
   lines.push('');
 
   if (!diff.hasDifferences) {
-    lines.push('_Geen verschillen gevonden._');
+    lines.push('_No differences found._');
     return lines.join('\n');
   }
 

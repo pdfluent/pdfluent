@@ -102,9 +102,9 @@ describe('messaging — protected-content reason', () => {
     expect(msg.actionable).toBe(true);
   });
 
-  it('protected-content explanation mentions beveiliging', () => {
+  it('protected-content explanation mentions protection', () => {
     const msg = getUnsupportedMessage({ supportClass: 'protected_or_locked', writable: false, reasonCode: 'protected-content', constraints: null });
-    expect(msg.explanation.toLowerCase()).toContain('beveiligd');
+    expect(msg.explanation.toLowerCase()).toContain('protected');
   });
 });
 
@@ -123,9 +123,9 @@ describe('messaging — unknown-source reason', () => {
     expect(msg.actionable).toBe(false);
   });
 
-  it('unknown-source explanation mentions vastgesteld (cannot be determined)', () => {
+  it('unknown-source explanation mentions that the origin could not be determined', () => {
     const msg = getUnsupportedMessage({ supportClass: 'unknown_structure', writable: false, reasonCode: 'unknown-source', constraints: null });
-    expect(msg.explanation.toLowerCase()).toContain('vastgesteld');
+    expect(msg.explanation.toLowerCase()).toContain('determined');
   });
 });
 
@@ -168,8 +168,8 @@ describe('getFontEncodingMessage — safe encodings', () => {
     expect(getFontEncodingMessage('subset_embedded').actionable).toBe(false);
   });
 
-  it('standard_latin tooltip mentions veilig', () => {
-    expect(getFontEncodingMessage('standard_latin').tooltip.toLowerCase()).toContain('veilig');
+  it('standard_latin tooltip mentions safe', () => {
+    expect(getFontEncodingMessage('standard_latin').tooltip.toLowerCase()).toContain('safe');
   });
 });
 
@@ -218,17 +218,17 @@ describe('getOverflowRiskMessage — structure', () => {
 });
 
 describe('getOverflowRiskMessage — content accuracy', () => {
-  it('overflow=1 tooltip mentions 1 teken', () => {
-    expect(getOverflowRiskMessage(1).tooltip).toContain('1 teken');
+  it('overflow=1 tooltip mentions 1 character', () => {
+    expect(getOverflowRiskMessage(1).tooltip).toContain('1 character');
   });
 
-  it('overflow=5 tooltip mentions 5 tekens (plural)', () => {
-    expect(getOverflowRiskMessage(5).tooltip).toContain('5 tekens');
+  it('overflow=5 tooltip mentions 5 characters (plural)', () => {
+    expect(getOverflowRiskMessage(5).tooltip).toContain('5 characters');
   });
 
   it('overflow=1 explanation uses singular form', () => {
     const msg = getOverflowRiskMessage(1);
-    expect(msg.explanation).toContain('1 teken');
+    expect(msg.explanation).toContain('1 character');
   });
 
   it('overflow=10 explanation mentions the count', () => {

@@ -56,7 +56,7 @@
     "fillAndSign": "भरें और हस्ताक्षर करें",
     "more": "और अधिक",
     "getDesktopApp": "डेस्कटॉप ऐप",
-    "getDesktopAppTitle": "डेस्कटॉप ऐप में संपादन, OCR, संपादन, पृष्ठ व्यवस्था और निर्यात प्राप्त करें"
+    "getDesktopAppTitle": "डेस्कटॉप ऐप में संपादन, OCR, गोपनीय जानकारी काला करना, पृष्ठ व्यवस्थित करना और निर्यात"
   },
   "toolbar": {
     "select": "चुनें",
@@ -94,7 +94,7 @@
     "date": "तारीख",
     "password": "पासवर्ड",
     "permissions": "अनुमतियाँ",
-    "redact": "संपादित करें",
+    "redact": "काला करें",
     "hide": "छिपाएं",
     "compare": "तुलना करें",
     "accessibility": "अभिगम्यता",
@@ -114,9 +114,9 @@
     "allTools": "सभी टूल",
     "contextualBar": "मोड टूलबार",
     "pdfa": "PDF/A",
-    "metadata": "Document properties",
-    "invoice": "E-invoice",
-    "bookmarks": "Bookmarks"
+    "metadata": "दस्तावेज़ गुण",
+    "invoice": "ई-इनवॉइस",
+    "bookmarks": "बुकमार्क"
   },
   "topbar": {
     "openPdf": "PDF खोलें",
@@ -233,16 +233,15 @@
     "noFieldsBrowserHint": "कोई प्रपत्र फ़ील्ड नहीं मिली।"
   },
   "protect": {
-    "applyRedactions": "संपादन स्थायी रूप से लागू करें",
-    "noRedactions": "कोई संपादन लंबित नहीं।",
-    "redactionsPending": "{{count}} संपादन लंबित",
-    "redactionsPending_plural": "{{count}} संपादन लंबित",
+    "applyRedactions": "काला करना स्थायी रूप से लागू करें",
+    "noRedactions": "काला करने के लिए कोई अंश लंबित नहीं।",
+    "redactionsPending": "{{count}} अंश काला करना लंबित",
+    "redactionsPending_plural": "{{count}} अंश काला करना लंबित",
     "encrypt": "एन्क्रिप्ट करें",
     "userPasswordPlaceholder": "उपयोगकर्ता पासवर्ड",
     "ownerPasswordPlaceholder": "मालिक पासवर्ड",
     "encryptBtn": "एन्क्रिप्ट करें…",
     "decrypt": "डिक्रिप्ट करें",
-    "currentPasswordPlaceholder": "वर्तमान पासवर्ड",
     "decryptBtn": "डिक्रिप्ट करें",
     "noDocument": "कोई दस्तावेज़ खुला नहीं है।",
     "permCanPrint": "प्रिंट करें",
@@ -253,12 +252,16 @@
     "permCanFillForms": "प्रपत्र भरें",
     "permCanExtractContent": "सामग्री निकालें",
     "permCanAssemble": "असेंबल करें",
-    "searchRedact": "खोजें और संपादित करें",
-    "searchRedactPlaceholder": "खोजने और संपादित करने के लिए टेक्स्ट…",
-    "searchRedactBtn": "खोजें और संपादित करें",
+    "searchRedact": "खोजें और काला करें",
+    "searchRedactPlaceholder": "खोजने और काला करने के लिए पाठ…",
+    "searchRedactBtn": "खोजें और काला करें",
     "redactMetadataTitle": "मेटाडेटा",
     "redactMetadataDesc": "लेखक, शीर्षक और अन्य पहचान मेटाडेटा हटाएं।",
-    "redactMetadataBtn": "मेटाडेटा हटाएं"
+    "redactMetadataBtn": "मेटाडेटा हटाएं",
+    "ownerPasswordForRemoval": "स्वामी (अनुमतियाँ) पासवर्ड",
+    "removePasswordHelp": "पासवर्ड हटाने के लिए स्वामी पासवर्ड चाहिए, जो अनुमतियों की रक्षा करता है। जिस पासवर्ड से आपने फ़ाइल खोली है वह पर्याप्त नहीं है जब तक कि वह स्वामी पासवर्ड भी न हो।",
+    "removePasswordReady": "आपने इस फ़ाइल को स्वामी पासवर्ड से खोला है, इसलिए इसे दोबारा टाइप किए बिना सुरक्षा हटाई जा सकती है।",
+    "removePasswordNotProtected": "इस दस्तावेज़ में कोई पासवर्ड सुरक्षा नहीं है।"
   },
   "organize": {
     "thumbnails": "थंबनेल",
@@ -287,33 +290,34 @@
     "combine": "फ़ाइलें संयोजित करें",
     "splitRange": "सीमा के अनुसार विभाजित करें",
     "splitRangeHint": "पहले पृष्ठ चुनें",
-    "moveLeft": "Move selected page left",
-    "moveRight": "Move selected page right",
-    "moveLeftShort": "Left",
-    "moveRightShort": "Right",
-    "rotateLeft": "Rotate left",
-    "rotateRight": "Rotate right",
-    "rotateLeftShort": "Left",
-    "rotateRightShort": "Right",
-    "addingPdf": "Adding PDF…",
-    "pdfAdded": "PDF added",
-    "combiningFiles": "Combining {{count}} file(s)…",
-    "filesCombined": "{{count}} file(s) combined",
-    "insertingPdf": "Inserting PDF before page {{page}}…",
-    "pdfInserted": "PDF inserted",
-    "exportingPages": "Exporting {{count}} page(s)…",
-    "selectionExported": "Selection exported to {{name}}",
-    "splittingPages": "Splitting into individual pages…",
-    "pagesSaved": "{{count}} pages saved",
-    "splittingRanges": "Splitting {{count}} range(s)…",
-    "filesSaved": "{{count}} file(s) saved"
+    "moveLeft": "चयनित पृष्ठ को बाएं ले जाएं",
+    "moveRight": "चयनित पृष्ठ को दाएं ले जाएं",
+    "moveLeftShort": "बाएं",
+    "moveRightShort": "दाएं",
+    "rotateLeft": "बाएं घुमाएं",
+    "rotateRight": "दाएं घुमाएं",
+    "rotateLeftShort": "बाएं",
+    "rotateRightShort": "दाएं",
+    "addingPdf": "PDF जोड़ा जा रहा है…",
+    "pdfAdded": "PDF जोड़ा गया",
+    "combiningFiles": "{{count}} फ़ाइल(लें) संयोजित की जा रही हैं…",
+    "filesCombined": "{{count}} फ़ाइल(लें) संयोजित की गईं",
+    "insertingPdf": "पृष्ठ {{page}} से पहले PDF डाला जा रहा है…",
+    "pdfInserted": "PDF डाला गया",
+    "exportingPages": "{{count}} पृष्ठ निर्यात हो रहे हैं…",
+    "selectionExported": "चयन {{name}} में निर्यात किया गया",
+    "splittingPages": "अलग पृष्ठों में विभाजित किया जा रहा है…",
+    "pagesSaved": "{{count}} पृष्ठ सहेजे गए",
+    "splittingRanges": "{{count}} सीमा(एं) विभाजित की जा रही हैं…",
+    "filesSaved": "{{count}} फ़ाइल(लें) सहेजी गईं"
   },
   "unsavedChanges": {
     "title": "असहेजे बदलाव",
     "message": "क्या आप जारी रखने से पहले अपने बदलाव सहेजना चाहते हैं?",
     "save": "सहेजें",
     "discard": "बदलाव अनदेखा करें",
-    "cancel": "रद्द करें"
+    "cancel": "रद्द करें",
+    "messageNamed": "क्या आप जारी रखने से पहले {{name}} में अपने बदलाव सहेजना चाहते हैं?"
   },
   "welcome": {
     "title": "शुरू करने के लिए PDF खोलें",
@@ -327,13 +331,13 @@
     "lede": "पढ़ें, संपादित करें, रूपांतरित करें, भरें और हस्ताक्षर करें — पूरी तरह आपके डिवाइस पर।",
     "privacyPromise": "Local-first · दस्तावेज़ इस डिवाइस से कभी नहीं जाते",
     "dropPdfHere": "PDF यहाँ छोड़ें",
-    "v3Subtitle": "Open a PDF to read, edit, convert or sign it locally.",
-    "openFileAria": "Choose a PDF file to open",
-    "clearRecent": "Clear recent",
-    "recentShort": "Recent",
-    "removeRecentAria": "Remove {{name}}",
-    "backToDocument": "Back to document",
-    "loadingDocument": "Loading document…"
+    "v3Subtitle": "PDF को स्थानीय रूप से पढ़ने, एडिट करने, कनवर्ट करने या हस्ताक्षर करने के लिए खोलें।",
+    "openFileAria": "खोलने के लिए PDF फ़ाइल चुनें",
+    "clearRecent": "हाल की सूची साफ़ करें",
+    "recentShort": "हाल की",
+    "removeRecentAria": "{{name}} हटाएं",
+    "backToDocument": "दस्तावेज़ पर वापस जाएं",
+    "loadingDocument": "दस्तावेज़ लोड हो रहा है…"
   },
   "settings": {
     "language": "भाषा",
@@ -350,15 +354,29 @@
     "reviewerNamePlaceholder": "टिप्पणियों में उपयोग किया गया नाम",
     "exportPreferences": "निर्यात प्राथमिकताएं",
     "exportFormatLabel": "डिफ़ॉल्ट निर्यात प्रारूप",
-    "autosave": "स्वतः सहेजें",
-    "autosaveEnable": "बदलाव स्वतः सहेजें",
     "themeLabel": "थीम",
     "ocrDefaults": "OCR डिफ़ॉल्ट",
     "ocrLanguageLabel": "डिफ़ॉल्ट भाषा (ISO-639-2)",
     "ocrLanguagePlaceholder": "उदा. eng, nld, deu",
-    "updates": "Updates",
-    "automaticUpdateCheck": "Check for a new version at startup",
-    "automaticUpdateCheckHint": "PDFluent asks pdfluent.com whether a newer version exists, a few seconds after it starts. Nothing from your documents is sent. Turn this off and the app never checks on its own — \"Check for updates\" still works whenever you ask for it."
+    "updates": "अपडेट",
+    "automaticUpdateCheck": "शुरू होने पर नए संस्करण की जांच करें",
+    "automaticUpdateCheckHint": "PDFluent शुरू होने के कुछ सेकंड बाद pdfluent.com से पूछता है कि कोई नया संस्करण मौजूद है या नहीं। आपके दस्तावेज़ों से कुछ भी नहीं भेजा जाता। इसे बंद करें और ऐप स्वयं कभी जाँच नहीं करेगा — \"अपडेट जाँचें\" तब भी काम करता है जब आप इसके लिए कहें।",
+    "recoveryCopy": "पुनर्प्राप्ति प्रति",
+    "recoveryCopyEnable": "बिना सहेजे परिवर्तनों की पुनर्प्राप्ति प्रति रखें, जो क्रैश के बाद पेश की जाएगी",
+    "view": "दृश्य",
+    "defaultZoomLabel": "डिफ़ॉल्ट ज़ूम",
+    "defaultZoomFitWidth": "चौड़ाई फिट करें (डिफ़ॉल्ट)",
+    "defaultZoomFitPage": "पृष्ठ फिट करें",
+    "defaultZoomActualSize": "वास्तविक आकार (100%)",
+    "defaultZoomLastUsed": "अंतिम उपयोग",
+    "defaultZoomHint": "दस्तावेज़ इस ज़ूम पर खुलता है और जब तक आप स्वयं ज़ूम नहीं करते, विंडो के अनुसार समायोजित होता रहता है. जब स्पष्ट रूप से बेहतर फिट हो, तो चौड़ाई फिट इसके बजाय पूरा पृष्ठ दिखाता है.",
+    "securityTitle": "सुरक्षा",
+    "formScriptsLabel": "फ़ॉर्म स्क्रिप्ट",
+    "formScriptsAsk": "पूछें",
+    "formScriptsAlways": "हमेशा",
+    "formScriptsNever": "कभी नहीं",
+    "formScriptsHint": "फ़ॉर्म में स्क्रिप्ट हो सकती हैं, उदाहरण के लिए गणनाएँ। पूछें डिफ़ॉल्ट है: फ़ॉर्म अपने संग्रहीत मानों के साथ खुलता है और जब तक आप सहमत न हों तब तक कुछ नहीं चलता।",
+    "formScriptsPinned": "आपके संगठन ने यह विकल्प सेट किया है। इसे यहाँ बदला नहीं जा सकता।"
   },
   "errors": {
     "loadFailed": "दस्तावेज़ लोड विफल",
@@ -367,7 +385,7 @@
     "unknownError": "एक अप्रत्याशित त्रुटि हुई",
     "ocrFailed": "OCR विफल",
     "exportFailed": "निर्यात विफल",
-    "redactionFailed": "संपादन विफल",
+    "redactionFailed": "काला करना विफल रहा",
     "textEditFailed": "टेक्स्ट संपादन विफल",
     "layoutEditFailed": "लेआउट संपादन विफल",
     "annotationFailed": "टिप्पणी विफल",
@@ -381,7 +399,8 @@
     "addPageFailed": "PDF जोड़ना विफल",
     "insertFailed": "PDF डालना विफल",
     "splitFailed": "विभाजन विफल",
-    "commandFailedTitle": "'{{command}}' did not complete"
+    "commandFailedTitle": "'{{command}}' पूरा नहीं हुआ",
+    "commandRetrying": "{{command}} में अस्थायी त्रुटि — फिर से कोशिश की जा रही है"
   },
   "events": {
     "formFieldUpdated": "प्रपत्र फ़ील्ड अपडेट हुई",
@@ -430,9 +449,9 @@
     "pageNotFound": "पृष्ठ नहीं मिला",
     "requiresFontInspection": "टेक्स्ट संपादन के लिए फ़ॉन्ट निरीक्षण आवश्यक है (चरण 6 के लिए योजनाबद्ध)।",
     "rejection": {
-      "bannerTitle": "This text was not changed",
-      "bannerDetail": "Reason reported by the PDF engine: {{detail}}",
-      "bannerDismiss": "Dismiss",
+      "bannerTitle": "यह टेक्स्ट नहीं बदला गया",
+      "bannerDetail": "PDF इंजन द्वारा बताया गया कारण: {{detail}}",
+      "bannerDismiss": "खारिज करें",
       "replacement-too-long": {
         "tooltip": "Replacement is too long",
         "explanation": "The replacement is longer than the text it replaces. Keep it the same length or shorter so the surrounding layout stays intact."
@@ -491,8 +510,8 @@
       }
     },
     "fallback": {
-      "fontSubstitutedTitle": "A standard font wrote the new text",
-      "fontSubstitutedMessage": "The original font of this text has no glyph for one or more characters you typed, so Helvetica was used for the replacement. The text is correct; it may look slightly different from the rest of the line."
+      "fontSubstitutedTitle": "नया टेक्स्ट एक मानक फ़ॉन्ट द्वारा लिखा गया",
+      "fontSubstitutedMessage": "इस टेक्स्ट के मूल फ़ॉन्ट में आपके द्वारा टाइप किए गए एक या अधिक वर्णों के लिए ग्लिफ़ नहीं है, इसलिए प्रतिस्थापन के लिए Helvetica का उपयोग किया गया। टेक्स्ट सही है; यह पंक्ति के बाकी हिस्से से थोड़ा अलग दिख सकता है।"
     }
   },
   "validation": {
@@ -502,7 +521,7 @@
     "objectInLockedLayer": "ऑब्जेक्ट लॉक परत में है और संशोधित नहीं किया जा सकता।",
     "formsWithoutFields": "प्रपत्र भरने का मोड बिना प्रपत्र फ़ील्ड वाले दस्तावेज़ पर सक्रिय है।",
     "annotationToolbarWrongMode": "टिप्पणी बार मोड '{{mode}}' में दिखाई दे रहा है, लेकिन 'annotating' आवश्यक है।",
-    "redactionToolbarWrongMode": "संपादन बार मोड '{{mode}}' में दिखाई दे रहा है, लेकिन 'redacting' आवश्यक है।"
+    "redactionToolbarWrongMode": "काला करने की पट्टी '{{mode}}' मोड में दिख रही है, पर उसे काला करने वाला मोड चाहिए।"
   },
   "revisions": {
     "deletedAnnotations": "## हटाई गई टिप्पणियाँ",
@@ -549,13 +568,13 @@
     "exportExcelDone": "Excel स्प्रेडशीट निर्यात हुई",
     "exportPowerpointRunning": "PowerPoint में रूपांतरित हो रहा है…",
     "exportPowerpointDone": "PowerPoint प्रस्तुति निर्यात हुई",
-    "applyRedactRunning": "संपादन लागू हो रहे हैं…",
-    "applyRedactDone": "संपादन लागू हुए",
-    "applyRedactFailed": "संपादन लागू करने में विफल",
-    "searchRedactRunning": "खोजा और संपादित किया जा रहा है…",
-    "searchRedactDone": "{{count}} मिलान संपादित हुआ",
-    "searchRedactDone_plural": "{{count}} मिलान संपादित हुए",
-    "searchRedactFailed": "खोज-और-संपादन विफल",
+    "applyRedactRunning": "काला करना लागू किया जा रहा है…",
+    "applyRedactDone": "काला करना लागू किया गया",
+    "applyRedactFailed": "काला करना लागू नहीं हो सका",
+    "searchRedactRunning": "खोजकर काला किया जा रहा है…",
+    "searchRedactDone": "{{count}} मिलान काला किया गया",
+    "searchRedactDone_plural": "{{count}} मिलान काले किए गए",
+    "searchRedactFailed": "खोजना और काला करना विफल रहा",
     "redactMetadataRunning": "मेटाडेटा हटाया जा रहा है…",
     "redactMetadataDone": "मेटाडेटा हटाया गया",
     "redactMetadataFailed": "मेटाडेटा हटाना विफल",
@@ -566,12 +585,16 @@
     "watermarkDone": "वॉटरमार्क जोड़ा गया",
     "watermarkFailed": "वॉटरमार्क जोड़ने में विफल",
     "watermarkRunning": "वॉटरमार्क जोड़ा जा रहा है…",
-    "pdfaRunning": "Converting to PDF/A…",
-    "pdfaDone": "PDF/A written",
-    "pdfaFailed": "PDF/A conversion failed",
-    "metadataRunning": "Saving properties…",
-    "metadataDone": "Properties saved",
-    "metadataFailed": "Could not save properties"
+    "pdfaRunning": "PDF/A में रूपांतरित हो रहा है…",
+    "pdfaDone": "PDF/A लिखा गया",
+    "pdfaFailed": "PDF/A रूपांतरण विफल",
+    "metadataRunning": "गुण सहेजे जा रहे हैं…",
+    "metadataDone": "गुण सहेजे गए",
+    "metadataFailed": "गुण सहेजे नहीं जा सके",
+    "exportMarkdownRunning": "Markdown के रूप में निर्यात हो रहा है…",
+    "exportMarkdownDone": "Markdown निर्यात किया गया",
+    "exportTablesRunning": "तालिकाएँ Excel में निर्यात हो रही हैं…",
+    "exportTablesDone": "तालिकाएँ Excel में निर्यात की गईं ({{count}})"
   },
   "panels": {
     "search": "खोजें",
@@ -586,8 +609,8 @@
     "annotationCreated": "टिप्पणी बनाई गई",
     "annotationUpdated": "टिप्पणी अपडेट हुई",
     "annotationDeleted": "टिप्पणी हटाई गई",
-    "redactionCreated": "संपादन बनाया गया",
-    "redactionApplied": "संपादन लागू हुआ",
+    "redactionCreated": "अंश काला करने के लिए चिह्नित किया गया",
+    "redactionApplied": "अंश काला किया गया",
     "metadataChanged": "मेटाडेटा बदला",
     "pageMutated": "पृष्ठ संशोधित हुआ",
     "textEditCommitted": "टेक्स्ट संपादन सहेजा गया",
@@ -714,7 +737,10 @@
     "formatJpeg": "JPEG (छवि)",
     "formatDocx": "Word दस्तावेज़ (.docx)",
     "formatXlsx": "Excel स्प्रेडशीट (.xlsx)",
-    "formatPptx": "PowerPoint प्रस्तुति (.pptx)"
+    "formatPptx": "PowerPoint प्रस्तुति (.pptx)",
+    "formatMarkdown": "Markdown (.md) - पूर्वावलोकन",
+    "formatTablesXlsx": "तालिकाएँ Excel में (.xlsx) - पूर्वावलोकन",
+    "noTablesFound": "इस दस्तावेज़ में कोई तालिका नहीं पहचानी गई।"
   },
   "goToPage": {
     "title": "पृष्ठ पर जाएं",
@@ -729,7 +755,9 @@
     "documentLabel": "दस्तावेज़:",
     "savedLabel": "सहेजा गया:",
     "recoveryPath": "पुनर्प्राप्ति पथ:",
-    "restore": "पुनर्स्थापित करें"
+    "restore": "पुनर्स्थापित करें",
+    "untitled": "शीर्षकहीन दस्तावेज़",
+    "andMore": "{{name}} और {{count}} अन्य"
   },
   "emptyStates": {
     "noDocument": "कोई दस्तावेज़ खुला नहीं",
@@ -759,7 +787,7 @@
   "textContext": {
     "editText": "टेक्स्ट संपादित करें",
     "annotate": "टिप्पणी करें",
-    "redact": "संपादित करें",
+    "redact": "काला करें",
     "copy": "कॉपी करें",
     "summarize": "सारांश",
     "explain": "समझाएं",
@@ -839,7 +867,26 @@
     "statusUnavailableWithReason": "OCR runtime अनुपलब्ध: {{reason}}",
     "statusRetry": "फिर से जाँचें",
     "runtimePath": "रनटाइम: {{path}}",
-    "missingPackages": "अनुपस्थित: {{packages}}"
+    "missingPackages": "अनुपस्थित: {{packages}}",
+    "noScannedPagesTitle": "पहचानने के लिए कुछ नहीं",
+    "unavailable": {
+      "platform": "इस प्लेटफ़ॉर्म के लिए OCR प्रस्तावित नहीं है।",
+      "missing": "इस संस्करण की OCR फ़ाइलें गायब हैं या अधूरी हैं। उन्हें बहाल करने के लिए PDFluent को दोबारा इंस्टॉल करें।"
+    },
+    "settings": {
+      "unknown": "OCR घटक: जाँच हो रही है…",
+      "installed": "OCR घटक: Tesseract {{version}} स्थापित है"
+    },
+    "errors": {
+      "OCR_COMPONENT_UNSUPPORTED_PLATFORM": "इस प्लेटफ़ॉर्म के लिए OCR घटक नहीं दिया जाता।",
+      "OCR_COMPONENT_NOT_INSTALLED": "OCR घटक इंस्टॉल नहीं है।",
+      "OCR_LANGUAGE_MISSING": "OCR के लिए भाषा पैक इंस्टॉल नहीं है।",
+      "OCR_SIGNED_DOCUMENT": "यह दस्तावेज़ हस्ताक्षरित है। OCR हस्ताक्षरित पृष्ठों को बदल देगा, इसलिए इसे नहीं चलाया जाता।",
+      "OCR_NOT_PERMITTED": "दस्तावेज़ की अनुमतियाँ इसकी सामग्री बदलने की इजाज़त नहीं देतीं।",
+      "OCR_DOCUMENT_CHANGED": "OCR चलते समय दस्तावेज़ बदल गया। OCR फिर चलाएँ।",
+      "OCR_ENGINE_FAILED": "OCR एक त्रुटि के साथ रुक गया।",
+      "OCR_PAGE_OUT_OF_RANGE": "पहचानने के लिए एक पृष्ठ दस्तावेज़ में नहीं है।"
+    }
   },
   "docInfo": {
     "title": "शीर्षक",
@@ -879,7 +926,17 @@
     "italicComingSoon": "इटैलिक स्वरूपण जल्द आ रहा है",
     "sourceDigital": "PDF टेक्स्ट परत",
     "sourceOcr": "OCR",
-    "browserLimitedNote": "समर्थित PDF टेक्स्ट संपादित करने के लिए पृष्ठ पर टेक्स्ट क्लिक करें। छवियाँ और लिंक डेस्कटॉप ऐप में उपलब्ध हैं।"
+    "browserLimitedNote": "समर्थित PDF टेक्स्ट संपादित करने के लिए पृष्ठ पर टेक्स्ट क्लिक करें। छवियाँ और लिंक डेस्कटॉप ऐप में उपलब्ध हैं।",
+    "typeface": {
+      "label": "टाइपफ़ेस",
+      "default": "दस्तावेज़ फ़ॉन्ट",
+      "noEmbed": "{{family}}: फ़ॉन्ट का लाइसेंस इसे PDF में एम्बेड करने की अनुमति नहीं देता",
+      "refusedLicence": "{{family}} का उपयोग नहीं किया जा सकता: इसका लाइसेंस इसे PDF में एम्बेड करने की अनुमति नहीं देता। कोई दूसरा टाइपफ़ेस चुनें।",
+      "refusedGlyphs": "{{family}} में {{characters}} के लिए कोई ग्लिफ़ नहीं है। कोई दूसरा टाइपफ़ेस चुनें।",
+      "refusedGone": "वह टाइपफ़ेस अब इंस्टॉल नहीं है। कोई दूसरा चुनें।",
+      "refusedText": "नया रूप देने वाला टेक्स्ट अब पेज पर नहीं है।",
+      "refusedUnusable": "{{family}} को फ़ॉन्ट के रूप में पढ़ा नहीं जा सका। कोई दूसरा टाइपफ़ेस चुनें।"
+    }
   },
   "rightPanel": {
     "properties": "गुण",
@@ -891,7 +948,7 @@
     "annotationColorValue": "टिप्पणी रंग {{color}}",
     "strokeWidth": "रेखा",
     "comments": "टिप्पणियाँ",
-    "redactions": "संपादन",
+    "redactions": "काला किए गए अंश",
     "ocr": "OCR",
     "pdfa": "PDF/A",
     "formFields": "प्रपत्र फ़ील्ड",
@@ -900,13 +957,13 @@
     "changeColor": "रंग बदलें",
     "deleteMarkup": "मार्कअप हटाएं",
     "delete": "हटाएं",
-    "redactionConfirm": "{{count}} संपादन स्थायी रूप से लागू करें? यह पूर्ववत नहीं किया जा सकता।",
-    "redactionConfirm_plural": "{{count}} संपादन स्थायी रूप से लागू करें? यह पूर्ववत नहीं किया जा सकता।",
-    "noRedactions": "कोई संपादन लंबित नहीं।",
-    "redactionCount": "{{count}} संपादन लंबित",
-    "redactionCount_plural": "{{count}} संपादन लंबित",
-    "applyRedactions": "संपादन स्थायी रूप से लागू करें",
-    "deleteRedaction": "संपादन हटाएं",
+    "redactionConfirm": "{{count}} अंश को काला करना स्थायी रूप से लागू करें? इसे पूर्ववत नहीं किया जा सकता।",
+    "redactionConfirm_plural": "{{count}} अंश को काला करना स्थायी रूप से लागू करें? इसे पूर्ववत नहीं किया जा सकता।",
+    "noRedactions": "काला करने के लिए कोई अंश लंबित नहीं।",
+    "redactionCount": "{{count}} अंश काला करना लंबित",
+    "redactionCount_plural": "{{count}} अंश काला करना लंबित",
+    "applyRedactions": "काला करना स्थायी रूप से लागू करें",
+    "deleteRedaction": "काला किया गया अंश हटाएँ",
     "signatures": "डिजिटल हस्ताक्षर",
     "watermarkApply": "वॉटरमार्क लागू करें",
     "watermarkOpacity": "अपारदर्शिता",
@@ -944,9 +1001,12 @@
     "flatten": "XFA समतल करें",
     "flattenDone": "XFA समतल हुआ। स्थिर संस्करण डाउनलोड करने के लिए PDF निर्यात करें।",
     "flattenFailed": "XFA समतल करना विफल",
-    "convertToStandard": "Convert to standard PDF",
-    "convertedToStandard": "XFA converted to standard PDF",
-    "convertFailed": "Conversion failed: {{message}}"
+    "convertToStandard": "मानक PDF में रूपांतरित करें",
+    "convertedToStandard": "XFA को मानक PDF में रूपांतरित किया गया",
+    "convertFailed": "रूपांतरण विफल: {{message}}",
+    "bannerTitle": "XFA प्रपत्र",
+    "bannerBody": "यह XFA प्रपत्र जैसा है वैसा ही दिखाया गया है। इसके फ़ील्ड भरने, संपादित करने या खोजने के लिए इसे सामान्य PDF में बदलें।",
+    "bannerBodyExperimental": "यह XFA प्रपत्र जैसा है वैसा ही दिखाया गया है। फ़ील्ड भरना अभी प्रायोगिक है; भरोसेमंद ढंग से भरने, संपादित करने और खोजने के लिए इसे सामान्य PDF में बदलें।"
   },
   "security": {
     "activeContentBadge": "अवरुद्ध",
@@ -970,7 +1030,8 @@
     "highlight": "हाइलाइट करें",
     "strikethrough": "काटें",
     "underline": "रेखांकित करें",
-    "copyText": "टेक्स्ट कॉपी करें"
+    "copyText": "टेक्स्ट कॉपी करें",
+    "copied": "कॉपी किया गया"
   },
   "update": {
     "available": "अपडेट उपलब्ध",
@@ -980,10 +1041,10 @@
     "installing": "इंस्टॉल हो रहा है…",
     "checkFailed": "अपडेट जाँच विफल",
     "upToDate": "आप नवीनतम संस्करण का उपयोग कर रहे हैं",
-    "installed": "Update installed",
-    "restartNow": "Restart now",
-    "restartUnsaved": "Save your changes before restarting.",
-    "restartManual": "If it doesn't restart automatically, quit and reopen PDFluent to finish."
+    "installed": "अपडेट इंस्टॉल हुआ",
+    "restartNow": "अभी पुनः आरंभ करें",
+    "restartUnsaved": "पुनः आरंभ करने से पहले अपने परिवर्तन सहेजें।",
+    "restartManual": "यदि यह अपने आप पुनः आरंभ नहीं होता, तो पूरा करने के लिए PDFluent बंद करके फिर से खोलें।"
   },
   "telemetry": {
     "addNoteLabel": "कुछ जोड़ना चाहते हैं? (वैकल्पिक)",
@@ -1012,6 +1073,11 @@
     "sentTitle": "भेज दिया गया। धन्यवाद।",
     "settingsAutoSend": "बिना पूछे स्वचालित रूप से भेजें",
     "settingsAutoSendNote": "स्वचालित रिपोर्ट व्यक्तिगत डेटा से मुक्त और साफ़ होती हैं, ठीक वैसे ही जैसे आप मैन्युअल रूप से समीक्षा करते हैं।",
+    "settingsSentReports": "इस कंप्यूटर से भेजी गई क्रैश रिपोर्ट: {{count}}। हम इन्हें {{days}} दिनों के बाद अपने सर्वर से अपने आप हटा देते हैं।",
+    "settingsDeleteReports": "मेरी क्रैश रिपोर्ट हटाएँ",
+    "settingsDeleting": "हटाया जा रहा है…",
+    "settingsDeleted": "हटाई गई क्रैश रिपोर्ट: {{count}}",
+    "settingsDeleteFailed": "{{count}} नहीं हटाई जा सकीं। अपना कनेक्शन जाँचें और फिर से कोशिश करें।",
     "settingsDescription": "रिपोर्ट में कभी भी व्यक्तिगत जानकारी या दस्तावेज़ सामग्री नहीं होती है। भेजने से पहले सब कुछ साफ़ किया जाता है और आप हर रिपोर्ट पहले देखते हैं। डिफ़ॉल्ट रूप से बंद।",
     "settingsTitle": "क्रैश और त्रुटि रिपोर्ट",
     "settingsToggle": "क्रैश और त्रुटि रिपोर्ट भेजें",
@@ -1019,7 +1085,11 @@
     "typeBug": "बग",
     "typeCrash": "क्रैश",
     "typeFeedback": "प्रतिक्रिया",
-    "whatGetsSent": "क्या भेजा जाता है"
+    "whatGetsSent": "क्या भेजा जाता है",
+    "settingsSentFeedback": "इस कंप्यूटर से भेजी गई प्रतिक्रिया रिपोर्टें: {{count}}। हम उन्हें {{days}} दिनों के बाद अपने सर्वर से अपने आप हटा देते हैं।",
+    "settingsDeleteFeedback": "मेरी प्रतिक्रिया रिपोर्टें हटाएँ",
+    "settingsFeedbackDeleted": "प्रतिक्रिया रिपोर्टें हटाई गईं: {{count}}",
+    "settingsFeedbackDeleteFailed": "{{count}} प्रतिक्रिया रिपोर्टें हटाई नहीं जा सकीं। अपना कनेक्शन जाँचें और फिर से कोशिश करें।"
   },
   "ai": {
     "summaryInstruction": "नीचे दिए गए दस्तावेज़ का संक्षिप्त सारांश हिंदी में प्रदान करें। प्रत्येक भूमिका के लिए नियोक्ता, पद और अवधि का उल्लेख करें। बुलेट पॉइंट का उपयोग करें।",
@@ -1076,7 +1146,8 @@
       "scrollLeft": "स्क्रॉल मोड बाईं ओर",
       "scrollRight": "स्क्रॉल मोड दाईं ओर",
       "workMode": "कार्य मोड",
-      "searchPlaceholder": "दस्तावेज़ में खोजें"
+      "searchPlaceholder": "दस्तावेज़ में खोजें",
+      "allTools": "सभी उपकरण"
     },
     "menu": {
       "about": "जानकारी",
@@ -1147,22 +1218,17 @@
       "draw": "ड्रॉ करें",
       "signatureName": "हस्ताक्षर का नाम",
       "typeName": "अपना नाम टाइप करें…",
-      "selectStyle": "शैली चुनें",
-      "styleClassic": "कर्सिव क्लासिक",
-      "styleElegant": "कर्सिव शानदार",
-      "styleBrush": "ब्रश हस्ताक्षर",
-      "styleModern": "आधुनिक हस्तलेखन",
       "drawHere": "अपने माउस, ट्रैकपैड, या स्टाइलस से यहां ड्रॉ करें",
       "clear": "साफ़ करें",
       "apply": "लागू करें",
-      "defaultSignature": "हस्ताक्षर",
       "clickToPlaceSignature": "हस्ताक्षर रखने के लिए पृष्ठ पर क्लिक करें।",
       "addInitials": "प्रारंभिक जोड़ें",
       "initialsIntro": "प्रारंभिक क्षेत्रों पर त्वरित प्लेसमेंट के लिए अपने प्रारंभिक टाइप करें।",
       "initials": "प्रारंभिक",
       "initialsPlaceholder": "उदा. AB",
-      "defaultInitials": "AB",
-      "clickToPlaceInitials": "प्रारंभिक रखने के लिए पृष्ठ पर क्लिक करें।"
+      "clickToPlaceInitials": "प्रारंभिक रखने के लिए पृष्ठ पर क्लिक करें।",
+      "signatureFont": "हस्ताक्षर फ़ॉन्ट",
+      "plainItalic": "सादा इटैलिक"
     },
     "overlay": {
       "signaturePlaced": "हस्ताक्षर रखा गया!",
@@ -1177,13 +1243,13 @@
     "textbox": {
       "editTitle": "पाठ बॉक्स संपादित करें",
       "newTitle": "नया पाठ बॉक्स",
-      "intro": "यह पाठ वर्तमान पृष्ठ पर एक ओवरले के रूप में रखा जाता है। खाली सहेजने से मौजूदा पाठ बॉक्स हटाया जाता है।",
       "label": "पाठ",
       "placeholder": "पाठ टाइप करें…",
       "delete": "हटाएं",
       "deleted": "पाठ बॉक्स हटाया गया।",
       "updated": "पाठ बॉक्स अपडेट किया गया।",
-      "added": "नया पाठ बॉक्स जोड़ा गया।"
+      "added": "नया पाठ बॉक्स जोड़ा गया।",
+      "introPdf": "टेक्स्ट बॉक्स PDF में लिखा जाता है और हर PDF व्यूअर में दिखता है। खाली सहेजने पर मौजूदा टेक्स्ट बॉक्स हट जाता है।"
     },
     "rail": {
       "tools": "PDF टूल्स",
@@ -1197,12 +1263,14 @@
       "more": "अधिक टूल्स",
       "strikeText": "पाठ को स्ट्राइक करें",
       "underlineText": "पाठ को रेखांकित करें",
-      "addAttachment": "संलग्नक जोड़ें"
+      "addAttachment": "संलग्नक जोड़ें",
+      "drawRectangle": "आयत बनाएँ"
     },
     "railToasts": {
-      "commentMode": "नोट मोड सक्रिय है। पाठ चुनें और नोट चुनें, या नोट्स सूची का उपयोग करके नोट जोड़ें।",
+      "commentMode": "नोट मोड। पेज पर उस जगह क्लिक करें जहाँ नोट रखना है।",
       "strikeout": "स्ट्राइकथ्रू सक्रिय है — लागू करने के लिए पाठ चुनें।",
-      "underline": "रेखांकन सक्रिय है — लागू करने के लिए पाठ चुनें।"
+      "underline": "रेखांकन सक्रिय है — लागू करने के लिए पाठ चुनें।",
+      "rectangle": "आयत सक्रिय — बनाने के लिए पेज पर खींचें।"
     },
     "tools": {
       "lede": "शुरुआत करने के लिए एक टूल चुनें। सब कुछ इस डिवाइस पर स्थानीय रूप से चलता है।",
@@ -1217,7 +1285,7 @@
       "merge": "फ़ाइलें मर्ज करें",
       "mergeSub": "PDFs को संयोजित करें",
       "contentSecurity": "सामग्री और सुरक्षा",
-      "redact": "रिडेक्ट करें",
+      "redact": "काला करें",
       "redactSub": "स्थायी रूप से पाठ को काला करें",
       "protect": "सुरक्षित करें",
       "protectSub": "पासवर्ड और अनुमतियां",
@@ -1238,17 +1306,18 @@
       "layers": "{{count}} परतें",
       "manageLayers": "परतों को प्रबंधित करें",
       "layersVisible": "{{count}} परतें दृश्यमान।",
-      "archiveAndData": "Archiving and data",
-      "pdfaSub": "Check or convert for long-term archiving",
-      "invoiceSub": "Read the ZUGFeRD/Factur-X invoice inside",
-      "metadataSub": "Title and author of this document"
+      "archiveAndData": "संग्रहण और डेटा",
+      "pdfaSub": "दीर्घकालिक संग्रहण के लिए जांचें या रूपांतरित करें",
+      "invoiceSub": "अंदर मौजूद ZUGFeRD/Factur-X इनवॉइस पढ़ें",
+      "metadataSub": "इस दस्तावेज़ का शीर्षक और लेखक",
+      "flattenForm": "समतल करें",
+      "flattenFormTitle": "फ़ॉर्म समतल करें: भरे गए मान पृष्ठ का हिस्सा बन जाते हैं और फ़ील्ड हटा दिए जाते हैं",
+      "flattenFormDone": "फ़ॉर्म समतल किया गया। पूर्ववत करने पर फ़ील्ड वापस आ जाएँगे।",
+      "flattenFormFailed": "फ़ॉर्म समतल नहीं किया जा सका: {{message}}"
     },
     "edit": {
       "lede": "दस्तावेज़ में पाठ पर क्लिक करके इनलाइन संपादित करें। स्वरूपण बार चयन के ऊपर दिखाई देता है।",
       "formatText": "पाठ स्वरूपित करें",
-      "fontLabel": "फ़ॉन्ट",
-      "fontHint": "मौजूदा PDF पाठ एम्बेडेड PDF फ़ॉन्ट्स का उपयोग करता है। फ़ॉन्ट \"{{font}}\" नए पाठ बॉक्स के लिए उपयोग किया जाएगा।",
-      "fontEmbedded": "एम्बेडेड PDF फ़ॉन्ट",
       "color": "रंग",
       "colorLabel": "रंग {{color}}",
       "addContent": "सामग्री जोड़ें",
@@ -1261,7 +1330,18 @@
       "clickAnywhereTextBox": "पाठ बॉक्स रखने के लिए पृष्ठ पर कहीं भी क्लिक करें।",
       "clickAnywhereImage": "छवि रखने के लिए पृष्ठ पर कहीं भी क्लिक करें।",
       "selection": "चयन",
-      "annotationOnPage": "{{type}} पृष्ठ {{page}} पर"
+      "annotationOnPage": "{{type}} पृष्ठ {{page}} पर",
+      "placeStamp": "मुहर लगाएँ",
+      "stampLabel": "मुहर",
+      "clickToPlaceStamp": "मुहर लगाने के लिए पेज पर क्लिक करें।",
+      "placementModeStamp": "प्लेसमेंट मोड: मुहर",
+      "stampPlaced": "मुहर लगा दी गई।",
+      "deleteAnnotation": "एनोटेशन हटाएँ",
+      "annotationColor": "एनोटेशन का रंग",
+      "editTextBox": "टेक्स्ट संपादित करें",
+      "replaceImage": "छवि बदलें",
+      "imageReplaced": "छवि बदल दी गई।",
+      "moveHint": "खिसकाने के लिए खींचें, आकार बदलने के लिए कोना खींचें, या तीर कुंजियों से सरकाएँ।"
     },
     "convert": {
       "exportPdfTo": "PDF को इस रूप में निर्यात करें",
@@ -1279,10 +1359,16 @@
       "confidenceFrom": "{{value}}% से आत्मविश्वास",
       "ocrOff": "OCR बंद",
       "ocrOn": "OCR चालू",
-      "ocrRunning": "OCR स्थानीय रूप से चल रहा है…"
+      "ocrRunning": "OCR स्थानीय रूप से चल रहा है…",
+      "ocrComponentUnknown": "OCR घटक: जाँच हो रही है…",
+      "ocrComponentInstalled": "OCR घटक इंस्टॉल है",
+      "ocrLastRun": "पिछली बार: {{pages}} पेज, {{words}} शब्द खोजने योग्य टेक्स्ट के रूप में जोड़े गए",
+      "ocrRunningProgress": "{{total}} में से पेज {{done}} पहचाना जा रहा है…",
+      "markdown": "Markdown (पूर्वावलोकन)",
+      "tablesToExcel": "Excel में तालिकाएँ (पूर्वावलोकन)"
     },
     "esign": {
-      "lede": "Sign with a certificate of your own, and check the signatures a document already carries. Both happen on this device.",
+      "lede": "अपने स्वयं के प्रमाणपत्र से हस्ताक्षर करें, और दस्तावेज़ पर पहले से मौजूद हस्ताक्षरों की जाँच करें। दोनों इसी डिवाइस पर होते हैं।",
       "fillAndSign": "अपने दस्तावेजों को भरें और हस्ताक्षर करें",
       "addSignature": "हस्ताक्षर जोड़ें",
       "addInitials": "प्रारंभिक जोड़ें",
@@ -1290,25 +1376,25 @@
       "placementModeInitials": "प्लेसमेंट मोड: प्रारंभिक",
       "clickToPlaceSignature": "अपना हस्ताक्षर रखने के लिए पृष्ठ पर कहीं भी क्लिक करें।",
       "clickToPlaceInitials": "अपने प्रारंभिक रखने के लिए पृष्ठ पर कहीं भी क्लिक करें।",
-      "verifySection": "Signatures",
-      "verify": "Check signatures",
-      "desktopOnly": "Available in the desktop app",
-      "unsigned": "This document carries no signatures.",
-      "signSection": "Sign with a certificate",
-      "padesLevel": "Produces a PAdES B-B signature: your certificate over the whole file, no timestamp server involved.",
-      "certificate": "Certificate (.p12 or .pfx)",
-      "certificateNone": "No certificate chosen",
-      "chooseCertificate": "Choose certificate",
-      "certificatePassword": "Certificate password",
-      "reason": "Reason (optional)",
-      "reasonPlaceholder": "Why you are signing",
-      "sign": "Sign and save a copy",
-      "signing": "Signing…",
-      "signNeedsCertificate": "Choose a certificate and enter its password first.",
-      "signSaved": "Signed copy saved as {{name}}",
-      "signFailed": "Signing failed: {{message}}",
-      "usageRights": "Reader enablement (usage rights)",
-      "usageRightsInvalidated": "Usage rights invalidated — this file was edited, so Adobe Reader no longer treats it as an enabled form."
+      "verifySection": "हस्ताक्षर",
+      "verify": "हस्ताक्षर जांचें",
+      "desktopOnly": "डेस्कटॉप ऐप में उपलब्ध",
+      "unsigned": "इस दस्तावेज़ में कोई हस्ताक्षर नहीं है।",
+      "signSection": "प्रमाणपत्र से हस्ताक्षर करें",
+      "padesLevel": "PAdES B-B हस्ताक्षर बनाता है: पूरी फ़ाइल पर आपका प्रमाणपत्र, कोई टाइमस्टैम्प सर्वर शामिल नहीं।",
+      "certificate": "प्रमाणपत्र (.p12 या .pfx)",
+      "certificateNone": "कोई प्रमाणपत्र नहीं चुना",
+      "chooseCertificate": "प्रमाणपत्र चुनें",
+      "certificatePassword": "प्रमाणपत्र पासवर्ड",
+      "reason": "कारण (वैकल्पिक)",
+      "reasonPlaceholder": "आप हस्ताक्षर क्यों कर रहे हैं",
+      "sign": "हस्ताक्षर करें और प्रति सहेजें",
+      "signing": "हस्ताक्षर हो रहा है…",
+      "signNeedsCertificate": "पहले प्रमाणपत्र चुनें और उसका पासवर्ड दर्ज करें।",
+      "signSaved": "हस्ताक्षरित प्रति {{name}} के रूप में सहेजी गई",
+      "signFailed": "हस्ताक्षर विफल: {{message}}",
+      "usageRights": "Reader सक्षमता (उपयोग अधिकार)",
+      "usageRightsInvalidated": "उपयोग अधिकार अमान्य — इस फ़ाइल में बदलाव किया गया था, इसलिए Adobe Reader अब इसे सक्षम फ़ॉर्म नहीं मानता।"
     },
     "protect": {
       "lede": "मजबूत क्रिप्टोग्राफिक पासवर्ड के साथ अपने PDF दस्तावेज़ को सुरक्षित करें। परिवर्तन तुरंत स्थानीय रूप से लागू किए जाते हैं।",
@@ -1330,9 +1416,11 @@
       "localViaTauri": "Tauri कमांड के माध्यम से स्थानीय, कोई ब्राउज़र रनटाइम नहीं",
       "compressingImages": "छवियों को संपीड़ित किया जा रहा है…",
       "percentComplete": "{{percent}}% पूर्ण",
-      "compressPdf": "PDF संपीड़ित करें",
       "desktopOnly": "केवल डेस्कटॉप ऐप में उपलब्ध",
-      "backToTools": "टूल्स पर वापस"
+      "backToTools": "टूल्स पर वापस",
+      "saveCopy": "संपीड़ित प्रतिलिपि इस रूप में सहेजें…",
+      "replaceOpen": "खुले दस्तावेज़ को संपीड़ित करके बदलें",
+      "replaceNote": "एक प्रतिलिपि खुले दस्तावेज़ और उसकी फ़ाइल को वैसे ही रहने देती है। बदलने से केवल खुला दस्तावेज़ बदलता है; पूर्ववत करने से मूल वापस आ जाता है।"
     },
     "split": {
       "lede": "अपने दस्तावेज़ को प्रति पृष्ठ या विशिष्ट पृष्ठ सीमा द्वारा अलग-अलग PDF फ़ाइलों में विभाजित करें।",
@@ -1360,16 +1448,61 @@
     },
     "redact": {
       "lede": "PDF से संवेदनशील जानकारी को चिह्नित करें और स्थायी रूप से हटाएं। रिडेक्शन वास्तविक स्रोत पाठ और वेक्टर को हटाता है।",
-      "modeActive": "रिडेक्शन मोड सक्रिय है",
+      "modeActive": "काला करने का मोड सक्रिय है",
       "dragHint": "पृष्ठ पर पाठ या छवियों पर माउस को ड्रैग करके उन्हें रिडेक्शन के लिए चिह्नित करें।",
-      "searchAndRedact": "पाठ खोजें और रिडेक्ट करें",
+      "searchAndRedact": "खोजें और काला करें",
       "searchPlaceholder": "खोज शब्द (उदा. SSN, phone)",
       "mark": "चिह्नित करें",
-      "draftRedactions": "ड्राफ़्ट रिडेक्शन ({{count}})",
+      "draftRedactions": "काला करने के प्रारूप ({{count}})",
       "applying": "लागू किया जा रहा है…",
-      "applyPermanently": "रिडेक्शन स्थायी रूप से लागू करें",
-      "noActiveMarkings": "कोई सक्रिय रिडेक्शन चिह्न नहीं।",
-      "backToTools": "टूल्स पर वापस"
+      "applyPermanently": "काला करना स्थायी रूप से लागू करें",
+      "noActiveMarkings": "कोई सक्रिय चिह्न नहीं।",
+      "backToTools": "टूल्स पर वापस",
+      "pii": {
+        "title": "व्यक्तिगत डेटा",
+        "lede": "Find personal data in the text of this document: IBANs, card numbers, national ID numbers, birth dates, e-mail addresses and phone numbers, and names and addresses when the model is installed. Review the list, then redact the ones you choose.",
+        "find": "व्यक्तिगत डेटा खोजें",
+        "scanning": "स्कैन किया जा रहा है…",
+        "none": "Nothing found.",
+        "kind": {
+          "iban": "IBAN",
+          "email": "ई-मेल पता",
+          "phone": "फ़ोन नंबर",
+          "credit_card": "कार्ड संख्या",
+          "national_id": "राष्ट्रीय आईडी संख्या",
+          "date_of_birth": "जन्म तिथि",
+          "bank_account": "बैंक खाता संख्या",
+          "person": "नाम",
+          "address": "पता"
+        },
+        "where": "पृष्ठ {{pages}} · {{count}}×",
+        "selectAll": "सभी चुनें",
+        "selectNone": "कुछ न चुनें",
+        "redactSelected": "चयनित {{count}} को काला करें",
+        "redacting": "काला किया जा रहा है…",
+        "done": "{{count}} आइटम काला किए गए। परिणाम रखने के लिए फ़ाइल सहेजें।",
+        "failed": "काला करना विफल: {{message}}",
+        "detectFailed": "खोज विफल: {{message}}",
+        "patternsOnly": "Without the model this finds only items it can check, such as IBANs, cards, ID numbers, birth dates, e-mail addresses and phone numbers. Names and addresses are not detected, so check every page yourself.",
+        "suggestionsOnly": "ये सुझाव हैं। डिटेक्टर कुछ चीज़ें चूक सकता है, इसलिए सहेजने से पहले हर पृष्ठ जाँचें।",
+        "source": {
+          "verified": "जाँचा गया {{detail}}",
+          "model": "मॉडल सुझाव, {{score}}%"
+        },
+        "model": {
+          "use": "मॉडल से नाम और पते भी ढूँढ़ें",
+          "languages": "इनके लिए जाँचा गया: {{languages}}",
+          "remove": "मॉडल हटाएँ",
+          "removeFailed": "मॉडल हटाया नहीं जा सका: {{message}}",
+          "failed": "मॉडल नहीं चल सका ({{code}})। केवल वे आइटम दिखाए जा रहे हैं जिन्हें जाँचा जा सकता है।",
+          "consentTitle": "व्यक्तिगत डेटा मॉडल डाउनलोड करें?",
+          "consentBody": "नाम और पते ढूँढ़ने के लिए भाषा मॉडल ({{size}}) चाहिए। इसे एक बार {{host}} से डाउनलोड किया जाता है, एक तय चेकसम से जाँचा जाता है, और फिर इसी कंप्यूटर पर चलता है। आपके दस्तावेज़ इस कंप्यूटर से बाहर नहीं जाते।",
+          "download": "डाउनलोड",
+          "downloading": "डाउनलोड हो रहा है…",
+          "downloadFailed": "डाउनलोड विफल: {{message}}",
+          "notInBuild": "इस संस्करण में डाउनलोड अभी उपलब्ध नहीं है।"
+        }
+      }
     },
     "toasts": {
       "saving": "सहेजा जा रहा है…",
@@ -1399,117 +1532,337 @@
       "pdfsMerged": "{{count}} PDF फ़ाइलें मर्ज की गईं",
       "mergedSaved": "मर्ज की गई PDF {{name}} के रूप में सहेजी गई।",
       "mergeFailed": "मर्ज विफल: {{message}}",
-      "redactMatches": "{{matches}} मिलान मिले, {{areas}} रिडेक्शन चिह्न रखे गए।",
-      "noRedactMatches": "रिडेक्ट करने के लिए कोई पाठ मिलान नहीं मिला।",
+      "redactSearchDone": "छिपाए गए मिलान: {{count}}। बदलाव रखने के लिए सहेजें।",
+      "noRedactMatches": "काला करने के लिए कोई पाठ नहीं मिला।",
       "redactSearchFailed": "खोज रिडेक्शन विफल: {{message}}",
       "applyRedactConfirm": "{{count}} रिडेक्शन चिह्न को स्थायी रूप से लागू करें? यह सामग्री को PDF से हमेशा के लिए हटा देता है।",
       "applyRedactConfirm_plural": "{{count}} रिडेक्शन चिह्नों को स्थायी रूप से लागू करें? यह सामग्री को PDF से हमेशा के लिए हटा देता है।",
-      "applyRedactTitle": "रिडेक्शन लागू करें",
-      "applyRedactRunning": "रिडेक्शन को स्थायी रूप से लागू किया जा रहा है…",
-      "applyRedactDone": "रिडेक्शन को स्थायी रूप से लागू किया गया",
+      "applyRedactTitle": "काला करना लागू करें",
+      "applyRedactRunning": "काला करना लागू किया जा रहा है…",
+      "applyRedactDone": "काला करना स्थायी रूप से लागू किया गया",
       "redactionsApplied": "रिडेक्शन को स्थायी रूप से लागू किया गया है।",
-      "redactFailed": "रिडेक्शन विफल: {{message}}"
+      "redactFailed": "रिडेक्शन विफल: {{message}}",
+      "compressedCopyToast": "{{name}} सहेजा गया: {{before}} से {{after}}। खुला दस्तावेज़ अपरिवर्तित है।",
+      "compressedReplacedToast": "खुले दस्तावेज़ को संपीड़ित किया: {{before}} से {{after}}। पूर्ववत करने पर मूल वापस आ जाएगा। संपीड़ित संस्करण रखने के लिए सहेजें।"
     },
     "thumbnails": {
       "pages": "पृष्ठ",
       "pageAlt": "पृष्ठ {{page}}",
-      "bookmarks": "Bookmarks"
+      "bookmarks": "बुकमार्क"
     },
     "pdfa": {
-      "lede": "PDF/A is the archival form of PDF: fonts embedded, colours defined, nothing that depends on the outside world.",
-      "section": "Conformance",
-      "level": "Level",
-      "validate": "Check this document",
-      "convert": "Save as PDF/A…",
-      "desktopOnly": "Available in the desktop app",
-      "compliant": "Conforms to {{level}}",
-      "notCompliant": "Does not conform: {{errors}} errors, {{warnings}} warnings",
-      "moreIssues": "{{count}} more",
+      "lede": "PDF/A, PDF का अभिलेखीय रूप है: फ़ॉन्ट एम्बेडेड, रंग परिभाषित, बाहरी दुनिया पर निर्भर कुछ भी नहीं।",
+      "section": "अनुरूपता",
+      "level": "स्तर",
+      "validate": "यह दस्तावेज़ जांचें",
+      "convert": "PDF/A के रूप में सहेजें…",
+      "desktopOnly": "डेस्कटॉप ऐप में उपलब्ध",
+      "compliant": "{{level}} के अनुरूप",
+      "notCompliant": "अनुरूप नहीं: {{errors}} त्रुटियाँ, {{warnings}} चेतावनियाँ",
+      "moreIssues": "{{count}} और",
       "report": {
-        "title": "What the conversion did",
-        "written": "Written to {{path}}",
-        "size": "{{out}} out of {{in}} ({{ratio}}×), in {{seconds}} s",
-        "pages": "{{count}} pages",
-        "fontsEmbedded": "{{embedded}} of {{found}} unembedded fonts embedded",
-        "fontsFailed": "Could not embed: {{fonts}}",
-        "removed": "Removed: {{count}} items that PDF/A does not allow",
-        "subset": "{{count}} font programs reduced, {{bytes}} kB saved",
-        "outputIntent": "Output intent added",
-        "unchangedDocument": "The open document was not changed.",
+        "title": "रूपांतरण ने क्या किया",
+        "written": "{{path}} में लिखा गया",
+        "size": "{{in}} में से {{out}} ({{ratio}}×), {{seconds}} सेकंड में",
+        "pages": "{{count}} पृष्ठ",
+        "fontsEmbedded": "{{found}} अनएम्बेडेड फ़ॉन्ट में से {{embedded}} एम्बेड किए गए",
+        "fontsFailed": "एम्बेड नहीं हो सके: {{fonts}}",
+        "removed": "हटाए गए: {{count}} आइटम जिनकी PDF/A अनुमति नहीं देता",
+        "subset": "{{count}} फ़ॉन्ट प्रोग्राम घटाए गए, {{bytes}} kB की बचत",
+        "outputIntent": "आउटपुट इंटेंट जोड़ा गया",
+        "unchangedDocument": "खुला दस्तावेज़ नहीं बदला गया।",
         "warning": "{{message}}",
-        "moreWarnings": "{{count}} more"
+        "moreWarnings": "{{count}} और"
       }
     },
     "metadata": {
-      "lede": "The title and author stored inside the file, which is what other readers and search show.",
-      "section": "Properties",
-      "title": "Title",
-      "author": "Author",
-      "apply": "Save properties",
-      "desktopOnly": "Available in the desktop app"
+      "lede": "फ़ाइल के अंदर संग्रहीत शीर्षक और लेखक, जिन्हें अन्य रीडर और खोज दिखाते हैं।",
+      "section": "गुण",
+      "title": "शीर्षक",
+      "author": "लेखक",
+      "apply": "गुण सहेजें",
+      "desktopOnly": "डेस्कटॉप ऐप में उपलब्ध"
     },
     "invoice": {
-      "lede": "A ZUGFeRD or Factur-X invoice travels as XML inside the PDF. This reads it and checks it against EN 16931.",
-      "section": "Embedded invoice",
-      "read": "Read invoice",
-      "desktopOnly": "Available in the desktop app",
-      "none": "This document carries no e-invoice.",
-      "number": "Number: {{number}}",
-      "issued": "Issued: {{date}}",
-      "seller": "Seller: {{name}}",
-      "buyer": "Buyer: {{name}}",
-      "total": "Total: {{total}} {{currency}}",
-      "lines": "Line items: {{count}}",
-      "valid": "Valid against {{profile}}",
-      "invalid": "Not valid: {{errors}} errors, {{warnings}} warnings"
+      "lede": "ZUGFeRD या Factur-X इनवॉइस PDF के भीतर XML के रूप में होता है। यह उसे पढ़ता है और EN 16931 के अनुसार जाँचता है।",
+      "section": "एम्बेडेड इनवॉइस",
+      "read": "इनवॉइस पढ़ें",
+      "desktopOnly": "डेस्कटॉप ऐप में उपलब्ध",
+      "none": "इस दस्तावेज़ में कोई ई-इनवॉइस नहीं है।",
+      "number": "संख्या: {{number}}",
+      "issued": "जारी: {{date}}",
+      "seller": "विक्रेता: {{name}}",
+      "buyer": "खरीदार: {{name}}",
+      "total": "कुल: {{total}} {{currency}}",
+      "lines": "पंक्ति आइटम: {{count}}",
+      "valid": "{{profile}} के अनुसार मान्य",
+      "invalid": "मान्य नहीं: {{errors}} त्रुटियाँ, {{warnings}} चेतावनियाँ"
     },
     "canvas": {
-      "document": "PDF document"
+      "document": "PDF दस्तावेज़"
+    },
+    "stamps": {
+      "Approved": "स्वीकृत",
+      "NotApproved": "अस्वीकृत",
+      "Draft": "मसौदा",
+      "Confidential": "गोपनीय",
+      "Final": "अंतिम",
+      "ForComment": "टिप्पणी के लिए",
+      "Expired": "समाप्त"
     }
   },
   "about": {
-    "section": "About",
-    "app": "App",
-    "version": "Version",
-    "privacy": "Privacy",
-    "privacyValue": "All processing happens locally",
-    "website": "Website"
+    "section": "परिचय",
+    "app": "ऐप",
+    "version": "संस्करण",
+    "privacy": "गोपनीयता",
+    "privacyValue": "सारी प्रक्रिया स्थानीय रूप से होती है",
+    "website": "वेबसाइट"
   },
   "reviewSummary": {
-    "title": "Review summary",
-    "generatedAt": "Generated on",
-    "comments": "Comments",
-    "noComments": "No comments.",
-    "replies": "Replies:",
-    "empty": "empty",
-    "redactions": "Redactions",
-    "noRedactions": "No redactions.",
-    "noIssues": "No issues.",
-    "metadataChanges": "Metadata changes",
-    "noMetadataChanges": "No changes.",
-    "changedBy": "by",
-    "on": "on"
+    "title": "समीक्षा सारांश",
+    "generatedAt": "बनाया गया",
+    "comments": "टिप्पणियाँ",
+    "noComments": "कोई टिप्पणी नहीं।",
+    "replies": "उत्तर:",
+    "empty": "खाली",
+    "redactions": "काला किए गए अंश",
+    "noRedactions": "कोई काला किया गया अंश नहीं।",
+    "noIssues": "कोई समस्या नहीं।",
+    "metadataChanges": "मेटाडेटा परिवर्तन",
+    "noMetadataChanges": "कोई परिवर्तन नहीं।",
+    "changedBy": "द्वारा",
+    "on": "को"
   },
   "externalLink": {
-    "askMessage": "This PDF wants to open an external link:\n\n{{label}}\n\nURL:\n{{href}}\n\nDo you want to continue?",
-    "title": "Open external link?",
-    "openLink": "Open link",
-    "dialogBody": "This PDF wants to open an external website. Check the URL before continuing."
+    "askMessage": "यह PDF एक बाहरी लिंक खोलना चाहता है:\n\n{{label}}\n\nURL:\n{{href}}\n\nक्या आप जारी रखना चाहते हैं?",
+    "title": "बाहरी लिंक खोलें?",
+    "openLink": "लिंक खोलें",
+    "dialogBody": "यह PDF एक बाहरी वेबसाइट खोलना चाहता है। जारी रखने से पहले URL जांचें।"
   },
   "linkChoice": {
-    "title": "Open link in your browser?",
-    "body": "This document wants to open an external website. Are you opening it from a trusted source?",
-    "alwaysAllow": "Always allow",
-    "openOnce": "Open once"
+    "title": "लिंक अपने ब्राउज़र में खोलें?",
+    "body": "यह दस्तावेज़ एक बाहरी वेबसाइट खोलना चाहता है। क्या आप इसे किसी विश्वसनीय स्रोत से खोल रहे हैं?",
+    "alwaysAllow": "हमेशा अनुमति दें",
+    "openOnce": "एक बार खोलें"
   },
   "fallbacks": {
-    "ocrUnavailableTitle": "OCR is not available on this computer",
-    "ocrUnavailableMessage": "PDFluent could not start the text-recognition engine. {{reason}}",
-    "ocrFailedMessage": "Text recognition stopped on page {{page}}: {{reason}}",
-    "xfaStaticTitle": "Form filled without recalculation",
-    "xfaStaticMessage": "This build writes XFA field values straight into the form. Field scripts do not run, so calculated totals and fields that appear or hide based on your answer stay as they are.",
-    "featureUnavailableTitle": "'{{feature}}' is not available in this build",
-    "usageRightsInvalidatedTitle": "This document is no longer Reader-enabled",
-    "usageRightsInvalidatedMessage": "Your change was made. It also invalidated the usage-rights signature this PDF carried, which let Adobe Reader fill in and save the form. The text edit stands; the extended rights are gone and cannot be restored by undoing it."
+    "ocrUnavailableTitle": "इस कंप्यूटर पर OCR उपलब्ध नहीं है",
+    "ocrUnavailableMessage": "PDFluent टेक्स्ट-पहचान इंजन शुरू नहीं कर सका। {{reason}}",
+    "ocrFailedMessage": "पृष्ठ {{page}} पर टेक्स्ट पहचान रुक गई: {{reason}}",
+    "xfaStaticTitle": "बिना पुनर्गणना के भरा फ़ॉर्म",
+    "xfaStaticMessage": "यह बिल्ड XFA फ़ील्ड मान सीधे फ़ॉर्म में लिखता है। फ़ील्ड स्क्रिप्ट नहीं चलतीं, इसलिए गणना किए गए कुल योग और आपके उत्तर के आधार पर दिखने या छिपने वाले फ़ील्ड जैसे हैं वैसे ही रहते हैं।",
+    "xfaScriptsNotRunTitle": "फ़ॉर्म की कुछ स्क्रिप्ट नहीं चलाई जातीं",
+    "xfaScriptsNotRunMessage": "आपका उत्तर सहेज लिया गया है। इस फ़ॉर्म में FormCalc स्क्रिप्ट हैं ({{count}} मिलीं) और PDFluent केवल JavaScript स्क्रिप्ट चलाता है। जिन कुल योगों और फ़ील्ड को ये स्क्रिप्ट अपडेट करतीं, वे फ़ॉर्म को Adobe Reader में खोलने तक अपने सहेजे गए मान बनाए रखते हैं।",
+    "xfaFieldRefusedTitle": "फ़ॉर्म ने मान स्वीकार नहीं किया",
+    "xfaFieldReadOnly": "इस फ़ॉर्म में फ़ील्ड “{{field}}” केवल पढ़ने के लिए है और बदला नहीं जा सकता।",
+    "xfaFieldRejected": "फ़ील्ड “{{field}}” यह मान स्वीकार नहीं करता: {{reason}}",
+    "xfaFieldNotFound": "फ़ील्ड “{{field}}” अब फ़ॉर्म में नहीं है। फ़ॉर्म दोबारा लोड किया गया।",
+    "featureUnavailableTitle": "'{{feature}}' इस बिल्ड में उपलब्ध नहीं है",
+    "usageRightsInvalidatedTitle": "यह दस्तावेज़ अब Reader-सक्षम नहीं है",
+    "usageRightsInvalidatedMessage": "आपका बदलाव कर दिया गया। इसने इस PDF में मौजूद उपयोग-अधिकार हस्ताक्षर को भी अमान्य कर दिया, जो Adobe Reader को फ़ॉर्म भरने और सहेजने देता था। टेक्स्ट बदलाव कायम रहेगा; विस्तारित अधिकार चले गए हैं और पूर्ववत करके वापस नहीं लाए जा सकते।",
+    "xfaScriptsFailedTitle": "कुछ फ़ॉर्म स्क्रिप्ट पूरी नहीं हुईं",
+    "xfaScriptsFailedMessage": "आपका उत्तर सहेज लिया गया है, लेकिन ये स्क्रिप्ट पूरी नहीं हुईं, इसलिए उनके सेट किए गए मान गायब हो सकते हैं: {{details}}.",
+    "xfaScriptKind_threw": "त्रुटि हुई",
+    "xfaScriptKind_timeout": "समय समाप्त हो गया",
+    "xfaScriptKind_refused": "सैंडबॉक्स ने अस्वीकार कर दिया"
+  },
+  "signedSave": {
+    "title": "यह दस्तावेज़ हस्ताक्षरित है",
+    "message": "काला करने से वह सामग्री हट जाती है जिसे हस्ताक्षर कवर करता है, इसलिए इसे हस्ताक्षरित मूल पर सहेजा नहीं जा सकता। प्रति सहेजें: प्रति में काला किया हुआ भाग रहता है और हस्ताक्षर नहीं।",
+    "saveCopy": "हस्ताक्षर के बिना प्रति सहेजें…",
+    "cancel": "रद्द करें"
+  },
+  "passwordPrompt": {
+    "title": "यह PDF सुरक्षित है",
+    "message": "{{name}} को खोलने के लिए पासवर्ड दर्ज करें।",
+    "incorrect": "वह पासवर्ड इस PDF को नहीं खोलता। फिर से प्रयास करें।",
+    "label": "पासवर्ड",
+    "open": "खोलें",
+    "cancel": "रद्द करें",
+    "readOnlyTitle": "केवल-पढ़ने के लिए खोला गया",
+    "readOnlyMessage": "इस PDF की अनुमतियाँ परिवर्तन की अनुमति नहीं देतीं। आप इसे पढ़ सकते हैं, और यदि अनुमतियाँ अनुमति दें तो प्रिंट कर सकते हैं। परिवर्तन सहेजने के लिए, स्वामी पासवर्ड से सुरक्षा हटाएँ।"
+  },
+  "a11y": {
+    "searchNextResult": "अगला परिणाम",
+    "searchPrevResult": "पिछला परिणाम"
+  },
+  "feedback": {
+    "title": "PDFluent को बेहतर बनाने में हमारी मदद करें",
+    "intro": "बताइए कि आप क्या करने की कोशिश कर रहे थे। हम हर रिपोर्ट पढ़ते हैं।",
+    "menuLabel": "PDFluent को बेहतर बनाने में मदद करें…",
+    "fromError": "अभी जो समस्या आई, उसके बारे में आप हमें बता सकते हैं।",
+    "areaLabel": "आप क्या करने की कोशिश कर रहे थे?",
+    "area": {
+      "open-view": "दस्तावेज़ खोलना या पढ़ना",
+      "search-copy": "टेक्स्ट खोजना या कॉपी करना",
+      "print": "प्रिंट करें",
+      "edit-text": "टेक्स्ट संपादित करना",
+      "annotate": "हाइलाइट करना, टिप्पणी करना या ड्रॉ करना",
+      "forms": "फ़ॉर्म भरना",
+      "sign": "हस्ताक्षर करना या हस्ताक्षर जाँचना",
+      "redact": "Redact",
+      "pages-organize": "पेज घुमाना, क्रम बदलना, मर्ज करना या विभाजित करना",
+      "convert-export": "कन्वर्ट या एक्सपोर्ट करना",
+      "ocr": "स्कैन में टेक्स्ट पहचानना (OCR)",
+      "pdfa-compliance": "PDF/A",
+      "protect": "पासवर्ड या अनुमतियाँ",
+      "save": "सहेजें",
+      "install-update": "PDFluent इंस्टॉल या अपडेट करना",
+      "other": "कुछ और"
+    },
+    "tryingToPlaceholder": "अपने शब्दों में (वैकल्पिक)",
+    "whatHappenedLabel": "क्या हुआ?",
+    "whatHappenedPlaceholder": "आपने क्या देखा?",
+    "whatHappenedRequired": "बताइए कि क्या हुआ, ताकि हम जान सकें कि कहाँ देखना है।",
+    "expectedLabel": "आपको क्या उम्मीद थी?",
+    "expectedPlaceholder": "वैकल्पिक",
+    "docTypeLabel": "वह किस तरह का दस्तावेज़ था?",
+    "docType": {
+      "none": "कोई दस्तावेज़ शामिल नहीं",
+      "form": "एक फ़ॉर्म",
+      "scanned": "एक स्कैन",
+      "signed": "हस्ताक्षरित दस्तावेज़",
+      "protected": "पासवर्ड से सुरक्षित",
+      "large": "बड़ा (100 से अधिक पेज)",
+      "xfa": "सरकारी या XFA फ़ॉर्म",
+      "other": "कुछ और"
+    },
+    "docTypeUnset": "चुनें…",
+    "pageCountLabel": "पेजों की संख्या",
+    "contextTitle": "आपकी रिपोर्ट के साथ भेजा जाता है",
+    "contextToggle": "सिस्टम विवरण शामिल करें",
+    "contextHint": "वर्ज़न, सिस्टम, भाषा और आख़िरी त्रुटि समस्या दोहराने में हमारी मदद करते हैं। इनमें फ़ाइल नाम, पाथ या दस्तावेज़ की सामग्री शामिल नहीं होती।",
+    "fieldVersion": "PDFluent वर्ज़न",
+    "fieldSystem": "सिस्टम",
+    "fieldLanguage": "भाषा",
+    "fieldLastError": "आख़िरी त्रुटि",
+    "fieldSessions": "सत्र",
+    "notIncluded": "शामिल नहीं",
+    "documentTitle": "दस्तावेज़ साझा करें (वैकल्पिक)",
+    "documentToggle": "खुला दस्तावेज़ इस रिपोर्ट के साथ साझा करें",
+    "documentNone": "कोई दस्तावेज़ खुला नहीं है।",
+    "documentTooLarge": "यह दस्तावेज़ 20 MB से बड़ा है, इसलिए इसे रिपोर्ट के साथ साझा नहीं किया जा सकता।",
+    "documentShared": "यह दस्तावेज़ साझा किया जाएगा।",
+    "documentConfirmTitle": "यह दस्तावेज़ साझा करें?",
+    "documentConfirmText": "यह फ़ाइल PDFluent (Innovation Trigger B.V.) को भेजी जाएगी। इसका उपयोग केवल इस रिपोर्ट की जाँच के लिए होता है, इसे कभी प्रकाशित नहीं किया जाता, कभी प्रशिक्षण के लिए उपयोग नहीं किया जाता, और समस्या ठीक होने के 90 दिनों के भीतर, और किसी भी स्थिति में 12 महीनों के भीतर हटा दिया जाता है।",
+    "documentConfirmFile": "{{name}} ({{size}})",
+    "documentConfirmYes": "यह दस्तावेज़ साझा करें",
+    "documentConfirmNo": "साझा न करें",
+    "contactTitle": "संपर्क में रहें (वैकल्पिक)",
+    "emailLabel": "ईमेल पता",
+    "emailInvalid": "यह ईमेल पते जैसा नहीं लगता।",
+    "consentContact": "PDFluent इस रिपोर्ट के बारे में सवालों के लिए मुझे ईमेल कर सकता है।",
+    "consentFixed": "इसके ठीक होने पर मुझे ईमेल करें।",
+    "contactHint": "आपका पता आपकी रिपोर्ट से अलग संग्रहीत किया जाता है, केवल इस रिपोर्ट के लिए उपयोग होता है, और न्यूज़लेटर या मार्केटिंग के लिए कभी नहीं।",
+    "noEmailHint": "ईमेल पते के बिना भी आपको हमारी ख़बर मिलेगी: जब कोई अपडेट आपकी रिपोर्ट की समस्या ठीक करेगा, तो PDFluent आपको ऐप में बता देगा।",
+    "privacyNotice": "Innovation Trigger B.V. को यह रिपोर्ट PDFluent को बेहतर बनाने के लिए मिलती है। रिपोर्टें अधिकतम 24 महीनों तक रखी जाती हैं। आप अपनी रिपोर्ट कभी भी हटवा सकते हैं।",
+    "privacyLink": "गोपनीयता कथन",
+    "send": "भेजें",
+    "sending": "भेजा जा रहा है…",
+    "cancel": "रद्द करें",
+    "sentTitle": "धन्यवाद!",
+    "sentBody": "आपकी रिपोर्ट हमें मिल गई है। यह उसका नंबर है:",
+    "sentIdHint": "अगर आप अपनी रिपोर्ट के बारे में पूछना चाहते हैं या उसे हटवाना चाहते हैं, तो यह नंबर संभालकर रखें।",
+    "sentNoLocalCopy": "PDFluent इस कंप्यूटर पर यह नंबर याद नहीं रख सका, इसलिए कृपया इसे लिख लें।",
+    "sentDocumentFailed": "आपकी रिपोर्ट मिल गई, लेकिन दस्तावेज़ अपलोड नहीं हो सका। अगर वह ज़रूरी है, तो आप रिपोर्ट को दस्तावेज़ के साथ दोबारा भेज सकते हैं।",
+    "removeReport": "यह रिपोर्ट हटाएँ",
+    "removing": "हटाया जा रहा है…",
+    "removed": "आपकी रिपोर्ट हटा दी गई है।",
+    "removeFailed": "अभी आपकी रिपोर्ट हटाई नहीं जा सकी। बाद में फिर कोशिश करें, या हमें नंबर ईमेल करें।",
+    "failedTitle": "यह नहीं हो पाया",
+    "failedNetwork": "PDFluent सर्वर तक नहीं पहुँच सका। कुछ भी नहीं भेजा गया, और आपका टेक्स्ट अब भी यहीं है।",
+    "failedRateLimited": "आज इस कनेक्शन से बहुत ज़्यादा रिपोर्टें आ चुकी हैं। कृपया कल फिर कोशिश करें।",
+    "failedRejected": "रिपोर्ट स्वीकार नहीं की गई। कृपया फ़ॉर्म जाँचें और फिर कोशिश करें।",
+    "failedServer": "हमारी तरफ़ कुछ गड़बड़ हो गई। आपका टेक्स्ट अब भी यहीं है; कृपया थोड़ी देर में फिर कोशिश करें।",
+    "tryAgain": "फिर कोशिश करें",
+    "fixedTitle": "ठीक हो गया!",
+    "fixedOffered": "वर्ज़न {{version}} आपकी रिपोर्ट {{ids}} की समस्या ठीक करता है। हमें बताने के लिए धन्यवाद।",
+    "fixedAfterUpdate": "आपकी रिपोर्ट {{ids}} इस वर्ज़न में ठीक हो गई है। हमें बताने के लिए धन्यवाद।",
+    "dismiss": "बंद करें"
+  },
+  "openError": {
+    "corrupt": {
+      "title": "यह PDF क्षतिग्रस्त है",
+      "body": "PDFluent इस फ़ाइल को पढ़ नहीं सका। हो सकता है डाउनलोड या कॉपी करते समय यह क्षतिग्रस्त हो गई हो, या इसे बनाने वाले ऐप ने इसे गलत तरीके से लिखा हो। इसे फिर से डाउनलोड या कॉपी करें, या मूल फ़ाइल खोलकर उसे दोबारा PDF के रूप में निर्यात करें।",
+      "action": "दूसरी फ़ाइल खोलें"
+    },
+    "not_pdf": {
+      "title": "यह PDF नहीं है",
+      "body": "PDFluent PDF फ़ाइलें खोलता है। यह फ़ाइल किसी और प्रकार की है, या इसका नाम .pdf पर खत्म नहीं होता। कोई PDF चुनें, या अगर यह फ़ाइल PDF है, तो इसका नाम बदलें ताकि वह .pdf पर खत्म हो।",
+      "action": "दूसरी फ़ाइल खोलें"
+    },
+    "empty": {
+      "title": "यह फ़ाइल खाली है",
+      "body": "फ़ाइल में कोई सामग्री नहीं है (0 बाइट)। हो सकता है डाउनलोड या कॉपी पूरी न हुई हो। इसे फिर से डाउनलोड या कॉपी करें, फिर खोलें।",
+      "action": "दूसरी फ़ाइल खोलें"
+    },
+    "encrypted_needs_password": {
+      "title": "इस PDF के लिए पासवर्ड चाहिए",
+      "body": "यह PDF पासवर्ड से सुरक्षित है। इसे फिर से खोलें और पासवर्ड दर्ज करें। अगर आपको पासवर्ड नहीं पता, तो फ़ाइल भेजने वाले व्यक्ति से पूछें।",
+      "action": "पासवर्ड दर्ज करें"
+    },
+    "wrong_password": {
+      "title": "वह पासवर्ड काम नहीं आया",
+      "body": "यह पासवर्ड इस PDF को नहीं खोलता। टाइपिंग की गलतियाँ और Caps Lock जाँचें, फिर दोबारा कोशिश करें।",
+      "action": "फिर से कोशिश करें"
+    },
+    "unsupported_encryption": {
+      "title": "PDFluent इस तरह की सुरक्षा वाली फ़ाइल नहीं खोल सकता",
+      "body": "यह PDF किसी प्रमाणपत्र या ऐसी सुरक्षा विधि से सुरक्षित है जिसे PDFluent समर्थन नहीं करता, इसलिए यहाँ कोई पासवर्ड इसे नहीं खोल सकता। भेजने वाले से बिना सुरक्षा वाली प्रति माँगें, या पासवर्ड से सुरक्षित प्रति माँगें।",
+      "action": "दूसरी फ़ाइल खोलें"
+    },
+    "too_large": {
+      "title": "यह फ़ाइल बहुत बड़ी है",
+      "body": "यह फ़ाइल उससे बड़ी है जिसे PDFluent सुरक्षित रूप से खोल सकता है। इसे बनाने वाले ऐप में इसे बाँटें या संपीड़ित करें, फिर उसके हिस्से खोलें।",
+      "action": "दूसरी फ़ाइल खोलें"
+    },
+    "too_many_pages": {
+      "title": "इस PDF में बहुत ज़्यादा पृष्ठ हैं",
+      "body": "इस दस्तावेज़ में उससे ज़्यादा पृष्ठ हैं जितने PDFluent एक साथ खोल सकता है। इसे बनाने वाले ऐप में इसे छोटे दस्तावेज़ों में बाँटें, फिर उनके हिस्से खोलें।",
+      "action": "दूसरी फ़ाइल खोलें"
+    },
+    "io_denied": {
+      "title": "PDFluent को यह फ़ाइल पढ़ने की अनुमति नहीं है",
+      "body": "आपके कंप्यूटर ने PDFluent को यह फ़ाइल पढ़ने की अनुमति नहीं दी। फ़ाइल की अनुमतियाँ जाँचें, या इसे दस्तावेज़ जैसे किसी फ़ोल्डर में ले जाएँ, फिर दोबारा कोशिश करें।",
+      "action": "फिर से कोशिश करें"
+    },
+    "not_found": {
+      "title": "यह फ़ाइल नहीं मिली",
+      "body": "हो सकता है फ़ाइल को दूसरी जगह ले जाया गया हो, उसका नाम बदला गया हो या उसे हटा दिया गया हो, या वह ऐसी ड्राइव पर हो जो अब जुड़ी नहीं है। फ़ाइल ढूँढें और उसे फिर से खोलें।",
+      "action": "दूसरी फ़ाइल खोलें"
+    },
+    "unknown": {
+      "title": "यह फ़ाइल नहीं खोली जा सकी",
+      "body": "इस फ़ाइल को खोलते समय कुछ गड़बड़ हो गई। फिर से कोशिश करें। अगर ऐसा बार-बार हो, तो हमें बताएँ ताकि हम इसे ठीक कर सकें।",
+      "action": "फिर से कोशिश करें"
+    },
+    "feedback": "PDFluent को बेहतर बनाने में हमारी मदद करें"
+  },
+  "formBar": {
+    "title": "भरने योग्य प्रपत्र",
+    "fields": "फ़ील्ड: {{count}}",
+    "clickToFill": "किसी फ़ील्ड को भरने के लिए उस पर क्लिक करें।",
+    "noCalculations": "Adobe प्रपत्रों की स्वचालित गणनाएँ नहीं चलाई जातीं।",
+    "autoLinks": "लिंक अपने-आप खोलें",
+    "autoLinksTitle": "लिंक अपने-आप आपके ब्राउज़र में खुलते हैं। इसे बंद करने के लिए क्लिक करें।",
+    "highlight": "फ़ील्ड हाइलाइट करें",
+    "firstField": "पहला फ़ील्ड"
+  },
+  "tabs": {
+    "label": "खुले दस्तावेज़",
+    "close": "{{name}} बंद करें",
+    "unsaved": "सहेजे नहीं गए बदलाव",
+    "new": "अन्य दस्तावेज़ खोलें",
+    "tooManyTitle": "बहुत से दस्तावेज़ खुले हैं",
+    "tooManyMessage": "{{max}} दस्तावेज़ खुले हैं। एक और खोलने के लिए एक बंद करें।"
+  },
+  "formScripts": {
+    "barLabel": "फ़ॉर्म स्क्रिप्ट",
+    "barMessage": "इस फ़ॉर्म में स्क्रिप्ट हैं (उदाहरण के लिए गणनाएँ)। उन्हें चलाएँ?",
+    "barDetail": "स्क्रिप्ट मिलीं: {{count}}.",
+    "runOnce": "इस दस्तावेज़ के लिए चलाएँ",
+    "runAlways": "हमेशा स्क्रिप्ट चलाएँ",
+    "dontRun": "न चलाएँ"
   }
 }

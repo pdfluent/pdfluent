@@ -20,7 +20,9 @@ const qualityWorkflowSource = readFileSync(
 
 describe("compliance and OCR hardening tooling", () => {
   it("defines compliance generation and gate scripts in package.json", () => {
-    expect(packageJsonSource).toContain("\"ocr:manifest\"");
+    // The OCR model manifest went with the Python bridge (J-60); the OCR
+    // component manifest is pinned by scripts/ocr-component/write-manifest.mjs.
+    expect(packageJsonSource).not.toContain("\"ocr:manifest\"");
     expect(packageJsonSource).toContain("\"compliance:generate\"");
     expect(packageJsonSource).toContain("\"compliance:check\"");
   });
@@ -29,7 +31,6 @@ describe("compliance and OCR hardening tooling", () => {
   // which is where they already lived in duplicate. Manual, and the workflow
   // says why: compliance:check exits 2 on this tree today.
   it("runs compliance gate in CI", () => {
-    expect(complianceWorkflowSource).toContain("Generate OCR model manifest");
     expect(complianceWorkflowSource).toContain("Generate compliance inventory");
     expect(complianceWorkflowSource).toContain("Enforce license policy gate");
   });

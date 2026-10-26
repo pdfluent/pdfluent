@@ -1,0 +1,2396 @@
+{
+  "_": [
+    "What the PDFluent editor promises, one entry per feature. The website, the store listings",
+    "and the release gates read this file; nothing else may state what the editor does.",
+    "",
+    "status: promised = gated, every listed test must PASS on every platform it names;",
+    "preview = the same, shown with a Preview label; pending-proof = promised in public and not",
+    "proven yet, pinned in pending_proof_ceiling, which only shrinks; not-offered = said",
+    "plainly that the editor does not do it; retired = no longer said anywhere.",
+    "",
+    "Checked by node scripts/quality/features.mjs --check, gated per platform by --gate in",
+    "quality:macos and quality:windows, published for the site by --publish. See product/README.md.",
+    "Every sentence in copy and limits is published text: it comes through the external-copy",
+    "route, and a digit in it needs a CLAIMS.md id in copy.claims."
+  ],
+  "schema": 2,
+  "groups": [
+    {
+      "id": "pages",
+      "title": "Put the document together"
+    },
+    {
+      "id": "convert",
+      "title": "Change what the file is"
+    },
+    {
+      "id": "sign",
+      "title": "Sign and check signatures"
+    },
+    {
+      "id": "protect",
+      "title": "Control what leaves the building"
+    },
+    {
+      "id": "markup",
+      "title": "Mark up and annotate"
+    },
+    {
+      "id": "read",
+      "title": "Read a long document"
+    },
+    {
+      "id": "work",
+      "title": "Get through the work"
+    },
+    {
+      "id": "edit",
+      "title": "Edit text and objects"
+    },
+    {
+      "id": "forms",
+      "title": "Fill PDF forms"
+    },
+    {
+      "id": "local",
+      "title": "Network, updates and your machine"
+    },
+    {
+      "id": "absent",
+      "title": "What the editor does not do"
+    }
+  ],
+  "pending_proof_ceiling": [
+    "insert-pdf",
+    "ocr",
+    "pdfa-validate",
+    "export-dialog",
+    "office-export",
+    "metadata-edit",
+    "ink",
+    "underline-strikeout",
+    "comment-note",
+    "attach-file",
+    "stamp",
+    "read-invoice",
+    "page-navigation",
+    "outline",
+    "zoom",
+    "fullscreen",
+    "read-aloud",
+    "command-palette",
+    "modes",
+    "undo-redo",
+    "edit-text-line",
+    "edit-text-format",
+    "shapes",
+    "images",
+    "acroform-field-types",
+    "xfa-fill",
+    "offline",
+    "auto-update",
+    "crash-reports",
+    "platforms",
+    "large-files",
+    "edit-text-font-family",
+    "images-edit-existing"
+  ],
+  "features": [
+    {
+      "id": "merge-pdfs",
+      "group": "pages",
+      "journeys": [
+        "J-74"
+      ],
+      "register": [
+        "panels:merge",
+        "tiles:toolbar.merge",
+        "buttons:organize-merge-pdf-btn",
+        "buttons:organize-combine-btn"
+      ],
+      "tests": [
+        {
+          "id": "pdfluent_lib::pdf_engine::tests::op_merge_pdfs_combines_page_counts",
+          "kind": "rust",
+          "platforms": [
+            "macos-arm64",
+            "windows-x64"
+          ]
+        }
+      ],
+      "status": "promised",
+      "limits": [],
+      "copy": {
+        "name": "Merge PDFs",
+        "site": "Combine several PDFs into one file, in the order you drop them in.",
+        "store_bullet": "Merge, split, reorder, rotate, and compress pages",
+        "claims": []
+      },
+      "since": "1.0.0"
+    },
+    {
+      "id": "split-pdf",
+      "group": "pages",
+      "journeys": [
+        "J-74"
+      ],
+      "register": [
+        "panels:split",
+        "tiles:toolbar.split",
+        "buttons:organize-split-btn",
+        "buttons:organize-split-range-btn"
+      ],
+      "tests": [
+        {
+          "id": "pdfluent_lib::pdf_engine::tests::op_split_into_pages_yields_one_pdf_per_page",
+          "kind": "rust",
+          "platforms": [
+            "macos-arm64",
+            "windows-x64"
+          ]
+        }
+      ],
+      "status": "promised",
+      "limits": [],
+      "copy": {
+        "name": "Split a PDF",
+        "site": "Cut a document into separate files, either one file per page or by a page range you type.",
+        "store_bullet": null,
+        "claims": []
+      },
+      "since": "1.0.0"
+    },
+    {
+      "id": "extract-pages",
+      "group": "pages",
+      "journeys": [
+        "J-74"
+      ],
+      "register": [
+        "buttons:organize-export-selection-btn",
+        "buttons:select-all-btn",
+        "buttons:clear-selection-btn"
+      ],
+      "tests": [
+        {
+          "id": "pdfluent_lib::pdf_engine::tests::op_extract_pages_to_file_yields_single_page",
+          "kind": "rust",
+          "platforms": [
+            "macos-arm64",
+            "windows-x64"
+          ]
+        }
+      ],
+      "status": "promised",
+      "limits": [],
+      "copy": {
+        "name": "Extract pages",
+        "site": "Select the pages you want and save just those as a new document.",
+        "store_bullet": null,
+        "claims": []
+      },
+      "since": "1.0.0"
+    },
+    {
+      "id": "reorder-pages",
+      "group": "pages",
+      "journeys": [
+        "J-73"
+      ],
+      "register": [
+        "buttons:organize-apply-order-btn",
+        "buttons:organize-move-left-btn",
+        "buttons:organize-move-right-btn",
+        "buttons:organize-cancel-order-btn"
+      ],
+      "tests": [
+        {
+          "id": "pdfluent_lib::pdf_engine::tests::op_reorder_pages_keeps_document_valid",
+          "kind": "rust",
+          "platforms": [
+            "macos-arm64",
+            "windows-x64"
+          ]
+        }
+      ],
+      "status": "promised",
+      "limits": [],
+      "copy": {
+        "name": "Reorder pages",
+        "site": "Drag pages into the order you want and apply the new order to the file.",
+        "store_bullet": null,
+        "claims": []
+      },
+      "since": "1.0.0"
+    },
+    {
+      "id": "rotate-pages",
+      "group": "pages",
+      "journeys": [
+        "J-73"
+      ],
+      "register": [
+        "tiles:toolbar.rotateLeft",
+        "tiles:toolbar.rotateRight",
+        "buttons:batch-rotate-left-btn",
+        "buttons:batch-rotate-right-btn"
+      ],
+      "tests": [
+        {
+          "id": "pdfluent_lib::pdf_engine::tests::op_rotate_pages_keeps_document_valid",
+          "kind": "rust",
+          "platforms": [
+            "macos-arm64",
+            "windows-x64"
+          ]
+        }
+      ],
+      "status": "promised",
+      "limits": [],
+      "copy": {
+        "name": "Rotate pages",
+        "site": "Turn one page or a whole selection left or right.",
+        "store_bullet": null,
+        "claims": []
+      },
+      "since": "1.0.0"
+    },
+    {
+      "id": "delete-pages",
+      "group": "pages",
+      "journeys": [
+        "J-73"
+      ],
+      "register": [
+        "tiles:toolbar.deletePage",
+        "buttons:batch-delete-btn"
+      ],
+      "tests": [
+        {
+          "id": "pdfluent_lib::pdf_engine::tests::op_delete_pages_reduces_count",
+          "kind": "rust",
+          "platforms": [
+            "macos-arm64",
+            "windows-x64"
+          ]
+        }
+      ],
+      "status": "promised",
+      "limits": [],
+      "copy": {
+        "name": "Delete pages",
+        "site": "Remove pages you do not need, one at a time or as a selection.",
+        "store_bullet": null,
+        "claims": []
+      },
+      "since": "1.0.0"
+    },
+    {
+      "id": "insert-pdf",
+      "group": "pages",
+      "journeys": [
+        "J-73"
+      ],
+      "register": [
+        "tiles:toolbar.insertPage",
+        "buttons:organize-insert-before-btn"
+      ],
+      "tests": [
+        {
+          "id": "tests/journeys/J-73.spec.ts",
+          "kind": "e2e-real-app",
+          "platforms": [
+            "macos-arm64",
+            "windows-x64"
+          ]
+        }
+      ],
+      "status": "pending-proof",
+      "owner_stream": "A",
+      "limits": [],
+      "copy": {
+        "name": "Insert another PDF",
+        "site": "Drop the pages of a second document in at the point you choose.",
+        "store_bullet": null,
+        "claims": []
+      },
+      "since": "1.0.0"
+    },
+    {
+      "id": "compress",
+      "group": "convert",
+      "journeys": [
+        "J-75"
+      ],
+      "register": [
+        "panels:compress",
+        "tiles:toolbar.compress"
+      ],
+      "tests": [
+        {
+          "id": "pdfluent_lib::pdf_engine::tests::op_compress_produces_valid_pdf",
+          "kind": "rust",
+          "platforms": [
+            "macos-arm64",
+            "windows-x64"
+          ]
+        }
+      ],
+      "status": "promised",
+      "limits": [],
+      "copy": {
+        "name": "Compress a PDF",
+        "site": "Make the file smaller before you send it, without uploading it anywhere first.",
+        "store_bullet": null,
+        "claims": []
+      },
+      "since": "1.0.0"
+    },
+    {
+      "id": "ocr",
+      "group": "convert",
+      "journeys": [
+        "J-60",
+        "J-22"
+      ],
+      "register": [
+        "tiles:toolbar.ocrScan",
+        "panels:convert",
+        "modes:convert"
+      ],
+      "tests": [
+        {
+          "id": "tests/journeys/J-60.spec.ts",
+          "kind": "e2e-real-app",
+          "platforms": [
+            "macos-arm64",
+            "windows-x64"
+          ]
+        }
+      ],
+      "status": "pending-proof",
+      "owner_stream": "C",
+      "limits": [
+        "OCR is built into the editor and runs on this computer, with no download. It reads English, Dutch, German, French, Spanish and Italian."
+      ],
+      "copy": {
+        "name": "Run OCR on a scan",
+        "site": "Turn a scanned page into text you can select and search, on your own machine.",
+        "store_bullet": "OCR to make scanned PDFs searchable",
+        "claims": []
+      },
+      "since": "1.0.0",
+      "note": "Owner decision D4 (17-10-2026): OCR runs on Tesseract; the result is written into the PDF as a text layer. Owner decision 19-10: Tesseract and the six language packs are bundled in every build (Mac DMG and site, Windows MSI and Store, Mac App Store), so there is no download and no consent dialog; the limit above replaces the opt-in download wording (CLAIMS B63 obsolete; new wording awaits an ID, docs/BUNDLED_OCR.md)."
+    },
+    {
+      "id": "pdfa-convert",
+      "group": "convert",
+      "journeys": [
+        "J-72"
+      ],
+      "register": [
+        "tiles:toolbar.pdfa",
+        "panels:pdfa",
+        "buttons:convert-pdfa-btn"
+      ],
+      "tests": [
+        {
+          "id": "golden_pdfa::golden_corpus_converts_to_pdfa_2b",
+          "kind": "rust",
+          "platforms": [
+            "macos-arm64",
+            "windows-x64"
+          ]
+        }
+      ],
+      "status": "promised",
+      "limits": [],
+      "copy": {
+        "name": "Convert to PDF/A",
+        "site": "Produce the archival format that record-keeping rules ask for.",
+        "store_bullet": null,
+        "claims": []
+      },
+      "since": "1.0.0"
+    },
+    {
+      "id": "pdfa-validate",
+      "group": "convert",
+      "journeys": [
+        "J-72"
+      ],
+      "register": [
+        "buttons:validate-pdfa-btn",
+        "panels:pdfa"
+      ],
+      "tests": [
+        {
+          "id": "tests/journeys/J-72.spec.ts",
+          "kind": "e2e-real-app",
+          "platforms": [
+            "macos-arm64",
+            "windows-x64"
+          ]
+        }
+      ],
+      "status": "pending-proof",
+      "owner_stream": "A",
+      "limits": [],
+      "copy": {
+        "name": "Validate PDF/A",
+        "site": "Check a document against the archival standard and see what it says, in the same window.",
+        "store_bullet": null,
+        "claims": []
+      },
+      "since": "1.0.0"
+    },
+    {
+      "id": "export-dialog",
+      "group": "convert",
+      "journeys": [
+        "J-70"
+      ],
+      "register": [
+        "palette:export",
+        "shortcuts:export (⌘E / Ctrl+E)"
+      ],
+      "tests": [
+        {
+          "id": "tests/journeys/J-70.spec.ts",
+          "kind": "e2e-real-app",
+          "platforms": [
+            "macos-arm64",
+            "windows-x64"
+          ]
+        }
+      ],
+      "status": "pending-proof",
+      "owner_stream": "A",
+      "limits": [],
+      "copy": {
+        "name": "Export",
+        "site": "Open the export dialog from the toolbar, the command palette, or Ctrl+E.",
+        "store_bullet": null,
+        "claims": []
+      },
+      "since": "1.0.0"
+    },
+    {
+      "id": "office-export",
+      "group": "convert",
+      "journeys": [
+        "J-70",
+        "J-71"
+      ],
+      "register": [],
+      "tests": [
+        {
+          "id": "pdfluent_lib::pdf_engine::tests::op_convert_to_docx_produces_non_empty_output",
+          "kind": "rust",
+          "platforms": [
+            "macos-arm64",
+            "windows-x64"
+          ]
+        },
+        {
+          "id": "pdfluent_lib::pdf_engine::tests::op_convert_to_xlsx_produces_non_empty_output",
+          "kind": "rust",
+          "platforms": [
+            "macos-arm64",
+            "windows-x64"
+          ]
+        },
+        {
+          "id": "pdfluent_lib::pdf_engine::tests::op_convert_to_pptx_produces_non_empty_output",
+          "kind": "rust",
+          "platforms": [
+            "macos-arm64",
+            "windows-x64"
+          ]
+        },
+        {
+          "id": "tests/journeys/J-70.spec.ts",
+          "kind": "e2e-real-app",
+          "platforms": [
+            "macos-arm64",
+            "windows-x64"
+          ]
+        }
+      ],
+      "status": "pending-proof",
+      "owner_stream": "C",
+      "limits": [
+        "Tables may not keep their layout when exported to Word."
+      ],
+      "copy": {
+        "name": "PDF to Word",
+        "site": "Convert PDF to Word, Excel, PowerPoint, image, or PDF/A.",
+        "store_bullet": "Convert to Word, Excel, PowerPoint, image, or PDF/A",
+        "claims": []
+      },
+      "since": "1.0.0",
+      "note": "The Rust tests only prove the output is not empty; a table comes out one glyph per cell in Word (#408). Gated once a test checks table cells and word retention."
+    },
+    {
+      "id": "sign-certificate",
+      "group": "sign",
+      "journeys": [
+        "J-61",
+        "J-64"
+      ],
+      "register": [
+        "buttons:sign-with-certificate",
+        "buttons:sign-cert-pick",
+        "panels:esign",
+        "modes:esign"
+      ],
+      "tests": [
+        {
+          "id": "pdfluent_lib::pdf_engine::tests::op_sign_with_certificate_verifies_after_reopen",
+          "kind": "rust",
+          "platforms": [
+            "macos-arm64",
+            "windows-x64"
+          ]
+        },
+        {
+          "id": "pdfluent_lib::pdf_engine::tests::op_sign_with_the_wrong_password_fails_and_writes_nothing",
+          "kind": "rust",
+          "platforms": [
+            "macos-arm64",
+            "windows-x64"
+          ]
+        },
+        {
+          "id": "signed_documents_keep_their_signatures::sign_then_annotate_then_save_keeps_the_signature_valid",
+          "kind": "rust",
+          "platforms": [
+            "macos-arm64",
+            "windows-x64"
+          ]
+        }
+      ],
+      "status": "promised",
+      "limits": [
+        "The signature is an invisible PAdES signature without a timestamp."
+      ],
+      "copy": {
+        "name": "Sign with your own certificate",
+        "site": "Pick a .p12 or .pfx file you already have and sign the document with it, on this machine.",
+        "store_bullet": "Sign locally with a PAdES digital signature",
+        "claims": [
+          "B27"
+        ]
+      },
+      "since": "1.0.0"
+    },
+    {
+      "id": "verify-signatures",
+      "group": "sign",
+      "journeys": [
+        "J-63"
+      ],
+      "register": [
+        "tiles:toolbar.signature",
+        "panels:esign"
+      ],
+      "tests": [
+        {
+          "id": "pdfluent_lib::pdf_engine::tests::op_sign_with_certificate_verifies_after_reopen",
+          "kind": "rust",
+          "platforms": [
+            "macos-arm64",
+            "windows-x64"
+          ]
+        },
+        {
+          "id": "signed_documents_keep_their_signatures::a_second_edit_and_save_appends_again_and_still_verifies",
+          "kind": "rust",
+          "platforms": [
+            "macos-arm64",
+            "windows-x64"
+          ]
+        }
+      ],
+      "status": "promised",
+      "limits": [],
+      "copy": {
+        "name": "Check the signatures in a file",
+        "site": "See which signatures a document carries and whether they still hold.",
+        "store_bullet": null,
+        "claims": [
+          "B27"
+        ]
+      },
+      "since": "1.0.0"
+    },
+    {
+      "id": "redact",
+      "group": "protect",
+      "journeys": [
+        "J-65"
+      ],
+      "register": [
+        "tiles:toolbar.redact"
+      ],
+      "tests": [
+        {
+          "id": "redaction_leaves_no_trace::search_redaction_leaves_no_trace_in_the_text_fixture",
+          "kind": "rust",
+          "platforms": [
+            "macos-arm64",
+            "windows-x64"
+          ]
+        },
+        {
+          "id": "redaction_leaves_no_trace::area_redaction_removes_the_text_under_the_box_or_refuses",
+          "kind": "rust",
+          "platforms": [
+            "macos-arm64",
+            "windows-x64"
+          ]
+        },
+        {
+          "id": "redaction_leaves_no_trace::applying_redaction_marks_never_reports_success_while_the_text_survives",
+          "kind": "rust",
+          "platforms": [
+            "macos-arm64",
+            "windows-x64"
+          ]
+        },
+        {
+          "id": "redaction_leaves_no_trace::metadata_naming_the_redacted_word_does_not_keep_it",
+          "kind": "rust",
+          "platforms": [
+            "macos-arm64",
+            "windows-x64"
+          ]
+        }
+      ],
+      "status": "promised",
+      "limits": [],
+      "copy": {
+        "name": "Redact",
+        "site": "Black out a passage so the words underneath are gone from the file, not covered up.",
+        "store_bullet": "Redact text permanently and add watermarks",
+        "claims": []
+      },
+      "since": "1.0.0"
+    },
+    {
+      "id": "password-protect",
+      "group": "protect",
+      "journeys": [
+        "J-76",
+        "J-18"
+      ],
+      "register": [
+        "tiles:toolbar.password",
+        "panels:protect"
+      ],
+      "tests": [
+        {
+          "id": "encrypted_documents::encrypting_writes_a_protected_copy_and_leaves_the_open_document_usable",
+          "kind": "rust",
+          "platforms": [
+            "macos-arm64",
+            "windows-x64"
+          ]
+        },
+        {
+          "id": "encrypted_documents::saving_a_protected_document_keeps_it_protected",
+          "kind": "rust",
+          "platforms": [
+            "macos-arm64",
+            "windows-x64"
+          ]
+        },
+        {
+          "id": "encrypted_documents::an_owner_password_only_file_opens_read_only_when_its_permissions_say_so",
+          "kind": "rust",
+          "platforms": [
+            "macos-arm64",
+            "windows-x64"
+          ]
+        },
+        {
+          "id": "encrypted_documents::a_user_password_is_asked_for_and_a_wrong_one_is_told_apart",
+          "kind": "rust",
+          "platforms": [
+            "macos-arm64",
+            "windows-x64"
+          ]
+        }
+      ],
+      "status": "promised",
+      "limits": [],
+      "copy": {
+        "name": "Password-protect a PDF",
+        "site": "Set or remove a password and the permissions that travel with it.",
+        "store_bullet": null,
+        "claims": []
+      },
+      "since": "1.0.0"
+    },
+    {
+      "id": "watermark",
+      "group": "protect",
+      "journeys": [
+        "J-77"
+      ],
+      "register": [
+        "tiles:toolbar.watermark",
+        "panels:watermark"
+      ],
+      "tests": [
+        {
+          "id": "pdfluent_lib::pdf_engine::tests::op_watermark_keeps_document_valid",
+          "kind": "rust",
+          "platforms": [
+            "macos-arm64",
+            "windows-x64"
+          ]
+        }
+      ],
+      "status": "promised",
+      "limits": [],
+      "copy": {
+        "name": "Watermark",
+        "site": "Put a text watermark across every page.",
+        "store_bullet": null,
+        "claims": []
+      },
+      "since": "1.0.0"
+    },
+    {
+      "id": "metadata-edit",
+      "group": "protect",
+      "journeys": [
+        "J-78"
+      ],
+      "register": [
+        "tiles:toolbar.metadata",
+        "panels:metadata"
+      ],
+      "tests": [
+        {
+          "id": "tests/journeys/J-78.spec.ts",
+          "kind": "e2e-real-app",
+          "platforms": [
+            "macos-arm64",
+            "windows-x64"
+          ]
+        }
+      ],
+      "status": "pending-proof",
+      "owner_stream": "A",
+      "limits": [],
+      "copy": {
+        "name": "Edit the document metadata",
+        "site": "Change the title, author and the rest of what a reader's PDF viewer shows in Properties.",
+        "store_bullet": null,
+        "claims": []
+      },
+      "since": "1.0.0"
+    },
+    {
+      "id": "highlight",
+      "group": "markup",
+      "journeys": [
+        "J-50"
+      ],
+      "register": [
+        "rail:highlight",
+        "tiles:toolbar.highlight"
+      ],
+      "tests": [
+        {
+          "id": "pdfluent_lib::pdf_engine::tests::op_add_highlight_annotation_persists",
+          "kind": "rust",
+          "platforms": [
+            "macos-arm64",
+            "windows-x64"
+          ]
+        }
+      ],
+      "status": "promised",
+      "limits": [],
+      "copy": {
+        "name": "Highlight passages",
+        "site": "Highlight a passage on a page. The highlight is saved into the PDF as a standard annotation, so other PDF readers show it too.",
+        "store_bullet": null,
+        "claims": []
+      },
+      "since": "1.0.0"
+    },
+    {
+      "id": "ink",
+      "group": "markup",
+      "journeys": [
+        "J-52"
+      ],
+      "register": [
+        "rail:draw",
+        "tiles:toolbar.freeDraw"
+      ],
+      "tests": [
+        {
+          "id": "tests/journeys/J-52.spec.ts",
+          "kind": "e2e-real-app",
+          "platforms": [
+            "macos-arm64",
+            "windows-x64"
+          ]
+        }
+      ],
+      "status": "pending-proof",
+      "owner_stream": "A",
+      "limits": [],
+      "copy": {
+        "name": "Draw on a page",
+        "site": "Freehand ink, straight onto the document.",
+        "store_bullet": null,
+        "claims": []
+      },
+      "since": "1.0.0"
+    },
+    {
+      "id": "underline-strikeout",
+      "group": "markup",
+      "journeys": [
+        "J-50"
+      ],
+      "register": [
+        "buttons:annotation-tool-underline",
+        "buttons:annotation-tool-strikeout"
+      ],
+      "tests": [
+        {
+          "id": "tests/journeys/J-50.spec.ts",
+          "kind": "e2e-real-app",
+          "platforms": [
+            "macos-arm64",
+            "windows-x64"
+          ]
+        }
+      ],
+      "status": "pending-proof",
+      "owner_stream": "A",
+      "limits": [],
+      "copy": {
+        "name": "Underline and strike through",
+        "site": "Mark a passage the way you would on paper.",
+        "store_bullet": null,
+        "claims": []
+      },
+      "since": "1.0.0"
+    },
+    {
+      "id": "comment-note",
+      "group": "markup",
+      "journeys": [
+        "J-51"
+      ],
+      "register": [
+        "rail:comment",
+        "tiles:toolbar.comment",
+        "tiles:toolbar.note"
+      ],
+      "tests": [
+        {
+          "id": "tests/journeys/J-51.spec.ts",
+          "kind": "e2e-real-app",
+          "platforms": [
+            "macos-arm64",
+            "windows-x64"
+          ]
+        }
+      ],
+      "status": "pending-proof",
+      "owner_stream": "A",
+      "limits": [],
+      "copy": {
+        "name": "Add comments",
+        "site": "Add a comment as a sticky note to a page.",
+        "store_bullet": null,
+        "claims": []
+      },
+      "since": "1.0.0"
+    },
+    {
+      "id": "attach-file",
+      "group": "markup",
+      "journeys": [
+        "J-54"
+      ],
+      "register": [
+        "buttons:annotation-tool-attachment",
+        "panels:tools"
+      ],
+      "tests": [
+        {
+          "id": "tests/journeys/J-54.spec.ts",
+          "kind": "e2e-real-app",
+          "platforms": [
+            "macos-arm64",
+            "windows-x64"
+          ]
+        }
+      ],
+      "status": "pending-proof",
+      "owner_stream": "A",
+      "limits": [],
+      "copy": {
+        "name": "Attach a file",
+        "site": "Carry a second file inside the PDF, and take it out again.",
+        "store_bullet": null,
+        "claims": []
+      },
+      "since": "1.0.0"
+    },
+    {
+      "id": "stamp",
+      "group": "markup",
+      "journeys": [
+        "J-53"
+      ],
+      "register": [
+        "tiles:toolbar.stamp"
+      ],
+      "tests": [
+        {
+          "id": "tests/journeys/J-53.spec.ts",
+          "kind": "e2e-real-app",
+          "platforms": [
+            "macos-arm64",
+            "windows-x64"
+          ]
+        }
+      ],
+      "status": "pending-proof",
+      "owner_stream": "B",
+      "limits": [],
+      "copy": {
+        "name": "Add stamps",
+        "site": "Put a stamp on a page, such as Approved or Draft.",
+        "store_bullet": null,
+        "claims": []
+      },
+      "since": "1.0.0",
+      "note": "Owner stream provisional: no stream has stamp in its brief; toolbar.stamp is NO ACTION. Coordinator to confirm."
+    },
+    {
+      "id": "read-invoice",
+      "group": "markup",
+      "journeys": [
+        "J-7C"
+      ],
+      "register": [
+        "tiles:toolbar.invoice",
+        "panels:invoice"
+      ],
+      "tests": [
+        {
+          "id": "tests/journeys/J-7C.spec.ts",
+          "kind": "e2e-real-app",
+          "platforms": [
+            "macos-arm64",
+            "windows-x64"
+          ]
+        }
+      ],
+      "status": "pending-proof",
+      "owner_stream": "A",
+      "limits": [],
+      "copy": {
+        "name": "Read an invoice",
+        "site": "Pull the fields out of an e-invoice and check them against the rules for one.",
+        "store_bullet": null,
+        "claims": []
+      },
+      "since": "1.0.0"
+    },
+    {
+      "id": "page-navigation",
+      "group": "read",
+      "journeys": [
+        "J-30"
+      ],
+      "register": [
+        "palette:first-page",
+        "palette:last-page",
+        "palette:next-page",
+        "palette:prev-page",
+        "buttons:floating-page-indicator",
+        "shortcuts:prevNextPage (← / →)",
+        "shortcuts:goToPage (⌘G / Ctrl+G)"
+      ],
+      "tests": [
+        {
+          "id": "tests/journeys/J-30.spec.ts",
+          "kind": "e2e-real-app",
+          "platforms": [
+            "macos-arm64",
+            "windows-x64"
+          ]
+        }
+      ],
+      "status": "pending-proof",
+      "owner_stream": "A",
+      "limits": [],
+      "copy": {
+        "name": "Page through the document",
+        "site": "First page, last page, next, previous — by button, by arrow key, or by typing a page number.",
+        "store_bullet": null,
+        "claims": []
+      },
+      "since": "1.0.0"
+    },
+    {
+      "id": "outline",
+      "group": "read",
+      "journeys": [
+        "J-31"
+      ],
+      "register": [
+        "tiles:toolbar.bookmarks",
+        "buttons:v3-outline-item"
+      ],
+      "tests": [
+        {
+          "id": "tests/journeys/J-31.spec.ts",
+          "kind": "e2e-real-app",
+          "platforms": [
+            "macos-arm64",
+            "windows-x64"
+          ]
+        }
+      ],
+      "status": "pending-proof",
+      "owner_stream": "A",
+      "limits": [],
+      "copy": {
+        "name": "Jump by the outline",
+        "site": "Use the document's own bookmarks to move between chapters.",
+        "store_bullet": null,
+        "claims": []
+      },
+      "since": "1.0.0"
+    },
+    {
+      "id": "search-text",
+      "group": "read",
+      "journeys": [
+        "J-32"
+      ],
+      "register": [
+        "tiles:toolbar.searchText"
+      ],
+      "tests": [
+        {
+          "id": "pdfluent_lib::pdf_engine::tests::op_search_text_finds_known_word",
+          "kind": "rust",
+          "platforms": [
+            "macos-arm64",
+            "windows-x64"
+          ]
+        }
+      ],
+      "status": "promised",
+      "limits": [],
+      "copy": {
+        "name": "Search the text",
+        "site": "Find a phrase in the document you have open.",
+        "store_bullet": null,
+        "claims": []
+      },
+      "since": "1.0.0"
+    },
+    {
+      "id": "zoom",
+      "group": "read",
+      "journeys": [
+        "J-30"
+      ],
+      "register": [
+        "buttons:zoom-in-btn",
+        "buttons:zoom-out-btn",
+        "buttons:zoom-fit-width-btn",
+        "buttons:zoom-reset-btn",
+        "shortcuts:fitZoom (⌘/Ctrl + Scroll)"
+      ],
+      "tests": [
+        {
+          "id": "tests/journeys/J-30.spec.ts",
+          "kind": "e2e-real-app",
+          "platforms": [
+            "macos-arm64",
+            "windows-x64"
+          ]
+        }
+      ],
+      "status": "pending-proof",
+      "owner_stream": "A",
+      "limits": [],
+      "copy": {
+        "name": "Zoom and fit",
+        "site": "In, out, back to actual size, or fit to the width of the window.",
+        "store_bullet": null,
+        "claims": []
+      },
+      "since": "1.0.0"
+    },
+    {
+      "id": "fullscreen",
+      "group": "read",
+      "journeys": [
+        "J-35"
+      ],
+      "register": [
+        "tiles:toolbar.fullscreen",
+        "palette:fullscreen",
+        "shortcuts:toggleFullscreen (F11 / ⌘⇧F)"
+      ],
+      "tests": [
+        {
+          "id": "tests/journeys/J-35.spec.ts",
+          "kind": "e2e-real-app",
+          "platforms": [
+            "macos-arm64",
+            "windows-x64"
+          ]
+        }
+      ],
+      "status": "pending-proof",
+      "owner_stream": "A",
+      "limits": [],
+      "copy": {
+        "name": "Full screen",
+        "site": "Drop the interface and read the page on its own.",
+        "store_bullet": null,
+        "claims": []
+      },
+      "since": "1.0.0"
+    },
+    {
+      "id": "read-aloud",
+      "group": "read",
+      "journeys": [
+        "J-35"
+      ],
+      "register": [
+        "tiles:toolbar.readAloud",
+        "buttons:read-aloud-btn"
+      ],
+      "tests": [
+        {
+          "id": "tests/journeys/J-35.spec.ts",
+          "kind": "e2e-real-app",
+          "platforms": [
+            "macos-arm64",
+            "windows-x64"
+          ]
+        }
+      ],
+      "status": "pending-proof",
+      "owner_stream": "A",
+      "limits": [],
+      "copy": {
+        "name": "Read aloud",
+        "site": "Have the page read to you by the voice your operating system already has.",
+        "store_bullet": null,
+        "claims": []
+      },
+      "since": "1.0.0"
+    },
+    {
+      "id": "command-palette",
+      "group": "work",
+      "journeys": [
+        "J-38"
+      ],
+      "register": [
+        "shortcuts:commandPalette (⌘K / Ctrl+K)",
+        "palette:shortcut-sheet",
+        "shortcuts:thisOverview (⌘? / Ctrl+?)"
+      ],
+      "tests": [
+        {
+          "id": "tests/journeys/J-38.spec.ts",
+          "kind": "e2e-real-app",
+          "platforms": [
+            "macos-arm64",
+            "windows-x64"
+          ]
+        }
+      ],
+      "status": "pending-proof",
+      "owner_stream": "A",
+      "limits": [],
+      "copy": {
+        "name": "Command palette",
+        "site": "Ctrl+K, then type the name of the thing you want; the shortcut sheet lists the rest.",
+        "store_bullet": null,
+        "claims": []
+      },
+      "since": "1.0.0"
+    },
+    {
+      "id": "modes",
+      "group": "work",
+      "journeys": [
+        "J-38",
+        "J-91"
+      ],
+      "register": [
+        "palette:mode-read",
+        "palette:mode-review",
+        "palette:mode-organize",
+        "palette:mode-convert",
+        "palette:mode-sign",
+        "palette:mode-forms",
+        "palette:mode-protect",
+        "shortcuts:switchMode (1 – 8)"
+      ],
+      "tests": [
+        {
+          "id": "tests/journeys/J-91.spec.ts",
+          "kind": "e2e-real-app",
+          "platforms": [
+            "macos-arm64",
+            "windows-x64"
+          ]
+        }
+      ],
+      "status": "pending-proof",
+      "owner_stream": "A",
+      "limits": [],
+      "copy": {
+        "name": "Switch modes",
+        "site": "Read, review, organise, convert, sign, forms and protect are separate rooms, and the number keys move between them.",
+        "store_bullet": null,
+        "claims": []
+      },
+      "since": "1.0.0"
+    },
+    {
+      "id": "multiple-documents",
+      "group": "work",
+      "journeys": [
+        "J-90"
+      ],
+      "register": [],
+      "tests": [
+        {
+          "id": "document_sessions::undo_in_one_document_does_not_touch_the_other",
+          "kind": "rust",
+          "platforms": [
+            "macos-arm64",
+            "windows-x64"
+          ]
+        },
+        {
+          "id": "document_sessions::each_document_has_its_own_undo_and_redo_stack",
+          "kind": "rust",
+          "platforms": [
+            "macos-arm64",
+            "windows-x64"
+          ]
+        },
+        {
+          "id": "document_sessions::the_unsaved_flag_belongs_to_its_document",
+          "kind": "rust",
+          "platforms": [
+            "macos-arm64",
+            "windows-x64"
+          ]
+        },
+        {
+          "id": "document_sessions::save_goes_to_the_path_of_the_document_on_screen",
+          "kind": "rust",
+          "platforms": [
+            "macos-arm64",
+            "windows-x64"
+          ]
+        },
+        {
+          "id": "document_sessions::closing_one_document_leaves_the_other_with_its_edits_and_undo",
+          "kind": "rust",
+          "platforms": [
+            "macos-arm64",
+            "windows-x64"
+          ]
+        },
+        {
+          "id": "document_sessions::the_same_file_opened_twice_gives_two_independent_documents",
+          "kind": "rust",
+          "platforms": [
+            "macos-arm64",
+            "windows-x64"
+          ]
+        },
+        {
+          "id": "src/viewer/tabs/__tests__/tabState.test.ts",
+          "kind": "unit-behaviour",
+          "platforms": [
+            "macos-arm64",
+            "windows-x64"
+          ]
+        },
+        {
+          "id": "src/viewer/state/__tests__/closeGuard.test.ts",
+          "kind": "unit-behaviour",
+          "platforms": [
+            "macos-arm64",
+            "windows-x64"
+          ]
+        }
+      ],
+      "status": "promised",
+      "limits": [
+        "Documents that are not on screen and have nothing unsaved are closed in the background to save memory. They open again from their file, on the page you left, when you select their tab.",
+        "There is a limit on how many documents can be open at once."
+      ],
+      "copy": {
+        "name": "Several documents at once",
+        "site": "Keep more than one document open, each in its own tab with its own undo history and its own unsaved changes. Opening a file that is already open brings its tab to the front.",
+        "store_bullet": null,
+        "claims": []
+      },
+      "since": "1.1.0"
+    },
+    {
+      "id": "undo-redo",
+      "group": "work",
+      "journeys": [
+        "J-85"
+      ],
+      "register": [
+        "buttons:undo-btn",
+        "buttons:redo-btn"
+      ],
+      "tests": [
+        {
+          "id": "tests/journeys/J-85.spec.ts",
+          "kind": "e2e-real-app",
+          "platforms": [
+            "macos-arm64",
+            "windows-x64"
+          ]
+        }
+      ],
+      "status": "pending-proof",
+      "owner_stream": "B",
+      "limits": [],
+      "copy": {
+        "name": "Undo and redo",
+        "site": "Step back out of anything you just did to the document.",
+        "store_bullet": null,
+        "claims": []
+      },
+      "since": "1.0.0",
+      "note": "Today undo covers form fields only (useFormFields.ts); text, annotations and page changes are not undoable."
+    },
+    {
+      "id": "save",
+      "group": "work",
+      "journeys": [
+        "J-80",
+        "J-83"
+      ],
+      "register": [
+        "buttons:save-btn",
+        "buttons:save-as-btn",
+        "palette:save-as",
+        "shortcuts:save (⌘S / Ctrl+S)"
+      ],
+      "tests": [
+        {
+          "id": "save_is_atomic::saving_over_the_document_replaces_it_and_leaves_nothing_beside_it",
+          "kind": "rust",
+          "platforms": [
+            "macos-arm64",
+            "windows-x64"
+          ]
+        },
+        {
+          "id": "save_is_atomic::a_save_that_cannot_happen_leaves_the_original_and_keeps_the_document_dirty",
+          "kind": "rust",
+          "platforms": [
+            "macos-arm64",
+            "windows-x64"
+          ]
+        },
+        {
+          "id": "save_is_atomic::a_read_only_document_is_refused_not_replaced",
+          "kind": "rust",
+          "platforms": [
+            "macos-arm64",
+            "windows-x64"
+          ]
+        },
+        {
+          "id": "save_is_atomic::the_save_writes_a_new_file_instead_of_rewriting_the_old_one",
+          "kind": "rust",
+          "platforms": [
+            "macos-arm64",
+            "windows-x64"
+          ]
+        }
+      ],
+      "status": "promised",
+      "limits": [],
+      "copy": {
+        "name": "Save and save as",
+        "site": "Write the document back where it came from, or somewhere else.",
+        "store_bullet": null,
+        "claims": []
+      },
+      "since": "1.0.0"
+    },
+    {
+      "id": "print",
+      "group": "work",
+      "journeys": [
+        "J-34"
+      ],
+      "register": [
+        "palette:print"
+      ],
+      "tests": [
+        {
+          "id": "print_copy_is_the_current_document::the_print_copy_carries_the_unsaved_edits_and_nothing_else",
+          "kind": "rust",
+          "platforms": [
+            "macos-arm64",
+            "windows-x64"
+          ]
+        },
+        {
+          "id": "print_copy_is_the_current_document::a_protected_document_that_forbids_printing_is_refused",
+          "kind": "rust",
+          "platforms": [
+            "macos-arm64",
+            "windows-x64"
+          ]
+        }
+      ],
+      "status": "promised",
+      "limits": [],
+      "copy": {
+        "name": "Print",
+        "site": "Send the open document to a printer.",
+        "store_bullet": null,
+        "claims": []
+      },
+      "since": "1.0.0"
+    },
+    {
+      "id": "edit-text-line",
+      "group": "edit",
+      "journeys": [
+        "J-40",
+        "J-41"
+      ],
+      "register": [
+        "tiles:toolbar.editText",
+        "panels:edit",
+        "modes:edit"
+      ],
+      "tests": [
+        {
+          "id": "golden_roundtrip::golden_corpus_survives_open_save_and_edit_save",
+          "kind": "rust",
+          "platforms": [
+            "macos-arm64",
+            "windows-x64"
+          ]
+        },
+        {
+          "id": "tests/journeys/J-40.spec.ts",
+          "kind": "e2e-real-app",
+          "platforms": [
+            "macos-arm64",
+            "windows-x64"
+          ]
+        },
+        {
+          "id": "tests/journeys/J-41.spec.ts",
+          "kind": "e2e-real-app",
+          "platforms": [
+            "macos-arm64",
+            "windows-x64"
+          ]
+        }
+      ],
+      "status": "pending-proof",
+      "owner_stream": "B",
+      "limits": [
+        "Text is edited one line at a time. A paragraph that runs over several lines cannot be edited yet."
+      ],
+      "copy": {
+        "name": "Edit text in place",
+        "site": "Click a line and rewrite it. Fix a typo in a contract or update a figure without exporting to another tool and back.",
+        "store_bullet": "Edit text directly inside the PDF, including white text on coloured pages",
+        "claims": []
+      },
+      "since": "1.0.0",
+      "note": "Typing a digit while editing switches the mode (#642, J-41); the UI path has no test (toolbar.editText UNTESTED)."
+    },
+    {
+      "id": "edit-text-format",
+      "group": "edit",
+      "journeys": [
+        "J-43"
+      ],
+      "register": [
+        "panels:edit"
+      ],
+      "tests": [
+        {
+          "id": "tests/journeys/J-43.spec.ts",
+          "kind": "e2e-real-app",
+          "platforms": [
+            "macos-arm64",
+            "windows-x64"
+          ]
+        }
+      ],
+      "status": "pending-proof",
+      "owner_stream": "B",
+      "limits": [],
+      "copy": {
+        "name": "Change text size and colour",
+        "site": "While editing a line of text you can change its size and colour.",
+        "store_bullet": null,
+        "claims": []
+      },
+      "since": "1.0.0",
+      "note": "Font-family change is its own feature (edit-text-font-family): stream B removed the control on 18-10."
+    },
+    {
+      "id": "edit-text-font-family",
+      "group": "edit",
+      "journeys": [
+        "J-43"
+      ],
+      "register": [],
+      "tests": [
+        {
+          "id": "tests/journeys/J-43.spec.ts",
+          "kind": "e2e-real-app",
+          "platforms": [
+            "macos-arm64",
+            "windows-x64"
+          ]
+        }
+      ],
+      "status": "pending-proof",
+      "owner_stream": "B",
+      "limits": [
+        "Changing the typeface of a line is not available yet."
+      ],
+      "copy": {
+        "name": "Change the typeface",
+        "site": "Changing the typeface of a line of text is not available yet; size and colour are.",
+        "store_bullet": null,
+        "claims": []
+      },
+      "since": null,
+      "note": "Stream B removed the font-family control (18-10). Comes back with a test or is retired."
+    },
+    {
+      "id": "shapes",
+      "group": "edit",
+      "journeys": [
+        "J-46"
+      ],
+      "register": [],
+      "tests": [
+        {
+          "id": "tests/journeys/J-46.spec.ts",
+          "kind": "e2e-real-app",
+          "platforms": [
+            "macos-arm64",
+            "windows-x64"
+          ]
+        }
+      ],
+      "status": "pending-proof",
+      "owner_stream": "B",
+      "limits": [],
+      "copy": {
+        "name": "Add shapes",
+        "site": "Add shapes such as rectangles and lines to a page.",
+        "store_bullet": null,
+        "claims": []
+      },
+      "since": "1.0.0",
+      "note": "Owner stream provisional: the rectangle cannot be selected in the shell today. Coordinator to confirm."
+    },
+    {
+      "id": "images",
+      "group": "edit",
+      "journeys": [
+        "J-45"
+      ],
+      "register": [
+        "tiles:toolbar.image"
+      ],
+      "tests": [
+        {
+          "id": "tests/journeys/J-45.spec.ts",
+          "kind": "e2e-real-app",
+          "platforms": [
+            "macos-arm64",
+            "windows-x64"
+          ]
+        }
+      ],
+      "status": "pending-proof",
+      "owner_stream": "B",
+      "limits": [],
+      "copy": {
+        "name": "Add images",
+        "site": "Add an image to a page.",
+        "store_bullet": null,
+        "claims": []
+      },
+      "since": "1.0.0",
+      "note": "Owner stream provisional: there is no image command; toolbar.image is NO ACTION. Coordinator to confirm. Images are added as stamp annotations (stream B, 18-10). Moving or replacing an image already in the PDF is images-edit-existing."
+    },
+    {
+      "id": "images-edit-existing",
+      "group": "edit",
+      "journeys": [
+        "J-45"
+      ],
+      "register": [],
+      "tests": [
+        {
+          "id": "tests/journeys/J-45.spec.ts",
+          "kind": "e2e-real-app",
+          "platforms": [
+            "macos-arm64",
+            "windows-x64"
+          ]
+        }
+      ],
+      "status": "pending-proof",
+      "owner_stream": "B",
+      "limits": [
+        "Moving or replacing an image that is already in the PDF is not available yet."
+      ],
+      "copy": {
+        "name": "Edit existing images",
+        "site": "Moving or replacing an image that is already in the PDF is not available yet.",
+        "store_bullet": null,
+        "claims": []
+      },
+      "since": null,
+      "note": "No command exists for existing image objects (plan J-45)."
+    },
+    {
+      "id": "acroform-fill",
+      "group": "forms",
+      "journeys": [
+        "J-56"
+      ],
+      "register": [
+        "palette:mode-forms"
+      ],
+      "tests": [
+        {
+          "id": "pdfluent_lib::pdf_engine::tests::acroform_fill_save_reopens_with_value",
+          "kind": "rust",
+          "platforms": [
+            "macos-arm64",
+            "windows-x64"
+          ]
+        }
+      ],
+      "status": "promised",
+      "limits": [
+        "Scripts inside a form, such as automatic calculations and validation, are not run."
+      ],
+      "copy": {
+        "name": "Fill standard forms",
+        "site": "Type into the text fields of a standard PDF form (AcroForm) and save. The values are still there when the file is opened again.",
+        "store_bullet": null,
+        "claims": []
+      },
+      "since": "1.0.0"
+    },
+    {
+      "id": "acroform-field-types",
+      "group": "forms",
+      "journeys": [
+        "J-56"
+      ],
+      "register": [],
+      "tests": [
+        {
+          "id": "tests/journeys/J-56.spec.ts",
+          "kind": "e2e-real-app",
+          "platforms": [
+            "macos-arm64",
+            "windows-x64"
+          ]
+        }
+      ],
+      "status": "pending-proof",
+      "owner_stream": "A",
+      "limits": [],
+      "copy": {
+        "name": "Fill every field type",
+        "site": "Every standard form field type can be filled: checkboxes, radio buttons, drop-down lists and list boxes, as well as text fields.",
+        "store_bullet": null,
+        "claims": []
+      },
+      "since": "1.0.0",
+      "note": "Only a text field has a Rust test; checkbox, radio, combo and list need one each."
+    },
+    {
+      "id": "xfa-view",
+      "group": "forms",
+      "journeys": [
+        "J-21"
+      ],
+      "register": [],
+      "tests": [
+        {
+          "id": "print_copy_is_the_current_document::an_xfa_form_prints_as_it_is_shown_not_as_its_placeholder_page",
+          "kind": "rust",
+          "platforms": [
+            "macos-arm64",
+            "windows-x64"
+          ]
+        }
+      ],
+      "status": "promised",
+      "limits": [],
+      "copy": {
+        "name": "Open XFA forms",
+        "site": "The editor opens XFA forms (dynamic forms used by some tax, government and bank paperwork) that many PDF readers show as a blank page or an Adobe Reader notice.",
+        "store_bullet": null,
+        "claims": []
+      },
+      "since": "1.0.0"
+    },
+    {
+      "id": "xfa-fill",
+      "group": "forms",
+      "journeys": [
+        "J-59"
+      ],
+      "register": [],
+      "tests": [
+        {
+          "id": "tests/journeys/J-59-fill-and-flatten-an-xfa-form.e2e.ts",
+          "kind": "e2e-real-app",
+          "platforms": [
+            "macos-arm64",
+            "windows-x64"
+          ]
+        },
+        {
+          "id": "pdfluent_lib::pdf_engine::tests::xfa_commit_recalculates_a_dependent_field",
+          "kind": "rust",
+          "platforms": [
+            "macos-arm64",
+            "windows-x64"
+          ]
+        },
+        {
+          "id": "pdfluent_lib::pdf_engine::tests::xfa_commit_to_a_read_only_field_is_refused_with_a_code",
+          "kind": "rust",
+          "platforms": [
+            "macos-arm64",
+            "windows-x64"
+          ]
+        },
+        {
+          "id": "src/viewer/hooks/__tests__/useXfaFormModel.commit.test.ts",
+          "kind": "unit-behaviour",
+          "platforms": [
+            "macos-arm64",
+            "windows-x64"
+          ]
+        }
+      ],
+      "status": "pending-proof",
+      "owner_stream": "B",
+      "limits": [
+        "Scripts written in JavaScript run; scripts written in FormCalc do not, and the editor says so when a form has them.",
+        "Adding or removing repeating rows is not supported."
+      ],
+      "copy": {
+        "name": "Fill XFA forms",
+        "site": "Filling in XFA forms and saving them is being finished. Today XFA forms open for reading.",
+        "store_bullet": null,
+        "claims": []
+      },
+      "since": "1.0.0",
+      "note": "Filling goes through the engine's commit loop (xfa-interactive, a default feature; the Mac App Store build leaves it out). Reached in code and tests on 19-10; stays pending-proof until J-59 and the Rust tests pass on both platforms with the engine pin moved past #406. Then flip to promised and drop it from pending_proof_ceiling."
+    },
+    {
+      "id": "form-scripts-consent",
+      "group": "forms",
+      "journeys": [
+        "J-97"
+      ],
+      "register": [],
+      "tests": [
+        {
+          "id": "pdfluent_lib::script_consent::tests::a_closed_guard_never_calls_the_script",
+          "kind": "rust",
+          "platforms": [
+            "macos-arm64",
+            "windows-x64"
+          ]
+        },
+        {
+          "id": "pdfluent_lib::pdf_engine::tests::an_xfa_commit_without_permission_writes_the_value_and_runs_no_script",
+          "kind": "rust",
+          "platforms": [
+            "macos-arm64",
+            "windows-x64"
+          ]
+        },
+        {
+          "id": "form_scripts_consent::nothing_is_calculated_without_permission",
+          "kind": "rust",
+          "platforms": [
+            "macos-arm64",
+            "windows-x64"
+          ]
+        },
+        {
+          "id": "form_scripts_consent::print_and_save_run_no_script",
+          "kind": "rust",
+          "platforms": [
+            "macos-arm64",
+            "windows-x64"
+          ]
+        },
+        {
+          "id": "pdfluent_lib::form_scripts_policy::tests::a_never_policy_refuses_the_grant_and_nothing_else_does",
+          "kind": "rust",
+          "platforms": [
+            "macos-arm64",
+            "windows-x64"
+          ]
+        },
+        {
+          "id": "src/viewer/state/__tests__/scriptConsent.test.ts",
+          "kind": "unit-behaviour",
+          "platforms": [
+            "macos-arm64",
+            "windows-x64"
+          ]
+        },
+        {
+          "id": "src/viewer/hooks/__tests__/useFormScriptConsent.test.ts",
+          "kind": "unit-behaviour",
+          "platforms": [
+            "macos-arm64",
+            "windows-x64"
+          ]
+        },
+        {
+          "id": "src/viewer/components/__tests__/scriptConsentBar.test.ts",
+          "kind": "unit-behaviour",
+          "platforms": [
+            "macos-arm64",
+            "windows-x64"
+          ]
+        }
+      ],
+      "status": "promised",
+      "limits": [],
+      "copy": {
+        "name": "Form scripts run only with your permission",
+        "site": "A form can carry scripts, such as calculations. They run only after you agree, for this document or always. Until then the form opens with its stored values and you can still fill it in.",
+        "store_bullet": null,
+        "claims": []
+      },
+      "since": "1.1.0"
+    },
+    {
+      "id": "offline",
+      "group": "local",
+      "journeys": [
+        "J-A0"
+      ],
+      "register": [],
+      "tests": [
+        {
+          "id": "tests/journeys/J-A0.spec.ts",
+          "kind": "e2e-real-app",
+          "platforms": [
+            "macos-arm64",
+            "windows-x64"
+          ]
+        }
+      ],
+      "status": "pending-proof",
+      "owner_stream": "A",
+      "limits": [],
+      "copy": {
+        "name": "Work offline",
+        "site": "Opening, editing, signing, converting, redacting and saving a document all happen on your computer. None of it makes a network connection, and the document itself never goes over the network.",
+        "store_bullet": "Runs fully offline. No account, no upload, no tracking",
+        "claims": [
+          "B09",
+          "B30"
+        ]
+      },
+      "since": "1.0.0",
+      "note": "S3 observed offline on macOS only; Windows S3 was SKIPPED in 1.0.0, and tests/offline-endpoint-allowlist.test.ts is excluded on win32. B30 no longer needs an OCR exception: the OCR component download is gone (decision 19-10), so the opt-in endpoint is not part of the build."
+    },
+    {
+      "id": "update-check",
+      "group": "local",
+      "journeys": [
+        "J-A2"
+      ],
+      "register": [
+        "palette:check-for-updates",
+        "palette:open-settings"
+      ],
+      "tests": [
+        {
+          "id": "tests/startup-update-check-gate.test.ts::automatic startup update check — the setting decides",
+          "kind": "unit-behaviour",
+          "platforms": [
+            "macos-arm64",
+            "windows-x64"
+          ]
+        }
+      ],
+      "status": "promised",
+      "limits": [],
+      "copy": {
+        "name": "Check for updates",
+        "site": "When it starts, the editor checks whether a new version exists. That automatic check can be turned off in Settings; the Check for updates command still works by hand.",
+        "store_bullet": null,
+        "claims": [
+          "B22"
+        ]
+      },
+      "since": "1.0.0"
+    },
+    {
+      "id": "auto-update",
+      "group": "local",
+      "journeys": [
+        "J-A1"
+      ],
+      "register": [],
+      "tests": [
+        {
+          "id": "tests/journeys/J-A1.spec.ts",
+          "kind": "e2e-real-app",
+          "platforms": [
+            "macos-arm64",
+            "windows-x64"
+          ]
+        }
+      ],
+      "status": "pending-proof",
+      "owner_stream": "A",
+      "limits": [],
+      "copy": {
+        "name": "Install updates",
+        "site": "When a new version is available, the editor asks you first, then downloads the signed update and installs it.",
+        "store_bullet": null,
+        "claims": []
+      },
+      "since": "1.0.0"
+    },
+    {
+      "id": "crash-reports",
+      "group": "local",
+      "journeys": [
+        "J-A6"
+      ],
+      "register": [],
+      "tests": [
+        {
+          "id": "tests/journeys/J-A6.spec.ts",
+          "kind": "e2e-real-app",
+          "platforms": [
+            "macos-arm64",
+            "windows-x64"
+          ]
+        }
+      ],
+      "status": "pending-proof",
+      "owner_stream": "D",
+      "limits": [],
+      "copy": {
+        "name": "Crash reports",
+        "site": "Crash reports are off until you switch them on in Settings. A report contains the app version, the operating system, the interface language, what you typed and, for a crash, a cleaned-up stack trace, but never the document.",
+        "store_bullet": null,
+        "claims": [
+          "B01",
+          "B21"
+        ]
+      },
+      "since": "1.0.0",
+      "note": "The report endpoint has no DNS record and the worker is not deployed (J-A6); the feedback lane makes it true."
+    },
+    {
+      "id": "feedback-in-app",
+      "group": "local",
+      "journeys": [
+        "J-A7"
+      ],
+      "register": [],
+      "tests": [
+        {
+          "id": "src/lib/feedback/__tests__/feedback.test.ts::submitFeedback",
+          "kind": "unit-behaviour",
+          "platforms": [
+            "macos-arm64",
+            "windows-x64"
+          ]
+        },
+        {
+          "id": "src/lib/feedback/__tests__/feedback.test.ts::buildFeedbackPayload",
+          "kind": "unit-behaviour",
+          "platforms": [
+            "macos-arm64",
+            "windows-x64"
+          ]
+        },
+        {
+          "id": "tests/report-worker-feedback.test.ts",
+          "kind": "unit-behaviour",
+          "platforms": [
+            "macos-arm64",
+            "windows-x64"
+          ]
+        },
+        {
+          "id": "pdfluent_lib::feedback::tests::the_open_document_is_described_and_read",
+          "kind": "rust",
+          "platforms": [
+            "macos-arm64",
+            "windows-x64"
+          ]
+        }
+      ],
+      "status": "promised",
+      "limits": [],
+      "copy": {
+        "name": "Help us improve PDFluent",
+        "site": "Help → Help us improve PDFluent sends a report only when you press Send. You see the system details first and can leave them out; the open document and your email address go along only if you choose.",
+        "store_bullet": null,
+        "claims": []
+      },
+      "since": "1.0.1",
+      "note": "The real-app journey J-A7 is not yet driven on the artefact (stream A); the form itself is covered by tests/e2e/feedback-form.spec.ts against the browser build. copy.site is a factual draft; it goes through DeepSeek and the Humanizer before the site renders it."
+    },
+    {
+      "id": "languages",
+      "group": "local",
+      "journeys": [
+        "J-03"
+      ],
+      "register": [],
+      "tests": [
+        {
+          "id": "tests/i18n-locale-detection.test.ts",
+          "kind": "unit-behaviour",
+          "platforms": [
+            "macos-arm64",
+            "windows-x64"
+          ]
+        }
+      ],
+      "status": "promised",
+      "limits": [],
+      "copy": {
+        "name": "Interface languages",
+        "site": "The interface is available in 27 languages and starts in the language of your system.",
+        "store_bullet": null,
+        "claims": [
+          "B26"
+        ]
+      },
+      "since": "1.0.0"
+    },
+    {
+      "id": "platforms",
+      "group": "local",
+      "journeys": [
+        "J-01",
+        "J-02"
+      ],
+      "register": [],
+      "tests": [
+        {
+          "id": "tests/journeys/J-01.spec.ts",
+          "kind": "e2e-real-app",
+          "platforms": [
+            "macos-arm64",
+            "windows-x64"
+          ]
+        },
+        {
+          "id": "tests/journeys/J-02.spec.ts",
+          "kind": "e2e-real-app",
+          "platforms": [
+            "macos-arm64",
+            "windows-x64"
+          ]
+        }
+      ],
+      "status": "pending-proof",
+      "owner_stream": "A",
+      "limits": [],
+      "copy": {
+        "name": "Mac and Windows",
+        "site": "The macOS app is one universal build that runs natively on Apple Silicon and Intel Macs, signed and notarised by Apple. There is also a Windows version.",
+        "store_bullet": null,
+        "claims": [
+          "B39",
+          "B40"
+        ]
+      },
+      "since": "1.0.0"
+    },
+    {
+      "id": "large-files",
+      "group": "local",
+      "journeys": [
+        "J-16"
+      ],
+      "register": [],
+      "tests": [
+        {
+          "id": "tests/journeys/J-16.spec.ts",
+          "kind": "e2e-real-app",
+          "platforms": [
+            "macos-arm64",
+            "windows-x64"
+          ]
+        }
+      ],
+      "status": "pending-proof",
+      "owner_stream": "A",
+      "limits": [],
+      "copy": {
+        "name": "Large files",
+        "site": "The editor sets no page or file-size limit of its own. The PDF engine enforces safety limits against malicious files; those are listed on the security page.",
+        "store_bullet": null,
+        "claims": []
+      },
+      "since": "1.0.0",
+      "note": "No measurement on the artefact; the engine limits on /security carry no CLAIMS.md id yet."
+    },
+    {
+      "id": "create-pdf",
+      "group": "absent",
+      "journeys": [
+        "J-79"
+      ],
+      "register": [],
+      "tests": [],
+      "status": "not-offered",
+      "limits": [],
+      "copy": {
+        "name": "Make a PDF from another file",
+        "site": "Making a PDF out of a Word file. It converts out of PDF, not into it.",
+        "store_bullet": null,
+        "claims": []
+      },
+      "since": null
+    },
+    {
+      "id": "compare",
+      "group": "absent",
+      "journeys": [
+        "J-7A"
+      ],
+      "register": [
+        "tiles:toolbar.compare"
+      ],
+      "tests": [],
+      "status": "not-offered",
+      "limits": [],
+      "copy": {
+        "name": "Compare versions",
+        "site": "There is no compare view for comparing two versions of a document side by side.",
+        "store_bullet": null,
+        "claims": []
+      },
+      "since": null
+    },
+    {
+      "id": "pii-detection",
+      "group": "protect",
+      "journeys": [
+        "J-66"
+      ],
+      "register": [],
+      "tests": [
+        {
+          "id": "tests/journeys/J-66.spec.ts",
+          "kind": "e2e-real-app",
+          "platforms": [
+            "macos-arm64",
+            "windows-x64"
+          ]
+        }
+      ],
+      "status": "not-offered",
+      "limits": [
+        "Finds patterns (IBANs, email addresses, phone numbers); it does not recognise names."
+      ],
+      "copy": {
+        "name": "Find personal data to redact",
+        "site": "Search for personal data such as IBANs, email addresses and phone numbers, and redact every match at once.",
+        "store_bullet": null,
+        "claims": []
+      },
+      "since": null,
+      "note": "Planned, not in 1.1.0 (owner decision 19-10): the code is kept behind the cargo feature `pii` and the build flag VITE_PII_ENABLED, both off in a release build; scripts/ci/no-pii-in-release.mjs checks the bundle. The promise stays off the site until it ships."
+    },
+    {
+      "id": "edit-text-paragraph",
+      "group": "absent",
+      "journeys": [
+        "J-42"
+      ],
+      "register": [],
+      "tests": [],
+      "status": "not-offered",
+      "limits": [],
+      "copy": {
+        "name": "Edit long paragraphs",
+        "site": "The editor does not edit a paragraph that runs over several lines. Text is edited one line at a time for now.",
+        "store_bullet": null,
+        "claims": []
+      },
+      "since": null,
+      "note": "Stream B builds multi-line editing on SDK 1.1.0 (#640); this entry becomes promised with its test."
+    },
+    {
+      "id": "timestamped-signature",
+      "group": "absent",
+      "journeys": [
+        "J-61"
+      ],
+      "register": [],
+      "tests": [],
+      "status": "not-offered",
+      "limits": [],
+      "copy": {
+        "name": "Trusted timestamps",
+        "site": "The editor does not add trusted timestamps to signatures, such as long-term validation or PAdES-LT. Signing needs no timestamp server, so the document stays on your machine.",
+        "store_bullet": null,
+        "claims": []
+      },
+      "since": null
+    },
+    {
+      "id": "automation",
+      "group": "absent",
+      "journeys": [],
+      "register": [],
+      "tests": [],
+      "status": "not-offered",
+      "limits": [],
+      "copy": {
+        "name": "Batch and server work",
+        "site": "The editor does not do unattended processing. That includes batch, command-line, watch-folder and server work. The separately licensed PDFluent SDK is for that.",
+        "store_bullet": null,
+        "claims": []
+      },
+      "since": null,
+      "note": "Product rule (CLAUDE.md): no CLI, watch-folder, headless or server mode in the free editor."
+    },
+    {
+      "id": "ai-assistant",
+      "group": "absent",
+      "journeys": [],
+      "register": [],
+      "tests": [],
+      "status": "not-offered",
+      "limits": [],
+      "copy": {
+        "name": "AI assistant",
+        "site": "The editor does not include an AI assistant. Translation and summaries are not available.",
+        "store_bullet": null,
+        "claims": []
+      },
+      "since": null
+    },
+    {
+      "id": "document-storage",
+      "group": "absent",
+      "journeys": [],
+      "register": [],
+      "tests": [],
+      "status": "not-offered",
+      "limits": [],
+      "copy": {
+        "name": "Document storage",
+        "site": "Document storage. Your files stay where you put them; there is nothing to store them in.",
+        "store_bullet": null,
+        "claims": []
+      },
+      "since": null
+    },
+    {
+      "id": "scanner-capture",
+      "group": "absent",
+      "journeys": [],
+      "register": [],
+      "tests": [],
+      "status": "not-offered",
+      "limits": [],
+      "copy": {
+        "name": "Capture from a scanner",
+        "site": "Capture from a scanner or a camera. Bring a file that already exists.",
+        "store_bullet": null,
+        "claims": []
+      },
+      "since": null
+    },
+    {
+      "id": "document-library",
+      "group": "absent",
+      "journeys": [],
+      "register": [],
+      "tests": [],
+      "status": "not-offered",
+      "limits": [],
+      "copy": {
+        "name": "A document library",
+        "site": "A searchable library across your documents. Documents open in tabs, but no library searches across them.",
+        "store_bullet": null,
+        "claims": []
+      },
+      "since": null
+    },
+    {
+      "id": "collaboration",
+      "group": "absent",
+      "journeys": [],
+      "register": [],
+      "tests": [],
+      "status": "not-offered",
+      "limits": [],
+      "copy": {
+        "name": "Collaboration",
+        "site": "Collaboration, review routing, or shared comments between people.",
+        "store_bullet": null,
+        "claims": []
+      },
+      "since": null
+    }
+  ]
+}

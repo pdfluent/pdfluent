@@ -6,6 +6,7 @@
 // See https://pdfluent.com/license for terms.
 
 import { memo } from 'react';
+import { useTranslation } from 'react-i18next';
 
 /**
  * Calm, form-focused bar shown when a document has fillable AcroForm fields.
@@ -38,14 +39,14 @@ export const FormBar = memo(function FormBar({
   autoOpenLinks,
   onToggleAutoOpenLinks,
 }: FormBarProps) {
+  const { t } = useTranslation();
   return (
     <div className="v3-form-bar" data-testid="form-bar">
       <span className="form-bar-icon" aria-hidden="true">🖊️</span>
       <div className="form-bar-text">
-        <strong>Invulbaar formulier</strong>
+        <strong>{t('formBar.title')}</strong>
         <span className="form-bar-sub">
-          {fieldCount} {fieldCount === 1 ? 'veld' : 'velden'} · klik om in te vullen.
-          Automatische berekeningen uit Adobe worden niet uitgevoerd.
+          {t('formBar.fields', { count: fieldCount })} · {t('formBar.clickToFill')} {t('formBar.noCalculations')}
         </span>
       </div>
       <div className="form-bar-actions">
@@ -55,9 +56,9 @@ export const FormBar = memo(function FormBar({
             className="form-bar-toggle is-on"
             data-testid="form-bar-autolinks-toggle"
             onClick={onToggleAutoOpenLinks}
-            title="Links worden automatisch in je browser geopend. Klik om dit uit te zetten."
+            title={t('formBar.autoLinksTitle')}
           >
-            Links automatisch openen ●
+            {t('formBar.autoLinks')} ●
           </button>
         )}
         <button
@@ -67,7 +68,7 @@ export const FormBar = memo(function FormBar({
           aria-pressed={highlight}
           onClick={onToggleHighlight}
         >
-          Velden markeren
+          {t('formBar.highlight')}
         </button>
         <button
           type="button"
@@ -76,7 +77,7 @@ export const FormBar = memo(function FormBar({
           onClick={onJumpToFirst}
           disabled={fieldCount === 0}
         >
-          Eerste veld
+          {t('formBar.firstField')}
         </button>
       </div>
     </div>

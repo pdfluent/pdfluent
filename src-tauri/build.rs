@@ -128,8 +128,78 @@ fn frontend_embed_fingerprint() {
     println!("cargo:rustc-env=PDFLUENT_FRONTEND_FINGERPRINT={fingerprint}");
 }
 
+/// The permissions of the ui-walk build's plugin (#471).
+///
+/// Declared here, explicitly, and only when the `ui-walk` feature is on: Cargo
+/// exposes an enabled feature to a build script as `CARGO_FEATURE_UI_WALK`. The
+/// plugin's two commands then get a generated `ui-walk:default` permission, and
+/// only `tauri.ui-walk.conf.json` grants it to a window. A shipped build neither
+/// declares the permission nor has a capability that could name it, so the walk
+/// commands are not reachable there even by accident.
+fn ui_walk_attributes(attributes: tauri_build::Attributes) -> tauri_build::Attributes {
+    if std::env::var_os("CARGO_FEATURE_UI_WALK").is_none() {
+        return attributes;
+    }
+    attributes.plugin(
+        "ui-walk",
+        tauri_build::InlinedPlugin::new()
+            .commands(&["targets", "report"])
+            .default_permission(tauri_build::DefaultPermissionRule::AllowAllCommands),
+    )
+}
+
+/// The OCR component ships inside every build (owner decision 19-10).
+///
+/// `tauri.conf.json` maps `resources/ocr-bundle` (staged by
+/// `scripts/ocr-component/ocr-bundle.mjs --stage`) to the app's `resources/ocr`.
+/// The folder must exist for Tauri to bundle it, so a development build that
+/// has not staged one gets an empty folder and reports OCR as unavailable
+/// (Settings names why). A build that is going to be shipped sets
+/// `PDFLUENT_REQUIRE_OCR_BUNDLE=1`, and then an unstaged or half-staged bundle
+/// stops the build here instead of producing an app without OCR.
+fn ocr_bundle_guard() {
+    use std::path::PathBuf;
+
+    println!("cargo:rerun-if-env-changed=PDFLUENT_REQUIRE_OCR_BUNDLE");
+    let manifest_dir = PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").unwrap());
+    let bundle = manifest_dir.join("resources").join("ocr-bundle");
+    println!("cargo:rerun-if-changed={}", bundle.display());
+    if let Err(err) = std::fs::create_dir_all(&bundle) {
+        panic!("could not create {}: {err}", bundle.display());
+    }
+    if std::env::var("PDFLUENT_REQUIRE_OCR_BUNDLE").as_deref() != Ok("1") {
+        return;
+    }
+    let target_os = std::env::var("CARGO_CFG_TARGET_OS").unwrap_or_default();
+    let binary = if target_os == "windows" { "tesseract.exe" } else { "tesseract" };
+    let mut missing: Vec<String> = Vec::new();
+    if !bundle.join("bin").join(binary).is_file() {
+        missing.push(format!("bin/{binary}"));
+    }
+    for dir in ["LICENSES", "tessdata"] {
+        let populated = std::fs::read_dir(bundle.join(dir))
+            .map(|mut entries| entries.next().is_some())
+            .unwrap_or(false);
+        if !populated {
+            missing.push(format!("{dir}/"));
+        }
+    }
+    if !missing.is_empty() {
+        panic!(
+            "PDFLUENT_REQUIRE_OCR_BUNDLE=1 but {} holds no complete OCR bundle (missing: {}). \
+             Stage it first: node scripts/ocr-component/ocr-bundle.mjs --stage <build-tesseract.sh --out folder>",
+            bundle.display(),
+            missing.join(", ")
+        );
+    }
+}
+
 fn main() {
     build_macos_translation_helper();
+    ocr_bundle_guard();
     frontend_embed_fingerprint();
-    tauri_build::build()
+    let attributes = ui_walk_attributes(tauri_build::Attributes::new());
+    if let Err(error) = tauri_build::try_build(attributes) {
+        panic!("tauri build failed: {error:#}");
+    }
 }

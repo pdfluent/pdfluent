@@ -1,0 +1,97 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R /AcroForm 5 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 0 >>
+stream
+
+endstream
+endobj
+5 0 obj
+<< /XFA 6 0 R /Fields [] >>
+endobj
+6 0 obj
+<< /Length 2302 >>
+stream
+<?xml version="1.0" encoding="UTF-8"?>
+<xdp:xdp xmlns:xdp="http://ns.adobe.com/xdp/">
+<template xmlns="http://www.xfa.org/schema/xfa-template/3.3/">
+  <subform name="order" layout="paginate" locale="en_US">
+    <pageSet>
+      <pageArea name="Page1" id="Page1">
+        <contentArea x="0.5in" y="0.5in" w="7.5in" h="10in"/>
+        <medium stock="default" short="8.5in" long="11in"/>
+      </pageArea>
+    </pageSet>
+    <subform name="lines" layout="tb" w="7.5in">
+      <field name="quantity" w="3in" h="0.3in">
+        <caption><value><text>Quantity</text></value></caption>
+        <ui><textEdit/></ui>
+        <value><text>1</text></value>
+      </field>
+      <field name="unit_price" w="3in" h="0.3in">
+        <caption><value><text>Unit price</text></value></caption>
+        <ui><textEdit/></ui>
+        <value><text>5</text></value>
+      </field>
+      <field name="total" w="3in" h="0.3in">
+        <caption><value><text>Total</text></value></caption>
+        <ui><textEdit/></ui>
+        <value><text/></value>
+        <calculate>
+          <script contentType="application/x-javascript">
+var q = Number(xfa.resolveNode("order.lines.quantity").rawValue);
+var p = Number(xfa.resolveNode("order.lines.unit_price").rawValue);
+this.rawValue = String((isNaN(q) ? 0 : q) * (isNaN(p) ? 0 : p));
+          </script>
+        </calculate>
+      </field>
+      <field name="discount_code" w="3in" h="0.3in">
+        <caption><value><text>Discount code</text></value></caption>
+        <ui><textEdit/></ui>
+        <value><text/></value>
+        <event activity="change">
+          <script contentType="application/x-formcalc">$ = Upper($)</script>
+        </event>
+      </field>
+      <field name="broken_hook" w="3in" h="0.3in">
+        <caption><value><text>Broken hook</text></value></caption>
+        <ui><textEdit/></ui>
+        <value><text/></value>
+        <event activity="change">
+          <script contentType="application/x-javascript">throw new Error("broken");</script>
+        </event>
+      </field>
+      <field name="internal_ref" w="3in" h="0.3in" access="readOnly">
+        <caption><value><text>Internal reference</text></value></caption>
+        <ui><textEdit/></ui>
+        <value><text>REF-001</text></value>
+      </field>
+    </subform>
+  </subform>
+</template>
+</xdp:xdp>
+
+endstream
+endobj
+xref
+0 7
+0000000000 65535 f 
+0000000009 00000 n 
+0000000074 00000 n 
+0000000131 00000 n 
+0000000218 00000 n 
+0000000267 00000 n 
+0000000310 00000 n 
+trailer
+<< /Size 7 /Root 1 0 R >>
+startxref
+2664
+%%EOF

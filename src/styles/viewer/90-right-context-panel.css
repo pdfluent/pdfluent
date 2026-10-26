@@ -176,8 +176,8 @@
 .contextpanel-input:focus,
 .contextpanel-select:focus,
 .contextpanel-textarea:focus {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 2px var(--accent-soft);
+  border-color: var(--focus-ring);
+  box-shadow: 0 0 0 2px var(--focus-halo);
 }
 
 .contextpanel-input::placeholder {
@@ -215,20 +215,20 @@
 
 /* Filled primary CTA — used sparingly (one per section at most). */
 .contextpanel-action-primary {
-  background: var(--brand-mark-fill);
-  color: var(--brand-mark-on);
+  background: var(--emphasis);
+  color: var(--on-emphasis);
   border-color: transparent;
 }
 
 .contextpanel-action-primary:hover:not(:disabled) {
-  background: #0a0a0a;
+  background: var(--emphasis-hover);
   border-color: transparent;
-  color: var(--brand-mark-on);
+  color: var(--on-emphasis);
 }
 
 @media (prefers-color-scheme: dark) {
   .contextpanel-action-primary:hover:not(:disabled) {
-    background: #f5f5f5;
+    background: var(--emphasis-hover);
   }
 }
 

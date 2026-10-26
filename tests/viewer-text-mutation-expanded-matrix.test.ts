@@ -231,7 +231,7 @@ describe('expanded matrix — blocked at support class level', () => {
     expect(support.supportClass).toBe('non_writable_digital_text');
   });
 
-  it('cross-line edit → multi-line target is non_writable_digital_text', () => {
+  it('cross-line edit → a paragraph of single-run lines is writable as one paragraph (J-42)', () => {
     const multiLine = {
       id: 'x',
       pageIndex: 0,
@@ -255,7 +255,7 @@ describe('expanded matrix — blocked at support class level', () => {
       ],
     };
     const support = getMutationSupport(multiLine);
-    expect(support.writable).toBe(false);
-    expect(support.supportClass).toBe('non_writable_digital_text');
+    expect(support.writable).toBe(true);
+    expect(support.reasonCode).toBe('multi-line-digital');
   });
 });

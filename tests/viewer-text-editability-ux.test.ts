@@ -126,9 +126,9 @@ describe('editability UX — reason labels are informative', () => {
     expect(label.toLowerCase()).toContain('ocr');
   });
 
-  it('protected-mode label mentions bewerkingsmodus', () => {
+  it('protected-mode label mentions edit mode', () => {
     const label = getEditabilityLabel('protected-mode');
-    expect(label.toLowerCase()).toContain('bewerk');
+    expect(label.toLowerCase()).toContain('edit');
   });
 
   it('annotation-tool-active label mentions annotatiegereedschap', () => {
@@ -204,7 +204,7 @@ describe('editability UX — protected-mode reason surface', () => {
 
   it('protected-mode label instructs to switch to edit mode', () => {
     const result = getEditability(makeParagraph(), 'read', null);
-    expect(result.label.toLowerCase()).toContain('bewerk');
+    expect(result.label.toLowerCase()).toContain('edit');
   });
 });
 

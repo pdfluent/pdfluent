@@ -6,6 +6,7 @@
 // See https://pdfluent.com/license for terms.
 
 import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { describe, it, expect } from 'vitest';
 
 // First-class AcroForm overlay (read-mode fillable; no Form Mode required).
@@ -25,6 +26,7 @@ const apiSource = readFileSync(
   new URL('../src/lib/tauri-api.ts', import.meta.url),
   'utf8',
 );
+const noticesSource = readFileSync(new URL('../src/viewer/components/Notices.tsx', import.meta.url), 'utf8');
 const viewerAppSource = readFileSync(
   new URL('../src/viewer/ViewerApp.tsx', import.meta.url),
   'utf8',
@@ -310,7 +312,7 @@ describe('ViewerApp — XFA banner parity', () => {
     // Old: pdfDoc.xfaDetected && !formModel.hasForm && !xfaBannerDismissed
     // New: pdfDoc.xfaDetected && !xfaBannerDismissed
     // The hasForm gate suppressed the banner for any XFA doc with an AcroForm compat layer.
-    const bannerStart = viewerAppSource.indexOf('xfa-experimental-badge');
+    const bannerStart = viewerAppSource.indexOf('<XfaBanner');
     expect(bannerStart).toBeGreaterThan(-1);
     const preceding = viewerAppSource.slice(Math.max(0, bannerStart - 250), bannerStart);
     expect(preceding).toContain('xfaDetected && !xfaBannerDismissed');
@@ -511,10 +513,12 @@ describe('ViewerApp — XFA wiring', () => {
     expect(viewerAppSource).toContain('import { useXfaFormModel }');
   });
 
-  it('gates the interactive XFA fill overlay to dev builds (experimental, parked for RC)', () => {
-    // The product ships XFA as view + convert-to-PDF only; interactive fill is
-    // experimental and hidden in release builds.
-    expect(viewerAppSource).toContain('const XFA_INTERACTIVE_FILL = import.meta.env.DEV');
+  it('gates the XFA fill overlay on XFA_INTERACTIVE_FILL from xfaFillGate', () => {
+    // J-59: the gate's value outside DEV is proven by behaviour in
+    // src/viewer/__tests__/xfaFillGate.test.ts; this only checks the overlay
+    // reads that gate and the XFA model, not a local DEV flag.
+    expect(viewerAppSource).toContain("import { XFA_INTERACTIVE_FILL } from './xfaFillGate'");
+    expect(viewerAppSource).not.toContain('import.meta.env.DEV;');
     const start = viewerAppSource.indexOf('<XfaFormOverlay');
     expect(start).toBeGreaterThan(-1);
     const preceding = viewerAppSource.slice(Math.max(0, start - 260), start);
@@ -532,9 +536,16 @@ describe('ViewerApp — XFA claim discipline (no dynamic-XFA fill overclaim)', (
   });
 
   it('XFA banner leads with view + convert-to-PDF (acceptable wording)', () => {
-    expect(viewerAppSource).toContain('Dit XFA-formulier wordt weergegeven');
-    expect(viewerAppSource).toContain('Zet het om naar een standaard PDF');
-    expect(viewerAppSource).toContain("i18n.t('xfa.convertToStandard')");
+    // The banner markup moved to components/Notices.tsx (so the contrast gallery
+    // can mount the same component); the gate stays in ViewerApp.
+    expect(noticesSource).toContain("i18n.t('xfa.bannerBody')");
+    // The wording lives in the locales now; the English and Dutch both lead
+    // with "shown" and point to converting.
+    const en = JSON.parse(readFileSync(resolve(__dirname, '../src/i18n/locales/en.json'), 'utf8')) as { xfa: Record<string, string> };
+    const nl = JSON.parse(readFileSync(resolve(__dirname, '../src/i18n/locales/nl.json'), 'utf8')) as { xfa: Record<string, string> };
+    expect(en.xfa.bannerBody).toContain('convert it to a standard PDF');
+    expect(nl.xfa.bannerBody).toContain('Zet het om naar een standaard PDF');
+    expect(noticesSource).toContain("i18n.t('xfa.convertToStandard')");
   });
 
   it('any experimental fill mention is gated behind the dev flag', () => {

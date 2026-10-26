@@ -114,9 +114,9 @@
     "allTools": "Alle verktøy",
     "contextualBar": "Modusverktøylinje",
     "pdfa": "PDF/A",
-    "metadata": "Document properties",
-    "invoice": "E-invoice",
-    "bookmarks": "Bookmarks"
+    "metadata": "Dokumentegenskaper",
+    "invoice": "E-faktura",
+    "bookmarks": "Bokmerker"
   },
   "topbar": {
     "openPdf": "Åpne PDF",
@@ -242,7 +242,6 @@
     "ownerPasswordPlaceholder": "Eierpassord",
     "encryptBtn": "Krypter…",
     "decrypt": "Dekrypter",
-    "currentPasswordPlaceholder": "Gjeldende passord",
     "decryptBtn": "Dekrypter",
     "noDocument": "Ingen dokument åpent.",
     "permCanPrint": "Skriv ut",
@@ -258,7 +257,11 @@
     "searchRedactBtn": "Finn og rediger ut",
     "redactMetadataTitle": "Metadata",
     "redactMetadataDesc": "Fjern forfatter, tittel og annen identifiserende metadata.",
-    "redactMetadataBtn": "Fjern metadata"
+    "redactMetadataBtn": "Fjern metadata",
+    "ownerPasswordForRemoval": "Eierpassord (tillatelser)",
+    "removePasswordHelp": "Fjerning av passord krever eierpassordet, det som beskytter tillatelsene. Passordet du åpnet filen med er ikke nok med mindre det også er eierpassordet.",
+    "removePasswordReady": "Du åpnet denne filen med eierpassordet, så beskyttelsen kan fjernes uten å skrive det på nytt.",
+    "removePasswordNotProtected": "Dette dokumentet har ingen passordbeskyttelse."
   },
   "organize": {
     "thumbnails": "Miniatyrbilder",
@@ -287,33 +290,34 @@
     "combine": "Kombiner filer",
     "splitRange": "Del etter område",
     "splitRangeHint": "Velg sider først",
-    "moveLeft": "Move selected page left",
-    "moveRight": "Move selected page right",
-    "moveLeftShort": "Left",
-    "moveRightShort": "Right",
-    "rotateLeft": "Rotate left",
-    "rotateRight": "Rotate right",
-    "rotateLeftShort": "Left",
-    "rotateRightShort": "Right",
-    "addingPdf": "Adding PDF…",
-    "pdfAdded": "PDF added",
-    "combiningFiles": "Combining {{count}} file(s)…",
-    "filesCombined": "{{count}} file(s) combined",
-    "insertingPdf": "Inserting PDF before page {{page}}…",
-    "pdfInserted": "PDF inserted",
-    "exportingPages": "Exporting {{count}} page(s)…",
-    "selectionExported": "Selection exported to {{name}}",
-    "splittingPages": "Splitting into individual pages…",
-    "pagesSaved": "{{count}} pages saved",
-    "splittingRanges": "Splitting {{count}} range(s)…",
-    "filesSaved": "{{count}} file(s) saved"
+    "moveLeft": "Flytt valgt side til venstre",
+    "moveRight": "Flytt valgt side til høyre",
+    "moveLeftShort": "Venstre",
+    "moveRightShort": "Høyre",
+    "rotateLeft": "Roter venstre",
+    "rotateRight": "Roter høyre",
+    "rotateLeftShort": "Venstre",
+    "rotateRightShort": "Høyre",
+    "addingPdf": "Legger til PDF…",
+    "pdfAdded": "PDF lagt til",
+    "combiningFiles": "Kombinerer {{count}} fil(er)…",
+    "filesCombined": "{{count}} fil(er) kombinert",
+    "insertingPdf": "Setter inn PDF foran side {{page}}…",
+    "pdfInserted": "PDF satt inn",
+    "exportingPages": "Eksporterer {{count}} side(r)…",
+    "selectionExported": "Utvalg eksportert til {{name}}",
+    "splittingPages": "Deler i enkeltsider…",
+    "pagesSaved": "{{count}} sider lagret",
+    "splittingRanges": "Deler {{count}} område(r)…",
+    "filesSaved": "{{count}} fil(er) lagret"
   },
   "unsavedChanges": {
     "title": "Ulagrede endringer",
     "message": "Vil du lagre endringene dine før du fortsetter?",
     "save": "Lagre",
     "discard": "Forkast endringer",
-    "cancel": "Avbryt"
+    "cancel": "Avbryt",
+    "messageNamed": "Vil du lagre endringene dine i {{name}} før du fortsetter?"
   },
   "welcome": {
     "title": "Åpne en PDF for å komme i gang",
@@ -327,13 +331,13 @@
     "lede": "Les, rediger, konverter, fyll ut og signer — helt på enheten din.",
     "privacyPromise": "Lokal-først · dokumenter forlater aldri denne enheten",
     "dropPdfHere": "Slipp PDF her",
-    "v3Subtitle": "Open a PDF to read, edit, convert or sign it locally.",
-    "openFileAria": "Choose a PDF file to open",
-    "clearRecent": "Clear recent",
-    "recentShort": "Recent",
-    "removeRecentAria": "Remove {{name}}",
-    "backToDocument": "Back to document",
-    "loadingDocument": "Loading document…"
+    "v3Subtitle": "Åpne en PDF for å lese, redigere, konvertere eller signere den lokalt.",
+    "openFileAria": "Velg en PDF-fil å åpne",
+    "clearRecent": "Tøm siste",
+    "recentShort": "Siste",
+    "removeRecentAria": "Fjern {{name}}",
+    "backToDocument": "Tilbake til dokumentet",
+    "loadingDocument": "Laster dokument…"
   },
   "settings": {
     "language": "Språk",
@@ -350,15 +354,29 @@
     "reviewerNamePlaceholder": "Navn brukt i kommentarer",
     "exportPreferences": "Eksportinnstillinger",
     "exportFormatLabel": "Standard eksportformat",
-    "autosave": "Automatisk lagring",
-    "autosaveEnable": "Lagre endringer automatisk",
     "themeLabel": "Tema",
     "ocrDefaults": "OCR-standardinnstillinger",
     "ocrLanguageLabel": "Standardspråk (ISO-639-2)",
     "ocrLanguagePlaceholder": "f.eks. eng, nld, deu",
-    "updates": "Updates",
-    "automaticUpdateCheck": "Check for a new version at startup",
-    "automaticUpdateCheckHint": "PDFluent asks pdfluent.com whether a newer version exists, a few seconds after it starts. Nothing from your documents is sent. Turn this off and the app never checks on its own — \"Check for updates\" still works whenever you ask for it."
+    "updates": "Oppdateringer",
+    "automaticUpdateCheck": "Se etter ny versjon ved oppstart",
+    "automaticUpdateCheckHint": "PDFluent spør pdfluent.com om en nyere versjon finnes, noen sekunder etter at den starter. Ingenting fra dokumentene dine sendes. Slå dette av, og appen sjekker aldri av seg selv — \"Se etter oppdateringer\" fungerer fortsatt når du ber om det.",
+    "recoveryCopy": "Gjenopprettingskopi",
+    "recoveryCopyEnable": "Behold en gjenopprettingskopi av ulagrede endringer, som tilbys etter et krasj",
+    "view": "Visning",
+    "defaultZoomLabel": "Standardzoom",
+    "defaultZoomFitWidth": "Tilpass bredde (standard)",
+    "defaultZoomFitPage": "Tilpass side",
+    "defaultZoomActualSize": "Faktisk størrelse (100%)",
+    "defaultZoomLastUsed": "Sist brukt",
+    "defaultZoomHint": "Et dokument åpnes med denne zoomen og følger vinduet til du zoomer selv. Tilpass bredde viser hele siden i stedet når det er tydelig bedre.",
+    "securityTitle": "Sikkerhet",
+    "formScriptsLabel": "Skjemaskript",
+    "formScriptsAsk": "Spør",
+    "formScriptsAlways": "Alltid",
+    "formScriptsNever": "Aldri",
+    "formScriptsHint": "Skjemaer kan inneholde skript, for eksempel beregninger. Spør er standard: et skjema åpnes med de lagrede verdiene, og ingenting kjøres før du godtar.",
+    "formScriptsPinned": "Organisasjonen din har fastsatt dette valget. Det kan ikke endres her."
   },
   "errors": {
     "loadFailed": "Dokumentinnlasting mislyktes",
@@ -381,7 +399,8 @@
     "addPageFailed": "Tillegg av PDF mislyktes",
     "insertFailed": "Innsetting av PDF mislyktes",
     "splitFailed": "Deling mislyktes",
-    "commandFailedTitle": "'{{command}}' did not complete"
+    "commandFailedTitle": "'{{command}}' ble ikke fullført",
+    "commandRetrying": "Midlertidig feil i {{command}} — prøver igjen"
   },
   "events": {
     "formFieldUpdated": "Skjemafelt oppdatert",
@@ -430,9 +449,9 @@
     "pageNotFound": "Side ikke funnet",
     "requiresFontInspection": "Tekstredigering krever skriftinspeksjon (planlagt for fase 6).",
     "rejection": {
-      "bannerTitle": "This text was not changed",
-      "bannerDetail": "Reason reported by the PDF engine: {{detail}}",
-      "bannerDismiss": "Dismiss",
+      "bannerTitle": "Denne teksten ble ikke endret",
+      "bannerDetail": "Årsak rapportert av PDF-motoren: {{detail}}",
+      "bannerDismiss": "Lukk",
       "replacement-too-long": {
         "tooltip": "Replacement is too long",
         "explanation": "The replacement is longer than the text it replaces. Keep it the same length or shorter so the surrounding layout stays intact."
@@ -491,8 +510,8 @@
       }
     },
     "fallback": {
-      "fontSubstitutedTitle": "A standard font wrote the new text",
-      "fontSubstitutedMessage": "The original font of this text has no glyph for one or more characters you typed, so Helvetica was used for the replacement. The text is correct; it may look slightly different from the rest of the line."
+      "fontSubstitutedTitle": "En standardskrift skrev den nye teksten",
+      "fontSubstitutedMessage": "Den opprinnelige skriften for denne teksten har ingen glyf for ett eller flere tegn du skrev, så Helvetica ble brukt for erstatningen. Teksten er riktig; den kan se litt annerledes ut enn resten av linjen."
     }
   },
   "validation": {
@@ -566,12 +585,16 @@
     "watermarkDone": "Vannmerke lagt til",
     "watermarkFailed": "Vannmerke mislyktes",
     "watermarkRunning": "Legger til vannmerke…",
-    "pdfaRunning": "Converting to PDF/A…",
-    "pdfaDone": "PDF/A written",
-    "pdfaFailed": "PDF/A conversion failed",
-    "metadataRunning": "Saving properties…",
-    "metadataDone": "Properties saved",
-    "metadataFailed": "Could not save properties"
+    "pdfaRunning": "Konverterer til PDF/A…",
+    "pdfaDone": "PDF/A skrevet",
+    "pdfaFailed": "PDF/A-konvertering mislyktes",
+    "metadataRunning": "Lagrer egenskaper…",
+    "metadataDone": "Egenskaper lagret",
+    "metadataFailed": "Kunne ikke lagre egenskaper",
+    "exportMarkdownRunning": "Eksporterer som Markdown…",
+    "exportMarkdownDone": "Markdown eksportert",
+    "exportTablesRunning": "Eksporterer tabeller til Excel…",
+    "exportTablesDone": "Tabeller eksportert til Excel ({{count}})"
   },
   "panels": {
     "search": "Søk",
@@ -714,7 +737,10 @@
     "formatJpeg": "JPEG (bilde)",
     "formatDocx": "Word-dokument (.docx)",
     "formatXlsx": "Excel-regneark (.xlsx)",
-    "formatPptx": "PowerPoint-presentasjon (.pptx)"
+    "formatPptx": "PowerPoint-presentasjon (.pptx)",
+    "formatMarkdown": "Markdown (.md) - Forhåndsvisning",
+    "formatTablesXlsx": "Tabeller til Excel (.xlsx) - Forhåndsvisning",
+    "noTablesFound": "Ingen tabeller ble gjenkjent i dette dokumentet."
   },
   "goToPage": {
     "title": "Gå til side",
@@ -729,7 +755,9 @@
     "documentLabel": "Dokument:",
     "savedLabel": "Lagret:",
     "recoveryPath": "Gjenopprettingsbane:",
-    "restore": "Gjenopprett"
+    "restore": "Gjenopprett",
+    "untitled": "Dokument uten navn",
+    "andMore": "{{name}} og {{count}} til"
   },
   "emptyStates": {
     "noDocument": "Ingen dokument åpent",
@@ -839,7 +867,26 @@
     "statusUnavailableWithReason": "OCR-kjøretid utilgjengelig: {{reason}}",
     "statusRetry": "Kontroller på nytt",
     "runtimePath": "Kjøretid: {{path}}",
-    "missingPackages": "Mangler: {{packages}}"
+    "missingPackages": "Mangler: {{packages}}",
+    "noScannedPagesTitle": "Ingenting å gjenkjenne",
+    "unavailable": {
+      "platform": "OCR tilbys ikke for denne plattformen.",
+      "missing": "OCR-filene til denne versjonen mangler eller er ufullstendige. Installer PDFluent på nytt for å gjenopprette dem."
+    },
+    "settings": {
+      "unknown": "OCR-komponent: sjekker…",
+      "installed": "OCR-komponent: Tesseract {{version}} installert"
+    },
+    "errors": {
+      "OCR_COMPONENT_UNSUPPORTED_PLATFORM": "OCR-komponenten tilbys ikke for denne plattformen.",
+      "OCR_COMPONENT_NOT_INSTALLED": "OCR-komponenten er ikke installert.",
+      "OCR_LANGUAGE_MISSING": "En språkpakke for OCR er ikke installert.",
+      "OCR_SIGNED_DOCUMENT": "Dette dokumentet er signert. OCR vil endre de signerte sidene, så det kjøres ikke.",
+      "OCR_NOT_PERMITTED": "Dokumentets tillatelser tillater ikke endring av innholdet.",
+      "OCR_DOCUMENT_CHANGED": "Dokumentet ble endret mens OCR kjørte. Kjør OCR på nytt.",
+      "OCR_ENGINE_FAILED": "OCR stoppet med en feil.",
+      "OCR_PAGE_OUT_OF_RANGE": "En side som skal gjenkjennes, finnes ikke i dokumentet."
+    }
   },
   "docInfo": {
     "title": "Tittel",
@@ -879,7 +926,17 @@
     "italicComingSoon": "Kursiv formatering kommer snart",
     "sourceDigital": "PDF-tekstlag",
     "sourceOcr": "OCR",
-    "browserLimitedNote": "Klikk på tekst på siden for å redigere støttet PDF-tekst. Bilder og lenker er tilgjengelig i skrivebordsappen."
+    "browserLimitedNote": "Klikk på tekst på siden for å redigere støttet PDF-tekst. Bilder og lenker er tilgjengelig i skrivebordsappen.",
+    "typeface": {
+      "label": "Skrifttype",
+      "default": "Dokumentfont",
+      "noEmbed": "{{family}}: lisensen til fonten tillater ikke innebygging i en PDF",
+      "refusedLicence": "{{family}} kan ikke brukes: lisensen tillater ikke innebygging i en PDF. Velg en annen skrifttype.",
+      "refusedGlyphs": "{{family}} mangler glyf for {{characters}}. Velg en annen skrifttype.",
+      "refusedGone": "Den skrifttypen er ikke lenger installert. Velg en annen.",
+      "refusedText": "Teksten som skal endres, er ikke lenger på siden.",
+      "refusedUnusable": "{{family}} kunne ikke leses som en skrift. Velg en annen skrifttype."
+    }
   },
   "rightPanel": {
     "properties": "Egenskaper",
@@ -944,9 +1001,12 @@
     "flatten": "Flat ut XFA",
     "flattenDone": "XFA flattet ut. Eksporter PDF-en for å laste ned den statiske versjonen.",
     "flattenFailed": "Utflating av XFA mislyktes",
-    "convertToStandard": "Convert to standard PDF",
-    "convertedToStandard": "XFA converted to standard PDF",
-    "convertFailed": "Conversion failed: {{message}}"
+    "convertToStandard": "Konverter til standard-PDF",
+    "convertedToStandard": "XFA konvertert til standard-PDF",
+    "convertFailed": "Konvertering mislyktes: {{message}}",
+    "bannerTitle": "XFA-skjema",
+    "bannerBody": "Dette XFA-skjemaet vises slik det er. Konverter det til en vanlig PDF for å fylle ut, redigere eller søke i feltene.",
+    "bannerBodyExperimental": "Dette XFA-skjemaet vises slik det er. Utfylling av felt er eksperimentelt. Konverter det til en vanlig PDF for å fylle ut, redigere og søke pålitelig."
   },
   "security": {
     "activeContentBadge": "Blokkert",
@@ -970,7 +1030,8 @@
     "highlight": "Marker",
     "strikethrough": "Gjennomstrek",
     "underline": "Understrek",
-    "copyText": "Kopier tekst"
+    "copyText": "Kopier tekst",
+    "copied": "Kopiert"
   },
   "update": {
     "available": "Oppdatering tilgjengelig",
@@ -980,10 +1041,10 @@
     "installing": "Installerer…",
     "checkFailed": "Oppdateringssjekk mislyktes",
     "upToDate": "Du bruker den nyeste versjonen",
-    "installed": "Update installed",
-    "restartNow": "Restart now",
-    "restartUnsaved": "Save your changes before restarting.",
-    "restartManual": "If it doesn't restart automatically, quit and reopen PDFluent to finish."
+    "installed": "Oppdatering installert",
+    "restartNow": "Start på nytt nå",
+    "restartUnsaved": "Lagre endringene dine før du starter på nytt.",
+    "restartManual": "Hvis den ikke starter på nytt automatisk, avslutt og åpne PDFluent igjen for å fullføre."
   },
   "telemetry": {
     "addNoteLabel": "Vil du legge til noe? (valgfritt)",
@@ -1012,6 +1073,11 @@
     "sentTitle": "Sendt. Takk.",
     "settingsAutoSend": "Send automatisk uten å spørre",
     "settingsAutoSendNote": "Automatiske rapporter er renset og fri for personopplysninger, akkurat som de du gjennomgår manuelt.",
+    "settingsSentReports": "Krasjrapporter sendt fra denne datamaskinen: {{count}}. Vi sletter dem automatisk fra serveren vår etter {{days}} dager.",
+    "settingsDeleteReports": "Slett krasjrapportene mine",
+    "settingsDeleting": "Sletter…",
+    "settingsDeleted": "Slettede krasjrapporter: {{count}}",
+    "settingsDeleteFailed": "{{count}} kunne ikke slettes. Sjekk tilkoblingen og prøv igjen.",
     "settingsDescription": "Rapporter inneholder aldri personlig informasjon eller dokumentinnhold. Alt renses før sending, og du ser hver rapport først. Av som standard.",
     "settingsTitle": "Krasj- og feilrapporter",
     "settingsToggle": "Send krasj- og feilrapporter",
@@ -1019,7 +1085,11 @@
     "typeBug": "Feil",
     "typeCrash": "Krasj",
     "typeFeedback": "Tilbakemelding",
-    "whatGetsSent": "Hva som sendes"
+    "whatGetsSent": "Hva som sendes",
+    "settingsSentFeedback": "Tilbakemeldingsrapporter sendt fra denne datamaskinen: {{count}}. Vi sletter dem fra serveren vår automatisk etter {{days}} dager.",
+    "settingsDeleteFeedback": "Slett mine tilbakemeldingsrapporter",
+    "settingsFeedbackDeleted": "Tilbakemeldingsrapporter slettet: {{count}}",
+    "settingsFeedbackDeleteFailed": "Kunne ikke slette {{count}} tilbakemeldingsrapporter. Sjekk tilkoblingen og prøv igjen."
   },
   "ai": {
     "summaryInstruction": "Gi et kortfattet sammendrag av følgende dokument på norsk. For hver stilling, nevn arbeidsgiver, rolle og periode. Bruk punkttegn.",
@@ -1076,7 +1146,8 @@
       "scrollLeft": "Scroll-moduser til venstre",
       "scrollRight": "Scroll-moduser til høyre",
       "workMode": "Arbeidsmodus",
-      "searchPlaceholder": "Søk i dokument"
+      "searchPlaceholder": "Søk i dokument",
+      "allTools": "Alle verktøy"
     },
     "menu": {
       "about": "Om",
@@ -1147,22 +1218,17 @@
       "draw": "Tegn",
       "signatureName": "Signaturavn",
       "typeName": "Skriv inn navnet ditt…",
-      "selectStyle": "Velg stil",
-      "styleClassic": "Kursiv klassisk",
-      "styleElegant": "Kursiv elegant",
-      "styleBrush": "Børste-signatur",
-      "styleModern": "Moderne håndskrift",
       "drawHere": "Tegn her med musen, trackpadden eller stylus",
       "clear": "Slett",
       "apply": "Bruk",
-      "defaultSignature": "Signatur",
       "clickToPlaceSignature": "Klikk på siden for å plassere signaturen.",
       "addInitials": "Legg til initialer",
       "initialsIntro": "Skriv dine initialer for rask plassering på initialfelt.",
       "initials": "Initialer",
       "initialsPlaceholder": "f.eks. AB",
-      "defaultInitials": "AB",
-      "clickToPlaceInitials": "Klikk på siden for å plassere initialene."
+      "clickToPlaceInitials": "Klikk på siden for å plassere initialene.",
+      "signatureFont": "Signaturskrift",
+      "plainItalic": "Vanlig kursiv"
     },
     "overlay": {
       "signaturePlaced": "Signatur plassert!",
@@ -1177,13 +1243,13 @@
     "textbox": {
       "editTitle": "Rediger tekstboks",
       "newTitle": "Ny tekstboks",
-      "intro": "Denne teksten plasseres som et overlegg på gjeldende side. Lagring av tom sletter en eksisterende tekstboks.",
       "label": "Tekst",
       "placeholder": "Skriv inn teksten…",
       "delete": "Slett",
       "deleted": "Tekstboks slettet.",
       "updated": "Tekstboks oppdatert.",
-      "added": "Ny tekstboks lagt til."
+      "added": "Ny tekstboks lagt til.",
+      "introPdf": "Tekstboksen skrives inn i PDF-filen og vises i alle PDF-visere. Lagres den tom, fjernes en eksisterende tekstboks."
     },
     "rail": {
       "tools": "PDF-verktøy",
@@ -1197,12 +1263,14 @@
       "more": "Flere verktøy",
       "strikeText": "Gjennomstreking av tekst",
       "underlineText": "Understreke tekst",
-      "addAttachment": "Legg til vedlegg"
+      "addAttachment": "Legg til vedlegg",
+      "drawRectangle": "Tegn et rektangel"
     },
     "railToasts": {
-      "commentMode": "Merknading aktiv. Velg tekst og velg Merknad, eller bruk merknadelisten for å legge til en merknad.",
+      "commentMode": "Notatmodus. Klikk på siden der notatet skal plasseres.",
       "strikeout": "Gjennomstreking aktiv – velg tekst for å bruke.",
-      "underline": "Understreking aktiv – velg tekst for å bruke."
+      "underline": "Understreking aktiv – velg tekst for å bruke.",
+      "rectangle": "Rektangel aktivt — dra på siden for å tegne det."
     },
     "tools": {
       "lede": "Velg et verktøy for å komme i gang. Alt kjøres lokalt på denne enheten.",
@@ -1238,17 +1306,18 @@
       "layers": "{{count}} lag",
       "manageLayers": "Administrer lag",
       "layersVisible": "{{count}} lag synlig.",
-      "archiveAndData": "Archiving and data",
-      "pdfaSub": "Check or convert for long-term archiving",
-      "invoiceSub": "Read the ZUGFeRD/Factur-X invoice inside",
-      "metadataSub": "Title and author of this document"
+      "archiveAndData": "Arkivering og data",
+      "pdfaSub": "Kontroller eller konverter for langtidsarkivering",
+      "invoiceSub": "Les ZUGFeRD/Factur-X-fakturaen i filen",
+      "metadataSub": "Tittel og forfatter for dette dokumentet",
+      "flattenForm": "Flat ut",
+      "flattenFormTitle": "Flat ut skjemaet: de utfylte verdiene blir en del av siden, og feltene fjernes",
+      "flattenFormDone": "Skjemaet er flatet ut. Angre henter feltene tilbake.",
+      "flattenFormFailed": "Kunne ikke flate ut skjemaet: {{message}}"
     },
     "edit": {
       "lede": "Klikk på tekst i dokumentet for å redigere inline. Formateringslinjen vises rett over markeringen.",
       "formatText": "Formater tekst",
-      "fontLabel": "Skrifttype",
-      "fontHint": "Eksisterende PDF-tekst bruker innebygde PDF-skrifttyper. Skrifttypen \"{{font}}\" vil bli brukt for nylig tilføyde tekstbokser.",
-      "fontEmbedded": "Innebygd PDF-skrifttype",
       "color": "Farge",
       "colorLabel": "Farge {{color}}",
       "addContent": "Legg til innhold",
@@ -1261,7 +1330,18 @@
       "clickAnywhereTextBox": "Klikk hvor som helst på siden for å plassere tekstboksen.",
       "clickAnywhereImage": "Klikk hvor som helst på siden for å plassere bildet.",
       "selection": "Valg",
-      "annotationOnPage": "{{type}} på side {{page}}"
+      "annotationOnPage": "{{type}} på side {{page}}",
+      "placeStamp": "Plasser stempel",
+      "stampLabel": "Stempel",
+      "clickToPlaceStamp": "Klikk på siden for å plassere stempelet.",
+      "placementModeStamp": "Plasseringsmodus: stempel",
+      "stampPlaced": "Stempel plassert.",
+      "deleteAnnotation": "Slett merknad",
+      "annotationColor": "Merknadsfarge",
+      "editTextBox": "Rediger tekst",
+      "replaceImage": "Erstatt bilde",
+      "imageReplaced": "Bildet er erstattet.",
+      "moveHint": "Dra for å flytte, dra i et hjørne for å endre størrelse, eller flytt med piltastene."
     },
     "convert": {
       "exportPdfTo": "Eksporter PDF til",
@@ -1279,10 +1359,16 @@
       "confidenceFrom": "Konfidensial fra {{value}}%",
       "ocrOff": "OCR av",
       "ocrOn": "OCR på",
-      "ocrRunning": "OCR kjøres lokalt…"
+      "ocrRunning": "OCR kjøres lokalt…",
+      "ocrComponentUnknown": "OCR-komponent: sjekker…",
+      "ocrComponentInstalled": "OCR-komponent installert",
+      "ocrLastRun": "Siste kjøring: {{pages}} side(r), {{words}} ord lagt til som søkbar tekst",
+      "ocrRunningProgress": "Gjenkjenner side {{done}} av {{total}}…",
+      "markdown": "Markdown (forhåndsvisning)",
+      "tablesToExcel": "Tabeller til Excel (forhåndsvisning)"
     },
     "esign": {
-      "lede": "Sign with a certificate of your own, and check the signatures a document already carries. Both happen on this device.",
+      "lede": "Signer med ditt eget sertifikat, og sjekk signaturene et dokument allerede har. Begge skjer på denne enheten.",
       "fillAndSign": "Fyll ut dokumentene og signer",
       "addSignature": "Legg til signatur",
       "addInitials": "Legg til initialer",
@@ -1290,25 +1376,25 @@
       "placementModeInitials": "Plasseringsmodus: Initialer",
       "clickToPlaceSignature": "Klikk hvor som helst på siden for å plassere signaturen.",
       "clickToPlaceInitials": "Klikk hvor som helst på siden for å plassere initialene.",
-      "verifySection": "Signatures",
-      "verify": "Check signatures",
-      "desktopOnly": "Available in the desktop app",
-      "unsigned": "This document carries no signatures.",
-      "signSection": "Sign with a certificate",
-      "padesLevel": "Produces a PAdES B-B signature: your certificate over the whole file, no timestamp server involved.",
-      "certificate": "Certificate (.p12 or .pfx)",
-      "certificateNone": "No certificate chosen",
-      "chooseCertificate": "Choose certificate",
-      "certificatePassword": "Certificate password",
-      "reason": "Reason (optional)",
-      "reasonPlaceholder": "Why you are signing",
-      "sign": "Sign and save a copy",
-      "signing": "Signing…",
-      "signNeedsCertificate": "Choose a certificate and enter its password first.",
-      "signSaved": "Signed copy saved as {{name}}",
-      "signFailed": "Signing failed: {{message}}",
-      "usageRights": "Reader enablement (usage rights)",
-      "usageRightsInvalidated": "Usage rights invalidated — this file was edited, so Adobe Reader no longer treats it as an enabled form."
+      "verifySection": "Signaturer",
+      "verify": "Kontroller signaturer",
+      "desktopOnly": "Tilgjengelig i skrivebordsappen",
+      "unsigned": "Dette dokumentet har ingen signaturer.",
+      "signSection": "Signer med et sertifikat",
+      "padesLevel": "Produserer en PAdES B-B-signatur: sertifikatet ditt over hele filen, ingen tidsstempelserver involvert.",
+      "certificate": "Sertifikat (.p12 eller .pfx)",
+      "certificateNone": "Ingen sertifikat valgt",
+      "chooseCertificate": "Velg sertifikat",
+      "certificatePassword": "Sertifikatpassord",
+      "reason": "Årsak (valgfritt)",
+      "reasonPlaceholder": "Hvorfor du signerer",
+      "sign": "Signer og lagre en kopi",
+      "signing": "Signerer…",
+      "signNeedsCertificate": "Velg et sertifikat og skriv inn passordet først.",
+      "signSaved": "Signert kopi lagret som {{name}}",
+      "signFailed": "Signering mislyktes: {{message}}",
+      "usageRights": "Reader-aktivering (bruksrettigheter)",
+      "usageRightsInvalidated": "Bruksrettigheter ugyldiggjort — denne filen ble redigert, så Adobe Reader behandler den ikke lenger som et aktivert skjema."
     },
     "protect": {
       "lede": "Beskytt PDF-dokumentet med sterke kryptografiske passord. Endringer brukes lokalt med en gang.",
@@ -1330,9 +1416,11 @@
       "localViaTauri": "Lokal via Tauri-kommando, ingen nettleserkjøretid",
       "compressingImages": "Komprimerer bilder…",
       "percentComplete": "{{percent}}% fullført",
-      "compressPdf": "Komprimer PDF",
       "desktopOnly": "Bare tilgjengelig i skrivebordsprogrammet",
-      "backToTools": "Tilbake til verktøy"
+      "backToTools": "Tilbake til verktøy",
+      "saveCopy": "Lagre komprimert kopi som…",
+      "replaceOpen": "Komprimer og erstatt det åpne dokumentet",
+      "replaceNote": "En kopi lar det åpne dokumentet og filen være som de er. Å erstatte endrer bare det åpne dokumentet; Angre bringer originalen tilbake."
     },
     "split": {
       "lede": "Del dokumentet ditt inn i separate PDF-filer per side eller etter et spesifikt sideområde.",
@@ -1369,7 +1457,52 @@
       "applying": "Bruker…",
       "applyPermanently": "Bruk redigeringer permanent",
       "noActiveMarkings": "Ingen aktive redigeringsmerknader.",
-      "backToTools": "Tilbake til verktøy"
+      "backToTools": "Tilbake til verktøy",
+      "pii": {
+        "title": "Personopplysninger",
+        "lede": "Find personal data in the text of this document: IBANs, card numbers, national ID numbers, birth dates, e-mail addresses and phone numbers, and names and addresses when the model is installed. Review the list, then redact the ones you choose.",
+        "find": "Finn personopplysninger",
+        "scanning": "Skanner…",
+        "none": "Nothing found.",
+        "kind": {
+          "iban": "IBAN",
+          "email": "E-postadresse",
+          "phone": "Telefonnummer",
+          "credit_card": "Kortnummer",
+          "national_id": "Nasjonalt ID-nummer",
+          "date_of_birth": "Fødselsdato",
+          "bank_account": "Bankkontonummer",
+          "person": "Navn",
+          "address": "Adresse"
+        },
+        "where": "Side {{pages}} · {{count}}×",
+        "selectAll": "Velg alle",
+        "selectNone": "Velg ingen",
+        "redactSelected": "Sladd {{count}} valgte",
+        "redacting": "Sladder…",
+        "done": "Sensurerte {{count}} elementer. Lagre filen for å beholde resultatet.",
+        "failed": "Sensurering mislyktes: {{message}}",
+        "detectFailed": "Søket mislyktes: {{message}}",
+        "patternsOnly": "Without the model this finds only items it can check, such as IBANs, cards, ID numbers, birth dates, e-mail addresses and phone numbers. Names and addresses are not detected, so check every page yourself.",
+        "suggestionsOnly": "Dette er forslag. Detektoren kan overse ting, så sjekk hver side før du lagrer.",
+        "source": {
+          "verified": "Kontrollert {{detail}}",
+          "model": "Modellforslag, {{score}} %"
+        },
+        "model": {
+          "use": "Finn også navn og adresser med modellen",
+          "languages": "Kontrollert for: {{languages}}",
+          "remove": "Fjern modellen",
+          "removeFailed": "Kunne ikke fjerne modellen: {{message}}",
+          "failed": "Modellen kunne ikke kjøre ({{code}}). Bare elementer som kan kontrolleres, vises.",
+          "consentTitle": "Vil du laste ned modellen for personopplysninger?",
+          "consentBody": "Å finne navn og adresser krever en språkmodell ({{size}}). Den lastes ned én gang fra {{host}}, kontrolleres mot en fast sjekksum og kjører deretter på denne datamaskinen. Dokumentene dine forlater aldri datamaskinen.",
+          "download": "Last ned",
+          "downloading": "Laster ned…",
+          "downloadFailed": "Nedlastingen mislyktes: {{message}}",
+          "notInBuild": "Nedlastingen er ikke tilgjengelig i denne versjonen ennå."
+        }
+      }
     },
     "toasts": {
       "saving": "Lagrer…",
@@ -1399,7 +1532,7 @@
       "pdfsMerged": "{{count}} PDF-filer flettet",
       "mergedSaved": "Flettet PDF lagret som {{name}}.",
       "mergeFailed": "Fletting mislyktes: {{message}}",
-      "redactMatches": "{{matches}} treff funnet, {{areas}} redigeringsmerknader plassert.",
+      "redactSearchDone": "Sladdede treff: {{count}}. Lagre for å beholde endringen.",
       "noRedactMatches": "Ingen teksttreff funnet å redigere.",
       "redactSearchFailed": "Søkredaksjon mislyktes: {{message}}",
       "applyRedactConfirm": "Bruk {{count}} redigeringsmerknad permanent? Dette fjerner innholdet fra PDF-en for godt.",
@@ -1408,108 +1541,328 @@
       "applyRedactRunning": "Bruker redigeringer permanent…",
       "applyRedactDone": "Redigeringer permanent brukt",
       "redactionsApplied": "Redigeringer har blitt permanent brukt.",
-      "redactFailed": "Redigering mislyktes: {{message}}"
+      "redactFailed": "Redigering mislyktes: {{message}}",
+      "compressedCopyToast": "Lagret {{name}}: {{before}} til {{after}}. Det åpne dokumentet er uendret.",
+      "compressedReplacedToast": "Komprimerte det åpne dokumentet: {{before}} til {{after}}. Angre henter originalen tilbake. Lagre for å beholde den komprimerte versjonen."
     },
     "thumbnails": {
       "pages": "Sider",
       "pageAlt": "Side {{page}}",
-      "bookmarks": "Bookmarks"
+      "bookmarks": "Bokmerker"
     },
     "pdfa": {
-      "lede": "PDF/A is the archival form of PDF: fonts embedded, colours defined, nothing that depends on the outside world.",
-      "section": "Conformance",
-      "level": "Level",
-      "validate": "Check this document",
-      "convert": "Save as PDF/A…",
-      "desktopOnly": "Available in the desktop app",
-      "compliant": "Conforms to {{level}}",
-      "notCompliant": "Does not conform: {{errors}} errors, {{warnings}} warnings",
-      "moreIssues": "{{count}} more",
+      "lede": "PDF/A er arkivformen av PDF: innebygde skrifter, definerte farger, ingenting som avhenger av omverdenen.",
+      "section": "Samsvar",
+      "level": "Nivå",
+      "validate": "Kontroller dette dokumentet",
+      "convert": "Lagre som PDF/A…",
+      "desktopOnly": "Tilgjengelig i skrivebordsappen",
+      "compliant": "Samsvarer med {{level}}",
+      "notCompliant": "Samsvarer ikke: {{errors}} feil, {{warnings}} advarsler",
+      "moreIssues": "{{count}} til",
       "report": {
-        "title": "What the conversion did",
-        "written": "Written to {{path}}",
-        "size": "{{out}} out of {{in}} ({{ratio}}×), in {{seconds}} s",
-        "pages": "{{count}} pages",
-        "fontsEmbedded": "{{embedded}} of {{found}} unembedded fonts embedded",
-        "fontsFailed": "Could not embed: {{fonts}}",
-        "removed": "Removed: {{count}} items that PDF/A does not allow",
-        "subset": "{{count}} font programs reduced, {{bytes}} kB saved",
-        "outputIntent": "Output intent added",
-        "unchangedDocument": "The open document was not changed.",
+        "title": "Hva konverteringen gjorde",
+        "written": "Skrevet til {{path}}",
+        "size": "{{out}} av {{in}} ({{ratio}}×), på {{seconds}} s",
+        "pages": "{{count}} sider",
+        "fontsEmbedded": "{{embedded}} av {{found}} ikke-innebygde skrifter innebygd",
+        "fontsFailed": "Kunne ikke bygge inn: {{fonts}}",
+        "removed": "Fjernet: {{count}} elementer som PDF/A ikke tillater",
+        "subset": "{{count}} fontprogrammer redusert, {{bytes}} kB spart",
+        "outputIntent": "Output intent lagt til",
+        "unchangedDocument": "Det åpne dokumentet ble ikke endret.",
         "warning": "{{message}}",
-        "moreWarnings": "{{count}} more"
+        "moreWarnings": "{{count}} til"
       }
     },
     "metadata": {
-      "lede": "The title and author stored inside the file, which is what other readers and search show.",
-      "section": "Properties",
-      "title": "Title",
-      "author": "Author",
-      "apply": "Save properties",
-      "desktopOnly": "Available in the desktop app"
+      "lede": "Tittelen og forfatteren som er lagret i filen, og som andre lesere og søk viser.",
+      "section": "Egenskaper",
+      "title": "Tittel",
+      "author": "Forfatter",
+      "apply": "Lagre egenskaper",
+      "desktopOnly": "Tilgjengelig i skrivebordsappen"
     },
     "invoice": {
-      "lede": "A ZUGFeRD or Factur-X invoice travels as XML inside the PDF. This reads it and checks it against EN 16931.",
-      "section": "Embedded invoice",
-      "read": "Read invoice",
-      "desktopOnly": "Available in the desktop app",
-      "none": "This document carries no e-invoice.",
-      "number": "Number: {{number}}",
-      "issued": "Issued: {{date}}",
-      "seller": "Seller: {{name}}",
-      "buyer": "Buyer: {{name}}",
-      "total": "Total: {{total}} {{currency}}",
-      "lines": "Line items: {{count}}",
-      "valid": "Valid against {{profile}}",
-      "invalid": "Not valid: {{errors}} errors, {{warnings}} warnings"
+      "lede": "En ZUGFeRD- eller Factur-X-faktura ligger som XML inne i PDF-en. Dette leser den og sjekker den mot EN 16931.",
+      "section": "Innebygd faktura",
+      "read": "Les faktura",
+      "desktopOnly": "Tilgjengelig i skrivebordsappen",
+      "none": "Dette dokumentet har ingen e-faktura.",
+      "number": "Nummer: {{number}}",
+      "issued": "Utstedt: {{date}}",
+      "seller": "Selger: {{name}}",
+      "buyer": "Kjøper: {{name}}",
+      "total": "Totalt: {{total}} {{currency}}",
+      "lines": "Fakturalinjer: {{count}}",
+      "valid": "Gyldig mot {{profile}}",
+      "invalid": "Ikke gyldig: {{errors}} feil, {{warnings}} advarsler"
     },
     "canvas": {
-      "document": "PDF document"
+      "document": "PDF-dokument"
+    },
+    "stamps": {
+      "Approved": "Godkjent",
+      "NotApproved": "Ikke godkjent",
+      "Draft": "Utkast",
+      "Confidential": "Konfidensielt",
+      "Final": "Endelig",
+      "ForComment": "Til kommentar",
+      "Expired": "Utløpt"
     }
   },
   "about": {
-    "section": "About",
+    "section": "Om",
     "app": "App",
-    "version": "Version",
-    "privacy": "Privacy",
-    "privacyValue": "All processing happens locally",
-    "website": "Website"
+    "version": "Versjon",
+    "privacy": "Personvern",
+    "privacyValue": "All behandling skjer lokalt",
+    "website": "Nettsted"
   },
   "reviewSummary": {
-    "title": "Review summary",
-    "generatedAt": "Generated on",
-    "comments": "Comments",
-    "noComments": "No comments.",
-    "replies": "Replies:",
-    "empty": "empty",
-    "redactions": "Redactions",
-    "noRedactions": "No redactions.",
-    "noIssues": "No issues.",
-    "metadataChanges": "Metadata changes",
-    "noMetadataChanges": "No changes.",
-    "changedBy": "by",
-    "on": "on"
+    "title": "Gjennomgangssammendrag",
+    "generatedAt": "Generert",
+    "comments": "Kommentarer",
+    "noComments": "Ingen kommentarer.",
+    "replies": "Svar:",
+    "empty": "tom",
+    "redactions": "Redigeringer",
+    "noRedactions": "Ingen redigeringer.",
+    "noIssues": "Ingen problemer.",
+    "metadataChanges": "Metadataendringer",
+    "noMetadataChanges": "Ingen endringer.",
+    "changedBy": "av",
+    "on": "den"
   },
   "externalLink": {
-    "askMessage": "This PDF wants to open an external link:\n\n{{label}}\n\nURL:\n{{href}}\n\nDo you want to continue?",
-    "title": "Open external link?",
-    "openLink": "Open link",
-    "dialogBody": "This PDF wants to open an external website. Check the URL before continuing."
+    "askMessage": "Denne PDF-en vil åpne en ekstern lenke:\n\n{{label}}\n\nURL:\n{{href}}\n\nVil du fortsette?",
+    "title": "Åpne ekstern lenke?",
+    "openLink": "Åpne lenke",
+    "dialogBody": "Denne PDF-en vil åpne et eksternt nettsted. Kontroller URL-en før du fortsetter."
   },
   "linkChoice": {
-    "title": "Open link in your browser?",
-    "body": "This document wants to open an external website. Are you opening it from a trusted source?",
-    "alwaysAllow": "Always allow",
-    "openOnce": "Open once"
+    "title": "Åpne lenken i nettleseren?",
+    "body": "Dette dokumentet vil åpne et eksternt nettsted. Åpner du det fra en pålitelig kilde?",
+    "alwaysAllow": "Tillat alltid",
+    "openOnce": "Åpne én gang"
   },
   "fallbacks": {
-    "ocrUnavailableTitle": "OCR is not available on this computer",
-    "ocrUnavailableMessage": "PDFluent could not start the text-recognition engine. {{reason}}",
-    "ocrFailedMessage": "Text recognition stopped on page {{page}}: {{reason}}",
-    "xfaStaticTitle": "Form filled without recalculation",
-    "xfaStaticMessage": "This build writes XFA field values straight into the form. Field scripts do not run, so calculated totals and fields that appear or hide based on your answer stay as they are.",
-    "featureUnavailableTitle": "'{{feature}}' is not available in this build",
-    "usageRightsInvalidatedTitle": "This document is no longer Reader-enabled",
-    "usageRightsInvalidatedMessage": "Your change was made. It also invalidated the usage-rights signature this PDF carried, which let Adobe Reader fill in and save the form. The text edit stands; the extended rights are gone and cannot be restored by undoing it."
+    "ocrUnavailableTitle": "OCR er ikke tilgjengelig på denne datamaskinen",
+    "ocrUnavailableMessage": "PDFluent kunne ikke starte tekstgjenkjenningen. {{reason}}",
+    "ocrFailedMessage": "Tekstgjenkjenning stoppet på side {{page}}: {{reason}}",
+    "xfaStaticTitle": "Skjema utfylt uten omberegning",
+    "xfaStaticMessage": "Denne versjonen skriver XFA-feltverdier rett inn i skjemaet. Feltskript kjøres ikke, så beregnede totaler og felt som vises eller skjules basert på svaret ditt, forblir som de er.",
+    "xfaScriptsNotRunTitle": "Noen skript i skjemaet kjøres ikke",
+    "xfaScriptsNotRunMessage": "Svaret ditt er lagret. Skjemaet inneholder FormCalc-skript ({{count}} funnet), og PDFluent kjører bare JavaScript-skript. Summer og felt som skriptene ville oppdatert, beholder de lagrede verdiene til skjemaet åpnes i Adobe Reader.",
+    "xfaFieldRefusedTitle": "Skjemaet godtok ikke verdien",
+    "xfaFieldReadOnly": "Feltet «{{field}}» er skrivebeskyttet i dette skjemaet og kan ikke endres.",
+    "xfaFieldRejected": "Feltet «{{field}}» godtar ikke den verdien: {{reason}}",
+    "xfaFieldNotFound": "Feltet «{{field}}» finnes ikke lenger i skjemaet. Skjemaet ble lastet inn på nytt.",
+    "featureUnavailableTitle": "'{{feature}}' er ikke tilgjengelig i denne versjonen",
+    "usageRightsInvalidatedTitle": "Dette dokumentet er ikke lenger Reader-aktivert",
+    "usageRightsInvalidatedMessage": "Endringen din ble utført. Den gjorde også at bruksrettighetssignaturen som dette PDF-dokumentet hadde, ble ugyldig, noe som lot Adobe Reader fylle ut og lagre skjemaet. Tekstendringen består; de utvidede rettighetene er borte og kan ikke gjenopprettes ved å angre endringen.",
+    "xfaScriptsFailedTitle": "Noen skjemaskript fullførte ikke",
+    "xfaScriptsFailedMessage": "Svaret ditt er lagret, men disse skriptene fullførte ikke, så verdier de satte kan mangle: {{details}}.",
+    "xfaScriptKind_threw": "fikk en feil",
+    "xfaScriptKind_timeout": "fikk tidsavbrudd",
+    "xfaScriptKind_refused": "ble avvist av sandkassen"
+  },
+  "signedSave": {
+    "title": "Dette dokumentet er signert",
+    "message": "Redigeringen fjerner innhold som signaturen dekker, så den kan ikke lagres over den signerte originalen uten å bryte signaturen. Lagre en kopi i stedet: kopien beholder redigeringen og har ikke signaturen.",
+    "saveCopy": "Lagre kopi uten signatur…",
+    "cancel": "Avbryt"
+  },
+  "passwordPrompt": {
+    "title": "Denne PDF-en er beskyttet",
+    "message": "Skriv inn passordet for å åpne {{name}}.",
+    "incorrect": "Passordet åpner ikke denne PDF-en. Prøv igjen.",
+    "label": "Passord",
+    "open": "Åpne",
+    "cancel": "Avbryt",
+    "readOnlyTitle": "Åpnet skrivebeskyttet",
+    "readOnlyMessage": "Denne PDF-ens tillatelser tillater ikke endringer. Du kan lese den, og skrive den ut hvis tillatelsene tillater det. For å lagre endringer, fjern beskyttelsen med eierpassordet."
+  },
+  "a11y": {
+    "searchNextResult": "Neste treff",
+    "searchPrevResult": "Forrige treff"
+  },
+  "feedback": {
+    "title": "Hjelp oss å gjøre PDFluent bedre",
+    "intro": "Fortell oss hva du prøvde å gjøre. Vi leser alle tilbakemeldinger.",
+    "menuLabel": "Hjelp oss å gjøre PDFluent bedre…",
+    "fromError": "Du kan fortelle oss om problemet du akkurat støtte på.",
+    "areaLabel": "Hva prøvde du å gjøre?",
+    "area": {
+      "open-view": "Åpne eller lese et dokument",
+      "search-copy": "Søke i eller kopiere tekst",
+      "print": "Skrive ut",
+      "edit-text": "Redigere tekst",
+      "annotate": "Utheve, kommentere eller tegne",
+      "forms": "Fylle ut et skjema",
+      "sign": "Signere eller kontrollere en signatur",
+      "redact": "Rediger ut",
+      "pages-organize": "Rotere, endre rekkefølge på, slå sammen eller dele sider",
+      "convert-export": "Konvertere eller eksportere",
+      "ocr": "Gjenkjenne tekst i en skanning (OCR)",
+      "pdfa-compliance": "PDF/A",
+      "protect": "Passord eller tillatelser",
+      "save": "Lagre",
+      "install-update": "Installere eller oppdatere PDFluent",
+      "other": "Noe annet"
+    },
+    "tryingToPlaceholder": "Med dine egne ord (valgfritt)",
+    "whatHappenedLabel": "Hva skjedde?",
+    "whatHappenedPlaceholder": "Hva så du?",
+    "whatHappenedRequired": "Fortell oss hva som skjedde, så vet vi hvor vi skal lete.",
+    "expectedLabel": "Hva forventet du?",
+    "expectedPlaceholder": "Valgfritt",
+    "docTypeLabel": "Hva slags dokument var det?",
+    "docType": {
+      "none": "Ingen dokumenter involvert",
+      "form": "Et skjema",
+      "scanned": "En skanning",
+      "signed": "Et signert dokument",
+      "protected": "Passordbeskyttet",
+      "large": "Stort (over 100 sider)",
+      "xfa": "Et offentlig skjema eller XFA-skjema",
+      "other": "Noe annet"
+    },
+    "docTypeUnset": "Velg…",
+    "pageCountLabel": "Antall sider",
+    "contextTitle": "Sendes med tilbakemeldingen",
+    "contextToggle": "Ta med systemdetaljer",
+    "contextHint": "Versjon, system, språk og siste feil hjelper oss å gjenskape problemet. Ingen filnavn, filbaner eller dokumentinnhold.",
+    "fieldVersion": "PDFluent-versjon",
+    "fieldSystem": "System",
+    "fieldLanguage": "Språk",
+    "fieldLastError": "Siste feil",
+    "fieldSessions": "Økter",
+    "notIncluded": "ikke inkludert",
+    "documentTitle": "Del dokumentet (valgfritt)",
+    "documentToggle": "Del det åpne dokumentet sammen med tilbakemeldingen",
+    "documentNone": "Ingen dokumenter er åpne.",
+    "documentTooLarge": "Dette dokumentet er større enn 20 MB og kan ikke deles sammen med en tilbakemelding.",
+    "documentShared": "Dette dokumentet blir delt.",
+    "documentConfirmTitle": "Dele dette dokumentet?",
+    "documentConfirmText": "Denne filen sendes til PDFluent (Innovation Trigger B.V.). Den brukes bare til å undersøke denne rapporten, publiseres aldri, brukes aldri til trening og slettes senest 90 dager etter at problemet er fikset, og uansett innen 12 måneder.",
+    "documentConfirmFile": "{{name}} ({{size}})",
+    "documentConfirmYes": "Del dokumentet",
+    "documentConfirmNo": "Ikke del",
+    "contactTitle": "Hold kontakten (valgfritt)",
+    "emailLabel": "E-postadresse",
+    "emailInvalid": "Dette ser ikke ut som en e-postadresse.",
+    "consentContact": "PDFluent kan sende meg e-post med spørsmål om denne rapporten.",
+    "consentFixed": "Send meg e-post når dette er fikset.",
+    "contactHint": "Adressen din lagres atskilt fra rapporten, brukes bare til denne rapporten og aldri til nyhetsbrev eller markedsføring.",
+    "noEmailHint": "Uten e-postadresse hører du likevel fra oss: Når en oppdatering løser problemet ditt, sier PDFluent fra i appen.",
+    "privacyNotice": "Innovation Trigger B.V. mottar denne rapporten for å forbedre PDFluent. Rapporter oppbevares i opptil 24 måneder. Du kan få din fjernet når som helst.",
+    "privacyLink": "Personvernerklæring",
+    "send": "Send",
+    "sending": "Sender…",
+    "cancel": "Avbryt",
+    "sentTitle": "Takk!",
+    "sentBody": "Tilbakemeldingen din er mottatt. Dette er nummeret:",
+    "sentIdHint": "Ta vare på nummeret hvis du vil spørre om tilbakemeldingen eller få den slettet.",
+    "sentNoLocalCopy": "PDFluent kunne ikke huske nummeret på denne datamaskinen, så skriv det ned.",
+    "sentDocumentFailed": "Tilbakemeldingen din kom fram, men dokumentet kunne ikke lastes opp. Du kan sende tilbakemeldingen på nytt med dokumentet hvis det er viktig.",
+    "removeReport": "Fjern denne tilbakemeldingen",
+    "removing": "Fjerner…",
+    "removed": "Tilbakemeldingen din er fjernet.",
+    "removeFailed": "Tilbakemeldingen kunne ikke fjernes akkurat nå. Prøv igjen senere, eller send oss nummeret på e-post.",
+    "failedTitle": "Det gikk ikke gjennom",
+    "failedNetwork": "PDFluent fikk ikke kontakt med serveren. Ingenting ble sendt, og teksten din er fortsatt her.",
+    "failedRateLimited": "For mange tilbakemeldinger fra denne tilkoblingen i dag. Prøv igjen i morgen.",
+    "failedRejected": "Tilbakemeldingen ble ikke godtatt. Sjekk skjemaet og prøv igjen.",
+    "failedServer": "Noe gikk galt hos oss. Teksten din er fortsatt her, så prøv igjen om litt.",
+    "tryAgain": "Prøv igjen",
+    "fixedTitle": "Løst!",
+    "fixedOffered": "Versjon {{version}} løser tilbakemeldingen din {{ids}}. Takk for at du sa fra.",
+    "fixedAfterUpdate": "Tilbakemeldingen din {{ids}} er løst i denne versjonen. Takk for at du sa fra.",
+    "dismiss": "Lukk"
+  },
+  "openError": {
+    "corrupt": {
+      "title": "Denne PDF-en er skadet",
+      "body": "PDFluent kunne ikke lese denne filen. Den kan ha blitt skadet under nedlasting eller kopiering, eller programmet som lagde den kan ha skrevet den feil. Last den ned eller kopier den på nytt, eller åpne originalen og eksporter den som PDF på nytt.",
+      "action": "Åpne en annen fil"
+    },
+    "not_pdf": {
+      "title": "Dette er ikke en PDF",
+      "body": "PDFluent åpner PDF-filer. Denne filen er noe annet, eller navnet slutter ikke på .pdf. Velg en PDF. Hvis filen er en PDF, gi den et navn som slutter på .pdf.",
+      "action": "Åpne en annen fil"
+    },
+    "empty": {
+      "title": "Filen er tom",
+      "body": "Filen har ikke noe innhold (0 byte). Nedlastingen eller kopieringen ble kanskje ikke ferdig. Last den ned eller kopier den på nytt, og åpne den igjen.",
+      "action": "Åpne en annen fil"
+    },
+    "encrypted_needs_password": {
+      "title": "Denne PDF-en krever passord",
+      "body": "Denne PDF-en er beskyttet med passord. Åpne den på nytt og skriv inn passordet. Hvis du ikke kjenner det, spør den som sendte deg filen.",
+      "action": "Skriv inn passord"
+    },
+    "wrong_password": {
+      "title": "Passordet fungerte ikke",
+      "body": "Passordet åpner ikke denne PDF-en. Se etter skrivefeil og Caps Lock, og prøv igjen.",
+      "action": "Prøv igjen"
+    },
+    "unsupported_encryption": {
+      "title": "PDFluent kan ikke åpne denne typen beskyttelse",
+      "body": "Denne PDF-en er beskyttet med et sertifikat eller en sikkerhetsmetode som PDFluent ikke støtter, så ingen passord kan åpne den her. Be avsenderen om en kopi uten beskyttelse, eller en beskyttet med passord.",
+      "action": "Åpne en annen fil"
+    },
+    "too_large": {
+      "title": "Filen er for stor",
+      "body": "Filen er større enn det PDFluent kan åpne trygt. Del opp eller komprimer den i programmet som lagde den, og åpne delene.",
+      "action": "Åpne en annen fil"
+    },
+    "too_many_pages": {
+      "title": "Denne PDF-en har for mange sider",
+      "body": "Dokumentet har flere sider enn PDFluent kan åpne samtidig. Del det opp i mindre dokumenter i programmet som lagde det, og åpne delene.",
+      "action": "Åpne en annen fil"
+    },
+    "io_denied": {
+      "title": "PDFluent har ikke tilgang til denne filen",
+      "body": "Datamaskinen ga ikke PDFluent tillatelse til å lese denne filen. Sjekk tillatelsene til filen, eller flytt den til en mappe som Dokumenter, og prøv igjen.",
+      "action": "Prøv igjen"
+    },
+    "not_found": {
+      "title": "Finner ikke filen",
+      "body": "Filen kan ha blitt flyttet, omdøpt eller slettet, eller den ligger på en stasjon som ikke lenger er koblet til. Finn filen og åpne den på nytt.",
+      "action": "Åpne en annen fil"
+    },
+    "unknown": {
+      "title": "Filen kunne ikke åpnes",
+      "body": "Noe gikk galt under åpningen av filen. Prøv igjen. Hvis det fortsetter, si fra til oss så vi kan rette det.",
+      "action": "Prøv igjen"
+    },
+    "feedback": "Hjelp oss å forbedre PDFluent"
+  },
+  "formBar": {
+    "title": "Utfyllbart skjema",
+    "fields": "Felt: {{count}}",
+    "clickToFill": "Klikk på et felt for å fylle det ut.",
+    "noCalculations": "Automatiske beregninger fra Adobe-skjemaer kjøres ikke.",
+    "autoLinks": "Åpne lenker automatisk",
+    "autoLinksTitle": "Lenker åpnes automatisk i nettleseren. Klikk for å slå av.",
+    "highlight": "Marker felt",
+    "firstField": "Første felt"
+  },
+  "tabs": {
+    "label": "Åpne dokumenter",
+    "close": "Lukk {{name}}",
+    "unsaved": "Ulagrede endringer",
+    "new": "Åpne et annet dokument",
+    "tooManyTitle": "For mange åpne dokumenter",
+    "tooManyMessage": "{{max}} dokumenter er åpne. Lukk ett for å åpne et annet."
+  },
+  "formScripts": {
+    "barLabel": "Skjemaskript",
+    "barMessage": "Dette skjemaet inneholder skript (for eksempel beregninger). Vil du kjøre dem?",
+    "barDetail": "Fant {{count}} skript.",
+    "runOnce": "Kjør for dette dokumentet",
+    "runAlways": "Kjør alltid skript",
+    "dontRun": "Ikke kjør"
   }
 }

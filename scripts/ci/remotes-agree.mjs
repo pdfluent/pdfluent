@@ -70,14 +70,23 @@ const GITHUB_HOST_KEY = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOo
  * left the building: it happened here once already, twelve characters of it, in
  * a Linux build log. Nothing prints a URL except through this.
  */
-export const shown = (url) => String(url).replace(/\/\/[^@/]*@/, "//***@");
+/**
+ * Strip credentials from any text that quotes a URL. Global and whitespace-
+ * bounded: git's own error quotes the URL inside a sentence, and Windows git
+ * prints the file-URL form `//user:token@E:/...` (#731).
+ */
+export const redactCredentials = (text) => String(text).replace(/\/\/[^@/\s]*@/g, "//***@");
+export const shown = redactCredentials;
 
 function git(args, opts = {}) {
   // GIT_TERMINAL_PROMPT=0: without it a read of the primary with no credential
   // sits waiting for a username instead of failing, and a job that hangs reads
   // like a slow runner rather than a guard that cannot see what it judges.
   const env = { ...(opts.env ?? process.env), GIT_TERMINAL_PROMPT: "0" };
-  return execFileSync("git", args, { cwd: root, encoding: "utf8", maxBuffer: 64 * 1024 * 1024, ...opts, env }).trim();
+  return execFileSync("git", args, { cwd: root, encoding: "utf8", maxBuffer: 64 * 1024 * 1024,
+    // stderr captured, not inherited: git quotes the URL it failed on, and an
+    // inherited stream reaches the log without passing redactCredentials.
+    stdio: ["ignore", "pipe", "pipe"], ...opts, env }).trim();
 }
 
 /**
@@ -123,7 +132,7 @@ export function fetchPrimary({ url = PRIMARY_URL, sshUrl = PRIMARY_SSH_URL, keyB
       : "no credential: PDFLUENT_PRIMARY_SSH_KEY_B64 is not set, and the primary is private";
     throw new Error(
       `remotes-agree: could not read ${branch} from ${shown(where)} — ${why}\n` +
-      `  (${String(e.message).split("\n")[0]})\n` +
+      `  (${redactCredentials(String(e.message).split("\n")[0])})\n` +
       `  Not a pass: the ${REMOTE_LABEL} is the other half of this comparison.`,
     );
   } finally {

@@ -36,6 +36,8 @@ const SHA = "a1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4";
 const OTHER_SHA = "0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c";
 /** Distinct enough that a test never removes a real fetched installer. */
 const MSI_WIN = "C:\\build\\bundle\\msi\\PDFluent_0.0.0-stub_x64_en-US.msi";
+/** Where the box keeps the built OCR component (build-tesseract.sh --out). */
+const OCR_ON_BOX = "C:\\pdfluent\\ocr-component\\out";
 const LOCAL_MSI = "/tmp/PDFluent_0.0.0-stub_x64_en-US.msi";
 
 const STUB_SSH = `#!/usr/bin/env bash
@@ -57,6 +59,8 @@ case "$all" in
     exit 0 ;;
   *Get-PSDrive*)
     echo "\${STUB_FREE_GB:-99}"; exit 0 ;;
+  *Test-Path*tesseract.exe*)
+    echo "\${STUB_OCR_ON_BOX:-yes}"; exit 0 ;;
   *release-windows.ps1*)
     echo "MSI_PATH=\${STUB_MSI_WIN}"; exit 0 ;;
   *"git fetch"*)
@@ -129,6 +133,7 @@ function run(args: string[], env: Record<string, string> = {}, script = SCRIPT):
       STUB_VERSION: "1.0.0",
       STUB_ENGINE_REV: "5b2e506bbe957a9db8f21f43978c400621f8f1bf",
       STUB_MSI_WIN: MSI_WIN,
+      PDFLUENT_OCR_COMPONENT_BUILD_WIN: OCR_ON_BOX,
       WINREMOTE_LOG: path.join(path.dirname(log), "build.log"),
       ...env,
     },
@@ -208,6 +213,29 @@ describe("the pinned engine", () => {
     expect(r.status).not.toBe(0);
     expect(r.out).toContain("cannot read the pinned engine repository");
     expect(r.sent.some((c) => c.includes("release-windows.ps1")), "it built against an engine it cannot fetch").toBe(false);
+  });
+});
+
+describe("the OCR component bundled in the installer", () => {
+  it("must be named before anything is built: every build bundles OCR", () => {
+    const r = run(["--sha", SHA], { ...HOST_ENV, PDFLUENT_OCR_COMPONENT_BUILD_WIN: "" });
+    expect(r.status).not.toBe(0);
+    expect(r.out).toContain("PDFLUENT_OCR_COMPONENT_BUILD_WIN");
+    expect(r.sent.some((c) => c.includes("release-windows.ps1")), "it built without OCR").toBe(false);
+  });
+
+  it("must be on the box, or the build does not start", () => {
+    const r = run(["--sha", SHA], { ...HOST_ENV, STUB_OCR_ON_BOX: "no" });
+    expect(r.status).not.toBe(0);
+    expect(r.out).toContain("has no windows-x86_64");
+    expect(r.sent.some((c) => c.includes("release-windows.ps1")), "it built without OCR").toBe(false);
+  });
+
+  it("reaches the build as the folder release-windows.ps1 stages from", () => {
+    const r = run(["--sha", SHA], HOST_ENV);
+    expect(r.status, r.out).toBe(0);
+    const build = r.sent.find((c) => c.includes("release-windows.ps1"));
+    expect(build).toContain(`PDFLUENT_OCR_COMPONENT_BUILD='${OCR_ON_BOX}'`);
   });
 });
 

@@ -11,6 +11,10 @@
 // Maps common runtime error strings to structured recovery actions.
 // Callers use these to decide how to surface failures to the user and
 // whether an automatic retry is safe.
+//
+// A failed open is not here: it is answered with a code by the backend and
+// explained by viewer/state/openError.ts. The string-matching version that
+// lived here carried hard-coded Dutch and was imported by nothing.
 // ---------------------------------------------------------------------------
 
 import i18n from '../../i18n';
@@ -20,7 +24,7 @@ export type RecoveryStrategy = 'retry' | 'fallback' | 'reset' | 'ignore';
 export interface RecoveryAction {
   /** How the caller should respond to the failure. */
   strategy: RecoveryStrategy;
-  /** Human-readable description of the suggested action (Dutch). */
+  /** What to tell the user, in their language (always from i18n). */
   description: string;
   /** True when the recovery can be attempted without user interaction. */
   canAutoRecover: boolean;
@@ -32,39 +36,6 @@ export interface RecoveryAction {
 export function isRetryableError(error: string): boolean {
   const lower = error.toLowerCase();
   return lower.includes('timeout') || lower.includes('network') || lower.includes('connection');
-}
-
-/**
- * Recovery strategy for document load failures.
- */
-export function getDocumentLoadRecovery(error: string): RecoveryAction {
-  const lower = error.toLowerCase();
-  if (lower.includes('not found') || lower.includes('no such file')) {
-    return {
-      strategy: 'fallback',
-      description: i18n.t('errors.fileNotFound'),
-      canAutoRecover: false,
-    };
-  }
-  if (lower.includes('permission')) {
-    return {
-      strategy: 'fallback',
-      description: 'Geen toegang tot bestand — controleer de rechten',
-      canAutoRecover: false,
-    };
-  }
-  if (lower.includes('encrypted')) {
-    return {
-      strategy: 'fallback',
-      description: 'Versleuteld bestand — voer het wachtwoord in',
-      canAutoRecover: false,
-    };
-  }
-  return {
-    strategy: 'reset',
-    description: i18n.t('errors.loadFailedRetry'),
-    canAutoRecover: false,
-  };
 }
 
 /**
@@ -86,7 +57,7 @@ export function getTauriInvokeRecovery(command: string, error: string): Recovery
   if (isRetryableError(error)) {
     return {
       strategy: 'retry',
-      description: `Tijdelijke fout bij '${command}' — wordt opnieuw geprobeerd`,
+      description: i18n.t('errors.commandRetrying', { command }),
       canAutoRecover: true,
     };
   }

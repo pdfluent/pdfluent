@@ -106,8 +106,15 @@ describe('ViewerApp — Tauri drag-drop listener', () => {
 
   it('calls handleLoadDocument with the dropped path', () => {
     const tauriDropBlock = viewerAppSource.indexOf("payload.type === 'drop'");
-    const loadCall = viewerAppSource.indexOf('void handleLoadDocument(pdf)', tauriDropBlock);
+    const loadCall = viewerAppSource.indexOf('await loadRef.current(pdf)', tauriDropBlock);
     expect(loadCall).toBeGreaterThan(tauriDropBlock);
+  });
+
+  it('opens every dropped PDF, in the order dropped (a tab each, J-90)', () => {
+    const tauriDropBlock = viewerAppSource.indexOf("payload.type === 'drop'");
+    const block = viewerAppSource.slice(tauriDropBlock, viewerAppSource.indexOf('await loadRef.current(pdf)', tauriDropBlock) + 40);
+    expect(block).toContain("pathList.filter(p => p.toLowerCase().endsWith('.pdf'))");
+    expect(block).toContain('for (const pdf of pdfs)');
   });
 
   it('stores and calls the unlisten cleanup function', () => {

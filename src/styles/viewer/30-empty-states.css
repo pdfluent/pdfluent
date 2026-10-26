@@ -90,24 +90,24 @@
 
 .viewer-empty-action:focus-visible {
   outline: none;
-  border-color: var(--accent);
-  box-shadow: 0 0 0 2px var(--accent-soft);
+  border-color: var(--focus-ring);
+  box-shadow: 0 0 0 2px var(--focus-halo);
 }
 
 .viewer-empty-action-primary {
-  background: var(--brand-mark-fill);
-  color: var(--brand-mark-on);
+  background: var(--emphasis);
+  color: var(--on-emphasis);
   border-color: transparent;
 }
 
 .viewer-empty-action-primary:hover {
-  background: #0a0a0a;
+  background: var(--emphasis-hover);
   border-color: transparent;
 }
 
 @media (prefers-color-scheme: dark) {
   .viewer-empty-action-primary:hover {
-    background: #f5f5f5;
+    background: var(--emphasis-hover);
   }
 }
 

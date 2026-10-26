@@ -17,6 +17,7 @@ import { makeCommand } from '../undoEngine';
 import type { UndoCommand } from '../undoEngine';
 import i18n from '../../i18n';
 import type { PdfDocument } from '../../core/document';
+import { createWriteQueue, mergeCalculated } from './formWriteSync';
 
 /** The four field families that carry a persistent value. */
 type CommitKind = 'text' | 'checkbox' | 'radio' | 'choice' | 'multiChoice';
@@ -118,6 +119,24 @@ export function useFormModel(
   // from here; reading `values` would yield the just-typed text (prev === new)
   // and silently drop the undo entry.
   const committedRef = useRef<Record<string, FieldLocalValue>>({});
+  // `values` as of the latest set, readable between renders: merging a write's
+  // answer needs the text the person has typed since, not a render-old copy.
+  const valuesRef = useRef<Record<string, FieldLocalValue>>({});
+  const enqueueWriteRef = useRef(createWriteQueue());
+  const enqueueWrite = enqueueWriteRef.current;
+  // Writes sent and not yet answered, and a counter that moves with each
+  // answer: a model read that overlaps either is older than the overlay.
+  const writesInFlightRef = useRef(0);
+  const writeEpochRef = useRef(0);
+
+  const updateValues = useCallback(
+    (fn: (prev: Record<string, FieldLocalValue>) => Record<string, FieldLocalValue>) => {
+      const next = fn(valuesRef.current);
+      valuesRef.current = next;
+      setValues(next);
+    },
+    [],
+  );
 
   const reload = useCallback(() => setReloadNonce(n => n + 1), []);
 
@@ -126,9 +145,10 @@ export function useFormModel(
     let cancelled = false;
     if (!pdfDoc || !isTauriRuntime()) {
       setModel([]);
-      setValues({});
+      updateValues(() => ({}));
       return;
     }
+    const epochAtStart = writeEpochRef.current;
     void getFormModel()
       .then(fields => {
         if (cancelled) return;
@@ -140,14 +160,18 @@ export function useFormModel(
           const p = f.widgets[0]?.pageIndex;
           if (p != null) pages[f.name] = p;
         }
-        setValues(vals);
-        committedRef.current = { ...vals };
         fieldPageRef.current = pages;
+        // A write was sent or answered while this read was on its way: the
+        // read describes the document before it, and the overlay already
+        // holds the newer values. Keep those.
+        if (writesInFlightRef.current > 0 || writeEpochRef.current !== epochAtStart) return;
+        updateValues(() => vals);
+        committedRef.current = { ...vals };
       })
       .catch(() => {
         if (!cancelled) {
           setModel([]);
-          setValues({});
+          updateValues(() => ({}));
         }
       });
     return () => {
@@ -168,8 +192,8 @@ export function useFormModel(
   }, [model]);
 
   const setTextLocal = useCallback((name: string, value: string) => {
-    setValues(prev => (prev[name] === value ? prev : { ...prev, [name]: value }));
-  }, []);
+    updateValues(prev => (prev[name] === value ? prev : { ...prev, [name]: value }));
+  }, [updateValues]);
 
   const requestFor = useCallback(
     (name: string, kind: CommitKind, value: FieldLocalValue): FormWriteRequest => {
@@ -194,18 +218,43 @@ export function useFormModel(
   const applyValue = useCallback(
     async (name: string, kind: CommitKind, value: FieldLocalValue) => {
       committedRef.current = { ...committedRef.current, [name]: value };
-      setValues(prev => ({ ...prev, [name]: value }));
+      updateValues(prev => ({ ...prev, [name]: value }));
       if (!isTauriRuntime()) return;
-      try {
-        await setFormValue(requestFor(name, kind, value));
-        markDirty();
-      } catch (err) {
-        // Keep the optimistic value so input isn't lost; surface for diagnostics.
-        // (Radio deselect / choice clear can legitimately reject — edge cases.)
-        console.error('[PDFluent] form write failed for', name, err);
-      }
+      // One write at a time: the answers are applied in the order the writes
+      // were made (see formWriteSync.ts), never an older one over a newer one.
+      writesInFlightRef.current += 1;
+      await enqueueWrite(async () => {
+        try {
+          const report = await setFormValue(requestFor(name, kind, value));
+          writeEpochRef.current += 1;
+          markDirty();
+          // Calculated fields (/AA /C) changed along with this one: show them,
+          // and make them the baseline the next undo entry starts from.
+          if (report && report.updated.length > 0) {
+            const merged = mergeCalculated(
+              valuesRef.current,
+              committedRef.current,
+              report.updated,
+            );
+            committedRef.current = merged.committed;
+            updateValues(() => merged.values);
+          }
+          for (const failure of report?.failed ?? []) {
+            console.error(
+              '[PDFluent] form calculation failed' + (failure.name ? ` for ${failure.name}` : ''),
+              failure.message,
+            );
+          }
+        } catch (err) {
+          // Keep the optimistic value so input isn't lost; surface for diagnostics.
+          // (Radio deselect / choice clear can legitimately reject — edge cases.)
+          console.error('[PDFluent] form write failed for', name, err);
+        } finally {
+          writesInFlightRef.current -= 1;
+        }
+      });
     },
-    [markDirty, requestFor],
+    [markDirty, requestFor, updateValues, enqueueWrite],
   );
 
   /** Commit a value AND record an undo entry (prev → new) on the shared stack. */

@@ -54,7 +54,6 @@ export function Settings({ visible, onClose }: SettingsProps) {
         alignItems: "center",
         justifyContent: "center",
         background: "rgba(15, 21, 35, 0.35)",
-        backdropFilter: "blur(2px)",
         // @ts-expect-error -- Electron/Tauri -webkit-app-region property
         WebkitAppRegion: "no-drag",
       }}
@@ -188,7 +187,7 @@ export function Settings({ visible, onClose }: SettingsProps) {
                 rel="noopener noreferrer"
                 style={{
                   fontSize: 13,
-                  color: "var(--accent)",
+                  color: "var(--link)",
                   textDecoration: "none",
                 }}
               >

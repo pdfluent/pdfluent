@@ -94,7 +94,7 @@ describe('RightContextPanel — protect mode: Beveiligingsinstellingen', () => {
   });
 
   it('has a decrypt password input', () => {
-    expect(panelSource).toContain("t('protect.currentPasswordPlaceholder'");
+    expect(panelSource).toContain("t('protect.ownerPasswordForRemoval'");
     expect(panelSource).toContain('decryptPassword');
   });
 

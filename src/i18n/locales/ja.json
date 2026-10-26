@@ -114,9 +114,9 @@
     "allTools": "すべてのツール",
     "contextualBar": "モードツールバー",
     "pdfa": "PDF/A",
-    "metadata": "Document properties",
-    "invoice": "E-invoice",
-    "bookmarks": "Bookmarks"
+    "metadata": "ドキュメントのプロパティ",
+    "invoice": "電子請求書",
+    "bookmarks": "ブックマーク"
   },
   "topbar": {
     "openPdf": "PDFを開く",
@@ -242,7 +242,6 @@
     "ownerPasswordPlaceholder": "所有者パスワード",
     "encryptBtn": "暗号化…",
     "decrypt": "復号化",
-    "currentPasswordPlaceholder": "現在のパスワード",
     "decryptBtn": "復号化",
     "noDocument": "ドキュメントが開かれていません。",
     "permCanPrint": "印刷",
@@ -258,7 +257,11 @@
     "searchRedactBtn": "検索して墨消し",
     "redactMetadataTitle": "メタデータ",
     "redactMetadataDesc": "著者、タイトル、その他の識別メタデータを削除します。",
-    "redactMetadataBtn": "メタデータ削除"
+    "redactMetadataBtn": "メタデータ削除",
+    "ownerPasswordForRemoval": "所有者（権限）パスワード",
+    "removePasswordHelp": "パスワードの解除には、権限を管理する所有者パスワードが必要です。ファイルを開いたときのパスワードでは、それが所有者パスワードでもない限り足りません。",
+    "removePasswordReady": "このファイルは所有者パスワードで開いたので、再入力しなくても保護を解除できます。",
+    "removePasswordNotProtected": "この文書はパスワードで保護されていません。"
   },
   "organize": {
     "thumbnails": "サムネイル",
@@ -287,33 +290,34 @@
     "combine": "ファイルを結合",
     "splitRange": "範囲で分割",
     "splitRangeHint": "最初にページを選択",
-    "moveLeft": "Move selected page left",
-    "moveRight": "Move selected page right",
-    "moveLeftShort": "Left",
-    "moveRightShort": "Right",
-    "rotateLeft": "Rotate left",
-    "rotateRight": "Rotate right",
-    "rotateLeftShort": "Left",
-    "rotateRightShort": "Right",
-    "addingPdf": "Adding PDF…",
-    "pdfAdded": "PDF added",
-    "combiningFiles": "Combining {{count}} file(s)…",
-    "filesCombined": "{{count}} file(s) combined",
-    "insertingPdf": "Inserting PDF before page {{page}}…",
-    "pdfInserted": "PDF inserted",
-    "exportingPages": "Exporting {{count}} page(s)…",
-    "selectionExported": "Selection exported to {{name}}",
-    "splittingPages": "Splitting into individual pages…",
-    "pagesSaved": "{{count}} pages saved",
-    "splittingRanges": "Splitting {{count}} range(s)…",
-    "filesSaved": "{{count}} file(s) saved"
+    "moveLeft": "選択したページを左へ移動",
+    "moveRight": "選択したページを右へ移動",
+    "moveLeftShort": "左へ",
+    "moveRightShort": "右へ",
+    "rotateLeft": "左に回転",
+    "rotateRight": "右に回転",
+    "rotateLeftShort": "左",
+    "rotateRightShort": "右",
+    "addingPdf": "PDF を追加中…",
+    "pdfAdded": "PDF を追加しました",
+    "combiningFiles": "{{count}} 個のファイルを結合中…",
+    "filesCombined": "{{count}} 個のファイルを結合しました",
+    "insertingPdf": "ページ {{page}} の前に PDF を挿入中…",
+    "pdfInserted": "PDF を挿入しました",
+    "exportingPages": "{{count}} ページをエクスポート中…",
+    "selectionExported": "選択範囲を {{name}} にエクスポートしました",
+    "splittingPages": "個別ページに分割中…",
+    "pagesSaved": "{{count}} ページを保存しました",
+    "splittingRanges": "{{count}} 個の範囲で分割中…",
+    "filesSaved": "{{count}} 個のファイルを保存しました"
   },
   "unsavedChanges": {
     "title": "未保存の変更",
     "message": "続行する前に変更を保存しますか?",
     "save": "保存",
     "discard": "破棄",
-    "cancel": "キャンセル"
+    "cancel": "キャンセル",
+    "messageNamed": "続行する前に、{{name}} への変更を保存しますか？"
   },
   "welcome": {
     "title": "PDF を開いて開始",
@@ -327,13 +331,13 @@
     "lede": "読み取り、編集、変換、入力、署名 — すべてデバイス上で。",
     "privacyPromise": "プライバシー第一 · ドキュメントはこのデバイスを離れません",
     "dropPdfHere": "PDF をここにドロップ",
-    "v3Subtitle": "Open a PDF to read, edit, convert or sign it locally.",
-    "openFileAria": "Choose a PDF file to open",
-    "clearRecent": "Clear recent",
-    "recentShort": "Recent",
-    "removeRecentAria": "Remove {{name}}",
-    "backToDocument": "Back to document",
-    "loadingDocument": "Loading document…"
+    "v3Subtitle": "PDF を開いて、ローカルで閲覧、編集、変換、署名できます。",
+    "openFileAria": "開く PDF ファイルを選択",
+    "clearRecent": "履歴をクリア",
+    "recentShort": "最近",
+    "removeRecentAria": "{{name}} を削除",
+    "backToDocument": "ドキュメントに戻る",
+    "loadingDocument": "ドキュメントを読み込み中…"
   },
   "settings": {
     "language": "言語",
@@ -350,15 +354,29 @@
     "reviewerNamePlaceholder": "注釈で使用される名前",
     "exportPreferences": "エクスポート設定",
     "exportFormatLabel": "デフォルトエクスポート形式",
-    "autosave": "自動保存",
-    "autosaveEnable": "変更を自動保存",
     "themeLabel": "テーマ",
     "ocrDefaults": "OCR デフォルト",
     "ocrLanguageLabel": "デフォルト言語 (ISO-639-2)",
     "ocrLanguagePlaceholder": "例: eng, nld, deu",
-    "updates": "Updates",
-    "automaticUpdateCheck": "Check for a new version at startup",
-    "automaticUpdateCheckHint": "PDFluent asks pdfluent.com whether a newer version exists, a few seconds after it starts. Nothing from your documents is sent. Turn this off and the app never checks on its own — \"Check for updates\" still works whenever you ask for it."
+    "updates": "アップデート",
+    "automaticUpdateCheck": "起動時に新しいバージョンを確認",
+    "automaticUpdateCheckHint": "PDFluent は起動から数秒後、新しいバージョンがあるかどうかを pdfluent.com に問い合わせます。文書の内容は一切送信されません。これをオフにすると、アプリが自動で確認することはありません —「アップデートを確認」は、実行したときにいつでも機能します。",
+    "recoveryCopy": "復元用コピー",
+    "recoveryCopyEnable": "未保存の変更の復元用コピーを保持し、クラッシュ後に復元できるようにする",
+    "view": "表示",
+    "defaultZoomLabel": "既定のズーム",
+    "defaultZoomFitWidth": "幅に合わせる (既定)",
+    "defaultZoomFitPage": "ページに合わせる",
+    "defaultZoomActualSize": "実際のサイズ (100%)",
+    "defaultZoomLastUsed": "前回使用した倍率",
+    "defaultZoomHint": "ドキュメントはこのズームで開き、手動でズームするまでウィンドウに追従します。幅に合わせるでは、ページ全体の方が明らかに適している場合、代わりにページ全体を表示します。",
+    "securityTitle": "セキュリティ",
+    "formScriptsLabel": "フォームスクリプト",
+    "formScriptsAsk": "確認",
+    "formScriptsAlways": "常に",
+    "formScriptsNever": "しない",
+    "formScriptsHint": "フォームにはスクリプト（例：計算）を含めることができます。デフォルトは「確認」です。フォームは保存された値で開き、同意するまで何も実行されません。",
+    "formScriptsPinned": "組織によってこの設定が固定されています。ここでは変更できません。"
   },
   "errors": {
     "loadFailed": "ドキュメント読み込み失敗",
@@ -381,7 +399,8 @@
     "addPageFailed": "PDF 追加失敗",
     "insertFailed": "挿入失敗",
     "splitFailed": "分割失敗",
-    "commandFailedTitle": "'{{command}}' did not complete"
+    "commandFailedTitle": "'{{command}}' が完了しませんでした",
+    "commandRetrying": "{{command}} で一時的なエラーが発生しました — 再試行しています"
   },
   "events": {
     "formFieldUpdated": "フォームフィールド更新",
@@ -430,9 +449,9 @@
     "pageNotFound": "ページが見つかりません",
     "requiresFontInspection": "テキスト編集はフォント検査が必要です (フェーズ 6 予定)。",
     "rejection": {
-      "bannerTitle": "This text was not changed",
-      "bannerDetail": "Reason reported by the PDF engine: {{detail}}",
-      "bannerDismiss": "Dismiss",
+      "bannerTitle": "このテキストは変更されませんでした",
+      "bannerDetail": "PDF エンジンが報告した理由: {{detail}}",
+      "bannerDismiss": "閉じる",
       "replacement-too-long": {
         "tooltip": "Replacement is too long",
         "explanation": "The replacement is longer than the text it replaces. Keep it the same length or shorter so the surrounding layout stays intact."
@@ -491,8 +510,8 @@
       }
     },
     "fallback": {
-      "fontSubstitutedTitle": "A standard font wrote the new text",
-      "fontSubstitutedMessage": "The original font of this text has no glyph for one or more characters you typed, so Helvetica was used for the replacement. The text is correct; it may look slightly different from the rest of the line."
+      "fontSubstitutedTitle": "新しいテキストは標準フォントで書き込まれました",
+      "fontSubstitutedMessage": "このテキストの元のフォントには、入力した文字の一部に対応する字形がないため、置換には Helvetica を使用しました。テキストは正しく表示されていますが、同じ行の他の部分と少し見た目が異なる場合があります。"
     }
   },
   "validation": {
@@ -566,12 +585,16 @@
     "watermarkDone": "透かしを追加しました",
     "watermarkFailed": "透かしの追加に失敗しました",
     "watermarkRunning": "透かしを追加中…",
-    "pdfaRunning": "Converting to PDF/A…",
-    "pdfaDone": "PDF/A written",
-    "pdfaFailed": "PDF/A conversion failed",
-    "metadataRunning": "Saving properties…",
-    "metadataDone": "Properties saved",
-    "metadataFailed": "Could not save properties"
+    "pdfaRunning": "PDF/A に変換中…",
+    "pdfaDone": "PDF/A を書き出しました",
+    "pdfaFailed": "PDF/A 変換失敗",
+    "metadataRunning": "プロパティを保存中…",
+    "metadataDone": "プロパティを保存しました",
+    "metadataFailed": "プロパティを保存できませんでした",
+    "exportMarkdownRunning": "Markdown として書き出し中…",
+    "exportMarkdownDone": "Markdown を書き出しました",
+    "exportTablesRunning": "テーブルを Excel に書き出し中…",
+    "exportTablesDone": "テーブルを Excel に書き出しました（{{count}}）"
   },
   "panels": {
     "search": "検索",
@@ -714,7 +737,10 @@
     "formatJpeg": "JPEG (画像)",
     "formatDocx": "Word ドキュメント (.docx)",
     "formatXlsx": "Excel スプレッドシート (.xlsx)",
-    "formatPptx": "PowerPoint プレゼンテーション (.pptx)"
+    "formatPptx": "PowerPoint プレゼンテーション (.pptx)",
+    "formatMarkdown": "Markdown (.md) - プレビュー",
+    "formatTablesXlsx": "表を Excel に (.xlsx) - プレビュー",
+    "noTablesFound": "このドキュメントには表が認識されませんでした。"
   },
   "goToPage": {
     "title": "ページへ移動",
@@ -729,7 +755,9 @@
     "documentLabel": "ドキュメント:",
     "savedLabel": "保存:",
     "recoveryPath": "リカバリパス:",
-    "restore": "復元"
+    "restore": "復元",
+    "untitled": "無題のドキュメント",
+    "andMore": "{{name}} と他 {{count}} 件"
   },
   "emptyStates": {
     "noDocument": "ドキュメントが開かれていません",
@@ -839,7 +867,26 @@
     "statusUnavailableWithReason": "OCR ランタイム利用不可: {{reason}}",
     "statusRetry": "もう一度確認",
     "runtimePath": "ランタイム: {{path}}",
-    "missingPackages": "不足: {{packages}}"
+    "missingPackages": "不足: {{packages}}",
+    "noScannedPagesTitle": "認識するものがありません",
+    "unavailable": {
+      "platform": "このプラットフォームでは OCR を提供していません。",
+      "missing": "このバージョンに付属する OCR ファイルが見つからないか、不完全です。PDFluent を再インストールして復元してください。"
+    },
+    "settings": {
+      "unknown": "OCR コンポーネント: 確認中…",
+      "installed": "OCR コンポーネント: Tesseract {{version}} インストール済み"
+    },
+    "errors": {
+      "OCR_COMPONENT_UNSUPPORTED_PLATFORM": "このプラットフォームでは OCR コンポーネントは提供されていません。",
+      "OCR_COMPONENT_NOT_INSTALLED": "OCR コンポーネントがインストールされていません。",
+      "OCR_LANGUAGE_MISSING": "OCR の言語パックがインストールされていません。",
+      "OCR_SIGNED_DOCUMENT": "このドキュメントは署名されています。OCR は署名済みページを変更するため、実行されません。",
+      "OCR_NOT_PERMITTED": "ドキュメントの権限でコンテンツの変更が許可されていません。",
+      "OCR_DOCUMENT_CHANGED": "OCR の実行中にドキュメントが変更されました。OCR をもう一度実行してください。",
+      "OCR_ENGINE_FAILED": "OCR がエラーで停止しました。",
+      "OCR_PAGE_OUT_OF_RANGE": "認識対象のページがドキュメントにありません。"
+    }
   },
   "docInfo": {
     "title": "タイトル",
@@ -879,7 +926,17 @@
     "italicComingSoon": "斜体フォーマット近日公開予定",
     "sourceDigital": "PDF テキストレイヤー",
     "sourceOcr": "OCR",
-    "browserLimitedNote": "ページ上のテキストをクリックしてサポートされている PDF テキストを編集します。画像とリンクはデスクトップアプリで利用可能です。"
+    "browserLimitedNote": "ページ上のテキストをクリックしてサポートされている PDF テキストを編集します。画像とリンクはデスクトップアプリで利用可能です。",
+    "typeface": {
+      "label": "書体",
+      "default": "文書のフォント",
+      "noEmbed": "{{family}}: このフォントのライセンスでは PDF への埋め込みが許可されていません",
+      "refusedLicence": "{{family}} は使用できません。ライセンスで PDF への埋め込みが許可されていません。別の書体を選んでください。",
+      "refusedGlyphs": "{{family}} には {{characters}} のグリフがありません。別の書体を選んでください。",
+      "refusedGone": "その書体はもうインストールされていません。別のものを選んでください。",
+      "refusedText": "スタイルを変更するテキストがページ上にありません。",
+      "refusedUnusable": "{{family}} をフォントとして読み込めませんでした。別の書体を選んでください。"
+    }
   },
   "rightPanel": {
     "properties": "プロパティ",
@@ -944,9 +1001,12 @@
     "flatten": "XFA フラット化",
     "flattenDone": "XFA フラット化。PDF をエクスポートして静的バージョンをダウンロードしてください。",
     "flattenFailed": "XFA フラット化失敗",
-    "convertToStandard": "Convert to standard PDF",
-    "convertedToStandard": "XFA converted to standard PDF",
-    "convertFailed": "Conversion failed: {{message}}"
+    "convertToStandard": "標準 PDF に変換",
+    "convertedToStandard": "XFA を標準 PDF に変換しました",
+    "convertFailed": "変換に失敗しました: {{message}}",
+    "bannerTitle": "XFAフォーム",
+    "bannerBody": "このXFAフォームはそのままの状態で表示されています。フィールドの入力、編集、検索をするには、標準のPDFに変換してください。",
+    "bannerBodyExperimental": "このXFAフォームはそのままの状態で表示されています。フィールドへの入力は試験的な機能です。確実に入力、編集、検索するには、標準のPDFに変換してください。"
   },
   "security": {
     "activeContentBadge": "ブロック済み",
@@ -970,7 +1030,8 @@
     "highlight": "蛍光ペン",
     "strikethrough": "打消し線",
     "underline": "下線",
-    "copyText": "テキストコピー"
+    "copyText": "テキストコピー",
+    "copied": "コピーしました"
   },
   "update": {
     "available": "更新利用可能",
@@ -980,10 +1041,10 @@
     "installing": "インストール中…",
     "checkFailed": "更新確認失敗",
     "upToDate": "最新バージョンを使用しています",
-    "installed": "Update installed",
-    "restartNow": "Restart now",
-    "restartUnsaved": "Save your changes before restarting.",
-    "restartManual": "If it doesn't restart automatically, quit and reopen PDFluent to finish."
+    "installed": "アップデートをインストールしました",
+    "restartNow": "今すぐ再起動",
+    "restartUnsaved": "再起動する前に変更を保存してください。",
+    "restartManual": "自動的に再起動しない場合は、PDFluent を終了して再度開くと完了します。"
   },
   "telemetry": {
     "addNoteLabel": "何か追加しますか？ (任意)",
@@ -1012,6 +1073,11 @@
     "sentTitle": "送信されました。ありがとうございます。",
     "settingsAutoSend": "確認なしで自動送信する",
     "settingsAutoSendNote": "自動レポートは、手動で確認するレポートと同様に個人データが除去され、個人情報は含まれません。",
+    "settingsSentReports": "このコンピューターから送信したクラッシュレポート: {{count}} 件。{{days}} 日後にサーバーから自動的に削除されます。",
+    "settingsDeleteReports": "自分のクラッシュレポートを削除",
+    "settingsDeleting": "削除中…",
+    "settingsDeleted": "削除したクラッシュレポート: {{count}} 件",
+    "settingsDeleteFailed": "{{count}} 件を削除できませんでした。接続を確認して、もう一度お試しください。",
     "settingsDescription": "レポートには個人情報やドキュメントの内容は一切含まれません。送信前にすべて除去され、各レポートを最初に確認できます。デフォルトではオフです。",
     "settingsTitle": "クラッシュとエラーレポート",
     "settingsToggle": "クラッシュおよびエラーレポートを送信する",
@@ -1019,7 +1085,11 @@
     "typeBug": "バグ",
     "typeCrash": "クラッシュ",
     "typeFeedback": "フィードバック",
-    "whatGetsSent": "送信内容"
+    "whatGetsSent": "送信内容",
+    "settingsSentFeedback": "このコンピューターから送信されたフィードバックレポート: {{count}}。サーバーからは {{days}} 日後に自動的に削除されます。",
+    "settingsDeleteFeedback": "フィードバックレポートを削除",
+    "settingsFeedbackDeleted": "フィードバックレポートを削除しました: {{count}}",
+    "settingsFeedbackDeleteFailed": "{{count}} 件のフィードバックレポートを削除できませんでした。接続を確認して、もう一度お試しください。"
   },
   "ai": {
     "summaryInstruction": "以下の文書の簡潔な要約を日本語で提供してください。各職歴について、雇用主、役職、期間を記載してください。箇条書きを使用してください。",
@@ -1076,7 +1146,8 @@
       "scrollLeft": "スクロールモードを左に",
       "scrollRight": "スクロールモードを右に",
       "workMode": "作業モード",
-      "searchPlaceholder": "ドキュメント内を検索"
+      "searchPlaceholder": "ドキュメント内を検索",
+      "allTools": "すべてのツール"
     },
     "menu": {
       "about": "概要",
@@ -1147,22 +1218,17 @@
       "draw": "描画",
       "signatureName": "署名名",
       "typeName": "あなたの名前を入力…",
-      "selectStyle": "スタイルを選択",
-      "styleClassic": "筆記体クラシック",
-      "styleElegant": "筆記体エレガント",
-      "styleBrush": "ブラシ署名",
-      "styleModern": "モダン手書き",
       "drawHere": "マウス、トラックパッド、またはスタイラスで描画してください",
       "clear": "クリア",
       "apply": "適用",
-      "defaultSignature": "署名",
       "clickToPlaceSignature": "ページをクリックして署名を配置します。",
       "addInitials": "頭文字を追加",
       "initialsIntro": "頭文字を入力して、頭文字フィールドに素早く配置します。",
       "initials": "頭文字",
       "initialsPlaceholder": "例：AB",
-      "defaultInitials": "AB",
-      "clickToPlaceInitials": "ページをクリックして頭文字を配置します。"
+      "clickToPlaceInitials": "ページをクリックして頭文字を配置します。",
+      "signatureFont": "署名フォント",
+      "plainItalic": "通常の斜体"
     },
     "overlay": {
       "signaturePlaced": "署名が配置されました！",
@@ -1177,13 +1243,13 @@
     "textbox": {
       "editTitle": "テキストボックスを編集",
       "newTitle": "新しいテキストボックス",
-      "intro": "このテキストは現在のページのオーバーレイとして配置されます。空の保存は既存のテキストボックスを削除します。",
       "label": "テキスト",
       "placeholder": "テキストを入力…",
       "delete": "削除",
       "deleted": "テキストボックスが削除されました。",
       "updated": "テキストボックスが更新されました。",
-      "added": "新しいテキストボックスが追加されました。"
+      "added": "新しいテキストボックスが追加されました。",
+      "introPdf": "テキストボックスは PDF に書き込まれ、どの PDF ビューアーでも表示されます。空のまま保存すると既存のテキストボックスが削除されます。"
     },
     "rail": {
       "tools": "PDF ツール",
@@ -1197,12 +1263,14 @@
       "more": "その他のツール",
       "strikeText": "テキストに取り消し線",
       "underlineText": "テキストに下線",
-      "addAttachment": "添付ファイルを追加"
+      "addAttachment": "添付ファイルを追加",
+      "drawRectangle": "四角形を描く"
     },
     "railToasts": {
-      "commentMode": "ノートモードがアクティブです。テキストを選択してノートを選択するか、コメントリストを使用してノートを追加してください。",
+      "commentMode": "ノートモードです。ノートを置きたい場所のページをクリックしてください。",
       "strikeout": "取り消し線がアクティブです — テキストを選択して適用してください。",
-      "underline": "下線がアクティブです — テキストを選択して適用してください。"
+      "underline": "下線がアクティブです — テキストを選択して適用してください。",
+      "rectangle": "四角形ツールが有効です — ページ上をドラッグして描きます。"
     },
     "tools": {
       "lede": "ツールを選択して開始してください。すべてはこのデバイス上でローカルに実行されます。",
@@ -1238,17 +1306,18 @@
       "layers": "{{count}} 件のレイヤー",
       "manageLayers": "レイヤーを管理",
       "layersVisible": "{{count}} 件のレイヤーが表示されています。",
-      "archiveAndData": "Archiving and data",
-      "pdfaSub": "Check or convert for long-term archiving",
-      "invoiceSub": "Read the ZUGFeRD/Factur-X invoice inside",
-      "metadataSub": "Title and author of this document"
+      "archiveAndData": "アーカイブとデータ",
+      "pdfaSub": "長期アーカイブ用に確認または変換",
+      "invoiceSub": "埋め込まれた ZUGFeRD/Factur-X 請求書を読み取る",
+      "metadataSub": "このドキュメントのタイトルと著者",
+      "flattenForm": "平坦化",
+      "flattenFormTitle": "フォームを平坦化: 入力された値がページの一部となり、フィールドは削除されます",
+      "flattenFormDone": "フォームを平坦化しました。元に戻すとフィールドが復元されます。",
+      "flattenFormFailed": "フォームを平坦化できませんでした: {{message}}"
     },
     "edit": {
       "lede": "ドキュメント内のテキストをクリックしてインライン編集してください。フォーマットバーは選択の直上に表示されます。",
       "formatText": "テキストをフォーマット",
-      "fontLabel": "フォント",
-      "fontHint": "既存の PDF テキストは埋め込まれた PDF フォントを使用します。フォント「{{font}}」は新しく追加されたテキストボックスに使用されます。",
-      "fontEmbedded": "埋め込まれた PDF フォント",
       "color": "色",
       "colorLabel": "色 {{color}}",
       "addContent": "コンテンツを追加",
@@ -1261,7 +1330,18 @@
       "clickAnywhereTextBox": "ページの任意の場所をクリックしてテキストボックスを配置してください。",
       "clickAnywhereImage": "ページの任意の場所をクリックして画像を配置してください。",
       "selection": "選択",
-      "annotationOnPage": "ページ {{page}} の {{type}}"
+      "annotationOnPage": "ページ {{page}} の {{type}}",
+      "placeStamp": "スタンプを配置",
+      "stampLabel": "スタンプ",
+      "clickToPlaceStamp": "ページをクリックしてスタンプを配置します。",
+      "placementModeStamp": "配置モード：スタンプ",
+      "stampPlaced": "スタンプを配置しました。",
+      "deleteAnnotation": "注釈を削除",
+      "annotationColor": "注釈の色",
+      "editTextBox": "テキストを編集",
+      "replaceImage": "画像を置き換え",
+      "imageReplaced": "画像を置き換えました。",
+      "moveHint": "ドラッグで移動、角をドラッグでサイズ変更、矢印キーで微調整できます。"
     },
     "convert": {
       "exportPdfTo": "PDF をエクスポート",
@@ -1279,10 +1359,16 @@
       "confidenceFrom": "{{value}}% 以上の信頼度",
       "ocrOff": "OCR オフ",
       "ocrOn": "OCR オン",
-      "ocrRunning": "OCR をローカルで実行中…"
+      "ocrRunning": "OCR をローカルで実行中…",
+      "ocrComponentUnknown": "OCR コンポーネント: 確認中…",
+      "ocrComponentInstalled": "OCR コンポーネントがインストールされています",
+      "ocrLastRun": "前回の実行: {{pages}} ページ、{{words}} 語を検索可能なテキストとして追加",
+      "ocrRunningProgress": "{{total}} ページ中 {{done}} ページを認識中…",
+      "markdown": "Markdown (プレビュー)",
+      "tablesToExcel": "表を Excel に変換 (プレビュー)"
     },
     "esign": {
-      "lede": "Sign with a certificate of your own, and check the signatures a document already carries. Both happen on this device.",
+      "lede": "ご自身の証明書で署名し、文書にすでに付与されている署名を確認できます。どちらもこのデバイス上で行われます。",
       "fillAndSign": "ドキュメントに記入して署名",
       "addSignature": "署名を追加",
       "addInitials": "頭文字を追加",
@@ -1290,25 +1376,25 @@
       "placementModeInitials": "配置モード：頭文字",
       "clickToPlaceSignature": "ページの任意の場所をクリックして署名を配置してください。",
       "clickToPlaceInitials": "ページの任意の場所をクリックして頭文字を配置してください。",
-      "verifySection": "Signatures",
-      "verify": "Check signatures",
-      "desktopOnly": "Available in the desktop app",
-      "unsigned": "This document carries no signatures.",
-      "signSection": "Sign with a certificate",
-      "padesLevel": "Produces a PAdES B-B signature: your certificate over the whole file, no timestamp server involved.",
-      "certificate": "Certificate (.p12 or .pfx)",
-      "certificateNone": "No certificate chosen",
-      "chooseCertificate": "Choose certificate",
-      "certificatePassword": "Certificate password",
-      "reason": "Reason (optional)",
-      "reasonPlaceholder": "Why you are signing",
-      "sign": "Sign and save a copy",
-      "signing": "Signing…",
-      "signNeedsCertificate": "Choose a certificate and enter its password first.",
-      "signSaved": "Signed copy saved as {{name}}",
-      "signFailed": "Signing failed: {{message}}",
-      "usageRights": "Reader enablement (usage rights)",
-      "usageRightsInvalidated": "Usage rights invalidated — this file was edited, so Adobe Reader no longer treats it as an enabled form."
+      "verifySection": "署名",
+      "verify": "署名を確認",
+      "desktopOnly": "デスクトップアプリで利用可能",
+      "unsigned": "このドキュメントには署名がありません。",
+      "signSection": "証明書で署名",
+      "padesLevel": "PAdES B-B 署名を生成します。ファイル全体に証明書を適用し、タイムスタンプサーバーは使用しません。",
+      "certificate": "証明書 (.p12 または .pfx)",
+      "certificateNone": "証明書が選択されていません",
+      "chooseCertificate": "証明書を選択",
+      "certificatePassword": "証明書のパスワード",
+      "reason": "理由 (オプション)",
+      "reasonPlaceholder": "署名する理由",
+      "sign": "署名してコピーを保存",
+      "signing": "署名中…",
+      "signNeedsCertificate": "先に証明書を選択し、パスワードを入力してください。",
+      "signSaved": "署名済みコピーを {{name}} として保存しました",
+      "signFailed": "署名に失敗しました: {{message}}",
+      "usageRights": "Reader の有効化（使用権）",
+      "usageRightsInvalidated": "使用権が無効になりました — このファイルは編集されたため、Adobe Reader はそれを有効化されたフォームとして扱わなくなります。"
     },
     "protect": {
       "lede": "強力な暗号化パスワードで PDF ドキュメントを保護します。変更はローカルでは直ちに適用されます。",
@@ -1330,9 +1416,11 @@
       "localViaTauri": "Tauri コマンドを介したローカル、ブラウザランタイムなし",
       "compressingImages": "画像を圧縮中…",
       "percentComplete": "{{percent}}% 完了",
-      "compressPdf": "PDF を圧縮",
       "desktopOnly": "デスクトップアプリのみで利用可能",
-      "backToTools": "ツールに戻る"
+      "backToTools": "ツールに戻る",
+      "saveCopy": "圧縮コピーを名前を付けて保存…",
+      "replaceOpen": "開いている文書を圧縮して置き換え",
+      "replaceNote": "コピーを作成すると、開いている文書とそのファイルはそのまま残ります。置き換えると開いている文書のみが変更されます。元に戻すと元の状態に戻ります。"
     },
     "split": {
       "lede": "ドキュメントを 1 ページごと、または特定のページ範囲で個別の PDF ファイルに分割します。",
@@ -1369,7 +1457,52 @@
       "applying": "適用中…",
       "applyPermanently": "リダクションを永続的に適用",
       "noActiveMarkings": "アクティブなリダクションマーキングはありません。",
-      "backToTools": "ツールに戻る"
+      "backToTools": "ツールに戻る",
+      "pii": {
+        "title": "個人データ",
+        "lede": "Find personal data in the text of this document: IBANs, card numbers, national ID numbers, birth dates, e-mail addresses and phone numbers, and names and addresses when the model is installed. Review the list, then redact the ones you choose.",
+        "find": "個人データを検索",
+        "scanning": "スキャン中…",
+        "none": "Nothing found.",
+        "kind": {
+          "iban": "IBAN",
+          "email": "メールアドレス",
+          "phone": "電話番号",
+          "credit_card": "カード番号",
+          "national_id": "国民識別番号",
+          "date_of_birth": "生年月日",
+          "bank_account": "銀行口座番号",
+          "person": "氏名",
+          "address": "住所"
+        },
+        "where": "ページ {{pages}} · {{count}}×",
+        "selectAll": "すべて選択",
+        "selectNone": "選択を解除",
+        "redactSelected": "選択した {{count}} 件を墨消し",
+        "redacting": "墨消し中…",
+        "done": "{{count}} 件を墨消ししました。結果を保存するにはファイルを保存してください。",
+        "failed": "墨消しに失敗しました: {{message}}",
+        "detectFailed": "検索に失敗しました: {{message}}",
+        "patternsOnly": "Without the model this finds only items it can check, such as IBANs, cards, ID numbers, birth dates, e-mail addresses and phone numbers. Names and addresses are not detected, so check every page yourself.",
+        "suggestionsOnly": "これらは提案です。検出器は見落とす可能性があるため、保存する前にすべてのページを確認してください。",
+        "source": {
+          "verified": "確認済み {{detail}}",
+          "model": "モデルの提案、{{score}}%"
+        },
+        "model": {
+          "use": "モデルを使用して名前と住所も検出する",
+          "languages": "チェック対象: {{languages}}",
+          "remove": "モデルを削除",
+          "removeFailed": "モデルを削除できませんでした: {{message}}",
+          "failed": "モデルを実行できませんでした（{{code}}）。確認できる項目のみ表示されています。",
+          "consentTitle": "個人データモデルをダウンロードしますか？",
+          "consentBody": "名前と住所の検出には言語モデル（{{size}}）が必要です。{{host}} から一度ダウンロードされ、固定のチェックサムで検証された後、このコンピューター上で実行されます。ドキュメントが外部に送信されることはありません。",
+          "download": "ダウンロード",
+          "downloading": "ダウンロード中…",
+          "downloadFailed": "ダウンロードに失敗しました: {{message}}",
+          "notInBuild": "このバージョンではまだダウンロードを利用できません。"
+        }
+      }
     },
     "toasts": {
       "saving": "保存中…",
@@ -1399,7 +1532,7 @@
       "pdfsMerged": "{{count}} ファイルが結合されました",
       "mergedSaved": "結合した PDF が {{name}} として保存されました。",
       "mergeFailed": "結合に失敗しました：{{message}}",
-      "redactMatches": "{{matches}} 件の一致が見つかり、{{areas}} 個のリダクションマーキングが配置されました。",
+      "redactSearchDone": "黒塗りした一致箇所: {{count}}。変更を保持するには保存してください。",
       "noRedactMatches": "リダクトするテキスト一致が見つかりません。",
       "redactSearchFailed": "検索リダクションに失敗しました：{{message}}",
       "applyRedactConfirm": "{{count}} 個のリダクションマーキングを永続的に適用しますか？これはコンテンツを PDF から恒久的に削除します。",
@@ -1408,108 +1541,328 @@
       "applyRedactRunning": "リダクションを永続的に適用中…",
       "applyRedactDone": "リダクションが永続的に適用されました",
       "redactionsApplied": "リダクションが永続的に適用されました。",
-      "redactFailed": "リダクションに失敗しました：{{message}}"
+      "redactFailed": "リダクションに失敗しました：{{message}}",
+      "compressedCopyToast": "保存しました {{name}}: {{before}} → {{after}}。開いているドキュメントは変更されていません。",
+      "compressedReplacedToast": "開いているドキュメントを圧縮しました: {{before}} → {{after}}。元に戻すと元の状態に戻ります。圧縮版を保存するには保存してください。"
     },
     "thumbnails": {
       "pages": "ページ",
       "pageAlt": "ページ {{page}}",
-      "bookmarks": "Bookmarks"
+      "bookmarks": "ブックマーク"
     },
     "pdfa": {
-      "lede": "PDF/A is the archival form of PDF: fonts embedded, colours defined, nothing that depends on the outside world.",
-      "section": "Conformance",
-      "level": "Level",
-      "validate": "Check this document",
-      "convert": "Save as PDF/A…",
-      "desktopOnly": "Available in the desktop app",
-      "compliant": "Conforms to {{level}}",
-      "notCompliant": "Does not conform: {{errors}} errors, {{warnings}} warnings",
-      "moreIssues": "{{count}} more",
+      "lede": "PDF/A は PDF のアーカイブ形式です。フォントは埋め込まれ、色は定義され、外部に依存するものはありません。",
+      "section": "準拠",
+      "level": "レベル",
+      "validate": "このドキュメントを確認",
+      "convert": "PDF/A として保存…",
+      "desktopOnly": "デスクトップアプリで利用可能",
+      "compliant": "{{level}} に準拠",
+      "notCompliant": "非準拠: エラー {{errors}} 件、警告 {{warnings}} 件",
+      "moreIssues": "他 {{count}} 件",
       "report": {
-        "title": "What the conversion did",
-        "written": "Written to {{path}}",
-        "size": "{{out}} out of {{in}} ({{ratio}}×), in {{seconds}} s",
-        "pages": "{{count}} pages",
-        "fontsEmbedded": "{{embedded}} of {{found}} unembedded fonts embedded",
-        "fontsFailed": "Could not embed: {{fonts}}",
-        "removed": "Removed: {{count}} items that PDF/A does not allow",
-        "subset": "{{count}} font programs reduced, {{bytes}} kB saved",
-        "outputIntent": "Output intent added",
-        "unchangedDocument": "The open document was not changed.",
+        "title": "変換の内容",
+        "written": "{{path}} に書き出しました",
+        "size": "{{out}} / {{in}} ({{ratio}}×)、{{seconds}} 秒",
+        "pages": "{{count}} ページ",
+        "fontsEmbedded": "未埋め込みフォント {{found}} 件中 {{embedded}} 件を埋め込みました",
+        "fontsFailed": "埋め込めませんでした: {{fonts}}",
+        "removed": "削除: PDF/A で許可されていない項目 {{count}} 件",
+        "subset": "{{count}} 個のフォントプログラムを削減、{{bytes}} kB を節約",
+        "outputIntent": "出力インテントを追加しました",
+        "unchangedDocument": "開いているドキュメントは変更されていません。",
         "warning": "{{message}}",
-        "moreWarnings": "{{count}} more"
+        "moreWarnings": "他 {{count}} 件"
       }
     },
     "metadata": {
-      "lede": "The title and author stored inside the file, which is what other readers and search show.",
-      "section": "Properties",
-      "title": "Title",
-      "author": "Author",
-      "apply": "Save properties",
-      "desktopOnly": "Available in the desktop app"
+      "lede": "ファイル内に保存されたタイトルと著者です。他のビューアーや検索にはこの情報が表示されます。",
+      "section": "プロパティ",
+      "title": "タイトル",
+      "author": "著者",
+      "apply": "プロパティを保存",
+      "desktopOnly": "デスクトップアプリで利用可能"
     },
     "invoice": {
-      "lede": "A ZUGFeRD or Factur-X invoice travels as XML inside the PDF. This reads it and checks it against EN 16931.",
-      "section": "Embedded invoice",
-      "read": "Read invoice",
-      "desktopOnly": "Available in the desktop app",
-      "none": "This document carries no e-invoice.",
-      "number": "Number: {{number}}",
-      "issued": "Issued: {{date}}",
-      "seller": "Seller: {{name}}",
-      "buyer": "Buyer: {{name}}",
-      "total": "Total: {{total}} {{currency}}",
-      "lines": "Line items: {{count}}",
-      "valid": "Valid against {{profile}}",
-      "invalid": "Not valid: {{errors}} errors, {{warnings}} warnings"
+      "lede": "ZUGFeRD または Factur-X の請求書は PDF 内に XML として格納されています。これを読み取り、EN 16931 に照らして検証します。",
+      "section": "埋め込み請求書",
+      "read": "請求書を読み取る",
+      "desktopOnly": "デスクトップアプリで利用可能",
+      "none": "このドキュメントには電子請求書がありません。",
+      "number": "番号: {{number}}",
+      "issued": "発行日: {{date}}",
+      "seller": "販売者: {{name}}",
+      "buyer": "購入者: {{name}}",
+      "total": "合計: {{total}} {{currency}}",
+      "lines": "明細行: {{count}}",
+      "valid": "{{profile}} に対して有効",
+      "invalid": "無効: エラー {{errors}} 件、警告 {{warnings}} 件"
     },
     "canvas": {
-      "document": "PDF document"
+      "document": "PDF ドキュメント"
+    },
+    "stamps": {
+      "Approved": "承認済み",
+      "NotApproved": "未承認",
+      "Draft": "下書き",
+      "Confidential": "社外秘",
+      "Final": "最終版",
+      "ForComment": "レビュー用",
+      "Expired": "期限切れ"
     }
   },
   "about": {
-    "section": "About",
-    "app": "App",
-    "version": "Version",
-    "privacy": "Privacy",
-    "privacyValue": "All processing happens locally",
-    "website": "Website"
+    "section": "情報",
+    "app": "アプリ",
+    "version": "バージョン",
+    "privacy": "プライバシー",
+    "privacyValue": "すべての処理はローカルで行われます",
+    "website": "ウェブサイト"
   },
   "reviewSummary": {
-    "title": "Review summary",
-    "generatedAt": "Generated on",
-    "comments": "Comments",
-    "noComments": "No comments.",
-    "replies": "Replies:",
-    "empty": "empty",
-    "redactions": "Redactions",
-    "noRedactions": "No redactions.",
-    "noIssues": "No issues.",
-    "metadataChanges": "Metadata changes",
-    "noMetadataChanges": "No changes.",
-    "changedBy": "by",
-    "on": "on"
+    "title": "レビューサマリ",
+    "generatedAt": "生成日時",
+    "comments": "コメント",
+    "noComments": "コメントはありません。",
+    "replies": "返信:",
+    "empty": "(空)",
+    "redactions": "墨消し",
+    "noRedactions": "墨消しはありません。",
+    "noIssues": "問題はありません。",
+    "metadataChanges": "メタデータの変更",
+    "noMetadataChanges": "変更はありません。",
+    "changedBy": "変更者:",
+    "on": "日時:"
   },
   "externalLink": {
-    "askMessage": "This PDF wants to open an external link:\n\n{{label}}\n\nURL:\n{{href}}\n\nDo you want to continue?",
-    "title": "Open external link?",
-    "openLink": "Open link",
-    "dialogBody": "This PDF wants to open an external website. Check the URL before continuing."
+    "askMessage": "この PDF が外部リンクを開こうとしています:\n\n{{label}}\n\nURL:\n{{href}}\n\n続行しますか?",
+    "title": "外部リンクを開きますか?",
+    "openLink": "リンクを開く",
+    "dialogBody": "この PDF が外部ウェブサイトを開こうとしています。続行する前に URL を確認してください。"
   },
   "linkChoice": {
-    "title": "Open link in your browser?",
-    "body": "This document wants to open an external website. Are you opening it from a trusted source?",
-    "alwaysAllow": "Always allow",
-    "openOnce": "Open once"
+    "title": "ブラウザでリンクを開きますか?",
+    "body": "このドキュメントが外部ウェブサイトを開こうとしています。信頼できる提供元から入手したドキュメントですか?",
+    "alwaysAllow": "常に許可",
+    "openOnce": "今回のみ開く"
   },
   "fallbacks": {
-    "ocrUnavailableTitle": "OCR is not available on this computer",
-    "ocrUnavailableMessage": "PDFluent could not start the text-recognition engine. {{reason}}",
-    "ocrFailedMessage": "Text recognition stopped on page {{page}}: {{reason}}",
-    "xfaStaticTitle": "Form filled without recalculation",
-    "xfaStaticMessage": "This build writes XFA field values straight into the form. Field scripts do not run, so calculated totals and fields that appear or hide based on your answer stay as they are.",
-    "featureUnavailableTitle": "'{{feature}}' is not available in this build",
-    "usageRightsInvalidatedTitle": "This document is no longer Reader-enabled",
-    "usageRightsInvalidatedMessage": "Your change was made. It also invalidated the usage-rights signature this PDF carried, which let Adobe Reader fill in and save the form. The text edit stands; the extended rights are gone and cannot be restored by undoing it."
+    "ocrUnavailableTitle": "このコンピューターでは OCR を利用できません",
+    "ocrUnavailableMessage": "PDFluent はテキスト認識エンジンを起動できませんでした。{{reason}}",
+    "ocrFailedMessage": "ページ {{page}} でテキスト認識が停止しました: {{reason}}",
+    "xfaStaticTitle": "再計算せずにフォームに入力しました",
+    "xfaStaticMessage": "このビルドでは、XFA フィールドの値をフォームに直接書き込みます。フィールドスクリプトは実行されないため、計算された合計や、回答に応じて表示・非表示になるフィールドはそのままです。",
+    "xfaScriptsNotRunTitle": "フォームの一部のスクリプトは実行されません",
+    "xfaScriptsNotRunMessage": "回答は保存されました。このフォームには FormCalc スクリプトが含まれており（{{count}} 件）、PDFluent は JavaScript スクリプトのみを実行します。これらのスクリプトが更新するはずだった合計やフィールドは、フォームを Adobe Reader で開くまで保存済みの値のままです。",
+    "xfaFieldRefusedTitle": "フォームが値を受け付けませんでした",
+    "xfaFieldReadOnly": "フィールド「{{field}}」はこのフォームでは読み取り専用で、変更できません。",
+    "xfaFieldRejected": "フィールド「{{field}}」はその値を受け付けません: {{reason}}",
+    "xfaFieldNotFound": "フィールド「{{field}}」はフォームに存在しなくなりました。フォームを再読み込みしました。",
+    "featureUnavailableTitle": "'{{feature}}' はこのビルドでは利用できません",
+    "usageRightsInvalidatedTitle": "このドキュメントは Reader 対応ではなくなりました",
+    "usageRightsInvalidatedMessage": "変更は完了しました。ただし、この PDF が持っていた使用権署名が無効になりました。これにより Adobe Reader でフォームに入力して保存できるようになっていました。テキスト編集は有効ですが、拡張権限は失われ、元に戻しても復元できません。",
+    "xfaScriptsFailedTitle": "一部のフォームスクリプトが完了しませんでした",
+    "xfaScriptsFailedMessage": "回答は保存されましたが、これらのスクリプトが完了しなかったため、設定された値が欠けている可能性があります: {{details}}。",
+    "xfaScriptKind_threw": "エラーが発生しました",
+    "xfaScriptKind_timeout": "タイムアウトしました",
+    "xfaScriptKind_refused": "サンドボックスに拒否されました"
+  },
+  "signedSave": {
+    "title": "このドキュメントは署名されています",
+    "message": "墨消しは署名が対象としている内容を削除するため、署名済みの元ファイルに上書き保存すると署名が無効になります。代わりにコピーとして保存してください。コピーには墨消しが反映され、署名は付きません。",
+    "saveCopy": "署名なしでコピーを保存…",
+    "cancel": "キャンセル"
+  },
+  "passwordPrompt": {
+    "title": "この PDF は保護されています",
+    "message": "{{name}} を開くためのパスワードを入力してください。",
+    "incorrect": "そのパスワードではこの PDF を開けません。もう一度お試しください。",
+    "label": "パスワード",
+    "open": "開く",
+    "cancel": "キャンセル",
+    "readOnlyTitle": "読み取り専用で開きました",
+    "readOnlyMessage": "この PDF の権限では変更が許可されていません。閲覧はできます。権限で許可されていれば印刷もできます。変更を保存するには、所有者パスワードで保護を解除してください。"
+  },
+  "a11y": {
+    "searchNextResult": "次の結果",
+    "searchPrevResult": "前の結果"
+  },
+  "feedback": {
+    "title": "PDFluentの改善にご協力ください",
+    "intro": "やろうとしていたことを教えてください。すべてのご報告に目を通しています。",
+    "menuLabel": "PDFluentの改善にご協力ください…",
+    "fromError": "今起きた問題について、ぜひお聞かせください。",
+    "areaLabel": "何をしようとしていましたか？",
+    "area": {
+      "open-view": "ドキュメントを開く・読む",
+      "search-copy": "テキストの検索・コピー",
+      "print": "印刷",
+      "edit-text": "テキストの編集",
+      "annotate": "ハイライト、コメント、描画",
+      "forms": "フォームへの入力",
+      "sign": "署名・署名の確認",
+      "redact": "墨消し",
+      "pages-organize": "ページの回転、並べ替え、結合、分割",
+      "convert-export": "変換・書き出し",
+      "ocr": "スキャンのテキスト認識（OCR）",
+      "pdfa-compliance": "PDF/A",
+      "protect": "パスワード・権限",
+      "save": "保存",
+      "install-update": "PDFluentのインストール・アップデート",
+      "other": "その他"
+    },
+    "tryingToPlaceholder": "ご自身の言葉で（任意）",
+    "whatHappenedLabel": "何が起きましたか？",
+    "whatHappenedPlaceholder": "何が表示されましたか？",
+    "whatHappenedRequired": "何が起きたか教えてください。調査の手がかりになります。",
+    "expectedLabel": "どうなると思っていましたか？",
+    "expectedPlaceholder": "任意",
+    "docTypeLabel": "どんなドキュメントでしたか？",
+    "docType": {
+      "none": "ドキュメントは関係なし",
+      "form": "フォーム",
+      "scanned": "スキャン",
+      "signed": "署名付きドキュメント",
+      "protected": "パスワード保護",
+      "large": "大きい（100ページ超）",
+      "xfa": "官公庁のフォームまたはXFAフォーム",
+      "other": "その他"
+    },
+    "docTypeUnset": "選択…",
+    "pageCountLabel": "ページ数",
+    "contextTitle": "報告と一緒に送信される内容",
+    "contextToggle": "システム情報を含める",
+    "contextHint": "バージョン、システム、言語、直近のエラーは、問題の再現に役立ちます。ファイル名、パス、ドキュメントの内容は含まれません。",
+    "fieldVersion": "PDFluentのバージョン",
+    "fieldSystem": "システム",
+    "fieldLanguage": "言語",
+    "fieldLastError": "直近のエラー",
+    "fieldSessions": "セッション",
+    "notIncluded": "含まれていません",
+    "documentTitle": "ドキュメントを共有（任意）",
+    "documentToggle": "開いているドキュメントをこの報告と共有する",
+    "documentNone": "開いているドキュメントはありません。",
+    "documentTooLarge": "このドキュメントは20 MBを超えているため、報告と共有できません。",
+    "documentShared": "このドキュメントを共有します。",
+    "documentConfirmTitle": "このドキュメントを共有しますか？",
+    "documentConfirmText": "このファイルは PDFluent（Innovation Trigger B.V.）に送信されます。このレポートの調査にのみ使用され、公開されることはなく、トレーニングにも使用されず、問題の修正後 90 日以内、いかなる場合でも 12 か月以内に削除されます。",
+    "documentConfirmFile": "{{name}}（{{size}}）",
+    "documentConfirmYes": "このドキュメントを共有",
+    "documentConfirmNo": "共有しない",
+    "contactTitle": "連絡先（任意）",
+    "emailLabel": "メールアドレス",
+    "emailInvalid": "メールアドレスの形式が正しくないようです。",
+    "consentContact": "PDFluent からこのレポートについて質問のメールが届く場合があります。",
+    "consentFixed": "修正されたらメールを受け取る",
+    "contactHint": "あなたのアドレスはレポートとは別に保存され、このレポートにのみ使用され、ニュースレターやマーケティングには決して使用されません。",
+    "noEmailHint": "メールアドレスがなくても、アップデートで報告の問題が修正されたときは、PDFluentがアプリ内でお知らせします。",
+    "privacyNotice": "Innovation Trigger B.V. は PDFluent の改善のためにこのレポートを受け取ります。レポートは最長 24 か月間保存されます。あなたのレポートはいつでも削除を依頼できます。",
+    "privacyLink": "プライバシーに関する声明",
+    "send": "送信",
+    "sending": "送信中…",
+    "cancel": "キャンセル",
+    "sentTitle": "ありがとうございます！",
+    "sentBody": "報告を受け付けました。受付番号はこちらです：",
+    "sentIdHint": "報告について問い合わせたり削除を依頼したりする場合に必要なので、この番号を控えておいてください。",
+    "sentNoLocalCopy": "このコンピューターには番号を保存できませんでした。お手数ですが、書き留めておいてください。",
+    "sentDocumentFailed": "報告は届きましたが、ドキュメントをアップロードできませんでした。必要な場合は、ドキュメント付きでもう一度送信してください。",
+    "removeReport": "この報告を削除",
+    "removing": "削除中…",
+    "removed": "報告を削除しました。",
+    "removeFailed": "現在、報告を削除できません。しばらくしてからもう一度お試しいただくか、番号をメールでお送りください。",
+    "failedTitle": "送信できませんでした",
+    "failedNetwork": "PDFluentがサーバーに接続できませんでした。何も送信されておらず、入力したテキストはそのまま残っています。",
+    "failedRateLimited": "今日はこの接続からの報告が多すぎます。明日もう一度お試しください。",
+    "failedRejected": "報告は受け付けられませんでした。フォームを確認して、もう一度お試しください。",
+    "failedServer": "こちら側で問題が発生しました。入力したテキストは残っています。しばらくしてからもう一度お試しください。",
+    "tryAgain": "再試行",
+    "fixedTitle": "修正しました！",
+    "fixedOffered": "バージョン{{version}}で、報告{{ids}}が修正されました。お知らせいただきありがとうございます。",
+    "fixedAfterUpdate": "報告{{ids}}は、このバージョンで修正されています。お知らせいただきありがとうございます。",
+    "dismiss": "閉じる"
+  },
+  "openError": {
+    "corrupt": {
+      "title": "このPDFは破損しています",
+      "body": "PDFluentはこのファイルを読み取れませんでした。ダウンロードやコピーの途中で破損したか、作成したアプリが正しく書き出さなかった可能性があります。もう一度ダウンロードまたはコピーするか、元のファイルを開いてPDFとして書き出し直してください。",
+      "action": "別のファイルを開く"
+    },
+    "not_pdf": {
+      "title": "これはPDFではありません",
+      "body": "PDFluentはPDFファイルを開きます。このファイルは別の形式か、ファイル名が .pdf で終わっていません。PDFを選んでください。このファイルがPDFの場合は、名前が .pdf で終わるように変更してください。",
+      "action": "別のファイルを開く"
+    },
+    "empty": {
+      "title": "このファイルは空です",
+      "body": "ファイルに内容がありません (0バイト)。ダウンロードやコピーが完了していない可能性があります。もう一度ダウンロードまたはコピーしてから開いてください。",
+      "action": "別のファイルを開く"
+    },
+    "encrypted_needs_password": {
+      "title": "このPDFにはパスワードが必要です",
+      "body": "このPDFはパスワードで保護されています。もう一度開いて、パスワードを入力してください。パスワードがわからない場合は、ファイルを送ってきた人に確認してください。",
+      "action": "パスワードを入力"
+    },
+    "wrong_password": {
+      "title": "パスワードが違います",
+      "body": "このパスワードではPDFを開けません。入力ミスやCaps Lockを確認して、もう一度お試しください。",
+      "action": "もう一度試す"
+    },
+    "unsupported_encryption": {
+      "title": "PDFluentはこの種類の保護を開けません",
+      "body": "このPDFは、PDFluentが対応していない証明書またはセキュリティ方式で保護されているため、パスワードでは開けません。保護なしのコピー、またはパスワードで保護されたコピーを送信者に依頼してください。",
+      "action": "別のファイルを開く"
+    },
+    "too_large": {
+      "title": "このファイルは大きすぎます",
+      "body": "このファイルは、PDFluentが安全に開ける大きさを超えています。作成したアプリで分割または圧縮してから、分けたファイルを開いてください。",
+      "action": "別のファイルを開く"
+    },
+    "too_many_pages": {
+      "title": "このPDFはページ数が多すぎます",
+      "body": "このドキュメントは、PDFluentが一度に開けるページ数を超えています。作成したアプリで小さなドキュメントに分割してから、分けたファイルを開いてください。",
+      "action": "別のファイルを開く"
+    },
+    "io_denied": {
+      "title": "PDFluentはこのファイルを読み取れません",
+      "body": "お使いのコンピュータが、このファイルの読み取りをPDFluentに許可していません。ファイルのアクセス権を確認するか、書類などのフォルダに移動してから、もう一度お試しください。",
+      "action": "もう一度試す"
+    },
+    "not_found": {
+      "title": "ファイルが見つかりません",
+      "body": "ファイルが移動、名前変更、または削除されたか、接続されていないドライブにある可能性があります。ファイルを探して、もう一度開いてください。",
+      "action": "別のファイルを開く"
+    },
+    "unknown": {
+      "title": "このファイルを開けませんでした",
+      "body": "ファイルを開く際に問題が発生しました。もう一度お試しください。繰り返し起きる場合は、修正のためにお知らせください。",
+      "action": "もう一度試す"
+    },
+    "feedback": "PDFluentの改善にご協力ください"
+  },
+  "formBar": {
+    "title": "入力可能なフォーム",
+    "fields": "フィールド: {{count}}",
+    "clickToFill": "フィールドをクリックして入力します。",
+    "noCalculations": "Adobeフォームの自動計算は実行されません。",
+    "autoLinks": "リンクを自動で開く",
+    "autoLinksTitle": "リンクはブラウザで自動的に開きます。クリックするとオフになります。",
+    "highlight": "フィールドを強調表示",
+    "firstField": "最初のフィールド"
+  },
+  "tabs": {
+    "label": "開いているドキュメント",
+    "close": "{{name}} を閉じる",
+    "unsaved": "未保存の変更",
+    "new": "別のドキュメントを開く",
+    "tooManyTitle": "開いているドキュメントが多すぎます",
+    "tooManyMessage": "{{max}} 個のドキュメントが開いています。別のドキュメントを開くには、1 つ閉じてください。"
+  },
+  "formScripts": {
+    "barLabel": "フォームスクリプト",
+    "barMessage": "このフォームにはスクリプト（例：計算）が含まれています。実行しますか？",
+    "barDetail": "スクリプトが見つかりました：{{count}}件。",
+    "runOnce": "このドキュメントで実行",
+    "runAlways": "常にスクリプトを実行",
+    "dontRun": "実行しない"
   }
 }

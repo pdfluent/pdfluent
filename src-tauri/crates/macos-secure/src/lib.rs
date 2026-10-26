@@ -27,6 +27,12 @@
 //! base64 string returned to the (Rust) caller, which persists it in the app
 //! container. On non-macOS targets every function is a no-op stub.
 
+mod print;
+pub use print::print_pdf;
+
+mod managed_prefs;
+pub use managed_prefs::managed_string;
+
 #[cfg(target_os = "macos")]
 mod imp {
     use std::collections::HashMap;

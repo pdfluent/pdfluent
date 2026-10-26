@@ -1,0 +1,30 @@
+{
+  "productName": "PDFluent UI Walk",
+  "identifier": "com.pdfluent.app.uiwalk",
+  "bundle": {
+    "createUpdaterArtifacts": false,
+    "macOS": {
+      "signingIdentity": "-"
+    },
+    "windows": {
+      "signCommand": null
+    }
+  },
+  "app": {
+    "security": {
+      "capabilities": [
+        "main",
+        {
+          "identifier": "ui-walk",
+          "description": "The ui-walk build only (#471): lets the page fetch its targets and hand back its result.",
+          "windows": [
+            "main"
+          ],
+          "permissions": [
+            "ui-walk:default"
+          ]
+        }
+      ]
+    }
+  }
+}

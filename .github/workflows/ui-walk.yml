@@ -1,0 +1,163 @@
+# SPDX-License-Identifier: LicenseRef-PDFluent-Proprietary
+
+name: UI walk (S5, macOS)
+
+# Release-suite step S5 on macOS and Windows (#471, #730). The installed application ships no
+# inspectable web view, so this builds the same commit a second time with an
+# in-page walker compiled in (scripts/build-ui-walk.sh), runs it over every control
+# in docs/UI_REGISTER.md, and judges the result with the rest of the suite. Every S5
+# row says "measured on the ui-walk build of <sha>, not on the shipped bytes".
+#
+# 1.0.0 shipped with S5 SKIPPED (131 skips). The shape here is built so that cannot
+# be silent again:
+#   * `announce` writes into the run summary that S5 is waiting for the macOS
+#     runner, before the runner has picked anything up.
+#   * `verdict` runs whatever happened to the walk job and fails unless it
+#     succeeded. A walk that never started (no runner) or was cancelled is red with
+#     "waiting for runner / did not run", never a skipped job that looks green.
+#
+# The walk build is never published: scripts/publish-artifact.mjs refuses any file
+# named PDFluent-ui-walk-* and tests/ui-walk-build.test.ts holds it.
+on:
+  schedule:
+    - cron: "43 3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  XFA_SDK_REV: bd658c93d16f4a73dc77041e9dbe10902b26b4c3
+  PDFLUENT_MACHINE_CLASS: runner-macbook
+
+concurrency:
+  group: ui-walk
+  cancel-in-progress: false
+
+jobs:
+  announce:
+    name: S5 is waiting for the macOS runner
+    runs-on: [self-hosted, linux, pdfluent-editor]
+    steps:
+      - run: |
+          {
+            echo "### S5 (UI walk, macOS)"
+            echo "Waiting for the macOS runner. Until it picks the job up, S5 has not run."
+            echo "If it never does, the verdict job below fails this run: not run is not a pass."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  walk:
+    name: S5 on macOS
+    needs: [announce]
+    runs-on: [self-hosted, macOS, pdfluent-editor-macos]
+    timeout-minutes: 150
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - run: sw_vers && node --version && rustc --version && cargo --version
+      - run: npm ci
+      - run: npm run build
+      - uses: ./.github/actions/sdk-pin
+        with:
+          deploy-key: ${{ secrets.ENGINE_DEPLOY_KEY }}
+          revision: ${{ env.XFA_SDK_REV }}
+      # Both builds come from this one commit in this one run (#471 condition 4).
+      - name: Build the app (unsigned CI build, the bytes S1-S3 judge)
+        run: npx tauri build --bundles app --config src-tauri/tauri.ci.conf.json
+      - name: Package the CI image
+        id: image
+        run: |
+          version="$(node -p 'require("./package.json").version')"
+          app="${CARGO_TARGET_DIR:-src-tauri/target}/release/bundle/macos/PDFluent.app"
+          [ -d "$app" ] || { echo "FAIL the build produced no $app"; exit 1; }
+          out="$RUNNER_TEMP/ci-image"; mkdir -p "$out"
+          dmg="$out/PDFluent_${version}_$(uname -m | sed 's/arm64/aarch64/').dmg"
+          hdiutil create -volname PDFluent -srcfolder "$app" -ov -format UDZO "$dmg"
+          echo "dmg=$dmg" >> "$GITHUB_OUTPUT"
+      - name: Build the ui-walk build of the same commit
+        run: scripts/build-ui-walk.sh --out "$RUNNER_TEMP/ui-walk"
+      - name: S5, the UI walk
+        run: |
+          export UI_WALK_APP="$(ls -d "$RUNNER_TEMP"/ui-walk/PDFluent-ui-walk-*.app | head -1)"
+          export UI_WALK_BUILT_FROM="$(cat "$RUNNER_TEMP/ui-walk/BUILT_FROM")"
+          scripts/quality/release_suite.sh --mode ci --steps s5 --platform macos \
+            --artefact "${{ steps.image.outputs.dmg }}" --commit "$GITHUB_SHA" \
+            --machine "$PDFLUENT_MACHINE_CLASS" --report-dir "$RUNNER_TEMP/suite-report"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ui-walk-report
+          path: ${{ runner.temp }}/suite-report
+          if-no-files-found: warn
+      # Removed by the job, not by the action: .github/actions/sdk-pin says why.
+      - name: Remove the engine deploy key
+        if: always()
+        run: rm -rf "${ENGINE_SSH_DIR:-}"
+
+  walk-windows:
+    name: S5 on Windows
+    needs: [announce]
+    runs-on: [self-hosted, Windows, pdfluent-editor-windows]
+    timeout-minutes: 240
+    env:
+      PDFLUENT_MACHINE_CLASS: build-desktop-windows
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - run: node --version && rustc --version && cargo --version
+      - run: npm ci
+      - run: npm run build
+      - uses: ./.github/actions/sdk-pin
+        with:
+          deploy-key: ${{ secrets.ENGINE_DEPLOY_KEY }}
+          revision: ${{ env.XFA_SDK_REV }}
+      - name: Build the installer (unsigned CI build, the bytes S1-S3 judge)
+        run: npx tauri build --bundles msi --config src-tauri/tauri.ci.conf.json
+      - name: Find the CI installer
+        id: msi
+        run: |
+          version="$(node -p 'require("./package.json").version.split("-")[0]')"
+          msi="$(cygpath -u "$CARGO_TARGET_DIR")/release/bundle/msi/PDFluent_${version}_x64_en-US.msi"
+          [ -f "$msi" ] || { echo "FAIL the build produced no $msi"; exit 1; }
+          echo "msi=$msi" >> "$GITHUB_OUTPUT"
+      - name: Build the ui-walk build of the same commit
+        run: scripts/build-ui-walk.sh --out "$(cygpath -u "$RUNNER_TEMP")/ui-walk"
+      - name: S5, the UI walk
+        run: |
+          out="$(cygpath -u "$RUNNER_TEMP")/ui-walk"
+          export UI_WALK_MSI="$(ls "$out"/PDFluent-ui-walk-*.msi | head -1)"
+          export UI_WALK_BUILT_FROM="$(cat "$out/BUILT_FROM")"
+          scripts/quality/release_suite.sh --mode ci --steps s5 --platform windows \
+            --artefact "${{ steps.msi.outputs.msi }}" --commit "$GITHUB_SHA" \
+            --machine "$PDFLUENT_MACHINE_CLASS" --report-dir "$(cygpath -u "$RUNNER_TEMP")/suite-report" \
+            --work "$(cygpath -u "$RUNNER_TEMP")/suite-work"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ui-walk-report-windows
+          path: ${{ runner.temp }}/suite-report
+          if-no-files-found: warn
+      - name: Remove the engine deploy key
+        if: always()
+        run: rm -rf "${ENGINE_SSH_DIR:-}"
+
+  verdict:
+    name: S5 verdict
+    needs: [walk, walk-windows]
+    if: ${{ always() }}
+    runs-on: [self-hosted, linux, pdfluent-editor]
+    steps:
+      - name: S5 ran and passed, or this run is red
+        run: |
+          bad=0
+          for pair in "macOS:${{ needs.walk.result }}" "Windows:${{ needs.walk-windows.result }}"; do
+            name="${pair%%:*}"; result="${pair#*:}"
+            echo "S5 verdict, $name: $result" >> "$GITHUB_STEP_SUMMARY"
+            if [ "$result" != "success" ]; then
+              echo "::error::S5 on $name did not pass (job: $result). 'skipped' and 'cancelled' mean it never ran or never got a runner; that is INCOMPLETE, not green."
+              bad=1
+            fi
+          done
+          exit $bad

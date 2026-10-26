@@ -1,6 +1,5 @@
 {
   "$schema": "https://raw.githubusercontent.com/nicoverbruggen/tauri-v2-schema/main/schema.json",
-  "version": "1.0.0",
   "bundle": {
     "createUpdaterArtifacts": false,
     "macOS": {

@@ -9,57 +9,9 @@
     "docs/UI_REGISTER.md are the measure, and they are meant to go down."
   ],
   "accepted": {
-    "button:add-attachment-btn": {
-      "state": "UNREACHABLE",
-      "reason": "rendered by a component nothing puts on screen; it goes when that surface goes"
-    },
     "button:export-btn": {
       "state": "UNTESTED",
       "reason": "reaches its handler, and the only test that named it was a helper called exclusively from tests that skip. Found on 2026-09-08 when the walker stopped reading a skipped test as proof: visual-e2e-beta-blockers.spec.ts skips 19 of its 23 tests, and exportPdfAndAssertValid -- the one place the id appeared -- is called from four of them. The control is wired; what is missing is a test that runs. It goes with the rewrite those skips already ask for."
-    },
-    "button:extract-attachment-btn": {
-      "state": "UNREACHABLE",
-      "reason": "rendered by a component nothing puts on screen; it goes when that surface goes"
-    },
-    "button:field-row": {
-      "state": "UNREACHABLE",
-      "reason": "rendered by a component nothing puts on screen; it goes when that surface goes"
-    },
-    "button:layer-visibility-btn": {
-      "state": "UNREACHABLE",
-      "reason": "rendered by a component nothing puts on screen; it goes when that surface goes"
-    },
-    "button:nav-next-page-btn": {
-      "state": "UNREACHABLE",
-      "reason": "rendered by a component nothing puts on screen; it goes when that surface goes"
-    },
-    "button:nav-prev-page-btn": {
-      "state": "UNREACHABLE",
-      "reason": "rendered by a component nothing puts on screen; it goes when that surface goes"
-    },
-    "button:outline-item": {
-      "state": "UNREACHABLE",
-      "reason": "rendered by a component nothing puts on screen; it goes when that surface goes"
-    },
-    "button:remove-attachment-btn": {
-      "state": "UNREACHABLE",
-      "reason": "rendered by a component nothing puts on screen; it goes when that surface goes"
-    },
-    "button:search-btn": {
-      "state": "UNTESTED",
-      "reason": "reaches its handler, and no test names it yet"
-    },
-    "button:text-left-bold-btn": {
-      "state": "UNREACHABLE",
-      "reason": "rendered by a component nothing puts on screen; it goes when that surface goes"
-    },
-    "button:text-left-italic-btn": {
-      "state": "UNREACHABLE",
-      "reason": "rendered by a component nothing puts on screen; it goes when that surface goes"
-    },
-    "button:text-left-underline-btn": {
-      "state": "UNREACHABLE",
-      "reason": "rendered by a component nothing puts on screen; it goes when that surface goes"
     },
     "dead-surface:src/viewer/ViewerSidePanels.tsx": {
       "lines": 140,
@@ -81,24 +33,12 @@
       "lines": 128,
       "reason": "nothing renders it; scheduled for removal with the legacy shell"
     },
-    "dead-surface:src/viewer/components/LeftNavRail.tsx": {
-      "lines": 1024,
-      "reason": "superseded by the v3 shell, which has its own rail and a thumbnails drawer. Its bookmarks, attachments, layers, fields and format panels are the \"fetched but never rendered\" entries in the plan."
-    },
-    "dead-surface:src/viewer/components/ModeSwitcher.tsx": {
-      "lines": 349,
-      "reason": "superseded by the v3 topbar mode tabs; the e2e helpers still switch modes by clicking its text, which is one reason those specs cannot pass."
-    },
     "dead-surface:src/viewer/components/ModeToolbar.tsx": {
       "lines": 499,
       "reason": "nothing renders it: the 42-tile dispatch and the old hand-written wired list lived here. The list is gone; the component and its switch stay until the tiles have a home that renders."
     },
     "dead-surface:src/viewer/components/ObjectSelectionOverlay.tsx": {
       "lines": 249,
-      "reason": "nothing renders it; scheduled for removal with the legacy shell"
-    },
-    "dead-surface:src/viewer/components/RecoveryDialog.tsx": {
-      "lines": 115,
       "reason": "nothing renders it; scheduled for removal with the legacy shell"
     },
     "dead-surface:src/viewer/components/RightContextPanel.tsx": {
@@ -125,83 +65,11 @@
       "lines": 229,
       "reason": "reached only through WelcomeSection, which nothing imports. tests/e2e/helpers/app.ts waits for its data-testid=\"welcome-screen\", so every spec using that helper is waiting for an element that is never rendered."
     },
-    "mode-tab:edit": {
-      "state": "UNTESTED",
-      "reason": "reaches its handler, and no test names it yet"
-    },
-    "mode:convert": {
-      "state": "UNREACHABLE",
-      "reason": "rendered by a component nothing puts on screen; it goes when that surface goes"
-    },
-    "mode:edit": {
-      "state": "UNREACHABLE",
-      "reason": "rendered by a component nothing puts on screen; it goes when that surface goes"
-    },
-    "mode:forms": {
-      "state": "UNREACHABLE",
-      "reason": "rendered by a component nothing puts on screen; it goes when that surface goes"
-    },
-    "mode:organize": {
-      "state": "UNREACHABLE",
-      "reason": "rendered by a component nothing puts on screen; it goes when that surface goes"
-    },
-    "mode:protect": {
-      "state": "UNREACHABLE",
-      "reason": "rendered by a component nothing puts on screen; it goes when that surface goes"
-    },
-    "mode:read": {
-      "state": "UNREACHABLE",
-      "reason": "rendered by a component nothing puts on screen; it goes when that surface goes"
-    },
-    "mode:review": {
-      "state": "UNREACHABLE",
-      "reason": "rendered by a component nothing puts on screen; it goes when that surface goes"
-    },
-    "mode:sign": {
-      "state": "UNREACHABLE",
-      "reason": "rendered by a component nothing puts on screen; it goes when that surface goes"
-    },
-    "panel:edit": {
-      "state": "UNTESTED",
-      "reason": "reaches its handler, and no test names it yet"
-    },
     "panel:redact": {
       "state": "UNTESTED",
       "reason": "reaches its handler, and no test names it yet"
     },
-    "rail-panel:attachments": {
-      "state": "UNREACHABLE",
-      "reason": "rendered by a component nothing puts on screen; it goes when that surface goes"
-    },
-    "rail-panel:bookmarks": {
-      "state": "UNREACHABLE",
-      "reason": "rendered by a component nothing puts on screen; it goes when that surface goes"
-    },
-    "rail-panel:comments": {
-      "state": "UNREACHABLE",
-      "reason": "rendered by a component nothing puts on screen; it goes when that surface goes"
-    },
-    "rail-panel:fields": {
-      "state": "UNREACHABLE",
-      "reason": "rendered by a component nothing puts on screen; it goes when that surface goes"
-    },
-    "rail-panel:format": {
-      "state": "UNREACHABLE",
-      "reason": "rendered by a component nothing puts on screen; it goes when that surface goes"
-    },
-    "rail-panel:layers": {
-      "state": "UNREACHABLE",
-      "reason": "rendered by a component nothing puts on screen; it goes when that surface goes"
-    },
-    "rail-panel:thumbnails": {
-      "state": "UNREACHABLE",
-      "reason": "rendered by a component nothing puts on screen; it goes when that surface goes"
-    },
     "rail-tool:comment": {
-      "state": "UNTESTED",
-      "reason": "reaches its handler, and no test names it yet"
-    },
-    "rail-tool:hand": {
       "state": "UNTESTED",
       "reason": "reaches its handler, and no test names it yet"
     },
@@ -230,11 +98,6 @@
       "reason": "no control in this shell performs this tool, so the tile is not rendered at all",
       "hidden": true
     },
-    "tile:toolbar.addText": {
-      "state": "NO ACTION",
-      "reason": "no control in this shell performs this tool, so the tile is not rendered at all",
-      "hidden": true
-    },
     "tile:toolbar.autoDetect": {
       "state": "NO ACTION",
       "reason": "no control in this shell performs this tool, so the tile is not rendered at all",
@@ -254,10 +117,6 @@
       "reason": "no control in this shell performs this tool, so the tile is not rendered at all",
       "hidden": true
     },
-    "tile:toolbar.editText": {
-      "state": "UNTESTED",
-      "reason": "reaches its handler, and no test names it yet"
-    },
     "tile:toolbar.exportPdf": {
       "state": "UNTESTED",
       "reason": "reaches its handler, and no test names it yet"
@@ -276,22 +135,7 @@
       "state": "UNTESTED",
       "reason": "reaches its handler, and no test names it yet"
     },
-    "tile:toolbar.image": {
-      "state": "NO ACTION",
-      "reason": "no control in this shell performs this tool, so the tile is not rendered at all",
-      "hidden": true
-    },
-    "tile:toolbar.initials": {
-      "state": "NO ACTION",
-      "reason": "no control in this shell performs this tool, so the tile is not rendered at all",
-      "hidden": true
-    },
     "tile:toolbar.link": {
-      "state": "NO ACTION",
-      "reason": "no control in this shell performs this tool, so the tile is not rendered at all",
-      "hidden": true
-    },
-    "tile:toolbar.note": {
       "state": "NO ACTION",
       "reason": "no control in this shell performs this tool, so the tile is not rendered at all",
       "hidden": true
@@ -313,11 +157,6 @@
     "tile:toolbar.select": {
       "state": "UNTESTED",
       "reason": "reaches its handler, and no test names it yet"
-    },
-    "tile:toolbar.stamp": {
-      "state": "NO ACTION",
-      "reason": "no control in this shell performs this tool, so the tile is not rendered at all",
-      "hidden": true
     },
     "tile:toolbar.strikethrough": {
       "state": "UNTESTED",

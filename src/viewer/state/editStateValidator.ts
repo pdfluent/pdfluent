@@ -109,7 +109,7 @@ export function validateTransition(from: EditorMode, to: EditorMode): StateViola
   if (!allowed || !allowed.includes(to)) {
     return {
       code: 'invalid-transition',
-      message: `Ongeldige moduswisseling: '${from}' → '${to}' is niet toegestaan.`,
+      message: `Invalid mode change: '${from}' → '${to}' is not allowed.`,
       blocking: true,
     };
   }
@@ -144,7 +144,7 @@ export function validateSessionModeParity(
   if (session !== null && session.mode !== mode) {
     return {
       code: 'edit-session-stale',
-      message: `Sessie-modus '${session.mode}' komt niet overeen met editor-modus '${mode}'.`,
+      message: `The session mode '${session.mode}' does not match the editor mode '${mode}'.`,
       blocking: true,
     };
   }
@@ -177,7 +177,7 @@ export function validateDirtyConsistency(
   if (session?.hasPendingChanges === true && !isDirty) {
     return {
       code: 'dirty-state-inconsistency',
-      message: 'Sessie heeft niet-opgeslagen wijzigingen maar isDirty is false.',
+      message: 'The session has unsaved changes but isDirty is false.',
       blocking: false,
     };
   }
@@ -209,7 +209,7 @@ export function validateSessionId(session: EditSession | null): StateViolation |
   if (!session.sessionId || session.sessionId.trim().length === 0) {
     return {
       code: 'session-id-collision',
-      message: 'Sessie-ID is leeg of ongeldig.',
+      message: 'The session ID is empty or invalid.',
       blocking: true,
     };
   }

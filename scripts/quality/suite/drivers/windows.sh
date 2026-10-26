@@ -210,12 +210,55 @@ driver_s4_probes() {
   echo $? > "${WORK}/probes/updater_payload.rc"
 }
 
-# The UI walk on the build host is not wired yet. WebView2 can be started with a
-# debugging port, so this platform does have a way in -- it has not been run
-# there, and a driver that has never run is exactly what this step exists to
-# stop being reported as coverage.
+# The UI walk (S5) drives a ui-walk build of the same commit, never the installer
+# that ships (#471). The build's in-page walker needs no debug port; this ships the
+# walk .msi (UI_WALK_MSI), the list of controls and one golden document to the
+# host, runs windows_ui_walk.ps1 there, fetches the one result file back and lets
+# ui_walk_run.mjs --accept turn it into the probe the judge reads. Every row says
+# "measured on the ui-walk build of <sha>, not on the shipped bytes".
+#
+# No UI_WALK_MSI, or no result, leaves the probe absent: every registered control
+# gets a SKIPPED row with the reason and the report is INCOMPLETE.
 driver_ui_walk() {
-  UI_WALK_GAP="the walk has not been run on the build-host lane yet, so no control was driven on this platform"
+  local msi="${UI_WALK_MSI:-}"
+  if [ -z "${msi}" ] || [ ! -f "${msi}" ]; then
+    UI_WALK_GAP="no ui-walk build was given to this run (UI_WALK_MSI), so no control was driven; the installer has no inspectable web view"
+    return 0
+  fi
+  local fixture="${REPO_ROOT}/src-tauri/tests/fixtures/ui-walk-doc.pdf"
+  local list="${WORK}/ui_walk_targets_list.json" result="${WORK}/ui_walk_result_fetched.json"
+  mkdir -p "${WORK}/probes"
+  node "${SUITE_DIR}/ui_walk.mjs" --targets "${REPO_ROOT}" > "${list}" 2>"${WORK}/probes/ui_walk.err" || {
+    UI_WALK_GAP="the list of controls could not be read from the register"; return 0; }
+  rm -f "${result}"
+  if _win_local; then
+    powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$(_winpath "${SUITE_DIR}/drivers/windows_ui_walk.ps1")" \
+      -Msi "$(_winpath "${msi}")" -Work "$(_winpath "${WORK}")" -Fixture "$(_winpath "${fixture}")" \
+      -Targets "$(_winpath "${list}")" -Signer "$(_winpath "${REPO_ROOT}/src-tauri/tests/fixtures")" > "${WORK}/ui-walk-run.log" 2>&1 || true
+    [ -f "${WORK}/walk/ui_walk_result.json" ] && cp "${WORK}/walk/ui_walk_result.json" "${result}"
+  else
+    local remote="${REMOTE_WORK}/ui-walk"
+    ssh "${WIN_SSH[@]}" "${WIN_BUILD_HOST}" "powershell -NoProfile -Command \"New-Item -ItemType Directory -Force -Path '${remote}' | Out-Null\"" >/dev/null 2>&1 || true
+    scp "${WIN_SSH[@]}" "${msi}" "${WIN_BUILD_HOST}:${remote}/walk.msi" >/dev/null 2>&1 \
+      && scp "${WIN_SSH[@]}" "${SUITE_DIR}/drivers/windows_ui_walk.ps1" "${WIN_BUILD_HOST}:${remote}/windows_ui_walk.ps1" >/dev/null 2>&1 \
+      && scp "${WIN_SSH[@]}" "${fixture}" "${WIN_BUILD_HOST}:${remote}/fixture.pdf" >/dev/null 2>&1 \
+      && scp "${WIN_SSH[@]}" "${list}" "${WIN_BUILD_HOST}:${remote}/targets.json" >/dev/null 2>&1 \
+      && scp "${WIN_SSH[@]}" "${REPO_ROOT}/src-tauri/tests/fixtures/signer-test.p12" "${REPO_ROOT}/src-tauri/tests/fixtures/signer-test.json" "${WIN_BUILD_HOST}:${remote}/" >/dev/null 2>&1 \
+      || { UI_WALK_GAP="the walk build could not be copied to the build host"; return 0; }
+    ssh "${WIN_SSH[@]}" "${WIN_BUILD_HOST}" \
+      "powershell -NoProfile -ExecutionPolicy Bypass -File '${remote}/windows_ui_walk.ps1' -Msi '${remote}/walk.msi' -Work '${remote}' -Fixture '${remote}/fixture.pdf' -Targets '${remote}/targets.json' -Signer '${remote}'" \
+      > "${WORK}/ui-walk-run.log" 2>&1 || true
+    scp "${WIN_SSH[@]}" "${WIN_BUILD_HOST}:${remote}/walk/ui_walk_result.json" "${result}" >/dev/null 2>&1 || true
+  fi
+  if [ ! -f "${result}" ]; then
+    UI_WALK_GAP="the walk build wrote no result on the Windows host ($(tail -n 1 "${WORK}/ui-walk-run.log" 2>/dev/null | tr -d '\r' | cut -c1-160))"
+    return 0
+  fi
+  if ! node "${SUITE_DIR}/ui_walk_run.mjs" --accept "${result}" --work "${WORK}" --built-from "${UI_WALK_BUILT_FROM:-}" \
+        2> "${WORK}/probes/ui_walk.err"; then
+    UI_WALK_GAP="$(tail -n 1 "${WORK}/probes/ui_walk.err" | tr -d '\r' | sed 's/^SKIPPED (not a pass): //')"
+    rm -f "${WORK}/probes/ui_walk.out" "${WORK}/probes/ui_walk.rc"
+  fi
 }
 
 driver_gaps() {

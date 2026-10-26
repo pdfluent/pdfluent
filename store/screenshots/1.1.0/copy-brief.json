@@ -1,0 +1,22 @@
+{
+  "about": "Input for scripts/screenshots/draft-copy.mjs: facts and limits only. The prose comes from the model, then the Humanizer pass, then Jasper. Every fact below is something the editor does today or is a known gap (blockedBy); a headline must not promise more than its fact.",
+  "rules": [
+    "English. Direct, specific, no fluff, no AI-sounding phrasing, no exclamation marks.",
+    "No numbers, percentages, speed or size claims, no comparisons with other products, no superlatives (best, fastest, most).",
+    "Do not mention AI, models, cloud, accounts or invites. Never write 'invite to sign'.",
+    "headline: at most 6 words. sub: at most 12 words, may be empty. caption: at most 200 characters, one plain sentence saying what the screenshot shows.",
+    "Markdown export and tables to Excel are labelled Preview in the app: the caption must say Preview."
+  ],
+  "frames": {
+    "01": { "shows": "A PDF open in the editor with page thumbnails; the interface is now black and white.", "facts": ["opens PDFs locally", "no account"] },
+    "02": { "shows": "Editing a line of text in place, with a system font chosen in the font picker.", "facts": ["click a line and rewrite it", "choose any font installed on the computer", "the font is embedded in the saved file"] },
+    "03": { "shows": "The export dialog with Markdown selected.", "facts": ["export the document as Markdown (.md)", "Preview feature"] },
+    "04": { "shows": "The export dialog with tables-to-Excel selected.", "facts": ["export the tables of a document to an Excel workbook", "Preview feature"] },
+    "05": { "shows": "A scanned report after OCR: the Convert panel reports the pages and words added as searchable text.", "facts": ["OCR is built in, with English, Dutch, German, French, Spanish and Italian", "works offline: nothing is downloaded", "OCR runs on the computer and writes an invisible text layer into the PDF"], "blockedBy": "journey J-60 gap ocr-text-layer; the built-in OCR claim is not registered yet (CLAIMS B63 is obsolete)" },
+    "06": { "shows": "A picture placed on a page and selected.", "facts": ["place an image on a page", "replace or move an image already on the page"], "blockedBy": "journey J-45 gap page-images-767" },
+    "07": { "shows": "A typed signature in a chosen signature font.", "facts": ["type your name, pick a signature style, place it on the page"], "blockedBy": "journey J-62 gap typed-signature-767" },
+    "08": { "shows": "An XFA form being filled in.", "facts": ["opens legacy XFA forms", "fill the fields in the app"], "blockedBy": "journey J-59 gap xfa-fill-in-place" },
+    "09": { "shows": "The page organiser with one page selected.", "facts": ["reorder, rotate, delete and extract pages"] },
+    "10": { "shows": "The All tools panel.", "facts": ["every tool in one list"] }
+  }
+}

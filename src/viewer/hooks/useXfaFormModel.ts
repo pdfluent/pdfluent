@@ -16,9 +16,14 @@ import { isTauriRuntime } from '../../lib/tauri-detection';
 import { makeCommand } from '../undoEngine';
 import type { UndoCommand } from '../undoEngine';
 import i18n from '../../i18n';
-import { reportCommandFailure } from '../../lib/commandBridge';
-import { announceXfaStaticWrite } from '../state/fallbackNotices';
+import {
+  announceXfaScriptsFailed,
+  announceXfaScriptsNotRun,
+  announceXfaStaticWrite,
+  reportXfaCommitFailure,
+} from '../state/fallbackNotices';
 import type { PdfDocument } from '../../core/document';
+import { createWriteQueue, mergeModelValues } from './formWriteSync';
 
 /**
  * Drives the Phase-1 XFA fill experience. Loads the SDK `xfa_form_model`
@@ -134,8 +139,27 @@ export function useXfaFormModel(
   // Last *committed* value per field — the undo baseline (distinct from `values`
   // which mirrors live keystrokes).
   const committedRef = useRef<Record<string, XfaLocalValue>>({});
+  // `values` as of the latest set, readable between renders (see formWriteSync.ts).
+  const valuesRef = useRef<Record<string, XfaLocalValue>>({});
+  const enqueueWrite = useRef(createWriteQueue()).current;
+  // Writes sent and not yet answered, and a counter that moves with each answer.
+  const writesInFlightRef = useRef(0);
+  const writeEpochRef = useRef(0);
+
+  const updateValues = useCallback(
+    (fn: (prev: Record<string, XfaLocalValue>) => Record<string, XfaLocalValue>) => {
+      const next = fn(valuesRef.current);
+      valuesRef.current = next;
+      setValues(next);
+    },
+    [],
+  );
   // Whether this document has already been told that its writes are static.
   const staticWriteAnnouncedRef = useRef(false);
+  // Likewise for "this form has scripts this build does not run".
+  const scriptsNotRunAnnouncedRef = useRef(false);
+  // And for "scripts of this form threw, timed out or were refused".
+  const scriptsFailedAnnouncedRef = useRef(false);
 
   const reload = useCallback(() => setReloadNonce(n => n + 1), []);
 
@@ -145,19 +169,26 @@ export function useXfaFormModel(
   useEffect(() => {
     let cancelled = false;
     staticWriteAnnouncedRef.current = false;
+    scriptsNotRunAnnouncedRef.current = false;
+    scriptsFailedAnnouncedRef.current = false;
     if (!pdfDoc || !isXfa || !isTauriRuntime()) {
       setModel([]);
-      setValues({});
+      updateValues(() => ({}));
       setPageCount(0);
       return;
     }
+    const epochAtStart = writeEpochRef.current;
     void xfaFormModel()
       .then(result => {
         if (cancelled) return;
+        // A commit was sent or answered while this read was on its way: the
+        // read is older than the overlay (and static, see below). Keep the
+        // overlay.
+        if (writesInFlightRef.current > 0 || writeEpochRef.current !== epochAtStart) return;
         setModel(result.fields);
         setPageCount(result.pageCount);
         const { values: vals, pages } = buildValueMaps(result.fields);
-        setValues(vals);
+        updateValues(() => vals);
         committedRef.current = { ...vals };
         fieldPageRef.current = pages;
       })
@@ -166,7 +197,7 @@ export function useXfaFormModel(
           // Non-XFA or parse failure: present an empty model rather than crash.
           console.error('[PDFluent] xfa_form_model failed', err);
           setModel([]);
-          setValues({});
+          updateValues(() => ({}));
           setPageCount(0);
         }
       });
@@ -194,8 +225,8 @@ export function useXfaFormModel(
   }, [model, renderedPages]);
 
   const setTextLocal = useCallback((name: string, value: string) => {
-    setValues(prev => (prev[name] === value ? prev : { ...prev, [name]: value }));
-  }, []);
+    updateValues(prev => (prev[name] === value ? prev : { ...prev, [name]: value }));
+  }, [updateValues]);
 
   const requestFor = useCallback(
     (name: string, kind: XfaCommitKind, value: XfaLocalValue): XfaWriteRequest => {
@@ -223,10 +254,16 @@ export function useXfaFormModel(
   const applyValue = useCallback(
     async (name: string, kind: XfaCommitKind, value: XfaLocalValue) => {
       committedRef.current = { ...committedRef.current, [name]: value };
-      setValues(prev => ({ ...prev, [name]: value }));
+      updateValues(prev => ({ ...prev, [name]: value }));
       if (!isTauriRuntime()) return;
+      // One commit at a time: each answer carries the whole model as it was
+      // right after its own commit, so the answers are applied in the order the
+      // commits were made, never an older one over a newer one.
+      writesInFlightRef.current += 1;
+      await enqueueWrite(async () => {
       try {
         const result = await commitXfaFieldValue(requestFor(name, kind, value));
+        writeEpochRef.current += 1;
         markDirty();
 
         // A Phase 1 write is a different product from a Phase 2 commit: the
@@ -238,6 +275,20 @@ export function useXfaFormModel(
         if (!result.interactive && !staticWriteAnnouncedRef.current) {
           staticWriteAnnouncedRef.current = true;
           announceXfaStaticWrite();
+        }
+
+        // FormCalc is not run by the sandboxed runtime: say so once, when the
+        // first value goes in and a total could have been expected to move.
+        if (result.interactive && result.model.unsupportedScripts > 0 && !scriptsNotRunAnnouncedRef.current) {
+          scriptsNotRunAnnouncedRef.current = true;
+          announceXfaScriptsNotRun(result.model.unsupportedScripts);
+        }
+
+        // A script that threw, timed out or was refused: name the field and
+        // what happened, once, so a missing calculated value has an explanation.
+        if (result.interactive && result.model.scriptErrors.length > 0 && !scriptsFailedAnnouncedRef.current) {
+          scriptsFailedAnnouncedRef.current = true;
+          announceXfaScriptsFailed(result.model.scriptErrors);
         }
 
         // Surface what the commit loop revealed/hid (debug output, task §3).
@@ -252,24 +303,41 @@ export function useXfaFormModel(
 
         // Fold the refreshed model back in (revealed/hidden fields + new values),
         // preserving the just-committed local value as the source of truth.
-        const { values: vals, pages } = buildValueMaps(result.model.fields);
-        vals[name] = value;
+        const { values: answer, pages } = buildValueMaps(result.model.fields);
+        // The edited field keeps the newest value committed for it (a later
+        // commit of the same field may already be queued behind this one).
+        answer[name] = committedRef.current[name] ?? value;
         setModel(result.model.fields);
         setPageCount(result.model.pageCount);
-        setValues(vals);
-        committedRef.current = { ...vals };
+        // Fields typed into since their last commit keep the typed text.
+        updateValues(prev => mergeModelValues(answer, prev, committedRef.current));
+        committedRef.current = { ...answer };
         fieldPageRef.current = pages;
 
         // Re-layout may have changed the rendered pages → repaint.
         requestRepaint();
       } catch (err) {
-        // Keep the optimistic value so input isn't lost, but say so: the field
-        // shows what was typed while the document does not carry it.
-        // (Read-only / unbound fields can legitimately reject.)
-        reportCommandFailure('commit_xfa_field_value', err);
+        // The form refused the value (read-only, wrong kind of value, field gone).
+        // Say why, in the person's language, and take the refused value back out
+        // of the overlay: the field must show what the document holds.
+        reportXfaCommitFailure(err);
+        try {
+          const fresh = await xfaFormModel();
+          const { values: vals, pages } = buildValueMaps(fresh.fields);
+          setModel(fresh.fields);
+          setPageCount(fresh.pageCount);
+          updateValues(() => vals);
+          committedRef.current = { ...vals };
+          fieldPageRef.current = pages;
+        } catch (reloadErr) {
+          console.error('[PDFluent] xfa_form_model failed after a refused write', reloadErr);
+        }
+      } finally {
+        writesInFlightRef.current -= 1;
       }
+      });
     },
-    [markDirty, requestFor, requestRepaint],
+    [markDirty, requestFor, requestRepaint, updateValues, enqueueWrite],
   );
 
   /** Commit a value AND record an undo entry (prev → new) on the shared stack. */

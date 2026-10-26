@@ -74,6 +74,13 @@ describe('MAS dossier is complete', () => {
   });
 });
 
+describe('MAS listing names the shipped version', () => {
+  it('lists the version in package.json, not an older line', () => {
+    const pkg = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8')) as { version: string };
+    expect(field('Version')).toBe(pkg.version);
+  });
+});
+
 describe('MAS listing fits the App Store fields', () => {
   it('keeps the name within 30 characters', () => {
     expect(field('Name (30)').length).toBeLessThanOrEqual(30);

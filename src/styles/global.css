@@ -49,24 +49,8 @@
      verifying visual parity.
    ============================================================================ */
 
+/* Colour tokens live in tokens.css. Only geometry, shadows and motion here. */
 :root {
-  --bg-canvas: #c5c5c7;
-  --bg-surface: #f4f4f6;
-  --bg-surface-2: #ececf0;
-  --bg-surface-3: #e3e3e9;
-  --bg-surface-elevated: #ffffff;
-  --text-primary: #1f1f22;
-  --text-secondary: #5f6370;
-  --text-muted: #7b808f;
-  --text-disabled: #a3a8b5;
-  --accent: #0a66ff;
-  --accent-strong: #0a58d8;
-  --accent-soft: rgba(10, 102, 255, 0.14);
-  --danger: #dc2626;
-  --warning: #d97706;
-  --success: #16a34a;
-  --border: #ccd1dc;
-  --border-strong: #bec5d3;
   --shadow-soft: 0 8px 24px rgba(26, 30, 40, 0.08);
   --shadow-panel: 0 6px 20px rgba(27, 31, 44, 0.08);
   --shadow-page: 0 2px 8px rgba(21, 25, 35, 0.22);
@@ -82,9 +66,6 @@
   --bg-surface-hover: rgba(15, 21, 35, 0.04);
   --bg-surface-press: rgba(15, 21, 35, 0.08);
   --border-subtle: rgba(15, 21, 35, 0.06);
-  /* Brand mark — near-black square with white P, per design system. */
-  --brand-mark-fill: #1a1a1a;
-  --brand-mark-on: #ffffff;
   /* Motion. Two durations, one easing — matches design system. */
   --pf-dur-fast: 120ms;
   --pf-dur-med: 220ms;
@@ -98,19 +79,6 @@
 }
 
 :root[data-platform="windows"] {
-  --bg-canvas: #d5dbe6;
-  --bg-surface: #f6f8fc;
-  --bg-surface-2: #eff3fa;
-  --bg-surface-3: #e4eaf4;
-  --text-primary: #181b20;
-  --text-secondary: #576072;
-  --text-muted: #6f7890;
-  --text-disabled: #9098ad;
-  --accent: #0f6cfe;
-  --accent-strong: #0a5de0;
-  --accent-soft: rgba(15, 108, 254, 0.14);
-  --border: #c8d1e0;
-  --border-strong: #b9c4d8;
   --shadow-soft: 0 10px 28px rgba(24, 35, 57, 0.1);
   --shadow-panel: 0 10px 26px rgba(24, 35, 57, 0.1);
   --shadow-page: 0 12px 30px rgba(22, 34, 54, 0.2);
@@ -125,20 +93,6 @@
    precedence when both apply. */
 @media (prefers-color-scheme: dark) {
   :root[data-platform="windows"] {
-    --bg-canvas: #16181f;
-    --bg-surface: #1c1f27;
-    --bg-surface-2: #232730;
-    --bg-surface-3: #2a2f3a;
-    --bg-surface-elevated: #1c1f27;
-    --text-primary: #e6e9f0;
-    --text-secondary: #a8aebb;
-    --text-muted: #757b8a;
-    --text-disabled: #5a5f6c;
-    --accent: #5298ff;
-    --accent-strong: #6ea6ff;
-    --accent-soft: rgba(82, 152, 255, 0.18);
-    --border: #353a45;
-    --border-strong: #444a56;
     --shadow-soft: 0 10px 28px rgba(0, 0, 0, 0.35);
     --shadow-panel: 0 10px 26px rgba(0, 0, 0, 0.35);
     --shadow-page: 0 12px 30px rgba(0, 0, 0, 0.5);
@@ -147,23 +101,6 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg-canvas: #1a1a1e;
-    --bg-surface: #27272c;
-    --bg-surface-2: #2e2e34;
-    --bg-surface-3: #36363d;
-    --bg-surface-elevated: #303038;
-    --text-primary: #e8e8ec;
-    --text-secondary: #a0a4b0;
-    --text-muted: #7b808f;
-    --text-disabled: #555966;
-    --accent: #4d94ff;
-    --accent-strong: #6ba3ff;
-    --accent-soft: rgba(77, 148, 255, 0.18);
-    --danger: #f87171;
-    --warning: #fbbf24;
-    --success: #4ade80;
-    --border: #3a3a44;
-    --border-strong: #4a4a56;
     --shadow-soft: 0 8px 24px rgba(0, 0, 0, 0.3);
     --shadow-panel: 0 6px 20px rgba(0, 0, 0, 0.3);
     --shadow-page: 0 2px 8px rgba(0, 0, 0, 0.5);
@@ -172,9 +109,6 @@
     --bg-surface-hover: rgba(255, 255, 255, 0.06);
     --bg-surface-press: rgba(255, 255, 255, 0.1);
     --border-subtle: rgba(255, 255, 255, 0.07);
-    /* In dark mode the mark inverts so it stays legible on dark surfaces. */
-    --brand-mark-fill: #ffffff;
-    --brand-mark-on: #1a1a1a;
     --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
   }
 }
@@ -310,8 +244,8 @@ textarea {
   width: 22px;
   height: 22px;
   border-radius: 5px;
-  background: var(--brand-mark-fill);
-  color: var(--brand-mark-on);
+  background: var(--emphasis);
+  color: var(--on-emphasis);
   flex-shrink: 0;
   display: inline-flex;
   align-items: center;
@@ -384,8 +318,8 @@ textarea {
 .toolbar-mode-btn-active {
   /* Selected tab uses the editor's only chroma touch (accent), but on a
      calm white pill — not a coloured fill. */
-  color: var(--accent);
-  border-color: rgba(10, 102, 255, 0.28);
+  color: var(--state-active-fg);
+  border-color: var(--border-strong);
   background: var(--bg-surface-elevated);
   box-shadow: var(--shadow-sm);
 }
@@ -434,15 +368,15 @@ textarea {
 .toolbar-btn-primary {
   /* Solid colour, no gradient. Two-stop gradients on a UI button read as
      SaaS-marketing — design system bans decorative gradients. */
-  color: #fff;
+  color: var(--on-emphasis);
   border-color: transparent;
-  background: var(--accent);
+  background: var(--emphasis);
 }
 
 .toolbar-btn-primary:hover:not(:disabled) {
-  color: #fff;
+  color: var(--on-emphasis);
   border-color: transparent;
-  background: var(--accent-strong);
+  background: var(--emphasis-hover);
   box-shadow: var(--shadow-sm);
 }
 
@@ -482,8 +416,8 @@ textarea {
 
 .toolbar-page-input:focus {
   outline: none;
-  border-color: var(--accent);
-  box-shadow: 0 0 0 2px var(--accent-soft);
+  border-color: var(--focus-ring);
+  box-shadow: 0 0 0 2px var(--focus-halo);
 }
 
 .toolbar-page-total {
@@ -697,9 +631,9 @@ textarea {
 .sidebar-thumb-active {
   /* Selected page — neutral white card, blue label/border. Monochrome
      guidance: the accent appears once, on the label and the hairline. */
-  border-color: rgba(10, 102, 255, 0.45);
+  border-color: var(--selection-line);
   background: var(--bg-surface-elevated);
-  box-shadow: 0 0 0 2px var(--accent-soft), var(--shadow-sm);
+  box-shadow: 0 0 0 2px var(--selection-fill), var(--shadow-sm);
 }
 
 .sidebar-thumb-dragging {
@@ -754,7 +688,7 @@ textarea {
 }
 
 .sidebar-thumb-active .sidebar-thumb-label {
-  color: var(--accent);
+  color: var(--state-active-fg);
 }
 
 .form-panel,
@@ -835,9 +769,9 @@ textarea {
 .form-panel-count,
 .admin-panel-badge {
   border-radius: var(--radius-pill);
-  border: 1px solid rgba(10, 102, 255, 0.25);
-  background: var(--accent-soft);
-  color: var(--accent);
+  border: 1px solid var(--border);
+  background: var(--state-active-bg);
+  color: var(--state-active-fg);
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.04em;
@@ -958,8 +892,8 @@ textarea {
 
 .form-field-input:focus {
   outline: none;
-  border-color: var(--accent);
-  box-shadow: 0 0 0 2px var(--accent-soft);
+  border-color: var(--focus-ring);
+  box-shadow: 0 0 0 2px var(--focus-halo);
 }
 
 .form-field-listbox {
@@ -1064,8 +998,8 @@ textarea {
   width: 56px;
   height: 56px;
   border-radius: 13px;
-  background: var(--brand-mark-fill);
-  color: var(--brand-mark-on);
+  background: var(--emphasis);
+  color: var(--on-emphasis);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1097,8 +1031,8 @@ textarea {
   padding: 0 22px;
   border-radius: var(--radius-pill);
   border: 1px solid transparent;
-  background: var(--brand-mark-fill);
-  color: var(--brand-mark-on);
+  background: var(--emphasis);
+  color: var(--on-emphasis);
   font-size: 13.5px;
   font-weight: 600;
   letter-spacing: -0.005em;
@@ -1110,7 +1044,7 @@ textarea {
 }
 
 .viewer-placeholder-cta:hover {
-  background: #0a0a0a;
+  background: var(--emphasis-hover);
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
 }
 
@@ -1245,7 +1179,7 @@ textarea {
 }
 
 .viewer-page-block-active .viewer-page-block-label {
-  color: var(--accent);
+  color: var(--state-active-fg);
 }
 
 .viewer-page-container-continuous {
@@ -1270,7 +1204,7 @@ textarea {
   height: 100%;
   border-radius: 10px;
   border: 1px dashed rgba(146, 160, 190, 0.5);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(236, 242, 255, 0.88));
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(244, 244, 246, 0.88));
 }
 
 .viewer-annotation-layer {
@@ -1300,7 +1234,7 @@ textarea {
 }
 
 .viewer-text-selection-layer div::selection {
-  background: rgba(10, 102, 255, 0.35);
+  background: var(--selection-text-bg);
   color: transparent;
 }
 
@@ -1314,7 +1248,7 @@ textarea {
 }
 
 .viewer-text-selection-line::selection {
-  background: rgba(10, 102, 255, 0.35);
+  background: var(--selection-text-bg);
   color: transparent;
 }
 
@@ -1382,21 +1316,21 @@ textarea {
 }
 
 .viewer-text-edit-hotspot:hover {
-  border-color: rgba(10, 102, 255, 0.75);
-  background: rgba(10, 102, 255, 0.08);
+  border-color: var(--chrome-hover);
+  background: var(--state-hover-bg);
 }
 
 .viewer-text-edit-hotspot:focus-visible {
   outline: none;
-  border-color: rgba(10, 102, 255, 0.9);
-  background: rgba(10, 102, 255, 0.12);
-  box-shadow: 0 0 0 2px rgba(10, 102, 255, 0.18);
+  border-color: var(--focus-ring-on-page);
+  background: var(--selection-on-page-fill);
+  box-shadow: 0 0 0 2px var(--focus-halo-on-page);
 }
 
 .viewer-text-inline-editor-in-place {
   position: absolute;
   background: #ffffff;
-  border: 1px dashed rgba(10, 102, 255, 0.7);
+  border: 1px dashed var(--selection-on-page);
   border-radius: 2px;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
   outline: none;
@@ -1409,8 +1343,8 @@ textarea {
 }
 
 .viewer-text-inline-editor-in-place:focus {
-  border-color: rgba(10, 102, 255, 0.9);
-  box-shadow: 0 0 0 2px rgba(10, 102, 255, 0.18);
+  border-color: var(--focus-ring-on-page);
+  box-shadow: 0 0 0 2px var(--focus-halo-on-page);
 }
 
 .viewer-text-inline-editor {
@@ -1419,7 +1353,7 @@ textarea {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  border: 1px solid rgba(10, 102, 255, 0.4);
+  border: 1px solid var(--selection-on-page);
   border-radius: 10px;
   background: rgba(255, 255, 255, 0.97);
   box-shadow: var(--shadow-soft);
@@ -1432,15 +1366,15 @@ textarea {
   border-radius: 7px;
   font-size: 13px;
   line-height: 1.25;
-  color: var(--text-primary);
+  color: #1a1a1a;
   padding: 6px 8px;
   background: #fff;
   outline: none;
 }
 
 .viewer-text-inline-input:focus {
-  border-color: rgba(10, 102, 255, 0.8);
-  box-shadow: 0 0 0 2px rgba(10, 102, 255, 0.15);
+  border-color: var(--focus-ring-on-page);
+  box-shadow: 0 0 0 2px var(--focus-halo-on-page);
 }
 
 .viewer-text-inline-input:disabled {
@@ -1453,10 +1387,10 @@ textarea {
 }
 
 .viewer-text-inline-button {
-  border: 1px solid rgba(10, 102, 255, 0.3);
+  border: 1px solid var(--border-strong);
   border-radius: 999px;
-  background: rgba(10, 102, 255, 0.12);
-  color: #0b56cc;
+  background: rgba(26, 26, 26, 0.08);
+  color: #1a1a1a;
   font-size: 11px;
   font-weight: 600;
   padding: 4px 10px;
@@ -1465,8 +1399,8 @@ textarea {
 
 .viewer-text-inline-button-secondary {
   border-color: rgba(160, 174, 202, 0.6);
-  background: rgba(241, 245, 255, 0.7);
-  color: var(--text-secondary);
+  background: #f4f4f6;
+  color: #5f6370;
 }
 
 .viewer-text-inline-button:disabled {
@@ -1495,7 +1429,7 @@ textarea {
   width: 28px;
   height: 28px;
   border: 3px solid rgba(160, 174, 202, 0.48);
-  border-top-color: var(--accent);
+  border-top-color: var(--text-secondary);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -1514,8 +1448,6 @@ textarea {
   align-items: center;
   justify-content: center;
   background: rgba(15, 21, 35, 0.4);
-  backdrop-filter: blur(3px);
-  -webkit-backdrop-filter: blur(3px);
   -webkit-app-region: no-drag;
   animation: pf-fade-in var(--pf-dur-med) var(--pf-ease);
 }
@@ -1571,8 +1503,8 @@ textarea {
 }
 
 .app-dialog-input:focus {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 2px var(--accent-soft);
+  border-color: var(--focus-ring);
+  box-shadow: 0 0 0 2px var(--focus-halo);
 }
 
 .app-dialog-actions {
@@ -1627,7 +1559,6 @@ textarea {
   align-items: center;
   justify-content: center;
   background: rgba(15, 21, 35, 0.35);
-  backdrop-filter: blur(2px);
   -webkit-app-region: no-drag;
 }
 
@@ -1676,8 +1607,8 @@ textarea {
 }
 
 .split-dialog-input:focus {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 2px var(--accent-soft);
+  border-color: var(--focus-ring);
+  box-shadow: 0 0 0 2px var(--focus-halo);
 }
 
 .split-dialog-input:disabled {
@@ -1709,7 +1640,6 @@ textarea {
   align-items: center;
   justify-content: center;
   background: rgba(15, 21, 35, 0.35);
-  backdrop-filter: blur(2px);
   -webkit-app-region: no-drag;
 }
 
@@ -1764,8 +1694,8 @@ textarea {
 }
 
 .export-encrypted-copy-dialog-input:focus {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 2px var(--accent-soft);
+  border-color: var(--focus-ring);
+  box-shadow: 0 0 0 2px var(--focus-halo);
 }
 
 .export-encrypted-copy-dialog-input:disabled {
@@ -1791,7 +1721,6 @@ textarea {
   align-items: center;
   justify-content: center;
   background: rgba(15, 21, 35, 0.35);
-  backdrop-filter: blur(2px);
   -webkit-app-region: no-drag;
 }
 
@@ -1846,8 +1775,8 @@ textarea {
 }
 
 .import-encrypted-copy-dialog-input:focus {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 2px var(--accent-soft);
+  border-color: var(--focus-ring);
+  box-shadow: 0 0 0 2px var(--focus-halo);
 }
 
 .import-encrypted-copy-dialog-input:disabled {
@@ -1873,7 +1802,6 @@ textarea {
   align-items: center;
   justify-content: center;
   background: rgba(15, 21, 35, 0.35);
-  backdrop-filter: blur(2px);
   -webkit-app-region: no-drag;
 }
 
@@ -1940,8 +1868,8 @@ textarea {
 }
 
 .export-images-dialog-input:focus {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 2px var(--accent-soft);
+  border-color: var(--focus-ring);
+  box-shadow: 0 0 0 2px var(--focus-halo);
 }
 
 .export-images-dialog-input:disabled {
@@ -1967,7 +1895,6 @@ textarea {
   align-items: center;
   justify-content: center;
   background: rgba(15, 21, 35, 0.35);
-  backdrop-filter: blur(2px);
   -webkit-app-region: no-drag;
 }
 
@@ -2034,8 +1961,8 @@ textarea {
 }
 
 .add-image-dialog-input:focus {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 2px var(--accent-soft);
+  border-color: var(--focus-ring);
+  box-shadow: 0 0 0 2px var(--focus-halo);
 }
 
 .add-image-dialog-input:disabled {
@@ -2061,7 +1988,6 @@ textarea {
   align-items: center;
   justify-content: center;
   background: rgba(15, 21, 35, 0.35);
-  backdrop-filter: blur(2px);
   -webkit-app-region: no-drag;
 }
 
@@ -2122,8 +2048,8 @@ textarea {
 }
 
 .remove-image-area-dialog-input:focus {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 2px var(--accent-soft);
+  border-color: var(--focus-ring);
+  box-shadow: 0 0 0 2px var(--focus-halo);
 }
 
 .remove-image-area-dialog-input:disabled {
@@ -2145,7 +2071,6 @@ textarea {
   align-items: center;
   justify-content: center;
   background: rgba(15, 21, 35, 0.35);
-  backdrop-filter: blur(2px);
   -webkit-app-region: no-drag;
 }
 
@@ -2195,8 +2120,8 @@ textarea {
 }
 
 .redaction-dialog-textarea:focus {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 2px var(--accent-soft);
+  border-color: var(--focus-ring);
+  box-shadow: 0 0 0 2px var(--focus-halo);
 }
 
 .redaction-dialog-textarea:disabled {
@@ -2218,7 +2143,6 @@ textarea {
   align-items: center;
   justify-content: center;
   background: rgba(15, 21, 35, 0.35);
-  backdrop-filter: blur(2px);
   -webkit-app-region: no-drag;
 }
 
@@ -2279,8 +2203,8 @@ textarea {
 }
 
 .watermark-dialog-input:focus {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 2px var(--accent-soft);
+  border-color: var(--focus-ring);
+  box-shadow: 0 0 0 2px var(--focus-halo);
 }
 
 .watermark-dialog-input:disabled {
@@ -2302,7 +2226,6 @@ textarea {
   align-items: center;
   justify-content: center;
   background: rgba(15, 21, 35, 0.35);
-  backdrop-filter: blur(2px);
   -webkit-app-region: no-drag;
 }
 
@@ -2351,8 +2274,8 @@ textarea {
 }
 
 .protect-dialog-input:focus {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 2px var(--accent-soft);
+  border-color: var(--focus-ring);
+  box-shadow: 0 0 0 2px var(--focus-halo);
 }
 
 .protect-dialog-input:disabled {
@@ -2374,7 +2297,6 @@ textarea {
   align-items: center;
   justify-content: center;
   background: rgba(15, 21, 35, 0.35);
-  backdrop-filter: blur(2px);
   -webkit-app-region: no-drag;
 }
 
@@ -2447,8 +2369,8 @@ textarea {
 }
 
 .sign-dialog-input:focus {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 2px var(--accent-soft);
+  border-color: var(--focus-ring);
+  box-shadow: 0 0 0 2px var(--focus-halo);
 }
 
 .sign-dialog-input:disabled {
@@ -2595,8 +2517,6 @@ textarea {
   align-items: center;
   justify-content: center;
   background: rgba(15, 21, 35, 0.4);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
   animation: pf-fade-in var(--pf-dur-med) var(--pf-ease);
 }
 
@@ -2621,8 +2541,8 @@ textarea {
   height: 48px;
   margin: 0 auto 18px;
   border-radius: 11px;
-  background: var(--brand-mark-fill);
-  color: var(--brand-mark-on);
+  background: var(--emphasis);
+  color: var(--on-emphasis);
   font-size: 26px;
   font-weight: 700;
   line-height: 48px;
@@ -2667,8 +2587,7 @@ textarea {
 }
 
 .first-run-option:hover {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px var(--accent-soft);
+  border-color: var(--border-strong);
   background: var(--bg-surface-elevated);
   transform: translateY(-1px);
 }
@@ -2737,8 +2656,8 @@ textarea {
   padding: 0 20px;
   border-radius: 9px;
   border: none;
-  background: var(--brand-mark-fill);
-  color: var(--brand-mark-on);
+  background: var(--emphasis);
+  color: var(--on-emphasis);
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
@@ -2748,7 +2667,7 @@ textarea {
 }
 
 .btn-primary:hover {
-  background: #0a0a0a;
+  background: var(--emphasis-hover);
 }
 
 .btn-primary:active {
@@ -2902,7 +2821,7 @@ textarea {
 .license-banner-link {
   background: none;
   border: none;
-  color: var(--accent);
+  color: var(--link);
   font-size: inherit;
   font-weight: 600;
   cursor: pointer;
@@ -2912,7 +2831,7 @@ textarea {
 }
 
 .license-banner-link:hover {
-  color: var(--accent-strong);
+  color: var(--link-hover);
   text-decoration: underline;
   text-underline-offset: 2px;
 }
@@ -2971,7 +2890,7 @@ textarea {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: var(--accent);
+  background: var(--emphasis);
   flex-shrink: 0;
 }
 
@@ -3043,8 +2962,8 @@ textarea {
 
 .pf-btn:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 2px var(--accent-soft);
-  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--focus-halo);
+  border-color: var(--focus-ring);
 }
 
 /* Class-driven active state — replaces the inline `style={{background:
@@ -3117,8 +3036,8 @@ textarea {
 }
 
 .annotation-tool-btn.active {
-  background: var(--accent-soft);
-  color: var(--accent);
+  background: var(--state-active-bg);
+  color: var(--state-active-fg);
 }
 
 .annotation-tool-btn:disabled {
@@ -3193,7 +3112,7 @@ textarea {
 .property-slider input[type="range"] {
   width: 60px;
   height: 4px;
-  accent-color: var(--accent);
+  accent-color: var(--emphasis);
 }
 
 .annotation-close-btn {
@@ -3257,8 +3176,8 @@ textarea {
 }
 
 .toolbar-annot-btn.active {
-  background: var(--accent-soft);
-  color: var(--accent);
+  background: var(--state-active-bg);
+  color: var(--state-active-fg);
 }
 
 .toolbar-annot-btn:disabled {
@@ -3364,8 +3283,8 @@ textarea {
 }
 
 .toolbar-view-btn.active {
-  color: var(--accent);
-  background: var(--accent-soft);
+  color: var(--state-active-fg);
+  background: var(--state-active-bg);
 }
 
 .toolbar-view-btn:disabled {
@@ -3423,13 +3342,13 @@ textarea {
 }
 
 .toolbar-search-field:focus-within {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 2px var(--accent-soft);
+  border-color: var(--focus-ring);
+  box-shadow: 0 0 0 2px var(--focus-halo);
   width: 280px;
 }
 
 .toolbar-search-field:focus-within .search-icon {
-  color: var(--accent);
+  color: var(--state-active-fg);
 }
 
 .toolbar-search-field input:disabled {
@@ -3498,7 +3417,7 @@ textarea {
   background: linear-gradient(
     90deg,
     transparent 0%,
-    var(--accent) 50%,
+    var(--emphasis) 50%,
     transparent 100%
   );
   animation: pf-progress-slide 1400ms cubic-bezier(0.4, 0, 0.2, 1) infinite;
@@ -3532,7 +3451,7 @@ textarea {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: var(--accent);
+  background: var(--emphasis);
   animation: pf-pulse 1400ms ease-in-out infinite;
 }
 
@@ -3638,8 +3557,7 @@ textarea {
   }
   .first-run-option:hover {
     background: var(--bg-surface-3);
-    box-shadow: 0 0 0 3px var(--accent-soft);
-  }
+    }
   .annotation-toolbar {
     box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5),
                 0 2px 8px rgba(0, 0, 0, 0.3);
@@ -3648,13 +3566,12 @@ textarea {
      is too loud as a button fill, per design system. */
   .viewer-placeholder-cta,
   .btn-primary {
-    background: var(--accent);
-    color: #fff;
+    background: var(--emphasis);
+    color: var(--on-emphasis);
   }
   .viewer-placeholder-cta:hover,
   .btn-primary:hover {
-    background: var(--accent-strong);
-    box-shadow: 0 4px 14px rgba(10, 102, 255, 0.35);
+    background: var(--emphasis-hover);
   }
 }
 
@@ -3742,7 +3659,7 @@ textarea {
   bottom: -1px;
   height: 2px;
   border-radius: 2px 2px 0 0;
-  background: var(--accent);
+  background: var(--emphasis);
   animation: pf-fade-in var(--pf-dur-fast) var(--pf-ease);
 }
 
@@ -3850,8 +3767,8 @@ textarea {
 }
 
 .mode-contextual-action.active {
-  color: var(--accent);
-  background: var(--accent-soft);
+  color: var(--state-active-fg);
+  background: var(--state-active-bg);
 }
 
 .mode-contextual-action:disabled {
@@ -3875,8 +3792,8 @@ textarea {
   padding: 0 16px;
   border-radius: var(--radius-pill);
   border: 1px solid transparent;
-  background: var(--brand-mark-fill);
-  color: var(--brand-mark-on);
+  background: var(--emphasis);
+  color: var(--on-emphasis);
   font-size: 12.5px;
   font-weight: 600;
   letter-spacing: -0.005em;
@@ -3888,7 +3805,7 @@ textarea {
 }
 
 .mode-contextual-cta:hover:not(:disabled) {
-  background: #0a0a0a;
+  background: var(--emphasis-hover);
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
 }
 
@@ -3921,12 +3838,11 @@ textarea {
   }
   .mode-contextual-cta,
   .mode-contextual-cta:hover:not(:disabled) {
-    background: var(--accent);
-    color: #fff;
+    background: var(--emphasis);
+    color: var(--on-emphasis);
   }
   .mode-contextual-cta:hover:not(:disabled) {
-    background: var(--accent-strong);
-    box-shadow: 0 4px 14px rgba(10, 102, 255, 0.35);
+    background: var(--emphasis-hover);
   }
 }
 
@@ -3972,7 +3888,7 @@ textarea {
 }
 
 .welcome-drop-target.is-dragging-over {
-  box-shadow: 0 0 0 3px var(--accent-soft), 0 0 0 4px var(--accent);
+  box-shadow: 0 0 0 3px var(--focus-halo), 0 0 0 4px var(--focus-ring);
 }
 
 .welcome-card {
@@ -3992,8 +3908,8 @@ textarea {
   width: 56px;
   height: 56px;
   border-radius: 13px;
-  background: var(--brand-mark-fill);
-  color: var(--brand-mark-on);
+  background: var(--emphasis);
+  color: var(--on-emphasis);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -4029,8 +3945,8 @@ textarea {
   padding: 0 24px;
   border-radius: var(--radius-pill);
   border: 1px solid transparent;
-  background: var(--brand-mark-fill);
-  color: var(--brand-mark-on);
+  background: var(--emphasis);
+  color: var(--on-emphasis);
   font-size: 14px;
   font-weight: 600;
   letter-spacing: -0.005em;
@@ -4045,7 +3961,7 @@ textarea {
 }
 
 .welcome-card-cta:hover {
-  background: #0a0a0a;
+  background: var(--emphasis-hover);
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
 }
 
@@ -4278,8 +4194,6 @@ textarea {
   align-items: center;
   justify-content: center;
   background: rgba(15, 21, 35, 0.4);
-  backdrop-filter: blur(3px);
-  -webkit-backdrop-filter: blur(3px);
   -webkit-app-region: no-drag;
   animation: pf-fade-in var(--pf-dur-med) var(--pf-ease);
 }
@@ -4401,14 +4315,14 @@ textarea {
 
 .settings-row-link {
   font-size: 13px;
-  color: var(--accent);
+  color: var(--link);
   text-decoration: none;
   font-weight: 500;
   transition: color var(--pf-dur-fast) var(--pf-ease);
 }
 
 .settings-row-link:hover {
-  color: var(--accent-strong);
+  color: var(--link-hover);
   text-decoration: underline;
   text-underline-offset: 2px;
 }
@@ -4433,8 +4347,8 @@ textarea {
 }
 
 .settings-select:focus {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 2px var(--accent-soft);
+  border-color: var(--focus-ring);
+  box-shadow: 0 0 0 2px var(--focus-halo);
 }
 
 .settings-divider {
@@ -4487,9 +4401,9 @@ textarea {
 }
 
 .settings-droplet-active {
-  border-color: var(--accent);
-  background: var(--accent-soft);
-  color: var(--accent);
+  border-color: var(--emphasis);
+  background: var(--state-active-bg);
+  color: var(--state-active-fg);
 }
 
 .settings-droplet svg {

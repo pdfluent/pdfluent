@@ -419,6 +419,47 @@ fn quiet_enough(load: Option<f64>, ceiling: f64) -> bool {
     }
 }
 
+fn load_ceiling() -> f64 {
+    std::env::var("PDFLUENT_AXES_MAX_LOAD")
+        .ok()
+        .and_then(|v| v.parse().ok())
+        .unwrap_or(1.0)
+}
+
+fn load_patience_s() -> u64 {
+    std::env::var("PDFLUENT_AXES_LOAD_WAIT_S")
+        .ok()
+        .and_then(|v| v.parse().ok())
+        .unwrap_or(600)
+}
+
+/// The sentence a refused measurement ends with. It names the cause, the load
+/// that was measured, the ceiling and how long we waited, so a red job explains
+/// itself without anyone opening the runner.
+fn unsettled_message(load: Option<f64>, ceiling: f64, waited_s: u64) -> String {
+    let seen = match load {
+        Some(v) => format!("one-minute load {v:.2}"),
+        None => "one-minute load unreadable".to_string(),
+    };
+    format!(
+        "golden_axes: no run file written because the machine never settled: {seen}, ceiling \
+         {ceiling:.2}, waited {waited_s}s. Cause: other work is running on this host (the sibling \
+         runner shares its four cores). A speed measured under load is a measurement of the load. \
+         Re-run when the host is idle, or raise PDFLUENT_AXES_LOAD_WAIT_S."
+    )
+}
+
+/// What is eating the box, for the failure message. Best effort, empty when ps
+/// is missing.
+fn busiest_processes() -> String {
+    let top = shell("ps -eo pcpu,comm --sort=-pcpu 2>/dev/null | head -6");
+    if top.is_empty() {
+        String::new()
+    } else {
+        format!("\nBusiest processes:\n{top}")
+    }
+}
+
 /// Wait until the machine is quiet enough to measure on, and say what it was.
 ///
 /// Waiting rather than refusing outright: on a box that is shared by design,
@@ -426,16 +467,8 @@ fn quiet_enough(load: Option<f64>, ceiling: f64) -> bool {
 /// when the machine will not settle does it hand back the load it saw so the
 /// caller can announce a skip instead of publishing a number.
 fn wait_until_quiet() -> (Option<f64>, bool) {
-    let ceiling: f64 = std::env::var("PDFLUENT_AXES_MAX_LOAD")
-        .ok()
-        .and_then(|v| v.parse().ok())
-        .unwrap_or(1.0);
-    let patience = std::time::Duration::from_secs(
-        std::env::var("PDFLUENT_AXES_LOAD_WAIT_S")
-            .ok()
-            .and_then(|v| v.parse().ok())
-            .unwrap_or(600),
-    );
+    let ceiling = load_ceiling();
+    let patience = std::time::Duration::from_secs(load_patience_s());
 
     let started = Instant::now();
     let mut load = load_average();
@@ -491,12 +524,15 @@ fn golden_axes_writes_a_run_file() {
     // and a speed number taken beside someone else's build is about their build.
     let (load, quiet) = wait_until_quiet();
     if !quiet {
-        eprintln!(
-            "SKIPPED (not a pass): the machine did not settle (one-minute load {}), so no run \
-             file was written. A speed measured under load is a measurement of the load; see the \
-             load_average note in this file.",
-            load.map(|v| format!("{v:.2}")).unwrap_or_else(|| "unreadable".to_string()),
-        );
+        let message = unsettled_message(load, load_ceiling(), load_patience_s());
+        // In CI a missing run file is a red job that names its cause, never a
+        // pass: the next steps have nothing to judge and the artifact upload
+        // finds nothing, which reads as a broken pipeline instead of a busy
+        // box (round 9). Locally the skip stays, loudly.
+        if std::env::var("PDFLUENT_AXES_REQUIRE_RUN").is_ok_and(|v| v == "1") {
+            panic!("{message}{}", busiest_processes());
+        }
+        eprintln!("SKIPPED (not a pass): {message}");
         return;
     }
 
@@ -588,4 +624,18 @@ fn a_busy_machine_is_not_measured_on() {
     // Not a refusal: a platform whose load we cannot read would otherwise never
     // produce a number at all.
     assert!(quiet_enough(None, 1.0), "an unreadable load is not a busy machine");
+}
+
+#[test]
+fn a_machine_that_never_settles_fails_with_its_cause() {
+    // Round 9: the wait expired, nothing was written, and the job failed three
+    // steps later on a missing file. The message must carry the cause and the
+    // measured load.
+    let message = unsettled_message(Some(3.52), 1.0, 600);
+    assert!(message.contains("never settled"), "{message}");
+    assert!(message.contains("one-minute load 3.52"), "{message}");
+    assert!(message.contains("ceiling 1.00"), "{message}");
+    assert!(message.contains("waited 600s"), "{message}");
+    assert!(message.contains("sibling runner"), "{message}");
+    assert!(unsettled_message(None, 1.0, 5).contains("unreadable"));
 }

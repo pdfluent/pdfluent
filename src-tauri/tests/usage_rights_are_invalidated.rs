@@ -5,17 +5,22 @@
 // of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
-//! Editing a Reader-enabled document destroys its usage rights. This file
-//! pins that fact, because the warning built on top of it is only honest for
-//! as long as it stays true.
+//! Editing a Reader-enabled document: what the save keeps, and what the edit
+//! still costs.
 //!
 //! `xfa-bd870029_pdf_0007` carries a `/Perms /UR3` signature: Adobe Reader
 //! enablement, which grants features rather than attesting to content. The
 //! writer edits it on purpose — refusing would make every Reader-enabled form
 //! read-only, which `signed_documents_are_refused.rs` pins from the other side.
-//! What the writer cannot do is keep the signature: the edit moves bytes the
-//! `/ByteRange` digest covers, so after the save the document is no longer
-//! Reader-enabled.
+//!
+//! Since 1.0.1 a document that carries any signature is saved as an
+//! incremental update (`signed_documents_keep_their_signatures.rs`), so the
+//! bytes the `/UR3` signature was computed over are kept exactly. That keeps
+//! the usage rights for the changes they grant — filling the form, adding
+//! comments. It does not make a text edit acceptable to them: a content-stream
+//! change is outside what `/UR3` permits, Reader withdraws the extended
+//! features when it sees one, and so the writer still reports
+//! `usage_rights_invalidated` for it and the app still warns.
 //!
 //! The fact is asserted on the bytes, not on `verify_signatures`. `pdf-sign`
 //! cannot parse the CMS Adobe writes into a `/UR3` signature at the pinned
@@ -23,14 +28,10 @@
 //! SignedData" for this fixture untouched and the identical sentence after the
 //! edit, so nothing it returns distinguishes the two. What does is the
 //! `/ByteRange` the signature declares: those bytes were what the signature was
-//! computed over, and after the save they are different bytes.
+//! computed over.
 //!
-//! Red when: the edit stops being applied, or something starts preserving the
-//! usage-rights signature across it — an incremental update that appends the
-//! change after the signed range would leave those bytes alone. The second one
-//! is not a regression — it is a better product — but it would make the warning
-//! this test exists for a lie, and the app has to stop saying it in the same
-//! change.
+//! Red when: the edit stops being applied, the writer stops reporting what a
+//! text edit costs, or a save rewrites the signed bytes again.
 //!
 //! Runs in the `cargo-test` job.
 
@@ -74,7 +75,7 @@ fn golden(name: &str) -> PathBuf {
 }
 
 #[test]
-fn editing_a_reader_enabled_form_invalidates_its_usage_rights_signature() {
+fn a_text_edit_of_a_reader_enabled_form_is_reported_and_saved_without_rewriting_the_signed_bytes() {
     let path = golden(READER_ENABLED);
     let mut doc = OpenDocument::open(path.to_str().expect("utf-8 path")).expect("open fixture");
 
@@ -122,15 +123,13 @@ fn editing_a_reader_enabled_form_invalidates_its_usage_rights_signature() {
     assert_eq!(
         after.len(),
         1,
-        "{READER_ENABLED}: the signature dictionary survives the save; only its \
-         guarantee does not"
+        "{READER_ENABLED}: the signature dictionary survives the save"
     );
-    assert_ne!(
+    assert_eq!(
         signed_after,
         signed_before,
-        "{READER_ENABLED}: the bytes the /UR3 signature was computed over must \
-         have changed — that is the whole of what the app warns the user about, \
-         and it is what an incremental update would avoid"
+        "{READER_ENABLED}: the save must append the edit as an incremental \
+         update and leave the bytes the /UR3 signature was computed over alone"
     );
     assert!(
         after[0].usage_rights,

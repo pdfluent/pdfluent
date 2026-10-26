@@ -95,7 +95,7 @@ export function checkPageBoundary(
     return {
       severity: 'error',
       code: 'page-boundary-violation',
-      message: 'Het object valt buiten de paginaranden. Verplaats of verklein het object.',
+      message: 'The object extends past the page edges. Move or shrink it.',
     };
   }
   return null;
@@ -109,7 +109,7 @@ export function checkMinimumSize(proposedRect: LayoutRect): CollisionIssue | nul
     return {
       severity: 'error',
       code: 'minimum-size-violation',
-      message: `Object is kleiner dan de minimale grootte (${MIN_OBJECT_SIZE}pt). Vergroot het object.`,
+      message: `The object is smaller than the minimum size (${MIN_OBJECT_SIZE}pt). Enlarge it.`,
     };
   }
   return null;
@@ -174,7 +174,7 @@ export function checkClippingRisk(
     return {
       severity: 'warning',
       code: 'clipping-risk',
-      message: 'Object kan worden afgeknipt door de groepsbegrenzing.',
+      message: 'The object may be clipped by the group boundary.',
       involvedIds: [obj.id],
     };
   }

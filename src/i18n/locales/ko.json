@@ -56,7 +56,7 @@
     "fillAndSign": "작성 및 서명",
     "more": "더 보기",
     "getDesktopApp": "데스크톱 앱",
-    "getDesktopAppTitle": "데스크톱 앱에서 편집, OCR, 편집, 페이지 정리 및 내보내기 사용"
+    "getDesktopAppTitle": "데스크톱 앱에서 편집, OCR, 가리기, 페이지 정리, 내보내기를 사용하세요"
   },
   "toolbar": {
     "select": "선택",
@@ -94,7 +94,7 @@
     "date": "날짜",
     "password": "비밀번호",
     "permissions": "권한",
-    "redact": "편집",
+    "redact": "가리기",
     "hide": "숨기기",
     "compare": "비교",
     "accessibility": "접근성",
@@ -114,9 +114,9 @@
     "allTools": "모든 도구",
     "contextualBar": "모드 도구모음",
     "pdfa": "PDF/A",
-    "metadata": "Document properties",
-    "invoice": "E-invoice",
-    "bookmarks": "Bookmarks"
+    "metadata": "문서 속성",
+    "invoice": "전자 인보이스",
+    "bookmarks": "북마크"
   },
   "topbar": {
     "openPdf": "PDF 열기",
@@ -233,16 +233,15 @@
     "noFieldsBrowserHint": "양식 필드가 없습니다."
   },
   "protect": {
-    "applyRedactions": "편집 영구 적용",
-    "noRedactions": "대기 중인 편집 없음.",
-    "redactionsPending": "{{count}}개 편집 대기 중",
-    "redactionsPending_plural": "{{count}}개 편집 대기 중",
+    "applyRedactions": "가리기를 영구 적용",
+    "noRedactions": "대기 중인 가리기 항목이 없습니다.",
+    "redactionsPending": "가리기 {{count}}건 대기 중",
+    "redactionsPending_plural": "가리기 {{count}}건 대기 중",
     "encrypt": "암호화",
     "userPasswordPlaceholder": "사용자 비밀번호",
     "ownerPasswordPlaceholder": "소유자 비밀번호",
     "encryptBtn": "암호화…",
     "decrypt": "복호화",
-    "currentPasswordPlaceholder": "현재 비밀번호",
     "decryptBtn": "복호화",
     "noDocument": "열린 문서 없음.",
     "permCanPrint": "인쇄",
@@ -253,12 +252,16 @@
     "permCanFillForms": "양식 작성",
     "permCanExtractContent": "내용 추출",
     "permCanAssemble": "조합",
-    "searchRedact": "검색 및 편집",
-    "searchRedactPlaceholder": "찾아서 편집할 텍스트…",
-    "searchRedactBtn": "찾아서 편집",
+    "searchRedact": "검색 후 가리기",
+    "searchRedactPlaceholder": "찾아서 가릴 텍스트…",
+    "searchRedactBtn": "찾아서 가리기",
     "redactMetadataTitle": "메타데이터",
     "redactMetadataDesc": "작성자, 제목 및 기타 식별 메타데이터를 제거합니다.",
-    "redactMetadataBtn": "메타데이터 제거"
+    "redactMetadataBtn": "메타데이터 제거",
+    "ownerPasswordForRemoval": "소유자(권한) 비밀번호",
+    "removePasswordHelp": "비밀번호를 제거하려면 권한을 보호하는 소유자 비밀번호가 필요합니다. 파일을 열 때 사용한 비밀번호는 소유자 비밀번호가 아닌 이상 충분하지 않습니다.",
+    "removePasswordReady": "이 파일을 소유자 비밀번호로 열었으므로, 다시 입력하지 않고도 보호를 제거할 수 있습니다.",
+    "removePasswordNotProtected": "이 문서는 비밀번호로 보호되어 있지 않습니다."
   },
   "organize": {
     "thumbnails": "썸네일",
@@ -287,33 +290,34 @@
     "combine": "파일 합치기",
     "splitRange": "범위로 나누기",
     "splitRangeHint": "먼저 페이지를 선택하세요",
-    "moveLeft": "Move selected page left",
-    "moveRight": "Move selected page right",
-    "moveLeftShort": "Left",
-    "moveRightShort": "Right",
-    "rotateLeft": "Rotate left",
-    "rotateRight": "Rotate right",
-    "rotateLeftShort": "Left",
-    "rotateRightShort": "Right",
-    "addingPdf": "Adding PDF…",
-    "pdfAdded": "PDF added",
-    "combiningFiles": "Combining {{count}} file(s)…",
-    "filesCombined": "{{count}} file(s) combined",
-    "insertingPdf": "Inserting PDF before page {{page}}…",
-    "pdfInserted": "PDF inserted",
-    "exportingPages": "Exporting {{count}} page(s)…",
-    "selectionExported": "Selection exported to {{name}}",
-    "splittingPages": "Splitting into individual pages…",
-    "pagesSaved": "{{count}} pages saved",
-    "splittingRanges": "Splitting {{count}} range(s)…",
-    "filesSaved": "{{count}} file(s) saved"
+    "moveLeft": "선택한 페이지를 왼쪽으로 이동",
+    "moveRight": "선택한 페이지를 오른쪽으로 이동",
+    "moveLeftShort": "왼쪽",
+    "moveRightShort": "오른쪽",
+    "rotateLeft": "왼쪽으로 회전",
+    "rotateRight": "오른쪽으로 회전",
+    "rotateLeftShort": "왼쪽",
+    "rotateRightShort": "오른쪽",
+    "addingPdf": "PDF 추가 중…",
+    "pdfAdded": "PDF 추가됨",
+    "combiningFiles": "파일 {{count}}개 합치는 중…",
+    "filesCombined": "파일 {{count}}개 합침",
+    "insertingPdf": "{{page}}페이지 앞에 PDF 삽입 중…",
+    "pdfInserted": "PDF 삽입됨",
+    "exportingPages": "{{count}}페이지 내보내는 중…",
+    "selectionExported": "선택 항목을 {{name}}(으)로 내보냄",
+    "splittingPages": "개별 페이지로 분할 중…",
+    "pagesSaved": "{{count}}페이지 저장됨",
+    "splittingRanges": "범위 {{count}}개 분할 중…",
+    "filesSaved": "파일 {{count}}개 저장됨"
   },
   "unsavedChanges": {
     "title": "저장되지 않은 변경 사항",
     "message": "계속하기 전에 변경 사항을 저장하시겠습니까?",
     "save": "저장",
     "discard": "변경 사항 버리기",
-    "cancel": "취소"
+    "cancel": "취소",
+    "messageNamed": "계속하기 전에 {{name}}의 변경 사항을 저장하시겠습니까?"
   },
   "welcome": {
     "title": "PDF를 열어 시작하세요",
@@ -327,13 +331,13 @@
     "lede": "읽기, 편집, 변환, 작성 및 서명 — 완전히 기기에서.",
     "privacyPromise": "로컬 우선 · 문서가 기기를 벗어나지 않음",
     "dropPdfHere": "여기에 PDF를 놓으세요",
-    "v3Subtitle": "Open a PDF to read, edit, convert or sign it locally.",
-    "openFileAria": "Choose a PDF file to open",
-    "clearRecent": "Clear recent",
-    "recentShort": "Recent",
-    "removeRecentAria": "Remove {{name}}",
-    "backToDocument": "Back to document",
-    "loadingDocument": "Loading document…"
+    "v3Subtitle": "PDF를 열어 로컬에서 읽기, 고치기, 변환 또는 서명하세요.",
+    "openFileAria": "열 PDF 파일 선택",
+    "clearRecent": "최근 항목 지우기",
+    "recentShort": "최근",
+    "removeRecentAria": "{{name}} 제거",
+    "backToDocument": "문서로 돌아가기",
+    "loadingDocument": "문서 로딩 중…"
   },
   "settings": {
     "language": "언어",
@@ -350,15 +354,29 @@
     "reviewerNamePlaceholder": "주석에 사용할 이름",
     "exportPreferences": "내보내기 기본 설정",
     "exportFormatLabel": "기본 내보내기 형식",
-    "autosave": "자동 저장",
-    "autosaveEnable": "변경 사항 자동 저장",
     "themeLabel": "테마",
     "ocrDefaults": "OCR 기본값",
     "ocrLanguageLabel": "기본 언어 (ISO-639-2)",
     "ocrLanguagePlaceholder": "예: eng, nld, deu",
-    "updates": "Updates",
-    "automaticUpdateCheck": "Check for a new version at startup",
-    "automaticUpdateCheckHint": "PDFluent asks pdfluent.com whether a newer version exists, a few seconds after it starts. Nothing from your documents is sent. Turn this off and the app never checks on its own — \"Check for updates\" still works whenever you ask for it."
+    "updates": "업데이트",
+    "automaticUpdateCheck": "시작할 때 새 버전 확인",
+    "automaticUpdateCheckHint": "PDFluent는 시작 후 몇 초 뒤에 pdfluent.com에 새 버전이 있는지 확인합니다. 문서에서 어떤 내용도 전송되지 않습니다. 이 기능을 끄면 앱이 자체적으로 확인하지 않지만, \"업데이트 확인\"은 요청할 때마다 여전히 작동합니다.",
+    "recoveryCopy": "복구 사본",
+    "recoveryCopyEnable": "저장되지 않은 변경 사항의 복구 사본을 보관하여 충돌 후 복원할 수 있도록 함",
+    "view": "보기",
+    "defaultZoomLabel": "기본 확대/축소",
+    "defaultZoomFitWidth": "너비 맞춤 (기본)",
+    "defaultZoomFitPage": "페이지 맞춤",
+    "defaultZoomActualSize": "실제 크기 (100%)",
+    "defaultZoomLastUsed": "마지막 사용",
+    "defaultZoomHint": "문서는 이 확대/축소 수준으로 열리고, 직접 확대/축소할 때까지 창 크기에 맞춰집니다. 너비 맞춤은 전체 페이지가 확실히 더 나은 맞춤일 때 대신 전체 페이지를 보여줍니다.",
+    "securityTitle": "보안",
+    "formScriptsLabel": "양식 스크립트",
+    "formScriptsAsk": "묻기",
+    "formScriptsAlways": "항상",
+    "formScriptsNever": "안 함",
+    "formScriptsHint": "양식에는 스크립트(예: 계산)가 있을 수 있습니다. 기본값은 '묻기'입니다: 양식은 저장된 값으로 열리고, 동의할 때까지 아무것도 실행되지 않습니다.",
+    "formScriptsPinned": "조직에서 이 선택을 설정했습니다. 여기에서는 변경할 수 없습니다."
   },
   "errors": {
     "loadFailed": "문서 로드 실패",
@@ -367,7 +385,7 @@
     "unknownError": "예기치 않은 오류가 발생했습니다",
     "ocrFailed": "OCR 실패",
     "exportFailed": "내보내기 실패",
-    "redactionFailed": "편집 실패",
+    "redactionFailed": "가리기 실패",
     "textEditFailed": "텍스트 편집 실패",
     "layoutEditFailed": "레이아웃 편집 실패",
     "annotationFailed": "주석 실패",
@@ -381,7 +399,8 @@
     "addPageFailed": "PDF 추가 실패",
     "insertFailed": "PDF 삽입 실패",
     "splitFailed": "분할 실패",
-    "commandFailedTitle": "'{{command}}' did not complete"
+    "commandFailedTitle": "'{{command}}' 작업이 완료되지 않았습니다",
+    "commandRetrying": "{{command}}에서 일시적인 오류 — 다시 시도하는 중"
   },
   "events": {
     "formFieldUpdated": "양식 필드 업데이트됨",
@@ -430,9 +449,9 @@
     "pageNotFound": "페이지를 찾을 수 없음",
     "requiresFontInspection": "텍스트 편집에는 폰트 검사가 필요합니다 (6단계에서 계획됨).",
     "rejection": {
-      "bannerTitle": "This text was not changed",
-      "bannerDetail": "Reason reported by the PDF engine: {{detail}}",
-      "bannerDismiss": "Dismiss",
+      "bannerTitle": "이 텍스트는 변경되지 않았습니다",
+      "bannerDetail": "PDF 엔진에서 보고된 이유: {{detail}}",
+      "bannerDismiss": "닫기",
       "replacement-too-long": {
         "tooltip": "Replacement is too long",
         "explanation": "The replacement is longer than the text it replaces. Keep it the same length or shorter so the surrounding layout stays intact."
@@ -491,8 +510,8 @@
       }
     },
     "fallback": {
-      "fontSubstitutedTitle": "A standard font wrote the new text",
-      "fontSubstitutedMessage": "The original font of this text has no glyph for one or more characters you typed, so Helvetica was used for the replacement. The text is correct; it may look slightly different from the rest of the line."
+      "fontSubstitutedTitle": "표준 글꼴이 새 텍스트를 작성했습니다",
+      "fontSubstitutedMessage": "이 텍스트의 원래 글꼴에 입력한 문자 중 하나 이상에 대한 글리프가 없어서, 대체용으로 Helvetica가 사용되었습니다. 텍스트는 정확하지만, 줄의 나머지 부분과 약간 다르게 보일 수 있습니다."
     }
   },
   "validation": {
@@ -502,7 +521,7 @@
     "objectInLockedLayer": "객체가 잠긴 레이어에 있어 수정할 수 없습니다.",
     "formsWithoutFields": "양식 필드가 없는 문서에서 양식 작성 모드가 활성화되어 있습니다.",
     "annotationToolbarWrongMode": "주석 바가 '{{mode}}' 모드에서 표시되지만 '주석 달기' 모드가 필요합니다.",
-    "redactionToolbarWrongMode": "편집 바가 '{{mode}}' 모드에서 표시되지만 '편집' 모드가 필요합니다."
+    "redactionToolbarWrongMode": "가리기 막대가 '{{mode}}' 모드에서 표시되지만 가리기 모드가 필요합니다."
   },
   "revisions": {
     "deletedAnnotations": "## 삭제된 주석",
@@ -549,13 +568,13 @@
     "exportExcelDone": "Excel 스프레드시트 내보내기 완료",
     "exportPowerpointRunning": "PowerPoint로 변환 중…",
     "exportPowerpointDone": "PowerPoint 프레젠테이션 내보내기 완료",
-    "applyRedactRunning": "편집 적용 중…",
-    "applyRedactDone": "편집 적용됨",
-    "applyRedactFailed": "편집 적용 실패",
-    "searchRedactRunning": "검색 및 편집 중…",
-    "searchRedactDone": "{{count}}개 일치 항목 편집됨",
-    "searchRedactDone_plural": "{{count}}개 일치 항목 편집됨",
-    "searchRedactFailed": "검색 및 편집 실패",
+    "applyRedactRunning": "가리기를 적용하는 중…",
+    "applyRedactDone": "가리기가 적용되었습니다",
+    "applyRedactFailed": "가리기를 적용하지 못했습니다",
+    "searchRedactRunning": "검색하여 가리는 중…",
+    "searchRedactDone": "일치 항목 {{count}}건을 가렸습니다",
+    "searchRedactDone_plural": "일치 항목 {{count}}건을 가렸습니다",
+    "searchRedactFailed": "검색 후 가리기 실패",
     "redactMetadataRunning": "메타데이터 제거 중…",
     "redactMetadataDone": "메타데이터 제거됨",
     "redactMetadataFailed": "메타데이터 제거 실패",
@@ -566,12 +585,16 @@
     "watermarkDone": "워터마크가 추가되었습니다",
     "watermarkFailed": "워터마크 추가 실패",
     "watermarkRunning": "워터마크 추가 중…",
-    "pdfaRunning": "Converting to PDF/A…",
-    "pdfaDone": "PDF/A written",
-    "pdfaFailed": "PDF/A conversion failed",
-    "metadataRunning": "Saving properties…",
-    "metadataDone": "Properties saved",
-    "metadataFailed": "Could not save properties"
+    "pdfaRunning": "PDF/A로 변환 중…",
+    "pdfaDone": "PDF/A 저장됨",
+    "pdfaFailed": "PDF/A 변환 실패",
+    "metadataRunning": "속성 저장 중…",
+    "metadataDone": "속성 저장됨",
+    "metadataFailed": "속성을 저장할 수 없음",
+    "exportMarkdownRunning": "Markdown으로 내보내는 중…",
+    "exportMarkdownDone": "Markdown 내보냄",
+    "exportTablesRunning": "Excel로 테이블 내보내는 중…",
+    "exportTablesDone": "Excel로 테이블 내보냄 ({{count}})"
   },
   "panels": {
     "search": "검색",
@@ -586,8 +609,8 @@
     "annotationCreated": "주석 생성됨",
     "annotationUpdated": "주석 업데이트됨",
     "annotationDeleted": "주석 삭제됨",
-    "redactionCreated": "편집 생성됨",
-    "redactionApplied": "편집 적용됨",
+    "redactionCreated": "가리기 항목을 만들었습니다",
+    "redactionApplied": "가리기를 적용했습니다",
     "metadataChanged": "메타데이터 변경됨",
     "pageMutated": "페이지 수정됨",
     "textEditCommitted": "텍스트 편집 저장됨",
@@ -714,7 +737,10 @@
     "formatJpeg": "JPEG (이미지)",
     "formatDocx": "Word 문서 (.docx)",
     "formatXlsx": "Excel 스프레드시트 (.xlsx)",
-    "formatPptx": "PowerPoint 프레젠테이션 (.pptx)"
+    "formatPptx": "PowerPoint 프레젠테이션 (.pptx)",
+    "formatMarkdown": "Markdown (.md) - 미리보기",
+    "formatTablesXlsx": "표를 Excel로 (.xlsx) - 미리보기",
+    "noTablesFound": "이 문서에서 표를 인식하지 못했습니다."
   },
   "goToPage": {
     "title": "페이지로 이동",
@@ -729,7 +755,9 @@
     "documentLabel": "문서:",
     "savedLabel": "저장됨:",
     "recoveryPath": "복구 경로:",
-    "restore": "복원"
+    "restore": "복원",
+    "untitled": "제목 없는 문서",
+    "andMore": "{{name}} 외 {{count}}개"
   },
   "emptyStates": {
     "noDocument": "열린 문서 없음",
@@ -759,7 +787,7 @@
   "textContext": {
     "editText": "텍스트 편집",
     "annotate": "주석",
-    "redact": "편집",
+    "redact": "가리기",
     "copy": "복사",
     "summarize": "요약",
     "explain": "설명",
@@ -839,7 +867,26 @@
     "statusUnavailableWithReason": "OCR 런타임 사용 불가: {{reason}}",
     "statusRetry": "다시 확인",
     "runtimePath": "런타임: {{path}}",
-    "missingPackages": "누락: {{packages}}"
+    "missingPackages": "누락: {{packages}}",
+    "noScannedPagesTitle": "인식할 항목 없음",
+    "unavailable": {
+      "platform": "이 플랫폼에서는 OCR이 제공되지 않습니다.",
+      "missing": "이 버전의 OCR 파일이 없거나 불완전합니다. PDFluent를 다시 설치하여 복구하세요."
+    },
+    "settings": {
+      "unknown": "OCR 구성 요소: 확인 중…",
+      "installed": "OCR 구성 요소: Tesseract {{version}} 설치됨"
+    },
+    "errors": {
+      "OCR_COMPONENT_UNSUPPORTED_PLATFORM": "이 플랫폼에서는 OCR 구성 요소를 제공하지 않습니다.",
+      "OCR_COMPONENT_NOT_INSTALLED": "OCR 구성 요소가 설치되어 있지 않습니다.",
+      "OCR_LANGUAGE_MISSING": "OCR용 언어 팩이 설치되어 있지 않습니다.",
+      "OCR_SIGNED_DOCUMENT": "이 문서는 서명되어 있습니다. OCR을 실행하면 서명된 페이지가 변경되므로 실행하지 않습니다.",
+      "OCR_NOT_PERMITTED": "문서 권한에서 내용 변경이 허용되지 않습니다.",
+      "OCR_DOCUMENT_CHANGED": "OCR이 실행되는 동안 문서가 변경되었습니다. OCR을 다시 실행하세요.",
+      "OCR_ENGINE_FAILED": "OCR이 오류로 중단되었습니다.",
+      "OCR_PAGE_OUT_OF_RANGE": "인식할 페이지가 문서에 없습니다."
+    }
   },
   "docInfo": {
     "title": "제목",
@@ -879,7 +926,17 @@
     "italicComingSoon": "기울임꼴 서식 출시 예정",
     "sourceDigital": "PDF 텍스트 레이어",
     "sourceOcr": "OCR",
-    "browserLimitedNote": "지원되는 PDF 텍스트를 편집하려면 페이지의 텍스트를 클릭하세요. 이미지와 링크는 데스크톱 앱에서 사용 가능합니다."
+    "browserLimitedNote": "지원되는 PDF 텍스트를 편집하려면 페이지의 텍스트를 클릭하세요. 이미지와 링크는 데스크톱 앱에서 사용 가능합니다.",
+    "typeface": {
+      "label": "서체",
+      "default": "문서 글꼴",
+      "noEmbed": "{{family}}: 이 글꼴의 라이선스는 PDF에 포함하는 것을 허용하지 않습니다",
+      "refusedLicence": "{{family}}은(는) 사용할 수 없습니다: 라이선스가 PDF에 포함하는 것을 허용하지 않습니다. 다른 서체를 선택하세요.",
+      "refusedGlyphs": "{{family}}에는 {{characters}}에 대한 글리프가 없습니다. 다른 서체를 선택하세요.",
+      "refusedGone": "해당 서체는 더 이상 설치되어 있지 않습니다. 다른 서체를 선택하세요.",
+      "refusedText": "서식을 바꿀 텍스트가 더 이상 페이지에 없습니다.",
+      "refusedUnusable": "{{family}}을(를) 글꼴로 읽을 수 없습니다. 다른 서체를 선택하세요."
+    }
   },
   "rightPanel": {
     "properties": "속성",
@@ -891,7 +948,7 @@
     "annotationColorValue": "주석 색상 {{color}}",
     "strokeWidth": "선 굵기",
     "comments": "댓글",
-    "redactions": "편집",
+    "redactions": "가리기 항목",
     "ocr": "OCR",
     "pdfa": "PDF/A",
     "formFields": "양식 필드",
@@ -900,13 +957,13 @@
     "changeColor": "색상 변경",
     "deleteMarkup": "마크업 삭제",
     "delete": "삭제",
-    "redactionConfirm": "{{count}}개 편집을 영구 적용하시겠습니까? 취소할 수 없습니다.",
-    "redactionConfirm_plural": "{{count}}개 편집을 영구 적용하시겠습니까? 취소할 수 없습니다.",
-    "noRedactions": "대기 중인 편집 없음.",
-    "redactionCount": "{{count}}개 편집 대기 중",
-    "redactionCount_plural": "{{count}}개 편집 대기 중",
-    "applyRedactions": "편집 영구 적용",
-    "deleteRedaction": "편집 삭제",
+    "redactionConfirm": "가리기 {{count}}건을 영구 적용할까요? 되돌릴 수 없습니다.",
+    "redactionConfirm_plural": "가리기 {{count}}건을 영구 적용할까요? 되돌릴 수 없습니다.",
+    "noRedactions": "대기 중인 가리기 항목이 없습니다.",
+    "redactionCount": "가리기 {{count}}건 대기 중",
+    "redactionCount_plural": "가리기 {{count}}건 대기 중",
+    "applyRedactions": "가리기를 영구 적용",
+    "deleteRedaction": "가리기 항목 삭제",
     "signatures": "디지털 서명",
     "watermarkApply": "워터마크 적용",
     "watermarkOpacity": "불투명도",
@@ -944,9 +1001,12 @@
     "flatten": "XFA 평탄화",
     "flattenDone": "XFA 평탄화됨. PDF를 내보내 정적 버전을 다운로드하세요.",
     "flattenFailed": "XFA 평탄화 실패",
-    "convertToStandard": "Convert to standard PDF",
-    "convertedToStandard": "XFA converted to standard PDF",
-    "convertFailed": "Conversion failed: {{message}}"
+    "convertToStandard": "표준 PDF로 변환",
+    "convertedToStandard": "XFA가 표준 PDF로 변환됨",
+    "convertFailed": "변환 실패: {{message}}",
+    "bannerTitle": "XFA 양식",
+    "bannerBody": "이 XFA 양식은 있는 그대로 표시됩니다. 필드를 입력, 편집하거나 검색하려면 표준 PDF로 변환하세요.",
+    "bannerBodyExperimental": "이 XFA 양식은 있는 그대로 표시됩니다. 필드 입력은 실험 기능입니다. 안정적으로 입력, 편집, 검색하려면 표준 PDF로 변환하세요."
   },
   "security": {
     "activeContentBadge": "차단됨",
@@ -970,7 +1030,8 @@
     "highlight": "형광펜",
     "strikethrough": "취소선",
     "underline": "밑줄",
-    "copyText": "텍스트 복사"
+    "copyText": "텍스트 복사",
+    "copied": "복사했습니다"
   },
   "update": {
     "available": "업데이트 사용 가능",
@@ -980,10 +1041,10 @@
     "installing": "설치 중…",
     "checkFailed": "업데이트 확인 실패",
     "upToDate": "최신 버전을 사용 중입니다",
-    "installed": "Update installed",
-    "restartNow": "Restart now",
-    "restartUnsaved": "Save your changes before restarting.",
-    "restartManual": "If it doesn't restart automatically, quit and reopen PDFluent to finish."
+    "installed": "업데이트 설치됨",
+    "restartNow": "지금 다시 시작",
+    "restartUnsaved": "다시 시작하기 전에 변경 사항을 저장하세요.",
+    "restartManual": "자동으로 다시 시작되지 않으면 PDFluent를 종료한 후 다시 열어 완료하세요."
   },
   "telemetry": {
     "addNoteLabel": "추가할 내용이 있나요? (선택 사항)",
@@ -1012,6 +1073,11 @@
     "sentTitle": "전송되었습니다. 감사합니다.",
     "settingsAutoSend": "묻지 않고 자동으로 보내기",
     "settingsAutoSendNote": "자동 보고서는 수동으로 검토하는 보고서와 똑같이 개인 데이터가 제거되고 개인 정보가 없습니다.",
+    "settingsSentReports": "이 컴퓨터에서 보낸 충돌 보고서: {{count}}개. {{days}}일 후 서버에서 자동으로 삭제됩니다.",
+    "settingsDeleteReports": "내 충돌 보고서 삭제",
+    "settingsDeleting": "삭제 중…",
+    "settingsDeleted": "삭제된 충돌 보고서: {{count}}개",
+    "settingsDeleteFailed": "{{count}}개를 삭제하지 못했습니다. 연결을 확인하고 다시 시도하세요.",
     "settingsDescription": "보고서에는 개인 정보나 문서 내용이 절대 포함되지 않습니다. 전송 전에 모든 것이 제거되고 모든 보고서를 먼저 확인합니다. 기본적으로 꺼져 있습니다.",
     "settingsTitle": "충돌 및 오류 보고서",
     "settingsToggle": "충돌 및 오류 보고서 보내기",
@@ -1019,7 +1085,11 @@
     "typeBug": "버그",
     "typeCrash": "충돌",
     "typeFeedback": "피드백",
-    "whatGetsSent": "전송되는 내용"
+    "whatGetsSent": "전송되는 내용",
+    "settingsSentFeedback": "이 컴퓨터에서 보낸 피드백 보고서: {{count}}개. 서버에서는 {{days}}일 후 자동으로 삭제됩니다.",
+    "settingsDeleteFeedback": "내 피드백 보고서 삭제",
+    "settingsFeedbackDeleted": "피드백 보고서 삭제됨: {{count}}",
+    "settingsFeedbackDeleteFailed": "{{count}}개의 피드백 보고서를 삭제하지 못했습니다. 연결을 확인하고 다시 시도하세요."
   },
   "ai": {
     "summaryInstruction": "아래 문서의 간결한 요약을 한국어로 제공하세요. 각 역할에 대해 고용주, 직책, 기간을 언급하세요. 글머리 기호를 사용하세요.",
@@ -1076,7 +1146,8 @@
       "scrollLeft": "스크롤 모드 왼쪽",
       "scrollRight": "스크롤 모드 오른쪽",
       "workMode": "작업 모드",
-      "searchPlaceholder": "문서에서 검색"
+      "searchPlaceholder": "문서에서 검색",
+      "allTools": "모든 도구"
     },
     "menu": {
       "about": "정보",
@@ -1147,22 +1218,17 @@
       "draw": "그리기",
       "signatureName": "서명 이름",
       "typeName": "이름을 입력하세요…",
-      "selectStyle": "스타일 선택",
-      "styleClassic": "필기체 클래식",
-      "styleElegant": "필기체 우아함",
-      "styleBrush": "붓 서명",
-      "styleModern": "현대식 필기",
       "drawHere": "마우스, 트랙패드 또는 스타일러스로 여기에 그리세요",
       "clear": "지우기",
       "apply": "적용",
-      "defaultSignature": "서명",
       "clickToPlaceSignature": "페이지를 클릭하여 서명을 배치하세요.",
       "addInitials": "이니셜 추가",
       "initialsIntro": "빠른 배치를 위해 이니셜을 입력하세요.",
       "initials": "이니셜",
       "initialsPlaceholder": "예) AB",
-      "defaultInitials": "AB",
-      "clickToPlaceInitials": "페이지를 클릭하여 이니셜을 배치하세요."
+      "clickToPlaceInitials": "페이지를 클릭하여 이니셜을 배치하세요.",
+      "signatureFont": "서명 글꼴",
+      "plainItalic": "일반 기울임"
     },
     "overlay": {
       "signaturePlaced": "서명이 배치되었습니다!",
@@ -1177,13 +1243,13 @@
     "textbox": {
       "editTitle": "텍스트 상자 편집",
       "newTitle": "새 텍스트 상자",
-      "intro": "이 텍스트는 현재 페이지에 오버레이로 배치됩니다. 빈 상태로 저장하면 기존 텍스트 상자가 제거됩니다.",
       "label": "텍스트",
       "placeholder": "텍스트를 입력하세요…",
       "delete": "삭제",
       "deleted": "텍스트 상자가 삭제되었습니다.",
       "updated": "텍스트 상자가 업데이트되었습니다.",
-      "added": "새 텍스트 상자가 추가되었습니다."
+      "added": "새 텍스트 상자가 추가되었습니다.",
+      "introPdf": "텍스트 상자는 PDF에 기록되며 모든 PDF 뷰어에 표시됩니다. 비워 두고 저장하면 기존 텍스트 상자가 삭제됩니다."
     },
     "rail": {
       "tools": "PDF 도구",
@@ -1197,12 +1263,14 @@
       "more": "더 많은 도구",
       "strikeText": "텍스트 취소선",
       "underlineText": "텍스트 밑줄",
-      "addAttachment": "첨부 파일 추가"
+      "addAttachment": "첨부 파일 추가",
+      "drawRectangle": "사각형 그리기"
     },
     "railToasts": {
-      "commentMode": "노트 모드 활성화. 텍스트를 선택하고 노트를 선택하거나 댓글 목록을 사용하여 노트를 추가하세요.",
+      "commentMode": "메모 모드입니다. 메모를 둘 페이지 위치를 클릭하세요.",
       "strikeout": "취소선 활성화 — 텍스트를 선택하여 적용하세요.",
-      "underline": "밑줄 활성화 — 텍스트를 선택하여 적용하세요."
+      "underline": "밑줄 활성화 — 텍스트를 선택하여 적용하세요.",
+      "rectangle": "사각형 도구 활성 — 페이지에서 드래그해 그리세요."
     },
     "tools": {
       "lede": "시작할 도구를 선택하세요. 모든 것이 이 기기에서 로컬로 실행됩니다.",
@@ -1217,7 +1285,7 @@
       "merge": "파일 병합",
       "mergeSub": "PDF 결합",
       "contentSecurity": "콘텐츠 및 보안",
-      "redact": "수정",
+      "redact": "가리기",
       "redactSub": "영구적으로 텍스트 검게 처리",
       "protect": "보호",
       "protectSub": "비밀번호 및 권한",
@@ -1238,17 +1306,18 @@
       "layers": "{{count}}개 레이어",
       "manageLayers": "레이어 관리",
       "layersVisible": "{{count}}개 레이어가 표시됩니다.",
-      "archiveAndData": "Archiving and data",
-      "pdfaSub": "Check or convert for long-term archiving",
-      "invoiceSub": "Read the ZUGFeRD/Factur-X invoice inside",
-      "metadataSub": "Title and author of this document"
+      "archiveAndData": "보관 및 데이터",
+      "pdfaSub": "장기 보관을 위해 검사 또는 변환",
+      "invoiceSub": "포함된 ZUGFeRD/Factur-X 인보이스 읽기",
+      "metadataSub": "이 문서의 제목과 작성자",
+      "flattenForm": "평면화",
+      "flattenFormTitle": "양식 평면화: 입력한 값이 페이지의 일부가 되고 필드는 제거됩니다",
+      "flattenFormDone": "양식을 평면화했습니다. 실행 취소하면 필드가 돌아옵니다.",
+      "flattenFormFailed": "양식을 평면화할 수 없습니다: {{message}}"
     },
     "edit": {
       "lede": "문서의 텍스트를 클릭하여 인라인으로 편집하세요. 서식 지정 표시줄이 선택 항목 바로 위에 나타납니다.",
       "formatText": "텍스트 서식",
-      "fontLabel": "글꼴",
-      "fontHint": "기존 PDF 텍스트는 포함된 PDF 글꼴을 사용합니다. \"{{font}}\" 글꼴은 새로 추가된 텍스트 상자에 사용됩니다.",
-      "fontEmbedded": "포함된 PDF 글꼴",
       "color": "색상",
       "colorLabel": "색상 {{color}}",
       "addContent": "콘텐츠 추가",
@@ -1261,7 +1330,18 @@
       "clickAnywhereTextBox": "페이지의 아무 곳이나 클릭하여 텍스트 상자를 배치하세요.",
       "clickAnywhereImage": "페이지의 아무 곳이나 클릭하여 이미지를 배치하세요.",
       "selection": "선택",
-      "annotationOnPage": "{{type}} ({{page}}페이지)"
+      "annotationOnPage": "{{type}} ({{page}}페이지)",
+      "placeStamp": "스탬프 배치",
+      "stampLabel": "스탬프",
+      "clickToPlaceStamp": "페이지를 클릭해 스탬프를 배치하세요.",
+      "placementModeStamp": "배치 모드: 스탬프",
+      "stampPlaced": "스탬프를 배치했습니다.",
+      "deleteAnnotation": "주석 삭제",
+      "annotationColor": "주석 색상",
+      "editTextBox": "텍스트 편집",
+      "replaceImage": "이미지 바꾸기",
+      "imageReplaced": "이미지를 바꿨습니다.",
+      "moveHint": "드래그해 이동하고, 모서리를 드래그해 크기를 바꾸거나, 화살표 키로 조금씩 옮기세요."
     },
     "convert": {
       "exportPdfTo": "PDF를 다음으로 내보내기",
@@ -1279,10 +1359,16 @@
       "confidenceFrom": "신뢰도 {{value}}%",
       "ocrOff": "OCR 꺼짐",
       "ocrOn": "OCR 켜짐",
-      "ocrRunning": "OCR을 로컬에서 실행 중…"
+      "ocrRunning": "OCR을 로컬에서 실행 중…",
+      "ocrComponentUnknown": "OCR 구성 요소: 확인 중…",
+      "ocrComponentInstalled": "OCR 구성 요소 설치됨",
+      "ocrLastRun": "마지막 실행: {{pages}}페이지, {{words}}단어가 검색 가능한 텍스트로 추가됨",
+      "ocrRunningProgress": "{{total}}페이지 중 {{done}}페이지 인식 중…",
+      "markdown": "Markdown (미리보기)",
+      "tablesToExcel": "표를 Excel로 (미리보기)"
     },
     "esign": {
-      "lede": "Sign with a certificate of your own, and check the signatures a document already carries. Both happen on this device.",
+      "lede": "본인의 인증서로 서명하고, 문서에 이미 있는 서명을 확인하세요. 둘 다 이 기기에서 이루어집니다.",
       "fillAndSign": "문서를 작성하고 서명하세요",
       "addSignature": "서명 추가",
       "addInitials": "이니셜 추가",
@@ -1290,25 +1376,25 @@
       "placementModeInitials": "배치 모드: 이니셜",
       "clickToPlaceSignature": "페이지의 아무 곳이나 클릭하여 서명을 배치하세요.",
       "clickToPlaceInitials": "페이지의 아무 곳이나 클릭하여 이니셜을 배치하세요.",
-      "verifySection": "Signatures",
-      "verify": "Check signatures",
-      "desktopOnly": "Available in the desktop app",
-      "unsigned": "This document carries no signatures.",
-      "signSection": "Sign with a certificate",
-      "padesLevel": "Produces a PAdES B-B signature: your certificate over the whole file, no timestamp server involved.",
-      "certificate": "Certificate (.p12 or .pfx)",
-      "certificateNone": "No certificate chosen",
-      "chooseCertificate": "Choose certificate",
-      "certificatePassword": "Certificate password",
-      "reason": "Reason (optional)",
-      "reasonPlaceholder": "Why you are signing",
-      "sign": "Sign and save a copy",
-      "signing": "Signing…",
-      "signNeedsCertificate": "Choose a certificate and enter its password first.",
-      "signSaved": "Signed copy saved as {{name}}",
-      "signFailed": "Signing failed: {{message}}",
-      "usageRights": "Reader enablement (usage rights)",
-      "usageRightsInvalidated": "Usage rights invalidated — this file was edited, so Adobe Reader no longer treats it as an enabled form."
+      "verifySection": "서명",
+      "verify": "서명 확인",
+      "desktopOnly": "데스크톱 앱에서 사용 가능",
+      "unsigned": "이 문서에는 서명이 없습니다.",
+      "signSection": "인증서로 서명",
+      "padesLevel": "PAdES B-B 서명을 만듭니다: 전체 파일에 인증서를 적용하며, 타임스탬프 서버는 관여하지 않습니다.",
+      "certificate": "인증서 (.p12 또는 .pfx)",
+      "certificateNone": "선택된 인증서 없음",
+      "chooseCertificate": "인증서 선택",
+      "certificatePassword": "인증서 비밀번호",
+      "reason": "이유 (선택 사항)",
+      "reasonPlaceholder": "서명하는 이유",
+      "sign": "서명하고 사본 저장",
+      "signing": "서명 중…",
+      "signNeedsCertificate": "먼저 인증서를 선택하고 비밀번호를 입력하세요.",
+      "signSaved": "서명된 사본을 {{name}}(으)로 저장했습니다",
+      "signFailed": "서명 실패: {{message}}",
+      "usageRights": "Reader 활성화 (사용 권한)",
+      "usageRightsInvalidated": "사용 권한이 무효화됨 — 이 파일이 변경되어 Adobe Reader가 더 이상 활성화된 양식으로 처리하지 않습니다."
     },
     "protect": {
       "lede": "강력한 암호화 비밀번호로 PDF 문서를 보호하세요. 변경 사항은 로컬에서 즉시 적용됩니다.",
@@ -1330,9 +1416,11 @@
       "localViaTauri": "Tauri 명령을 통한 로컬, 브라우저 런타임 없음",
       "compressingImages": "이미지를 압축 중…",
       "percentComplete": "{{percent}}% 완료",
-      "compressPdf": "PDF 압축",
       "desktopOnly": "데스크톱 앱에서만 사용 가능",
-      "backToTools": "도구로 돌아가기"
+      "backToTools": "도구로 돌아가기",
+      "saveCopy": "압축된 복사본을 다른 이름으로 저장…",
+      "replaceOpen": "열려 있는 문서를 압축하여 바꾸기",
+      "replaceNote": "복사본을 만들면 열려 있는 문서와 파일은 그대로 유지됩니다. 바꾸기는 열려 있는 문서에만 적용되며, 실행 취소하면 원본으로 돌아갑니다."
     },
     "split": {
       "lede": "문서를 페이지별 또는 특정 페이지 범위로 분할 PDF 파일로 분할하세요.",
@@ -1359,17 +1447,62 @@
       "currentDocument": "현재 문서"
     },
     "redact": {
-      "lede": "PDF에서 민감한 정보를 표시하고 영구적으로 제거하세요. 수정은 실제 소스 텍스트와 벡터를 제거합니다.",
-      "modeActive": "수정 모드가 활성화됨",
-      "dragHint": "마우스를 페이지의 텍스트 또는 이미지 위로 끌어서 수정 대상으로 표시하세요.",
-      "searchAndRedact": "텍스트 검색 및 수정",
+      "lede": "PDF의 민감한 정보를 표시하고 영구적으로 제거합니다. 가리기는 원본 텍스트와 벡터 자체를 제거합니다.",
+      "modeActive": "가리기 모드가 켜져 있습니다",
+      "dragHint": "가릴 텍스트나 이미지 위로 마우스를 드래그해 표시하세요.",
+      "searchAndRedact": "검색 후 가리기",
       "searchPlaceholder": "검색 용어 (예: SSN, 전화)",
       "mark": "표시",
-      "draftRedactions": "초안 수정 ({{count}})",
+      "draftRedactions": "가리기 초안 ({{count}})",
       "applying": "적용 중…",
-      "applyPermanently": "수정을 영구적으로 적용",
-      "noActiveMarkings": "활성 수정 표시가 없습니다.",
-      "backToTools": "도구로 돌아가기"
+      "applyPermanently": "가리기를 영구 적용",
+      "noActiveMarkings": "활성 가리기 표시가 없습니다.",
+      "backToTools": "도구로 돌아가기",
+      "pii": {
+        "title": "개인정보",
+        "lede": "Find personal data in the text of this document: IBANs, card numbers, national ID numbers, birth dates, e-mail addresses and phone numbers, and names and addresses when the model is installed. Review the list, then redact the ones you choose.",
+        "find": "개인 정보 찾기",
+        "scanning": "스캔 중…",
+        "none": "Nothing found.",
+        "kind": {
+          "iban": "IBAN",
+          "email": "이메일 주소",
+          "phone": "전화번호",
+          "credit_card": "카드 번호",
+          "national_id": "국가 신분증 번호",
+          "date_of_birth": "생년월일",
+          "bank_account": "은행 계좌 번호",
+          "person": "이름",
+          "address": "주소"
+        },
+        "where": "페이지 {{pages}} · {{count}}×",
+        "selectAll": "모두 선택",
+        "selectNone": "모두 선택 해제",
+        "redactSelected": "선택한 {{count}}개 가리기",
+        "redacting": "가리는 중…",
+        "done": "{{count}}개 항목을 가렸습니다. 결과를 유지하려면 파일을 저장하세요.",
+        "failed": "가리기 실패: {{message}}",
+        "detectFailed": "검색 실패: {{message}}",
+        "patternsOnly": "Without the model this finds only items it can check, such as IBANs, cards, ID numbers, birth dates, e-mail addresses and phone numbers. Names and addresses are not detected, so check every page yourself.",
+        "suggestionsOnly": "이 항목은 제안입니다. 감지기가 놓칠 수 있으므로 저장하기 전에 모든 페이지를 확인하세요.",
+        "source": {
+          "verified": "확인됨: {{detail}}",
+          "model": "모델 제안, {{score}}%"
+        },
+        "model": {
+          "use": "모델로 이름과 주소도 찾기",
+          "languages": "확인 대상: {{languages}}",
+          "remove": "모델 제거",
+          "removeFailed": "모델을 제거할 수 없습니다: {{message}}",
+          "failed": "모델을 실행할 수 없습니다({{code}}). 확인할 수 있는 항목만 표시됩니다.",
+          "consentTitle": "개인정보 모델을 다운로드할까요?",
+          "consentBody": "이름과 주소를 찾으려면 언어 모델({{size}})이 필요합니다. 이 모델은 {{host}}에서 한 번 내려받은 뒤 고정 체크섬으로 확인하고 이 컴퓨터에서 실행됩니다. 문서는 이 컴퓨터를 벗어나지 않습니다.",
+          "download": "다운로드",
+          "downloading": "다운로드 중…",
+          "downloadFailed": "다운로드 실패: {{message}}",
+          "notInBuild": "이 버전에서는 아직 다운로드를 사용할 수 없습니다."
+        }
+      }
     },
     "toasts": {
       "saving": "저장 중…",
@@ -1399,117 +1532,337 @@
       "pdfsMerged": "{{count}}개 PDF 파일 병합됨",
       "mergedSaved": "병합된 PDF가 {{name}}으로 저장되었습니다.",
       "mergeFailed": "병합 실패: {{message}}",
-      "redactMatches": "{{matches}}개 일치 항목이 발견되었고 {{areas}}개 수정 표시가 배치되었습니다.",
-      "noRedactMatches": "수정할 텍스트 일치 항목을 찾을 수 없습니다.",
-      "redactSearchFailed": "수정 검색 실패: {{message}}",
-      "applyRedactConfirm": "{{count}}개 수정 표시를 영구적으로 적용하시겠어요? 이렇게 하면 콘텐츠가 PDF에서 완전히 제거됩니다.",
-      "applyRedactConfirm_plural": "{{count}}개 수정 표시를 영구적으로 적용하시겠어요? 이렇게 하면 콘텐츠가 PDF에서 완전히 제거됩니다.",
-      "applyRedactTitle": "수정 적용",
-      "applyRedactRunning": "수정을 영구적으로 적용 중…",
-      "applyRedactDone": "수정이 영구적으로 적용됨",
-      "redactionsApplied": "수정이 영구적으로 적용되었습니다.",
-      "redactFailed": "수정 실패: {{message}}"
+      "redactSearchDone": "가려진 일치 항목: {{count}}. 변경 사항을 유지하려면 저장하세요.",
+      "noRedactMatches": "가릴 텍스트를 찾지 못했습니다.",
+      "redactSearchFailed": "가릴 텍스트 검색 실패: {{message}}",
+      "applyRedactConfirm": "가리기 표시 {{count}}개를 영구 적용할까요? PDF에서 내용이 완전히 제거됩니다.",
+      "applyRedactConfirm_plural": "가리기 표시 {{count}}개를 영구 적용할까요? PDF에서 내용이 완전히 제거됩니다.",
+      "applyRedactTitle": "가리기 적용",
+      "applyRedactRunning": "가리기를 적용하는 중…",
+      "applyRedactDone": "가리기가 영구 적용되었습니다",
+      "redactionsApplied": "가리기가 영구 적용되었습니다.",
+      "redactFailed": "가리기 실패: {{message}}",
+      "compressedCopyToast": "{{name}} 저장됨: {{before}}에서 {{after}}로. 열린 문서는 그대로입니다.",
+      "compressedReplacedToast": "열린 문서를 압축했습니다: {{before}}에서 {{after}}로. 실행 취소하면 원본이 돌아옵니다. 압축된 버전을 유지하려면 저장하세요."
     },
     "thumbnails": {
       "pages": "페이지",
       "pageAlt": "{{page}}페이지",
-      "bookmarks": "Bookmarks"
+      "bookmarks": "북마크"
     },
     "pdfa": {
-      "lede": "PDF/A is the archival form of PDF: fonts embedded, colours defined, nothing that depends on the outside world.",
-      "section": "Conformance",
-      "level": "Level",
-      "validate": "Check this document",
-      "convert": "Save as PDF/A…",
-      "desktopOnly": "Available in the desktop app",
-      "compliant": "Conforms to {{level}}",
-      "notCompliant": "Does not conform: {{errors}} errors, {{warnings}} warnings",
-      "moreIssues": "{{count}} more",
+      "lede": "PDF/A는 PDF의 보존 형식입니다: 글꼴이 포함되고, 색상이 정의되며, 외부 환경에 의존하는 요소가 없습니다.",
+      "section": "준수",
+      "level": "수준",
+      "validate": "이 문서 검사",
+      "convert": "PDF/A로 저장…",
+      "desktopOnly": "데스크톱 앱에서 사용 가능",
+      "compliant": "{{level}} 준수",
+      "notCompliant": "준수하지 않음: 오류 {{errors}}개, 경고 {{warnings}}개",
+      "moreIssues": "{{count}}개 더",
       "report": {
-        "title": "What the conversion did",
-        "written": "Written to {{path}}",
-        "size": "{{out}} out of {{in}} ({{ratio}}×), in {{seconds}} s",
-        "pages": "{{count}} pages",
-        "fontsEmbedded": "{{embedded}} of {{found}} unembedded fonts embedded",
-        "fontsFailed": "Could not embed: {{fonts}}",
-        "removed": "Removed: {{count}} items that PDF/A does not allow",
-        "subset": "{{count}} font programs reduced, {{bytes}} kB saved",
-        "outputIntent": "Output intent added",
-        "unchangedDocument": "The open document was not changed.",
+        "title": "변환 결과",
+        "written": "{{path}}에 저장됨",
+        "size": "{{in}} 중 {{out}} ({{ratio}}×), {{seconds}}초",
+        "pages": "{{count}}페이지",
+        "fontsEmbedded": "포함되지 않은 글꼴 {{found}}개 중 {{embedded}}개 포함됨",
+        "fontsFailed": "포함할 수 없음: {{fonts}}",
+        "removed": "제거됨: PDF/A에서 허용되지 않는 항목 {{count}}개",
+        "subset": "글꼴 프로그램 {{count}}개 축소, {{bytes}} kB 절약",
+        "outputIntent": "출력 인텐트 추가됨",
+        "unchangedDocument": "열려 있는 문서는 변경되지 않았습니다.",
         "warning": "{{message}}",
-        "moreWarnings": "{{count}} more"
+        "moreWarnings": "{{count}}개 더"
       }
     },
     "metadata": {
-      "lede": "The title and author stored inside the file, which is what other readers and search show.",
-      "section": "Properties",
-      "title": "Title",
-      "author": "Author",
-      "apply": "Save properties",
-      "desktopOnly": "Available in the desktop app"
+      "lede": "파일 안에 저장된 제목과 작성자로, 다른 뷰어와 검색에 표시되는 정보입니다.",
+      "section": "속성",
+      "title": "제목",
+      "author": "작성자",
+      "apply": "속성 저장",
+      "desktopOnly": "데스크톱 앱에서 사용 가능"
     },
     "invoice": {
-      "lede": "A ZUGFeRD or Factur-X invoice travels as XML inside the PDF. This reads it and checks it against EN 16931.",
-      "section": "Embedded invoice",
-      "read": "Read invoice",
-      "desktopOnly": "Available in the desktop app",
-      "none": "This document carries no e-invoice.",
-      "number": "Number: {{number}}",
-      "issued": "Issued: {{date}}",
-      "seller": "Seller: {{name}}",
-      "buyer": "Buyer: {{name}}",
-      "total": "Total: {{total}} {{currency}}",
-      "lines": "Line items: {{count}}",
-      "valid": "Valid against {{profile}}",
-      "invalid": "Not valid: {{errors}} errors, {{warnings}} warnings"
+      "lede": "ZUGFeRD 또는 Factur-X 인보이스는 PDF 안에 XML로 담겨 있습니다. 이 기능은 이를 읽고 EN 16931 기준으로 검사합니다.",
+      "section": "포함된 인보이스",
+      "read": "인보이스 읽기",
+      "desktopOnly": "데스크톱 앱에서 사용 가능",
+      "none": "이 문서에는 전자 인보이스가 없습니다.",
+      "number": "번호: {{number}}",
+      "issued": "발행일: {{date}}",
+      "seller": "판매자: {{name}}",
+      "buyer": "구매자: {{name}}",
+      "total": "합계: {{total}} {{currency}}",
+      "lines": "품목 수: {{count}}",
+      "valid": "{{profile}} 기준 유효",
+      "invalid": "유효하지 않음: 오류 {{errors}}개, 경고 {{warnings}}개"
     },
     "canvas": {
-      "document": "PDF document"
+      "document": "PDF 문서"
+    },
+    "stamps": {
+      "Approved": "승인됨",
+      "NotApproved": "승인 안 됨",
+      "Draft": "초안",
+      "Confidential": "기밀",
+      "Final": "최종",
+      "ForComment": "검토용",
+      "Expired": "만료됨"
     }
   },
   "about": {
-    "section": "About",
-    "app": "App",
-    "version": "Version",
-    "privacy": "Privacy",
-    "privacyValue": "All processing happens locally",
-    "website": "Website"
+    "section": "정보",
+    "app": "앱",
+    "version": "버전",
+    "privacy": "개인정보 보호",
+    "privacyValue": "모든 처리는 이 기기에서 이루어집니다",
+    "website": "웹사이트"
   },
   "reviewSummary": {
-    "title": "Review summary",
-    "generatedAt": "Generated on",
-    "comments": "Comments",
-    "noComments": "No comments.",
-    "replies": "Replies:",
-    "empty": "empty",
-    "redactions": "Redactions",
-    "noRedactions": "No redactions.",
-    "noIssues": "No issues.",
-    "metadataChanges": "Metadata changes",
-    "noMetadataChanges": "No changes.",
-    "changedBy": "by",
-    "on": "on"
+    "title": "검토 요약",
+    "generatedAt": "생성 일시",
+    "comments": "댓글",
+    "noComments": "댓글이 없습니다.",
+    "replies": "답글:",
+    "empty": "비어 있음",
+    "redactions": "가리기 항목",
+    "noRedactions": "가리기 항목이 없습니다.",
+    "noIssues": "문제가 없습니다.",
+    "metadataChanges": "메타데이터 변경",
+    "noMetadataChanges": "변경 사항이 없습니다.",
+    "changedBy": "변경자:",
+    "on": "일시:"
   },
   "externalLink": {
-    "askMessage": "This PDF wants to open an external link:\n\n{{label}}\n\nURL:\n{{href}}\n\nDo you want to continue?",
-    "title": "Open external link?",
-    "openLink": "Open link",
-    "dialogBody": "This PDF wants to open an external website. Check the URL before continuing."
+    "askMessage": "이 PDF가 외부 링크를 열려고 합니다:\n\n{{label}}\n\nURL:\n{{href}}\n\n계속하시겠습니까?",
+    "title": "외부 링크를 여시겠습니까?",
+    "openLink": "링크 열기",
+    "dialogBody": "이 PDF가 외부 웹사이트를 열려고 합니다. 계속하기 전에 URL을 확인하세요."
   },
   "linkChoice": {
-    "title": "Open link in your browser?",
-    "body": "This document wants to open an external website. Are you opening it from a trusted source?",
-    "alwaysAllow": "Always allow",
-    "openOnce": "Open once"
+    "title": "브라우저에서 링크를 여시겠습니까?",
+    "body": "이 문서가 외부 웹사이트를 열려고 합니다. 신뢰할 수 있는 출처에서 받은 문서입니까?",
+    "alwaysAllow": "항상 허용",
+    "openOnce": "한 번만 열기"
   },
   "fallbacks": {
-    "ocrUnavailableTitle": "OCR is not available on this computer",
-    "ocrUnavailableMessage": "PDFluent could not start the text-recognition engine. {{reason}}",
-    "ocrFailedMessage": "Text recognition stopped on page {{page}}: {{reason}}",
-    "xfaStaticTitle": "Form filled without recalculation",
-    "xfaStaticMessage": "This build writes XFA field values straight into the form. Field scripts do not run, so calculated totals and fields that appear or hide based on your answer stay as they are.",
-    "featureUnavailableTitle": "'{{feature}}' is not available in this build",
-    "usageRightsInvalidatedTitle": "This document is no longer Reader-enabled",
-    "usageRightsInvalidatedMessage": "Your change was made. It also invalidated the usage-rights signature this PDF carried, which let Adobe Reader fill in and save the form. The text edit stands; the extended rights are gone and cannot be restored by undoing it."
+    "ocrUnavailableTitle": "이 컴퓨터에서는 OCR을 사용할 수 없습니다",
+    "ocrUnavailableMessage": "PDFluent가 텍스트 인식 엔진을 시작할 수 없습니다. {{reason}}",
+    "ocrFailedMessage": "{{page}}페이지에서 텍스트 인식이 중단되었습니다: {{reason}}",
+    "xfaStaticTitle": "재계산 없이 채워진 양식",
+    "xfaStaticMessage": "이 빌드는 XFA 필드 값을 양식에 바로 기록합니다. 필드 스크립트가 실행되지 않으므로, 계산된 합계와 답변에 따라 표시되거나 숨겨지는 필드는 그대로 유지됩니다.",
+    "xfaScriptsNotRunTitle": "일부 양식 스크립트는 실행되지 않습니다",
+    "xfaScriptsNotRunMessage": "답변이 저장되었습니다. 이 양식에는 FormCalc 스크립트가 있으며({{count}}개 발견) PDFluent는 JavaScript 스크립트만 실행합니다. 해당 스크립트가 갱신했을 합계와 필드는 양식을 Adobe Reader에서 열 때까지 저장된 값을 유지합니다.",
+    "xfaFieldRefusedTitle": "양식이 값을 받아들이지 않았습니다",
+    "xfaFieldReadOnly": "“{{field}}” 필드는 이 양식에서 읽기 전용이므로 변경할 수 없습니다.",
+    "xfaFieldRejected": "“{{field}}” 필드는 해당 값을 허용하지 않습니다: {{reason}}",
+    "xfaFieldNotFound": "“{{field}}” 필드가 더 이상 양식에 없습니다. 양식을 다시 불러왔습니다.",
+    "featureUnavailableTitle": "'{{feature}}' 기능은 이 빌드에서 사용할 수 없습니다",
+    "usageRightsInvalidatedTitle": "이 문서는 더 이상 Reader 사용 가능 문서가 아닙니다",
+    "usageRightsInvalidatedMessage": "변경 사항이 적용되었습니다. 이 변경으로 이 PDF에 포함된 사용 권한 서명도 무효가 되었습니다. 이 서명은 Adobe Reader에서 양식을 작성하고 저장할 수 있게 해 주던 것입니다. 텍스트 변경은 유지되지만 확장 권한은 사라졌으며 실행 취소로도 복원할 수 없습니다.",
+    "xfaScriptsFailedTitle": "일부 양식 스크립트가 완료되지 않았습니다",
+    "xfaScriptsFailedMessage": "답변이 저장되었지만 이 스크립트가 완료되지 않아 설정한 값이 누락될 수 있습니다: {{details}}.",
+    "xfaScriptKind_threw": "오류 발생",
+    "xfaScriptKind_timeout": "시간 초과",
+    "xfaScriptKind_refused": "샌드박스에서 거부됨"
+  },
+  "signedSave": {
+    "title": "이 문서는 서명되었습니다",
+    "message": "가리기는 서명이 포함하는 내용을 제거하므로 서명된 원본 위에 저장하면 서명이 깨집니다. 사본으로 저장하세요. 사본에는 가리기가 유지되고 서명은 포함되지 않습니다.",
+    "saveCopy": "서명 없이 사본 저장…",
+    "cancel": "취소"
+  },
+  "passwordPrompt": {
+    "title": "이 PDF는 보호되어 있습니다",
+    "message": "{{name}}을(를) 열려면 비밀번호를 입력하세요.",
+    "incorrect": "해당 비밀번호로는 이 PDF를 열 수 없습니다. 다시 시도하세요.",
+    "label": "비밀번호",
+    "open": "열기",
+    "cancel": "취소",
+    "readOnlyTitle": "읽기 전용으로 열림",
+    "readOnlyMessage": "이 PDF의 권한은 변경을 허용하지 않습니다. 읽을 수 있으며, 권한이 허용하는 경우 인쇄할 수 있습니다. 변경 사항을 저장하려면 소유자 비밀번호로 보호를 제거하세요."
+  },
+  "a11y": {
+    "searchNextResult": "다음 결과",
+    "searchPrevResult": "이전 결과"
+  },
+  "feedback": {
+    "title": "PDFluent 개선에 도움을 주세요",
+    "intro": "무엇을 하려고 하셨는지 알려 주세요. 모든 제보를 읽고 있어요.",
+    "menuLabel": "PDFluent 개선에 도움 주기…",
+    "fromError": "방금 겪은 문제를 저희에게 알려 주실 수 있어요.",
+    "areaLabel": "무엇을 하려고 하셨나요?",
+    "area": {
+      "open-view": "문서 열기 또는 읽기",
+      "search-copy": "텍스트 검색 또는 복사",
+      "print": "인쇄",
+      "edit-text": "텍스트 편집",
+      "annotate": "강조, 메모 또는 그리기",
+      "forms": "양식 작성",
+      "sign": "서명 또는 서명 확인",
+      "redact": "Redact",
+      "pages-organize": "페이지 회전, 순서 변경, 병합 또는 분할",
+      "convert-export": "변환 또는 내보내기",
+      "ocr": "스캔본에서 텍스트 인식(OCR)",
+      "pdfa-compliance": "PDF/A",
+      "protect": "암호 또는 권한",
+      "save": "저장",
+      "install-update": "PDFluent 설치 또는 업데이트",
+      "other": "기타"
+    },
+    "tryingToPlaceholder": "직접 적어 주세요(선택 사항)",
+    "whatHappenedLabel": "어떤 일이 있었나요?",
+    "whatHappenedPlaceholder": "무엇을 보셨나요?",
+    "whatHappenedRequired": "어떤 일이 있었는지 알려 주세요. 어디를 살펴봐야 할지 알 수 있어요.",
+    "expectedLabel": "어떻게 되길 기대하셨나요?",
+    "expectedPlaceholder": "선택 사항",
+    "docTypeLabel": "어떤 문서였나요?",
+    "docType": {
+      "none": "관련된 문서 없음",
+      "form": "양식",
+      "scanned": "스캔본",
+      "signed": "서명된 문서",
+      "protected": "암호로 보호됨",
+      "large": "대용량(100페이지 초과)",
+      "xfa": "정부 양식 또는 XFA 양식",
+      "other": "기타"
+    },
+    "docTypeUnset": "선택…",
+    "pageCountLabel": "페이지 수",
+    "contextTitle": "제보와 함께 전송되는 정보",
+    "contextToggle": "시스템 정보 포함",
+    "contextHint": "버전, 시스템, 언어, 마지막 오류는 문제를 재현하는 데 도움이 됩니다. 파일 이름, 경로, 문서 내용은 포함되지 않아요.",
+    "fieldVersion": "PDFluent 버전",
+    "fieldSystem": "시스템",
+    "fieldLanguage": "언어",
+    "fieldLastError": "마지막 오류",
+    "fieldSessions": "세션",
+    "notIncluded": "포함되지 않음",
+    "documentTitle": "문서 공유(선택 사항)",
+    "documentToggle": "열려 있는 문서를 제보와 함께 공유",
+    "documentNone": "열려 있는 문서가 없어요.",
+    "documentTooLarge": "이 문서는 20 MB보다 커서 제보와 함께 공유할 수 없어요.",
+    "documentShared": "이 문서가 공유됩니다.",
+    "documentConfirmTitle": "이 문서를 공유할까요?",
+    "documentConfirmText": "이 파일은 PDFluent(Innovation Trigger B.V.)로 전송됩니다. 이 보고서를 조사하는 데만 사용되며, 절대 공개되지 않고, 학습에 사용되지 않으며, 문제가 해결된 뒤 늦어도 90일 이내에, 어떠한 경우에도 12개월 이내에 삭제됩니다.",
+    "documentConfirmFile": "{{name}} ({{size}})",
+    "documentConfirmYes": "문서 공유",
+    "documentConfirmNo": "공유 안 함",
+    "contactTitle": "연락 받기(선택 사항)",
+    "emailLabel": "이메일 주소",
+    "emailInvalid": "올바른 이메일 주소가 아닌 것 같아요.",
+    "consentContact": "PDFluent가 이 보고서에 관한 질문을 위해 이메일을 보낼 수 있습니다.",
+    "consentFixed": "이 문제가 해결되면 이메일로 알려주세요.",
+    "contactHint": "주소는 보고서와 별도로 저장되며, 이 보고서에만 사용되고 뉴스레터나 마케팅에는 절대 사용되지 않습니다.",
+    "noEmailHint": "이메일 주소가 없어도 소식은 받으실 수 있어요. 업데이트로 제보한 문제가 해결되면 PDFluent가 앱에서 알려 드려요.",
+    "privacyNotice": "Innovation Trigger B.V.는 PDFluent 개선을 위해 이 보고서를 받습니다. 보고서는 최대 24개월 동안 보관됩니다. 언제든지 본인의 보고서를 삭제하도록 요청할 수 있습니다.",
+    "privacyLink": "개인정보 처리방침",
+    "send": "전송",
+    "sending": "전송 중…",
+    "cancel": "취소",
+    "sentTitle": "감사합니다!",
+    "sentBody": "제보가 도착했어요. 제보 번호는 다음과 같아요:",
+    "sentIdHint": "제보에 대해 문의하거나 삭제를 요청하려면 이 번호를 보관해 두세요.",
+    "sentNoLocalCopy": "PDFluent가 이 컴퓨터에 번호를 저장하지 못했어요. 번호를 따로 적어 두세요.",
+    "sentDocumentFailed": "제보는 도착했지만 문서를 업로드하지 못했어요. 문서가 중요하다면 문서와 함께 제보를 다시 보내 주세요.",
+    "removeReport": "이 제보 삭제",
+    "removing": "삭제 중…",
+    "removed": "제보가 삭제되었어요.",
+    "removeFailed": "지금은 제보를 삭제할 수 없어요. 나중에 다시 시도하거나 번호를 이메일로 보내 주세요.",
+    "failedTitle": "전송되지 않았어요",
+    "failedNetwork": "PDFluent가 서버에 연결하지 못했어요. 아무것도 전송되지 않았고 입력한 내용은 그대로 있어요.",
+    "failedRateLimited": "오늘 이 연결에서 보낸 제보가 너무 많아요. 내일 다시 시도해 주세요.",
+    "failedRejected": "제보가 접수되지 않았어요. 양식을 확인하고 다시 시도해 주세요.",
+    "failedServer": "저희 쪽에 문제가 생겼어요. 입력한 내용은 그대로 있으니 잠시 후 다시 시도해 주세요.",
+    "tryAgain": "다시 시도",
+    "fixedTitle": "해결했어요!",
+    "fixedOffered": "버전 {{version}}에서 제보 {{ids}}의 문제를 해결했어요. 알려 주셔서 감사합니다.",
+    "fixedAfterUpdate": "제보 {{ids}}의 문제가 이 버전에서 해결되었어요. 알려 주셔서 감사합니다.",
+    "dismiss": "닫기"
+  },
+  "openError": {
+    "corrupt": {
+      "title": "손상된 PDF입니다",
+      "body": "PDFluent에서 이 파일을 읽을 수 없습니다. 다운로드하거나 복사하는 중에 손상되었거나, 파일을 만든 앱이 잘못 저장했을 수 있습니다. 다시 다운로드하거나 복사해 보세요. 원본 파일이 있다면 PDF로 다시 내보내 보세요.",
+      "action": "다른 파일 열기"
+    },
+    "not_pdf": {
+      "title": "PDF 파일이 아닙니다",
+      "body": "PDFluent는 PDF 파일을 엽니다. 이 파일은 다른 형식이거나 이름이 .pdf로 끝나지 않습니다. PDF 파일을 선택하세요. PDF 파일이 맞다면 이름이 .pdf로 끝나도록 변경하세요.",
+      "action": "다른 파일 열기"
+    },
+    "empty": {
+      "title": "빈 파일입니다",
+      "body": "파일에 내용이 없습니다(0바이트). 다운로드나 복사가 끝나지 않았을 수 있습니다. 다시 다운로드하거나 복사한 다음 열어 보세요.",
+      "action": "다른 파일 열기"
+    },
+    "encrypted_needs_password": {
+      "title": "비밀번호가 필요한 PDF입니다",
+      "body": "이 PDF는 비밀번호로 보호되어 있습니다. 파일을 다시 열고 비밀번호를 입력하세요. 비밀번호를 모르면 파일을 보낸 사람에게 문의하세요.",
+      "action": "비밀번호 입력"
+    },
+    "wrong_password": {
+      "title": "비밀번호가 맞지 않습니다",
+      "body": "이 PDF를 열 수 있는 비밀번호가 아닙니다. 오타나 Caps Lock 상태를 확인한 다음 다시 시도하세요.",
+      "action": "다시 시도"
+    },
+    "unsupported_encryption": {
+      "title": "이 보호 방식은 PDFluent에서 열 수 없습니다",
+      "body": "이 PDF는 PDFluent가 지원하지 않는 인증서 또는 보안 방식으로 보호되어 있어, 비밀번호로는 열 수 없습니다. 보낸 사람에게 보호를 해제한 사본이나 비밀번호로 보호한 사본을 요청하세요.",
+      "action": "다른 파일 열기"
+    },
+    "too_large": {
+      "title": "파일이 너무 큽니다",
+      "body": "PDFluent에서 안전하게 열 수 있는 크기를 넘는 파일입니다. 파일을 만든 앱에서 나누거나 압축한 다음, 나뉜 파일을 여세요.",
+      "action": "다른 파일 열기"
+    },
+    "too_many_pages": {
+      "title": "PDF의 페이지 수가 너무 많습니다",
+      "body": "PDFluent에서 한 번에 열 수 있는 페이지 수를 넘는 문서입니다. 파일을 만든 앱에서 더 작은 문서로 나눈 다음, 나뉜 파일을 여세요.",
+      "action": "다른 파일 열기"
+    },
+    "io_denied": {
+      "title": "PDFluent가 이 파일을 읽을 수 없습니다",
+      "body": "컴퓨터에서 PDFluent에 이 파일을 읽을 권한을 주지 않았습니다. 파일 권한을 확인하거나 문서 같은 다른 폴더로 옮긴 다음 다시 시도하세요.",
+      "action": "다시 시도"
+    },
+    "not_found": {
+      "title": "파일을 찾을 수 없습니다",
+      "body": "파일이 이동되었거나, 이름이 바뀌었거나, 삭제되었을 수 있습니다. 또는 연결이 끊긴 드라이브에 있을 수 있습니다. 파일을 찾아 다시 여세요.",
+      "action": "다른 파일 열기"
+    },
+    "unknown": {
+      "title": "파일을 열 수 없습니다",
+      "body": "파일을 여는 중 문제가 발생했습니다. 다시 시도하세요. 계속 문제가 생기면 알려 주세요. 해결하겠습니다.",
+      "action": "다시 시도"
+    },
+    "feedback": "PDFluent 개선에 도움 주기"
+  },
+  "formBar": {
+    "title": "입력 가능한 양식",
+    "fields": "필드: {{count}}개",
+    "clickToFill": "필드를 클릭해 입력하세요.",
+    "noCalculations": "Adobe 양식의 자동 계산은 실행되지 않습니다.",
+    "autoLinks": "링크 자동으로 열기",
+    "autoLinksTitle": "링크가 브라우저에서 자동으로 열립니다. 클릭하면 끕니다.",
+    "highlight": "필드 강조",
+    "firstField": "첫 번째 필드"
+  },
+  "tabs": {
+    "label": "열린 문서",
+    "close": "{{name}} 닫기",
+    "unsaved": "저장되지 않은 변경 사항",
+    "new": "다른 문서 열기",
+    "tooManyTitle": "문서가 너무 많이 열려 있음",
+    "tooManyMessage": "{{max}}개의 문서가 열려 있습니다. 다른 문서를 열려면 하나를 닫으세요."
+  },
+  "formScripts": {
+    "barLabel": "양식 스크립트",
+    "barMessage": "이 양식에는 스크립트(예: 계산)가 있습니다. 실행할까요?",
+    "barDetail": "스크립트 {{count}}개 발견.",
+    "runOnce": "이 문서에서 실행",
+    "runAlways": "스크립트 항상 실행",
+    "dontRun": "실행 안 함"
   }
 }

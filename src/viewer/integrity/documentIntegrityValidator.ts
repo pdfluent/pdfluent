@@ -113,14 +113,14 @@ export function checkPageCount(pageCount: number): IntegrityIssue | null {
     return {
       severity: 'critical',
       code: 'no-pages',
-      message: 'Document heeft geen pagina\'s. Het bestand is mogelijk corrupt.',
+      message: 'The document has no pages. The file may be corrupt.',
     };
   }
   if (pageCount > MAX_PAGE_COUNT) {
     return {
       severity: 'warning',
       code: 'page-count-overflow',
-      message: `Document heeft meer dan ${MAX_PAGE_COUNT} pagina's. Prestatieproblemen mogelijk.`,
+      message: `The document has more than ${MAX_PAGE_COUNT} pages. Performance problems are possible.`,
     };
   }
   return null;
@@ -134,7 +134,7 @@ export function checkPdfVersion(pdfVersion: string): IntegrityIssue | null {
     return {
       severity: 'warning',
       code: 'invalid-pdf-version',
-      message: `Onbekende PDF-versie '${pdfVersion}'. Compatibiliteit niet gegarandeerd.`,
+      message: `Unknown PDF version '${pdfVersion}'. Compatibility is not guaranteed.`,
     };
   }
   return null;
@@ -162,7 +162,7 @@ export function checkXrefCompleteness(xrefComplete: boolean): IntegrityIssue | n
     return {
       severity: 'warning',
       code: 'xref-gap-detected',
-      message: 'Cross-referentietabel is incompleet. Sommige objecten zijn mogelijk onbereikbaar.',
+      message: 'The cross-reference table is incomplete. Some objects may be unreachable.',
     };
   }
   return null;
@@ -216,7 +216,7 @@ export function checkEncryptionConsistency(
     return {
       severity: 'info',
       code: 'encryption-inconsistency',
-      message: 'Document is versleuteld én bewerkingsvergrendeld. Bewerkingen zijn geblokkeerd.',
+      message: 'The document is encrypted and locked for editing. Edits are blocked.',
     };
   }
   return null;
@@ -230,7 +230,7 @@ export function checkEditLock(editLocked: boolean): IntegrityIssue | null {
     return {
       severity: 'warning',
       code: 'edit-locked',
-      message: 'Document is beveiligd tegen bewerking. Wijzigingen zijn niet mogelijk.',
+      message: 'The document is protected against editing. Changes are not possible.',
     };
   }
   return null;

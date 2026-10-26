@@ -22,7 +22,8 @@ describe("magic-patterns design integration", () => {
     // These are the canonical light-mode values — update here when the design system changes.
     expect(css).toContain("--pf-surface-0: hsl(0 0% 90%);");
     expect(css).toContain("--pf-surface-1: hsl(0 0% 97%);");
-    expect(css).toContain("--pf-accent: hsl(0 0% 10%);");
+    // The accent is the primary-action token: near-black, near-white in dark.
+    expect(css).toContain("--pf-accent: var(--emphasis);");
     expect(css).toContain("--pf-toolbar-height: 40px;");
     expect(css).toContain("--pf-sidebar-width: 88px;");
   });

@@ -1,4 +1,8 @@
 {
+  "a11y": {
+    "searchNextResult": "Volgend resultaat",
+    "searchPrevResult": "Vorig resultaat"
+  },
   "app": {
     "name": "PDFluent",
     "tagline": "Privacy-first PDF-editor"
@@ -242,7 +246,6 @@
     "ownerPasswordPlaceholder": "Eigenaarswachtwoord",
     "encryptBtn": "Versleutelen…",
     "decrypt": "Ontsleutelen",
-    "currentPasswordPlaceholder": "Huidig wachtwoord",
     "decryptBtn": "Ontsleutelen",
     "noDocument": "Geen document geopend.",
     "permCanPrint": "Afdrukken",
@@ -258,7 +261,11 @@
     "searchRedactBtn": "Zoeken en redigeren",
     "redactMetadataTitle": "Metadata",
     "redactMetadataDesc": "Verwijder auteur, titel en andere identificerende metadata.",
-    "redactMetadataBtn": "Metadata verwijderen"
+    "redactMetadataBtn": "Metadata verwijderen",
+    "ownerPasswordForRemoval": "Eigenaarwachtwoord (machtigingen)",
+    "removePasswordHelp": "Voor het verwijderen van een wachtwoord is het eigenaarwachtwoord nodig, het wachtwoord dat de machtigingen beveiligt. Het wachtwoord waarmee u het bestand hebt geopend is niet genoeg, tenzij dat ook het eigenaarwachtwoord is.",
+    "removePasswordReady": "U hebt dit bestand met het eigenaarwachtwoord geopend, dus de beveiliging kan worden verwijderd zonder het opnieuw te typen.",
+    "removePasswordNotProtected": "Dit document is niet met een wachtwoord beveiligd."
   },
   "organize": {
     "thumbnails": "Miniaturen",
@@ -313,7 +320,8 @@
     "message": "Wil je je wijzigingen opslaan voordat je doorgaat?",
     "save": "Opslaan",
     "discard": "Verwijder wijzigingen",
-    "cancel": "Annuleer"
+    "cancel": "Annuleer",
+    "messageNamed": "Wil je je wijzigingen in {{name}} opslaan voordat je doorgaat?"
   },
   "welcome": {
     "title": "Open een PDF om te beginnen",
@@ -350,15 +358,29 @@
     "reviewerNamePlaceholder": "Naam voor annotaties",
     "exportPreferences": "Exportvoorkeuren",
     "exportFormatLabel": "Standaard exportformaat",
-    "autosave": "Automatisch opslaan",
-    "autosaveEnable": "Wijzigingen automatisch opslaan",
     "themeLabel": "Thema",
     "ocrDefaults": "OCR-standaarden",
     "ocrLanguageLabel": "Standaardtaal (ISO-639-2)",
     "ocrLanguagePlaceholder": "bijv. eng, nld, deu",
     "updates": "Updates",
     "automaticUpdateCheck": "Bij het opstarten controleren op een nieuwe versie",
-    "automaticUpdateCheckHint": "PDFluent vraagt een paar seconden na het opstarten aan pdfluent.com of er een nieuwere versie is. Er gaat niets uit je documenten mee. Zet je dit uit, dan controleert de app nooit uit zichzelf — \"Controleer op updates\" blijft werken wanneer je er zelf om vraagt."
+    "automaticUpdateCheckHint": "PDFluent vraagt een paar seconden na het opstarten aan pdfluent.com of er een nieuwere versie is. Er gaat niets uit je documenten mee. Zet je dit uit, dan controleert de app nooit uit zichzelf — \"Controleer op updates\" blijft werken wanneer je er zelf om vraagt.",
+    "recoveryCopy": "Herstelkopie",
+    "recoveryCopyEnable": "Bewaar een herstelkopie van niet-opgeslagen wijzigingen, aangeboden na een crash",
+    "view": "Beeld",
+    "defaultZoomLabel": "Standaardzoom",
+    "defaultZoomFitWidth": "Breedte passend maken (standaard)",
+    "defaultZoomFitPage": "Pagina passend maken",
+    "defaultZoomActualSize": "Werkelijke grootte (100%)",
+    "defaultZoomLastUsed": "Laatst gebruikt",
+    "defaultZoomHint": "Een document wordt op deze zoom geopend en volgt het venster totdat u zelf zoomt. Breedte passend maken toont in plaats daarvan de hele pagina wanneer dat duidelijk beter past.",
+    "securityTitle": "Beveiliging",
+    "formScriptsLabel": "Formulierscripts",
+    "formScriptsAsk": "Vragen",
+    "formScriptsAlways": "Altijd",
+    "formScriptsNever": "Nooit",
+    "formScriptsHint": "Formulieren kunnen scripts bevatten, bijvoorbeeld berekeningen. Vragen is de standaard: een formulier opent met de opgeslagen waarden en er wordt niets uitgevoerd totdat u akkoord gaat.",
+    "formScriptsPinned": "Uw organisatie heeft deze keuze vastgelegd. Deze kan hier niet worden gewijzigd."
   },
   "about": {
     "section": "Over",
@@ -389,7 +411,8 @@
     "addPageFailed": "PDF toevoegen mislukt",
     "insertFailed": "PDF invoegen mislukt",
     "splitFailed": "Splitsen mislukt",
-    "commandFailedTitle": "'{{command}}' did not complete"
+    "commandFailedTitle": "'{{command}}' is niet voltooid",
+    "commandRetrying": "Tijdelijke fout in {{command}} — opnieuw proberen"
   },
   "events": {
     "formFieldUpdated": "Formulierveld bijgewerkt",
@@ -453,9 +476,9 @@
     "pageNotFound": "Pagina niet gevonden",
     "requiresFontInspection": "Tekstbewerking vereist Rust-zijdige lettertypeinspectie (gepland voor fase 6).",
     "rejection": {
-      "bannerTitle": "This text was not changed",
-      "bannerDetail": "Reason reported by the PDF engine: {{detail}}",
-      "bannerDismiss": "Dismiss",
+      "bannerTitle": "Deze tekst is niet gewijzigd",
+      "bannerDetail": "Reden gemeld door de PDF-engine: {{detail}}",
+      "bannerDismiss": "Sluiten",
       "replacement-too-long": {
         "tooltip": "Replacement is too long",
         "explanation": "The replacement is longer than the text it replaces. Keep it the same length or shorter so the surrounding layout stays intact."
@@ -514,8 +537,8 @@
       }
     },
     "fallback": {
-      "fontSubstitutedTitle": "A standard font wrote the new text",
-      "fontSubstitutedMessage": "The original font of this text has no glyph for one or more characters you typed, so Helvetica was used for the replacement. The text is correct; it may look slightly different from the rest of the line."
+      "fontSubstitutedTitle": "Een standaardlettertype heeft de nieuwe tekst geschreven",
+      "fontSubstitutedMessage": "Het oorspronkelijke lettertype van deze tekst heeft geen glyph voor een of meer tekens die u hebt getypt, dus Helvetica is gebruikt voor de vervanging. De tekst is correct; hij kan er iets anders uitzien dan de rest van de regel."
     }
   },
   "validation": {
@@ -594,7 +617,11 @@
     "pdfaFailed": "Omzetten naar PDF/A mislukt",
     "metadataRunning": "Eigenschappen opslaan…",
     "metadataDone": "Eigenschappen opgeslagen",
-    "metadataFailed": "Eigenschappen opslaan mislukt"
+    "metadataFailed": "Eigenschappen opslaan mislukt",
+    "exportMarkdownRunning": "Exporteren als Markdown…",
+    "exportMarkdownDone": "Markdown geëxporteerd",
+    "exportTablesRunning": "Tabellen naar Excel exporteren…",
+    "exportTablesDone": "Tabellen geëxporteerd naar Excel ({{count}})"
   },
   "panels": {
     "search": "Zoeken",
@@ -737,7 +764,10 @@
     "formatJpeg": "JPEG (afbeelding)",
     "formatDocx": "Word-document (.docx)",
     "formatXlsx": "Excel-spreadsheet (.xlsx)",
-    "formatPptx": "PowerPoint-presentatie (.pptx)"
+    "formatPptx": "PowerPoint-presentatie (.pptx)",
+    "formatMarkdown": "Markdown (.md) - Voorbeeld",
+    "formatTablesXlsx": "Tabellen naar Excel (.xlsx) - Voorbeeld",
+    "noTablesFound": "Er zijn geen tabellen herkend in dit document."
   },
   "goToPage": {
     "title": "Ga naar pagina",
@@ -752,7 +782,9 @@
     "documentLabel": "Document:",
     "savedLabel": "Opgeslagen:",
     "recoveryPath": "Herstelpad:",
-    "restore": "Herstellen"
+    "restore": "Herstellen",
+    "untitled": "Naamloos document",
+    "andMore": "{{name}} en nog {{count}} meer"
   },
   "emptyStates": {
     "noDocument": "Geen document geopend",
@@ -862,7 +894,26 @@
     "statusUnavailableWithReason": "OCR-runtime niet beschikbaar: {{reason}}",
     "statusRetry": "Opnieuw",
     "runtimePath": "Runtime: {{path}}",
-    "missingPackages": "Ontbreekt: {{packages}}"
+    "missingPackages": "Ontbreekt: {{packages}}",
+    "noScannedPagesTitle": "Niets te herkennen",
+    "unavailable": {
+      "platform": "OCR wordt voor dit platform niet aangeboden.",
+      "missing": "De OCR-bestanden die bij deze versie horen ontbreken of zijn onvolledig. Installeer PDFluent opnieuw om ze te herstellen."
+    },
+    "settings": {
+      "unknown": "OCR-onderdeel: bezig met controleren…",
+      "installed": "OCR-onderdeel: Tesseract {{version}} geïnstalleerd"
+    },
+    "errors": {
+      "OCR_COMPONENT_UNSUPPORTED_PLATFORM": "Het OCR-onderdeel wordt voor dit platform niet aangeboden.",
+      "OCR_COMPONENT_NOT_INSTALLED": "Het OCR-onderdeel is niet geïnstalleerd.",
+      "OCR_LANGUAGE_MISSING": "Een taalpakket voor OCR is niet geïnstalleerd.",
+      "OCR_SIGNED_DOCUMENT": "Dit document is ondertekend. OCR zou de ondertekende pagina's wijzigen en wordt daarom niet uitgevoerd.",
+      "OCR_NOT_PERMITTED": "De rechten van dit document staan geen wijzigingen toe.",
+      "OCR_DOCUMENT_CHANGED": "Het document is gewijzigd terwijl OCR liep. Start OCR opnieuw.",
+      "OCR_ENGINE_FAILED": "OCR is gestopt met een fout.",
+      "OCR_PAGE_OUT_OF_RANGE": "Een te herkennen pagina zit niet in het document."
+    }
   },
   "docInfo": {
     "title": "Titel",
@@ -902,7 +953,17 @@
     "italicComingSoon": "Cursieve opmaak binnenkort beschikbaar",
     "sourceDigital": "PDF-tekstlaag",
     "sourceOcr": "OCR",
-    "browserLimitedNote": "Klik op tekst in de pagina om ondersteunde PDF-tekst te bewerken. Afbeeldingen en links zijn beschikbaar in de desktop-app."
+    "browserLimitedNote": "Klik op tekst in de pagina om ondersteunde PDF-tekst te bewerken. Afbeeldingen en links zijn beschikbaar in de desktop-app.",
+    "typeface": {
+      "label": "Lettertype",
+      "default": "Lettertype van het document",
+      "noEmbed": "{{family}}: de licentie van dit lettertype staat insluiten in een PDF niet toe",
+      "refusedLicence": "{{family}} kan niet worden gebruikt: de licentie staat insluiten in een PDF niet toe. Kies een ander lettertype.",
+      "refusedGlyphs": "{{family}} heeft geen teken voor {{characters}}. Kies een ander lettertype.",
+      "refusedGone": "Dat lettertype is niet meer geïnstalleerd. Kies een ander.",
+      "refusedText": "De tekst die u wilt aanpassen staat niet meer op de pagina.",
+      "refusedUnusable": "{{family}} kon niet als lettertype worden gelezen. Kies een ander lettertype."
+    }
   },
   "rightPanel": {
     "properties": "Eigenschappen",
@@ -969,7 +1030,10 @@
     "flattenFailed": "XFA afvlakken mislukt",
     "convertToStandard": "Omzetten naar standaard PDF",
     "convertedToStandard": "XFA omgezet naar standaard PDF",
-    "convertFailed": "Omzetten mislukt: {{message}}"
+    "convertFailed": "Omzetten mislukt: {{message}}",
+    "bannerTitle": "XFA-formulier",
+    "bannerBody": "Dit XFA-formulier wordt weergegeven. Zet het om naar een standaard PDF om de velden in te vullen, te bewerken en te doorzoeken.",
+    "bannerBodyExperimental": "Dit XFA-formulier wordt weergegeven. Velden invullen is experimenteel — zet het om naar een standaard PDF voor betrouwbaar invullen, bewerken en doorzoeken."
   },
   "externalLink": {
     "askMessage": "Deze PDF wil een externe link openen:\n\n{{label}}\n\nURL:\n{{href}}\n\nWil je doorgaan?",
@@ -1005,7 +1069,8 @@
     "highlight": "Markeren",
     "strikethrough": "Doorstrepen",
     "underline": "Onderstrepen",
-    "copyText": "Tekst kopiëren"
+    "copyText": "Tekst kopiëren",
+    "copied": "Gekopieerd"
   },
   "update": {
     "available": "Update beschikbaar",
@@ -1054,7 +1119,16 @@
     "settingsToggle": "Crash- en foutrapporten sturen",
     "settingsDescription": "Rapporten bevatten nooit persoonlijke informatie of documentinhoud. Alles wordt vóór verzending geschrobd en je ziet elk rapport eerst. Standaard uit.",
     "settingsAutoSend": "Automatisch versturen zonder te vragen",
-    "settingsAutoSendNote": "Automatische rapporten worden geschrobd en bevatten geen persoonsgegevens, precies zoals de rapporten die je met de hand controleert."
+    "settingsAutoSendNote": "Automatische rapporten worden geschrobd en bevatten geen persoonsgegevens, precies zoals de rapporten die je met de hand controleert.",
+    "settingsSentReports": "Verstuurde crashrapporten vanaf deze computer: {{count}}. We verwijderen ze na {{days}} dagen automatisch van onze server.",
+    "settingsDeleteReports": "Verwijder mijn crashrapporten",
+    "settingsDeleting": "Verwijderen…",
+    "settingsDeleted": "Verwijderde crashrapporten: {{count}}",
+    "settingsDeleteFailed": "{{count}} kon niet worden verwijderd. Controleer je verbinding en probeer het opnieuw.",
+    "settingsSentFeedback": "Feedbackrapporten verzonden vanaf deze computer: {{count}}. We verwijderen ze automatisch van onze server na {{days}} dagen.",
+    "settingsDeleteFeedback": "Mijn feedbackrapporten verwijderen",
+    "settingsFeedbackDeleted": "Feedbackrapporten verwijderd: {{count}}",
+    "settingsFeedbackDeleteFailed": "Het is niet gelukt om {{count}} feedbackrapporten te verwijderen. Controleer je verbinding en probeer het opnieuw."
   },
   "ai": {
     "summaryInstruction": "Geef een beknopte samenvatting van onderstaand document in het Nederlands. Noem per functie de werkgever, de rol en de periode. Gebruik opsommingstekens.",
@@ -1114,7 +1188,8 @@
       "scrollLeft": "Modi naar links",
       "scrollRight": "Modi naar rechts",
       "workMode": "Werkmodus",
-      "searchPlaceholder": "Zoeken in document"
+      "searchPlaceholder": "Zoeken in document",
+      "allTools": "Alle tools"
     },
     "menu": {
       "about": "Over",
@@ -1185,22 +1260,17 @@
       "draw": "Tekenen",
       "signatureName": "Naam handtekening",
       "typeName": "Typ je naam...",
-      "selectStyle": "Stijl selecteren",
-      "styleClassic": "Cursive Klassiek",
-      "styleElegant": "Cursive Elegant",
-      "styleBrush": "Penseel Handtekening",
-      "styleModern": "Modern Handschrift",
       "drawHere": "Teken hier met je muis, trackpad of stylus",
       "clear": "Wissen",
       "apply": "Toepassen",
-      "defaultSignature": "Handtekening",
       "clickToPlaceSignature": "Klik op de pagina om de handtekening te plaatsen.",
       "addInitials": "Initialen toevoegen",
       "initialsIntro": "Typ je initialen om snel te plaatsen op parafeerplekken.",
       "initials": "Initialen",
       "initialsPlaceholder": "Bijv. AB",
-      "defaultInitials": "AB",
-      "clickToPlaceInitials": "Klik op de pagina om de initialen te plaatsen."
+      "clickToPlaceInitials": "Klik op de pagina om de initialen te plaatsen.",
+      "signatureFont": "Handtekeninglettertype",
+      "plainItalic": "Gewoon cursief"
     },
     "overlay": {
       "signaturePlaced": "Handtekening geplaatst!",
@@ -1215,7 +1285,7 @@
     "textbox": {
       "editTitle": "Tekstvak bewerken",
       "newTitle": "Nieuw tekstvak",
-      "intro": "Deze tekst wordt als overlay op de huidige pagina geplaatst. Leeg opslaan verwijdert een bestaand tekstvak.",
+      "introPdf": "Het tekstvak wordt in de PDF geschreven en is in elke PDF-viewer te zien. Leeg opslaan verwijdert een bestaand tekstvak.",
       "label": "Tekst",
       "placeholder": "Typ de tekst...",
       "delete": "Verwijderen",
@@ -1235,12 +1305,14 @@
       "more": "Meer gereedschap",
       "strikeText": "Tekst doorhalen",
       "underlineText": "Tekst onderstrepen",
-      "addAttachment": "Bijlage toevoegen"
+      "addAttachment": "Bijlage toevoegen",
+      "drawRectangle": "Rechthoek tekenen"
     },
     "railToasts": {
-      "commentMode": "Notitiemodus actief. Selecteer tekst en kies Notitie, of gebruik de opmerkingenlijst om een notitie toe te voegen.",
+      "commentMode": "Notitiemodus. Klik op de pagina waar de notitie moet komen.",
       "strikeout": "Doorhalen actief - selecteer tekst om toe te passen.",
-      "underline": "Onderstrepen actief - selecteer tekst om toe te passen."
+      "underline": "Onderstrepen actief - selecteer tekst om toe te passen.",
+      "rectangle": "Rechthoek actief — sleep op de pagina om hem te tekenen."
     },
     "tools": {
       "lede": "Kies een tool om te beginnen. Alles draait lokaal op dit apparaat.",
@@ -1267,6 +1339,10 @@
       "comments": "{{count}} opmerkingen",
       "resolveAll": "Alles oplossen",
       "fields": "{{count}} velden",
+      "flattenForm": "Plat maken",
+      "flattenFormTitle": "Formulier plat maken: de ingevulde waarden worden deel van de pagina en de velden verdwijnen",
+      "flattenFormDone": "Formulier plat gemaakt. Ongedaan maken haalt de velden terug.",
+      "flattenFormFailed": "Formulier plat maken is mislukt: {{message}}",
       "attachments": "{{count}} bijlagen",
       "addAttachment": "Bijlage toevoegen",
       "saveAttachment": "Bijlage opslaan",
@@ -1284,9 +1360,6 @@
     "edit": {
       "lede": "Klik op tekst in het document om inline te bewerken. De opmaakbalk verschijnt direct boven de selectie.",
       "formatText": "Tekst opmaken",
-      "fontLabel": "Lettertype",
-      "fontHint": "Bestaande PDF-tekst gebruikt de ingebedde PDF-fonts. Het lettertype \"{{font}}\" wordt gebruikt voor nieuw toegevoegde tekstvakken.",
-      "fontEmbedded": "Ingebed PDF-font",
       "color": "Kleur",
       "colorLabel": "Kleur {{color}}",
       "addContent": "Inhoud toevoegen",
@@ -1299,7 +1372,18 @@
       "clickAnywhereTextBox": "Klik ergens op de pagina om het tekstvak te plaatsen.",
       "clickAnywhereImage": "Klik ergens op de pagina om de afbeelding te plaatsen.",
       "selection": "Selectie",
-      "annotationOnPage": "{{type}} op pagina {{page}}"
+      "annotationOnPage": "{{type}} op pagina {{page}}",
+      "placeStamp": "Stempel plaatsen",
+      "stampLabel": "Stempel",
+      "clickToPlaceStamp": "Klik op de pagina om de stempel te plaatsen.",
+      "placementModeStamp": "Plaatsingsmodus: stempel",
+      "stampPlaced": "Stempel geplaatst.",
+      "deleteAnnotation": "Annotatie verwijderen",
+      "annotationColor": "Kleur van de annotatie",
+      "editTextBox": "Tekst bewerken",
+      "replaceImage": "Afbeelding vervangen",
+      "imageReplaced": "Afbeelding vervangen.",
+      "moveHint": "Sleep om te verplaatsen, sleep een hoek om het formaat te wijzigen, of verschuif met de pijltjestoetsen."
     },
     "convert": {
       "exportPdfTo": "Exporteer PDF naar",
@@ -1317,10 +1401,16 @@
       "confidenceFrom": "Confidence vanaf {{value}}%",
       "ocrOff": "OCR uit",
       "ocrOn": "OCR aan",
-      "ocrRunning": "OCR draait lokaal..."
+      "ocrRunning": "OCR draait lokaal...",
+      "ocrComponentUnknown": "OCR-onderdeel: bezig met controleren…",
+      "ocrComponentInstalled": "OCR-onderdeel geïnstalleerd",
+      "ocrLastRun": "Laatste run: {{pages}} pagina('s), {{words}} woord(en) als doorzoekbare tekst toegevoegd",
+      "ocrRunningProgress": "Pagina {{done}} van {{total}} wordt herkend…",
+      "markdown": "Markdown (Voorbeeld)",
+      "tablesToExcel": "Tabellen naar Excel (Voorbeeld)"
     },
     "esign": {
-      "lede": "Sign with a certificate of your own, and check the signatures a document already carries. Both happen on this device.",
+      "lede": "Onderteken met uw eigen certificaat en controleer de handtekeningen die een document al bevat. Beide gebeuren op dit apparaat.",
       "fillAndSign": "Vul je documenten in en onderteken",
       "addSignature": "Handtekening toevoegen",
       "addInitials": "Initialen toevoegen",
@@ -1332,21 +1422,21 @@
       "verify": "Handtekeningen controleren",
       "desktopOnly": "Beschikbaar in de desktop-app",
       "unsigned": "Dit document bevat geen handtekeningen.",
-      "signSection": "Sign with a certificate",
-      "padesLevel": "Produces a PAdES B-B signature: your certificate over the whole file, no timestamp server involved.",
-      "certificate": "Certificate (.p12 or .pfx)",
-      "certificateNone": "No certificate chosen",
-      "chooseCertificate": "Choose certificate",
-      "certificatePassword": "Certificate password",
-      "reason": "Reason (optional)",
-      "reasonPlaceholder": "Why you are signing",
-      "sign": "Sign and save a copy",
-      "signing": "Signing…",
-      "signNeedsCertificate": "Choose a certificate and enter its password first.",
-      "signSaved": "Signed copy saved as {{name}}",
-      "signFailed": "Signing failed: {{message}}",
-      "usageRights": "Reader enablement (usage rights)",
-      "usageRightsInvalidated": "Usage rights invalidated — this file was edited, so Adobe Reader no longer treats it as an enabled form."
+      "signSection": "Ondertekenen met een certificaat",
+      "padesLevel": "Maakt een PAdES B-B-handtekening: uw certificaat over het hele bestand, zonder tijdstempelserver.",
+      "certificate": "Certificaat (.p12 of .pfx)",
+      "certificateNone": "Geen certificaat gekozen",
+      "chooseCertificate": "Certificaat kiezen",
+      "certificatePassword": "Wachtwoord van het certificaat",
+      "reason": "Reden (optioneel)",
+      "reasonPlaceholder": "Waarom je ondertekent",
+      "sign": "Ondertekenen en een kopie opslaan",
+      "signing": "Bezig met ondertekenen…",
+      "signNeedsCertificate": "Kies eerst een certificaat en voer het wachtwoord in.",
+      "signSaved": "Ondertekende kopie opgeslagen als {{name}}",
+      "signFailed": "Ondertekenen mislukt: {{message}}",
+      "usageRights": "Reader-inschakeling (gebruiksrechten)",
+      "usageRightsInvalidated": "Gebruiksrechten ongeldig gemaakt — dit bestand is bewerkt, dus Adobe Reader behandelt het niet langer als een ingeschakeld formulier."
     },
     "protect": {
       "lede": "Bescherm je PDF-document met sterke cryptografische wachtwoorden. Wijzigingen worden direct lokaal toegepast.",
@@ -1368,9 +1458,11 @@
       "localViaTauri": "Lokaal via Tauri-command, zonder browser-runtime",
       "compressingImages": "Afbeeldingen comprimeren...",
       "percentComplete": "{{percent}}% voltooid",
-      "compressPdf": "PDF comprimeren",
       "desktopOnly": "Alleen beschikbaar in de desktop-app",
-      "backToTools": "Terug naar functies"
+      "backToTools": "Terug naar functies",
+      "saveCopy": "Gecomprimeerde kopie opslaan als…",
+      "replaceOpen": "Comprimeren en het geopende document vervangen",
+      "replaceNote": "Een kopie laat het geopende document en het bestand ongemoeid. Vervangen wijzigt alleen het geopende document; Ongedaan maken haalt het origineel terug."
     },
     "split": {
       "lede": "Splits je document op in afzonderlijke PDF-bestanden per pagina of volgens een specifiek paginabereik.",
@@ -1407,7 +1499,52 @@
       "applying": "Toepassen...",
       "applyPermanently": "Redacties permanent toepassen",
       "noActiveMarkings": "Geen actieve redactiemarkeringen.",
-      "backToTools": "Terug naar functies"
+      "backToTools": "Terug naar functies",
+      "pii": {
+        "title": "Persoonsgegevens",
+        "lede": "Zoek persoonsgegevens in de tekst van dit document: IBAN's, kaartnummers, nationale identificatienummers, geboortedatums, e-mailadressen en telefoonnummers, en namen en adressen als het model is geïnstalleerd. Controleer de lijst en maak daarna zwart wat je kiest.",
+        "find": "Zoek persoonsgegevens",
+        "scanning": "Bezig met zoeken…",
+        "none": "Niets gevonden.",
+        "kind": {
+          "iban": "IBAN",
+          "email": "E-mailadres",
+          "phone": "Telefoonnummer",
+          "credit_card": "Kaartnummer",
+          "national_id": "Nationaal identificatienummer",
+          "date_of_birth": "Geboortedatum",
+          "bank_account": "Bankrekeningnummer",
+          "person": "Naam",
+          "address": "Adres"
+        },
+        "where": "Pagina {{pages}} · {{count}}×",
+        "selectAll": "Alles selecteren",
+        "selectNone": "Niets selecteren",
+        "redactSelected": "{{count}} geselecteerde zwart maken",
+        "redacting": "Bezig met zwart maken…",
+        "done": "{{count}} items zwart gemaakt. Sla het bestand op om het resultaat te bewaren.",
+        "failed": "Zwart maken mislukt: {{message}}",
+        "detectFailed": "Zoeken mislukt: {{message}}",
+        "patternsOnly": "Zonder het model vindt dit alleen wat het kan controleren, zoals IBAN's, kaarten, ID-nummers, geboortedatums, e-mailadressen en telefoonnummers. Namen en adressen worden niet gevonden, controleer dus elke pagina zelf.",
+        "suggestionsOnly": "Dit zijn suggesties. De detector kan dingen missen, controleer dus elke pagina voordat je opslaat.",
+        "source": {
+          "verified": "Gecontroleerd {{detail}}",
+          "model": "Suggestie van het model, {{score}}%"
+        },
+        "model": {
+          "use": "Zoek ook namen en adressen met het model",
+          "languages": "Gecontroleerd voor: {{languages}}",
+          "remove": "Model verwijderen",
+          "removeFailed": "Model verwijderen mislukt: {{message}}",
+          "failed": "Het model kon niet draaien ({{code}}). Alleen wat te controleren is, wordt getoond.",
+          "consentTitle": "Het model voor persoonsgegevens downloaden?",
+          "consentBody": "Voor het vinden van namen en adressen is een taalmodel nodig ({{size}}). Het wordt eenmalig gedownload van {{host}}, gecontroleerd met een vaste checksum en draait daarna op deze computer. Je documenten verlaten die niet.",
+          "download": "Downloaden",
+          "downloading": "Bezig met downloaden…",
+          "downloadFailed": "Downloaden mislukt: {{message}}",
+          "notInBuild": "Downloaden is in deze versie nog niet beschikbaar."
+        }
+      }
     },
     "toasts": {
       "saving": "Opslaan...",
@@ -1437,7 +1574,7 @@
       "pdfsMerged": "{{count}} PDF-bestanden samengevoegd",
       "mergedSaved": "Samengevoegde PDF opgeslagen als {{name}}.",
       "mergeFailed": "Samenvoegen mislukt: {{message}}",
-      "redactMatches": "{{matches}} matches gevonden, {{areas}} redactiemarkeringen geplaatst.",
+      "redactSearchDone": "Gezwarte treffers: {{count}}. Sla op om de wijziging te bewaren.",
       "noRedactMatches": "Geen tekstmatches gevonden om te redigeren.",
       "redactSearchFailed": "Zoekredactie mislukt: {{message}}",
       "applyRedactConfirm": "{{count}} redactiemarkering permanent toepassen? Dit verwijdert de inhoud definitief uit de PDF.",
@@ -1446,7 +1583,9 @@
       "applyRedactRunning": "Redacties permanent toepassen...",
       "applyRedactDone": "Redacties permanent toegepast",
       "redactionsApplied": "Redacties zijn permanent toegepast.",
-      "redactFailed": "Redactie mislukt: {{message}}"
+      "redactFailed": "Redactie mislukt: {{message}}",
+      "compressedCopyToast": "{{name}} opgeslagen: {{before}} naar {{after}}. Het geopende document is ongewijzigd.",
+      "compressedReplacedToast": "Het geopende document gecomprimeerd: {{before}} naar {{after}}. Ongedaan maken haalt het origineel terug. Sla op om de gecomprimeerde versie te bewaren."
     },
     "thumbnails": {
       "pages": "Pagina's",
@@ -1464,18 +1603,18 @@
       "notCompliant": "Voldoet niet: {{errors}} fouten, {{warnings}} waarschuwingen",
       "moreIssues": "Nog {{count}}",
       "report": {
-        "title": "What the conversion did",
-        "written": "Written to {{path}}",
-        "size": "{{out}} out of {{in}} ({{ratio}}×), in {{seconds}} s",
-        "pages": "{{count}} pages",
-        "fontsEmbedded": "{{embedded}} of {{found}} unembedded fonts embedded",
-        "fontsFailed": "Could not embed: {{fonts}}",
-        "removed": "Removed: {{count}} items that PDF/A does not allow",
-        "subset": "{{count}} font programs reduced, {{bytes}} kB saved",
-        "outputIntent": "Output intent added",
-        "unchangedDocument": "The open document was not changed.",
+        "title": "Wat de conversie heeft gedaan",
+        "written": "Geschreven naar {{path}}",
+        "size": "{{out}} van {{in}} ({{ratio}}×), in {{seconds}} s",
+        "pages": "{{count}} pagina's",
+        "fontsEmbedded": "{{embedded}} van {{found}} niet-ingesloten lettertypen ingesloten",
+        "fontsFailed": "Kon niet insluiten: {{fonts}}",
+        "removed": "Verwijderd: {{count}} onderdelen die PDF/A niet toestaat",
+        "subset": "{{count}} fontprogramma's verkleind, {{bytes}} kB bespaard",
+        "outputIntent": "Output intent toegevoegd",
+        "unchangedDocument": "Het geopende document is niet gewijzigd.",
         "warning": "{{message}}",
-        "moreWarnings": "{{count}} more"
+        "moreWarnings": "Nog {{count}}"
       }
     },
     "metadata": {
@@ -1500,16 +1639,230 @@
       "lines": "Regels: {{count}}",
       "valid": "Geldig volgens {{profile}}",
       "invalid": "Niet geldig: {{errors}} fouten, {{warnings}} waarschuwingen"
+    },
+    "stamps": {
+      "Approved": "Goedgekeurd",
+      "NotApproved": "Afgekeurd",
+      "Draft": "Concept",
+      "Confidential": "Vertrouwelijk",
+      "Final": "Definitief",
+      "ForComment": "Ter beoordeling",
+      "Expired": "Verlopen"
     }
   },
   "fallbacks": {
-    "ocrUnavailableTitle": "OCR is not available on this computer",
-    "ocrUnavailableMessage": "PDFluent could not start the text-recognition engine. {{reason}}",
-    "ocrFailedMessage": "Text recognition stopped on page {{page}}: {{reason}}",
-    "xfaStaticTitle": "Form filled without recalculation",
-    "xfaStaticMessage": "This build writes XFA field values straight into the form. Field scripts do not run, so calculated totals and fields that appear or hide based on your answer stay as they are.",
-    "featureUnavailableTitle": "'{{feature}}' is not available in this build",
-    "usageRightsInvalidatedTitle": "This document is no longer Reader-enabled",
-    "usageRightsInvalidatedMessage": "Your change was made. It also invalidated the usage-rights signature this PDF carried, which let Adobe Reader fill in and save the form. The text edit stands; the extended rights are gone and cannot be restored by undoing it."
+    "ocrUnavailableTitle": "OCR is niet beschikbaar op deze computer",
+    "ocrUnavailableMessage": "PDFluent kon de tekstherkenningsengine niet starten. {{reason}}",
+    "ocrFailedMessage": "Tekstherkenning is gestopt op pagina {{page}}: {{reason}}",
+    "xfaStaticTitle": "Formulier ingevuld zonder herberekening",
+    "xfaStaticMessage": "Deze build schrijft XFA-veldwaarden rechtstreeks in het formulier. Veldscripts worden niet uitgevoerd, dus berekende totalen en velden die op basis van uw antwoord verschijnen of verborgen blijven, blijven ongewijzigd.",
+    "xfaScriptsNotRunTitle": "Sommige formulierscripts worden niet uitgevoerd",
+    "xfaScriptsNotRunMessage": "Je antwoord is opgeslagen. Dit formulier bevat FormCalc-scripts ({{count}} gevonden) en PDFluent voert alleen JavaScript-scripts uit. Totalen en velden die die scripts zouden bijwerken behouden hun opgeslagen waarde tot het formulier in Adobe Reader wordt geopend.",
+    "xfaFieldRefusedTitle": "Het formulier accepteerde de waarde niet",
+    "xfaFieldReadOnly": "Het veld “{{field}}” is in dit formulier alleen-lezen en kan niet worden gewijzigd.",
+    "xfaFieldRejected": "Het veld “{{field}}” accepteert die waarde niet: {{reason}}",
+    "xfaFieldNotFound": "Het veld “{{field}}” staat niet meer in het formulier. Het formulier is opnieuw geladen.",
+    "featureUnavailableTitle": "'{{feature}}' is niet beschikbaar in deze build",
+    "usageRightsInvalidatedTitle": "Dit document is niet langer geschikt voor Reader",
+    "usageRightsInvalidatedMessage": "Uw wijziging is doorgevoerd. Daarmee is ook de handtekening voor gebruiksrechten die deze PDF had ongeldig gemaakt, waardoor Adobe Reader het formulier kon invullen en opslaan. De tekstwijziging blijft staan; de uitgebreide rechten zijn verdwenen en kunnen niet worden hersteld door de wijziging ongedaan te maken.",
+    "xfaScriptsFailedTitle": "Sommige formulierscripts zijn niet voltooid",
+    "xfaScriptsFailedMessage": "Je antwoord is opgeslagen, maar deze scripts zijn niet voltooid, dus waarden die ze hebben ingesteld, kunnen ontbreken: {{details}}.",
+    "xfaScriptKind_threw": "gaf een fout",
+    "xfaScriptKind_timeout": "duurde te lang",
+    "xfaScriptKind_refused": "werd door de sandbox geweigerd"
+  },
+  "signedSave": {
+    "title": "Dit document is ondertekend",
+    "message": "De redactie verwijdert inhoud die onder de handtekening valt. Opslaan over het ondertekende origineel zou de handtekening breken. Sla in plaats daarvan een kopie op: die bevat de redactie, maar niet de handtekening.",
+    "saveCopy": "Kopie zonder handtekening opslaan…",
+    "cancel": "Annuleren"
+  },
+  "passwordPrompt": {
+    "title": "Deze pdf is beveiligd",
+    "message": "Voer het wachtwoord in om {{name}} te openen.",
+    "incorrect": "Met dit wachtwoord gaat deze pdf niet open. Probeer het opnieuw.",
+    "label": "Wachtwoord",
+    "open": "Openen",
+    "cancel": "Annuleren",
+    "readOnlyTitle": "Alleen-lezen geopend",
+    "readOnlyMessage": "De rechten van deze pdf staan geen wijzigingen toe. Je kunt hem lezen, en printen als de rechten dat toelaten. Wil je wijzigingen opslaan, verwijder dan de beveiliging met het eigenaarswachtwoord."
+  },
+  "feedback": {
+    "title": "Help ons PDFluent beter maken",
+    "intro": "Vertel wat je probeerde. We lezen elk bericht.",
+    "menuLabel": "Help ons PDFluent beter maken…",
+    "fromError": "Je kunt ons vertellen over het probleem dat je net tegenkwam.",
+    "areaLabel": "Wat probeerde je te doen?",
+    "area": {
+      "open-view": "Een document openen of lezen",
+      "search-copy": "Tekst zoeken of kopiëren",
+      "print": "Afdrukken",
+      "edit-text": "Tekst bewerken",
+      "annotate": "Markeren, opmerkingen of tekenen",
+      "forms": "Een formulier invullen",
+      "sign": "Ondertekenen of een handtekening controleren",
+      "redact": "Zwartlakken",
+      "pages-organize": "Pagina's draaien, ordenen, samenvoegen of splitsen",
+      "convert-export": "Converteren of exporteren",
+      "ocr": "Tekst herkennen in een scan (OCR)",
+      "pdfa-compliance": "PDF/A",
+      "protect": "Wachtwoord of rechten",
+      "save": "Opslaan",
+      "install-update": "PDFluent installeren of bijwerken",
+      "other": "Iets anders"
+    },
+    "tryingToPlaceholder": "In je eigen woorden (optioneel)",
+    "whatHappenedLabel": "Wat gebeurde er?",
+    "whatHappenedPlaceholder": "Wat zag je?",
+    "whatHappenedRequired": "Vertel wat er gebeurde, dan weten we waar we moeten zoeken.",
+    "expectedLabel": "Wat had je verwacht?",
+    "expectedPlaceholder": "Optioneel",
+    "docTypeLabel": "Om wat voor document ging het?",
+    "docType": {
+      "none": "Geen document",
+      "form": "Een formulier",
+      "scanned": "Een scan",
+      "signed": "Een ondertekend document",
+      "protected": "Beveiligd met een wachtwoord",
+      "large": "Groot (meer dan 100 pagina's)",
+      "xfa": "Een overheids- of XFA-formulier",
+      "other": "Iets anders"
+    },
+    "docTypeUnset": "Kies…",
+    "pageCountLabel": "Aantal pagina's",
+    "contextTitle": "Gaat mee met je melding",
+    "contextToggle": "Systeemgegevens meesturen",
+    "contextHint": "Versie, systeem, taal en de laatste fout helpen ons het probleem na te spelen. Geen bestandsnamen, paden of documentinhoud.",
+    "fieldVersion": "PDFluent-versie",
+    "fieldSystem": "Systeem",
+    "fieldLanguage": "Taal",
+    "fieldLastError": "Laatste fout",
+    "fieldSessions": "Sessies",
+    "notIncluded": "niet meegestuurd",
+    "documentTitle": "Het document delen (optioneel)",
+    "documentToggle": "Het geopende document met deze melding delen",
+    "documentNone": "Er is geen document geopend.",
+    "documentTooLarge": "Dit document is groter dan 20 MB en kan daarom niet met een melding worden gedeeld.",
+    "documentShared": "Dit document wordt gedeeld.",
+    "documentConfirmTitle": "Dit document delen?",
+    "documentConfirmText": "Dit bestand wordt naar PDFluent (Innovation Trigger B.V.) gestuurd. Het wordt alleen gebruikt om deze melding te onderzoeken, nooit gepubliceerd, nooit gebruikt voor training, en uiterlijk 90 dagen nadat het probleem is opgelost verwijderd, en in elk geval binnen 12 maanden.",
+    "documentConfirmFile": "{{name}} ({{size}})",
+    "documentConfirmYes": "Dit document delen",
+    "documentConfirmNo": "Niet delen",
+    "contactTitle": "Contact houden (optioneel)",
+    "emailLabel": "E-mailadres",
+    "emailInvalid": "Dit lijkt geen e-mailadres.",
+    "consentContact": "PDFluent mag me mailen met vragen over deze melding.",
+    "consentFixed": "Mail me als dit is opgelost.",
+    "contactHint": "Je adres wordt apart van je melding bewaard, alleen voor deze melding gebruikt en nooit voor nieuwsbrieven of marketing.",
+    "noEmailHint": "Ook zonder e-mailadres hoor je van ons: als een update je melding oplost, laat PDFluent het je in de app weten.",
+    "privacyNotice": "Innovation Trigger B.V. ontvangt deze melding om PDFluent te verbeteren. Meldingen worden maximaal 24 maanden bewaard. Je kunt de jouwe altijd laten verwijderen.",
+    "privacyLink": "Privacyverklaring",
+    "send": "Versturen",
+    "sending": "Versturen…",
+    "cancel": "Annuleren",
+    "sentTitle": "Bedankt!",
+    "sentBody": "Je melding is binnen. Dit is het nummer:",
+    "sentIdHint": "Bewaar dit nummer als je naar je melding wilt vragen of hem wilt laten verwijderen.",
+    "sentNoLocalCopy": "PDFluent kon dit nummer niet op deze computer onthouden. Schrijf het dus even op.",
+    "sentDocumentFailed": "Je melding is binnen, maar het document kon niet worden geüpload. Als het belangrijk is, kun je de melding opnieuw met het document sturen.",
+    "removeReport": "Deze melding verwijderen",
+    "removing": "Verwijderen…",
+    "removed": "Je melding is verwijderd.",
+    "removeFailed": "Je melding kon nu niet worden verwijderd. Probeer het later opnieuw, of mail ons het nummer.",
+    "failedTitle": "Dat is niet gelukt",
+    "failedNetwork": "PDFluent kon de server niet bereiken. Er is niets verstuurd en je tekst staat er nog.",
+    "failedRateLimited": "Vandaag zijn er te veel meldingen vanaf deze verbinding gestuurd. Probeer het morgen opnieuw.",
+    "failedRejected": "De melding werd niet geaccepteerd. Controleer het formulier en probeer het opnieuw.",
+    "failedServer": "Er ging bij ons iets mis. Je tekst staat er nog; probeer het zo opnieuw.",
+    "tryAgain": "Opnieuw proberen",
+    "fixedTitle": "Opgelost!",
+    "fixedOffered": "Versie {{version}} lost je melding {{ids}} op. Bedankt dat je het liet weten.",
+    "fixedAfterUpdate": "Je melding {{ids}} is opgelost in deze versie. Bedankt dat je het liet weten.",
+    "dismiss": "Sluiten"
+  },
+  "openError": {
+    "corrupt": {
+      "title": "Deze PDF is beschadigd",
+      "body": "PDFluent kan dit bestand niet lezen. Misschien is het beschadigd bij het downloaden of kopiëren, of heeft het programma dat het maakte het niet goed weggeschreven. Download of kopieer het opnieuw, of open het origineel en exporteer het opnieuw als PDF.",
+      "action": "Ander bestand openen"
+    },
+    "not_pdf": {
+      "title": "Dit is geen PDF",
+      "body": "PDFluent opent PDF-bestanden. Dit bestand is iets anders, of de naam eindigt niet op .pdf. Kies een PDF, of geef het bestand een naam die op .pdf eindigt als het wel een PDF is.",
+      "action": "Ander bestand openen"
+    },
+    "empty": {
+      "title": "Dit bestand is leeg",
+      "body": "Het bestand heeft geen inhoud (0 bytes). Misschien is een download of kopie niet afgemaakt. Download of kopieer het opnieuw en open het dan.",
+      "action": "Ander bestand openen"
+    },
+    "encrypted_needs_password": {
+      "title": "Deze PDF heeft een wachtwoord nodig",
+      "body": "Deze PDF is beveiligd met een wachtwoord. Open hem opnieuw en vul het wachtwoord in. Weet je het niet, vraag het dan aan wie je het bestand heeft gestuurd.",
+      "action": "Wachtwoord invullen"
+    },
+    "wrong_password": {
+      "title": "Dat wachtwoord klopt niet",
+      "body": "Met dit wachtwoord gaat deze PDF niet open. Let op typefouten en Caps Lock en probeer het opnieuw.",
+      "action": "Opnieuw proberen"
+    },
+    "unsupported_encryption": {
+      "title": "PDFluent kan deze beveiliging niet openen",
+      "body": "Deze PDF is beveiligd met een certificaat of een beveiligingsmethode die PDFluent niet ondersteunt, dus geen enkel wachtwoord opent hem hier. Vraag de afzender om een kopie zonder beveiliging, of een die met een wachtwoord is beveiligd.",
+      "action": "Ander bestand openen"
+    },
+    "too_large": {
+      "title": "Dit bestand is te groot",
+      "body": "Dit bestand is groter dan PDFluent veilig kan openen. Splits of comprimeer het in het programma waarmee het is gemaakt en open daarna de delen.",
+      "action": "Ander bestand openen"
+    },
+    "too_many_pages": {
+      "title": "Deze PDF heeft te veel pagina's",
+      "body": "Dit document heeft meer pagina's dan PDFluent in één keer kan openen. Splits het in kleinere documenten in het programma waarmee het is gemaakt en open daarna de delen.",
+      "action": "Ander bestand openen"
+    },
+    "io_denied": {
+      "title": "PDFluent mag dit bestand niet lezen",
+      "body": "Je computer geeft PDFluent geen toestemming om dit bestand te lezen. Controleer de rechten van het bestand, of zet het in een map zoals Documenten, en probeer het opnieuw.",
+      "action": "Opnieuw proberen"
+    },
+    "not_found": {
+      "title": "Dit bestand is niet gevonden",
+      "body": "Het bestand is misschien verplaatst, hernoemd of verwijderd, of het staat op een schijf die niet meer is aangesloten. Zoek het bestand op en open het opnieuw.",
+      "action": "Ander bestand openen"
+    },
+    "unknown": {
+      "title": "Dit bestand kon niet worden geopend",
+      "body": "Er ging iets mis bij het openen van dit bestand. Probeer het opnieuw. Gebeurt het vaker, laat het ons dan weten, dan kunnen we het oplossen.",
+      "action": "Opnieuw proberen"
+    },
+    "feedback": "Help ons PDFluent beter te maken"
+  },
+  "formBar": {
+    "title": "Invulbaar formulier",
+    "fields": "Velden: {{count}}",
+    "clickToFill": "Klik op een veld om het in te vullen.",
+    "noCalculations": "Automatische berekeningen uit Adobe worden niet uitgevoerd.",
+    "autoLinks": "Links automatisch openen",
+    "autoLinksTitle": "Links worden automatisch in je browser geopend. Klik om dit uit te zetten.",
+    "highlight": "Velden markeren",
+    "firstField": "Eerste veld"
+  },
+  "tabs": {
+    "label": "Geopende documenten",
+    "close": "{{name}} sluiten",
+    "unsaved": "Niet-opgeslagen wijzigingen",
+    "new": "Nog een document openen",
+    "tooManyTitle": "Te veel documenten open",
+    "tooManyMessage": "{{max}} documenten zijn geopend. Sluit er een om een ander te openen."
+  },
+  "formScripts": {
+    "barLabel": "Formulierscripts",
+    "barMessage": "Dit formulier bevat scripts (bijvoorbeeld berekeningen). Uitvoeren?",
+    "barDetail": "Scripts gevonden: {{count}}.",
+    "runOnce": "Uitvoeren voor dit document",
+    "runAlways": "Scripts altijd uitvoeren",
+    "dontRun": "Niet uitvoeren"
   }
 }

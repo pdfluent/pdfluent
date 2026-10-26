@@ -1,0 +1,10 @@
+{
+  "name": "PDFluent Feedback",
+  "url": "https://pdfluent.com",
+  "description": "Opens a private issue for each in-app feedback report. Issues carry no personal data.",
+  "public": false,
+  "default_permissions": {
+    "issues": "write",
+    "metadata": "read"
+  }
+}

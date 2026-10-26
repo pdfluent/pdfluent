@@ -167,7 +167,7 @@ export function checkToolbarModeParity(
   if (activeModes.length === 1 && activeModes[0] !== mode) {
     return {
       code: 'toolbar-mode-mismatch',
-      message: `Actieve modus in toolbar '${activeModes[0]}' komt niet overeen met editor-modus '${mode}'.`,
+      message: `The active toolbar mode '${activeModes[0]}' does not match the editor mode '${mode}'.`,
       blocking: true,
     };
   }

@@ -118,13 +118,6 @@
     {
       "file": "src-tauri/src/lib.rs",
       "kind": "discarded-result",
-      "code": "let _ = telemetry::open_external_url(telemetry::FEEDBACK_URL.to_string());",
-      "count": 1,
-      "reason": "menu item opening the feedback page in the default browser; a browser that will not launch is visible to the user as nothing happening."
-    },
-    {
-      "file": "src-tauri/src/lib.rs",
-      "kind": "discarded-result",
       "code": "let _ = telemetry::open_external_url(LICENSE_URL.to_string());",
       "count": 1,
       "reason": "menu item opening the licence page in the default browser; same as the other two menu links."
@@ -153,23 +146,9 @@
     {
       "file": "src-tauri/src/lib.rs",
       "kind": "discarded-result",
-      "code": "let _ = app_handle.emit(\"open-file\", path);",
-      "count": 1,
-      "reason": "delivering an open-file event to the webview. The path is also kept in take_pending_open, which the frontend polls at startup, so a dropped event is recovered."
-    },
-    {
-      "file": "src-tauri/src/lib.rs",
-      "kind": "discarded-result",
       "code": "let _ = &event;",
       "count": 1,
       "reason": "binds the otherwise-unused run-event parameter on the platforms without an open-file event. No runtime behaviour; app_handle left the binding when the clean-quit record started using it."
-    },
-    {
-      "file": "src-tauri/src/ocr.rs",
-      "kind": "discarded-result",
-      "code": "let _ = std::fs::remove_file(&tmp_path);",
-      "count": 2,
-      "reason": "removing the temporary image handed to the OCR bridge. A leftover temp file is the OS's problem; the OCR result has already been read or already failed with its own message."
     },
     {
       "file": "src-tauri/src/pdf_engine.rs",
@@ -361,27 +340,6 @@
       "reason": "persisting the reviewer identity. The name is already in use for this session; only remembering it next time is at risk."
     },
     {
-      "file": "src/viewer/components/LeftNavRail.tsx",
-      "kind": "silent-catch",
-      "code": "} catch {",
-      "count": 1,
-      "reason": "reading computed style off a selection to seed the format controls. A failed read leaves the controls at their defaults."
-    },
-    {
-      "file": "src/viewer/components/LeftNavRail.tsx",
-      "kind": "silent-catch",
-      "code": "} catch { /* localStorage unavailable (e.g. sandboxed iframe) */ }",
-      "count": 1,
-      "reason": "reading which nav panel was open. Falls back to closed, which is the default state anyway."
-    },
-    {
-      "file": "src/viewer/components/LeftNavRail.tsx",
-      "kind": "silent-catch",
-      "code": "} catch { /* ignore write errors */ }",
-      "count": 1,
-      "reason": "persisting which nav panel is open. A layout preference, not document state."
-    },
-    {
       "file": "src/viewer/components/OrganizeGrid.tsx",
       "kind": "silent-catch",
       "code": "} catch {",
@@ -394,13 +352,6 @@
       "code": "} catch {",
       "count": 1,
       "reason": "sampling a pixel to pick the page background colour. Out-of-bounds means the sample is skipped and the next one is used."
-    },
-    {
-      "file": "src/viewer/components/PageCanvas.tsx",
-      "kind": "silent-rejection",
-      "code": "navigator.clipboard.writeText(text).catch(() => {});",
-      "count": 1,
-      "reason": "copying selected text. A clipboard the browser refuses is visible the moment the user pastes, and a toast about it would fire on every denied permission prompt."
     },
     {
       "file": "src/viewer/components/RightContextPanel.tsx",
@@ -431,18 +382,18 @@
       "reason": "clipboard read during paste, with document.execCommand('paste') as the fallback on the next line -- an actual second attempt, not a shrug."
     },
     {
+      "file": "src/viewer/hooks/formWriteSync.ts",
+      "kind": "silent-rejection",
+      "code": "tail = run.catch(() => undefined);",
+      "count": 1,
+      "reason": "Keeps the write queue's chain alive after a failed write so the next write still runs. The failure is not swallowed: `run`, which carries the rejection, is what the caller gets back and handles (the write's own error toast and the field revert)."
+    },
+    {
       "file": "src/viewer/hooks/useAnnotations.ts",
       "kind": "silent-catch",
       "code": "} catch { /* ignore read errors */ }",
       "count": 1,
       "reason": "restoring the last page position for a reopened file. A failed read opens page one."
-    },
-    {
-      "file": "src/viewer/hooks/useAnnotations.ts",
-      "kind": "silent-rejection",
-      "code": "}).catch(() => { /* ignore — labels are optional */ });",
-      "count": 1,
-      "reason": "page labels. A document without them falls back to page numbers, which is what most documents use."
     },
     {
       "file": "src/viewer/hooks/useAnnotations.ts",
@@ -455,15 +406,15 @@
       "file": "src/viewer/hooks/useAnnotations.ts",
       "kind": "silent-catch",
       "code": "} catch { /* silent */ }",
-      "count": 5,
-      "reason": "creating and applying redactions and reordering pages. The bridge reports the command failure; the page state on screen is refetched from the document either way."
+      "count": 3,
+      "reason": "creating redactions and reordering pages. The bridge reports the command failure; the page state on screen is refetched from the document either way."
     },
     {
       "file": "src/viewer/hooks/useAnnotations.ts",
       "kind": "silent-catch",
       "code": "} catch { return null; }",
-      "count": 2,
-      "reason": "search-and-redact and delete-page both answer null on failure, and the caller renders that as no matches / no change. The bridge has already reported why."
+      "count": 1,
+      "reason": "delete-page answers null on failure, and the caller renders that as no change. The bridge has already reported why."
     },
     {
       "file": "src/viewer/hooks/useAnnotations.ts",
@@ -471,20 +422,6 @@
       "code": "} catch { return false; }",
       "count": 1,
       "reason": "metadata redaction answers false, which the caller turns into a failed task-queue entry. The bridge has already reported why."
-    },
-    {
-      "file": "src/viewer/hooks/useDocumentLifecycle.ts",
-      "kind": "silent-catch",
-      "code": "} catch { /* silent — task queue lives in TopBar, not here */ }",
-      "count": 1,
-      "reason": "save-as. The bridge reports the failed save_pdf and the document stays marked dirty, so nothing is lost or claimed saved."
-    },
-    {
-      "file": "src/viewer/hooks/useDocumentLifecycle.ts",
-      "kind": "silent-catch",
-      "code": "} catch { /* save failed — proceed anyway; task bar will surface the error */ }",
-      "count": 1,
-      "reason": "the save inside a close/reopen flow. The bridge reports it and the dirty flag is not cleared, so the unsaved-changes prompt still stands."
     },
     {
       "file": "src/viewer/hooks/useFormFields.ts",
@@ -741,9 +678,16 @@
     {
       "file": "src/viewer/ViewerApp.tsx",
       "kind": "silent-rejection",
-      "code": "const pending = await invoke<string | null>('take_pending_open').catch(() => null);",
+      "code": "const pending = await invoke<string[]>('take_pending_opens').catch(() => [] as string[]);",
       "count": 1,
-      "reason": "asking the backend whether a file was double-clicked to launch the app. Null means it was not, which is the usual case."
+      "reason": "asking the backend which files were double-clicked to launch the app. An empty list means none were, which is the usual case."
+    },
+    {
+      "file": "src/viewer/v3/imagePick.ts",
+      "kind": "silent-catch",
+      "code": "} catch {",
+      "count": 1,
+      "reason": "A cancelled or refused picture pick returns null. A refusal has already reached the person: the pick goes through invokeCommand, which reports every failed command on the error stack, so repeating it here would show it twice."
     },
     {
       "file": "tests/e2e/smoke-shell.spec.ts",
@@ -891,6 +835,90 @@
       "code": "let _ = T0.set(Instant::now());",
       "count": 1,
       "reason": "OnceLock::set fails only when the clock was already started, which is exactly the outcome wanted: the first call wins so a second run() cannot move the origin under a session that is already being measured."
+    },
+    {
+      "file": "src-tauri/src/lib.rs",
+      "kind": "unwrap-or-default",
+      "code": ".unwrap_or_default()",
+      "count": 1,
+      "reason": "run_ocr: no page list means every page; the default is the documented meaning, not a swallowed error."
+    },
+    {
+      "file": "src-tauri/src/ocr_component.rs",
+      "kind": "unwrap-or-default",
+      "code": ".unwrap_or_default();",
+      "count": 1,
+      "reason": "OCR component status: no component means no languages to show; that is a state (the problem field names why), not a swallowed error."
+    },
+    {
+      "file": "src-tauri/src/ocr_component.rs",
+      "kind": "unwrap-or-default",
+      "code": ".unwrap_or_default(),",
+      "count": 1,
+      "reason": "OCR component status: a platform the manifest does not list has no files to show; platform_supported says so beside it."
+    },
+    {
+      "file": "src-tauri/src/lib.rs",
+      "kind": "discarded-result",
+      "code": "let _ = installed;",
+      "count": 1,
+      "reason": "silences the unused-variable lint in the build without the pii-model feature; the function answers the model-not-in-build error on the next line, so nothing is discarded that a user could act on"
+    },
+    {
+      "file": "src-tauri/src/pii_component.rs",
+      "kind": "unwrap-or-default",
+      "code": ".unwrap_or_default()",
+      "count": 1,
+      "reason": "the file list of a component whose manifest cannot be read; the status then shows no files and the offer is not made, which is the honest state, and total_size is already 0 on the same path"
+    },
+    {
+      "file": "src-tauri/src/pii_component.rs",
+      "kind": "discarded-result",
+      "code": "let _ = std::fs::remove_dir_all(&staging);",
+      "count": 1,
+      "reason": "removing a staging directory after a failed or finished install; a leftover directory is swept on the next install, and the failure that matters has already been returned"
+    },
+    {
+      "file": "src-tauri/src/pii_component.rs",
+      "kind": "discarded-result",
+      "code": "let _ = std::fs::remove_dir_all(entry.path());",
+      "count": 1,
+      "reason": "sweeping stale staging directories before an install; one that cannot be removed is retried on the next install and does not affect this one"
+    },
+    {
+      "file": "src/lib/releaseListener.ts",
+      "kind": "silent-rejection",
+      "code": "void Promise.resolve(stop()).catch(() => undefined);",
+      "count": 1,
+      "reason": "unlistening a Tauri event that is already gone rejects with an internal error that is not actionable; reporting it put 'Something went wrong' over the editor during an ordinary tool switch (J-66, J-78)"
+    },
+    {
+      "file": "src/lib/releaseListener.ts",
+      "kind": "silent-catch",
+      "code": "} catch {",
+      "count": 1,
+      "reason": "a synchronous throw from the same unlisten call: the listener was already gone"
+    },
+    {
+      "file": "src/viewer/v3/PiiControls.tsx",
+      "kind": "silent-catch",
+      "code": "} catch {",
+      "count": 2,
+      "reason": "no component status means no model offer; the checksum rules still run and the panel says so"
+    },
+    {
+      "file": "src-tauri/src/page_images.rs",
+      "kind": "unwrap-or-default",
+      "code": "PlacementKind::XObject => p.resource_name.clone().unwrap_or_default(),",
+      "count": 1,
+      "reason": "the display name of an image placement whose resource name the content stream does not give; the name is a label in a list, the placement is addressed by its index, and an empty label breaks nothing"
+    },
+    {
+      "file": "src/viewer/components/PageCanvas.tsx",
+      "kind": "silent-rejection",
+      "code": ".catch(() => {});",
+      "count": 1,
+      "reason": "the clipboard refused the write (permission, no focus): the selection toolbar then simply shows no 'Copied' confirmation, which is the honest answer; the selection stays and the user can try again"
     }
   ]
 }

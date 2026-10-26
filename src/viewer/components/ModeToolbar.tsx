@@ -14,6 +14,7 @@ import { getWiredTools } from '../tools/wiredTools';
 import { useTaskQueueContext } from '../context/TaskQueueContext';
 import { ChevronLeftIcon, ChevronRightIcon, PlusIcon, PrinterIcon, HighlighterIcon, UnderlineIcon, StrikethroughIcon, SquareIcon, EraserIcon, Undo2Icon, Redo2Icon } from 'lucide-react';
 import { TextEditFormatBar } from './TextEditFormatBar';
+import { printDocument } from '../state/printFlow';
 
 // ---------------------------------------------------------------------------
 // Annotation tool types
@@ -350,7 +351,7 @@ export function ModeToolbar({
               <Divider />
               <button
                 data-testid="print-all-btn"
-                onClick={() => { window.print(); }}
+                onClick={() => { void printDocument(); }}
                 className="pf-btn"
                 title={t('toolbar.printAllTitle')}
                 aria-label={t('toolbar.printAllTitle')}

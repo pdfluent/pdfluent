@@ -22,8 +22,14 @@
 // dialog) rather than swallowed — but never escalate into a crash-on-crash.
 // ---------------------------------------------------------------------------
 
-import { invokeCommand as invoke } from '../commandBridge';
+import { invokeQuietly } from '../commandBridge';
 import { scrub, scrubOptional } from './scrub';
+import {
+  forgetCrashReports,
+  readLocalCrashReports,
+  rememberCrashReport,
+  type KeyValueStore,
+} from './localCrashReports';
 
 /**
  * Our own stable addresses. The app bakes in ONLY pdfluent.com URLs; the
@@ -32,7 +38,6 @@ import { scrub, scrubOptional } from './scrub';
  * third-party URL here.
  */
 export const REPORT_ENDPOINT = 'https://report.pdfluent.com/v1/report';
-export const FEEDBACK_URL = 'https://feedback.pdfluent.com';
 
 /** The three kinds of report; one shared payload shape (plan §3). */
 export type ReportType = 'crash' | 'bug' | 'feedback';
@@ -45,6 +50,8 @@ export interface ReportEnvironment {
   appVersion: string;
   os: string;
   osVersion: string | null;
+  /** CPU architecture (`aarch64`, `x86_64`); null outside the desktop app. */
+  arch: string | null;
   locale: string;
 }
 
@@ -53,6 +60,7 @@ interface RawEnvironment {
   app_version: string;
   os: string;
   os_version: string | null;
+  arch?: string;
 }
 
 /**
@@ -106,7 +114,7 @@ export interface ReportDraft {
 
 /** Outcome of a send attempt, surfaced to the dialog (never thrown upward). */
 export type SendResult =
-  | { ok: true; id: string }
+  | { ok: true; id: string; deleteToken: string | null }
   | { ok: false; error: string };
 
 /**
@@ -116,11 +124,12 @@ export type SendResult =
  */
 export async function getEnvironment(): Promise<ReportEnvironment> {
   try {
-    const raw = await invoke<RawEnvironment>('get_environment');
+    const raw = await invokeQuietly<RawEnvironment>('get_environment');
     return {
       appVersion: raw.app_version,
       os: raw.os,
       osVersion: raw.os_version,
+      arch: raw.arch ?? null,
       locale: detectLocale(),
     };
   } catch {
@@ -128,6 +137,7 @@ export async function getEnvironment(): Promise<ReportEnvironment> {
       appVersion: 'unknown',
       os: 'unknown',
       osVersion: null,
+      arch: null,
       locale: detectLocale(),
     };
   }
@@ -160,7 +170,10 @@ export function buildReport(
  * Never throws — returns a SendResult so a failed crash report can't itself
  * become a crash.
  */
-export async function sendReport(payload: ReportPayload): Promise<SendResult> {
+export async function sendReport(
+  payload: ReportPayload,
+  store?: KeyValueStore | null,
+): Promise<SendResult> {
   let lastError = 'unknown error';
 
   for (let attempt = 0; attempt < 2; attempt++) {
@@ -172,12 +185,20 @@ export async function sendReport(payload: ReportPayload): Promise<SendResult> {
       });
 
       if (res.ok) {
-        // Worker answers 202 Accepted with { id }.
+        // Worker answers 202 Accepted with { id, delete_token }. The token is
+        // kept on this machine so the sender can delete the report later.
         const data = (await res.json().catch(() => null)) as
-          | { id?: string }
+          | { id?: string; delete_token?: string }
           | null;
-        if (data?.id) return { ok: true, id: data.id };
-        return { ok: true, id: '' };
+        if (data?.id && data.delete_token) {
+          rememberCrashReport(
+            { id: data.id, deleteToken: data.delete_token, sentAt: new Date().toISOString() },
+            store,
+          );
+          return { ok: true, id: data.id, deleteToken: data.delete_token };
+        }
+        if (data?.id) return { ok: true, id: data.id, deleteToken: null };
+        return { ok: true, id: '', deleteToken: null };
       }
 
       // 4xx = permanent (bad payload); don't retry.
@@ -201,4 +222,50 @@ export async function buildAndSend(
   env: ReportEnvironment,
 ): Promise<SendResult> {
   return sendReport(buildReport(draft, env));
+}
+
+/**
+ * Erase a crash report: the sender's own right, exercised with the token only
+ * this machine holds. A report the server no longer has (404) counts as gone.
+ */
+export async function removeCrashReport(
+  receipt: { id: string; deleteToken: string },
+  options: { userRequested: boolean; fetchImpl?: typeof fetch },
+): Promise<boolean> {
+  if (options.userRequested !== true) return false;
+  const doFetch = options.fetchImpl ?? fetch;
+  try {
+    const res = await doFetch(`${REPORT_ENDPOINT}/${receipt.id}`, {
+      method: 'DELETE',
+      headers: { 'X-Delete-Token': receipt.deleteToken },
+    });
+    return res.status === 204 || res.status === 404;
+  } catch (error) {
+    console.warn('[telemetry] delete request failed', error);
+    return false;
+  }
+}
+
+/** Outcome of deleting every crash report this installation remembers. */
+export interface RemoveAllResult {
+  removed: number;
+  failed: number;
+}
+
+/** Delete all remembered crash reports; the ones that failed stay listed for another try. */
+export async function removeAllCrashReports(options: {
+  userRequested: boolean;
+  fetchImpl?: typeof fetch;
+  store?: KeyValueStore | null;
+}): Promise<RemoveAllResult> {
+  if (options.userRequested !== true) return { removed: 0, failed: 0 };
+  const reports = readLocalCrashReports(options.store);
+  const gone: string[] = [];
+  for (const report of reports) {
+    if (await removeCrashReport(report, { userRequested: true, fetchImpl: options.fetchImpl })) {
+      gone.push(report.id);
+    }
+  }
+  forgetCrashReports(gone, options.store);
+  return { removed: gone.length, failed: reports.length - gone.length };
 }

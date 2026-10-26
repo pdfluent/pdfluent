@@ -13,10 +13,6 @@ const mockFormEngineSource = readFileSync(
   'utf8'
 );
 
-const tauriFormEngineSource = readFileSync(
-  new URL('../src/platform/engine/tauri/TauriFormEngine.ts', import.meta.url),
-  'utf8'
-);
 
 const viewerAppSource = [
   '../src/viewer/hooks/usePageNavigation.ts',
@@ -80,53 +76,11 @@ describe('MockFormEngine — setFormFieldValue', () => {
 // TauriFormEngine — setFormFieldValue
 // ---------------------------------------------------------------------------
 
-describe('TauriFormEngine — setFormFieldValue', () => {
-  it('is an async method', () => {
-    expect(tauriFormEngineSource).toContain('async setFormFieldValue(');
-  });
-
-  it('looks up the field by id in the document', () => {
-    const fnStart = tauriFormEngineSource.indexOf('async setFormFieldValue(');
-    const fnEnd = tauriFormEngineSource.indexOf('\n  }', fnStart) + 4;
-    const fnBody = tauriFormEngineSource.slice(fnStart, fnEnd);
-    expect(fnBody).toContain("document.formFields.find(f => f.id === fieldId)");
-  });
-
-  it('invokes the set_form_field_value Tauri command', () => {
-    const fnStart = tauriFormEngineSource.indexOf('async setFormFieldValue(');
-    const fnEnd = tauriFormEngineSource.indexOf('\n  }', fnStart) + 4;
-    const fnBody = tauriFormEngineSource.slice(fnStart, fnEnd);
-    expect(fnBody).toContain("invoke('set_form_field_value'");
-  });
-
-  it('sends field.name (not fieldId) to the backend', () => {
-    const fnStart = tauriFormEngineSource.indexOf('async setFormFieldValue(');
-    const fnEnd = tauriFormEngineSource.indexOf('\n  }', fnStart) + 4;
-    const fnBody = tauriFormEngineSource.slice(fnStart, fnEnd);
-    expect(fnBody).toContain('name: field.name');
-  });
-
-  it('sends value stringified via String(value)', () => {
-    const fnStart = tauriFormEngineSource.indexOf('async setFormFieldValue(');
-    const fnEnd = tauriFormEngineSource.indexOf('\n  }', fnStart) + 4;
-    const fnBody = tauriFormEngineSource.slice(fnStart, fnEnd);
-    expect(fnBody).toContain('value: String(value)');
-  });
-
-  it('returns optimistic success with spread field and new value', () => {
-    const fnStart = tauriFormEngineSource.indexOf('async setFormFieldValue(');
-    const fnEnd = tauriFormEngineSource.indexOf('\n  }', fnStart) + 4;
-    const fnBody = tauriFormEngineSource.slice(fnStart, fnEnd);
-    expect(fnBody).toContain('{ success: true, value: { ...field, value } }');
-  });
-
-  it('returns internal-error on Tauri invoke failure', () => {
-    const fnStart = tauriFormEngineSource.indexOf('async setFormFieldValue(');
-    const fnEnd = tauriFormEngineSource.indexOf('\n  }', fnStart) + 4;
-    const fnBody = tauriFormEngineSource.slice(fnStart, fnEnd);
-    expect(fnBody).toContain("code: 'internal-error'");
-  });
-});
+// TauriFormEngine.setFormFieldValue is proven by behaviour, not by its source:
+// src/platform/engine/tauri/__tests__/tauri-form-engine.write.test.ts calls it
+// with a mocked command bridge and checks the typed `set_form_value` request
+// per field type (J-56). The source checks that stood here asserted the
+// legacy raw-/V `set_form_field_value` call, which is what J-56 replaced.
 
 // ---------------------------------------------------------------------------
 // ViewerApp — handleSetFieldValue

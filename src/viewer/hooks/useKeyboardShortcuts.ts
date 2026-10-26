@@ -6,10 +6,11 @@
 // See https://pdfluent.com/license for terms.
 
 import { useEffect, useRef, useCallback } from 'react';
-import type { UndoStack } from '../undoEngine';
 import type { ViewerMode } from '../types';
 import type { TextParagraphTarget } from '../text/textInteractionModel';
 import type { FormField } from '../../core/document';
+import { printDocument } from '../state/printFlow';
+import { historyActionForKeyEvent, isTypingTarget, modeForKeyEvent } from './keyTargets';
 
 interface UseKeyboardShortcutsProps {
   pageCount: number;
@@ -28,8 +29,9 @@ interface UseKeyboardShortcutsProps {
   activeFieldIdx: number;
   handleFieldNav: (idx: number) => void;
   setZoom: (z: number | ((prev: number) => number)) => void;
-  undoStackRef: React.MutableRefObject<UndoStack>;
-  syncUndoState: () => void;
+  /** Document undo / redo (J-85); see useUndoRedo. */
+  onUndo: () => void | Promise<void>;
+  onRedo: () => void | Promise<void>;
   handleSaveAs: () => Promise<void>;
   setExportOpen: (v: boolean | ((prev: boolean) => boolean)) => void;
   setCommandPaletteOpen: (v: boolean | ((prev: boolean) => boolean)) => void;
@@ -65,8 +67,8 @@ export function useKeyboardShortcuts({
   activeFieldIdx,
   handleFieldNav,
   setZoom,
-  undoStackRef,
-  syncUndoState,
+  onUndo,
+  onRedo,
   handleSaveAs,
   setExportOpen,
   setCommandPaletteOpen,
@@ -257,25 +259,15 @@ export function useKeyboardShortcuts({
     return () => { window.removeEventListener('keydown', handleCommentJumpKey); };
   }, [handleNextComment, handlePrevComment]);
 
-  // Mode switching keyboard shortcuts — 1–8 map to viewer modes
+  // Mode switching keyboard shortcuts — 1–8 map to viewer modes. The decision
+  // lives in keyTargets.ts so the typing guard is the same one every shortcut
+  // uses (#642: digits typed in the inline editor switched the mode).
+  const editingTextTargetIdRef = useRef(editingTextTargetId);
+  useEffect(() => { editingTextTargetIdRef.current = editingTextTargetId; }, [editingTextTargetId]);
   useEffect(() => {
-    const MODE_KEYS: Record<string, ViewerMode> = {
-      '1': 'read',
-      '2': 'review',
-      '3': 'edit',
-      '4': 'sign',
-      '5': 'organize',
-      '6': 'forms',
-      '7': 'protect',
-      '8': 'convert',
-    };
-
     function handleModeKey(e: KeyboardEvent): void {
-      if (e.metaKey || e.ctrlKey || e.altKey) return;
-      const tag = (e.target as HTMLElement | null)?.tagName ?? '';
-      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
-      const mode = MODE_KEYS[e.key];
-      if (mode) setMode(mode);
+      const next = modeForKeyEvent(e, editingTextTargetIdRef.current);
+      if (next) setMode(next);
     }
 
     window.addEventListener('keydown', handleModeKey);
@@ -302,20 +294,23 @@ export function useKeyboardShortcuts({
     return () => { window.removeEventListener('keydown', handleZoomKey); };
   }, [pageCount]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Undo/Redo keyboard shortcuts — ⌘Z / Ctrl+Z (undo), ⌘⇧Z / Ctrl+Shift+Z (redo)
+  // Undo/Redo keyboard shortcuts — ⌘Z / Ctrl+Z (undo), ⌘⇧Z / Ctrl+Shift+Z /
+  // Ctrl+Y (redo). Inside a field or the inline editor the field's own undo
+  // applies (historyActionForKeyEvent returns null there).
   useEffect(() => {
     function handleUndoKey(e: KeyboardEvent): void {
-      if (!(e.metaKey || e.ctrlKey) || e.key !== 'z') return;
+      const action = historyActionForKeyEvent(e, editingTextTargetIdRef.current);
+      if (!action) return;
       e.preventDefault();
-      if (e.shiftKey) {
-        void undoStackRef.current.redo().then(syncUndoState);
+      if (action === 'redo') {
+        void onRedo();
       } else {
-        void undoStackRef.current.undo().then(syncUndoState);
+        void onUndo();
       }
     }
     window.addEventListener('keydown', handleUndoKey);
     return () => { window.removeEventListener('keydown', handleUndoKey); };
-  }, [syncUndoState]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [onUndo, onRedo]);
 
   // Save As keyboard shortcut — ⌘⇧S / Ctrl+Shift+S
   useEffect(() => {
@@ -336,7 +331,7 @@ export function useKeyboardShortcuts({
       if (!(e.metaKey || e.ctrlKey) || e.key !== 'p') return;
       if (pageCount === 0) return;
       e.preventDefault();
-      window.print();
+      void printDocument();
     }
     window.addEventListener('keydown', handlePrintKey);
     return () => { window.removeEventListener('keydown', handlePrintKey); };
@@ -388,8 +383,7 @@ export function useKeyboardShortcuts({
     function handleSelectAll(e: KeyboardEvent): void {
       if (!(e.metaKey || e.ctrlKey) || e.key !== 'a') return;
       // Let the browser handle it inside inputs, textareas, and the inline editor.
-      const tag = (e.target as HTMLElement | null)?.tagName ?? '';
-      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+      if (isTypingTarget(e.target)) return;
       if (editingTextTargetId) return;
       e.preventDefault();
       const layers = document.querySelectorAll('.pdf-text-layer');

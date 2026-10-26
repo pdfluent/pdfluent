@@ -5,461 +5,363 @@
 // of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
-//! Paddle OCR bridge — spawns the Python bridge script and returns the JSON result.
+//! OCR: recognise scanned pages and write the text into the PDF.
+//!
+//! Until 1.0.1 OCR spawned the user's own Python with `paddleocr` and showed
+//! the words in an overlay; nothing reached the document, so a saved file was
+//! exactly as unsearchable as before, and on a machine without that Python it
+//! did nothing at all (J-60).
+//!
+//! Now the words become an invisible text layer in the page (text rendering
+//! mode 3, set by the SDK's `pdf_ocr::make_searchable`), so after Save the
+//! document is searchable and selectable in any reader. Recognition runs the
+//! Tesseract component bundled in the app (`ocr_component`) as a separate
+//! process: nothing of Tesseract is linked into this binary, which stays pure
+//! Rust (B31). The page image goes to the process over a pipe and the words
+//! come back as TSV; no file and no network is involved.
 
-use base64::Engine as _;
-use serde::{Deserialize, Serialize};
-use std::collections::BTreeMap;
-use std::path::{Path, PathBuf};
-use std::process::Command;
-use std::time::{SystemTime, UNIX_EPOCH};
+use crate::ocr_component::Installed;
+use pdf_engine::{PdfDocument, RenderOptions};
+use pdf_ocr::{OcrEngine, OcrPageResult};
+use serde::Serialize;
+use std::io::{Cursor, Write as _};
+use std::path::PathBuf;
+use std::process::{Command, Stdio};
+use std::sync::atomic::{AtomicU32, Ordering};
 
-// ---------------------------------------------------------------------------
-// Request / response types
-// ---------------------------------------------------------------------------
+/// Resolution pages are rendered at for recognition. 300 dpi is what
+/// Tesseract is tuned for; lower loses small print, higher costs time and
+/// memory for no gain on ordinary scans.
+pub const OCR_DPI: u32 = 300;
 
-#[derive(Debug, Deserialize)]
-pub struct PaddleOcrRequest {
-    pub image_base64: String,
-    pub language: String,
-    pub include_structure: bool,
-    pub preprocess_mode: String,
-    pub preprocess_steps: Option<Vec<String>>,
-    pub auto_confidence_threshold: Option<f64>,
-}
+/// The document is signed: a text layer changes the page content the
+/// signature covers.
+pub const ERR_SIGNED: &str = "OCR_SIGNED_DOCUMENT";
+/// The document's permissions do not allow changing its content.
+pub const ERR_NOT_PERMITTED: &str = "OCR_NOT_PERMITTED";
+/// The document changed while OCR ran; the result would overwrite that change.
+pub const ERR_CHANGED: &str = "OCR_DOCUMENT_CHANGED";
+/// Tesseract could not be started or failed on a page.
+pub const ERR_ENGINE: &str = "OCR_ENGINE_FAILED";
+/// A page number outside the document.
+pub const ERR_PAGE: &str = "OCR_PAGE_OUT_OF_RANGE";
 
-#[derive(Debug, Serialize, Deserialize)]
-pub struct PaddleOcrResponse {
-    pub engine: String,
-    pub language: String,
-    pub words: Vec<serde_json::Value>,
-    pub text: String,
-    pub structure_blocks: Vec<serde_json::Value>,
-    pub average_confidence: f64,
-    pub preprocessing_applied: bool,
-    pub preprocessing_mode: String,
-    pub preprocessing_steps: Vec<String>,
-    pub preprocessing_reason: String,
-    pub quality_metrics: serde_json::Value,
-}
+// ── Engine ───────────────────────────────────────────────────────────────
 
-// ---------------------------------------------------------------------------
-// Runtime status / engine boundary
-// ---------------------------------------------------------------------------
-
-#[derive(Debug, Serialize, Clone)]
-pub struct OcrRuntimeStatus {
-    pub available: bool,
-    pub python_path: Option<String>,
-    pub python_source: Option<String>,
-    pub bridge_path: String,
-    pub bridge_available: bool,
-    pub missing_packages: Vec<String>,
-    pub diagnostics: Vec<String>,
-    pub remediation: String,
-    pub package_versions: BTreeMap<String, String>,
-}
-
-pub trait OcrEngine {
-    fn status(&self) -> OcrRuntimeStatus;
-    fn run(&self, request_id: u32, payload: PaddleOcrRequest) -> Result<PaddleOcrResponse, String>;
-}
-
-#[derive(Debug, Default)]
-pub struct PaddleOcrPythonEngine;
-
+/// Tesseract from the installed component, run as a subprocess.
 #[derive(Debug, Clone)]
-struct PythonCandidate {
-    path: PathBuf,
-    source: String,
+pub struct ComponentTesseract {
+    binary: PathBuf,
+    tessdata: PathBuf,
+    language: String,
 }
 
-#[derive(Debug, Deserialize)]
-struct PythonCheckPayload {
-    executable: Option<String>,
-    missing: Vec<String>,
-    versions: BTreeMap<String, String>,
-}
-
-const STATUS_PREFIX: &str = "PDFLUENT_OCR_STATUS=";
-
-const IMPORT_CHECK_SCRIPT: &str = r#"
-import importlib
-import json
-import sys
-
-modules = {
-    "paddleocr": "paddleocr",
-    "numpy": "numpy",
-    "cv2": "opencv-python",
-}
-
-missing = []
-versions = {}
-for module_name, package_name in modules.items():
-    try:
-        module = importlib.import_module(module_name)
-        versions[package_name] = str(getattr(module, "__version__", "unknown"))
-    except Exception:
-        missing.append(package_name)
-
-payload = {
-    "executable": sys.executable,
-    "missing": missing,
-    "versions": versions,
-}
-print("PDFLUENT_OCR_STATUS=" + json.dumps(payload, sort_keys=True))
-sys.exit(1 if missing else 0)
-"#;
-
-/// Resolve the path to the paddle_ocr_bridge.py script relative to the binary.
-fn bridge_script_path() -> PathBuf {
-    // In production the script is bundled next to the binary in `scripts/`.
-    // In development it lives at `src-tauri/scripts/paddle_ocr_bridge.py`.
-    let exe_dir = std::env::current_exe()
-        .ok()
-        .and_then(|p| p.parent().map(|d| d.to_path_buf()))
-        .unwrap_or_else(|| PathBuf::from("."));
-
-    let candidates = [
-        exe_dir.join("scripts").join("paddle_ocr_bridge.py"),
-        PathBuf::from("src-tauri/scripts/paddle_ocr_bridge.py"),
-    ];
-    for path in &candidates {
-        if path.exists() {
-            return path.clone();
-        }
-    }
-    candidates[1].clone()
-}
-
-fn add_python_candidate(
-    candidates: &mut Vec<PythonCandidate>,
-    path: PathBuf,
-    source: impl Into<String>,
-) {
-    if candidates.iter().any(|candidate| candidate.path == path) {
-        return;
-    }
-    candidates.push(PythonCandidate {
-        path,
-        source: source.into(),
-    });
-}
-
-fn add_venv_candidates(
-    candidates: &mut Vec<PythonCandidate>,
-    root: PathBuf,
-    source: impl Into<String>,
-) {
-    let source = source.into();
-    #[cfg(target_os = "windows")]
-    let rel_paths = ["Scripts/python.exe", "python.exe"];
-    #[cfg(not(target_os = "windows"))]
-    let rel_paths = ["bin/python3", "bin/python"];
-
-    for rel in rel_paths {
-        add_python_candidate(candidates, root.join(rel), source.clone());
-    }
-}
-
-fn python_candidates() -> Vec<PythonCandidate> {
-    let mut candidates = Vec::new();
-
-    if let Ok(path) = std::env::var("PDFLUENT_OCR_PYTHON") {
-        if !path.trim().is_empty() {
-            add_python_candidate(&mut candidates, PathBuf::from(path), "PDFLUENT_OCR_PYTHON");
-        }
-    }
-
-    if let Ok(path) = std::env::var("PDFLUENT_OCR_VENV") {
-        if !path.trim().is_empty() {
-            add_venv_candidates(&mut candidates, PathBuf::from(path), "PDFLUENT_OCR_VENV");
-        }
-    }
-
-    if let Ok(path) = std::env::var("PDFLUENT_OCR_RUNTIME_DIR") {
-        if !path.trim().is_empty() {
-            add_venv_candidates(
-                &mut candidates,
-                PathBuf::from(path),
-                "PDFLUENT_OCR_RUNTIME_DIR",
-            );
-        }
-    }
-
-    if let Some(exe_dir) = std::env::current_exe()
-        .ok()
-        .and_then(|p| p.parent().map(|d| d.to_path_buf()))
-    {
-        add_venv_candidates(&mut candidates, exe_dir.join(".venv-ocr"), "app .venv-ocr");
-        add_venv_candidates(
-            &mut candidates,
-            exe_dir.join("ocr-runtime"),
-            "app ocr-runtime",
-        );
-    }
-
-    if let Ok(cwd) = std::env::current_dir() {
-        add_venv_candidates(
-            &mut candidates,
-            cwd.join(".venv-ocr"),
-            "workspace .venv-ocr",
-        );
-        add_venv_candidates(
-            &mut candidates,
-            cwd.join("src-tauri").join(".venv-ocr"),
-            "src-tauri .venv-ocr",
-        );
-    }
-
-    add_python_candidate(&mut candidates, PathBuf::from("python3"), "PATH python3");
-    add_python_candidate(&mut candidates, PathBuf::from("python"), "PATH python");
-
-    candidates
-}
-
-fn is_bare_command(path: &Path) -> bool {
-    path.components().count() == 1
-}
-
-fn should_try_candidate(path: &Path) -> bool {
-    is_bare_command(path) || path.exists()
-}
-
-fn display_path(path: &Path) -> String {
-    path.to_string_lossy().to_string()
-}
-
-fn parse_check_payload(stdout: &[u8]) -> Result<PythonCheckPayload, String> {
-    let stdout = String::from_utf8_lossy(stdout);
-    let line = stdout
-        .lines()
-        .rev()
-        .find(|line| line.starts_with(STATUS_PREFIX))
-        .ok_or_else(|| format!("health check did not emit {STATUS_PREFIX}"))?;
-    serde_json::from_str::<PythonCheckPayload>(&line[STATUS_PREFIX.len()..])
-        .map_err(|e| format!("health check JSON parse error: {e}"))
-}
-
-fn push_unique_missing(missing: &mut Vec<String>, package: String) {
-    if !missing.iter().any(|existing| existing == &package) {
-        missing.push(package);
-    }
-}
-
-fn unavailable_status(
-    bridge_path: &Path,
-    bridge_available: bool,
-    python_path: Option<String>,
-    python_source: Option<String>,
-    missing_packages: Vec<String>,
-    diagnostics: Vec<String>,
-    package_versions: BTreeMap<String, String>,
-) -> OcrRuntimeStatus {
-    let remediation = if !bridge_available {
-        "OCR bridge script is missing from the app resources.".to_string()
-    } else if !missing_packages.is_empty() {
-        "Install the PaddleOCR runtime packages, or point PDFLUENT_OCR_PYTHON at an environment that already contains paddleocr, numpy, and opencv-python.".to_string()
-    } else {
-        "Configure PDFLUENT_OCR_PYTHON or PDFLUENT_OCR_VENV to an existing open-source PaddleOCR Python environment.".to_string()
-    };
-
-    OcrRuntimeStatus {
-        available: false,
-        python_path,
-        python_source,
-        bridge_path: display_path(bridge_path),
-        bridge_available,
-        missing_packages,
-        diagnostics,
-        remediation,
-        package_versions,
-    }
-}
-
-impl OcrEngine for PaddleOcrPythonEngine {
-    fn status(&self) -> OcrRuntimeStatus {
-        let bridge_path = bridge_script_path();
-        let bridge_available = bridge_path.exists();
-        let mut diagnostics = vec![format!("OCR bridge: {}", display_path(&bridge_path))];
-        let mut first_python_path: Option<String> = None;
-        let mut first_python_source: Option<String> = None;
-        let mut missing_packages: Vec<String> = Vec::new();
-        let mut package_versions: BTreeMap<String, String> = BTreeMap::new();
-
-        for candidate in python_candidates() {
-            let display = display_path(&candidate.path);
-            if !should_try_candidate(&candidate.path) {
-                diagnostics.push(format!("Skipped missing Python candidate: {display}"));
-                continue;
-            }
-
-            let output = match Command::new(&candidate.path)
-                .arg("-c")
-                .arg(IMPORT_CHECK_SCRIPT)
-                .output()
-            {
-                Ok(output) => output,
-                Err(err) => {
-                    diagnostics.push(format!(
-                        "Failed to run Python candidate {display} ({}): {err}",
-                        candidate.source
-                    ));
-                    continue;
-                }
-            };
-
-            let payload = match parse_check_payload(&output.stdout) {
-                Ok(payload) => payload,
-                Err(err) => {
-                    let stderr = String::from_utf8_lossy(&output.stderr).trim().to_string();
-                    diagnostics.push(format!(
-                        "Invalid health check response from {display} ({}): {err}; stderr: {stderr}",
-                        candidate.source
-                    ));
-                    continue;
-                }
-            };
-
-            let resolved_python = payload
-                .executable
-                .clone()
-                .unwrap_or_else(|| display.clone());
-
-            if first_python_path.is_none() {
-                first_python_path = Some(resolved_python.clone());
-                first_python_source = Some(candidate.source.clone());
-            }
-
-            for (name, version) in &payload.versions {
-                package_versions
-                    .entry(name.clone())
-                    .or_insert_with(|| version.clone());
-            }
-
-            if output.status.success() && payload.missing.is_empty() && bridge_available {
-                diagnostics.push(format!(
-                    "OCR runtime ready from {}: {resolved_python}",
-                    candidate.source
-                ));
-                return OcrRuntimeStatus {
-                    available: true,
-                    python_path: Some(resolved_python),
-                    python_source: Some(candidate.source),
-                    bridge_path: display_path(&bridge_path),
-                    bridge_available,
-                    missing_packages: Vec::new(),
-                    diagnostics,
-                    remediation: "OCR runtime is ready.".to_string(),
-                    package_versions: payload.versions,
-                };
-            }
-
-            if !payload.missing.is_empty() {
-                diagnostics.push(format!(
-                    "Python candidate {display} ({}) is missing packages: {}",
-                    candidate.source,
-                    payload.missing.join(", ")
-                ));
-                for package in payload.missing {
-                    push_unique_missing(&mut missing_packages, package);
-                }
-            } else if !bridge_available {
-                diagnostics.push("Python runtime is ready, but OCR bridge is missing.".to_string());
-            }
-        }
-
-        unavailable_status(
-            &bridge_path,
-            bridge_available,
-            first_python_path,
-            first_python_source,
-            missing_packages,
-            diagnostics,
-            package_versions,
-        )
-    }
-
-    fn run(&self, request_id: u32, payload: PaddleOcrRequest) -> Result<PaddleOcrResponse, String> {
-        let status = self.status();
-        if !status.available {
-            return Err(format!("OCR runtime unavailable: {}", status.remediation));
-        }
-        let python_path = status
-            .python_path
-            .ok_or_else(|| "OCR runtime unavailable: no Python executable resolved".to_string())?;
-
-        // Decode base64 image into a temp file so the Python script can read it.
-        let image_bytes = base64::engine::general_purpose::STANDARD
-            .decode(&payload.image_base64)
-            .map_err(|e| format!("base64 decode error: {e}"))?;
-
-        let ts = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .map(|d| d.as_millis())
-            .unwrap_or(0);
-        let tmp_path = std::env::temp_dir().join(format!("pdfluent_ocr_{ts}_{request_id}.png"));
-
-        use std::io::Write as _;
-        let mut tmp_file = std::fs::File::create(&tmp_path)
-            .map_err(|e| format!("create temp image error: {e}"))?;
-        tmp_file
-            .write_all(&image_bytes)
-            .map_err(|e| format!("write temp image error: {e}"))?;
-        drop(tmp_file);
-
-        let mut cmd = Command::new(python_path);
-        cmd.arg(bridge_script_path());
-        cmd.arg("--input-image").arg(&tmp_path);
-        cmd.arg("--language").arg(&payload.language);
-        cmd.arg("--include-structure")
-            .arg(if payload.include_structure { "1" } else { "0" });
-        cmd.arg("--preprocess-mode").arg(&payload.preprocess_mode);
-
-        if let Some(ref steps) = payload.preprocess_steps {
-            if !steps.is_empty() {
-                cmd.arg("--preprocess-steps").arg(steps.join(","));
-            }
-        }
-
-        if let Some(threshold) = payload.auto_confidence_threshold {
-            cmd.arg("--auto-confidence-threshold")
-                .arg(threshold.to_string());
-        }
-
-        let output = match cmd.output() {
-            Ok(output) => output,
-            Err(err) => {
-                let _ = std::fs::remove_file(&tmp_path);
-                return Err(format!("failed to spawn OCR bridge: {err}"));
-            }
+impl ComponentTesseract {
+    /// An engine for `languages` (Tesseract tags such as `eng`, `nld`),
+    /// refused when one of them is not installed. The binary is asked for its
+    /// version once here, so a broken component fails before any page is
+    /// rendered.
+    pub fn new(installed: &Installed, languages: &[String]) -> Result<Self, String> {
+        installed.require_languages(languages)?;
+        let engine = Self {
+            binary: installed.binary.clone(),
+            tessdata: installed.tessdata.clone(),
+            language: languages.join("+"),
         };
+        let output = engine
+            .command()
+            .arg("--version")
+            .stdin(Stdio::null())
+            .output()
+            .map_err(|e| format!("{ERR_ENGINE}: could not start Tesseract: {e}"))?;
+        if !output.status.success() {
+            return Err(format!(
+                "{ERR_ENGINE}: Tesseract --version exited with {}",
+                output.status
+            ));
+        }
+        Ok(engine)
+    }
 
-        let _ = std::fs::remove_file(&tmp_path);
+    pub fn language(&self) -> &str {
+        &self.language
+    }
 
+    fn command(&self) -> Command {
+        let mut command = Command::new(&self.binary);
+        // The language data is the component's own, never a system copy.
+        command.env("TESSDATA_PREFIX", &self.tessdata);
+        // One thread per process: the app already keeps the machine busy
+        // rendering, and an OpenMP build otherwise takes every core.
+        command.env("OMP_THREAD_LIMIT", "1");
+        #[cfg(windows)]
+        {
+            use std::os::windows::process::CommandExt as _;
+            // CREATE_NO_WINDOW: no console window flashes up per page.
+            command.creation_flags(0x0800_0000);
+        }
+        command
+    }
+}
+
+impl OcrEngine for ComponentTesseract {
+    fn recognize(
+        &self,
+        image_data: &[u8],
+        width: u32,
+        height: u32,
+        dpi: u32,
+    ) -> Result<OcrPageResult, String> {
+        let png = encode_png(image_data, width, height)?;
+        let mut child = self
+            .command()
+            .arg("stdin")
+            .arg("stdout")
+            .arg("--tessdata-dir")
+            .arg(&self.tessdata)
+            // `-c tessedit_create_tsv=1`, not the `tsv` config name: the
+            // component ships no configs folder, and a missing config makes
+            // Tesseract print a warning and an empty page with exit 0.
+            .args(["--dpi", &dpi.to_string(), "-l", &self.language, "-c", "tessedit_create_tsv=1"])
+            .stdin(Stdio::piped())
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped())
+            .spawn()
+            .map_err(|e| format!("{ERR_ENGINE}: could not start Tesseract: {e}"))?;
+        // Written from a thread: a page large enough to fill the pipe buffer
+        // would otherwise deadlock against Tesseract writing its output.
+        let mut stdin = child
+            .stdin
+            .take()
+            .ok_or_else(|| format!("{ERR_ENGINE}: no pipe to Tesseract"))?;
+        let writer = std::thread::spawn(move || stdin.write_all(&png));
+        let output = child
+            .wait_with_output()
+            .map_err(|e| format!("{ERR_ENGINE}: Tesseract did not finish: {e}"))?;
+        writer
+            .join()
+            .map_err(|_| format!("{ERR_ENGINE}: the page could not be handed to Tesseract"))?
+            .map_err(|e| format!("{ERR_ENGINE}: the page could not be handed to Tesseract: {e}"))?;
         if !output.status.success() {
             let stderr = String::from_utf8_lossy(&output.stderr);
-            return Err(format!("OCR bridge exited with error: {stderr}"));
+            return Err(format!(
+                "{ERR_ENGINE}: Tesseract exited with {}: {}",
+                output.status,
+                stderr.trim()
+            ));
         }
-
         let stdout = String::from_utf8_lossy(&output.stdout);
-        let response: PaddleOcrResponse = serde_json::from_str(&stdout)
-            .map_err(|e| format!("OCR JSON parse error: {e}\nraw: {stdout}"))?;
+        // A run that produced no TSV at all is a failure, never "a page with
+        // no words" (exit 0 with an unreadable config looked exactly so).
+        if !stdout.starts_with("level\t") {
+            return Err(format!(
+                "{ERR_ENGINE}: Tesseract produced no recognition output: {}",
+                String::from_utf8_lossy(&output.stderr).lines().find(|l| !l.starts_with("Error in")).unwrap_or("no message").trim()
+            ));
+        }
+        let words = pdf_ocr::tesseract_cli::parse_tsv(&stdout);
+        let confidence = if words.is_empty() {
+            0.0
+        } else {
+            words.iter().map(|w| w.confidence).sum::<f32>() / words.len() as f32
+        };
+        Ok(OcrPageResult {
+            words,
+            confidence,
+            image_width: width,
+            image_height: height,
+        })
+    }
 
-        Ok(response)
+    fn supported_languages(&self) -> Vec<String> {
+        self.language.split('+').map(str::to_string).collect()
     }
 }
 
-pub fn get_ocr_status_command() -> OcrRuntimeStatus {
-    PaddleOcrPythonEngine.status()
+/// RGBA or RGB row-major pixels as a PNG.
+fn encode_png(pixels: &[u8], width: u32, height: u32) -> Result<Vec<u8>, String> {
+    let count = width as usize * height as usize;
+    let rgb: Vec<u8> = if pixels.len() == count * 4 {
+        pixels
+            .as_chunks::<4>()
+            .0
+            .iter()
+            .flat_map(|px| [px[0], px[1], px[2]])
+            .collect()
+    } else if pixels.len() == count * 3 {
+        pixels.to_vec()
+    } else {
+        return Err(format!(
+            "{ERR_ENGINE}: page image is {} bytes for {width}x{height}",
+            pixels.len()
+        ));
+    };
+    let image = image::RgbImage::from_raw(width, height, rgb)
+        .ok_or_else(|| format!("{ERR_ENGINE}: page image has the wrong size"))?;
+    let mut png = Vec::new();
+    image
+        .write_to(&mut Cursor::new(&mut png), image::ImageFormat::Png)
+        .map_err(|e| format!("{ERR_ENGINE}: could not encode the page image: {e}"))?;
+    Ok(png)
 }
 
-/// Execute the PaddleOCR bridge for a single rendered page image.
-/// `request_id` is reserved for future async/cancel support.
-pub fn run_paddle_ocr_command(
-    request_id: u32,
-    payload: PaddleOcrRequest,
-) -> Result<PaddleOcrResponse, String> {
-    PaddleOcrPythonEngine.run(request_id, payload)
+// ── Text layer ───────────────────────────────────────────────────────────
+
+#[derive(Debug, Clone, Serialize, PartialEq)]
+pub struct OcrPageSummary {
+    /// 1-based page number.
+    pub page: u32,
+    /// False when the page already had text and was left alone.
+    pub recognised: bool,
+    pub words: usize,
+    pub confidence: f32,
+}
+
+/// What a run did, page by page.
+#[derive(Debug, Clone, Serialize, PartialEq)]
+pub struct OcrTextLayerReport {
+    pub pages_considered: usize,
+    pub pages_recognised: usize,
+    pub pages_with_text_already: usize,
+    pub words: usize,
+    pub language: String,
+    pub pages: Vec<OcrPageSummary>,
+}
+
+/// Counts pages through `recognize` so the caller can show progress; the SDK
+/// pipeline has no progress hook of its own.
+struct Counting<'a, E> {
+    inner: &'a E,
+    done: AtomicU32,
+    total: u32,
+    on_page: &'a (dyn Fn(u32, u32) + Sync),
+}
+
+impl<E: OcrEngine> OcrEngine for Counting<'_, E> {
+    fn recognize(&self, image: &[u8], w: u32, h: u32, dpi: u32) -> Result<OcrPageResult, String> {
+        let result = self.inner.recognize(image, w, h, dpi);
+        let done = self.done.fetch_add(1, Ordering::SeqCst) + 1;
+        (self.on_page)(done, self.total);
+        result
+    }
+
+    fn supported_languages(&self) -> Vec<String> {
+        self.inner.supported_languages()
+    }
+}
+
+/// Recognise the scanned pages among `pages` (1-based; empty means all) and
+/// add an invisible text layer to each. Pages that already carry text are
+/// left as they are, so running OCR twice does not double the text.
+///
+/// `render` is the document to rasterise -- the same pages as `doc`; the
+/// layer does not change how a page looks, so a render source from before the
+/// run is the right one.
+pub fn add_text_layer<E: OcrEngine>(
+    doc: &mut lopdf::Document,
+    render: &PdfDocument,
+    engine: &E,
+    pages: &[u32],
+    language: &str,
+    on_page: &(dyn Fn(u32, u32) + Sync),
+) -> Result<OcrTextLayerReport, String> {
+    let page_count = doc.get_pages().len() as u32;
+    for &p in pages {
+        if p == 0 || p > page_count {
+            return Err(format!("{ERR_PAGE}:{p}"));
+        }
+    }
+    let considered = if pages.is_empty() { page_count } else { pages.len() as u32 };
+    let config = pdf_ocr::OcrConfig {
+        dpi: OCR_DPI,
+        pages: pages.to_vec(),
+        ..Default::default()
+    };
+    let counting = Counting {
+        inner: engine,
+        done: AtomicU32::new(0),
+        total: considered,
+        on_page,
+    };
+    let render_fn = |_: &lopdf::Document, page: u32, dpi: u32| {
+        let options = RenderOptions {
+            dpi: dpi as f64,
+            // The layer sits under what the page shows, annotations included;
+            // recognising a sticky note's icon would only add noise.
+            render_annotations: false,
+            ..Default::default()
+        };
+        render
+            .render_page((page - 1) as usize, &options)
+            .map(|r| (r.pixels, r.width, r.height))
+            .map_err(|e| format!("could not render page {page}: {e}"))
+    };
+    let report = pdf_ocr::make_searchable(doc, &counting, &config, render_fn).map_err(|e| {
+        let message = e.to_string();
+        if message.starts_with(ERR_ENGINE) {
+            message
+        } else {
+            format!("{ERR_ENGINE}: {message}")
+        }
+    })?;
+    let pages: Vec<OcrPageSummary> = report
+        .pages
+        .iter()
+        .map(|p| OcrPageSummary {
+            page: p.page,
+            recognised: p.ocr_needed,
+            words: p.words_recognized,
+            confidence: p.confidence,
+        })
+        .collect();
+    Ok(OcrTextLayerReport {
+        pages_considered: pages.len(),
+        pages_recognised: report.pages_processed,
+        pages_with_text_already: pages.iter().filter(|p| !p.recognised).count(),
+        words: report.total_words,
+        language: language.to_string(),
+        pages,
+    })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn png_encoding_takes_rgba_and_rgb_and_refuses_the_rest() {
+        let rgba = vec![255u8; 2 * 2 * 4];
+        let rgb = vec![0u8; 2 * 2 * 3];
+        for pixels in [&rgba, &rgb] {
+            let png = encode_png(pixels, 2, 2).unwrap();
+            assert_eq!(&png[1..4], b"PNG");
+        }
+        let err = encode_png(&[0u8; 5], 2, 2).unwrap_err();
+        assert!(err.starts_with(ERR_ENGINE), "{err}");
+    }
+
+    #[test]
+    fn a_missing_language_is_refused_before_tesseract_starts() {
+        let installed = Installed {
+            binary: PathBuf::from("/nonexistent/tesseract"),
+            tessdata: PathBuf::from("/nonexistent/tessdata"),
+            languages: vec!["eng".into()],
+        };
+        let err = ComponentTesseract::new(&installed, &["nld".into()]).unwrap_err();
+        assert!(err.starts_with(crate::ocr_component::ERR_LANGUAGE_MISSING), "{err}");
+    }
+
+    #[test]
+    fn a_component_whose_binary_will_not_start_fails_by_name() {
+        let dir = std::env::temp_dir().join(format!("pdfluent-ocr-nobin-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        std::fs::write(dir.join("eng.traineddata"), b"x").unwrap();
+        let installed = Installed {
+            binary: dir.join("no-such-binary"),
+            tessdata: dir.clone(),
+            languages: vec!["eng".into()],
+        };
+        let err = ComponentTesseract::new(&installed, &["eng".into()]).unwrap_err();
+        assert!(err.starts_with(ERR_ENGINE), "{err}");
+    }
 }

@@ -23,23 +23,29 @@
 // indistinguishable from a control that worked, which is the failure this whole
 // suite is arranged against.
 
+import { execFileSync } from "node:child_process";
 import { describe, it, expect } from "vitest";
 import { runToFile } from "../ci/run";
 import { REPO_ROOT, stageCase, suiteArgs, readReport, rows, type Row } from "./helpers";
-import { walkTargets } from "../../scripts/quality/suite/ui_walk.mjs";
+import { checkExpectedFaults, EXPECTED_WALK_FAULTS, judgeWalkFaults, walkTargets } from "../../scripts/quality/suite/ui_walk.mjs";
 import { buildRegister } from "../../scripts/quality/ui-register.mjs";
 
 const run = (args: string[], env: NodeJS.ProcessEnv = {}) =>
   runToFile("bash", args, { cwd: REPO_ROOT, env: { ...process.env, ...env } });
 
 const TARGETS = walkTargets(REPO_ROOT);
+const HEAD = execFileSync("git", ["rev-parse", "HEAD"], { cwd: REPO_ROOT, encoding: "utf8" }).trim();
 
 /** A walk that reached every control the register lists. */
 function fullWalk(edit: (w: WalkFile) => void = () => {}): string {
   const walk: WalkFile = {
     driver: "fake",
+    build: "ui-walk",
+    marker: "pdfluent-ui-walk-build",
+    built_from: HEAD,
     walked: TARGETS.map((t) => ({ id: t.id, found: true, activated: true, reached: [...t.commands] })),
     not_probed: [],
+    faults: [],
   };
   edit(walk);
   return JSON.stringify(walk, null, 2) + "\n";
@@ -47,13 +53,17 @@ function fullWalk(edit: (w: WalkFile) => void = () => {}): string {
 
 interface WalkFile {
   driver: string;
+  build?: string;
+  marker?: string;
+  built_from?: string;
   walked: { id: string; found: boolean; activated: boolean; reached: string[] }[];
   not_probed: { id: string; reason: string }[];
+  faults?: { control: string; kind: string; text: string; command?: string }[];
 }
 
 /** The per-control rows, without the walk's own coverage row. */
 const walkRows = (json: Record<string, unknown>): Row[] =>
-  rows(json).filter((r) => r.id.startsWith("ui:") && r.id !== "ui:walk-coverage");
+  rows(json).filter((r) => r.id.startsWith("ui:") && r.id !== "ui:walk-coverage" && r.id !== "ui:walk-faults");
 const walkRow = (json: Record<string, unknown>, id: string): Row | undefined =>
   rows(json).find((r) => r.id === `ui:${id}`);
 
@@ -180,4 +190,108 @@ describe("release suite — the UI walk", () => {
     expect(walkRows(json).length).toBe(TARGETS.length);
     for (const row of walkRows(json)) expect(row.status).toBe("SKIPPED");
   });
+
+  // #471, condition 3: a row that does not say which bytes it measured reads as a
+  // statement about the artefact.
+  it("labels every S5 row with the build it measured", () => {
+    const s = staged(fullWalk());
+    expect(run(suiteArgs(s)).status).toBe(0);
+    const all = rows(readReport(s).json).filter((r) => r.id.startsWith("ui:"));
+    expect(all.length).toBeGreaterThan(TARGETS.length);
+    for (const row of all) {
+      expect(row.reason, `${row.id} does not say what it measured`)
+        .toContain(`measured on the ui-walk build of ${HEAD.slice(0, 12)}, not on the shipped bytes`);
+    }
+  });
+
+  it("does not accept a probe that does not say it came from the ui-walk build", () => {
+    const s = staged(fullWalk((w) => { delete w.build; delete w.marker; }));
+    expect(run(suiteArgs(s)).status).toBe(3);
+    const r = walkRow(readReport(s).json, TARGETS[0].id)!;
+    expect(r.status).toBe("SKIPPED");
+    expect(r.reason).toContain("does not say it was measured on the ui-walk build");
+  });
+
+  // Condition 4: one commit in one run.
+  it("does not accept a walk built from another commit than the artefact", () => {
+    const s = staged(fullWalk((w) => { w.built_from = "0".repeat(40); }));
+    expect(run(suiteArgs(s)).status).toBe(3);
+    const r = walkRow(readReport(s).json, TARGETS[0].id)!;
+    expect(r.status).toBe("SKIPPED");
+    expect(r.reason).toContain("proves nothing about this one");
+  });
 });
+
+// The walk presses every control on a real document. An error the app puts on
+// screen or in the console while it does is what a person pressing the same
+// control would see; the walk used to count only whether something happened.
+describe("release suite — the UI walk and the errors it saw", () => {
+  const faultRow = (s: string) => rows(readReport(s).json).find((r) => r.id === "ui:walk-faults")!;
+
+  it("passes with a row that says no errors were seen", () => {
+    const s = staged(fullWalk());
+    expect(run(suiteArgs(s)).status).toBe(0);
+    const row = faultRow(s);
+    expect(row.status).toBe("PASS");
+  });
+
+  it("fails the walk on an error toast, naming the control and the command", () => {
+    const control = TARGETS[3].id;
+    const s = staged(fullWalk((w) => {
+      w.faults = [{ control, kind: "error-toast", command: "ocr_component_status", text: "'ocr_component_status' did not complete \u2014 No resource folder for the OCR component" }];
+    }));
+    expect(run(suiteArgs(s)).status).toBe(1);
+    const { json } = readReport(s);
+    expect(json.verdict).toBe("FAIL");
+    const row = faultRow(s);
+    expect(row.status).toBe("FAIL");
+    expect(row.reason).toContain("ocr_component_status");
+    expect(row.reason).toContain(control);
+    // The control's own row is not blamed for it.
+    expect(walkRow(json, control)!.status).toBe("PASS");
+  });
+
+  it("fails on a console error and on an error from before the first control", () => {
+    const s = staged(fullWalk((w) => {
+      w.faults = [{ control: "(start)", kind: "console-error", text: "Warning: Maximum update depth exceeded" }];
+    }));
+    expect(run(suiteArgs(s)).status).toBe(1);
+    expect(faultRow(s).reason).toContain("(start)");
+  });
+
+  it("does not take a probe that never looked for errors as a clean walk", () => {
+    const s = staged(fullWalk((w) => { delete w.faults; }));
+    expect(run(suiteArgs(s)).status).toBe(3);
+    const row = faultRow(s);
+    expect(row.status).toBe("SKIPPED");
+    expect(row.reason).toMatch(/did not report the errors/);
+  });
+
+  it("leaves the row when the walk did not run at all", () => {
+    const s = stageCase("good");
+    run(suiteArgs(s), { FAKE_MISSING_PROBE: "ui_walk" });
+    expect(faultRow(s).status).toBe("SKIPPED");
+  });
+
+  describe("what the walk may expect", () => {
+    const toast = { control: "button:x", kind: "error-toast", command: "save_pdf", text: "'save_pdf' did not complete" };
+
+    it("expects nothing today: a bug is fixed, not listed", () => {
+      expect(EXPECTED_WALK_FAULTS).toEqual([]);
+    });
+
+    it("lets an expectation through only when it matches, and counts the rest", () => {
+      const expected = [{ control: "button:x", command: "save_pdf", reason: "this control saves into a folder the walk made read-only" }];
+      expect(judgeWalkFaults([toast], expected)).toEqual({ unexpected: [], allowed: [toast] });
+      const other = { ...toast, control: "button:y" };
+      expect(judgeWalkFaults([toast, other], expected).unexpected).toEqual([other]);
+    });
+
+    it("refuses an expectation without a reason or without anything to match", () => {
+      expect(checkExpectedFaults([{ command: "save_pdf", reason: "short" }]).join()).toMatch(/needs a written reason/);
+      expect(checkExpectedFaults([{ reason: "a reason that is long enough to count" }]).join()).toMatch(/would allow every fault/);
+      expect(checkExpectedFaults([{ command: "save_pdf", reason: "a reason that is long enough to count" }])).toEqual([]);
+    });
+  });
+});
+

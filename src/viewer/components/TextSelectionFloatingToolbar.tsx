@@ -182,7 +182,7 @@ export const TextSelectionFloatingToolbar = memo(function TextSelectionFloatingT
             className="flex items-center gap-2 w-full px-2 py-1 text-xs text-foreground hover:bg-muted rounded-md transition-colors cursor-pointer"
           >
             <PencilIcon className="w-3.5 h-3.5 text-muted-foreground" />
-            {t('textContext.editText') || 'Bewerk tekst'}
+            {t('textContext.editText') || 'Edit text'}
           </button>
         )}
         <button

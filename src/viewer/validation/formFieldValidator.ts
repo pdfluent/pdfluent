@@ -53,7 +53,7 @@ export function validateFormFieldValue(
       if (trimmed.length > FORM_FIELD_TEXT_MAX_LENGTH) {
         return {
           valid: false,
-          error: `Tekstveld te lang (max ${FORM_FIELD_TEXT_MAX_LENGTH} tekens)`,
+          error: `Text field too long (max ${FORM_FIELD_TEXT_MAX_LENGTH} characters)`,
           sanitized: trimmed.slice(0, FORM_FIELD_TEXT_MAX_LENGTH),
         };
       }
@@ -62,7 +62,7 @@ export function validateFormFieldValue(
     case 'checkbox': {
       const allowed = ['on', 'off', 'true', 'false'];
       if (!allowed.includes(trimmed.toLowerCase())) {
-        return { valid: false, error: 'Ongeldige checkbox-waarde', sanitized: '' };
+        return { valid: false, error: 'Invalid checkbox value', sanitized: '' };
       }
       return { valid: true, sanitized: trimmed.toLowerCase() };
     }
@@ -70,7 +70,7 @@ export function validateFormFieldValue(
     case 'number': {
       const n = Number(trimmed);
       if (!Number.isFinite(n)) {
-        return { valid: false, error: 'Geen geldig getal', sanitized: '' };
+        return { valid: false, error: 'Not a valid number', sanitized: '' };
       }
       return { valid: true, sanitized: String(n) };
     }
@@ -78,7 +78,7 @@ export function validateFormFieldValue(
     case 'radio':
     case 'select':
       if (trimmed === '') {
-        return { valid: false, error: 'Veld mag niet leeg zijn', sanitized: '' };
+        return { valid: false, error: 'The field must not be empty', sanitized: '' };
       }
       return { valid: true, sanitized: trimmed };
 

@@ -140,7 +140,7 @@ export function validateImageReplace(
     return {
       valid: false,
       reasonCode: 'not-replaceable',
-      message: 'Dit object ondersteunt geen afbeeldingsvervanging.',
+      message: 'This object does not support image replacement.',
     };
   }
 
@@ -148,7 +148,7 @@ export function validateImageReplace(
     return {
       valid: false,
       reasonCode: 'not-image-type',
-      message: 'Alleen afbeeldingsobjecten kunnen worden vervangen.',
+      message: 'Only image objects can be replaced.',
     };
   }
 
@@ -156,7 +156,7 @@ export function validateImageReplace(
     return {
       valid: false,
       reasonCode: 'unsupported-mime-type',
-      message: `Afbeeldingstype '${mimeType}' wordt niet ondersteund. Gebruik PNG, JPEG of WebP.`,
+      message: `Image type '${mimeType}' is not supported. Use PNG, JPEG or WebP.`,
     };
   }
 
@@ -164,7 +164,7 @@ export function validateImageReplace(
     return {
       valid: false,
       reasonCode: 'image-data-empty',
-      message: 'Er zijn geen afbeeldingsgegevens opgegeven.',
+      message: 'No image data was provided.',
     };
   }
 
@@ -172,7 +172,7 @@ export function validateImageReplace(
     return {
       valid: false,
       reasonCode: 'invalid-dimensions',
-      message: 'Ongeldige afbeeldingsafmetingen. Breedte en hoogte moeten positief zijn.',
+      message: 'Invalid image dimensions. Width and height must be positive.',
     };
   }
 
@@ -296,7 +296,7 @@ export function interpretReplaceResult(
       outcome: 'backend-error',
       updatedObject: null,
       reasonCode: ipcResult.error?.code ?? 'unknown-backend-error',
-      message: ipcResult.error?.message ?? 'Onbekende fout bij afbeeldingsvervanging.',
+      message: ipcResult.error?.message ?? 'Unknown error while replacing the image.',
     };
   }
 
@@ -304,6 +304,6 @@ export function interpretReplaceResult(
     outcome: 'replaced',
     updatedObject: { id: originalObj.id, pageIndex: originalObj.pageIndex },
     reasonCode: 'ok',
-    message: 'Afbeelding succesvol vervangen.',
+    message: 'Image replaced.',
   };
 }

@@ -114,9 +114,9 @@
     "allTools": "Tutti gli strumenti",
     "contextualBar": "Barra degli strumenti modalità",
     "pdfa": "PDF/A",
-    "metadata": "Document properties",
-    "invoice": "E-invoice",
-    "bookmarks": "Bookmarks"
+    "metadata": "Proprietà documento",
+    "invoice": "Fattura elettronica",
+    "bookmarks": "Segnalibri"
   },
   "topbar": {
     "openPdf": "Apri PDF",
@@ -242,7 +242,6 @@
     "ownerPasswordPlaceholder": "Password proprietario",
     "encryptBtn": "Crittografa…",
     "decrypt": "Decrittografa",
-    "currentPasswordPlaceholder": "Password corrente",
     "decryptBtn": "Decrittografa",
     "noDocument": "Nessun documento aperto.",
     "permCanPrint": "Stampa",
@@ -258,7 +257,11 @@
     "searchRedactBtn": "Cerca e oscura",
     "redactMetadataTitle": "Metadati",
     "redactMetadataDesc": "Rimuovi autore, titolo e altri metadati identificativi.",
-    "redactMetadataBtn": "Rimuovi metadati"
+    "redactMetadataBtn": "Rimuovi metadati",
+    "ownerPasswordForRemoval": "Password del proprietario (permessi)",
+    "removePasswordHelp": "Per rimuovere una password serve la password del proprietario, quella che protegge i permessi. La password con cui hai aperto il file non basta, a meno che non sia anche la password del proprietario.",
+    "removePasswordReady": "Hai aperto questo file con la password del proprietario, quindi la protezione può essere rimossa senza digitarla di nuovo.",
+    "removePasswordNotProtected": "Questo documento non è protetto da password."
   },
   "organize": {
     "thumbnails": "Miniature",
@@ -287,33 +290,34 @@
     "combine": "Unisci file",
     "splitRange": "Dividi per intervallo",
     "splitRangeHint": "Seleziona prima le pagine",
-    "moveLeft": "Move selected page left",
-    "moveRight": "Move selected page right",
-    "moveLeftShort": "Left",
-    "moveRightShort": "Right",
-    "rotateLeft": "Rotate left",
-    "rotateRight": "Rotate right",
-    "rotateLeftShort": "Left",
-    "rotateRightShort": "Right",
-    "addingPdf": "Adding PDF…",
-    "pdfAdded": "PDF added",
-    "combiningFiles": "Combining {{count}} file(s)…",
-    "filesCombined": "{{count}} file(s) combined",
-    "insertingPdf": "Inserting PDF before page {{page}}…",
-    "pdfInserted": "PDF inserted",
-    "exportingPages": "Exporting {{count}} page(s)…",
-    "selectionExported": "Selection exported to {{name}}",
-    "splittingPages": "Splitting into individual pages…",
-    "pagesSaved": "{{count}} pages saved",
-    "splittingRanges": "Splitting {{count}} range(s)…",
-    "filesSaved": "{{count}} file(s) saved"
+    "moveLeft": "Sposta la pagina selezionata a sinistra",
+    "moveRight": "Sposta la pagina selezionata a destra",
+    "moveLeftShort": "Sinistra",
+    "moveRightShort": "Destra",
+    "rotateLeft": "Ruota a sinistra",
+    "rotateRight": "Ruota a destra",
+    "rotateLeftShort": "Sinistra",
+    "rotateRightShort": "Destra",
+    "addingPdf": "Aggiunta PDF…",
+    "pdfAdded": "PDF aggiunto",
+    "combiningFiles": "Unione di {{count}} file…",
+    "filesCombined": "{{count}} file uniti",
+    "insertingPdf": "Inserimento PDF prima della pagina {{page}}…",
+    "pdfInserted": "PDF inserito",
+    "exportingPages": "Esportazione di {{count}} pagina/e…",
+    "selectionExported": "Selezione esportata in {{name}}",
+    "splittingPages": "Divisione in pagine singole…",
+    "pagesSaved": "{{count}} pagine salvate",
+    "splittingRanges": "Divisione di {{count}} intervallo/i…",
+    "filesSaved": "{{count}} file salvati"
   },
   "unsavedChanges": {
     "title": "Modifiche non salvate",
     "message": "Desideri salvare le modifiche prima di continuare?",
     "save": "Salva",
     "discard": "Scarta",
-    "cancel": "Annulla"
+    "cancel": "Annulla",
+    "messageNamed": "Vuoi salvare le modifiche apportate a {{name}} prima di continuare?"
   },
   "welcome": {
     "title": "Apri un PDF per iniziare",
@@ -327,13 +331,13 @@
     "lede": "Leggi, modifica, converti, compila e firma — completamente sul tuo dispositivo.",
     "privacyPromise": "Privacy-first · i documenti non lasciano mai questo dispositivo",
     "dropPdfHere": "Rilascia il PDF qui",
-    "v3Subtitle": "Open a PDF to read, edit, convert or sign it locally.",
-    "openFileAria": "Choose a PDF file to open",
-    "clearRecent": "Clear recent",
-    "recentShort": "Recent",
-    "removeRecentAria": "Remove {{name}}",
-    "backToDocument": "Back to document",
-    "loadingDocument": "Loading document…"
+    "v3Subtitle": "Apri un PDF per leggerlo, modificarlo, convertirlo o firmarlo localmente.",
+    "openFileAria": "Scegli un file PDF da aprire",
+    "clearRecent": "Cancella recenti",
+    "recentShort": "Recenti",
+    "removeRecentAria": "Rimuovi {{name}}",
+    "backToDocument": "Torna al documento",
+    "loadingDocument": "Caricamento documento…"
   },
   "settings": {
     "language": "Lingua",
@@ -350,15 +354,29 @@
     "reviewerNamePlaceholder": "Nome usato nelle annotazioni",
     "exportPreferences": "Preferenze esportazione",
     "exportFormatLabel": "Formato esportazione predefinito",
-    "autosave": "Salvataggio automatico",
-    "autosaveEnable": "Salva modifiche automaticamente",
     "themeLabel": "Tema",
     "ocrDefaults": "Impostazioni predefinite OCR",
     "ocrLanguageLabel": "Lingua predefinita (ISO-639-2)",
     "ocrLanguagePlaceholder": "es. eng, nld, deu",
-    "updates": "Updates",
-    "automaticUpdateCheck": "Check for a new version at startup",
-    "automaticUpdateCheckHint": "PDFluent asks pdfluent.com whether a newer version exists, a few seconds after it starts. Nothing from your documents is sent. Turn this off and the app never checks on its own — \"Check for updates\" still works whenever you ask for it."
+    "updates": "Aggiornamenti",
+    "automaticUpdateCheck": "Cerca una nuova versione all'avvio",
+    "automaticUpdateCheckHint": "PDFluent chiede a pdfluent.com se esiste una versione più recente, pochi secondi dopo l'avvio. Niente dei tuoi documenti viene inviato. Disattiva questa opzione e l'app non controllerà mai da sola — \"Controlla aggiornamenti\" funziona comunque quando lo richiedi.",
+    "recoveryCopy": "Copia di recupero",
+    "recoveryCopyEnable": "Conserva una copia di recupero delle modifiche non salvate, proposta dopo un arresto anomalo",
+    "view": "Visualizza",
+    "defaultZoomLabel": "Zoom predefinito",
+    "defaultZoomFitWidth": "Adatta larghezza (predefinito)",
+    "defaultZoomFitPage": "Adatta pagina",
+    "defaultZoomActualSize": "Dimensioni reali (100%)",
+    "defaultZoomLastUsed": "Ultimo utilizzo",
+    "defaultZoomHint": "Un documento si apre con questo zoom e segue la finestra finché non modifichi lo zoom manualmente. Adatta larghezza mostra invece l'intera pagina quando è chiaramente più adatta.",
+    "securityTitle": "Sicurezza",
+    "formScriptsLabel": "Script del modulo",
+    "formScriptsAsk": "Chiedi",
+    "formScriptsAlways": "Sempre",
+    "formScriptsNever": "Mai",
+    "formScriptsHint": "I moduli possono contenere script, ad esempio calcoli. Chiedi è l'impostazione predefinita: un modulo si apre con i valori memorizzati e non viene eseguito nulla finché non acconsenti.",
+    "formScriptsPinned": "La tua organizzazione ha impostato questa scelta. Non può essere modificata qui."
   },
   "errors": {
     "loadFailed": "Caricamento documento fallito",
@@ -381,7 +399,8 @@
     "addPageFailed": "Aggiunta PDF fallita",
     "insertFailed": "Inserimento fallito",
     "splitFailed": "Divisione fallita",
-    "commandFailedTitle": "'{{command}}' did not complete"
+    "commandFailedTitle": "'{{command}}' non è stato completato",
+    "commandRetrying": "Errore temporaneo in {{command}}: nuovo tentativo"
   },
   "events": {
     "formFieldUpdated": "Campo modulo aggiornato",
@@ -430,9 +449,9 @@
     "pageNotFound": "Pagina non trovata",
     "requiresFontInspection": "La modifica del testo richiede ispezione font (pianificato per fase 6).",
     "rejection": {
-      "bannerTitle": "This text was not changed",
-      "bannerDetail": "Reason reported by the PDF engine: {{detail}}",
-      "bannerDismiss": "Dismiss",
+      "bannerTitle": "Questo testo non è stato modificato",
+      "bannerDetail": "Motivo segnalato dal motore PDF: {{detail}}",
+      "bannerDismiss": "Ignora",
       "replacement-too-long": {
         "tooltip": "Replacement is too long",
         "explanation": "The replacement is longer than the text it replaces. Keep it the same length or shorter so the surrounding layout stays intact."
@@ -491,8 +510,8 @@
       }
     },
     "fallback": {
-      "fontSubstitutedTitle": "A standard font wrote the new text",
-      "fontSubstitutedMessage": "The original font of this text has no glyph for one or more characters you typed, so Helvetica was used for the replacement. The text is correct; it may look slightly different from the rest of the line."
+      "fontSubstitutedTitle": "Un font standard ha scritto il nuovo testo",
+      "fontSubstitutedMessage": "Il font originale di questo testo non ha un glifo per uno o più caratteri che hai digitato, quindi per la sostituzione è stato usato Helvetica. Il testo è corretto; potrebbe apparire leggermente diverso dal resto della riga."
     }
   },
   "validation": {
@@ -566,12 +585,16 @@
     "watermarkDone": "Filigrana aggiunta",
     "watermarkFailed": "Filigrana non riuscita",
     "watermarkRunning": "Aggiunta filigrana…",
-    "pdfaRunning": "Converting to PDF/A…",
-    "pdfaDone": "PDF/A written",
-    "pdfaFailed": "PDF/A conversion failed",
-    "metadataRunning": "Saving properties…",
-    "metadataDone": "Properties saved",
-    "metadataFailed": "Could not save properties"
+    "pdfaRunning": "Conversione in PDF/A…",
+    "pdfaDone": "PDF/A salvato",
+    "pdfaFailed": "Conversione PDF/A fallita",
+    "metadataRunning": "Salvataggio proprietà…",
+    "metadataDone": "Proprietà salvate",
+    "metadataFailed": "Impossibile salvare le proprietà",
+    "exportMarkdownRunning": "Esportazione in Markdown…",
+    "exportMarkdownDone": "Markdown esportato",
+    "exportTablesRunning": "Esportazione tabelle in Excel…",
+    "exportTablesDone": "Tabelle esportate in Excel ({{count}})"
   },
   "panels": {
     "search": "Cerca",
@@ -714,7 +737,10 @@
     "formatJpeg": "JPEG (immagine)",
     "formatDocx": "Documento Word (.docx)",
     "formatXlsx": "Foglio di calcolo Excel (.xlsx)",
-    "formatPptx": "Presentazione PowerPoint (.pptx)"
+    "formatPptx": "Presentazione PowerPoint (.pptx)",
+    "formatMarkdown": "Markdown (.md) - Anteprima",
+    "formatTablesXlsx": "Tabelle in Excel (.xlsx) - Anteprima",
+    "noTablesFound": "Nessuna tabella riconosciuta in questo documento."
   },
   "goToPage": {
     "title": "Vai a pagina",
@@ -729,7 +755,9 @@
     "documentLabel": "Documento:",
     "savedLabel": "Salvato:",
     "recoveryPath": "Percorso recupero:",
-    "restore": "Ripristina"
+    "restore": "Ripristina",
+    "untitled": "Documento senza titolo",
+    "andMore": "{{name}} e altri {{count}}"
   },
   "emptyStates": {
     "noDocument": "Nessun documento aperto",
@@ -839,7 +867,26 @@
     "statusUnavailableWithReason": "Runtime OCR non disponibile: {{reason}}",
     "statusRetry": "Controlla di nuovo",
     "runtimePath": "Runtime: {{path}}",
-    "missingPackages": "Mancanti: {{packages}}"
+    "missingPackages": "Mancanti: {{packages}}",
+    "noScannedPagesTitle": "Niente da riconoscere",
+    "unavailable": {
+      "platform": "L'OCR non è disponibile per questa piattaforma.",
+      "missing": "I file OCR di questa versione mancano o sono incompleti. Reinstalla PDFluent per ripristinarli."
+    },
+    "settings": {
+      "unknown": "Componente OCR: verifica in corso…",
+      "installed": "Componente OCR: Tesseract {{version}} installato"
+    },
+    "errors": {
+      "OCR_COMPONENT_UNSUPPORTED_PLATFORM": "Il componente OCR non è offerto per questa piattaforma.",
+      "OCR_COMPONENT_NOT_INSTALLED": "Il componente OCR non è installato.",
+      "OCR_LANGUAGE_MISSING": "Un pacchetto lingua per l'OCR non è installato.",
+      "OCR_SIGNED_DOCUMENT": "Questo documento è firmato. L'OCR modificherebbe le pagine firmate, quindi non viene eseguito.",
+      "OCR_NOT_PERMITTED": "I permessi del documento non consentono di modificarne il contenuto.",
+      "OCR_DOCUMENT_CHANGED": "Il documento è cambiato durante l'esecuzione dell'OCR. Esegui di nuovo l'OCR.",
+      "OCR_ENGINE_FAILED": "L'OCR si è interrotto con un errore.",
+      "OCR_PAGE_OUT_OF_RANGE": "Una pagina da riconoscere non è presente nel documento."
+    }
   },
   "docInfo": {
     "title": "Titolo",
@@ -879,7 +926,17 @@
     "italicComingSoon": "Formattazione corsivo in arrivo",
     "sourceDigital": "Livello testo PDF",
     "sourceOcr": "OCR",
-    "browserLimitedNote": "Fai clic su testo nella pagina per modificare il testo PDF supportato. Immagini e link sono disponibili nell'app desktop."
+    "browserLimitedNote": "Fai clic su testo nella pagina per modificare il testo PDF supportato. Immagini e link sono disponibili nell'app desktop.",
+    "typeface": {
+      "label": "Tipo di carattere",
+      "default": "Carattere del documento",
+      "noEmbed": "{{family}}: la licenza del carattere non ne consente l'incorporamento in un PDF",
+      "refusedLicence": "{{family}} non può essere usato: la sua licenza non ne consente l'incorporamento in un PDF. Scegli un altro tipo di carattere.",
+      "refusedGlyphs": "{{family}} non ha glifi per {{characters}}. Scegli un altro tipo di carattere.",
+      "refusedGone": "Quel tipo di carattere non è più installato. Scegline un altro.",
+      "refusedText": "Il testo da ristilizzare non è più sulla pagina.",
+      "refusedUnusable": "Impossibile leggere {{family}} come carattere. Scegli un altro tipo di carattere."
+    }
   },
   "rightPanel": {
     "properties": "Proprietà",
@@ -944,9 +1001,12 @@
     "flatten": "Appiattisci XFA",
     "flattenDone": "XFA appiattito. Esporta il PDF per scaricare la versione statica.",
     "flattenFailed": "Appiattimento XFA fallito",
-    "convertToStandard": "Convert to standard PDF",
-    "convertedToStandard": "XFA converted to standard PDF",
-    "convertFailed": "Conversion failed: {{message}}"
+    "convertToStandard": "Converti in PDF standard",
+    "convertedToStandard": "XFA convertito in PDF standard",
+    "convertFailed": "Conversione non riuscita: {{message}}",
+    "bannerTitle": "Modulo XFA",
+    "bannerBody": "Questo modulo XFA viene mostrato così com'è. Per compilarne, modificarne o cercarne i campi, convertilo in un PDF standard.",
+    "bannerBodyExperimental": "Questo modulo XFA viene mostrato così com'è. La compilazione dei campi è sperimentale; convertilo in un PDF standard per compilarlo, modificarlo e cercarvi in modo affidabile."
   },
   "security": {
     "activeContentBadge": "Bloccato",
@@ -970,7 +1030,8 @@
     "highlight": "Evidenzia",
     "strikethrough": "Barrato",
     "underline": "Sottolinea",
-    "copyText": "Copia testo"
+    "copyText": "Copia testo",
+    "copied": "Copiato"
   },
   "update": {
     "available": "Aggiornamento disponibile",
@@ -980,10 +1041,10 @@
     "installing": "Installazione…",
     "checkFailed": "Controllo aggiornamento fallito",
     "upToDate": "Stai usando la versione più recente",
-    "installed": "Update installed",
-    "restartNow": "Restart now",
-    "restartUnsaved": "Save your changes before restarting.",
-    "restartManual": "If it doesn't restart automatically, quit and reopen PDFluent to finish."
+    "installed": "Aggiornamento installato",
+    "restartNow": "Riavvia ora",
+    "restartUnsaved": "Salva le modifiche prima di riavviare.",
+    "restartManual": "Se non si riavvia automaticamente, chiudi e riapri PDFluent per completare."
   },
   "telemetry": {
     "addNoteLabel": "Vuoi aggiungere qualcosa? (facoltativo)",
@@ -1012,6 +1073,11 @@
     "sentTitle": "Inviato. Grazie.",
     "settingsAutoSend": "Invia automaticamente senza chiedere",
     "settingsAutoSendNote": "I rapporti automatici vengono ripuliti e sono privi di dati personali, proprio come quelli che esamini manualmente.",
+    "settingsSentReports": "Rapporti di arresto anomalo inviati da questo computer: {{count}}. Li eliminiamo automaticamente dal nostro server dopo {{days}} giorni.",
+    "settingsDeleteReports": "Elimina i miei rapporti di arresto anomalo",
+    "settingsDeleting": "Eliminazione…",
+    "settingsDeleted": "Rapporti di arresto anomalo eliminati: {{count}}",
+    "settingsDeleteFailed": "Impossibile eliminarne {{count}}. Controlla la connessione e riprova.",
     "settingsDescription": "I rapporti non contengono mai informazioni personali o contenuti dei documenti. Tutto viene ripulito prima dell'invio e vedi ogni rapporto in anteprima. Disattivato per impostazione predefinita.",
     "settingsTitle": "Rapporti di arresto anomalo ed errori",
     "settingsToggle": "Invia rapporti di arresto anomalo ed errori",
@@ -1019,7 +1085,11 @@
     "typeBug": "Bug",
     "typeCrash": "Arresto anomalo",
     "typeFeedback": "Feedback",
-    "whatGetsSent": "Cosa viene inviato"
+    "whatGetsSent": "Cosa viene inviato",
+    "settingsSentFeedback": "Report di feedback inviati da questo computer: {{count}}. Li eliminiamo automaticamente dal nostro server dopo {{days}} giorni.",
+    "settingsDeleteFeedback": "Elimina i miei report di feedback",
+    "settingsFeedbackDeleted": "Report di feedback eliminati: {{count}}",
+    "settingsFeedbackDeleteFailed": "Impossibile eliminare {{count}} report di feedback. Controlla la connessione e riprova."
   },
   "ai": {
     "summaryInstruction": "Fornisci un riassunto conciso del seguente documento in italiano. Per ogni ruolo, indica il datore di lavoro, la posizione e il periodo. Usa i punti elenco.",
@@ -1076,7 +1146,8 @@
       "scrollLeft": "Scorri modalità a sinistra",
       "scrollRight": "Scorri modalità a destra",
       "workMode": "Modalità di lavoro",
-      "searchPlaceholder": "Cerca nel documento"
+      "searchPlaceholder": "Cerca nel documento",
+      "allTools": "Tutti gli strumenti"
     },
     "menu": {
       "about": "Informazioni",
@@ -1147,22 +1218,17 @@
       "draw": "Disegna",
       "signatureName": "Nome firma",
       "typeName": "Digita il tuo nome…",
-      "selectStyle": "Seleziona stile",
-      "styleClassic": "Corsivo Classico",
-      "styleElegant": "Corsivo Elegante",
-      "styleBrush": "Firma a pennello",
-      "styleModern": "Scrittura a mano moderna",
       "drawHere": "Disegna qui con il mouse, il trackpad o lo stilo",
       "clear": "Cancella",
       "apply": "Applica",
-      "defaultSignature": "Firma",
       "clickToPlaceSignature": "Fai clic sulla pagina per posizionare la firma.",
       "addInitials": "Aggiungi iniziali",
       "initialsIntro": "Digita le tue iniziali per un posizionamento rapido nei campi iniziali.",
       "initials": "Iniziali",
       "initialsPlaceholder": "es. AB",
-      "defaultInitials": "AB",
-      "clickToPlaceInitials": "Fai clic sulla pagina per posizionare le iniziali."
+      "clickToPlaceInitials": "Fai clic sulla pagina per posizionare le iniziali.",
+      "signatureFont": "Font della firma",
+      "plainItalic": "Corsivo semplice"
     },
     "overlay": {
       "signaturePlaced": "Firma posizionata!",
@@ -1177,13 +1243,13 @@
     "textbox": {
       "editTitle": "Modifica casella di testo",
       "newTitle": "Nuova casella di testo",
-      "intro": "Questo testo viene posizionato come sovrapposizione sulla pagina corrente. Se si salva un campo vuoto, viene rimossa una casella di testo esistente.",
       "label": "Testo",
       "placeholder": "Digita il testo…",
       "delete": "Elimina",
       "deleted": "Casella di testo eliminata.",
       "updated": "Casella di testo aggiornata.",
-      "added": "Nuova casella di testo aggiunta."
+      "added": "Nuova casella di testo aggiunta.",
+      "introPdf": "La casella di testo viene scritta nel PDF ed è visibile in ogni visualizzatore PDF. Salvarla vuota rimuove una casella di testo esistente."
     },
     "rail": {
       "tools": "Strumenti PDF",
@@ -1197,12 +1263,14 @@
       "more": "Altri strumenti",
       "strikeText": "Barramento testo",
       "underlineText": "Sottolinea testo",
-      "addAttachment": "Aggiungi allegato"
+      "addAttachment": "Aggiungi allegato",
+      "drawRectangle": "Disegna un rettangolo"
     },
     "railToasts": {
-      "commentMode": "Modalità nota attiva. Seleziona testo e scegli Nota, oppure usa l'elenco dei commenti per aggiungere una nota.",
+      "commentMode": "Modalità nota. Fai clic sulla pagina nel punto in cui vuoi mettere la nota.",
       "strikeout": "Barramento attivo — seleziona il testo per applicare.",
-      "underline": "Sottolineatura attiva — seleziona il testo per applicare."
+      "underline": "Sottolineatura attiva — seleziona il testo per applicare.",
+      "rectangle": "Rettangolo attivo — trascina sulla pagina per disegnarlo."
     },
     "tools": {
       "lede": "Scegli uno strumento per iniziare. Tutto viene eseguito localmente su questo dispositivo.",
@@ -1238,17 +1306,18 @@
       "layers": "{{count}} livelli",
       "manageLayers": "Gestisci livelli",
       "layersVisible": "{{count}} livelli visibili.",
-      "archiveAndData": "Archiving and data",
-      "pdfaSub": "Check or convert for long-term archiving",
-      "invoiceSub": "Read the ZUGFeRD/Factur-X invoice inside",
-      "metadataSub": "Title and author of this document"
+      "archiveAndData": "Archiviazione e dati",
+      "pdfaSub": "Verifica o converti per l'archiviazione a lungo termine",
+      "invoiceSub": "Leggi la fattura ZUGFeRD/Factur-X contenuta",
+      "metadataSub": "Titolo e autore di questo documento",
+      "flattenForm": "Appiattisci",
+      "flattenFormTitle": "Appiattisci il modulo: i valori compilati diventano parte della pagina e i campi vengono rimossi",
+      "flattenFormDone": "Modulo appiattito. Annulla ripristina i campi.",
+      "flattenFormFailed": "Impossibile appiattire il modulo: {{message}}"
     },
     "edit": {
       "lede": "Fai clic sul testo nel documento per modificare inline. La barra di formattazione appare direttamente sopra la selezione.",
       "formatText": "Formatta testo",
-      "fontLabel": "Font",
-      "fontHint": "Il testo PDF esistente utilizza i font PDF incorporati. Il font \"{{font}}\" verrà utilizzato per le nuove caselle di testo.",
-      "fontEmbedded": "Font PDF incorporato",
       "color": "Colore",
       "colorLabel": "Colore {{color}}",
       "addContent": "Aggiungi contenuto",
@@ -1261,7 +1330,18 @@
       "clickAnywhereTextBox": "Fai clic in qualsiasi punto della pagina per posizionare la casella di testo.",
       "clickAnywhereImage": "Fai clic in qualsiasi punto della pagina per posizionare l'immagine.",
       "selection": "Selezione",
-      "annotationOnPage": "{{type}} sulla pagina {{page}}"
+      "annotationOnPage": "{{type}} sulla pagina {{page}}",
+      "placeStamp": "Inserisci timbro",
+      "stampLabel": "Timbro",
+      "clickToPlaceStamp": "Fai clic sulla pagina per inserire il timbro.",
+      "placementModeStamp": "Modalità di inserimento: timbro",
+      "stampPlaced": "Timbro inserito.",
+      "deleteAnnotation": "Elimina annotazione",
+      "annotationColor": "Colore dell’annotazione",
+      "editTextBox": "Modifica testo",
+      "replaceImage": "Sostituisci immagine",
+      "imageReplaced": "Immagine sostituita.",
+      "moveHint": "Trascina per spostare, trascina un angolo per ridimensionare o sposta con i tasti freccia."
     },
     "convert": {
       "exportPdfTo": "Esporta PDF in",
@@ -1279,10 +1359,16 @@
       "confidenceFrom": "Confidenza da {{value}}%",
       "ocrOff": "OCR disattivato",
       "ocrOn": "OCR attivato",
-      "ocrRunning": "OCR in esecuzione localmente…"
+      "ocrRunning": "OCR in esecuzione localmente…",
+      "ocrComponentUnknown": "Componente OCR: verifica in corso…",
+      "ocrComponentInstalled": "Componente OCR installato",
+      "ocrLastRun": "Ultima esecuzione: {{pages}} pagina/e, {{words}} parola/e aggiunte come testo ricercabile",
+      "ocrRunningProgress": "Riconoscimento pagina {{done}} di {{total}}…",
+      "markdown": "Markdown (Anteprima)",
+      "tablesToExcel": "Tabelle in Excel (Anteprima)"
     },
     "esign": {
-      "lede": "Sign with a certificate of your own, and check the signatures a document already carries. Both happen on this device.",
+      "lede": "Firma con un tuo certificato e controlla le firme già presenti in un documento. Entrambe le operazioni avvengono su questo dispositivo.",
       "fillAndSign": "Compila i tuoi documenti e firma",
       "addSignature": "Aggiungi firma",
       "addInitials": "Aggiungi iniziali",
@@ -1290,25 +1376,25 @@
       "placementModeInitials": "Modalità di posizionamento: Iniziali",
       "clickToPlaceSignature": "Fai clic in qualsiasi punto della pagina per posizionare la tua firma.",
       "clickToPlaceInitials": "Fai clic in qualsiasi punto della pagina per posizionare le tue iniziali.",
-      "verifySection": "Signatures",
-      "verify": "Check signatures",
-      "desktopOnly": "Available in the desktop app",
-      "unsigned": "This document carries no signatures.",
-      "signSection": "Sign with a certificate",
-      "padesLevel": "Produces a PAdES B-B signature: your certificate over the whole file, no timestamp server involved.",
-      "certificate": "Certificate (.p12 or .pfx)",
-      "certificateNone": "No certificate chosen",
-      "chooseCertificate": "Choose certificate",
-      "certificatePassword": "Certificate password",
-      "reason": "Reason (optional)",
-      "reasonPlaceholder": "Why you are signing",
-      "sign": "Sign and save a copy",
-      "signing": "Signing…",
-      "signNeedsCertificate": "Choose a certificate and enter its password first.",
-      "signSaved": "Signed copy saved as {{name}}",
-      "signFailed": "Signing failed: {{message}}",
-      "usageRights": "Reader enablement (usage rights)",
-      "usageRightsInvalidated": "Usage rights invalidated — this file was edited, so Adobe Reader no longer treats it as an enabled form."
+      "verifySection": "Firme",
+      "verify": "Verifica firme",
+      "desktopOnly": "Disponibile nell'app desktop",
+      "unsigned": "Questo documento non contiene firme.",
+      "signSection": "Firma con un certificato",
+      "padesLevel": "Produce una firma PAdES B-B: il tuo certificato sull'intero file, senza server di marca temporale.",
+      "certificate": "Certificato (.p12 o .pfx)",
+      "certificateNone": "Nessun certificato scelto",
+      "chooseCertificate": "Scegli certificato",
+      "certificatePassword": "Password del certificato",
+      "reason": "Motivo (facoltativo)",
+      "reasonPlaceholder": "Perché stai firmando",
+      "sign": "Firma e salva una copia",
+      "signing": "Firma in corso…",
+      "signNeedsCertificate": "Scegli prima un certificato e inserisci la sua password.",
+      "signSaved": "Copia firmata salvata come {{name}}",
+      "signFailed": "Firma non riuscita: {{message}}",
+      "usageRights": "Abilitazione Reader (diritti di utilizzo)",
+      "usageRightsInvalidated": "Diritti di utilizzo invalidati — questo file è stato modificato, quindi Adobe Reader non lo considera più un modulo abilitato."
     },
     "protect": {
       "lede": "Proteggi il tuo documento PDF con password crittografiche forti. I cambiamenti vengono applicati localmente subito.",
@@ -1330,9 +1416,11 @@
       "localViaTauri": "Locale tramite comando Tauri, nessun runtime browser",
       "compressingImages": "Compressione immagini…",
       "percentComplete": "{{percent}}% completato",
-      "compressPdf": "Comprimi PDF",
       "desktopOnly": "Disponibile solo nell'app desktop",
-      "backToTools": "Torna agli strumenti"
+      "backToTools": "Torna agli strumenti",
+      "saveCopy": "Salva copia compressa come…",
+      "replaceOpen": "Comprimi e sostituisci il documento aperto",
+      "replaceNote": "Una copia lascia il documento aperto e il suo file così come sono. La sostituzione modifica solo il documento aperto; Annulla ripristina l'originale."
     },
     "split": {
       "lede": "Dividi il tuo documento in file PDF separati per pagina o per intervallo di pagine specifico.",
@@ -1369,7 +1457,52 @@
       "applying": "Applicazione…",
       "applyPermanently": "Applica le redigente permanentemente",
       "noActiveMarkings": "Nessun contrassegno di redazione attivo.",
-      "backToTools": "Torna agli strumenti"
+      "backToTools": "Torna agli strumenti",
+      "pii": {
+        "title": "Dati personali",
+        "lede": "Find personal data in the text of this document: IBANs, card numbers, national ID numbers, birth dates, e-mail addresses and phone numbers, and names and addresses when the model is installed. Review the list, then redact the ones you choose.",
+        "find": "Trova dati personali",
+        "scanning": "Scansione…",
+        "none": "Nothing found.",
+        "kind": {
+          "iban": "IBAN",
+          "email": "Indirizzo e-mail",
+          "phone": "Numero di telefono",
+          "credit_card": "Numero di carta",
+          "national_id": "Numero di identificazione nazionale",
+          "date_of_birth": "Data di nascita",
+          "bank_account": "Numero di conto bancario",
+          "person": "Nome",
+          "address": "Indirizzo"
+        },
+        "where": "Pagina {{pages}} · {{count}}×",
+        "selectAll": "Seleziona tutto",
+        "selectNone": "Deseleziona tutto",
+        "redactSelected": "Oscura {{count}} selezionati",
+        "redacting": "Oscuramento…",
+        "done": "Oscurati {{count}} elementi. Salva il file per conservare il risultato.",
+        "failed": "Oscuramento non riuscito: {{message}}",
+        "detectFailed": "Ricerca non riuscita: {{message}}",
+        "patternsOnly": "Without the model this finds only items it can check, such as IBANs, cards, ID numbers, birth dates, e-mail addresses and phone numbers. Names and addresses are not detected, so check every page yourself.",
+        "suggestionsOnly": "Questi sono suggerimenti. Il rilevatore può tralasciare qualcosa, quindi controlla ogni pagina prima di salvare.",
+        "source": {
+          "verified": "Verificato {{detail}}",
+          "model": "Suggerimento del modello, {{score}}%"
+        },
+        "model": {
+          "use": "Trova anche nomi e indirizzi con il modello",
+          "languages": "Verificato per: {{languages}}",
+          "remove": "Rimuovi il modello",
+          "removeFailed": "Impossibile rimuovere il modello: {{message}}",
+          "failed": "Impossibile eseguire il modello ({{code}}). Vengono mostrati solo gli elementi che possono essere verificati.",
+          "consentTitle": "Scaricare il modello per i dati personali?",
+          "consentBody": "Per trovare nomi e indirizzi serve un modello linguistico ({{size}}). Viene scaricato una volta da {{host}}, verificato con un checksum fisso e poi viene eseguito su questo computer. I tuoi documenti non lo lasciano mai.",
+          "download": "Scarica",
+          "downloading": "Download in corso…",
+          "downloadFailed": "Download non riuscito: {{message}}",
+          "notInBuild": "Il download non è ancora disponibile in questa versione."
+        }
+      }
     },
     "toasts": {
       "saving": "Salvataggio…",
@@ -1399,7 +1532,7 @@
       "pdfsMerged": "{{count}} file PDF uniti",
       "mergedSaved": "PDF unito salvato come {{name}}.",
       "mergeFailed": "Unione non riuscita: {{message}}",
-      "redactMatches": "{{matches}} corrispondenze trovate, {{areas}} contrassegni di redazione posizionati.",
+      "redactSearchDone": "Corrispondenze oscurate: {{count}}. Salva per mantenere la modifica.",
       "noRedactMatches": "Nessuna corrispondenza di testo trovata da redigere.",
       "redactSearchFailed": "Ricerca di redazione non riuscita: {{message}}",
       "applyRedactConfirm": "Applicare {{count}} contrassegno di redazione permanentemente? Questo rimuove il contenuto dal PDF per sempre.",
@@ -1408,108 +1541,328 @@
       "applyRedactRunning": "Applicazione delle redigente permanentemente…",
       "applyRedactDone": "Redigente applicate permanentemente",
       "redactionsApplied": "Le redigente sono state applicate permanentemente.",
-      "redactFailed": "Redazione non riuscita: {{message}}"
+      "redactFailed": "Redazione non riuscita: {{message}}",
+      "compressedCopyToast": "Salvato {{name}}: da {{before}} a {{after}}. Il documento aperto è invariato.",
+      "compressedReplacedToast": "Compresso il documento aperto: da {{before}} a {{after}}. Annulla ripristina l'originale. Salva per mantenere la versione compressa."
     },
     "thumbnails": {
       "pages": "Pagine",
       "pageAlt": "Pagina {{page}}",
-      "bookmarks": "Bookmarks"
+      "bookmarks": "Segnalibri"
     },
     "pdfa": {
-      "lede": "PDF/A is the archival form of PDF: fonts embedded, colours defined, nothing that depends on the outside world.",
-      "section": "Conformance",
-      "level": "Level",
-      "validate": "Check this document",
-      "convert": "Save as PDF/A…",
-      "desktopOnly": "Available in the desktop app",
-      "compliant": "Conforms to {{level}}",
-      "notCompliant": "Does not conform: {{errors}} errors, {{warnings}} warnings",
-      "moreIssues": "{{count}} more",
+      "lede": "PDF/A è la forma archivistica del PDF: caratteri incorporati, colori definiti, nulla che dipenda dall'esterno.",
+      "section": "Conformità",
+      "level": "Livello",
+      "validate": "Verifica questo documento",
+      "convert": "Salva come PDF/A…",
+      "desktopOnly": "Disponibile nell'app desktop",
+      "compliant": "Conforme a {{level}}",
+      "notCompliant": "Non conforme: {{errors}} errori, {{warnings}} avvisi",
+      "moreIssues": "Altri {{count}}",
       "report": {
-        "title": "What the conversion did",
-        "written": "Written to {{path}}",
-        "size": "{{out}} out of {{in}} ({{ratio}}×), in {{seconds}} s",
-        "pages": "{{count}} pages",
-        "fontsEmbedded": "{{embedded}} of {{found}} unembedded fonts embedded",
-        "fontsFailed": "Could not embed: {{fonts}}",
-        "removed": "Removed: {{count}} items that PDF/A does not allow",
-        "subset": "{{count}} font programs reduced, {{bytes}} kB saved",
-        "outputIntent": "Output intent added",
-        "unchangedDocument": "The open document was not changed.",
+        "title": "Cosa ha fatto la conversione",
+        "written": "Salvato in {{path}}",
+        "size": "{{out}} su {{in}} ({{ratio}}×), in {{seconds}} s",
+        "pages": "{{count}} pagine",
+        "fontsEmbedded": "{{embedded}} di {{found}} font non incorporati sono stati incorporati",
+        "fontsFailed": "Impossibile incorporare: {{fonts}}",
+        "removed": "Rimossi: {{count}} elementi non consentiti da PDF/A",
+        "subset": "{{count}} programmi di caratteri ridotti, {{bytes}} kB risparmiati",
+        "outputIntent": "Output intent aggiunto",
+        "unchangedDocument": "Il documento aperto non è stato modificato.",
         "warning": "{{message}}",
-        "moreWarnings": "{{count}} more"
+        "moreWarnings": "Altri {{count}}"
       }
     },
     "metadata": {
-      "lede": "The title and author stored inside the file, which is what other readers and search show.",
-      "section": "Properties",
-      "title": "Title",
-      "author": "Author",
-      "apply": "Save properties",
-      "desktopOnly": "Available in the desktop app"
+      "lede": "Il titolo e l'autore memorizzati nel file, che sono ciò che mostrano gli altri lettori e la ricerca.",
+      "section": "Proprietà",
+      "title": "Titolo",
+      "author": "Autore",
+      "apply": "Salva proprietà",
+      "desktopOnly": "Disponibile nell'app desktop"
     },
     "invoice": {
-      "lede": "A ZUGFeRD or Factur-X invoice travels as XML inside the PDF. This reads it and checks it against EN 16931.",
-      "section": "Embedded invoice",
-      "read": "Read invoice",
-      "desktopOnly": "Available in the desktop app",
-      "none": "This document carries no e-invoice.",
-      "number": "Number: {{number}}",
-      "issued": "Issued: {{date}}",
-      "seller": "Seller: {{name}}",
-      "buyer": "Buyer: {{name}}",
-      "total": "Total: {{total}} {{currency}}",
-      "lines": "Line items: {{count}}",
-      "valid": "Valid against {{profile}}",
-      "invalid": "Not valid: {{errors}} errors, {{warnings}} warnings"
+      "lede": "Una fattura ZUGFeRD o Factur-X viaggia come XML all'interno del PDF. Questo la legge e la verifica secondo EN 16931.",
+      "section": "Fattura incorporata",
+      "read": "Leggi fattura",
+      "desktopOnly": "Disponibile nell'app desktop",
+      "none": "Questo documento non contiene una fattura elettronica.",
+      "number": "Numero: {{number}}",
+      "issued": "Emessa: {{date}}",
+      "seller": "Venditore: {{name}}",
+      "buyer": "Acquirente: {{name}}",
+      "total": "Totale: {{total}} {{currency}}",
+      "lines": "Righe: {{count}}",
+      "valid": "Valida secondo {{profile}}",
+      "invalid": "Non valida: {{errors}} errori, {{warnings}} avvisi"
     },
     "canvas": {
-      "document": "PDF document"
+      "document": "Documento PDF"
+    },
+    "stamps": {
+      "Approved": "Approvato",
+      "NotApproved": "Non approvato",
+      "Draft": "Bozza",
+      "Confidential": "Riservato",
+      "Final": "Definitivo",
+      "ForComment": "Per commenti",
+      "Expired": "Scaduto"
     }
   },
   "about": {
-    "section": "About",
+    "section": "Informazioni",
     "app": "App",
-    "version": "Version",
+    "version": "Versione",
     "privacy": "Privacy",
-    "privacyValue": "All processing happens locally",
-    "website": "Website"
+    "privacyValue": "Tutta l'elaborazione avviene localmente",
+    "website": "Sito web"
   },
   "reviewSummary": {
-    "title": "Review summary",
-    "generatedAt": "Generated on",
-    "comments": "Comments",
-    "noComments": "No comments.",
-    "replies": "Replies:",
-    "empty": "empty",
-    "redactions": "Redactions",
-    "noRedactions": "No redactions.",
-    "noIssues": "No issues.",
-    "metadataChanges": "Metadata changes",
-    "noMetadataChanges": "No changes.",
-    "changedBy": "by",
-    "on": "on"
+    "title": "Riepilogo revisione",
+    "generatedAt": "Generato il",
+    "comments": "Commenti",
+    "noComments": "Nessun commento.",
+    "replies": "Risposte:",
+    "empty": "vuoto",
+    "redactions": "Oscuramenti",
+    "noRedactions": "Nessun oscuramento.",
+    "noIssues": "Nessun problema.",
+    "metadataChanges": "Modifiche ai metadati",
+    "noMetadataChanges": "Nessuna modifica.",
+    "changedBy": "da",
+    "on": "il"
   },
   "externalLink": {
-    "askMessage": "This PDF wants to open an external link:\n\n{{label}}\n\nURL:\n{{href}}\n\nDo you want to continue?",
-    "title": "Open external link?",
-    "openLink": "Open link",
-    "dialogBody": "This PDF wants to open an external website. Check the URL before continuing."
+    "askMessage": "Questo PDF vuole aprire un link esterno:\n\n{{label}}\n\nURL:\n{{href}}\n\nVuoi continuare?",
+    "title": "Aprire il link esterno?",
+    "openLink": "Apri link",
+    "dialogBody": "Questo PDF vuole aprire un sito web esterno. Controlla l'URL prima di continuare."
   },
   "linkChoice": {
-    "title": "Open link in your browser?",
-    "body": "This document wants to open an external website. Are you opening it from a trusted source?",
-    "alwaysAllow": "Always allow",
-    "openOnce": "Open once"
+    "title": "Aprire il link nel browser?",
+    "body": "Questo documento vuole aprire un sito web esterno. Lo stai aprendo da una fonte attendibile?",
+    "alwaysAllow": "Consenti sempre",
+    "openOnce": "Apri una volta"
   },
   "fallbacks": {
-    "ocrUnavailableTitle": "OCR is not available on this computer",
-    "ocrUnavailableMessage": "PDFluent could not start the text-recognition engine. {{reason}}",
-    "ocrFailedMessage": "Text recognition stopped on page {{page}}: {{reason}}",
-    "xfaStaticTitle": "Form filled without recalculation",
-    "xfaStaticMessage": "This build writes XFA field values straight into the form. Field scripts do not run, so calculated totals and fields that appear or hide based on your answer stay as they are.",
-    "featureUnavailableTitle": "'{{feature}}' is not available in this build",
-    "usageRightsInvalidatedTitle": "This document is no longer Reader-enabled",
-    "usageRightsInvalidatedMessage": "Your change was made. It also invalidated the usage-rights signature this PDF carried, which let Adobe Reader fill in and save the form. The text edit stands; the extended rights are gone and cannot be restored by undoing it."
+    "ocrUnavailableTitle": "OCR non è disponibile su questo computer",
+    "ocrUnavailableMessage": "PDFluent non è riuscito ad avviare il motore di riconoscimento del testo. {{reason}}",
+    "ocrFailedMessage": "Riconoscimento del testo interrotto a pagina {{page}}: {{reason}}",
+    "xfaStaticTitle": "Modulo compilato senza ricalcolo",
+    "xfaStaticMessage": "Questa build scrive i valori dei campi XFA direttamente nel modulo. Gli script dei campi non vengono eseguiti, quindi i totali calcolati e i campi che appaiono o si nascondono in base alla tua risposta rimangono così come sono.",
+    "xfaScriptsNotRunTitle": "Alcuni script del modulo non vengono eseguiti",
+    "xfaScriptsNotRunMessage": "La tua risposta è stata salvata. Questo modulo contiene script FormCalc ({{count}} trovati) e PDFluent esegue solo script JavaScript. I totali e i campi che questi script aggiornerebbero mantengono i valori salvati finché il modulo non viene aperto in Adobe Reader.",
+    "xfaFieldRefusedTitle": "Il modulo non ha accettato il valore",
+    "xfaFieldReadOnly": "Il campo «{{field}}» è di sola lettura in questo modulo e non può essere modificato.",
+    "xfaFieldRejected": "Il campo «{{field}}» non accetta questo valore: {{reason}}",
+    "xfaFieldNotFound": "Il campo «{{field}}» non è più nel modulo. Il modulo è stato ricaricato.",
+    "featureUnavailableTitle": "'{{feature}}' non è disponibile in questa build",
+    "usageRightsInvalidatedTitle": "Questo documento non è più abilitato per Reader",
+    "usageRightsInvalidatedMessage": "La modifica è stata apportata. Ha anche invalidato la firma dei diritti di utilizzo che questo PDF aveva, che consentiva ad Adobe Reader di compilare e salvare il modulo. La modifica del testo rimane; i diritti estesi sono scomparsi e non possono essere ripristinati annullando l'operazione.",
+    "xfaScriptsFailedTitle": "Alcuni script del modulo non sono stati completati",
+    "xfaScriptsFailedMessage": "La tua risposta è stata salvata, ma questi script non sono terminati, quindi i valori che hanno impostato potrebbero mancare: {{details}}.",
+    "xfaScriptKind_threw": "ha generato un errore",
+    "xfaScriptKind_timeout": "tempo scaduto",
+    "xfaScriptKind_refused": "è stato rifiutato dalla sandbox"
+  },
+  "signedSave": {
+    "title": "Questo documento è firmato",
+    "message": "La redazione rimuove contenuto coperto dalla firma, quindi non può essere salvata sopra l'originale firmato senza invalidare la firma. Salva invece una copia: la copia mantiene la redazione e non contiene la firma.",
+    "saveCopy": "Salva copia senza firma…",
+    "cancel": "Annulla"
+  },
+  "passwordPrompt": {
+    "title": "Questo PDF è protetto",
+    "message": "Inserisci la password per aprire {{name}}.",
+    "incorrect": "Questa password non apre il PDF. Riprova.",
+    "label": "Password",
+    "open": "Apri",
+    "cancel": "Annulla",
+    "readOnlyTitle": "Aperto in sola lettura",
+    "readOnlyMessage": "I permessi di questo PDF non consentono modifiche. Puoi leggerlo e stamparlo se i permessi lo consentono. Per salvare le modifiche, rimuovi la protezione con la password del proprietario."
+  },
+  "a11y": {
+    "searchNextResult": "Risultato successivo",
+    "searchPrevResult": "Risultato precedente"
+  },
+  "feedback": {
+    "title": "Aiutaci a migliorare PDFluent",
+    "intro": "Raccontaci cosa stavi cercando di fare. Leggiamo ogni segnalazione.",
+    "menuLabel": "Aiutaci a migliorare PDFluent…",
+    "fromError": "Puoi raccontarci il problema che hai appena riscontrato.",
+    "areaLabel": "Cosa stavi cercando di fare?",
+    "area": {
+      "open-view": "Aprire o leggere un documento",
+      "search-copy": "Cercare o copiare testo",
+      "print": "Stampare",
+      "edit-text": "Modificare il testo",
+      "annotate": "Evidenziare, commentare o disegnare",
+      "forms": "Compilare un modulo",
+      "sign": "Firmare o verificare una firma",
+      "redact": "Oscurare",
+      "pages-organize": "Ruotare, riordinare, unire o dividere le pagine",
+      "convert-export": "Convertire o esportare",
+      "ocr": "Riconoscere il testo in una scansione (OCR)",
+      "pdfa-compliance": "PDF/A",
+      "protect": "Password o autorizzazioni",
+      "save": "Salvare",
+      "install-update": "Installare o aggiornare PDFluent",
+      "other": "Altro"
+    },
+    "tryingToPlaceholder": "Con parole tue (facoltativo)",
+    "whatHappenedLabel": "Cos'è successo?",
+    "whatHappenedPlaceholder": "Cosa hai visto?",
+    "whatHappenedRequired": "Dicci cos'è successo, così sappiamo dove guardare.",
+    "expectedLabel": "Cosa ti aspettavi?",
+    "expectedPlaceholder": "Facoltativo",
+    "docTypeLabel": "Che tipo di documento era?",
+    "docType": {
+      "none": "Nessun documento coinvolto",
+      "form": "Un modulo",
+      "scanned": "Una scansione",
+      "signed": "Un documento firmato",
+      "protected": "Protetto da password",
+      "large": "Grande (più di 100 pagine)",
+      "xfa": "Un modulo della pubblica amministrazione o XFA",
+      "other": "Altro"
+    },
+    "docTypeUnset": "Scegli…",
+    "pageCountLabel": "Numero di pagine",
+    "contextTitle": "Inviato con la tua segnalazione",
+    "contextToggle": "Includi i dettagli di sistema",
+    "contextHint": "Versione, sistema, lingua e ultimo errore ci aiutano a riprodurre il problema. Nessun nome di file, percorso o contenuto del documento.",
+    "fieldVersion": "Versione di PDFluent",
+    "fieldSystem": "Sistema",
+    "fieldLanguage": "Lingua",
+    "fieldLastError": "Ultimo errore",
+    "fieldSessions": "Sessioni",
+    "notIncluded": "non incluso",
+    "documentTitle": "Condividi il documento (facoltativo)",
+    "documentToggle": "Condividi il documento aperto con questa segnalazione",
+    "documentNone": "Nessun documento aperto.",
+    "documentTooLarge": "Questo documento supera i 20 MB, quindi non può essere condiviso con una segnalazione.",
+    "documentShared": "Questo documento verrà condiviso.",
+    "documentConfirmTitle": "Condividere questo documento?",
+    "documentConfirmText": "Questo file sarà inviato a PDFluent (Innovation Trigger B.V.). È utilizzato solo per investigare questa segnalazione, mai pubblicato, mai utilizzato per l'addestramento e cancellato non oltre 90 giorni dopo che il problema è risolto, e comunque entro 12 mesi.",
+    "documentConfirmFile": "{{name}} ({{size}})",
+    "documentConfirmYes": "Condividi questo documento",
+    "documentConfirmNo": "Non condividere",
+    "contactTitle": "Restiamo in contatto (facoltativo)",
+    "emailLabel": "Indirizzo e-mail",
+    "emailInvalid": "Questo non sembra un indirizzo e-mail.",
+    "consentContact": "PDFluent può inviarmi email con domande su questa segnalazione.",
+    "consentFixed": "Inviami un'email quando questo sarà risolto.",
+    "contactHint": "Il tuo indirizzo è memorizzato separatamente dalla tua segnalazione, utilizzato solo per questa segnalazione e mai per newsletter o marketing.",
+    "noEmailHint": "Anche senza e-mail avrai nostre notizie: quando un aggiornamento risolve la tua segnalazione, PDFluent te lo comunica nell'app.",
+    "privacyNotice": "Innovation Trigger B.V. riceve questa segnalazione per migliorare PDFluent. Le segnalazioni sono conservate per un massimo di 24 mesi. Puoi richiedere la rimozione della tua in qualsiasi momento.",
+    "privacyLink": "Informativa sulla privacy",
+    "send": "Invia",
+    "sending": "Invio in corso…",
+    "cancel": "Annulla",
+    "sentTitle": "Grazie!",
+    "sentBody": "La tua segnalazione è arrivata. Questo è il suo numero:",
+    "sentIdHint": "Conserva questo numero se vuoi chiedere informazioni sulla tua segnalazione o farla rimuovere.",
+    "sentNoLocalCopy": "PDFluent non è riuscito a ricordare questo numero su questo computer, quindi annotalo.",
+    "sentDocumentFailed": "La tua segnalazione è arrivata, ma non è stato possibile caricare il documento. Se è importante, puoi inviare di nuovo la segnalazione con il documento.",
+    "removeReport": "Rimuovi questa segnalazione",
+    "removing": "Rimozione in corso…",
+    "removed": "La tua segnalazione è stata rimossa.",
+    "removeFailed": "Al momento non è stato possibile rimuovere la tua segnalazione. Riprova più tardi o scrivici il numero via e-mail.",
+    "failedTitle": "Invio non riuscito",
+    "failedNetwork": "PDFluent non è riuscito a raggiungere il server. Non è stato inviato nulla e il tuo testo è ancora qui.",
+    "failedRateLimited": "Oggi sono state inviate troppe segnalazioni da questa connessione. Riprova domani.",
+    "failedRejected": "La segnalazione non è stata accettata. Controlla il modulo e riprova.",
+    "failedServer": "Qualcosa è andato storto da parte nostra. Il tuo testo è ancora qui; riprova tra un momento.",
+    "tryAgain": "Riprova",
+    "fixedTitle": "Risolto!",
+    "fixedOffered": "La versione {{version}} risolve la tua segnalazione {{ids}}. Grazie per avercelo detto.",
+    "fixedAfterUpdate": "La tua segnalazione {{ids}} è risolta in questa versione. Grazie per averlo segnalato.",
+    "dismiss": "Chiudi"
+  },
+  "openError": {
+    "corrupt": {
+      "title": "Questo PDF è danneggiato",
+      "body": "PDFluent non è riuscito a leggere questo file. Potrebbe essersi danneggiato durante il download o la copia, oppure l'app che lo ha creato lo ha scritto in modo errato. Scaricalo o copialo di nuovo, oppure apri l'originale ed esportalo di nuovo come PDF.",
+      "action": "Apri un altro file"
+    },
+    "not_pdf": {
+      "title": "Questo non è un PDF",
+      "body": "PDFluent apre file PDF. Questo file è di un altro tipo, oppure il suo nome non termina con .pdf. Scegli un PDF oppure, se questo file è un PDF, rinominalo in modo che il nome termini con .pdf.",
+      "action": "Apri un altro file"
+    },
+    "empty": {
+      "title": "Questo file è vuoto",
+      "body": "Il file non ha contenuto (0 byte). Il download o la copia potrebbe non essere terminato. Scaricalo o copialo di nuovo, poi aprilo.",
+      "action": "Apri un altro file"
+    },
+    "encrypted_needs_password": {
+      "title": "Questo PDF richiede una password",
+      "body": "Questo PDF è protetto da una password. Aprilo di nuovo e inserisci la password. Se non la conosci, chiedila alla persona che ti ha inviato il file.",
+      "action": "Inserisci la password"
+    },
+    "wrong_password": {
+      "title": "Questa password non ha funzionato",
+      "body": "La password non apre questo PDF. Controlla di non aver commesso errori di battitura e che il blocco maiuscole (Caps Lock) non sia attivo, poi riprova.",
+      "action": "Riprova"
+    },
+    "unsupported_encryption": {
+      "title": "PDFluent non può aprire questo tipo di protezione",
+      "body": "Questo PDF è protetto con un certificato o con un metodo di sicurezza che PDFluent non supporta, quindi nessuna password può aprirlo qui. Chiedi al mittente una copia senza protezione o protetta da una password.",
+      "action": "Apri un altro file"
+    },
+    "too_large": {
+      "title": "Questo file è troppo grande",
+      "body": "Questo file è più grande di quanto PDFluent possa aprire in sicurezza. Dividilo o comprimilo nell'app che lo ha creato, poi apri le parti.",
+      "action": "Apri un altro file"
+    },
+    "too_many_pages": {
+      "title": "Questo PDF ha troppe pagine",
+      "body": "Questo documento ha più pagine di quante PDFluent possa aprirne in una volta. Dividilo in documenti più piccoli nell'app che lo ha creato, poi apri le parti.",
+      "action": "Apri un altro file"
+    },
+    "io_denied": {
+      "title": "PDFluent non può leggere questo file",
+      "body": "Il tuo computer non ha concesso a PDFluent il permesso di leggere questo file. Controlla i permessi del file oppure spostalo in una cartella come Documenti, poi riprova.",
+      "action": "Riprova"
+    },
+    "not_found": {
+      "title": "Impossibile trovare questo file",
+      "body": "Il file potrebbe essere stato spostato, rinominato o eliminato, oppure si trova su un'unità non più collegata. Trova il file e aprilo di nuovo.",
+      "action": "Apri un altro file"
+    },
+    "unknown": {
+      "title": "Impossibile aprire questo file",
+      "body": "Qualcosa è andato storto durante l'apertura di questo file. Riprova. Se il problema continua, segnalacelo così possiamo risolverlo.",
+      "action": "Riprova"
+    },
+    "feedback": "Aiutaci a migliorare PDFluent"
+  },
+  "formBar": {
+    "title": "Modulo compilabile",
+    "fields": "Campi: {{count}}",
+    "clickToFill": "Fai clic su un campo per compilarlo.",
+    "noCalculations": "I calcoli automatici dei moduli Adobe non vengono eseguiti.",
+    "autoLinks": "Apri i collegamenti automaticamente",
+    "autoLinksTitle": "I collegamenti si aprono automaticamente nel browser. Fai clic per disattivarlo.",
+    "highlight": "Evidenzia i campi",
+    "firstField": "Primo campo"
+  },
+  "tabs": {
+    "label": "Documenti aperti",
+    "close": "Chiudi {{name}}",
+    "unsaved": "Modifiche non salvate",
+    "new": "Apri un altro documento",
+    "tooManyTitle": "Troppi documenti aperti",
+    "tooManyMessage": "{{max}} documenti sono aperti. Chiudine uno per aprirne un altro."
+  },
+  "formScripts": {
+    "barLabel": "Script del modulo",
+    "barMessage": "Questo modulo contiene script (ad esempio calcoli). Eseguirli?",
+    "barDetail": "Script trovati: {{count}}.",
+    "runOnce": "Esegui per questo documento",
+    "runAlways": "Esegui sempre gli script",
+    "dontRun": "Non eseguire"
   }
 }

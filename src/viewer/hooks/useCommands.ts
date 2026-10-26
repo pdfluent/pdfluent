@@ -9,6 +9,7 @@ import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { Command } from '../components/CommandPalette';
 import type { ViewerMode } from '../types';
+import { printDocument } from '../state/printFlow';
 
 interface UseCommandsProps {
   pageCount: number;
@@ -21,6 +22,12 @@ interface UseCommandsProps {
   setShortcutSheetOpen: (v: boolean | ((prev: boolean) => boolean)) => void;
   setMode: (mode: ViewerMode) => void;
   closeDocument: () => void;
+  /**
+   * Close the document on screen, asking first if it has unsaved changes. With
+   * documents in tabs (J-90) that is the tab on screen; it replaces the guard
+   * below, which knows of one document only.
+   */
+  closeDocumentWithGuard?: () => void;
   setCurrentFilePath: (path: string | null) => void;
   setUnsavedDialogOpen: (open: boolean) => void;
   pendingActionRef: React.MutableRefObject<(() => void) | null>;
@@ -41,6 +48,7 @@ export function useCommands({
   setShortcutSheetOpen,
   setMode,
   closeDocument,
+  closeDocumentWithGuard,
   setCurrentFilePath,
   setUnsavedDialogOpen,
   pendingActionRef,
@@ -86,9 +94,13 @@ export function useCommands({
       { id: 'shortcut-sheet', label: t('commands.shortcuts'), keywords: ['shortcuts', 'keys', 'help', '?'],
         action: () => { setShortcutSheetOpen(true); } },
       { id: 'print', label: t('commands.print'), keywords: ['print', 'p'],
-        action: () => { if (pageCount > 0) window.print(); } },
+        action: () => { if (pageCount > 0) void printDocument(); } },
       { id: 'close-document', label: t('commands.closeDocument'), keywords: ['close', 'document'],
         action: () => {
+          if (closeDocumentWithGuard) {
+            closeDocumentWithGuard();
+            return;
+          }
           if (isDirty) {
             pendingActionRef.current = () => { closeDocument(); setCurrentFilePath(null); };
             setUnsavedDialogOpen(true);
@@ -131,5 +143,5 @@ export function useCommands({
       }),
     ];
     return commands;
-  }, [t, pageCount, isDirty, setPageIndex, setZoom, handleSaveAs, setExportOpen, setLeftRailOpen, setShortcutSheetOpen, setMode, closeDocument, setCurrentFilePath, setUnsavedDialogOpen, pendingActionRef, recentFiles, handleLoadDocument, onCheckForUpdates, setSettingsOpen]);
+  }, [t, pageCount, isDirty, setPageIndex, setZoom, handleSaveAs, setExportOpen, setLeftRailOpen, setShortcutSheetOpen, setMode, closeDocument, closeDocumentWithGuard, setCurrentFilePath, setUnsavedDialogOpen, pendingActionRef, recentFiles, handleLoadDocument, onCheckForUpdates, setSettingsOpen]);
 }

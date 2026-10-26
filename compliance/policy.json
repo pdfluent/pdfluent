@@ -8,7 +8,8 @@
     "Zlib",
     "CC0-1.0",
     "Unlicense",
-    "BlueOak-1.0.0"
+    "BlueOak-1.0.0",
+    "OFL-1.1"
   ],
   "blocked_licenses": [
     "GPL-2.0-only",
@@ -29,5 +30,5 @@
   ],
   "unknown_license_policy": "fail",
   "manual_review_allowed": true,
-  "notes": "PDFluent Editor is proprietary software (see LICENSE.md / LICENSE-Ref PDFluent-Proprietary). The allowed/blocked lists apply to third-party dependencies only: copyleft licenses (GPL/LGPL/AGPL) and source-available/non-commercial licenses are blocked for bundled dependencies."
+  "notes": "OFL-1.1 is allowed for bundled fonts only: the licence permits bundling and embedding a subset, and forbids selling the font on its own. PDFluent Editor is proprietary software (see LICENSE.md / LICENSE-Ref PDFluent-Proprietary). The allowed/blocked lists apply to third-party dependencies only: copyleft licenses (GPL/LGPL/AGPL) and source-available/non-commercial licenses are blocked for bundled dependencies."
 }

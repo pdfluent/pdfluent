@@ -68,36 +68,36 @@ export interface TextMutationRejection extends MutationMessage {
 
 const SUPPORT_CLASS_MESSAGES: Record<TextMutationSupportClass, MutationMessage> = {
   writable_digital_text: {
-    tooltip: 'Tekst bewerken',
-    explanation: 'Deze tekst kan worden bewerkt en direct worden opgeslagen in de PDF.',
+    tooltip: 'Edit text',
+    explanation: 'This text can be edited and saved directly to the PDF.',
     actionable: false,
   },
   non_writable_digital_text: {
-    tooltip: 'Complexe tekststructuur — niet bewerkbaar',
+    tooltip: 'Complex text structure — not editable',
     explanation:
-      'Deze tekst heeft een te complexe opmaakstructuur (meerdere regels of lettertypes) ' +
-      'om direct te bewerken. Eenvoudige, enkelvoudige tekstblokken zijn wel bewerkbaar.',
+      'This text has a formatting structure that is too complex (several lines or fonts) ' +
+      'to edit directly. Simple, single text blocks are editable.',
     actionable: false,
   },
   ocr_read_only: {
-    tooltip: 'OCR-tekst — alleen lezen',
+    tooltip: 'OCR text — read only',
     explanation:
-      'Deze tekst is herkend via OCR en kan niet worden teruggeschreven naar de PDF. ' +
-      'OCR-tekst is een overlay over gescande inhoud, geen ingebedde PDF-tekst.',
+      'This text was recognized by OCR and cannot be written back to the PDF. ' +
+      'OCR text is an overlay on scanned content, not embedded PDF text.',
     actionable: false,
   },
   protected_or_locked: {
-    tooltip: 'Beveiligd document — bewerking geblokkeerd',
+    tooltip: 'Protected document — editing blocked',
     explanation:
-      'Dit document of deze inhoud is beveiligd of vergrendeld. ' +
+      'This document or its content is protected or locked. ' +
       i18n.t('textMutation.removeProtection'),
     actionable: true,
   },
   unknown_structure: {
-    tooltip: 'Tekststructuur onbekend — niet bewerkbaar',
+    tooltip: 'Unknown text structure — not editable',
     explanation:
-      'De structuur van deze tekst kon niet worden vastgesteld. ' +
-      'Bewerking is uitgeschakeld om beschadiging van de PDF te voorkomen.',
+      'The structure of this text could not be determined. ' +
+      'Editing is disabled to avoid damaging the PDF.',
     actionable: false,
   },
 };
@@ -108,43 +108,43 @@ const SUPPORT_CLASS_MESSAGES: Record<TextMutationSupportClass, MutationMessage> 
 
 const REASON_CODE_MESSAGES: Partial<Record<MutationSupportReason, MutationMessage>> = {
   'multi-span-unsupported': {
-    tooltip: 'Meerdere lettertypes in één regel — niet bewerkbaar',
+    tooltip: 'Several fonts in one line — not editable',
     explanation:
-      'Deze tekstregel bevat meerdere segmenten met verschillende lettertypes of stijlen. ' +
-      'Alleen enkelvoudige tekstsegmenten zijn momenteel bewerkbaar.',
+      'This line of text has several segments with different fonts or styles. ' +
+      'Only single text segments are editable for now.',
     actionable: false,
   },
   'multi-line-unsupported': {
-    tooltip: 'Alinea met meerdere regels — niet bewerkbaar',
+    tooltip: 'Multi-line paragraph — not editable',
     explanation:
-      'Alinea\'s met meerdere regels kunnen nog niet worden bewerkt. ' +
-      'Enkelvoudige regels zonder regelomloop zijn wel bewerkbaar.',
+      'Multi-line paragraphs cannot be edited yet. ' +
+      'Single lines without wrapping are editable.',
     actionable: false,
   },
   'ocr-source': {
-    tooltip: 'OCR-tekst — alleen lezen',
+    tooltip: 'OCR text — read only',
     explanation:
-      'Deze tekst is afkomstig van OCR-herkenning en is niet ingebed in de PDF-inhoudsstream. ' +
+      'This text comes from OCR recognition and is not embedded in the PDF content stream. ' +
       i18n.t('textMutation.ocrCannotSave'),
     actionable: false,
   },
   'empty-content': {
-    tooltip: 'Lege tekst — niet bewerkbaar',
-    explanation: 'Dit tekstblok bevat geen inhoud en kan niet worden bewerkt.',
+    tooltip: 'Empty text — not editable',
+    explanation: 'This text block has no content and cannot be edited.',
     actionable: false,
   },
   'protected-content': {
-    tooltip: 'Beveiligde inhoud — bewerking geblokkeerd',
+    tooltip: 'Protected content — editing blocked',
     explanation:
-      'Deze tekst is beveiligd of behoort tot een vergrendeld formulierveld. ' +
+      'This text is protected or belongs to a locked form field. ' +
       i18n.t('textMutation.removeDocProtection'),
     actionable: true,
   },
   'unknown-source': {
-    tooltip: 'Onbekende tekstbron — niet bewerkbaar',
+    tooltip: 'Unknown text source — not editable',
     explanation:
-      'De herkomst van deze tekst kon niet worden vastgesteld. ' +
-      'Bewerking is uitgeschakeld om schade aan de PDF te voorkomen.',
+      'The origin of this text could not be determined. ' +
+      'Editing is disabled to avoid damaging the PDF.',
     actionable: false,
   },
 };
@@ -218,48 +218,48 @@ const KNOWN_REJECTION_CODES = new Set<BackendRejectionCode>([
 
 const FONT_ENCODING_MESSAGES: Record<FontEncodingClass, MutationMessage> = {
   standard_latin: {
-    tooltip: 'Standaard Latin-codering — veilig',
-    explanation: 'Dit lettertype gebruikt een standaard Latin-codering (WinAnsi of MacRoman). Bewerking is mogelijk.',
+    tooltip: 'Standard Latin encoding — safe',
+    explanation: 'This font uses a standard Latin encoding (WinAnsi or MacRoman). Editing is possible.',
     actionable: false,
   },
   subset_embedded: {
-    tooltip: 'Ingesloten subset-lettertype — veilig',
-    explanation: 'Dit lettertype is als subset ingebed in de PDF. Bewerking is mogelijk voor tekens in de subset.',
+    tooltip: 'Embedded subset font — safe',
+    explanation: 'This font is embedded in the PDF as a subset. Editing is possible for characters in the subset.',
     actionable: false,
   },
   identity_h: {
-    tooltip: 'Identity-H codering — niet bewerkbaar',
+    tooltip: 'Identity-H encoding — not editable',
     explanation:
-      'Dit lettertype gebruikt Identity-H (CID-gebaseerde glyfindexen). ' +
-      'Directe tekstvarvanging is niet mogelijk — de bytes zijn glyfindexen, geen Unicode.',
+      'This font uses Identity-H (CID-based glyph indices). ' +
+      'Direct text replacement is not possible — the bytes are glyph indices, not Unicode.',
     actionable: false,
   },
   identity_v: {
-    tooltip: 'Identity-V codering — niet bewerkbaar',
+    tooltip: 'Identity-V encoding — not editable',
     explanation:
-      'Dit lettertype gebruikt Identity-V (verticale CID-codering). ' +
-      'Directe tekstvarvanging is niet mogelijk.',
+      'This font uses Identity-V (vertical CID encoding). ' +
+      'Direct text replacement is not possible.',
     actionable: false,
   },
   cid_keyed: {
-    tooltip: 'CID-lettertype — niet bewerkbaar',
+    tooltip: 'CID font — not editable',
     explanation:
-      'Dit lettertype gebruikt een CID-gebaseerde CMap. ' +
+      'This font uses a CID-based CMap. ' +
       i18n.t('textMutation.requiresFontInspection'),
     actionable: false,
   },
   custom_encoding: {
-    tooltip: 'Aangepaste codering — niet bewerkbaar',
+    tooltip: 'Custom encoding — not editable',
     explanation:
-      'Dit lettertype gebruikt een niet-standaard codering. ' +
+      'This font uses a non-standard encoding. ' +
       'Directe tekstvarvanging is uitgeschakeld om beschadiging te voorkomen.',
     actionable: false,
   },
   unknown: {
-    tooltip: 'Codering onbekend — niet bewerkbaar',
+    tooltip: 'Unknown encoding — not editable',
     explanation:
-      'De codering van dit lettertype kon niet worden vastgesteld. ' +
-      'Bewerking is uitgeschakeld als voorzorgsmaatregel.',
+      'The encoding of this font could not be determined. ' +
+      'Editing is disabled as a precaution.',
     actionable: false,
   },
 };
@@ -327,10 +327,10 @@ export function getFontEncodingMessage(encodingClass: FontEncodingClass): Mutati
 export function getOverflowRiskMessage(charOverflow: number): MutationMessage {
   const excess = Math.max(0, charOverflow);
   return {
-    tooltip: `Vervangtekst ${excess} teken${excess === 1 ? '' : 's'} te lang`,
+    tooltip: `Replacement text ${excess} character${excess === 1 ? '' : 's'} too long`,
     explanation:
-      `De vervangende tekst is ${excess} teken${excess === 1 ? '' : 's'} langer dan het origineel. ` +
-      'Verkort de vervangtekst om opmaakproblemen in de PDF te voorkomen.',
+      `The replacement text is ${excess} character${excess === 1 ? '' : 's'} longer than the original. ` +
+      'Shorten the replacement text to avoid layout problems in the PDF.',
     actionable: true,
   };
 }

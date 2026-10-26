@@ -19,19 +19,44 @@ binary line says `ADVISORY` and changes no exit code (decided 2026-09-10).
 
 ## What the app can contact
 
-Three origins, all ours. Nothing else the product does needs a network.
+Two origins, both ours. Nothing else the product does needs a network.
 
 | Origin | Used for | Default | Turn it off |
 |---|---|---|---|
-| `https://pdfluent.com` | Update check (`/releases/latest.json`); the website and licence pages when you click them | On | Settings → "Check for updates automatically" |
-| `https://report.pdfluent.com` | Crash and feedback reports (`POST /v1/report`) | **Off** | Never sent unless you switch reporting on and confirm the text |
-| `https://feedback.pdfluent.com` | The feedback page, opened in your browser from the Help menu | On click only | Do not click it |
+| `https://pdfluent.com` | Update check (`/releases/latest.json`); the website, licence and privacy pages when you click them | On | Settings → "Check for updates automatically" |
+| `https://report.pdfluent.com` | Two opt-in exceptions, by path (below) | **Off** | Nothing is sent without your deliberate act |
 
-With automatic update checks off and reporting off — which is the state the app
+The report host is declared per path in `scripts/ci/offline-allowlist.mjs`; a
+URL on it with any other path fails the gate like an undeclared host would.
+
+| Path | What | Sent only when |
+|---|---|---|
+| `/v1/report` | Crash report; `DELETE /v1/report/<id>` removes one you sent | Crash reporting is switched on in Settings (default off) and you confirm the review dialog. The delete request only when you press "Delete my crash reports" in Settings |
+| `/v1/feedback` | Help → "Help us improve PDFluent" | You press **Send**. The open document goes along only if you ticked it **and** confirmed the second prompt that names the file; an e-mail address only if you ticked one of the two follow-up boxes |
+
+With automatic update checks off and no report sent — which is the state the app
 ships in for reporting, and one switch away for updates — PDFluent makes no
 outbound request at all. Opening, editing, signing, converting, redacting,
-OCR-free text extraction and PDF/A export are entirely local: the PDF engine is
+OCR, text extraction and PDF/A export are entirely local: the PDF engine is
 compiled into the application and there is no HTTP client in the Rust backend.
+
+The "your report is fixed" notice needs no request of its own: the update feed
+the check already downloads carries a `fixed_feedback` list of report IDs, and
+the app compares it with the IDs it sent, on the machine.
+
+### OCR needs no network
+
+Tesseract and its language packs (English, Dutch, German, French, Spanish,
+Italian) are part of every build (owner decision 19-10), so OCR works offline
+from the first launch and there is no component host. Nothing is downloaded,
+nothing asks for consent, and the Rust backend has no HTTP client for it: the
+`ocr-download` feature, the downloader and the component host are gone from the code, from `scripts/ci/offline-allowlist.mjs` and from this
+list. The component sits in the signed app under `resources/ocr`, is checked
+against the SHA-256 and size of every file in
+`src-tauri/resources/ocr/tesseract-component.json` when the build is made, and is
+started as a child process that gets the page as PNG on stdin and answers TSV on
+stdout (see docs/BUNDLED_OCR.md). `tests/ocr-bundle.test.ts` fails if a download
+path comes back.
 
 No account, no licence check, no analytics, no telemetry beacon, no font or
 model download at runtime.
@@ -42,7 +67,7 @@ model download at runtime.
 system, refuses anything that is not `https://pdfluent.com` or a subdomain of
 it (`src-tauri/src/telemetry.rs`). The webview's `connect-src` policy
 (`src-tauri/tauri.conf.json`) allows only the app itself, Tauri IPC and the
-report host, so a compromised or careless frontend cannot reach a fourth
+report host, so a compromised or careless frontend cannot reach a third
 address either.
 
 ## Strings that look like addresses and are not
@@ -59,6 +84,7 @@ origin has to fail the build.
 | `https://locize.com` | Vendor link inside an i18next console message |
 | `https://rollupjs.org` | Documentation link inside a Rollup/Vite runtime error message |
 | `https://apps.microsoft.com` | The Store listing, printed in the About box so a user can say which build they have. `open_external_url` refuses it like any other non-`pdfluent.com` host |
+| `http://asset.localhost` | Tauri's asset protocol as WebView2 addresses it on Windows; the print window loads the local print copy from it (J-34). Served by the app itself, nothing leaves the machine |
 
 Backend test code is not scanned. `#[cfg(test)]` modules in `src-tauri/src/` are
 stripped before the scan, because the case proving `open_external_url` refuses

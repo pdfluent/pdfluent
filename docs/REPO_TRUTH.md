@@ -259,7 +259,8 @@ directory itself is `internal`, or every overlaid file would appear twice.
    that goes out. Red on any hit.
 2. `node scripts/ci/publish-public-snapshot.mjs` — builds the snapshot commit on
    top of the current public head. It refuses first if git would sign it with
-   anything but a `@users.noreply.github.com` alias, and it never pushes.
+   anything but a `@users.noreply.github.com` alias, and it only pushes when
+   given `--push`.
    Before it offers anything to push, it runs the public repository's own
    guards against the snapshot tree — the address scan and the sources
    requirement — and refuses if either says no. Not copies of them: the snapshot
@@ -269,7 +270,11 @@ directory itself is `internal`, or every overlaid file would appear twice.
    before this existed, one of them since the snapshot before that, because this
    side published without ever asking what that side checks.
 3. `git push --dry-run <public> <commit>:refs/heads/main` — read what it says.
-4. Push, then run `node scripts/ci/repo-truth.mjs`. Green is the receipt.
+   `main` on the public repository accepts writes from one credential only, the
+   deploy key `publish-public-snapshot` (ruleset `main-only-via-publish-path`,
+   #753); your own account is refused, org admins included. The key is read from
+   `$PDFLUENT_PUBLIC_DEPLOY_KEY`, default `~/.config/pdfluent/pdfluent-public-deploy-key`.
+4. Push (`--push` does it through the key), then run `node scripts/ci/repo-truth.mjs`. Green is the receipt.
 
 The commit messages of the trunk are not published by this route, so the
 internal-names guard over them (`--range`) is a check on our own hygiene rather

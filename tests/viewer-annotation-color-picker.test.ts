@@ -132,14 +132,14 @@ describe('ViewerApp — handleUpdateAnnotationColor', () => {
 
   it('invokes update_annotation_color backend command', () => {
     const fnStart = viewerAppSource.indexOf('const handleUpdateAnnotationColor = useCallback(');
-    const fnEnd = viewerAppSource.indexOf('[pdfDoc, refetchComments, markDirty]', fnStart) + 40;
+    const fnEnd = viewerAppSource.indexOf('\n  }, [', fnStart);
     const fnBody = viewerAppSource.slice(fnStart, fnEnd);
     expect(fnBody).toContain("invoke('update_annotation_color'");
   });
 
   it('passes annotationId and color to backend', () => {
     const fnStart = viewerAppSource.indexOf('const handleUpdateAnnotationColor = useCallback(');
-    const fnEnd = viewerAppSource.indexOf('[pdfDoc, refetchComments, markDirty]', fnStart) + 40;
+    const fnEnd = viewerAppSource.indexOf('\n  }, [', fnStart);
     const fnBody = viewerAppSource.slice(fnStart, fnEnd);
     expect(fnBody).toContain('annotationId');
     expect(fnBody).toContain('color');
@@ -147,14 +147,14 @@ describe('ViewerApp — handleUpdateAnnotationColor', () => {
 
   it('calls refetchComments after updating color', () => {
     const fnStart = viewerAppSource.indexOf('const handleUpdateAnnotationColor = useCallback(');
-    const fnEnd = viewerAppSource.indexOf('[pdfDoc, refetchComments, markDirty]', fnStart) + 40;
+    const fnEnd = viewerAppSource.indexOf('\n  }, [', fnStart);
     const fnBody = viewerAppSource.slice(fnStart, fnEnd);
     expect(fnBody).toContain('refetchComments()');
   });
 
   it('calls markDirty after updating color', () => {
     const fnStart = viewerAppSource.indexOf('const handleUpdateAnnotationColor = useCallback(');
-    const fnEnd = viewerAppSource.indexOf('[pdfDoc, refetchComments, markDirty]', fnStart) + 40;
+    const fnEnd = viewerAppSource.indexOf('\n  }, [', fnStart);
     const fnBody = viewerAppSource.slice(fnStart, fnEnd);
     expect(fnBody).toContain('markDirty()');
   });

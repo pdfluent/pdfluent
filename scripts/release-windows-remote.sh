@@ -32,6 +32,7 @@
 # Env:
 #   WIN_BUILD_HOST   REQUIRED: ssh target of your Windows build host (user@host
 #                    or an ssh-config alias). Keep it in your gitignored .env.
+#   PDFLUENT_OCR_COMPONENT_BUILD_WIN  REQUIRED: OCR --out folder ON THE HOST; also read from the .env.
 #   WIN_EDITOR_PATH  REQUIRED: editor checkout path on that host. Keep it in
 #                    your gitignored .env; it is a fact about one machine.
 #   PDFLUENT_ENV     Optional: the .env to read those from. See below.
@@ -116,6 +117,7 @@ EOF
 if [ -n "${ENV_FILE}" ]; then
   : "${WIN_BUILD_HOST:=$(env_value WIN_BUILD_HOST "${ENV_FILE}")}"
   : "${WIN_EDITOR_PATH:=$(env_value WIN_EDITOR_PATH "${ENV_FILE}")}"
+  : "${PDFLUENT_OCR_COMPONENT_BUILD_WIN:=$(env_value PDFLUENT_OCR_COMPONENT_BUILD_WIN "${ENV_FILE}")}"
 fi
 
 if [ -z "${WIN_BUILD_HOST:-}" ] || [ -z "${WIN_EDITOR_PATH:-}" ]; then
@@ -254,9 +256,25 @@ if [ -n "${FREE_GB}" ] && [ "${FREE_GB}" -lt 12 ] 2>/dev/null; then
 fi
 echo "   free on the build host: ${FREE_GB:-unknown} GB"
 
+# ── 4b. The OCR component has to be on the box before the build ──────────────
+# OCR is bundled in every build (owner decision 19-10). The box holds the
+# --out folder of scripts/ocr-component/build-tesseract.sh (windows-x86_64\ and
+# tessdata\, tesseract.exe signed and pinned in the committed manifest).
+# release-windows.ps1 stages it through ocr-bundle.mjs, which refuses anything
+# the manifest does not pin. Say so now, not after the frontend build.
+OCR_BUILD_WIN="${PDFLUENT_OCR_COMPONENT_BUILD_WIN:-}"
+if [ -z "${OCR_BUILD_WIN}" ]; then
+  echo "✘ Set PDFLUENT_OCR_COMPONENT_BUILD_WIN to the folder on the build host that holds the built OCR component"
+  echo "  (build-tesseract.sh --platform windows-x86_64 --out <dir>, then --tessdata --out <dir>); every build bundles OCR. See docs/BUNDLED_OCR.md."
+  exit 1
+fi
+OCR_HERE="$(ssh "${SSHO[@]}" "$HOST" "powershell -NoProfile -Command \"if ((Test-Path '${OCR_BUILD_WIN}\\windows-x86_64\\bin\\tesseract.exe') -and (Test-Path '${OCR_BUILD_WIN}\\tessdata')) { 'yes' } else { 'no' }\"" | tr -d '\r')"
+[ "${OCR_HERE}" = "yes" ] || { echo "✘ ${OCR_BUILD_WIN} on the build host has no windows-x86_64\\bin\\tesseract.exe and tessdata\\"; exit 1; }
+echo "   OCR component on the box: ${OCR_BUILD_WIN}"
+
 # ── 5. Build the .msi on the box (build-only; prints MSI_PATH=…) ─────────────
 echo "== building ${BUILD_SHA} as v${VERSION} on the build host (MSVC + WiX — this takes a while) =="
-ssh "${SSHO[@]}" "$HOST" "powershell -NoProfile -ExecutionPolicy Bypass -File '${EDITOR_WIN}/scripts/release-windows.ps1' '${VERSION}'" | tee "${BUILD_LOG}"
+ssh "${SSHO[@]}" "$HOST" "powershell -NoProfile -ExecutionPolicy Bypass -Command \"\$env:PDFLUENT_OCR_COMPONENT_BUILD='${OCR_BUILD_WIN}'; & '${EDITOR_WIN}/scripts/release-windows.ps1' '${VERSION}'\"" | tee "${BUILD_LOG}"
 
 MSI_WIN="$(grep -oE 'MSI_PATH=[^[:space:]]+\.msi' "${BUILD_LOG}" | head -1 | cut -d= -f2- | tr -d '\r')"
 [ -n "${MSI_WIN}" ] || { echo "✘ No .msi produced on the box (see log above)."; exit 1; }

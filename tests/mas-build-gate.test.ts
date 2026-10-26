@@ -32,6 +32,8 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 const ROOT = resolve(import.meta.dirname, '..');
 const SCRIPT = join(ROOT, 'scripts', 'build-mas.sh');
 const COUNTER = join(ROOT, 'store', 'mas', 'build-number');
+// PATH 'bash' is Intel-only on the owner's Mac; the arch guard would (rightly) refuse it.
+const BASH = existsSync('/bin/bash') ? '/bin/bash' : 'bash';
 
 let tmp: string;
 
@@ -46,7 +48,7 @@ afterAll(() => {
 function dryRun(counterContents: string | null, env: Record<string, string> = {}) {
   const counter = join(tmp, `counter-${Math.random().toString(36).slice(2)}`);
   if (counterContents !== null) writeFileSync(counter, counterContents);
-  const run = spawnSync('bash', [SCRIPT], {
+  const run = spawnSync(BASH, [SCRIPT], {
     cwd: ROOT,
     encoding: 'utf8',
     env: { ...process.env, MAS_DRY_RUN: '1', MAS_BUILD_NUMBER_FILE: counter, ...env },
@@ -132,5 +134,76 @@ describe('MAS build number', () => {
     const built = src.indexOf('npm run tauri build');
     expect(recorded).toBeGreaterThan(-1);
     expect(built).toBeGreaterThan(recorded);
+  });
+  it('ships the app version: the overlay has no version, or the app version without its pre-release tag', () => {
+    // The overlay sat at 1.0.0 while the app moved to 1.1.0; the package would
+    // have been named and stamped 1.0.0.
+    const overlay = JSON.parse(readFileSync(join(ROOT, 'src-tauri', 'tauri.mas.conf.json'), 'utf8')).version;
+    const app = JSON.parse(readFileSync(join(ROOT, 'src-tauri', 'tauri.conf.json'), 'utf8')).version.split('-')[0];
+    expect(overlay === undefined || overlay === app).toBe(true);
+    expect(readFileSync(SCRIPT, 'utf8')).toContain('The App Store build must ship the app');
+  });
+
+  it('runs the preflight before it spends a build number', () => {
+    const src = readFileSync(SCRIPT, 'utf8');
+    expect(src.indexOf('mas-preflight.sh')).toBeGreaterThan(-1);
+    expect(src.indexOf('mas-preflight.sh')).toBeLessThan(src.indexOf('> "${BUILD_NUMBER_FILE}"'));
+  });
+
+  it('hands altool the folder of APPLE_API_KEY_PATH, which altool otherwise ignores', () => {
+    const src = readFileSync(SCRIPT, 'utf8');
+    expect(src).toContain('API_PRIVATE_KEYS_DIR');
+    expect(src.indexOf('export API_PRIVATE_KEYS_DIR')).toBeLessThan(src.indexOf('altool --upload-app'));
+  });
+
+  it('preflight reports a missing provisioning profile and does not build', () => {
+    const run = spawnSync(BASH, [join(ROOT, 'scripts', 'mas-preflight.sh')], {
+      cwd: ROOT,
+      encoding: 'utf8',
+      env: { ...process.env, MAS_PREFLIGHT_SKIP_SIGN: '1', MAS_PROFILE: join(tmp, 'no-such.provisionprofile') },
+    });
+    expect(run.status).not.toBe(0);
+    expect(`${run.stdout}${run.stderr}`).toContain('FAIL  missing');
+  });
+
+  it('signs the .pkg with productsign, because productbuild --sign waits for a keychain click', () => {
+    const src = readFileSync(SCRIPT, 'utf8');
+    expect(src).not.toMatch(/^\s*xcrun productbuild[^\n]*--sign/m);
+    expect(src.indexOf('productsign --sign')).toBeGreaterThan(src.indexOf('productbuild --component'));
+    expect(src.indexOf('pkgutil --check-signature')).toBeGreaterThan(src.indexOf('productsign --sign'));
+  });
+
+  it('looks for the built .app under CARGO_TARGET_DIR when it is set', () => {
+    expect(readFileSync(SCRIPT, 'utf8')).toContain('${CARGO_TARGET_DIR:-src-tauri/target}/universal-apple-darwin/release/bundle/macos"');
+  });
+
+  describe('arch guard (Rosetta)', () => {
+    const guarded = (script: string, env: Record<string, string>) => {
+      const run = spawnSync(BASH, [join(ROOT, 'scripts', script)], {
+        cwd: ROOT,
+        encoding: 'utf8',
+        env: { ...process.env, MAS_DRY_RUN: '1', MAS_PREFLIGHT_SKIP_SIGN: '1', MAS_GUARD_UNAME_S: 'Darwin', ...env },
+      });
+      return { status: run.status, out: `${run.stdout}${run.stderr}` };
+    };
+
+    for (const script of ['build-mas.sh', 'mas-preflight.sh']) {
+      it(`${script} refuses an x86_64 shell and names the fix`, () => {
+        const r = guarded(script, { MAS_GUARD_UNAME_M: 'x86_64', MAS_GUARD_TRANSLATED: '0' });
+        expect(r.status).toBe(1);
+        expect(r.out).toContain('arch -arm64 /bin/bash');
+      });
+      it(`${script} refuses a translated arm64-looking shell`, () => {
+        const r = guarded(script, { MAS_GUARD_UNAME_M: 'arm64', MAS_GUARD_TRANSLATED: '1' });
+        expect(r.status).toBe(1);
+        expect(r.out).toContain('Rosetta');
+      });
+    }
+
+    it('lets a native arm64 shell through to the dry run', () => {
+      const r = guarded('build-mas.sh', { MAS_GUARD_UNAME_M: 'arm64', MAS_GUARD_TRANSLATED: '0' });
+      expect(r.out).not.toContain('Rosetta');
+      expect(r.out).toContain('CFBundleVersion=');
+    });
   });
 });

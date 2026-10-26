@@ -1,0 +1,303 @@
+/* Copyright (c) 2026 Innovation Trigger B.V. All rights reserved. */
+/* See https://pdfluent.com/license for terms. */
+
+/* ============================================================================
+   PDFluent — colour tokens. The ONLY file in src/ that may contain a blue.
+   ============================================================================
+
+   Brand is monochrome (design system: colors_and_type.css). Blue is a
+   functional micro-accent and has exactly four jobs:
+
+     --focus-ring / --focus-halo   keyboard focus indicator
+     --link / --link-hover         text links
+     --selection*                  selection (text, PDF objects, selected item)
+
+   Everything that used to be "accent" as a decorative fill, a button fill, an
+   active tab or an active tool is now neutral:
+
+     --emphasis / --on-emphasis    primary action: near-black on white,
+                                   near-white (#f2f2f2) on dark surfaces
+     --state-active-*              active tab / tool / list row (neutral tint)
+     --state-hover-bg              hover tint
+
+   tests/monochrome-guard.test.ts refuses blue hex/rgb/hsl values and blue
+   Tailwind classes anywhere else in src/, and checks the contrast of the pairs
+   below (text 4.5:1, focus ring and selection 3:1). Add a blue anywhere but
+   here and that test fails.
+
+   Every foreground/background pair a component paints is listed in
+   tests/contrast-pairs.test.ts (read from the component's own CSS rule, in
+   light, dark and the Windows tints) and measured on the rendered page by
+   tests/e2e/contrast.spec.ts. Banners, toasts and the edit pill take their
+   colours from the --notice-* and --inverse-* tokens below, never literals.
+   The two dark blocks (OS preference, and .theme-dark/.dark) must declare the
+   same properties: the first one missing from the class block painted a light
+   command palette under a dark shell.
+
+   Dark mode is applied by any of: OS preference (unless `.theme-light`),
+   `.theme-dark` on the root, `.dark` (shadcn), `.pfv3.theme-dark` (v3 shell).
+   All four select the same dark block below.
+   ============================================================================ */
+
+:root {
+  /* ── Primary action: near-black fill, white text ─────────────────────── */
+  --emphasis: #1a1a1a;
+  --emphasis-hover: #0a0a0a;
+  --on-emphasis: #ffffff;
+
+  /* ── Neutral interaction states (never blue) ─────────────────────────── */
+  --state-active-bg: rgba(26, 26, 26, 0.08);
+  --state-active-fg: #1a1a1a;
+  --state-hover-bg: rgba(26, 26, 26, 0.05);
+  /* Hover/idle chrome on PDF objects: grey, not a colour. */
+  --chrome-hover: #5f6370;
+
+  /* ── Blue job 1: focus. 3:1 or better on every surface it sits on. ───── */
+  --focus-ring: #0a66ff;
+  --focus-halo: rgba(10, 102, 255, 0.3);
+
+  /* ── Blue job 2: links. Text, so 4.5:1 on white and on panel greys. ──── */
+  --link: #0a58d8;
+  --link-hover: #0846a8;
+
+  /* ── Blue job 3: selection ───────────────────────────────────────────── */
+  --selection: #0a66ff;
+  --selection-fill: rgba(10, 102, 255, 0.18);
+  --selection-line: rgba(10, 102, 255, 0.55);
+  /* Drawn over a PDF page. A page is white paper in both themes, so this
+     stays the light-mode blue even in dark mode (#4d94ff on white is 3.0:1). */
+  --selection-on-page: #0a66ff;
+  --selection-on-page-fill: rgba(10, 102, 255, 0.16);
+  --selection-on-page-line: rgba(10, 102, 255, 0.55);
+  --selection-on-page-strong: rgba(10, 102, 255, 0.9);
+  /* Native checkbox/radio colour on a page: near-black in both themes. */
+  --emphasis-on-page: #1a1a1a;
+  /* Hover outline on a page object: grey, because hover is not selection. */
+  --chrome-hover-on-page: #5f6370;
+  --focus-ring-on-page: #0a66ff;
+  --focus-halo-on-page: rgba(10, 102, 255, 0.3);
+  --selection-text-bg: rgba(10, 102, 255, 0.35);
+  /* Caret in text editors sitting on a page. */
+  --caret-on-page: #0a66ff;
+
+  /* ── Greys. Text greys are the brand greys, adjusted where the brand grey
+        fails AA: #7b808f is 3.9:1 on white, so muted TEXT is #656a77 (5.4:1);
+        #7b808f stays for icons and other non-text marks. ──────────────── */
+  --text-primary: #1a1a1a;
+  --text-secondary: #5f6370;
+  --text-muted: #656a77;
+  --text-disabled: #858a97;
+  --icon-muted: #7b808f;
+  --border: #ccd1dc;
+  --border-strong: #bec5d3;
+
+  /* ── Surfaces ────────────────────────────────────────────────────────── */
+  --bg-canvas: #c5c5c7;
+  --bg-surface: #f4f4f6;
+  --bg-surface-2: #ececf0;
+  --bg-surface-3: #e3e3e9;
+  --bg-surface-elevated: #ffffff;
+
+  /* ── Notices: banners, rejection notes, error toasts. Status hue (amber/red)
+        is allowed for these; each pair below is 4.5:1 in tests/contrast-pairs.ts. */
+  --notice-warn-bg: #fbf1df;
+  --notice-warn-fg: #6b3208;
+  --notice-warn-fg-muted: #7a4010;
+  --notice-warn-border: #d9a866;
+  --notice-warn-badge-bg: #f3dcb0;
+  --notice-warn-action-bg: #9a4a07;
+  --notice-warn-action-fg: #ffffff;
+  --notice-warn-secondary-bg: #fffaf0;
+  --notice-error-fg: #a11818;
+  --notice-error-border: #e0a0a0;
+
+  /* ── Inverse surface: toast, floating edit pill. Dark pill on a light app,
+        light pill on a dark app, so it never sinks into the canvas. ─────── */
+  --inverse-bg: #15171c;
+  --inverse-fg: #ffffff;
+  --inverse-fg-muted: #c9ccd4;
+  --inverse-border: rgba(255, 255, 255, 0.18);
+  --inverse-hover: rgba(255, 255, 255, 0.10);
+  --inverse-pressed: rgba(255, 255, 255, 0.22);
+  --inverse-cta-bg: #ffffff;
+  --inverse-cta-fg: #141414;
+  --inverse-success: #4ade80;
+
+  /* ── Status (unchanged) ──────────────────────────────────────────────── */
+  --danger: #dc2626;
+  --warning: #d97706;
+  --success: #16a34a;
+}
+
+/* Windows keeps its own surface tints; the interaction colours are shared. */
+:root[data-platform="windows"] {
+  --bg-canvas: #d5dbe6;
+  --bg-surface: #f6f8fc;
+  --bg-surface-2: #eff3fa;
+  --bg-surface-3: #e4eaf4;
+  --text-primary: #181b20;
+  --text-secondary: #576072;
+  --text-muted: #5f6879;
+  --text-disabled: #858ba0;
+  --border: #c8d1e0;
+  --border-strong: #b9c4d8;
+}
+
+/* ── Dark ──────────────────────────────────────────────────────────────── */
+@media (prefers-color-scheme: dark) {
+  :root:not(.theme-light) {
+    --emphasis: #f2f2f2;
+    --emphasis-hover: #ffffff;
+    --on-emphasis: #0e0e12;
+    --state-active-bg: rgba(255, 255, 255, 0.12);
+    --state-active-fg: #f2f2f2;
+    --state-hover-bg: rgba(255, 255, 255, 0.06);
+    --chrome-hover: #a0a4b0;
+    --focus-ring: #4d94ff;
+    --focus-halo: rgba(77, 148, 255, 0.4);
+    --link: #6ba3ff;
+    --link-hover: #8fb9ff;
+    --selection: #4d94ff;
+    --selection-fill: rgba(77, 148, 255, 0.24);
+    --selection-line: rgba(77, 148, 255, 0.6);
+    --text-primary: #e8e8ec;
+    --text-secondary: #a0a4b0;
+    --text-muted: #9a9fad;
+    --text-disabled: #7a7f8b;
+    --icon-muted: #7b808f;
+    --border: #3a3a44;
+    --border-strong: #4a4a56;
+    --bg-canvas: #1a1a1e;
+    --bg-surface: #27272c;
+    --bg-surface-2: #2e2e34;
+    --bg-surface-3: #36363d;
+    --bg-surface-elevated: #303038;
+    --danger: #f87171;
+    --warning: #fbbf24;
+    --success: #4ade80;
+
+    --notice-warn-bg: #2e2412;
+    --notice-warn-fg: #fcd9a0;
+    --notice-warn-fg-muted: #e8c48a;
+    --notice-warn-border: #7a5a22;
+    --notice-warn-badge-bg: #4a3516;
+    --notice-warn-action-bg: #fbbf24;
+    --notice-warn-action-fg: #1c1305;
+    --notice-warn-secondary-bg: #3a2d17;
+    --notice-error-fg: #fca5a5;
+    --notice-error-border: #8a3a3a;
+    --inverse-bg: #eceef2;
+    --inverse-fg: #14161b;
+    --inverse-fg-muted: #3f434d;
+    --inverse-border: rgba(0, 0, 0, 0.2);
+    --inverse-hover: rgba(0, 0, 0, 0.08);
+    --inverse-pressed: rgba(0, 0, 0, 0.16);
+    --inverse-cta-bg: #14161b;
+    --inverse-cta-fg: #ffffff;
+    --inverse-success: #166534;
+  }
+  :root[data-platform="windows"]:not(.theme-light) {
+    --bg-canvas: #16181f;
+    --bg-surface: #1c1f27;
+    --bg-surface-2: #232730;
+    --bg-surface-3: #2a2f3a;
+    --bg-surface-elevated: #1c1f27;
+    --text-primary: #e6e9f0;
+    --text-secondary: #a8aebb;
+    --text-muted: #9aa0ad;
+    --text-disabled: #767b88;
+    --border: #353a45;
+    --border-strong: #444a56;
+  }
+}
+
+:root.theme-dark,
+.dark,
+.pfv3.theme-dark {
+  --emphasis: #f2f2f2;
+  --emphasis-hover: #ffffff;
+  --on-emphasis: #0e0e12;
+  --state-active-bg: rgba(255, 255, 255, 0.12);
+  --state-active-fg: #f2f2f2;
+  --state-hover-bg: rgba(255, 255, 255, 0.06);
+  --chrome-hover: #a0a4b0;
+  --focus-ring: #4d94ff;
+  --focus-halo: rgba(77, 148, 255, 0.4);
+  --link: #6ba3ff;
+  --link-hover: #8fb9ff;
+  --selection: #4d94ff;
+  --selection-fill: rgba(77, 148, 255, 0.24);
+  --selection-line: rgba(77, 148, 255, 0.6);
+  --text-primary: #e8e8ec;
+  --text-secondary: #a0a4b0;
+  --text-muted: #9a9fad;
+  --text-disabled: #7a7f8b;
+  --icon-muted: #7b808f;
+  --border: #3a3a44;
+  --border-strong: #4a4a56;
+  --bg-canvas: #1a1a1e;
+  --bg-surface: #27272c;
+  --bg-surface-2: #2e2e34;
+  --bg-surface-3: #36363d;
+  --bg-surface-elevated: #303038;
+  --danger: #f87171;
+  --warning: #fbbf24;
+  --success: #4ade80;
+
+  --notice-warn-bg: #2e2412;
+  --notice-warn-fg: #fcd9a0;
+  --notice-warn-fg-muted: #e8c48a;
+  --notice-warn-border: #7a5a22;
+  --notice-warn-badge-bg: #4a3516;
+  --notice-warn-action-bg: #fbbf24;
+  --notice-warn-action-fg: #1c1305;
+  --notice-warn-secondary-bg: #3a2d17;
+  --notice-error-fg: #fca5a5;
+  --notice-error-border: #8a3a3a;
+  --inverse-bg: #eceef2;
+  --inverse-fg: #14161b;
+  --inverse-fg-muted: #3f434d;
+  --inverse-border: rgba(0, 0, 0, 0.2);
+  --inverse-hover: rgba(0, 0, 0, 0.08);
+  --inverse-pressed: rgba(0, 0, 0, 0.16);
+  --inverse-cta-bg: #14161b;
+  --inverse-cta-fg: #ffffff;
+  --inverse-success: #166534;
+}
+
+:root[data-platform="windows"].theme-dark,
+.dark[data-platform="windows"] {
+  --bg-canvas: #16181f;
+  --bg-surface: #1c1f27;
+  --bg-surface-2: #232730;
+  --bg-surface-3: #2a2f3a;
+  --bg-surface-elevated: #1c1f27;
+  --text-primary: #e6e9f0;
+  --text-secondary: #a8aebb;
+  --text-muted: #9aa0ad;
+  --text-disabled: #767b88;
+  --border: #353a45;
+  --border-strong: #444a56;
+}
+
+/* ── v3 shell: its own surface scale, same interaction tokens ──────────── */
+.pfv3 {
+  --text-primary: #1a1a1a;
+  --text-secondary: #57606e;
+  --text-muted: #656a77;
+}
+.pfv3.theme-dark {
+  /* Re-resolve the shadcn bridge on the element that flips theme. */
+  --primary: var(--emphasis);
+  --primary-foreground: var(--on-emphasis);
+  --ring: var(--focus-ring);
+  --text-primary: #ececf0;
+  --text-secondary: #a3a8b4;
+  --text-muted: #9a9fad;
+}
+
+/* Native form controls and text selection follow the same rules. */
+::selection {
+  background: var(--selection-fill);
+  color: inherit;
+}

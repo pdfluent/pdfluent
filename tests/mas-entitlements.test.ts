@@ -21,7 +21,7 @@
  */
 
 import { spawnSync } from 'node:child_process';
-import { chmodSync, existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
@@ -130,26 +130,13 @@ describe('MAS entitlements comparison', () => {
     // standing between "no MAS build here" and six entitlement differences
     // reported against a Developer ID build (2026-09-10, on the release
     // machine, hours after building the DMG).
-    const stub = (authority: string) => {
-      const dir = mkdtempSync(join(tmpdir(), 'mas-codesign-'));
-      writeFileSync(join(dir, 'codesign'), `#!/bin/sh\necho "Authority=${authority}" >&2\n`);
-      chmodSync(join(dir, 'codesign'), 0o755);
-      return dir;
-    };
-    const withPath = (dir: string, fn: () => boolean) => {
-      const before = process.env.PATH;
-      process.env.PATH = `${dir}:${before}`;
-      try { return fn(); } finally { process.env.PATH = before; }
-    };
-    const appStore = stub('Apple Distribution: Innovation Trigger B.V. (58Z6SVW7CN)');
-    const developerId = stub('Developer ID Application: Innovation Trigger B.V. (58Z6SVW7CN)');
-    try {
-      expect(withPath(appStore, () => signedForTheAppStore('/nonexistent.app'))).toBe(true);
-      expect(withPath(developerId, () => signedForTheAppStore('/nonexistent.app'))).toBe(false);
-    } finally {
-      rmSync(appStore, { recursive: true, force: true });
-      rmSync(developerId, { recursive: true, force: true });
-    }
+    // codesign writes its description to stderr.
+    const says = (authority: string) => () => ({ stdout: '', stderr: `Authority=${authority}\n` });
+    const appStore = says('Apple Distribution: Innovation Trigger B.V. (58Z6SVW7CN)');
+    const developerId = says('Developer ID Application: Innovation Trigger B.V. (58Z6SVW7CN)');
+    expect(signedForTheAppStore('/nonexistent.app', appStore)).toBe(true);
+    expect(signedForTheAppStore('/nonexistent.app', developerId)).toBe(false);
+    expect(signedForTheAppStore('/nonexistent.app', () => ({ stdout: '', stderr: '' }))).toBe(false);
   });
 
   it('matches the entitlements of the signed MAS artifact when one is present', () => {

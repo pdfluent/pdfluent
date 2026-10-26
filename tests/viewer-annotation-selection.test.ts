@@ -65,35 +65,35 @@ describe('ViewerApp — selectedAnnotationId state', () => {
 describe('ViewerApp — handleAnnotationClick handles markup annotations', () => {
   it('looks up clicked annotation in allAnnotations', () => {
     const fnStart = viewerAppSource.indexOf('const handleAnnotationClick = useCallback(');
-    const fnEnd = viewerAppSource.indexOf('[allAnnotations, comments, mode])', fnStart) + 35;
+    const fnEnd = viewerAppSource.indexOf('[allAnnotations, pageImages, comments, mode])', fnStart) + 47;
     const fnBody = viewerAppSource.slice(fnStart, fnEnd);
-    expect(fnBody).toContain('allAnnotations.find(a => a.id === annotationId)');
+    expect(fnBody).toContain('markerTarget(annotationId, allAnnotations, pageImages)');
   });
 
   it('sets selectedAnnotationId for non-text annotation types', () => {
     const fnStart = viewerAppSource.indexOf('const handleAnnotationClick = useCallback(');
-    const fnEnd = viewerAppSource.indexOf('[allAnnotations, comments, mode])', fnStart) + 35;
+    const fnEnd = viewerAppSource.indexOf('[allAnnotations, pageImages, comments, mode])', fnStart) + 47;
     const fnBody = viewerAppSource.slice(fnStart, fnEnd);
     expect(fnBody).toContain('setSelectedAnnotationId(');
   });
 
   it('toggles selection off if same annotation clicked again', () => {
     const fnStart = viewerAppSource.indexOf('const handleAnnotationClick = useCallback(');
-    const fnEnd = viewerAppSource.indexOf('[allAnnotations, comments, mode])', fnStart) + 35;
+    const fnEnd = viewerAppSource.indexOf('[allAnnotations, pageImages, comments, mode])', fnStart) + 47;
     const fnBody = viewerAppSource.slice(fnStart, fnEnd);
     expect(fnBody).toContain('prev === annotationId ? null : annotationId');
   });
 
   it("routes text annotations to comment sidebar (ann.type === 'text')", () => {
     const fnStart = viewerAppSource.indexOf('const handleAnnotationClick = useCallback(');
-    const fnEnd = viewerAppSource.indexOf('[allAnnotations, comments, mode])', fnStart) + 35;
+    const fnEnd = viewerAppSource.indexOf('[allAnnotations, pageImages, comments, mode])', fnStart) + 47;
     const fnBody = viewerAppSource.slice(fnStart, fnEnd);
     expect(fnBody).toContain("ann.type === 'text'");
   });
 
   it('always switches mode to review on annotation click', () => {
     const fnStart = viewerAppSource.indexOf('const handleAnnotationClick = useCallback(');
-    const fnEnd = viewerAppSource.indexOf('[allAnnotations, comments, mode])', fnStart) + 35;
+    const fnEnd = viewerAppSource.indexOf('[allAnnotations, pageImages, comments, mode])', fnStart) + 47;
     const fnBody = viewerAppSource.slice(fnStart, fnEnd);
     expect(fnBody).toContain("setMode('review')");
   });
@@ -107,14 +107,14 @@ describe('ViewerApp — selectedAnnotation useMemo', () => {
   it('derives selectedAnnotation from allAnnotations by selectedAnnotationId', () => {
     expect(viewerAppSource).toContain('const selectedAnnotation = useMemo(');
     const memoStart = viewerAppSource.indexOf('const selectedAnnotation = useMemo(');
-    const memoEnd = viewerAppSource.indexOf('[selectedAnnotationId, allAnnotations]', memoStart) + 40;
+    const memoEnd = viewerAppSource.indexOf('[selectedAnnotationId, allAnnotations, pageImages]', memoStart) + 52;
     const memoBody = viewerAppSource.slice(memoStart, memoEnd);
     expect(memoBody).toContain('allAnnotations.find(a => a.id === selectedAnnotationId)');
   });
 
   it('returns null when selectedAnnotationId is null', () => {
     const memoStart = viewerAppSource.indexOf('const selectedAnnotation = useMemo(');
-    const memoEnd = viewerAppSource.indexOf('[selectedAnnotationId, allAnnotations]', memoStart) + 40;
+    const memoEnd = viewerAppSource.indexOf('[selectedAnnotationId, allAnnotations, pageImages]', memoStart) + 52;
     const memoBody = viewerAppSource.slice(memoStart, memoEnd);
     expect(memoBody).toContain('if (!selectedAnnotationId) return null');
   });
@@ -135,21 +135,21 @@ describe('ViewerApp — handleDeleteSelectedAnnotation', () => {
 
   it('calls engine.annotation.deleteAnnotation', () => {
     const fnStart = viewerAppSource.indexOf('const handleDeleteSelectedAnnotation = useCallback(');
-    const fnEnd = viewerAppSource.indexOf('[pdfDoc, engine, refetchComments])', fnStart) + 35;
+    const fnEnd = viewerAppSource.indexOf('\n  }, [', fnStart);
     const fnBody = viewerAppSource.slice(fnStart, fnEnd);
     expect(fnBody).toContain('deleteAnnotation(pdfDoc, annotationId)');
   });
 
   it('resets selectedAnnotationId to null on success', () => {
     const fnStart = viewerAppSource.indexOf('const handleDeleteSelectedAnnotation = useCallback(');
-    const fnEnd = viewerAppSource.indexOf('[pdfDoc, engine, refetchComments])', fnStart) + 35;
+    const fnEnd = viewerAppSource.indexOf('\n  }, [', fnStart);
     const fnBody = viewerAppSource.slice(fnStart, fnEnd);
     expect(fnBody).toContain('setSelectedAnnotationId(null)');
   });
 
   it('calls refetchComments after deleting', () => {
     const fnStart = viewerAppSource.indexOf('const handleDeleteSelectedAnnotation = useCallback(');
-    const fnEnd = viewerAppSource.indexOf('[pdfDoc, engine, refetchComments])', fnStart) + 35;
+    const fnEnd = viewerAppSource.indexOf('\n  }, [', fnStart);
     const fnBody = viewerAppSource.slice(fnStart, fnEnd);
     expect(fnBody).toContain('refetchComments()');
   });

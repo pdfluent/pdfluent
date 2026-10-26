@@ -124,7 +124,7 @@ describe('lib.rs — apply_redactions Tauri command', () => {
 
   it('apply_redactions command delegates to doc.apply_redactions()', () => {
     const fnIdx = libSource.indexOf('fn apply_redactions(');
-    const body = libSource.slice(fnIdx, fnIdx + 150);
+    const body = libSource.slice(fnIdx, fnIdx + 220);
     expect(body).toContain('doc.apply_redactions()');
   });
 

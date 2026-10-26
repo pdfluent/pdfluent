@@ -19,6 +19,8 @@
 // assertion still has to hold.
 
 import { describe, it, expect } from "vitest";
+import path from "node:path";
+import { readFileSync } from "node:fs";
 import { runToFile } from "../ci/run";
 import { REPO_ROOT, stageCase, suiteArgs, readReport, row, rows } from "./helpers";
 
@@ -187,6 +189,58 @@ describe("release suite — an artefact that should not ship", () => {
     const x = row(readReport(s).json, "clean_quit")!;
     expect(x.status).toBe("FAIL");
     expect(x.reason).toContain("start 1789041600");
+  });
+
+  // 2026-10-23, quality:windows on e1439dc6: "17 start lines against 16
+  // clean_quit lines" named no launch and no cause, so a killed instance, an
+  // app that exited without its line and a log that was never flushed all read
+  // the same. The driver now records one line per launch; the judge uses it.
+  describe("clean_quit names the launch", () => {
+    const sessions = (quits: number) =>
+      ["start 1789041600 __VERSION__", ...(quits >= 1 ? ["clean_quit 1789041618 __VERSION__"] : []),
+       "start 1789041640 __VERSION__", ...(quits >= 2 ? ["clean_quit 1789041655 __VERSION__"] : [])].join("\n") + "\n";
+    const ver = JSON.parse(readFileSync(path.join(REPO_ROOT, "package.json"), "utf8")).version as string;
+    const stage = (quits: number, launches: string) =>
+      stageCase("good", {
+        "session_delta.out": sessions(quits).split("__VERSION__").join(ver),
+        "session_launches.out": launches,
+        "session_launches.rc": "0\n",
+      });
+
+    it("reports a launch the suite had to kill as a quit that timed out, not as a missing line", () => {
+      const s = stage(1, "budget_ms=15000\ndoc-a starts=1 quits=1 forced=0 quit_ms=410 exit_logged=1 close_guard=0\n" +
+        "doc-b starts=1 quits=0 forced=1 quit_ms=15003 exit_logged=0 close_guard=1\n");
+      expect(run(suiteArgs(s)).status).toBe(1);
+      const x = row(readReport(s).json, "clean_quit")!;
+      expect(x.status).toBe("FAIL");
+      expect(x.reason).toContain("did not quit within 15000 ms and were killed by the suite: doc-b (no exit in 15003 ms, the close guard held the close)");
+      expect(x.reason).not.toContain("start lines against");
+      expect(x.numbers.quit_ms_max).toBe(15003);
+    });
+
+    it("names the launch that exited on its own without writing the line", () => {
+      const s = stage(1, "budget_ms=15000\ndoc-a starts=1 quits=1 forced=0 quit_ms=410 exit_logged=1 close_guard=0\n" +
+        "doc-b starts=1 quits=0 forced=0 quit_ms=380 exit_logged=0 close_guard=0\n");
+      expect(run(suiteArgs(s)).status).toBe(1);
+      const x = row(readReport(s).json, "clean_quit")!;
+      expect(x.status).toBe("FAIL");
+      expect(x.reason).toContain("exited without writing clean_quit: doc-b (no exit line in the app log)");
+    });
+
+    it("passes when every launch quit, and reports how long the slowest quit took", () => {
+      const s = stage(2, "budget_ms=15000\ndoc-a starts=1 quits=1 forced=0 quit_ms=410 exit_logged=1 close_guard=0\n" +
+        "doc-b starts=1 quits=1 forced=0 quit_ms=1380 exit_logged=1 close_guard=0\n");
+      expect(run(suiteArgs(s)).status).toBe(0);
+      const x = row(readReport(s).json, "clean_quit")!;
+      expect(x.status).toBe("PASS");
+      expect(x.numbers.quit_ms_max).toBe(1380);
+    });
+
+    it("still fails the totals when the per-launch record is absent", () => {
+      const s = stage(1, "");
+      expect(run(suiteArgs(s)).status).toBe(1);
+      expect(row(readReport(s).json, "clean_quit")!.status).toBe("FAIL");
+    });
   });
 
   it("fails a run that talked to something it was not allowed to", () => {

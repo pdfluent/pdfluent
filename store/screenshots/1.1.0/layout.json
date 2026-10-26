@@ -1,0 +1,77 @@
+{
+  "version": 1,
+  "about": "Frame layout of the 1.1.0 store screenshots: which raw scene goes in which frame, in which order, for which store. Copy (headline, caption) is NOT here: it lives in copy.json, which scripts/screenshots/draft-copy.mjs generates and a person approves. Specs: store/screenshots/1.1.0/SPEC.md. A frame with `stores` appears only in those stores; ids are unique per store.",
+  "outputs": {
+    "mac-app-store": {
+      "platform": "macos-arm64",
+      "width": 2880,
+      "height": 1800,
+      "max": 10,
+      "alpha": false,
+      "captionMax": null
+    },
+    "microsoft-store": {
+      "platform": "windows-x64",
+      "width": 3840,
+      "height": 2160,
+      "max": 10,
+      "alpha": false,
+      "captionMax": 200
+    }
+  },
+  "frames": [
+    {
+      "id": "01",
+      "scene": "01-open-document",
+      "shot": null
+    },
+    {
+      "id": "02",
+      "scene": "02-edit-text-fonts",
+      "shot": null
+    },
+    {
+      "id": "03",
+      "scene": "07-export-markdown-excel",
+      "shot": "markdown"
+    },
+    {
+      "id": "04",
+      "scene": "07-export-markdown-excel",
+      "shot": "excel"
+    },
+    {
+      "id": "05",
+      "scene": "08-ocr",
+      "shot": "result"
+    },
+    {
+      "id": "06",
+      "scene": "11-page-images",
+      "shot": null
+    },
+    {
+      "id": "07",
+      "scene": "09-signature",
+      "shot": null
+    },
+    {
+      "id": "08",
+      "scene": "05-xfa-form",
+      "shot": null
+    },
+    {
+      "id": "09",
+      "scene": "06-page-organiser",
+      "shot": null
+    },
+    {
+      "id": "10",
+      "scene": "10-all-tools",
+      "shot": null
+    }
+  ],
+  "unusedScenes": {
+    "04-forms": "AcroForm filling; swap in for a frame if the owner wants forms back in the set"
+  }
+}

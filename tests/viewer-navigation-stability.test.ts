@@ -8,10 +8,6 @@
 import { readFileSync } from 'node:fs';
 import { describe, it, expect } from 'vitest';
 
-const navRailSource = readFileSync(
-  new URL('../src/viewer/components/LeftNavRail.tsx', import.meta.url),
-  'utf8'
-);
 
 const viewerAppSource = [
   '../src/viewer/hooks/usePageNavigation.ts',
@@ -42,57 +38,11 @@ const engineSource = readFileSync(
 // Stability — LeftNavRailProps completeness
 // ---------------------------------------------------------------------------
 
-describe('Stability — LeftNavRailProps interface completeness', () => {
-  it('contains all required navigation props', () => {
-    const ifaceStart = navRailSource.indexOf('interface LeftNavRailProps');
-    const ifaceEnd = navRailSource.indexOf('\n}', ifaceStart) + 2;
-    const iface = navRailSource.slice(ifaceStart, ifaceEnd);
-    expect(iface).toContain('thumbnails');
-    expect(iface).toContain('pageCount');
-    expect(iface).toContain('currentPage');
-    expect(iface).toContain('onPageSelect');
-    expect(iface).toContain('outline');
-    expect(iface).toContain('onReorderPages');
-    expect(iface).toContain('pageLabels');
-  });
-});
 
 // ---------------------------------------------------------------------------
 // Stability — ThumbnailPanel feature coexistence
 // ---------------------------------------------------------------------------
 
-describe('Stability — ThumbnailPanel features coexist', () => {
-  function thumbnailPanelBody(): string {
-    const fnStart = navRailSource.indexOf('function ThumbnailPanel(');
-    const fnEnd = navRailSource.indexOf('function OutlineItem(', fnStart);
-    return navRailSource.slice(fnStart, fnEnd);
-  }
-
-  it('virtualization does not break drag-and-drop (dragSrcIndex still present)', () => {
-    expect(thumbnailPanelBody()).toContain('dragSrcIndex');
-  });
-
-  it('virtualization does not break page label display', () => {
-    expect(thumbnailPanelBody()).toContain('pageLabels?.[i]');
-  });
-
-  it('virtualization does not break active page highlighting', () => {
-    expect(thumbnailPanelBody()).toContain('isActive');
-    // v2: active thumb uses the .leftrail-thumb-active class (token-
-    // driven via --accent) instead of the hardcoded #2563eb border.
-    expect(thumbnailPanelBody()).toMatch(/2px solid #2563eb|leftrail-thumb-active/);
-  });
-
-  it('virtualization does not break auto-scroll to active page', () => {
-    expect(thumbnailPanelBody()).toContain('scrollIntoView');
-  });
-
-  it('drag handlers are still wired to visible thumbnail buttons', () => {
-    expect(thumbnailPanelBody()).toContain('onDragStart=');
-    expect(thumbnailPanelBody()).toContain('onDragOver=');
-    expect(thumbnailPanelBody()).toContain('onDrop=');
-  });
-});
 
 // ---------------------------------------------------------------------------
 // Stability — ViewerApp wires all navigation callbacks

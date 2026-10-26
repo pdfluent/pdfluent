@@ -6,27 +6,28 @@
 // See https://pdfluent.com/license for terms.
 
 // ---------------------------------------------------------------------------
-// PDFluent crash ingest Worker (plan §5)
+// PDFluent report Worker: crash reports and "Help us improve PDFluent".
 //
-// Fase 0 scope: this Worker ingests *crash* reports only. General
-// feedback/contact is NOT handled here — it goes to the website form at
-// pdfluent.com/feedback (reached via feedback.pdfluent.com). There is no
-// in-app feedback ingest in this phase. The 'bug'/'feedback' report types are
-// accepted by the validator/schema as forward-looking (Fase 1), but the app
-// does not send them yet.
+//   POST   /v1/report                    crash report (opt-in consent in the app)
+//          → 202 { "id": "<uuid>", "delete_token" } | 400 | 429
+//   DELETE /v1/report/<id>               the sender removes their crash report (X-Delete-Token)
+//          → 204 | 403 | 404
+//   POST   /v1/feedback                  feedback report (sent only when the user presses Send)
+//          → 201 { "id": "FB-…", "delete_token", "upload_token"? } | 400 | 403 | 429
+//   PUT    /v1/feedback/<id>/attachment  the document the reporter agreed to share
+//   DELETE /v1/feedback/<id>             the reporter removes their report
+//   cron                                 open missing issues, expire documents and old rows
+//                                        (crash reports after 90 days, feedback after 365),
+//                                        delete R2 objects no row refers to
 //
-// Stateless, single responsibility: validate a report, scrub it again as
-// defence-in-depth, and write exactly one row to D1. No dedup, no queue, no
-// auth token, no IP logging — the endpoint is low-risk and carries no PII.
-//
-//   POST https://report.pdfluent.com/v1/report   (JSON, see plan §3)
-//   → 202 { "id": "<uuid>" }   on success
-//   → 400 { "error": "…" }     on validation failure
-//   → 429 { "error": "…" }     when the coarse rate limit trips
+// Crash reports carry no personal data and are written as one D1 row; src/reports.js
+// holds their deletion and retention. The feedback flow is in src/feedback.js; its own header says what is stored
+// where and why the GitHub issue never carries anything personal.
 //
 // Bindings (wrangler.toml):
-//   DB           D1 database (table `reports`, see schema.sql)
-//   RATE_LIMIT   KV namespace (ephemeral fixed-window counter, no IP stored)
+//   DB           D1 database (tables `reports`, `feedback`, `contact`; schema.sql)
+//   RATE_LIMIT   KV namespace (ephemeral counters; feedback keys are a salted daily hash, no IP stored)
+//   ATTACHMENTS  R2 bucket (shared documents, keyed by report ID, lifecycle-expired)
 // ---------------------------------------------------------------------------
 
 // Field length caps (plan §5).
@@ -48,35 +49,27 @@ const ALLOWED_ORIGINS = new Set([
   'http://tauri.localhost',
   'http://localhost:1420',
   'http://127.0.0.1:1420',
+  // The website feedback form posts the same report shape (source: 'site').
+  'https://pdfluent.com',
+  'https://www.pdfluent.com',
 ]);
 
-// ── Server-side scrub (mirrors src/lib/telemetry/scrub.ts) ────────────────
-const WINDOWS_PATH = /[A-Za-z]:\\[^\s"'<>|)\]}]*/g;
-const UNIX_PATH = /(?:\/[\w.\-@+]+){2,}\/?/g;
-const EMAIL = /[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/g;
-const DOC_FILE =
-  /\b[\w.-]+\.(?:pdf|docx?|xlsx?|pptx?|csv|txt|log|rtf|odt|ods|odp|png|jpe?g|gif|tiff?|bmp|webp|heic)\b/gi;
-const BASE64_BLOB = /[A-Za-z0-9+/]{40,}={0,2}/g;
-const HEX_BLOB = /\b(?:0x)?[0-9a-fA-F]{32,}\b/g;
-
-function scrub(input) {
-  if (input == null) return '';
-  let out = String(input);
-  out = out.replace(WINDOWS_PATH, '<path>');
-  out = out.replace(UNIX_PATH, '<path>');
-  out = out.replace(EMAIL, '<email>');
-  out = out.replace(DOC_FILE, '<file>');
-  out = out.replace(BASE64_BLOB, '<redacted>');
-  out = out.replace(HEX_BLOB, '<redacted>');
-  return out;
-}
+import { scrub } from './src/scrub.js';
+import {
+  handleAttachmentPut,
+  handleFeedbackDelete,
+  handleFeedbackPost,
+  syncFeedback,
+} from './src/feedback.js';
+import { handleReportDelete, sweepOrphanedAttachments, syncReports } from './src/reports.js';
+import { newToken, sha256Hex } from './src/ids.js';
 
 function corsHeaders(origin) {
   const allow = ALLOWED_ORIGINS.has(origin) ? origin : 'null';
   return {
     'Access-Control-Allow-Origin': allow,
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Methods': 'POST, PUT, DELETE, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, X-Upload-Token, X-Delete-Token',
     'Access-Control-Max-Age': '86400',
     Vary: 'Origin',
   };
@@ -147,13 +140,14 @@ async function handleReport(request, env, origin) {
   }
 
   const id = crypto.randomUUID();
+  const deleteToken = newToken();
   const createdAt = new Date().toISOString();
 
   await env.DB.prepare(
     `INSERT INTO reports
        (id, created_at, type, app_version, os, os_version, locale,
-        message, stack, attachment_key, client_ts, cluster_id, status)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, ?, NULL, 'new')`,
+        message, stack, attachment_key, client_ts, cluster_id, status, delete_token_hash)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, ?, NULL, 'new', ?)`,
   )
     .bind(
       id,
@@ -166,30 +160,79 @@ async function handleReport(request, env, origin) {
       message,
       stack,
       clientTs,
+      await sha256Hex(deleteToken),
     )
     .run();
 
-  return json({ id }, 202, origin);
+  return json({ id, delete_token: deleteToken }, 202, origin);
+}
+
+const REPORT_ITEM = /^\/v1\/report\/([^/]+)$/;
+const FEEDBACK_ITEM = /^\/v1\/feedback\/(FB-[0-9A-Z]{8})(\/attachment)?$/;
+
+async function route(request, env, ctx, origin) {
+  const url = new URL(request.url);
+  if (request.method === 'POST' && url.pathname === '/v1/report') {
+    return handleReport(request, env, origin);
+  }
+  if (request.method === 'POST' && url.pathname === '/v1/feedback') {
+    const r = await handleFeedbackPost(request, env, ctx);
+    return json(r.body, r.status, origin);
+  }
+  const reportItem = REPORT_ITEM.exec(url.pathname);
+  if (reportItem && request.method === 'DELETE') {
+    const r = await handleReportDelete(request, env, reportItem[1]);
+    return r.body === null ? new Response(null, { status: r.status, headers: corsHeaders(origin) }) : json(r.body, r.status, origin);
+  }
+  const item = FEEDBACK_ITEM.exec(url.pathname);
+  if (item && item[2] && request.method === 'PUT') {
+    const r = await handleAttachmentPut(request, env, item[1]);
+    return r.body === null ? new Response(null, { status: r.status, headers: corsHeaders(origin) }) : json(r.body, r.status, origin);
+  }
+  if (item && !item[2] && request.method === 'DELETE') {
+    const r = await handleFeedbackDelete(request, env, item[1]);
+    return r.body === null ? new Response(null, { status: r.status, headers: corsHeaders(origin) }) : json(r.body, r.status, origin);
+  }
+  return json({ error: 'not found' }, 404, origin);
+}
+
+/**
+ * The cron pass. Each step is independent: one failing must not stop the
+ * others, because a stuck issue retry is no reason to keep expired reports.
+ * Only the error's class name is logged, never its message.
+ */
+export async function runScheduled(env, deps = {}) {
+  const steps = [
+    ['feedback', () => syncFeedback(env, deps)],
+    ['reports', () => syncReports(env, deps)],
+    ['orphans', () => sweepOrphanedAttachments(env, deps)],
+  ];
+  const settled = await Promise.allSettled(steps.map(([, run]) => run()));
+  settled.forEach((outcome, i) => {
+    if (outcome.status === 'rejected') {
+      console.warn(`scheduled ${steps[i][0]} failed: error ${outcome.reason?.name ?? typeof outcome.reason}`);
+    }
+  });
+  return Object.fromEntries(settled.map((o, i) => [steps[i][0], o.status === 'fulfilled' ? o.value : null]));
 }
 
 export default {
-  async fetch(request, env) {
+  async fetch(request, env, ctx) {
     const origin = request.headers.get('Origin') ?? '';
-    const url = new URL(request.url);
 
     if (request.method === 'OPTIONS') {
       return new Response(null, { status: 204, headers: corsHeaders(origin) });
     }
 
-    if (request.method !== 'POST' || url.pathname !== '/v1/report') {
-      return json({ error: 'not found' }, 404, origin);
-    }
-
     try {
-      return await handleReport(request, env, origin);
-    } catch (err) {
-      // Never leak internals; the app retries once then drops silently.
+      return await route(request, env, ctx, origin);
+    } catch {
+      // Never leak internals. The app shows its own localized failure text.
       return json({ error: 'internal error' }, 500, origin);
     }
+  },
+
+  async scheduled(_event, env, ctx) {
+    ctx.waitUntil(runScheduled(env));
   },
 };

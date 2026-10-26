@@ -14,9 +14,11 @@ interface UnsavedChangesDialogProps {
   onSave: () => void;
   onDiscard: () => void;
   onCancel: () => void;
+  /** With several documents open (J-90) the dialog says which one it is about. */
+  documentName?: string;
 }
 
-export function UnsavedChangesDialog({ isOpen, canSave, onSave, onDiscard, onCancel }: UnsavedChangesDialogProps) {
+export function UnsavedChangesDialog({ isOpen, canSave, onSave, onDiscard, onCancel, documentName }: UnsavedChangesDialogProps) {
   const { t } = useTranslation();
   // Stable ref so the Escape listener always calls the latest onCancel
   const onCancelRef = useRef(onCancel);
@@ -59,7 +61,7 @@ export function UnsavedChangesDialog({ isOpen, canSave, onSave, onDiscard, onCan
             {t('unsavedChanges.title')}
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            {t('unsavedChanges.message')}
+            {documentName ? t('unsavedChanges.messageNamed', { name: documentName }) : t('unsavedChanges.message')}
           </p>
         </div>
 

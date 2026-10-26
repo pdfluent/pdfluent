@@ -7,6 +7,7 @@
 
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
+import { applyLanguageToDocument } from './direction';
 import en from './locales/en.json';
 import nl from './locales/nl.json';
 import ar from './locales/ar.json';
@@ -113,6 +114,11 @@ function getInitialLanguage(): string {
   return detectLanguageFromEnvironment() ?? 'en';
 }
 
+// Every language change, including the first one init makes, sets <html lang>
+// and <html dir>. Registered before init so the initial language is covered
+// without a second code path.
+i18n.on('languageChanged', (lng: string) => { applyLanguageToDocument(lng); });
+
 void i18n
   .use(initReactI18next)
   .init({
@@ -153,6 +159,12 @@ void i18n
     },
   });
 
+// init with inline resources is synchronous, but whether it emits
+// languageChanged for the initial language is an i18next detail; apply once
+// more so the document is right either way.
+applyLanguageToDocument(i18n.language);
+
+export { RTL_LANGUAGES, directionOf } from './direction';
 export default i18n;
 
 /** Change language and persist the choice to localStorage. */

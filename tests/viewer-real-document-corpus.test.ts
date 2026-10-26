@@ -138,11 +138,11 @@ describe('corpus — writable categories', () => {
 });
 
 describe('corpus — blocked categories', () => {
-  it('multi_line_paragraph → non_writable_digital_text', () => {
+  it('multi_line_paragraph → writable_digital_text (paragraph edit, J-42)', () => {
     const entry = getCorpusEntry('multi_line_paragraph')!;
     const result = getMutationSupport(entry.representativeTarget);
-    expect(result.supportClass).toBe('non_writable_digital_text');
-    expect(result.writable).toBe(false);
+    expect(result.supportClass).toBe('writable_digital_text');
+    expect(result.writable).toBe(true);
   });
 
   it('kerning_heavy → non_writable_digital_text (multi-span)', () => {

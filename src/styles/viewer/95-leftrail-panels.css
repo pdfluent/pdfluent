@@ -112,8 +112,8 @@
   height: 14px;
   padding: 0 4px;
   border-radius: var(--radius-pill);
-  background: var(--accent);
-  color: var(--brand-mark-on);
+  background: var(--emphasis);
+  color: var(--on-emphasis);
   font-size: 9px;
   font-weight: 700;
   line-height: 1;
@@ -143,7 +143,7 @@
 }
 
 .leftrail-item-active {
-  background: var(--accent-soft);
+  background: var(--state-active-bg);
   color: var(--text-primary);
 }
 

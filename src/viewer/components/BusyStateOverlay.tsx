@@ -21,6 +21,7 @@
  */
 
 import React from 'react';
+import i18n from '../../i18n';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -137,7 +138,7 @@ export function BusyStateOverlay({
             onClick={onCancel}
             type="button"
           >
-            Annuleren
+            {i18n.t('common.cancel')}
           </button>
         )}
       </div>

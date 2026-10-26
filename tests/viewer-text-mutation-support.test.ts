@@ -212,7 +212,7 @@ describe('getMutationSupport — writable_digital_text', () => {
     expect(getMutationSupport(makeWritableParagraph()).reasonCode).toBe('single-span-digital');
   });
 
-  it('label is non-empty Dutch string', () => {
+  it('label is a non-empty string', () => {
     const { label } = getMutationSupport(makeWritableParagraph());
     expect(label.length).toBeGreaterThan(10);
   });
@@ -272,23 +272,21 @@ describe('getMutationSupport — multi-span non_writable_digital_text', () => {
 // non_writable_digital_text — multi-line
 // ---------------------------------------------------------------------------
 
-describe('getMutationSupport — multi-line non_writable_digital_text', () => {
-  it('multi-line paragraph returns non_writable_digital_text', () => {
-    expect(getMutationSupport(makeMultiLineParagraph()).supportClass).toBe(
-      'non_writable_digital_text',
-    );
+describe('getMutationSupport — multi-line paragraphs are writable (J-42)', () => {
+  it('a paragraph of single-run lines is writable_digital_text', () => {
+    const r = getMutationSupport(makeMultiLineParagraph());
+    expect(r.supportClass).toBe('writable_digital_text');
+    expect(r.writable).toBe(true);
+    expect(r.reasonCode).toBe('multi-line-digital');
+    expect(r.constraints).not.toBeNull();
   });
 
-  it('writable is false', () => {
-    expect(getMutationSupport(makeMultiLineParagraph()).writable).toBe(false);
-  });
-
-  it('reasonCode is multi-line-unsupported', () => {
-    expect(getMutationSupport(makeMultiLineParagraph()).reasonCode).toBe('multi-line-unsupported');
-  });
-
-  it('constraints are null', () => {
-    expect(getMutationSupport(makeMultiLineParagraph()).constraints).toBeNull();
+  it('a paragraph with a styled (multi-run) line is still refused', () => {
+    const para = makeMultiLineParagraph() as unknown as { lines: Array<{ spans: unknown[] }> };
+    para.lines[1]!.spans = [...para.lines[1]!.spans, { ...makeSpan('bold'), id: 'p0:s9' }];
+    const r = getMutationSupport(para as unknown as TextParagraphTarget);
+    expect(r.writable).toBe(false);
+    expect(r.reasonCode).toBe('multi-span-unsupported');
   });
 });
 
@@ -410,9 +408,9 @@ describe('validateReplacement — rejection cases', () => {
     expect(result.reasonCode).toBe('empty-replacement');
   });
 
-  it('empty replacement message mentions redactie', () => {
+  it('empty replacement message mentions redaction', () => {
     const result = validateReplacement('Hello', '', MVP_CONSTRAINTS);
-    expect(result.message.toLowerCase()).toContain('redactie');
+    expect(result.message.toLowerCase()).toContain('redaction');
   });
 
   it('null maxLength does not block longer replacement', () => {
@@ -463,8 +461,8 @@ describe('isWritable predicate', () => {
     expect(isWritable(makeMultiSpanParagraph())).toBe(false);
   });
 
-  it('false for multi-line paragraph', () => {
-    expect(isWritable(makeMultiLineParagraph())).toBe(false);
+  it('true for a multi-line paragraph of single-run lines (J-42)', () => {
+    expect(isWritable(makeMultiLineParagraph())).toBe(true);
   });
 
   it('false for OCR paragraph', () => {
@@ -490,8 +488,8 @@ describe('isNonWritableDigital predicate', () => {
     expect(isNonWritableDigital(makeMultiSpanParagraph())).toBe(true);
   });
 
-  it('true for multi-line digital paragraph', () => {
-    expect(isNonWritableDigital(makeMultiLineParagraph())).toBe(true);
+  it('false for a multi-line paragraph of single-run lines (J-42)', () => {
+    expect(isNonWritableDigital(makeMultiLineParagraph())).toBe(false);
   });
 
   it('false for single-span digital (that is writable)', () => {
@@ -541,7 +539,6 @@ describe('getMutationSupport — class coverage', () => {
   it('non-writable results always have null constraints', () => {
     const nonWritable = [
       makeMultiSpanParagraph(),
-      makeMultiLineParagraph(),
       makeOcrParagraph(),
       makeEmptyParagraph(),
     ];

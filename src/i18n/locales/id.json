@@ -114,9 +114,9 @@
     "allTools": "Semua alat",
     "contextualBar": "Bilah alat mode",
     "pdfa": "PDF/A",
-    "metadata": "Document properties",
-    "invoice": "E-invoice",
-    "bookmarks": "Bookmarks"
+    "metadata": "Properti dokumen",
+    "invoice": "Faktur elektronik",
+    "bookmarks": "Penanda"
   },
   "topbar": {
     "openPdf": "Buka PDF",
@@ -242,7 +242,6 @@
     "ownerPasswordPlaceholder": "Kata sandi pemilik",
     "encryptBtn": "Enkripsi…",
     "decrypt": "Dekripsi",
-    "currentPasswordPlaceholder": "Kata sandi saat ini",
     "decryptBtn": "Dekripsi",
     "noDocument": "Tidak ada dokumen yang terbuka.",
     "permCanPrint": "Cetak",
@@ -258,7 +257,11 @@
     "searchRedactBtn": "Cari dan redaksi",
     "redactMetadataTitle": "Metadata",
     "redactMetadataDesc": "Hapus penulis, judul, dan metadata identifikasi lainnya.",
-    "redactMetadataBtn": "Hapus metadata"
+    "redactMetadataBtn": "Hapus metadata",
+    "ownerPasswordForRemoval": "Kata sandi pemilik (izin)",
+    "removePasswordHelp": "Menghapus kata sandi memerlukan kata sandi pemilik, yaitu yang menjaga izin. Kata sandi yang Anda gunakan untuk membuka file tidak cukup kecuali itu juga kata sandi pemilik.",
+    "removePasswordReady": "Anda membuka file ini dengan kata sandi pemilik, jadi perlindungan dapat dihapus tanpa mengetikkannya lagi.",
+    "removePasswordNotProtected": "Dokumen ini tidak memiliki perlindungan kata sandi."
   },
   "organize": {
     "thumbnails": "Thumbnail",
@@ -287,33 +290,34 @@
     "combine": "Gabungkan file",
     "splitRange": "Pisah berdasarkan rentang",
     "splitRangeHint": "Pilih halaman terlebih dahulu",
-    "moveLeft": "Move selected page left",
-    "moveRight": "Move selected page right",
-    "moveLeftShort": "Left",
-    "moveRightShort": "Right",
-    "rotateLeft": "Rotate left",
-    "rotateRight": "Rotate right",
-    "rotateLeftShort": "Left",
-    "rotateRightShort": "Right",
-    "addingPdf": "Adding PDF…",
-    "pdfAdded": "PDF added",
-    "combiningFiles": "Combining {{count}} file(s)…",
-    "filesCombined": "{{count}} file(s) combined",
-    "insertingPdf": "Inserting PDF before page {{page}}…",
-    "pdfInserted": "PDF inserted",
-    "exportingPages": "Exporting {{count}} page(s)…",
-    "selectionExported": "Selection exported to {{name}}",
-    "splittingPages": "Splitting into individual pages…",
-    "pagesSaved": "{{count}} pages saved",
-    "splittingRanges": "Splitting {{count}} range(s)…",
-    "filesSaved": "{{count}} file(s) saved"
+    "moveLeft": "Pindahkan halaman terpilih ke kiri",
+    "moveRight": "Pindahkan halaman terpilih ke kanan",
+    "moveLeftShort": "Kiri",
+    "moveRightShort": "Kanan",
+    "rotateLeft": "Putar kiri",
+    "rotateRight": "Putar kanan",
+    "rotateLeftShort": "Kiri",
+    "rotateRightShort": "Kanan",
+    "addingPdf": "Menambahkan PDF…",
+    "pdfAdded": "PDF ditambahkan",
+    "combiningFiles": "Menggabungkan {{count}} file…",
+    "filesCombined": "{{count}} file digabungkan",
+    "insertingPdf": "Menyisipkan PDF sebelum halaman {{page}}…",
+    "pdfInserted": "PDF disisipkan",
+    "exportingPages": "Mengekspor {{count}} halaman…",
+    "selectionExported": "Pilihan diekspor ke {{name}}",
+    "splittingPages": "Memisah menjadi halaman terpisah…",
+    "pagesSaved": "{{count}} halaman disimpan",
+    "splittingRanges": "Memisah {{count}} rentang…",
+    "filesSaved": "{{count}} file disimpan"
   },
   "unsavedChanges": {
     "title": "Perubahan belum disimpan",
     "message": "Apakah Anda ingin menyimpan perubahan sebelum melanjutkan?",
     "save": "Simpan",
     "discard": "Buang perubahan",
-    "cancel": "Batal"
+    "cancel": "Batal",
+    "messageNamed": "Apakah Anda ingin menyimpan perubahan pada {{name}} sebelum melanjutkan?"
   },
   "welcome": {
     "title": "Buka PDF untuk memulai",
@@ -327,13 +331,13 @@
     "lede": "Baca, edit, konversi, isi dan tanda tangan — sepenuhnya di perangkat Anda.",
     "privacyPromise": "Local-first · dokumen tidak pernah meninggalkan perangkat ini",
     "dropPdfHere": "Jatuhkan PDF di sini",
-    "v3Subtitle": "Open a PDF to read, edit, convert or sign it locally.",
-    "openFileAria": "Choose a PDF file to open",
-    "clearRecent": "Clear recent",
-    "recentShort": "Recent",
-    "removeRecentAria": "Remove {{name}}",
-    "backToDocument": "Back to document",
-    "loadingDocument": "Loading document…"
+    "v3Subtitle": "Buka PDF untuk membaca, mengedit, mengonversi, atau menandatanganinya secara lokal.",
+    "openFileAria": "Pilih file PDF untuk dibuka",
+    "clearRecent": "Bersihkan daftar terbaru",
+    "recentShort": "Terbaru",
+    "removeRecentAria": "Hapus {{name}}",
+    "backToDocument": "Kembali ke dokumen",
+    "loadingDocument": "Memuat dokumen…"
   },
   "settings": {
     "language": "Bahasa",
@@ -350,15 +354,29 @@
     "reviewerNamePlaceholder": "Nama yang digunakan dalam anotasi",
     "exportPreferences": "Preferensi ekspor",
     "exportFormatLabel": "Format ekspor default",
-    "autosave": "Simpan otomatis",
-    "autosaveEnable": "Simpan perubahan secara otomatis",
     "themeLabel": "Tema",
     "ocrDefaults": "Default OCR",
     "ocrLanguageLabel": "Bahasa default (ISO-639-2)",
     "ocrLanguagePlaceholder": "mis. eng, nld, deu",
-    "updates": "Updates",
-    "automaticUpdateCheck": "Check for a new version at startup",
-    "automaticUpdateCheckHint": "PDFluent asks pdfluent.com whether a newer version exists, a few seconds after it starts. Nothing from your documents is sent. Turn this off and the app never checks on its own — \"Check for updates\" still works whenever you ask for it."
+    "updates": "Pembaruan",
+    "automaticUpdateCheck": "Periksa versi baru saat memulai",
+    "automaticUpdateCheckHint": "PDFluent menanyakan ke pdfluent.com apakah ada versi yang lebih baru, beberapa detik setelah dimulai. Tidak ada apa pun dari dokumen Anda yang dikirim. Matikan ini dan aplikasi tidak akan memeriksa sendiri — \"Periksa pembaruan\" tetap berfungsi kapan pun Anda memintanya.",
+    "recoveryCopy": "Salinan pemulihan",
+    "recoveryCopyEnable": "Simpan salinan pemulihan dari perubahan yang belum disimpan, ditawarkan setelah aplikasi mogok",
+    "view": "Tampilan",
+    "defaultZoomLabel": "Zoom default",
+    "defaultZoomFitWidth": "Sesuaikan lebar (default)",
+    "defaultZoomFitPage": "Sesuaikan halaman",
+    "defaultZoomActualSize": "Ukuran asli (100%)",
+    "defaultZoomLastUsed": "Terakhir digunakan",
+    "defaultZoomHint": "Dokumen terbuka pada zoom ini dan mengikuti jendela sampai Anda melakukan zoom sendiri. Sesuaikan lebar justru menampilkan seluruh halaman saat itu jelas lebih cocok.",
+    "securityTitle": "Keamanan",
+    "formScriptsLabel": "Skrip formulir",
+    "formScriptsAsk": "Tanya",
+    "formScriptsAlways": "Selalu",
+    "formScriptsNever": "Jangan pernah",
+    "formScriptsHint": "Formulir dapat membawa skrip, misalnya perhitungan. Tanya adalah pilihan bawaan: formulir dibuka dengan nilai tersimpannya dan tidak ada yang dijalankan sampai Anda menyetujuinya.",
+    "formScriptsPinned": "Organisasi Anda telah menetapkan pilihan ini. Tidak dapat diubah di sini."
   },
   "errors": {
     "loadFailed": "Dokumen gagal dimuat",
@@ -381,7 +399,8 @@
     "addPageFailed": "Tambah PDF gagal",
     "insertFailed": "Sisipkan PDF gagal",
     "splitFailed": "Pemisahan gagal",
-    "commandFailedTitle": "'{{command}}' did not complete"
+    "commandFailedTitle": "'{{command}}' tidak selesai",
+    "commandRetrying": "Kegagalan sementara pada {{command}} — mencoba lagi"
   },
   "events": {
     "formFieldUpdated": "Bidang formulir diperbarui",
@@ -430,9 +449,9 @@
     "pageNotFound": "Halaman tidak ditemukan",
     "requiresFontInspection": "Pengeditan teks memerlukan inspeksi font (direncanakan untuk fase 6).",
     "rejection": {
-      "bannerTitle": "This text was not changed",
-      "bannerDetail": "Reason reported by the PDF engine: {{detail}}",
-      "bannerDismiss": "Dismiss",
+      "bannerTitle": "Teks ini tidak diubah",
+      "bannerDetail": "Alasan yang dilaporkan mesin PDF: {{detail}}",
+      "bannerDismiss": "Tutup",
       "replacement-too-long": {
         "tooltip": "Replacement is too long",
         "explanation": "The replacement is longer than the text it replaces. Keep it the same length or shorter so the surrounding layout stays intact."
@@ -491,8 +510,8 @@
       }
     },
     "fallback": {
-      "fontSubstitutedTitle": "A standard font wrote the new text",
-      "fontSubstitutedMessage": "The original font of this text has no glyph for one or more characters you typed, so Helvetica was used for the replacement. The text is correct; it may look slightly different from the rest of the line."
+      "fontSubstitutedTitle": "Teks baru ditulis dengan font standar",
+      "fontSubstitutedMessage": "Font asli teks ini tidak memiliki glif untuk satu atau beberapa karakter yang Anda ketik, jadi Helvetica digunakan untuk penggantian. Teksnya benar; tampilannya mungkin sedikit berbeda dari bagian lain di baris ini."
     }
   },
   "validation": {
@@ -566,12 +585,16 @@
     "watermarkDone": "Tanda air ditambahkan",
     "watermarkFailed": "Gagal menambahkan tanda air",
     "watermarkRunning": "Menambahkan tanda air…",
-    "pdfaRunning": "Converting to PDF/A…",
-    "pdfaDone": "PDF/A written",
-    "pdfaFailed": "PDF/A conversion failed",
-    "metadataRunning": "Saving properties…",
-    "metadataDone": "Properties saved",
-    "metadataFailed": "Could not save properties"
+    "pdfaRunning": "Mengonversi ke PDF/A…",
+    "pdfaDone": "PDF/A ditulis",
+    "pdfaFailed": "Konversi PDF/A gagal",
+    "metadataRunning": "Menyimpan properti…",
+    "metadataDone": "Properti disimpan",
+    "metadataFailed": "Tidak dapat menyimpan properti",
+    "exportMarkdownRunning": "Mengekspor sebagai Markdown…",
+    "exportMarkdownDone": "Markdown diekspor",
+    "exportTablesRunning": "Mengekspor tabel ke Excel…",
+    "exportTablesDone": "Tabel diekspor ke Excel ({{count}})"
   },
   "panels": {
     "search": "Cari",
@@ -714,7 +737,10 @@
     "formatJpeg": "JPEG (gambar)",
     "formatDocx": "Dokumen Word (.docx)",
     "formatXlsx": "Spreadsheet Excel (.xlsx)",
-    "formatPptx": "Presentasi PowerPoint (.pptx)"
+    "formatPptx": "Presentasi PowerPoint (.pptx)",
+    "formatMarkdown": "Markdown (.md) - Pratinjau",
+    "formatTablesXlsx": "Tabel ke Excel (.xlsx) - Pratinjau",
+    "noTablesFound": "Tidak ada tabel yang dikenali dalam dokumen ini."
   },
   "goToPage": {
     "title": "Pergi ke halaman",
@@ -729,7 +755,9 @@
     "documentLabel": "Dokumen:",
     "savedLabel": "Disimpan:",
     "recoveryPath": "Jalur pemulihan:",
-    "restore": "Pulihkan"
+    "restore": "Pulihkan",
+    "untitled": "Dokumen tanpa judul",
+    "andMore": "{{name}} dan {{count}} lainnya"
   },
   "emptyStates": {
     "noDocument": "Tidak ada dokumen yang terbuka",
@@ -839,7 +867,26 @@
     "statusUnavailableWithReason": "OCR runtime tidak tersedia: {{reason}}",
     "statusRetry": "Periksa lagi",
     "runtimePath": "Waktu proses: {{path}}",
-    "missingPackages": "Tidak ada: {{packages}}"
+    "missingPackages": "Tidak ada: {{packages}}",
+    "noScannedPagesTitle": "Tidak ada yang bisa dikenali",
+    "unavailable": {
+      "platform": "OCR tidak tersedia untuk platform ini.",
+      "missing": "File OCR untuk versi ini hilang atau tidak lengkap. Instal ulang PDFluent untuk memulihkannya."
+    },
+    "settings": {
+      "unknown": "Komponen OCR: memeriksa…",
+      "installed": "Komponen OCR: Tesseract {{version}} terpasang"
+    },
+    "errors": {
+      "OCR_COMPONENT_UNSUPPORTED_PLATFORM": "Komponen OCR tidak disediakan untuk platform ini.",
+      "OCR_COMPONENT_NOT_INSTALLED": "Komponen OCR tidak terpasang.",
+      "OCR_LANGUAGE_MISSING": "Paket bahasa untuk OCR tidak terpasang.",
+      "OCR_SIGNED_DOCUMENT": "Dokumen ini ditandatangani. OCR akan mengubah halaman yang ditandatangani, jadi tidak dijalankan.",
+      "OCR_NOT_PERMITTED": "Izin dokumen tidak mengizinkan perubahan isinya.",
+      "OCR_DOCUMENT_CHANGED": "Dokumen berubah saat OCR berjalan. Jalankan OCR lagi.",
+      "OCR_ENGINE_FAILED": "OCR berhenti karena kesalahan.",
+      "OCR_PAGE_OUT_OF_RANGE": "Halaman yang akan dikenali tidak ada dalam dokumen."
+    }
   },
   "docInfo": {
     "title": "Judul",
@@ -879,7 +926,17 @@
     "italicComingSoon": "Pemformatan miring segera hadir",
     "sourceDigital": "Lapisan teks PDF",
     "sourceOcr": "OCR",
-    "browserLimitedNote": "Klik teks di halaman untuk mengedit teks PDF yang didukung. Gambar dan tautan tersedia di aplikasi desktop."
+    "browserLimitedNote": "Klik teks di halaman untuk mengedit teks PDF yang didukung. Gambar dan tautan tersedia di aplikasi desktop.",
+    "typeface": {
+      "label": "Jenis huruf",
+      "default": "Font dokumen",
+      "noEmbed": "{{family}}: lisensi font tidak mengizinkan penyematan ke dalam PDF",
+      "refusedLicence": "{{family}} tidak dapat digunakan: lisensinya tidak mengizinkan penyematan ke dalam PDF. Pilih jenis huruf lain.",
+      "refusedGlyphs": "{{family}} tidak memiliki glif untuk {{characters}}. Pilih jenis huruf lain.",
+      "refusedGone": "Jenis huruf itu tidak lagi terpasang. Pilih yang lain.",
+      "refusedText": "Teks yang akan diubah gaya tidak lagi ada di halaman.",
+      "refusedUnusable": "{{family}} tidak dapat dibaca sebagai font. Pilih jenis huruf lain."
+    }
   },
   "rightPanel": {
     "properties": "Properti",
@@ -944,9 +1001,12 @@
     "flatten": "Ratakan XFA",
     "flattenDone": "XFA diratakan. Ekspor PDF untuk mengunduh versi statis.",
     "flattenFailed": "Meratakan XFA gagal",
-    "convertToStandard": "Convert to standard PDF",
-    "convertedToStandard": "XFA converted to standard PDF",
-    "convertFailed": "Conversion failed: {{message}}"
+    "convertToStandard": "Konversi ke PDF standar",
+    "convertedToStandard": "XFA dikonversi ke PDF standar",
+    "convertFailed": "Konversi gagal: {{message}}",
+    "bannerTitle": "Formulir XFA",
+    "bannerBody": "Formulir XFA ini ditampilkan apa adanya. Untuk mengisi, mengedit, atau mencari bidangnya, konversi ke PDF standar.",
+    "bannerBodyExperimental": "Formulir XFA ini ditampilkan apa adanya. Pengisian bidang masih bersifat eksperimental; konversi ke PDF standar untuk mengisi, mengedit, dan mencari dengan andal."
   },
   "security": {
     "activeContentBadge": "Diblokir",
@@ -970,7 +1030,8 @@
     "highlight": "Sorot",
     "strikethrough": "Coret",
     "underline": "Garis bawah",
-    "copyText": "Salin teks"
+    "copyText": "Salin teks",
+    "copied": "Disalin"
   },
   "update": {
     "available": "Pembaruan tersedia",
@@ -980,10 +1041,10 @@
     "installing": "Menginstal…",
     "checkFailed": "Pemeriksaan pembaruan gagal",
     "upToDate": "Anda menggunakan versi terbaru",
-    "installed": "Update installed",
-    "restartNow": "Restart now",
-    "restartUnsaved": "Save your changes before restarting.",
-    "restartManual": "If it doesn't restart automatically, quit and reopen PDFluent to finish."
+    "installed": "Pembaruan terinstal",
+    "restartNow": "Mulai ulang sekarang",
+    "restartUnsaved": "Simpan perubahan Anda sebelum memulai ulang.",
+    "restartManual": "Jika tidak dimulai ulang secara otomatis, keluar lalu buka kembali PDFluent untuk menyelesaikan."
   },
   "telemetry": {
     "addNoteLabel": "Ingin menambahkan sesuatu? (opsional)",
@@ -1012,6 +1073,11 @@
     "sentTitle": "Terkirim. Terima kasih.",
     "settingsAutoSend": "Kirim secara otomatis tanpa bertanya",
     "settingsAutoSendNote": "Laporan otomatis dibersihkan dan bebas dari data pribadi, persis seperti yang Anda tinjau secara manual.",
+    "settingsSentReports": "Laporan kerusakan yang dikirim dari komputer ini: {{count}}. Kami menghapusnya secara otomatis dari server kami setelah {{days}} hari.",
+    "settingsDeleteReports": "Hapus laporan kerusakan saya",
+    "settingsDeleting": "Menghapus…",
+    "settingsDeleted": "Laporan kerusakan yang dihapus: {{count}}",
+    "settingsDeleteFailed": "{{count}} tidak dapat dihapus. Periksa koneksi Anda dan coba lagi.",
     "settingsDescription": "Laporan tidak pernah berisi informasi pribadi atau konten dokumen. Semuanya dibersihkan sebelum dikirim dan Anda melihat setiap laporan terlebih dahulu. Mati secara default.",
     "settingsTitle": "Laporan kerusakan & kesalahan",
     "settingsToggle": "Kirim laporan kerusakan dan kesalahan",
@@ -1019,7 +1085,11 @@
     "typeBug": "Bug",
     "typeCrash": "Kerusakan",
     "typeFeedback": "Umpan balik",
-    "whatGetsSent": "Apa yang dikirim"
+    "whatGetsSent": "Apa yang dikirim",
+    "settingsSentFeedback": "Laporan umpan balik yang dikirim dari komputer ini: {{count}}. Kami menghapusnya dari server kami secara otomatis setelah {{days}} hari.",
+    "settingsDeleteFeedback": "Hapus laporan umpan balik saya",
+    "settingsFeedbackDeleted": "Laporan umpan balik dihapus: {{count}}",
+    "settingsFeedbackDeleteFailed": "Tidak dapat menghapus {{count}} laporan umpan balik. Periksa koneksi Anda dan coba lagi."
   },
   "ai": {
     "summaryInstruction": "Berikan ringkasan singkat dari dokumen di bawah ini dalam bahasa Indonesia. Untuk setiap peran, sebutkan pemberi kerja, posisi, dan periode. Gunakan poin-poin.",
@@ -1076,7 +1146,8 @@
       "scrollLeft": "Mode scroll ke kiri",
       "scrollRight": "Mode scroll ke kanan",
       "workMode": "Mode kerja",
-      "searchPlaceholder": "Cari dalam dokumen"
+      "searchPlaceholder": "Cari dalam dokumen",
+      "allTools": "Semua alat"
     },
     "menu": {
       "about": "Tentang",
@@ -1147,22 +1218,17 @@
       "draw": "Gambat",
       "signatureName": "Nama tanda tangan",
       "typeName": "Ketik nama Anda…",
-      "selectStyle": "Pilih gaya",
-      "styleClassic": "Kursif Klasik",
-      "styleElegant": "Kursif Elegan",
-      "styleBrush": "Tanda Tangan Kuas",
-      "styleModern": "Tulisan Tangan Modern",
       "drawHere": "Gambar di sini dengan mouse, trackpad, atau stylus Anda",
       "clear": "Hapus",
       "apply": "Terapkan",
-      "defaultSignature": "Tanda tangan",
       "clickToPlaceSignature": "Klik halaman untuk menempatkan tanda tangan.",
       "addInitials": "Tambah inisial",
       "initialsIntro": "Ketik inisial Anda untuk penempatan cepat di bidang inisial.",
       "initials": "Inisial",
       "initialsPlaceholder": "mis. AB",
-      "defaultInitials": "AB",
-      "clickToPlaceInitials": "Klik halaman untuk menempatkan inisial."
+      "clickToPlaceInitials": "Klik halaman untuk menempatkan inisial.",
+      "signatureFont": "Font tanda tangan",
+      "plainItalic": "Miring biasa"
     },
     "overlay": {
       "signaturePlaced": "Tanda tangan ditempatkan!",
@@ -1177,13 +1243,13 @@
     "textbox": {
       "editTitle": "Edit kotak teks",
       "newTitle": "Kotak teks baru",
-      "intro": "Teks ini ditempatkan sebagai overlay di halaman saat ini. Menyimpan kosong menghapus kotak teks yang ada.",
       "label": "Teks",
       "placeholder": "Ketik teksnya…",
       "delete": "Hapus",
       "deleted": "Kotak teks dihapus.",
       "updated": "Kotak teks diperbarui.",
-      "added": "Kotak teks baru ditambahkan."
+      "added": "Kotak teks baru ditambahkan.",
+      "introPdf": "Kotak teks ditulis ke dalam PDF dan terlihat di setiap penampil PDF. Menyimpannya kosong akan menghapus kotak teks yang ada."
     },
     "rail": {
       "tools": "Alat PDF",
@@ -1197,12 +1263,14 @@
       "more": "Alat lainnya",
       "strikeText": "Coret teks",
       "underlineText": "Garis bawahi teks",
-      "addAttachment": "Tambah lampiran"
+      "addAttachment": "Tambah lampiran",
+      "drawRectangle": "Gambar persegi panjang"
     },
     "railToasts": {
-      "commentMode": "Mode catatan aktif. Pilih teks dan pilih Catatan, atau gunakan daftar komentar untuk menambah catatan.",
+      "commentMode": "Mode catatan. Klik halaman di tempat catatan akan diletakkan.",
       "strikeout": "Coretan aktif — pilih teks untuk diterapkan.",
-      "underline": "Garis bawah aktif — pilih teks untuk diterapkan."
+      "underline": "Garis bawah aktif — pilih teks untuk diterapkan.",
+      "rectangle": "Persegi panjang aktif — seret di halaman untuk menggambarnya."
     },
     "tools": {
       "lede": "Pilih alat untuk memulai. Semuanya berjalan secara lokal di perangkat ini.",
@@ -1238,17 +1306,18 @@
       "layers": "{{count}} lapisan",
       "manageLayers": "Kelola lapisan",
       "layersVisible": "{{count}} lapisan terlihat.",
-      "archiveAndData": "Archiving and data",
-      "pdfaSub": "Check or convert for long-term archiving",
-      "invoiceSub": "Read the ZUGFeRD/Factur-X invoice inside",
-      "metadataSub": "Title and author of this document"
+      "archiveAndData": "Pengarsipan dan data",
+      "pdfaSub": "Periksa atau konversi untuk pengarsipan jangka panjang",
+      "invoiceSub": "Baca faktur ZUGFeRD/Factur-X di dalamnya",
+      "metadataSub": "Judul dan penulis dokumen ini",
+      "flattenForm": "Ratakan",
+      "flattenFormTitle": "Ratakan formulir: nilai yang diisi menjadi bagian dari halaman dan bidang dihapus",
+      "flattenFormDone": "Formulir diratakan. Urungkan mengembalikan bidang-bidangnya.",
+      "flattenFormFailed": "Tidak dapat meratakan formulir: {{message}}"
     },
     "edit": {
       "lede": "Klik teks dalam dokumen untuk mengedit sebaris. Bilah pemformatan muncul tepat di atas pilihan.",
       "formatText": "Format teks",
-      "fontLabel": "Font",
-      "fontHint": "Teks PDF yang ada menggunakan font PDF tertanam. Font \"{{font}}\" akan digunakan untuk kotak teks yang baru ditambahkan.",
-      "fontEmbedded": "Font PDF tertanam",
       "color": "Warna",
       "colorLabel": "Warna {{color}}",
       "addContent": "Tambah konten",
@@ -1261,7 +1330,18 @@
       "clickAnywhereTextBox": "Klik di mana saja di halaman untuk menempatkan kotak teks.",
       "clickAnywhereImage": "Klik di mana saja di halaman untuk menempatkan gambar.",
       "selection": "Pilihan",
-      "annotationOnPage": "{{type}} di halaman {{page}}"
+      "annotationOnPage": "{{type}} di halaman {{page}}",
+      "placeStamp": "Tempatkan stempel",
+      "stampLabel": "Stempel",
+      "clickToPlaceStamp": "Klik halaman untuk menempatkan stempel.",
+      "placementModeStamp": "Mode penempatan: stempel",
+      "stampPlaced": "Stempel ditempatkan.",
+      "deleteAnnotation": "Hapus anotasi",
+      "annotationColor": "Warna anotasi",
+      "editTextBox": "Edit teks",
+      "replaceImage": "Ganti gambar",
+      "imageReplaced": "Gambar diganti.",
+      "moveHint": "Seret untuk memindahkan, seret sudut untuk mengubah ukuran, atau geser dengan tombol panah."
     },
     "convert": {
       "exportPdfTo": "Ekspor PDF ke",
@@ -1279,10 +1359,16 @@
       "confidenceFrom": "Kepercayaan dari {{value}}%",
       "ocrOff": "OCR mati",
       "ocrOn": "OCR aktif",
-      "ocrRunning": "OCR berjalan secara lokal…"
+      "ocrRunning": "OCR berjalan secara lokal…",
+      "ocrComponentUnknown": "Komponen OCR: memeriksa…",
+      "ocrComponentInstalled": "Komponen OCR terpasang",
+      "ocrLastRun": "Terakhir dijalankan: {{pages}} halaman, {{words}} kata ditambahkan sebagai teks yang dapat dicari",
+      "ocrRunningProgress": "Mengenali halaman {{done}} dari {{total}}…",
+      "markdown": "Markdown (Pratinjau)",
+      "tablesToExcel": "Tabel ke Excel (Pratinjau)"
     },
     "esign": {
-      "lede": "Sign with a certificate of your own, and check the signatures a document already carries. Both happen on this device.",
+      "lede": "Tandatangani dengan sertifikat Anda sendiri, dan periksa tanda tangan yang sudah ada di dokumen. Keduanya terjadi di perangkat ini.",
       "fillAndSign": "Isi dokumen Anda dan tandatangani",
       "addSignature": "Tambah tanda tangan",
       "addInitials": "Tambah inisial",
@@ -1290,25 +1376,25 @@
       "placementModeInitials": "Mode penempatan: Inisial",
       "clickToPlaceSignature": "Klik di mana saja di halaman untuk menempatkan tanda tangan Anda.",
       "clickToPlaceInitials": "Klik di mana saja di halaman untuk menempatkan inisial Anda.",
-      "verifySection": "Signatures",
-      "verify": "Check signatures",
-      "desktopOnly": "Available in the desktop app",
-      "unsigned": "This document carries no signatures.",
-      "signSection": "Sign with a certificate",
-      "padesLevel": "Produces a PAdES B-B signature: your certificate over the whole file, no timestamp server involved.",
-      "certificate": "Certificate (.p12 or .pfx)",
-      "certificateNone": "No certificate chosen",
-      "chooseCertificate": "Choose certificate",
-      "certificatePassword": "Certificate password",
-      "reason": "Reason (optional)",
-      "reasonPlaceholder": "Why you are signing",
-      "sign": "Sign and save a copy",
-      "signing": "Signing…",
-      "signNeedsCertificate": "Choose a certificate and enter its password first.",
-      "signSaved": "Signed copy saved as {{name}}",
-      "signFailed": "Signing failed: {{message}}",
-      "usageRights": "Reader enablement (usage rights)",
-      "usageRightsInvalidated": "Usage rights invalidated — this file was edited, so Adobe Reader no longer treats it as an enabled form."
+      "verifySection": "Tanda tangan",
+      "verify": "Periksa tanda tangan",
+      "desktopOnly": "Tersedia di aplikasi desktop",
+      "unsigned": "Dokumen ini tidak memiliki tanda tangan.",
+      "signSection": "Tandatangani dengan sertifikat",
+      "padesLevel": "Menghasilkan tanda tangan PAdES B-B: sertifikat Anda atas seluruh file, tanpa melibatkan server stempel waktu.",
+      "certificate": "Sertifikat (.p12 atau .pfx)",
+      "certificateNone": "Belum ada sertifikat dipilih",
+      "chooseCertificate": "Pilih sertifikat",
+      "certificatePassword": "Kata sandi sertifikat",
+      "reason": "Alasan (opsional)",
+      "reasonPlaceholder": "Alasan Anda menandatangani",
+      "sign": "Tandatangani dan simpan salinan",
+      "signing": "Menandatangani…",
+      "signNeedsCertificate": "Pilih sertifikat dan masukkan kata sandinya terlebih dahulu.",
+      "signSaved": "Salinan bertanda tangan disimpan sebagai {{name}}",
+      "signFailed": "Penandatanganan gagal: {{message}}",
+      "usageRights": "Pengaktifan Reader (hak penggunaan)",
+      "usageRightsInvalidated": "Hak penggunaan tidak berlaku — file ini telah diedit, sehingga Adobe Reader tidak lagi memperlakukannya sebagai formulir yang diaktifkan."
     },
     "protect": {
       "lede": "Lindungi dokumen PDF Anda dengan kata sandi kriptografi yang kuat. Perubahan diterapkan secara lokal segera.",
@@ -1330,9 +1416,11 @@
       "localViaTauri": "Lokal melalui perintah Tauri, tidak ada runtime browser",
       "compressingImages": "Mengompresi gambar…",
       "percentComplete": "{{percent}}% lengkap",
-      "compressPdf": "Kompres PDF",
       "desktopOnly": "Tersedia di aplikasi desktop saja",
-      "backToTools": "Kembali ke alat"
+      "backToTools": "Kembali ke alat",
+      "saveCopy": "Simpan salinan terkompresi sebagai…",
+      "replaceOpen": "Kompres dan ganti dokumen yang terbuka",
+      "replaceNote": "Salinan membiarkan dokumen yang terbuka dan filenya apa adanya. Mengganti hanya mengubah dokumen yang terbuka; Urungkan mengembalikan yang asli."
     },
     "split": {
       "lede": "Bagi dokumen Anda menjadi file PDF terpisah per halaman atau berdasarkan jangkauan halaman tertentu.",
@@ -1369,7 +1457,52 @@
       "applying": "Menerapkan…",
       "applyPermanently": "Terapkan redaksi secara permanen",
       "noActiveMarkings": "Tidak ada penanda redaksi aktif.",
-      "backToTools": "Kembali ke alat"
+      "backToTools": "Kembali ke alat",
+      "pii": {
+        "title": "Data pribadi",
+        "lede": "Find personal data in the text of this document: IBANs, card numbers, national ID numbers, birth dates, e-mail addresses and phone numbers, and names and addresses when the model is installed. Review the list, then redact the ones you choose.",
+        "find": "Temukan data pribadi",
+        "scanning": "Memindai…",
+        "none": "Nothing found.",
+        "kind": {
+          "iban": "IBAN",
+          "email": "Alamat email",
+          "phone": "Nomor telepon",
+          "credit_card": "Nomor kartu",
+          "national_id": "Nomor identitas nasional",
+          "date_of_birth": "Tanggal lahir",
+          "bank_account": "Nomor rekening bank",
+          "person": "Nama",
+          "address": "Alamat"
+        },
+        "where": "Halaman {{pages}} · {{count}}×",
+        "selectAll": "Pilih semua",
+        "selectNone": "Pilih tidak ada",
+        "redactSelected": "Redaksi {{count}} yang dipilih",
+        "redacting": "Meredaksi…",
+        "done": "{{count}} item disensor. Simpan file untuk menyimpan hasilnya.",
+        "failed": "Penyensoran gagal: {{message}}",
+        "detectFailed": "Pencarian gagal: {{message}}",
+        "patternsOnly": "Without the model this finds only items it can check, such as IBANs, cards, ID numbers, birth dates, e-mail addresses and phone numbers. Names and addresses are not detected, so check every page yourself.",
+        "suggestionsOnly": "Ini adalah saran. Detektor dapat melewatkan sesuatu, jadi periksa setiap halaman sebelum Anda menyimpan.",
+        "source": {
+          "verified": "Diperiksa {{detail}}",
+          "model": "Saran model, {{score}}%"
+        },
+        "model": {
+          "use": "Juga temukan nama dan alamat dengan model",
+          "languages": "Diperiksa untuk: {{languages}}",
+          "remove": "Hapus model",
+          "removeFailed": "Tidak dapat menghapus model: {{message}}",
+          "failed": "Model tidak dapat dijalankan ({{code}}). Hanya item yang dapat diperiksa yang ditampilkan.",
+          "consentTitle": "Unduh model data pribadi?",
+          "consentBody": "Menemukan nama dan alamat memerlukan model bahasa ({{size}}). Model diunduh sekali dari {{host}}, diperiksa terhadap checksum tetap, lalu berjalan di komputer ini. Dokumen Anda tidak pernah meninggalkannya.",
+          "download": "Unduh",
+          "downloading": "Mengunduh…",
+          "downloadFailed": "Unduhan gagal: {{message}}",
+          "notInBuild": "Unduhan belum tersedia di versi ini."
+        }
+      }
     },
     "toasts": {
       "saving": "Menyimpan…",
@@ -1399,7 +1532,7 @@
       "pdfsMerged": "{{count}} file PDF digabung",
       "mergedSaved": "PDF yang digabung disimpan sebagai {{name}}.",
       "mergeFailed": "Penggabungan gagal: {{message}}",
-      "redactMatches": "{{matches}} kecocokan ditemukan, {{areas}} penanda redaksi ditempatkan.",
+      "redactSearchDone": "Kecocokan yang disamarkan: {{count}}. Simpan untuk mempertahankan perubahan.",
       "noRedactMatches": "Tidak ada kecocokan teks yang ditemukan untuk redaksi.",
       "redactSearchFailed": "Pencarian redaksi gagal: {{message}}",
       "applyRedactConfirm": "Terapkan {{count}} penanda redaksi secara permanen? Ini menghapus konten dari PDF selamanya.",
@@ -1408,108 +1541,328 @@
       "applyRedactRunning": "Menerapkan redaksi secara permanen…",
       "applyRedactDone": "Redaksi diterapkan secara permanen",
       "redactionsApplied": "Redaksi telah diterapkan secara permanen.",
-      "redactFailed": "Redaksi gagal: {{message}}"
+      "redactFailed": "Redaksi gagal: {{message}}",
+      "compressedCopyToast": "Disimpan {{name}}: {{before}} ke {{after}}. Dokumen yang terbuka tidak berubah.",
+      "compressedReplacedToast": "Kompresi dokumen yang terbuka: {{before}} ke {{after}}. Urungkan mengembalikan yang asli. Simpan untuk menyimpan versi terkompresi."
     },
     "thumbnails": {
       "pages": "Halaman",
       "pageAlt": "Halaman {{page}}",
-      "bookmarks": "Bookmarks"
+      "bookmarks": "Penanda"
     },
     "pdfa": {
-      "lede": "PDF/A is the archival form of PDF: fonts embedded, colours defined, nothing that depends on the outside world.",
-      "section": "Conformance",
-      "level": "Level",
-      "validate": "Check this document",
-      "convert": "Save as PDF/A…",
-      "desktopOnly": "Available in the desktop app",
-      "compliant": "Conforms to {{level}}",
-      "notCompliant": "Does not conform: {{errors}} errors, {{warnings}} warnings",
-      "moreIssues": "{{count}} more",
+      "lede": "PDF/A adalah bentuk arsip dari PDF: font disematkan, warna ditentukan, tidak ada yang bergantung pada dunia luar.",
+      "section": "Kesesuaian",
+      "level": "Tingkat",
+      "validate": "Periksa dokumen ini",
+      "convert": "Simpan sebagai PDF/A…",
+      "desktopOnly": "Tersedia di aplikasi desktop",
+      "compliant": "Sesuai dengan {{level}}",
+      "notCompliant": "Tidak sesuai: {{errors}} kesalahan, {{warnings}} peringatan",
+      "moreIssues": "{{count}} lainnya",
       "report": {
-        "title": "What the conversion did",
-        "written": "Written to {{path}}",
-        "size": "{{out}} out of {{in}} ({{ratio}}×), in {{seconds}} s",
-        "pages": "{{count}} pages",
-        "fontsEmbedded": "{{embedded}} of {{found}} unembedded fonts embedded",
-        "fontsFailed": "Could not embed: {{fonts}}",
-        "removed": "Removed: {{count}} items that PDF/A does not allow",
-        "subset": "{{count}} font programs reduced, {{bytes}} kB saved",
-        "outputIntent": "Output intent added",
-        "unchangedDocument": "The open document was not changed.",
+        "title": "Hasil konversi",
+        "written": "Ditulis ke {{path}}",
+        "size": "{{out}} dari {{in}} ({{ratio}}×), dalam {{seconds}} dtk",
+        "pages": "{{count}} halaman",
+        "fontsEmbedded": "{{embedded}} dari {{found}} font yang belum disematkan kini disematkan",
+        "fontsFailed": "Tidak dapat menyematkan: {{fonts}}",
+        "removed": "Dihapus: {{count}} item yang tidak diizinkan oleh PDF/A",
+        "subset": "{{count}} program font dikurangi, {{bytes}} kB dihemat",
+        "outputIntent": "Output intent ditambahkan",
+        "unchangedDocument": "Dokumen yang terbuka tidak diubah.",
         "warning": "{{message}}",
-        "moreWarnings": "{{count}} more"
+        "moreWarnings": "{{count}} lainnya"
       }
     },
     "metadata": {
-      "lede": "The title and author stored inside the file, which is what other readers and search show.",
-      "section": "Properties",
-      "title": "Title",
-      "author": "Author",
-      "apply": "Save properties",
-      "desktopOnly": "Available in the desktop app"
+      "lede": "Judul dan penulis yang tersimpan di dalam file, yang ditampilkan oleh pembaca lain dan pencarian.",
+      "section": "Properti",
+      "title": "Judul",
+      "author": "Penulis",
+      "apply": "Simpan properti",
+      "desktopOnly": "Tersedia di aplikasi desktop"
     },
     "invoice": {
-      "lede": "A ZUGFeRD or Factur-X invoice travels as XML inside the PDF. This reads it and checks it against EN 16931.",
-      "section": "Embedded invoice",
-      "read": "Read invoice",
-      "desktopOnly": "Available in the desktop app",
-      "none": "This document carries no e-invoice.",
-      "number": "Number: {{number}}",
-      "issued": "Issued: {{date}}",
-      "seller": "Seller: {{name}}",
-      "buyer": "Buyer: {{name}}",
-      "total": "Total: {{total}} {{currency}}",
-      "lines": "Line items: {{count}}",
-      "valid": "Valid against {{profile}}",
-      "invalid": "Not valid: {{errors}} errors, {{warnings}} warnings"
+      "lede": "Faktur ZUGFeRD atau Factur-X berjalan sebagai XML di dalam PDF. Ini membacanya dan memeriksanya terhadap EN 16931.",
+      "section": "Faktur tersemat",
+      "read": "Baca faktur",
+      "desktopOnly": "Tersedia di aplikasi desktop",
+      "none": "Dokumen ini tidak memuat faktur elektronik.",
+      "number": "Nomor: {{number}}",
+      "issued": "Diterbitkan: {{date}}",
+      "seller": "Penjual: {{name}}",
+      "buyer": "Pembeli: {{name}}",
+      "total": "Jumlah: {{total}} {{currency}}",
+      "lines": "Item baris: {{count}}",
+      "valid": "Valid menurut {{profile}}",
+      "invalid": "Tidak valid: {{errors}} kesalahan, {{warnings}} peringatan"
     },
     "canvas": {
-      "document": "PDF document"
+      "document": "Dokumen PDF"
+    },
+    "stamps": {
+      "Approved": "Disetujui",
+      "NotApproved": "Tidak disetujui",
+      "Draft": "Draf",
+      "Confidential": "Rahasia",
+      "Final": "Final",
+      "ForComment": "Untuk ditinjau",
+      "Expired": "Kedaluwarsa"
     }
   },
   "about": {
-    "section": "About",
-    "app": "App",
-    "version": "Version",
-    "privacy": "Privacy",
-    "privacyValue": "All processing happens locally",
-    "website": "Website"
+    "section": "Tentang",
+    "app": "Aplikasi",
+    "version": "Versi",
+    "privacy": "Privasi",
+    "privacyValue": "Semua diproses secara lokal",
+    "website": "Situs web"
   },
   "reviewSummary": {
-    "title": "Review summary",
-    "generatedAt": "Generated on",
-    "comments": "Comments",
-    "noComments": "No comments.",
-    "replies": "Replies:",
-    "empty": "empty",
-    "redactions": "Redactions",
-    "noRedactions": "No redactions.",
-    "noIssues": "No issues.",
-    "metadataChanges": "Metadata changes",
-    "noMetadataChanges": "No changes.",
-    "changedBy": "by",
-    "on": "on"
+    "title": "Ringkasan tinjauan",
+    "generatedAt": "Dibuat pada",
+    "comments": "Komentar",
+    "noComments": "Tidak ada komentar.",
+    "replies": "Balasan:",
+    "empty": "kosong",
+    "redactions": "Redaksi",
+    "noRedactions": "Tidak ada redaksi.",
+    "noIssues": "Tidak ada masalah.",
+    "metadataChanges": "Perubahan metadata",
+    "noMetadataChanges": "Tidak ada perubahan.",
+    "changedBy": "oleh",
+    "on": "pada"
   },
   "externalLink": {
-    "askMessage": "This PDF wants to open an external link:\n\n{{label}}\n\nURL:\n{{href}}\n\nDo you want to continue?",
-    "title": "Open external link?",
-    "openLink": "Open link",
-    "dialogBody": "This PDF wants to open an external website. Check the URL before continuing."
+    "askMessage": "PDF ini ingin membuka tautan eksternal:\n\n{{label}}\n\nURL:\n{{href}}\n\nLanjutkan?",
+    "title": "Buka tautan eksternal?",
+    "openLink": "Buka tautan",
+    "dialogBody": "PDF ini ingin membuka situs web eksternal. Periksa URL sebelum melanjutkan."
   },
   "linkChoice": {
-    "title": "Open link in your browser?",
-    "body": "This document wants to open an external website. Are you opening it from a trusted source?",
-    "alwaysAllow": "Always allow",
-    "openOnce": "Open once"
+    "title": "Buka tautan di browser Anda?",
+    "body": "Dokumen ini ingin membuka situs web eksternal. Apakah Anda membukanya dari sumber tepercaya?",
+    "alwaysAllow": "Selalu izinkan",
+    "openOnce": "Buka sekali"
   },
   "fallbacks": {
-    "ocrUnavailableTitle": "OCR is not available on this computer",
-    "ocrUnavailableMessage": "PDFluent could not start the text-recognition engine. {{reason}}",
-    "ocrFailedMessage": "Text recognition stopped on page {{page}}: {{reason}}",
-    "xfaStaticTitle": "Form filled without recalculation",
-    "xfaStaticMessage": "This build writes XFA field values straight into the form. Field scripts do not run, so calculated totals and fields that appear or hide based on your answer stay as they are.",
-    "featureUnavailableTitle": "'{{feature}}' is not available in this build",
-    "usageRightsInvalidatedTitle": "This document is no longer Reader-enabled",
-    "usageRightsInvalidatedMessage": "Your change was made. It also invalidated the usage-rights signature this PDF carried, which let Adobe Reader fill in and save the form. The text edit stands; the extended rights are gone and cannot be restored by undoing it."
+    "ocrUnavailableTitle": "OCR tidak tersedia di komputer ini",
+    "ocrUnavailableMessage": "PDFluent tidak dapat memulai mesin pengenalan teks. {{reason}}",
+    "ocrFailedMessage": "Pengenalan teks berhenti di halaman {{page}}: {{reason}}",
+    "xfaStaticTitle": "Formulir diisi tanpa perhitungan ulang",
+    "xfaStaticMessage": "Build ini menulis nilai bidang XFA langsung ke dalam formulir. Skrip bidang tidak dijalankan, jadi total hasil perhitungan dan bidang yang muncul atau tersembunyi berdasarkan jawaban Anda tetap apa adanya.",
+    "xfaScriptsNotRunTitle": "Beberapa skrip formulir tidak dijalankan",
+    "xfaScriptsNotRunMessage": "Jawaban Anda telah disimpan. Formulir ini berisi skrip FormCalc ({{count}} ditemukan) dan PDFluent hanya menjalankan skrip JavaScript. Total dan kolom yang akan diperbarui skrip tersebut mempertahankan nilai tersimpannya sampai formulir dibuka di Adobe Reader.",
+    "xfaFieldRefusedTitle": "Formulir tidak menerima nilai tersebut",
+    "xfaFieldReadOnly": "Kolom “{{field}}” bersifat hanya-baca di formulir ini dan tidak dapat diubah.",
+    "xfaFieldRejected": "Kolom “{{field}}” tidak menerima nilai itu: {{reason}}",
+    "xfaFieldNotFound": "Kolom “{{field}}” tidak ada lagi di formulir. Formulir telah dimuat ulang.",
+    "featureUnavailableTitle": "'{{feature}}' tidak tersedia di build ini",
+    "usageRightsInvalidatedTitle": "Dokumen ini tidak lagi aktif untuk Reader",
+    "usageRightsInvalidatedMessage": "Perubahan Anda berhasil dilakukan. Perubahan itu juga membatalkan tanda tangan hak penggunaan yang ada pada PDF ini, yang memungkinkan Adobe Reader mengisi dan menyimpan formulir. Suntingan teks tetap berlaku; hak yang diperluas sudah hilang dan tidak dapat dikembalikan dengan membatalkan perubahan itu.",
+    "xfaScriptsFailedTitle": "Beberapa skrip formulir tidak selesai",
+    "xfaScriptsFailedMessage": "Jawaban Anda telah disimpan, tetapi skrip ini tidak selesai, jadi nilai yang ditetapkan mungkin hilang: {{details}}.",
+    "xfaScriptKind_threw": "mengalami error",
+    "xfaScriptKind_timeout": "kehabisan waktu",
+    "xfaScriptKind_refused": "ditolak oleh sandbox"
+  },
+  "signedSave": {
+    "title": "Dokumen ini ditandatangani",
+    "message": "Redaksi menghapus konten yang dicakup tanda tangan, jadi tidak dapat disimpan menimpa asli yang ditandatangani tanpa merusak tanda tangan. Simpan salinan saja: salinan tetap memiliki redaksi dan tidak membawa tanda tangan.",
+    "saveCopy": "Simpan salinan tanpa tanda tangan…",
+    "cancel": "Batal"
+  },
+  "passwordPrompt": {
+    "title": "PDF ini dilindungi",
+    "message": "Masukkan kata sandi untuk membuka {{name}}.",
+    "incorrect": "Kata sandi itu tidak dapat membuka PDF ini. Coba lagi.",
+    "label": "Kata sandi",
+    "open": "Buka",
+    "cancel": "Batal",
+    "readOnlyTitle": "Dibuka hanya-baca",
+    "readOnlyMessage": "Izin PDF ini tidak mengizinkan perubahan. Anda dapat membacanya, dan mencetaknya jika izin mengizinkan. Untuk menyimpan perubahan, hapus perlindungan dengan kata sandi pemilik."
+  },
+  "a11y": {
+    "searchNextResult": "Hasil berikutnya",
+    "searchPrevResult": "Hasil sebelumnya"
+  },
+  "feedback": {
+    "title": "Bantu kami menyempurnakan PDFluent",
+    "intro": "Ceritakan apa yang ingin Anda lakukan. Kami membaca setiap laporan.",
+    "menuLabel": "Bantu kami menyempurnakan PDFluent…",
+    "fromError": "Anda bisa menceritakan masalah yang baru saja Anda alami.",
+    "areaLabel": "Apa yang ingin Anda lakukan?",
+    "area": {
+      "open-view": "Membuka atau membaca dokumen",
+      "search-copy": "Mencari atau menyalin teks",
+      "print": "Cetak",
+      "edit-text": "Mengedit teks",
+      "annotate": "Menyorot, berkomentar, atau menggambar",
+      "forms": "Mengisi formulir",
+      "sign": "Menandatangani atau memeriksa tanda tangan",
+      "redact": "Redaksi",
+      "pages-organize": "Memutar, menyusun ulang, menggabung, atau memisahkan halaman",
+      "convert-export": "Mengonversi atau mengekspor",
+      "ocr": "Mengenali teks dalam pindaian (OCR)",
+      "pdfa-compliance": "PDF/A",
+      "protect": "Kata sandi atau izin",
+      "save": "Simpan",
+      "install-update": "Memasang atau memperbarui PDFluent",
+      "other": "Lainnya"
+    },
+    "tryingToPlaceholder": "Dengan kata-kata Anda sendiri (opsional)",
+    "whatHappenedLabel": "Apa yang terjadi?",
+    "whatHappenedPlaceholder": "Apa yang Anda lihat?",
+    "whatHappenedRequired": "Ceritakan apa yang terjadi, supaya kami tahu harus mencari ke mana.",
+    "expectedLabel": "Apa yang Anda harapkan?",
+    "expectedPlaceholder": "Opsional",
+    "docTypeLabel": "Dokumen jenis apa itu?",
+    "docType": {
+      "none": "Tidak ada dokumen",
+      "form": "Sebuah formulir",
+      "scanned": "Sebuah pindaian",
+      "signed": "Dokumen bertanda tangan",
+      "protected": "Dilindungi kata sandi",
+      "large": "Besar (lebih dari 100 halaman)",
+      "xfa": "Formulir pemerintah atau XFA",
+      "other": "Lainnya"
+    },
+    "docTypeUnset": "Pilih…",
+    "pageCountLabel": "Jumlah halaman",
+    "contextTitle": "Dikirim bersama laporan Anda",
+    "contextToggle": "Sertakan detail sistem",
+    "contextHint": "Versi, sistem, bahasa, dan kesalahan terakhir membantu kami mereproduksi masalah. Tanpa nama file, jalur, atau isi dokumen.",
+    "fieldVersion": "Versi PDFluent",
+    "fieldSystem": "Sistem",
+    "fieldLanguage": "Bahasa",
+    "fieldLastError": "Kesalahan terakhir",
+    "fieldSessions": "Sesi",
+    "notIncluded": "tidak disertakan",
+    "documentTitle": "Bagikan dokumen (opsional)",
+    "documentToggle": "Bagikan dokumen yang terbuka bersama laporan ini",
+    "documentNone": "Tidak ada dokumen yang terbuka.",
+    "documentTooLarge": "Dokumen ini lebih besar dari 20 MB, sehingga tidak dapat dibagikan bersama laporan.",
+    "documentShared": "Dokumen ini akan dibagikan.",
+    "documentConfirmTitle": "Bagikan dokumen ini?",
+    "documentConfirmText": "File ini akan dikirim ke PDFluent (Innovation Trigger B.V.). File ini hanya digunakan untuk menyelidiki laporan ini, tidak pernah dipublikasikan, tidak pernah digunakan untuk pelatihan, dan dihapus paling lambat 90 hari setelah masalah diperbaiki, dan dalam 12 bulan apa pun yang terjadi.",
+    "documentConfirmFile": "{{name}} ({{size}})",
+    "documentConfirmYes": "Bagikan dokumen ini",
+    "documentConfirmNo": "Jangan bagikan",
+    "contactTitle": "Tetap terhubung (opsional)",
+    "emailLabel": "Alamat email",
+    "emailInvalid": "Ini tidak terlihat seperti alamat email.",
+    "consentContact": "PDFluent boleh mengirimi saya email dengan pertanyaan tentang laporan ini.",
+    "consentFixed": "Kirimi saya email setelah ini diperbaiki.",
+    "contactHint": "Alamat Anda disimpan terpisah dari laporan Anda, hanya digunakan untuk laporan ini, dan tidak pernah untuk buletin atau pemasaran.",
+    "noEmailHint": "Tanpa alamat email, Anda tetap akan mendengar kabar dari kami: saat pembaruan memperbaiki laporan Anda, PDFluent memberi tahu Anda di aplikasi.",
+    "privacyNotice": "Innovation Trigger B.V. menerima laporan ini untuk meningkatkan PDFluent. Laporan disimpan hingga 24 bulan. Anda dapat meminta laporan Anda dihapus kapan saja.",
+    "privacyLink": "Pernyataan privasi",
+    "send": "Kirim",
+    "sending": "Mengirim…",
+    "cancel": "Batal",
+    "sentTitle": "Terima kasih!",
+    "sentBody": "Laporan Anda sudah kami terima. Ini nomornya:",
+    "sentIdHint": "Simpan nomor ini jika Anda ingin menanyakan laporan Anda atau memintanya dihapus.",
+    "sentNoLocalCopy": "PDFluent tidak dapat mengingat nomor ini di komputer ini, jadi mohon catat.",
+    "sentDocumentFailed": "Laporan Anda sudah diterima, tetapi dokumennya gagal diunggah. Jika penting, Anda bisa mengirim ulang laporan beserta dokumennya.",
+    "removeReport": "Hapus laporan ini",
+    "removing": "Menghapus…",
+    "removed": "Laporan Anda telah dihapus.",
+    "removeFailed": "Laporan Anda tidak dapat dihapus saat ini. Coba lagi nanti, atau kirim nomornya ke email kami.",
+    "failedTitle": "Gagal terkirim",
+    "failedNetwork": "PDFluent tidak dapat menjangkau server. Tidak ada yang terkirim, dan teks Anda masih ada.",
+    "failedRateLimited": "Terlalu banyak laporan dari koneksi ini hari ini. Silakan coba lagi besok.",
+    "failedRejected": "Laporan tidak diterima. Periksa formulir lalu coba lagi.",
+    "failedServer": "Terjadi masalah di pihak kami. Teks Anda masih ada; silakan coba lagi sebentar lagi.",
+    "tryAgain": "Coba lagi",
+    "fixedTitle": "Sudah diperbaiki!",
+    "fixedOffered": "Versi {{version}} memperbaiki laporan Anda {{ids}}. Terima kasih sudah memberi tahu kami.",
+    "fixedAfterUpdate": "Laporan Anda {{ids}} sudah diperbaiki di versi ini. Terima kasih sudah memberi tahu kami.",
+    "dismiss": "Tutup"
+  },
+  "openError": {
+    "corrupt": {
+      "title": "PDF ini rusak",
+      "body": "PDFluent tidak dapat membaca file ini. File mungkin rusak saat diunduh atau disalin, atau aplikasi yang membuatnya menulisnya dengan tidak benar. Unduh atau salin lagi, atau buka file aslinya dan ekspor kembali sebagai PDF.",
+      "action": "Buka file lain"
+    },
+    "not_pdf": {
+      "title": "Ini bukan PDF",
+      "body": "PDFluent membuka file PDF. File ini bertipe lain, atau namanya tidak diakhiri .pdf. Pilih file PDF, atau jika file ini adalah PDF, ubah namanya agar diakhiri .pdf.",
+      "action": "Buka file lain"
+    },
+    "empty": {
+      "title": "File ini kosong",
+      "body": "File ini tidak berisi apa pun (0 byte). Pengunduhan atau penyalinan mungkin belum selesai. Unduh atau salin lagi, lalu buka.",
+      "action": "Buka file lain"
+    },
+    "encrypted_needs_password": {
+      "title": "PDF ini memerlukan kata sandi",
+      "body": "PDF ini dilindungi dengan kata sandi. Buka lagi dan masukkan kata sandinya. Jika Anda tidak mengetahuinya, tanyakan kepada orang yang mengirim file ini.",
+      "action": "Masukkan kata sandi"
+    },
+    "wrong_password": {
+      "title": "Kata sandi itu tidak berhasil",
+      "body": "Kata sandi tidak dapat membuka PDF ini. Periksa kesalahan ketik dan Caps Lock, lalu coba lagi.",
+      "action": "Coba lagi"
+    },
+    "unsupported_encryption": {
+      "title": "PDFluent tidak dapat membuka jenis perlindungan ini",
+      "body": "PDF ini dilindungi dengan sertifikat atau metode keamanan yang tidak didukung PDFluent, sehingga tidak ada kata sandi yang dapat membukanya di sini. Minta salinan tanpa perlindungan kepada pengirim, atau yang dilindungi dengan kata sandi.",
+      "action": "Buka file lain"
+    },
+    "too_large": {
+      "title": "File ini terlalu besar",
+      "body": "File ini lebih besar daripada yang dapat dibuka PDFluent dengan aman. Pisahkan atau kompres di aplikasi yang membuatnya, lalu buka bagian-bagiannya.",
+      "action": "Buka file lain"
+    },
+    "too_many_pages": {
+      "title": "PDF ini memiliki terlalu banyak halaman",
+      "body": "Dokumen ini memiliki lebih banyak halaman daripada yang dapat dibuka PDFluent sekaligus. Pisahkan menjadi dokumen yang lebih kecil di aplikasi yang membuatnya, lalu buka bagian-bagiannya.",
+      "action": "Buka file lain"
+    },
+    "io_denied": {
+      "title": "PDFluent tidak diizinkan membaca file ini",
+      "body": "Komputer Anda tidak memberi PDFluent izin untuk membaca file ini. Periksa izin file, atau pindahkan ke folder seperti Dokumen, lalu coba lagi.",
+      "action": "Coba lagi"
+    },
+    "not_found": {
+      "title": "File ini tidak ditemukan",
+      "body": "File mungkin telah dipindahkan, diganti namanya, atau dihapus, atau berada di drive yang tidak lagi terhubung. Temukan file tersebut dan buka lagi.",
+      "action": "Buka file lain"
+    },
+    "unknown": {
+      "title": "File ini tidak dapat dibuka",
+      "body": "Terjadi masalah saat membuka file ini. Coba lagi. Jika terus terjadi, beri tahu kami agar dapat kami perbaiki.",
+      "action": "Coba lagi"
+    },
+    "feedback": "Bantu kami menyempurnakan PDFluent"
+  },
+  "formBar": {
+    "title": "Formulir yang dapat diisi",
+    "fields": "Bidang: {{count}}",
+    "clickToFill": "Klik sebuah bidang untuk mengisinya.",
+    "noCalculations": "Perhitungan otomatis dari formulir Adobe tidak dijalankan.",
+    "autoLinks": "Buka tautan secara otomatis",
+    "autoLinksTitle": "Tautan dibuka otomatis di browser Anda. Klik untuk mematikan ini.",
+    "highlight": "Sorot bidang",
+    "firstField": "Bidang pertama"
+  },
+  "tabs": {
+    "label": "Dokumen terbuka",
+    "close": "Tutup {{name}}",
+    "unsaved": "Perubahan belum disimpan",
+    "new": "Buka dokumen lain",
+    "tooManyTitle": "Terlalu banyak dokumen terbuka",
+    "tooManyMessage": "{{max}} dokumen terbuka. Tutup satu untuk membuka dokumen lain."
+  },
+  "formScripts": {
+    "barLabel": "Skrip formulir",
+    "barMessage": "Formulir ini berisi skrip (misalnya perhitungan). Jalankan?",
+    "barDetail": "Skrip ditemukan: {{count}}.",
+    "runOnce": "Jalankan untuk dokumen ini",
+    "runAlways": "Selalu jalankan skrip",
+    "dontRun": "Jangan jalankan"
   }
 }

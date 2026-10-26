@@ -25,8 +25,14 @@
  *    mistakes an English placeholder for a decision. Translate one and remove
  *    its entry; leave the entry behind and the check fails, the same way a
  *    stale exception fails the UI register.
+ *  - A backlog that only shrinks. src/i18n/untranslated-ceiling.json holds, per
+ *    locale, the most entries untranslated.json may list. More fails: a new
+ *    key is translated in the change that adds it, not parked. Fewer fails
+ *    too, until the ceiling is lowered to match (`--lower` does that), so the
+ *    ground a translation wins cannot be given back later without anyone
+ *    noticing.
  *
- * Usage: node scripts/quality/i18n-parity.mjs [--check | --fill]
+ * Usage: node scripts/quality/i18n-parity.mjs [--check | --fill | --lower]
  */
 
 import { readFileSync, writeFileSync, readdirSync } from 'node:fs';
@@ -40,6 +46,7 @@ export const REPO = resolvePath(HERE, '..', '..');
 export const LOCALES_DIR = 'src/i18n/locales';
 export const SOURCE_LOCALE = 'en';
 export const UNTRANSLATED_PATH = 'src/i18n/untranslated.json';
+export const CEILING_PATH = 'src/i18n/untranslated-ceiling.json';
 
 /** Every key of a locale tree as a dotted path, with its string value. */
 export function flatten(tree, prefix = '', out = new Map()) {
@@ -104,6 +111,63 @@ export function readUntranslated(root = REPO) {
   }
 }
 
+/** Per-locale ceiling on the backlog; {} when the file is absent. */
+export function readCeilings(root = REPO) {
+  try {
+    return JSON.parse(readFileSync(join(root, CEILING_PATH), 'utf8')).ceilings ?? {};
+  } catch {
+    return {};
+  }
+}
+
+/** The ratchet's findings: a backlog above its ceiling, or a ceiling above its backlog. */
+export function ratchetProblems(root = REPO) {
+  const problems = [];
+  const backlog = readUntranslated(root);
+  const ceilings = readCeilings(root);
+  for (const name of localeNames(root)) {
+    if (name === SOURCE_LOCALE) continue;
+    const count = (backlog[name] ?? []).length;
+    const ceiling = ceilings[name] ?? 0;
+    if (count > ceiling) {
+      problems.push(
+        `${name}: ${count} untranslated key(s), ceiling ${ceiling} in ${CEILING_PATH} — ` +
+        'translate the new key(s) in this change; the backlog may only shrink'
+      );
+    } else if (count < ceiling) {
+      problems.push(
+        `${name}: ceiling ${ceiling} in ${CEILING_PATH}, but only ${count} key(s) untranslated — ` +
+        'lower it (`node scripts/quality/i18n-parity.mjs --lower`)'
+      );
+    }
+  }
+  for (const name of Object.keys(ceilings)) {
+    if (name === SOURCE_LOCALE || !localeNames(root).includes(name)) {
+      problems.push(`${CEILING_PATH} has a ceiling for ${name}, which is not a translated locale — remove it`);
+    }
+  }
+  return problems;
+}
+
+/** Lower every ceiling to the current backlog. Never raises one. */
+export function lowerCeilings(root = REPO) {
+  const backlog = readUntranslated(root);
+  const old = readCeilings(root);
+  const ceilings = {};
+  for (const name of localeNames(root)) {
+    if (name === SOURCE_LOCALE) continue;
+    const count = (backlog[name] ?? []).length;
+    ceilings[name] = name in old ? Math.min(old[name], count) : count;
+  }
+  const doc = {
+    reason: 'Most keys each locale may list in src/i18n/untranslated.json. A ceiling only goes down: ' +
+      'see scripts/quality/i18n-parity.mjs.',
+    ceilings,
+  };
+  writeFileSync(join(root, CEILING_PATH), JSON.stringify(doc, null, 2) + '\n');
+  return ceilings;
+}
+
 /**
  * Everything wrong with the locale set right now, as sentences.
  *
@@ -145,6 +209,7 @@ export function check(root = REPO) {
       }
     }
   }
+  problems.push(...ratchetProblems(root));
   return problems;
 }
 
@@ -185,6 +250,12 @@ export function fill(root = REPO) {
 }
 
 function main(argv) {
+  if (argv.includes('--lower')) {
+    const ceilings = lowerCeilings();
+    const total = Object.values(ceilings).reduce((n, c) => n + c, 0);
+    console.log('Ceilings in %s now total %d untranslated key(s).', CEILING_PATH, total);
+    return 0;
+  }
   if (argv.includes('--fill')) {
     const filled = fill();
     const total = Object.values(filled).reduce((n, keys) => n + keys.length, 0);

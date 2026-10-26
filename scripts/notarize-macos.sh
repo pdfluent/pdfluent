@@ -72,13 +72,37 @@ rustup target add aarch64-apple-darwin x86_64-apple-darwin >/dev/null 2>&1 || tr
 
 IDENTITY="Developer ID Application: Innovation Trigger B.V. (58Z6SVW7CN)"
 ENTITLEMENTS="${REPO_ROOT}/src-tauri/Entitlements.plist"
+# Same two keys as the store's helpers (app-sandbox + inherit): the direct build
+# is sandboxed too (see Entitlements.plist).
+OCR_INHERIT_ENTITLEMENTS="${REPO_ROOT}/src-tauri/Entitlements.appstore.inherit.plist"
+
+# ── 0. stage the OCR component ───────────────────────────────────────────────
+# OCR is bundled in every build (owner decision 19-10): no download, no network.
+# PDFLUENT_OCR_COMPONENT_BUILD is the --out folder of
+# scripts/ocr-component/build-tesseract.sh holding macos-aarch64/, macos-x86_64/
+# and tessdata/. ocr-bundle.mjs refuses anything the committed manifest does not
+# pin (SHA-256 and size), lipo-merges the two binaries and signs the result with
+# the Developer ID identity, hardened runtime and the sandbox-inherit
+# entitlements. Steps: docs/BUNDLED_OCR.md.
+OCR_BUNDLE="${REPO_ROOT}/src-tauri/resources/ocr-bundle"
+OCR_IN_APP="Contents/Resources/resources/ocr"
+if [ "${SKIP_BUILD:-0}" != "1" ]; then
+  [ -n "${PDFLUENT_OCR_COMPONENT_BUILD:-}" ] \
+    || { echo "✘ Set PDFLUENT_OCR_COMPONENT_BUILD to the build-tesseract.sh --out folder (arm64 + x86_64 + tessdata); every build bundles OCR"; exit 1; }
+  echo "== 0/6  stage OCR component =="
+  PDFLUENT_CODESIGN_IDENTITY="${IDENTITY}" node "${REPO_ROOT}/scripts/ocr-component/ocr-bundle.mjs" \
+    --stage "${PDFLUENT_OCR_COMPONENT_BUILD}" --platform macos-universal --out "${OCR_BUNDLE}"
+  node "${REPO_ROOT}/scripts/ocr-component/ocr-smoke.mjs" "${OCR_BUNDLE}" --universal
+fi
 
 # ── 1. build + Developer-ID-sign the universal .app ──────────────────────────
 # Direct-download only: no updater artifacts (no production minisign key here).
 # SKIP_BUILD=1 reuses an existing build (re-sign + re-notarize without rebuild).
+# PDFLUENT_REQUIRE_OCR_BUNDLE=1: src-tauri/build.rs refuses to build an app
+# without the staged OCR bundle.
 if [ "${SKIP_BUILD:-0}" != "1" ]; then
   echo "== 1/6  tauri build (universal .app, Developer ID + Hardened Runtime) =="
-  npm run tauri build -- --target universal-apple-darwin --bundles app \
+  PDFLUENT_REQUIRE_OCR_BUNDLE=1 npm run tauri build -- --target universal-apple-darwin --bundles app \
     --config '{"bundle":{"createUpdaterArtifacts":false}}'
 else
   echo "== 1/6  SKIP_BUILD=1 — reusing existing build =="
@@ -100,12 +124,30 @@ while IFS= read -r bin; do
   [ "${bin}" = "${MAIN_EXE}" ] && continue
   file -b "${bin}" | grep -q "Mach-O" || continue   # skip scripts, data, fonts
   echo "   sign nested: ${bin#${APP}/}"
-  codesign --force --options runtime --timestamp -s "${IDENTITY}" "${bin}"
+  if [ "${bin}" = "${APP}/${OCR_IN_APP}/bin/tesseract" ]; then
+    # The app is sandboxed: a helper without inherit is killed at launch.
+    codesign --force --options runtime --timestamp --entitlements "${OCR_INHERIT_ENTITLEMENTS}" -s "${IDENTITY}" "${bin}"
+  else
+    codesign --force --options runtime --timestamp -s "${IDENTITY}" "${bin}"
+  fi
 done < <(find "${APP}/Contents" -type f \( -perm -u+x -o -name '*.dylib' -o -name '*.so' \))
 # Re-seal the outer bundle with the app's entitlements + Hardened Runtime.
 codesign --force --options runtime --timestamp --entitlements "${ENTITLEMENTS}" -s "${IDENTITY}" "${APP}"
 codesign --verify --deep --strict --verbose=2 "${APP}"
 echo "   ✓ nested binaries signed + app re-sealed"
+
+# The bundled Tesseract is the pinned component, universal, hardened and
+# sandbox-inheriting. Judged on the finished app, not on what was staged.
+node "${REPO_ROOT}/scripts/ocr-component/ocr-bundle.mjs" --verify "${APP}/${OCR_IN_APP}" --platform macos-universal
+OCR_BIN="${APP}/${OCR_IN_APP}/bin/tesseract"
+codesign --verify --strict --verbose=2 "${OCR_BIN}"
+OCR_DV="$(codesign -dv "${OCR_BIN}" 2>&1)"
+echo "${OCR_DV}" | grep -q "flags=.*runtime" \
+  || { echo "✘ the bundled Tesseract is NOT signed with Hardened Runtime"; exit 1; }
+OCR_ENT="$(codesign -d --entitlements :- "${OCR_BIN}" 2>/dev/null)"
+echo "${OCR_ENT}" | grep -q "com.apple.security.inherit" \
+  || { echo "✘ the bundled Tesseract lacks the sandbox-inherit entitlement (the sandbox would kill it)"; exit 1; }
+echo "   ✓ bundled OCR verified in the app"
 
 # ── 2. embed gate + signature sanity ─────────────────────────────────────────
 echo "== 2/6  embed gate + signature sanity =="

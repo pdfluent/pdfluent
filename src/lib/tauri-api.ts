@@ -4,7 +4,7 @@
 // including for commercial purposes. Redistribution, or extraction or reuse
 // of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
-import { invokeCommand as invoke } from "./commandBridge";
+import { invokeCommand as invoke, invokeQuietly } from "./commandBridge";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -219,9 +219,64 @@ export async function getLinkAnnotations(): Promise<LinkAnnotationDto[]> {
   return invoke<LinkAnnotationDto[]>("get_link_annotations");
 }
 
-/** Apply a typed value through the SDK writeback chain (/V + /AS + /AP). */
-export async function setFormValue(request: FormWriteRequest): Promise<void> {
-  return invoke<void>("set_form_value", { request });
+/** What a document's scripts are and whether they may run (mirrors script_consent.rs). */
+export interface FormScriptsStatus {
+  /** XFA JavaScript scripts. */
+  javascript: number;
+  /** XFA FormCalc scripts (also XFA scripts with no declared language). */
+  formcalc: number;
+  /** AcroForm calculate / format / validate / keystroke JavaScript actions. */
+  acroform: number;
+  total: number;
+  /** Whether scripts may run for this document now. Closed until the user allows them. */
+  allowed: boolean;
+  /** SHA-256 of the file as opened: the key a choice is remembered under. */
+  contentHash: string;
+}
+
+export interface FormScriptsOutcome {
+  status: FormScriptsStatus;
+  report: { ran: boolean; fieldsChanged: number };
+}
+
+/** The organisation's "Form scripts" choice from the OS-managed location, or null. */
+export async function getFormScriptsPolicy(): Promise<"ask" | "always" | "never" | null> {
+  return invoke<"ask" | "always" | "never" | null>("get_form_scripts_policy");
+}
+
+/** The scripts the open document carries. Reads the document, runs nothing. */
+export async function getFormScripts(): Promise<FormScriptsStatus> {
+  return invoke<FormScriptsStatus>("get_form_scripts");
+}
+
+/**
+ * Give or take back the permission to run the document's scripts. On a grant
+ * the form's initial scripts run once; the effect is one undo step.
+ */
+export async function setFormScriptsAllowed(allowed: boolean): Promise<FormScriptsOutcome> {
+  return invoke<FormScriptsOutcome>("set_form_scripts_allowed", { allowed });
+}
+
+/** Flatten the AcroForm (J-58): values become page content, fields are removed. */
+export async function flattenForm(): Promise<DocumentInfo> {
+  return invoke<DocumentInfo>("flatten_form");
+}
+
+/** What the calculations after a field change did (mirrors pdf_engine::FormCalcReport). */
+export interface FormCalcReport {
+  /** Fields the calculations set, with their new value. */
+  updated: { name: string; value: string }[];
+  /** Calculations that failed. `name` is empty when the form as a whole could not be recalculated. */
+  failed: { name: string; message: string }[];
+}
+
+/**
+ * Apply a typed value through the SDK writeback chain (/V + /AS + /AP), then
+ * run the form's calculations (`/AA /C` in `/CO` order). The report names the
+ * calculated fields so the overlay can show them.
+ */
+export async function setFormValue(request: FormWriteRequest): Promise<FormCalcReport | undefined> {
+  return invoke<FormCalcReport | undefined>("set_form_value", { request });
 }
 
 // ---------------------------------------------------------------------------
@@ -293,6 +348,18 @@ export interface XfaFormModelDto {
    *  the overlay bounds placement by the document's rendered page count. */
   pageCount: number;
   fields: XfaFieldDto[];
+  /** Scripts the form was due to run that this build cannot (FormCalc, or no
+   *  declared language), from the engine's script report for this call. The
+   *  sandboxed runtime runs JavaScript only. */
+  unsupportedScripts: number;
+  /** Scripts that threw, timed out or were refused (engine script report). */
+  scriptErrors: XfaScriptErrorDto[];
+}
+
+export interface XfaScriptErrorDto {
+  /** `<field>:<activity>#<n>`. */
+  scriptId: string;
+  kind: 'threw' | 'timeout' | 'refused';
 }
 
 /** Typed XFA write request (mirrors pdf_engine::XfaWriteRequest, tag "kind"). */
@@ -390,12 +457,16 @@ export interface CompressResult {
   streams_compressed: number;
   duplicates_merged: number;
   unused_removed: number;
+  bytes_before: number;
+  bytes_after: number;
 }
 
+/** Writes a compressed copy; the open document only changes when `replaceOpen` is true. */
 export async function compressPdf(
   outputPath: string,
+  replaceOpen = false,
 ): Promise<CompressResult> {
-  return invoke<CompressResult>("compress_pdf", { outputPath });
+  return invoke<CompressResult>("compress_pdf", { outputPath, replaceOpen });
 }
 
 export async function addWatermark(
@@ -577,7 +648,8 @@ export async function encryptPdf(
   return invoke<void>("encrypt_pdf", { userPassword, ownerPassword, outputPath });
 }
 
-export async function decryptPdf(password: string): Promise<void> {
+/** Omit the password when the document was opened with the owner password. */
+export async function decryptPdf(password?: string): Promise<void> {
   return invoke<void>("decrypt_pdf", { password });
 }
 
@@ -613,6 +685,87 @@ export async function redactSearch(
   query: string,
 ): Promise<SearchRedactReport> {
   return invoke<SearchRedactReport>("redact_search", { query });
+}
+
+export interface PiiCandidate {
+  kind:
+    | "iban"
+    | "credit_card"
+    | "national_id"
+    | "date_of_birth"
+    | "email"
+    | "phone"
+    | "bank_account"
+    | "person"
+    | "address";
+  text: string;
+  /** 0-based pages the text appears on. */
+  pages: number[];
+  occurrences: number;
+  detail: string | null;
+  source: "pattern" | "model" | "both";
+  /** The model's score in percent; 100 for a validated pattern. */
+  score_pct: number;
+  validated: boolean;
+  /** Ticked when the list opens. Ticking is not redacting. */
+  preselected: boolean;
+}
+
+export interface PiiScan {
+  candidates: PiiCandidate[];
+  model: { state: "not_requested" } | { state: "used" } | { state: "failed"; code: string };
+}
+
+export interface PiiComponentStatus {
+  /** The evaluation gate passed and the manifest is pinned. */
+  offered: boolean;
+  published: boolean;
+  model_in_build: boolean;
+  download_in_build: boolean;
+  platform_supported: boolean;
+  installed: boolean;
+  host: string;
+  consent_text_version: number;
+  total_size: number;
+  files: Array<{ path: string; size: number }>;
+  notices: Array<{ name: string; version: string; license: string; source: string }>;
+  model: { name: string; license: string; source: string };
+  /** Languages the evaluation gate passed for. */
+  languages: string[];
+}
+
+export interface PiiRedactReport {
+  texts_redacted: number;
+  matches_found: number;
+  operations_removed: number;
+  pages_affected: number;
+}
+
+/**
+ * Personal data proposed for review (read-only): checksum and context rules
+ * always, the model too when `useModel` is set and the component is installed.
+ */
+export async function detectPii(useModel = false): Promise<PiiScan> {
+  return invoke<PiiScan>("detect_pii", { useModel });
+}
+
+/** The personal-data model component: what it is, what it costs, whether it is installed. */
+export async function piiComponentStatus(): Promise<PiiComponentStatus> {
+  return invoke<PiiComponentStatus>("pii_component_status");
+}
+
+/** Install the model after the user confirmed the dialog for `consentTextVersion`. */
+export async function installPiiComponent(consentTextVersion: number): Promise<void> {
+  return invoke<void>("install_pii_component", { consentTextVersion, consented: true });
+}
+
+export async function removePiiComponent(): Promise<PiiComponentStatus> {
+  return invoke<PiiComponentStatus>("remove_pii_component");
+}
+
+/** Redact the reviewed items; all or nothing, one undo step. */
+export async function redactPii(texts: string[]): Promise<PiiRedactReport> {
+  return invoke<PiiRedactReport>("redact_pii", { texts });
 }
 
 // ---------------------------------------------------------------------------
@@ -821,6 +974,10 @@ export interface PaddleOcrResponse {
   };
 }
 
+/**
+ * Retired with the Python OCR bridge. Kept as a type so the retired V1 shell
+ * (src/legacy, fenced out of every bundle) still compiles.
+ */
 export interface OcrRuntimeStatus {
   available: boolean;
   python_path: string | null;
@@ -833,21 +990,102 @@ export interface OcrRuntimeStatus {
   package_versions: Record<string, string>;
 }
 
+// ---------------------------------------------------------------------------
+// OCR — the Tesseract component bundled in the app and the text-layer run
+// (src-tauri/src/ocr_component.rs, src-tauri/src/ocr.rs)
+// ---------------------------------------------------------------------------
+
+export interface OcrNotice {
+  name: string;
+  version: string;
+  license: string;
+  source: string;
+  file: string;
+}
+
+export interface OcrLanguageStatus {
+  code: string;
+  name: string;
+  size: number;
+  installed: boolean;
+}
+
+export interface OcrComponentStatus {
+  /** The build carries pinned hashes for the component, so the bundle can be checked. */
+  published: boolean;
+  platform_supported: boolean;
+  platform: string;
+  /** The OCR component that ships inside the app is complete and OCR can run. */
+  installed: boolean;
+  /** Why the bundle cannot be used, when it cannot (names the file). */
+  problem: string | null;
+  component: string;
+  version: string;
+  component_size: number;
+  files: Array<{ path: string; size: number }>;
+  notices: OcrNotice[];
+  languages: OcrLanguageStatus[];
+  development_override: boolean;
+}
+
+export interface OcrPageSummary {
+  page: number;
+  recognised: boolean;
+  words: number;
+  confidence: number;
+}
+
+export interface OcrTextLayerReport {
+  pages_considered: number;
+  pages_recognised: number;
+  pages_with_text_already: number;
+  words: number;
+  language: string;
+  pages: OcrPageSummary[];
+}
+
+/**
+ * The OCR status is a background probe (it runs when the viewer mounts), so a
+ * failure is not an error toast: the caller logs it and the OCR UI shows
+ * "not available in this build". A missing bundle is not even a rejection --
+ * the backend answers with `installed: false` and the paths it tried in
+ * `problem`.
+ */
+export async function getOcrComponentStatus(): Promise<OcrComponentStatus> {
+  return invokeQuietly<OcrComponentStatus>("ocr_component_status");
+}
+
+/** Recognise scanned pages and write the invisible text layer into the open document. */
+export async function runOcr(
+  languages: string[],
+  pageIndices?: number[],
+): Promise<OcrTextLayerReport> {
+  return invoke<OcrTextLayerReport>("run_ocr", { languages, pageIndices: pageIndices ?? null });
+}
+
 export async function validateStorageProfile(
   _profile: StorageProfilePayload,
 ): Promise<StorageValidationResult> {
   throw new Error("Storage validation not yet implemented in XFA SDK backend");
 }
 
+/**
+ * Retired: the Python bridge behind `get_ocr_status` / `run_paddle_ocr` is
+ * gone (J-60). OCR is `runOcr` above. These two remain only so the retired V1
+ * shell compiles; they do not reach the backend and say so.
+ */
 export async function getOcrStatus(): Promise<OcrRuntimeStatus> {
-  return invoke<OcrRuntimeStatus>("get_ocr_status");
+  throw new Error(RETIRED_OCR_BRIDGE);
 }
 
 export async function runPaddleOcr(
-  payload: PaddleOcrRequestPayload,
+  _payload: PaddleOcrRequestPayload,
 ): Promise<PaddleOcrResponse> {
-  return invoke<PaddleOcrResponse>("run_paddle_ocr", { payload });
+  throw new Error(RETIRED_OCR_BRIDGE);
 }
+
+const RETIRED_OCR_BRIDGE =
+  "The Python OCR bridge was removed. Use Convert, Run OCR, which writes a searchable text layer.";
 
 // ---------------------------------------------------------------------------
 // TextSpanInfo — SDK canonical wire DTO

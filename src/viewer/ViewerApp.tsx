@@ -13,11 +13,15 @@ import { makeDocumentEvent, appendEvent } from './state/documentEvents';
 import type { DocumentEvent } from './state/documentEvents';
 import type { AppError } from './state/errorCenter';
 import { appendError, clearError } from './state/errorCenter';
-import { subscribeCommandFailures } from '../lib/commandBridge';
+import { subscribeCommandFailures, logToApp, describeError, reportFallback } from '../lib/commandBridge';
+import { routeCommandFailure, saveAsWithDialog } from './state/saveFlow';
+import { setPasswordPrompter, type PasswordRequest } from './state/passwordPrompt';
+import { restoreRecoveryCopy, startRecoveryCopies, type PendingRecovery } from './state/recoveryCopy';
 import i18n from '../i18n';
 import { scheduleStartupUpdateCheckIfEnabled, checkAndInstallUpdate, checkForUpdate, relaunchApp } from '../lib/updater';
 import { loadAppSettings, saveAppSettings } from './state/appSettings';
 import type { AppSettings } from './state/appSettings';
+import { applyThemeToRoot, resolveDark, systemPrefersDark } from './state/theme';
 
 import { useEngine } from './hooks/useEngine';
 import { useDocument } from './hooks/useDocument';
@@ -25,11 +29,15 @@ import { useThumbnails } from './hooks/useThumbnails';
 import type { DocumentRevision } from './state/documentRevision';
 import { EMPTY_REVISION, bumpAll, bumpPages, pageRevision } from './state/documentRevision';
 import { useRecentFiles } from './hooks/useRecentFiles';
+import { useOcr } from './hooks/useOcr';
 import { useModeManager } from './hooks/useModeManager';
 import { useZoomControls } from './hooks/useZoomControls';
+import { useAutoFitZoom } from './hooks/useAutoFitZoom';
 import { usePageNavigation } from './hooks/usePageNavigation';
 import { useSidebarState } from './hooks/useSidebarState';
 import { useUndoRedo } from './hooks/useUndoRedo';
+import type { HistoryStepResult } from './state/documentHistory';
+import { isTypingTarget } from './hooks/keyTargets';
 import { useSearch } from './hooks/useSearch';
 import { useFormFields } from './hooks/useFormFields';
 import { useTextInteraction } from './hooks/useTextInteraction';
@@ -37,13 +45,18 @@ import type { TextParagraphTarget } from './text/textInteractionModel';
 import { useAnnotations } from './hooks/useAnnotations';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { useDocumentLifecycle } from './hooks/useDocumentLifecycle';
+import { useDocumentTabs, type DocumentTabsApi } from './tabs/useDocumentTabs';
+import { tabSwitchDirection } from './tabs/tabState';
+import { DocumentTabBar } from './components/DocumentTabBar';
 import { useCommands } from './hooks/useCommands';
 import { useDragDrop } from './hooks/useDragDrop';
 import { PageCanvas } from './components/PageCanvas';
 import { BottomTaskBar } from './components/BottomTaskBar';
 import { OrganizeGrid } from './components/OrganizeGrid';
+import { OpenErrorPanel } from './components/OpenErrorPanel';
 import { EditorV3Shell } from './v3/EditorV3Shell';
-import type { AttachmentInfo, LayerInfo } from './components/LeftNavRail';
+import { XFA_INTERACTIVE_FILL } from './xfaFillGate';
+import type { AttachmentInfo, LayerInfo } from './types';
 import type { ExportFormat } from './components/ExportDialog';
 import { sortBlocksForReading } from './text/textReadingOrder';
 import { pickPdfPath } from '../platform/native/fileDialogs';
@@ -58,6 +71,9 @@ const ShortcutSheet = lazy(() => import('./components/ShortcutSheet').then(m => 
 const SettingsPanel = lazy(() => import('./components/SettingsPanel').then(m => ({ default: m.SettingsPanel })));
 const GoToPageDialog = lazy(() => import('./components/GoToPageDialog').then(m => ({ default: m.GoToPageDialog })));
 const UnsavedChangesDialog = lazy(() => import('./components/UnsavedChangesDialog').then(m => ({ default: m.UnsavedChangesDialog })));
+const PasswordPromptDialog = lazy(() => import('./components/PasswordPromptDialog').then(m => ({ default: m.PasswordPromptDialog })));
+const RecoveryDialog = lazy(() => import('./components/RecoveryDialog').then(m => ({ default: m.RecoveryDialog })));
+const SignedSaveDialog = lazy(() => import('./components/SignedSaveDialog').then(m => ({ default: m.SignedSaveDialog })));
 import { TaskQueueProvider } from './context/TaskQueueContext';
 import { useRenderTelemetry } from './hooks/useRenderTelemetry';
 import { useHoverController } from './interaction/hoverController';
@@ -68,13 +84,20 @@ import { TextInlineEditor, readInlineEditorText } from './components/TextInlineE
 import { TextEditFloatingPill } from './components/TextEditFloatingPill';
 import { FormOverlay } from './components/FormOverlay';
 import { FormBar } from './components/FormBar';
+import { ScriptConsentBar } from './components/ScriptConsentBar';
+import { XfaBanner, TextEditRejectionNotice, AppErrorToast } from './components/Notices';
+import { useFormScriptConsent } from './hooks/useFormScriptConsent';
+import { loadOsFormScriptsPolicy } from './state/scriptConsent';
 import { XfaFormOverlay } from './components/XfaFormOverlay';
 import { LinkOverlay } from './components/LinkOverlay';
 import { useFormModel } from './hooks/useFormModel';
+import { runFlattenForm } from './state/flattenForm';
 import { useXfaFormModel } from './hooks/useXfaFormModel';
 import { getLinkAnnotations, type LinkAnnotationDto } from './../lib/tauri-api';
 import { downloadPdfBytesInBrowser } from './export/browserPdfDownload';
 import { getEditability } from './text/textEditability';
+import { printDocument } from './state/printFlow';
+import { releaseListener } from '../lib/releaseListener';
 
 // Dev-only test hook — never present in production builds
 declare global {
@@ -101,14 +124,12 @@ declare global {
 const isTauri = isTauriRuntime();
 const AUTO_OPEN_LINKS_KEY = 'pdfluent.links.autoOpen';
 
-// XFA interactive fill is EXPERIMENTAL and parked for the non-XFA release: the
-// SDK Phase 2 commit loop (dynamic reveal/repagination) ships behind the
-// `xfa-interactive` Cargo feature, which is OFF in release builds, and the
-// rendered/Adobe page-count parity is not release-ready. So the editable XFA
-// overlay is gated to dev builds only. In the shipped product, XFA documents are
-// VIEWED and can be CONVERTED/FLATTENED to a standard PDF for reliable filling,
-// editing and search — we make no dynamic-XFA Acrobat-parity fill claim.
-const XFA_INTERACTIVE_FILL = import.meta.env.DEV;
+/** "report.pdf", or "report.pdf and 2 more" when several documents were left unsaved. */
+function recoveryDocumentLabel(offers: readonly PendingRecovery[]): string {
+  const first = offers[0];
+  const name = first?.originalPath?.split(/[\\/]/).filter(Boolean).pop() ?? i18n.t('recover.untitled');
+  return offers.length > 1 ? i18n.t('recover.andMore', { name, count: offers.length - 1 }) : name;
+}
 
 export type { SearchResult } from './hooks/useSearch';
 
@@ -127,11 +148,25 @@ export function ViewerApp() {
     replaceDocument,
     loadDocument,
     closeDocument,
+    dismissError: dismissDocError,
   } = useDocument(engine);
   const { recentFiles, addRecentFile, removeRecentFile, clearRecentFiles } = useRecentFiles();
   const { mode, setMode } = useModeManager();
-  const { zoom, setZoom, zoomPresetsOpen, setZoomPresetsOpen } = useZoomControls();
-  const { canUndo, canRedo, pushUndo, undoStackRef, syncUndoState } = useUndoRedo();
+  const { zoom, setZoom, setAutoZoom, zoomManual, zoomPresetsOpen, setZoomPresetsOpen } = useZoomControls(pdfDoc?.id ?? null);
+  // Undo/redo of every edit lives in the backend (J-85). After a step the
+  // views catch up through historyStepRef, filled in once the hooks it needs
+  // exist further down.
+  const historyStepRef = useRef<((step: HistoryStepResult) => void) | null>(null);
+  const handleDocumentMutatedRef = useRef<((pages?: number[]) => void) | null>(null);
+  const onBackendStep = useCallback((step: HistoryStepResult) => { historyStepRef.current?.(step); }, []);
+  // The command bridge has already shown the failure; this keeps it in the log.
+  const onBackendError = useCallback((message: string) => { void logToApp(`undo/redo failed: ${message}`); }, []);
+  const { canUndo, canRedo, pushUndo, undo: undoEdit, redo: redoEdit } = useUndoRedo({
+    backend: isTauri,
+    onBackendStep,
+    onBackendError,
+    onBackendModified: markDirty,
+  });
   const {
     commandPaletteOpen, setCommandPaletteOpen,
     allToolsOpen, setAllToolsOpen,
@@ -154,6 +189,20 @@ export function ViewerApp() {
     setAppSettings(next);
     saveAppSettings(next);
   }, []);
+  // Theme: the stored preference decides, "system" follows the OS live (#721).
+  const [systemDark, setSystemDark] = useState<boolean>(() => systemPrefersDark());
+  useEffect(() => {
+    if (typeof window.matchMedia !== 'function') return;
+    const mq = window.matchMedia('(prefers-color-scheme: dark)');
+    const onChange = (e: MediaQueryListEvent): void => { setSystemDark(e.matches); };
+    mq.addEventListener('change', onChange);
+    return () => { mq.removeEventListener('change', onChange); };
+  }, []);
+  const themeDark = resolveDark(appSettings.themePreference, systemDark);
+  useEffect(() => { applyThemeToRoot(themeDark); }, [themeDark]);
+  const handleToggleTheme = useCallback(() => {
+    handleSettingsChange({ ...appSettings, themePreference: themeDark ? 'light' : 'dark' });
+  }, [appSettings, themeDark, handleSettingsChange]);
 
   const renderFallback = useRenderTelemetry();
 
@@ -220,7 +269,31 @@ export function ViewerApp() {
   // Every command failure and every visible fallback, from anywhere in the
   // tree, lands in the same stack the user reads. Without this the bridge
   // reports into an empty room: hooks five levels down have no setter for it.
+  // A signed document whose change cannot be appended (a redaction) is refused
+  // by save_pdf with a typed reason; the answer is a dialog offering a copy
+  // without the signature, and only that: no error toast beside it.
+  const [signedSaveDialogOpen, setSignedSaveDialogOpen] = useState(false);
+
+  // The password prompt for protected PDFs (J-18). The open waits on the
+  // promise; the dialog resolves it with the password or null for Cancel.
+  const [passwordRequest, setPasswordRequest] = useState<{
+    request: PasswordRequest;
+    resolve: (password: string | null) => void;
+  } | null>(null);
+  useEffect(() => setPasswordPrompter((request) => new Promise<string | null>((resolve) => {
+    setPasswordRequest({ request, resolve });
+  })), []);
+  const answerPasswordRequest = useCallback((password: string | null) => {
+    setPasswordRequest((current) => {
+      current?.resolve(password);
+      return null;
+    });
+  }, []);
   useEffect(() => subscribeCommandFailures(error => {
+    if (routeCommandFailure(error.message) === 'signed-save-dialog') {
+      setSignedSaveDialogOpen(true);
+      return;
+    }
     setAppErrors(prev => appendError(prev, error));
   }), []);
 
@@ -310,9 +383,9 @@ export function ViewerApp() {
       .catch(() => { setUpdateCheckNotice('failed'); });
   }, []);
 
-  // OCR overlay state — lifted so PageCanvas and OcrPanel share the same values
-  const [ocrVisible, setOcrVisible] = useState(true);
-  const [ocrConfidenceThreshold, setOcrConfidenceThreshold] = useState(0.6);
+  // OCR no longer draws an overlay of guessed words: the words are written
+  // into the page as an invisible text layer (useOcr), so search, selection
+  // and copy see them like any other text.
 
   // Attachments and optional content groups are native-backed document data.
   const [attachments, setAttachments] = useState<AttachmentInfo[]>([]);
@@ -342,7 +415,8 @@ export function ViewerApp() {
       void (async () => {
         const { invokeCommand: invoke } = await import('../lib/commandBridge');
         const list = await invoke<AttachmentInfo[] | null>('add_attachment_dialog');
-        if (list) setAttachments(list);
+        // null: the picker was cancelled and nothing changed.
+        if (list) { setAttachments(list); markDirty(); }
       })();
     } else {
       // Browser fallback: simulate file input picker
@@ -359,25 +433,28 @@ export function ViewerApp() {
             creation_date: new Date().toISOString(),
           };
           setAttachments(prev => [...prev, newAttachment]);
+          markDirty();
         }
       };
       input.click();
     }
-  }, []);
+  }, [markDirty]);
 
   const handleRemoveAttachment = useCallback((name: string) => {
     if (isTauri) {
       void (async () => {
         const { invokeCommand: invoke } = await import('../lib/commandBridge');
         await invoke('remove_attachment', { name });
+        markDirty();
         const list = await invoke<AttachmentInfo[]>('list_attachments');
         setAttachments(list);
       })();
     } else {
       // Browser fallback
       setAttachments(prev => prev.filter(att => att.name !== name));
+      markDirty();
     }
-  }, []);
+  }, [markDirty]);
 
   const handleToggleLayer = useCallback((id: string) => {
     setLayerVisibility(prev => {
@@ -391,26 +468,81 @@ export function ViewerApp() {
   const { hoveredTarget } = useHoverController();
 
   // Derived filename — passed to useDocumentLifecycle for tab/window title.
-  const fileName = metadata?.title?.trim() || pdfDoc?.fileName || null;
+  // The file on disk wins over the name the document was loaded under: after
+  // Save As the app works on the new file (the next Save goes there), and the
+  // title bar kept naming the old one (J-83, tests/journeys/J-83-save-as.e2e.ts).
+  // The engine reports the load-time file name as the title of a document
+  // without /Title, so that value is a file name, not a title.
+  const savedFileName = currentFilePath ? currentFilePath.split(/[\\/]/).pop() || null : null;
+  const documentTitle = metadata?.title?.trim() || null;
+  const ownTitle = documentTitle && documentTitle !== pdfDoc?.fileName ? documentTitle : null;
+  const fileName = ownTitle || savedFileName || pdfDoc?.fileName || null;
 
   // ---------------------------------------------------------------------------
   // Document lifecycle: save-as, open/close guards, unsaved-changes dialog
   // ---------------------------------------------------------------------------
 
+  // The tabs need what the lifecycle hands back, and the lifecycle opens files
+  // through the tabs: this ref closes the loop (J-90).
+  const tabsRef = useRef<DocumentTabsApi | null>(null);
   const {
     pendingActionRef,
     isSavingRef,
     docLoadingRef,
     handleSaveAs,
+    handleSaveAsOrThrow,
     handleLoadDocument,
+    beginAccess,
+    releaseAccess,
+    askAboutUnsavedChanges,
     handleUnsavedSave,
     handleUnsavedDiscard,
     handleUnsavedCancel,
   } = useDocumentLifecycle(
     isDirty, loadDocument, clearDirty, addRecentFile,
     pdfDoc, pageCount, currentFilePath, setCurrentFilePath, setUnsavedDialogOpen,
-    docLoading,
+    docLoading, tabsRef,
   );
+
+  // ── Several documents (J-90) ──────────────────────────────────────────────
+  // One tab per open document. The desktop app only: the browser build shows
+  // one document and a new file replaces it.
+  const longTaskBusyRef = useRef(false);
+  const documentTabs = useDocumentTabs({
+    enabled: isTauri,
+    loadDocument,
+    isDirty,
+    fileName,
+    currentFilePath,
+    setCurrentFilePath,
+    pageIndex,
+    setPageIndex,
+    zoom,
+    setZoom,
+    zoomManual,
+    clearViewer: () => { closeDocument(); setCurrentFilePath(null); },
+    // A save, a load or a long job (OCR) works on the document on screen; a
+    // switch in the middle of one would split it.
+    isBusy: () => isSavingRef.current || docLoadingRef.current || longTaskBusyRef.current,
+    beginAccess,
+    releaseAccess,
+    askAboutUnsavedChanges,
+    notify: (message) => {
+      reportFallback({
+        source: 'document-tabs',
+        title: i18n.t('tabs.tooManyTitle'),
+        message,
+        code: 'TOO_MANY_DOCUMENTS',
+        taxonomy: 'environment_failure.memory_exhausted',
+      });
+    },
+    text: { tooMany: (max) => i18n.t('tabs.tooManyMessage', { max }) },
+    invoke: async <T,>(command: string, args?: Record<string, unknown>): Promise<T> => {
+      const { invokeCommand } = await import('../lib/commandBridge');
+      return invokeCommand<T>(command, args);
+    },
+  });
+  tabsRef.current = isTauri ? documentTabs : null;
 
   const handleBrowserSaveAs = useCallback(async () => {
     if (!pdfDoc || !engine || pageCount === 0) return;
@@ -427,7 +559,101 @@ export function ViewerApp() {
     clearDirty();
   }, [pdfDoc, engine, pageCount, fileName, clearDirty]);
 
-  const handleRuntimeSaveAs = isTauri ? handleSaveAs : handleBrowserSaveAs;
+  const handleRuntimeSaveAs = isTauri ? handleSaveAsOrThrow : handleBrowserSaveAs;
+
+  // The copy the signed-save dialog offers. The document becomes that copy.
+  const handleSaveUnsignedCopy = useCallback(async () => {
+    setSignedSaveDialogOpen(false);
+    try {
+      const { invokeCommand } = await import('../lib/commandBridge');
+      await saveAsWithDialog(invokeCommand, (path) => {
+        setCurrentFilePath(path);
+        clearDirty();
+        addRecentFile(path);
+      }, 'save_unsigned_copy_as_dialog');
+    } catch (error) {
+      console.warn('save_unsigned_copy_as_dialog failed (already reported)', error);
+    }
+  }, [clearDirty, addRecentFile]);
+
+  // ── Recovery copy (J-84) ──────────────────────────────────────────────────
+  // While the Autosave setting is on and there are unsaved changes, a recovery
+  // copy is written on a timer (src-tauri/src/recovery.rs). A copy a crash
+  // left behind is offered once, at start.
+  const recoveryEnabledRef = useRef(appSettings.autosaveEnabled);
+  useEffect(() => { recoveryEnabledRef.current = appSettings.autosaveEnabled; }, [appSettings.autosaveEnabled]);
+  // A document in another tab counts: its copy is written too.
+  const recoveryDirtyRef = useRef(documentTabs.anyDirty);
+  useEffect(() => { recoveryDirtyRef.current = documentTabs.anyDirty; }, [documentTabs.anyDirty]);
+  useEffect(() => {
+    if (!isTauri) return;
+    return startRecoveryCopies({
+      isEnabled: () => recoveryEnabledRef.current,
+      isDirty: () => recoveryDirtyRef.current,
+      write: async () => {
+        const { invokeCommand } = await import('../lib/commandBridge');
+        return invokeCommand<boolean>('write_recovery_copy');
+      },
+    });
+  }, []);
+  // One copy per document that was open and unsaved when the app stopped; the
+  // dialog offers them together and Recover brings each back in its own tab.
+  const [recoveryOffer, setRecoveryOffer] = useState<PendingRecovery[]>([]);
+  useEffect(() => {
+    if (!isTauri) return;
+    let cancelled = false;
+    void (async () => {
+      try {
+        const { invokeCommand } = await import('../lib/commandBridge');
+        const records = await invokeCommand<PendingRecovery[]>('pending_recoveries');
+        if (!cancelled && records.length > 0) setRecoveryOffer(records);
+      } catch (error) {
+        console.warn('pending_recoveries failed (already reported)', error);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
+  const handleRecoverCopy = useCallback(async () => {
+    const records = recoveryOffer;
+    setRecoveryOffer([]);
+    try {
+      const { invokeCommand } = await import('../lib/commandBridge');
+      for (const record of records) {
+        await restoreRecoveryCopy(record, {
+          invoke: invokeCommand,
+          // A recovered copy is a document of its own, even when the file it
+          // came from is open in another tab.
+          open: async (path) => {
+            if (!(await documentTabs.openPath(path, { allowDuplicate: true }))) {
+              throw new Error('the recovered document could not be opened');
+            }
+          },
+          onRestored: (originalPath) => {
+            setCurrentFilePath(originalPath);
+            markDirty();
+          },
+        });
+      }
+    } catch (error) {
+      console.warn('restoring the recovery copy failed (already reported)', error);
+    }
+  }, [recoveryOffer, documentTabs, markDirty]);
+  const handleDiscardRecovery = useCallback(async () => {
+    const records = recoveryOffer;
+    setRecoveryOffer([]);
+    try {
+      const { invokeCommand } = await import('../lib/commandBridge');
+      for (const record of records) await invokeCommand('discard_recovery', { slot: record.slot });
+    } catch (error) {
+      console.warn('discard_recovery failed (already reported)', error);
+    }
+  }, [recoveryOffer]);
+
+  // After signing, the open document is the signed file: point the app at it.
+  const handleDocumentPathChanged = useCallback((path: string) => {
+    setCurrentFilePath(path);
+    addRecentFile(path);
+  }, [addRecentFile]);
 
   const handleRuntimeSave = useCallback(async () => {
     if (!pdfDoc || pageCount === 0) return;
@@ -487,10 +713,44 @@ export function ViewerApp() {
 
   // First-class AcroForm model — fillable in normal read mode (no Form Mode).
   const formModel = useFormModel(pdfDoc, documentVersion, markDirty, setPageIndex, pushUndo);
+  // J-58: flatten the AcroForm. The backend records it as one undo step; the
+  // views refresh like after any document-wide edit.
+  const onFormFlattened = useCallback((info: { page_count: number }) => {
+    updatePageCount(info.page_count);
+    setFormFields([]);
+    markDirty();
+    bumpDocument();
+    setContentRevision(n => n + 1);
+  }, [markDirty, bumpDocument]); // eslint-disable-line react-hooks/exhaustive-deps
+  const [flattenFormBusy, setFlattenFormBusy] = useState(false);
+  const handleFlattenForm = useCallback(async () => {
+    setFlattenFormBusy(true);
+    try {
+      return await runFlattenForm(onFormFlattened);
+    } finally {
+      setFlattenFormBusy(false);
+    }
+  }, [onFormFlattened]);
   // XFA fill model (Phase 2 interactive commit loop) — only for dynamic XFA docs.
   const xfaForm = useXfaFormModel(
     pdfDoc, markDirty, setPageIndex, pushUndo,
     bumpDocument,
+  );
+  // Form scripts run only with the user's permission (script_consent.rs).
+  // When permission arrives the initial scripts have just run: repaint the
+  // pages and reload both form models so the calculated values show.
+  const handleFormScriptsMode = useCallback((mode: AppSettings['formScriptsMode']) => {
+    handleSettingsChange({ ...loadAppSettings(), formScriptsMode: mode });
+  }, [handleSettingsChange]);
+  const reloadXfaForm = xfaForm.reload;
+  const handleFormScriptsRan = useCallback(() => {
+    reloadXfaForm();
+    bumpDocument();
+    setContentRevision(n => n + 1);
+  }, [reloadXfaForm, bumpDocument]);
+  useEffect(() => { void loadOsFormScriptsPolicy(); }, []);
+  const scriptConsent = useFormScriptConsent(
+    pdfDoc?.id, appSettings, handleFormScriptsMode, handleFormScriptsRan,
   );
   const [highlightFields, setHighlightFields] = useState(true);
   // Capability-based link trust: null = ask on first use; true = auto-open
@@ -566,8 +826,6 @@ export function ViewerApp() {
     comments,
     activeCommentIdx,
     scannedPageIndices,
-    ocrRunning,
-    ocrPageWords,
     activeAnnotationTool,
     setActiveAnnotationTool,
     annotationAppearance,
@@ -583,6 +841,7 @@ export function ViewerApp() {
     handlePrevComment,
     handleMetadataChange,
     handleAddComment,
+    handleAddNote,
     handleDeleteComment,
     handleUpdateComment,
     handleToggleResolvedStatus,
@@ -590,7 +849,6 @@ export function ViewerApp() {
     handleDeleteReply,
     handleResolveAll,
     handleDeleteAllResolved,
-    handleRunOcr,
     handleTextSelection,
     createTextMarkupFromSelection,
     handleRectDraw,
@@ -598,17 +856,70 @@ export function ViewerApp() {
     handleRedactionDraw,
     handleDeleteSelectedAnnotation,
     handleUpdateAnnotationColor,
+    handleUpdateAnnotationRect,
+    handleUpdateAnnotationText,
+    handleReplaceAnnotationImage,
+    handlePlaceAnnotation,
     handleApplyRedactions,
     handleRedactSearch,
     handleRedactMetadata,
     handleAnnotationClick,
     handleReorderPages: handleReorderPagesRaw,
     handleDeletePage: handleDeletePageRaw,
+    refetchAnnotations,
   } = useAnnotations(
     pdfDoc, engine, pageIndex, pageCount, mode, setMode, authorName, markDirty,
     docLoadingRef, metadata, currentFilePath, setPageIndex, setDocumentEventLog,
     setOutline, setFormFields, setActiveFieldIdx, documentEventLog,
+    (pages) => handleDocumentMutatedRef.current?.(pages),
   );
+
+  // The page and zoom a tab was left at come back once the viewer has reset
+  // itself for the document that just appeared (the effect above runs first).
+  useEffect(() => {
+    documentTabs.applyPendingView();
+  }, [pdfDoc?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // The backend holds the close of the window while any open document has
+  // unsaved changes, not only the one on screen.
+  useEffect(() => {
+    if (!isTauri) return;
+    void import('../lib/commandBridge')
+      .then(({ invokeCommand }) => invokeCommand('set_unsaved_changes', { dirty: documentTabs.anyDirty }))
+      .catch((error: unknown) => { console.warn('set_unsaved_changes failed (already reported)', error); });
+  }, [documentTabs.anyDirty]);
+
+  // Tab shortcuts: Ctrl+Tab and Ctrl+Shift+Tab (every platform), Ctrl+Page
+  // Down/Up, and on macOS Cmd+Shift+] and Cmd+Shift+[. File > New Tab and
+  // Close Tab come from the application menu.
+  const tabsForKeysRef = useRef(documentTabs);
+  tabsForKeysRef.current = documentTabs;
+  useEffect(() => {
+    if (!isTauri) return;
+    function onKeyDown(event: KeyboardEvent): void {
+      const tabsNow = tabsForKeysRef.current;
+      const direction = tabSwitchDirection(event);
+      if (direction === null || tabsNow.tabs.length < 2) return;
+      event.preventDefault();
+      void tabsNow.switchRelative(direction);
+    }
+    window.addEventListener('keydown', onKeyDown);
+    return () => { window.removeEventListener('keydown', onKeyDown); };
+  }, []);
+
+  // After an undo or redo the backend holds an earlier (or later) document:
+  // every view that reads it catches up — page count, renders and thumbnails,
+  // annotations, form values — and the unsaved flag follows the backend, so
+  // undoing back to what was saved is clean again.
+  historyStepRef.current = (step: HistoryStepResult) => {
+    updatePageCount(step.document.pageCount);
+    setPageIndex(prev => Math.min(prev, Math.max(0, step.document.pageCount - 1)));
+    if (step.history.modified) markDirty(); else clearDirty();
+    bumpDocument();
+    setContentRevision(n => n + 1);
+    void refetchAnnotations();
+    xfaForm.reload();
+  };
 
   // Wrap raw reorder to also bump the revision so thumbnails regenerate.
   // Document-wide: after a reorder no page is where it was.
@@ -633,6 +944,26 @@ export function ViewerApp() {
     // the bytes a signature covers no longer are what they were.
     setContentRevision(n => n + 1);
   }, []);
+  // useAnnotations is called above this line and re-renders the pages an
+  // annotation edit touched through this ref.
+  handleDocumentMutatedRef.current = handleDocumentMutated;
+
+  // OCR (J-60): the run writes a text layer into the open document, so the
+  // pages re-render and the document is unsaved until the user saves it.
+  const handleOcrChangedDocument = useCallback(() => {
+    handleDocumentMutated();
+    markDirty();
+  }, [handleDocumentMutated, markDirty]);
+  const ocr = useOcr({
+    isTauri,
+    hasDocument: pdfDoc !== null,
+    scannedPageIndices,
+    pageCount,
+    languageSetting: appSettings.ocrDefaultLanguage,
+    onDocumentChanged: handleOcrChangedDocument,
+  });
+  const ocrRunning = ocr.running;
+  longTaskBusyRef.current = ocrRunning;
 
   // Per document, not per session. Keyed on the document object rather than its
   // path: a "Save as" gives the same document a new path and has not undone
@@ -670,6 +1001,9 @@ export function ViewerApp() {
     selectedTextTargetId,
     selectedTextTarget,
     editingTextTargetId,
+    draftFontSize,
+    draftFontId,
+    setDraftFontId,
     textDraft,
     setTextDraft,
     handleTextTargetSelect,
@@ -807,7 +1141,10 @@ export function ViewerApp() {
   useEffect(() => {
     setPageLabels([]);
     if (!pdfDoc || !isTauri) return;
-    void import('../lib/commandBridge').then(({ invokeCommand: invoke }) => {
+    // Labels are optional: a document that is still locked (it asks for its
+    // password after it opens) or has none shows plain page numbers, and a toast
+    // for that would be noise the person cannot act on (J-18, J-76).
+    void import('../lib/commandBridge').then(({ invokeQuietly: invoke }) => {
       void invoke<string[]>('get_page_labels').then(labels => setPageLabels(labels)).catch(() => {});
     });
   }, [pdfDoc?.id]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -908,8 +1245,8 @@ export function ViewerApp() {
     activeFieldIdx,
     handleFieldNav,
     setZoom,
-    undoStackRef,
-    syncUndoState,
+    onUndo: undoEdit,
+    onRedo: redoEdit,
     handleSaveAs,
     setExportOpen,
     setCommandPaletteOpen,
@@ -922,6 +1259,20 @@ export function ViewerApp() {
     handleNextComment,
     handlePrevComment,
     handleDeleteCurrentPage,
+  });
+
+  // A document opens fitted to the window and stays fitted through resizes
+  // until the reader zooms it by hand (Settings > View > Default zoom).
+  const firstPageSize = pdfDoc?.pages[0]?.size ?? null;
+  const { fitNow: fitZoomToWindow } = useAutoFitZoom({
+    containerRef: canvasContainerRef,
+    documentId: pdfDoc?.id ?? null,
+    firstPage: firstPageSize ? { width: firstPageSize.width, height: firstPageSize.height } : null,
+    preference: appSettings.defaultZoom,
+    manual: zoomManual,
+    zoom,
+    setAutoZoom,
+    setZoom,
   });
 
   // ---------------------------------------------------------------------------
@@ -977,6 +1328,12 @@ export function ViewerApp() {
   }, [handleLoadDocument]);
 
   const handleCloseDocumentWithGuard = useCallback(() => {
+    // With documents in tabs this closes the tab on screen and asks first when
+    // it has unsaved changes.
+    if (documentTabs.tabs.length > 0) {
+      void documentTabs.requestCloseActive();
+      return;
+    }
     if (isDirty) {
       pendingActionRef.current = () => { closeDocument(); setCurrentFilePath(null); };
       setUnsavedDialogOpen(true);
@@ -984,7 +1341,68 @@ export function ViewerApp() {
     }
     closeDocument();
     setCurrentFilePath(null);
-  }, [isDirty, closeDocument, pendingActionRef, setUnsavedDialogOpen]);
+  }, [isDirty, closeDocument, pendingActionRef, setUnsavedDialogOpen, documentTabs]);
+
+  // The latest handlers, read by one long-lived listener. Re-subscribing on
+  // every change of a handler left listeners behind that Tauri could not
+  // remove ("listeners[eventId]" undefined), and File > Open then showed the
+  // picker once per leaked listener (J-15).
+  const menuEventRef = useRef<(payload: string) => void>(() => undefined);
+  menuEventRef.current = (payload: string): void => {
+    switch (payload) {
+      case 'file_open':
+      case 'file_new_tab':
+        window.setTimeout(() => { void handleOpenFile(); }, 0);
+        break;
+      case 'window_next_tab':
+        void documentTabs.switchRelative(1);
+        break;
+      case 'window_previous_tab':
+        void documentTabs.switchRelative(-1);
+        break;
+      case 'file_save':
+        // A failed save is already on screen (invokeCommand); keep the
+        // rejection away from the crash reporter.
+        handleRuntimeSave().catch((error: unknown) => {
+          console.warn('file_save failed (already reported)', error);
+          void logToApp(`file_save failed (already reported): ${describeError(error)}`);
+        });
+        break;
+      case 'file_save_as':
+        void handleSaveAs();
+        break;
+      case 'file_close':
+        handleCloseDocumentWithGuard();
+        break;
+      case 'file_print':
+        void printDocument();
+        break;
+      case 'edit_undo':
+      case 'edit_redo': {
+        // The menu accelerator reaches here even while a field or the inline
+        // editor has focus; there the field's own history applies.
+        if (isTypingTarget(document.activeElement)) {
+          document.execCommand(payload === 'edit_undo' ? 'undo' : 'redo');
+        } else if (payload === 'edit_undo') {
+          void undoEdit();
+        } else {
+          void redoEdit();
+        }
+        break;
+      }
+      case 'view_zoom_in':
+        setZoom(z => Math.min(4, Number((z + 0.25).toFixed(2))));
+        break;
+      case 'view_zoom_out':
+        setZoom(z => Math.max(0.25, Number((z - 0.25).toFixed(2))));
+        break;
+      case 'view_actual_size':
+        setZoom(1);
+        break;
+      default:
+        break;
+    }
+  };
 
   useEffect(() => {
     if (!isTauri) return;
@@ -994,54 +1412,13 @@ export function ViewerApp() {
     void (async () => {
       const { listen } = await import('@tauri-apps/api/event');
       if (cancelled) return;
-      unlisten = await listen<string>('menu-event', (event) => {
-        switch (event.payload) {
-          case 'file_open':
-            window.setTimeout(() => { void handleOpenFile(); }, 0);
-            break;
-          case 'file_save':
-            void handleRuntimeSave();
-            break;
-          case 'file_save_as':
-            void handleRuntimeSaveAs();
-            break;
-          case 'file_close':
-            handleCloseDocumentWithGuard();
-            break;
-          case 'file_print':
-            window.print();
-            break;
-          case 'edit_undo':
-            void undoStackRef.current.undo().then(syncUndoState);
-            break;
-          case 'edit_redo':
-            void undoStackRef.current.redo().then(syncUndoState);
-            break;
-          case 'view_zoom_in':
-            setZoom(z => Math.min(4, Number((z + 0.25).toFixed(2))));
-            break;
-          case 'view_zoom_out':
-            setZoom(z => Math.max(0.25, Number((z - 0.25).toFixed(2))));
-            break;
-          case 'view_actual_size':
-            setZoom(1);
-            break;
-          default:
-            break;
-        }
-      });
+      const stop = await listen<string>('menu-event', (event) => { menuEventRef.current(event.payload); });
+      if (cancelled) releaseListener(stop);
+      else unlisten = stop;
     })();
 
-    return () => { cancelled = true; unlisten?.(); };
-  }, [
-    handleOpenFile,
-    handleRuntimeSave,
-    handleRuntimeSaveAs,
-    handleCloseDocumentWithGuard,
-    undoStackRef,
-    syncUndoState,
-    setZoom,
-  ]);
+    return () => { cancelled = true; releaseListener(unlisten); };
+  }, []);
 
   const handleWelcomeFileInputChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -1076,6 +1453,7 @@ export function ViewerApp() {
     setShortcutSheetOpen,
     setMode,
     closeDocument,
+    closeDocumentWithGuard: handleCloseDocumentWithGuard,
     setCurrentFilePath,
     setUnsavedDialogOpen,
     pendingActionRef,
@@ -1137,7 +1515,9 @@ export function ViewerApp() {
   // take_pending_open command. We only CAPTURE the path here — the OS open can
   // arrive before the engine has finished initialising, so the actual load is
   // deferred to the effect below that waits for engine readiness.
-  const [pendingOpenPath, setPendingOpenPath] = useState<string | null>(null);
+  // Several files can arrive together (a multi-file Open With, a launch with
+  // several arguments); each gets a tab, so they are queued, not replaced.
+  const [pendingOpenPaths, setPendingOpenPaths] = useState<string[]>([]);
   useEffect(() => {
     if (!isTauri) return;
     let cancelled = false;
@@ -1148,21 +1528,38 @@ export function ViewerApp() {
         import('../lib/commandBridge'),
       ]);
       if (cancelled) return;
-      unlisten = await listen<string>('open-file', (e) => {
-        if (e.payload) setPendingOpenPath(e.payload);
+      const stop = await listen<string>('open-file', (e) => {
+        if (e.payload) {
+          const path = e.payload;
+          setPendingOpenPaths((queue) => [...queue, path]);
+        }
       });
-      const pending = await invoke<string | null>('take_pending_open').catch(() => null);
-      if (!cancelled && typeof pending === 'string' && pending) setPendingOpenPath(pending);
+      if (cancelled) { releaseListener(stop); return; }
+      unlisten = stop;
+      const pending = await invoke<string[]>('take_pending_opens').catch(() => [] as string[]);
+      if (!cancelled && pending.length > 0) setPendingOpenPaths((queue) => [...queue, ...pending]);
     })();
-    return () => { cancelled = true; unlisten?.(); };
+    return () => { cancelled = true; releaseListener(unlisten); };
   }, []);
   // Load a captured OS-open path once the engine is ready.
+  // One at a time: a tab opens only after the one before it, and a path
+  // already open comes to the front instead (tabState.findTabByPath).
+  const openingQueuedRef = useRef(false);
   useEffect(() => {
-    if (!pendingOpenPath || !engine || engineLoading) return;
-    const path = pendingOpenPath;
-    setPendingOpenPath(null);
-    void loadDocumentRef.current(path);
-  }, [pendingOpenPath, engine, engineLoading]);
+    if (pendingOpenPaths.length === 0 || !engine || engineLoading || openingQueuedRef.current) return;
+    openingQueuedRef.current = true;
+    const [path, ...rest] = pendingOpenPaths;
+    setPendingOpenPaths(rest);
+    void (async () => {
+      try {
+        if (path) await loadDocumentRef.current(path);
+      } finally {
+        openingQueuedRef.current = false;
+        // Another file may have arrived while this one opened.
+        setPendingOpenPaths((queue) => [...queue]);
+      }
+    })();
+  }, [pendingOpenPaths, engine, engineLoading]);
 
   useEffect(() => {
     if (!import.meta.env.DEV || !engine) return;
@@ -1236,6 +1633,19 @@ export function ViewerApp() {
         )}
 
         <EditorV3Shell
+          documentTabs={isTauri ? (
+            <DocumentTabBar
+              tabs={documentTabs.tabs}
+              activeId={documentTabs.activeId}
+              busy={documentTabs.switching}
+              onSelect={(id) => { void documentTabs.switchTo(id); }}
+              onClose={(id) => { void documentTabs.requestClose(id); }}
+              onMove={documentTabs.moveTab}
+              onNew={() => { void handleOpenFile(); }}
+            />
+          ) : undefined}
+          themeDark={themeDark}
+          onToggleTheme={handleToggleTheme}
           canvasRef={canvasContainerRef}
           fileName={fileName}
           pageIndex={pageIndex}
@@ -1268,6 +1678,9 @@ export function ViewerApp() {
           onSetFieldValue={handleSetFieldValue}
           formValidationErrors={formValidationErrors}
           onFormSubmit={handleFormSubmit}
+          formFieldCount={pdfDoc?.xfaDetected ? 0 : formModel.fieldCount}
+          onFlattenForm={handleFlattenForm}
+          flattenFormBusy={flattenFormBusy}
           pdfDoc={pdfDoc ?? null}
           onMetadataChange={handleMetadataChange}
           selectedAnnotation={selectedAnnotation}
@@ -1275,6 +1688,10 @@ export function ViewerApp() {
           onAnnotationAppearanceChange={setAnnotationAppearance}
           onDeleteSelectedAnnotation={handleDeleteSelectedAnnotation}
           onUpdateAnnotationColor={handleUpdateAnnotationColor}
+          onUpdateAnnotationText={handleUpdateAnnotationText}
+          onReplaceAnnotationImage={handleReplaceAnnotationImage}
+          onPlaceAnnotation={handlePlaceAnnotation}
+          onAddNote={handleAddNote}
           redactions={redactions}
           documentIssues={documentIssues}
           onApplyRedactions={handleApplyRedactions}
@@ -1284,10 +1701,9 @@ export function ViewerApp() {
           onRedactMetadata={handleRedactMetadata}
           scannedPageIndices={scannedPageIndices}
           ocrRunning={ocrRunning}
-          ocrVisible={ocrVisible}
-          onOcrVisibleChange={setOcrVisible}
-          ocrConfidenceThreshold={ocrConfidenceThreshold}
-          onOcrConfidenceChange={setOcrConfidenceThreshold}
+          ocrProgress={ocr.runProgress}
+          ocrLastReport={ocr.lastReport}
+          ocrComponentInstalled={ocr.status?.installed ?? null}
           attachments={attachments}
           onExtractAttachment={handleExtractAttachment}
           onAddAttachment={handleAddAttachment}
@@ -1305,17 +1721,9 @@ export function ViewerApp() {
           onOpenFile={handleLoadDocument}
           onSaveComplete={clearDirty}
           onSaveAs={handleRuntimeSaveAs}
-          onCloseDocument={() => {
-            if (isDirty) {
-              pendingActionRef.current = () => { closeDocument(); setCurrentFilePath(null); };
-              setUnsavedDialogOpen(true);
-              return;
-            }
-            closeDocument();
-            setCurrentFilePath(null);
-          }}
-          onUndo={() => { void undoStackRef.current.undo().then(syncUndoState); }}
-          onRedo={() => { void undoStackRef.current.redo().then(syncUndoState); }}
+          onCloseDocument={handleCloseDocumentWithGuard}
+          onUndo={() => { void undoEdit(); }}
+          onRedo={() => { void redoEdit(); }}
           onModeChange={(nextMode) => { setMode(nextMode); setAllToolsOpen(false); }}
           onOpenAllTools={() => { setAllToolsOpen(true); }}
           onOpenExport={(format) => {
@@ -1335,16 +1743,21 @@ export function ViewerApp() {
           onAnnotationToolChange={setActiveAnnotationTool}
           onAddComment={handleAddComment}
           onFormatCommand={handleFormatCommand}
+          editTypeface={editingTextTargetId ? { value: draftFontId, onChange: setDraftFontId } : null}
+          editFontSize={editingTextTargetId ? (draftFontSize ?? selectedTextTarget?.lines[0]?.spans[0]?.fontSize ?? null) : null}
           onNavigatePage={navigateToPage}
           onZoomChange={setZoom}
+          onFitToView={fitZoomToWindow}
           zoomPresetsOpen={zoomPresetsOpen}
           setZoomPresetsOpen={setZoomPresetsOpen}
           onOpenGoToPage={() => { setGoToPageOpen(true); }}
-          onRunOcr={() => { void handleRunOcr({ language: 'en', scope: 'scanned', preprocessMode: 'auto' }); }}
+          onRunOcr={() => { if (!isTauri) return; void ocr.requestRun('scanned'); }}
           onProtectDocument={() => { setMode('protect'); setAllToolsOpen(false); }}
           onWatermark={() => { setMode('protect'); setAllToolsOpen(false); }}
           onCheckForUpdates={handleCheckForUpdates}
           onDocumentMutated={handleDocumentMutated}
+          onDocumentEdited={markDirty}
+          onDocumentPathChanged={handleDocumentPathChanged}
           contentRevision={contentRevision}
           requestedPanel={requestedPanel}
           onRequestedPanelHandled={handleRequestedPanelHandled}
@@ -1361,10 +1774,27 @@ export function ViewerApp() {
             </div>
           )}
 
+          {/* Outside the welcome section, so "Open another file" on the
+              open-error panel can reach it in the browser build too. */}
+          <input
+            ref={welcomeFileInputRef}
+            type="file"
+            accept=".pdf"
+            className="hidden"
+            onChange={handleWelcomeFileInputChange}
+            aria-label={i18n.t('welcome.openFileAria')}
+          />
+
           {docError && !docLoading && (
-            <div className="v3-canvas-state error">
-              <span>{docError}</span>
-            </div>
+            <OpenErrorPanel
+              code={docError.code}
+              onOpenAnother={() => { dismissDocError(); void handleOpenFile(); }}
+              onRetry={() => {
+                dismissDocError();
+                const failed = documentTabs.lastFailedPath() ?? currentFilePath;
+                if (failed) void handleLoadDocument(failed);
+              }}
+            />
           )}
 
           {/* data-testid="welcome-screen": every e2e helper waits for it before
@@ -1373,14 +1803,6 @@ export function ViewerApp() {
               helpers failed at its first line. */}
           {!pdfDoc && !docLoading && !docError && (
             <section className="welcome-v3" data-testid="welcome-screen">
-              <input
-                ref={welcomeFileInputRef}
-                type="file"
-                accept=".pdf"
-                className="hidden"
-                onChange={handleWelcomeFileInputChange}
-                aria-label={i18n.t('welcome.openFileAria')}
-              />
               <div className="welcome-mark">P</div>
               <h1>PDFluent Editor</h1>
               <p>{i18n.t('welcome.v3Subtitle')}</p>
@@ -1438,6 +1860,17 @@ export function ViewerApp() {
             </div>
           )}
 
+          {pdfDoc && scriptConsent.asking && scriptConsent.status && mode !== 'organize' && (
+            <ScriptConsentBar
+              status={scriptConsent.status}
+              busy={scriptConsent.busy}
+              alwaysAvailable={scriptConsent.alwaysAvailable}
+              onRunOnce={scriptConsent.runOnce}
+              onRunAlways={scriptConsent.runAlways}
+              onDontRun={scriptConsent.dontRun}
+            />
+          )}
+
           {/* Calm, form-focused bar — replaces the old "active content"
               warning. Capability decisions (links) happen at point of use,
               not on open, so opening a form raises no alarm. */}
@@ -1455,55 +1888,24 @@ export function ViewerApp() {
             />
           )}
 
-          {/* XFA documents are VIEWED here; the reliable path to fill, edit and
-              search is converting to a standard PDF (which then uses the
-              first-class AcroForm tooling). Interactive XFA fill is experimental
-              and dev-gated (see XFA_INTERACTIVE_FILL) — the product makes no
-              dynamic-XFA Acrobat-parity fill claim. */}
+          {/* XFA documents can be filled in place (static Phase-1 values, see
+              XFA_INTERACTIVE_FILL in xfaFillGate.ts); converting to a standard
+              PDF remains the path to edit and search them. The product makes no
+              dynamic-XFA Acrobat-parity claim: event scripts do not run. */}
           {pdfDoc && pdfDoc.xfaDetected && !xfaBannerDismissed && (
-            <div className="v3-warning">
-              <span className="badge" data-testid="xfa-experimental-badge">XFA</span>
-              <div>
-                <strong>XFA-formulier</strong>
-                <p>
-                  {XFA_INTERACTIVE_FILL ? (
-                    <>
-                      Dit XFA-formulier wordt weergegeven. Velden invullen is experimenteel —
-                      zet het om naar een standaard PDF voor betrouwbaar invullen, bewerken en
-                      doorzoeken.
-                    </>
-                  ) : (
-                    <>
-                      Dit XFA-formulier wordt weergegeven. Zet het om naar een standaard PDF om
-                      de velden in te vullen, te bewerken en te doorzoeken.
-                    </>
-                  )}
-                </p>
-                {xfaFlattenError && <p data-testid="xfa-flatten-status" className="warning-error">{xfaFlattenError}</p>}
-              </div>
-              <div className="warning-actions">
-                <button
-                  type="button"
-                  className="warning-action"
-                  data-testid="xfa-flatten-btn"
-                  onClick={() => { void handleFlattenXfa(); }}
-                  disabled={xfaFlattenBusy}
-                >
-                  {xfaFlattenBusy ? i18n.t('common.busy') : i18n.t('xfa.convertToStandard')}
-                </button>
-                <button
-                  type="button"
-                  className="warning-secondary"
-                  onClick={() => setXfaBannerDismissed(true)}
-                >
-                  Sluiten
-                </button>
-              </div>
-            </div>
+            <XfaBanner
+              fillExperimental={XFA_INTERACTIVE_FILL}
+              flattenError={xfaFlattenError}
+              busy={xfaFlattenBusy}
+              onConvert={() => { void handleFlattenXfa(); }}
+              onDismiss={() => setXfaBannerDismissed(true)}
+            />
           )}
 
           {pdfDoc && !docLoading && mode !== 'organize' && (
-            <div className="v3-page-stack" {...stateDataAttr(annotationInteractionState)}>
+            // dir="ltr": the pages are the document's own geometry. A
+            // right-to-left UI mirrors the chrome around them, never the pages.
+            <div className="v3-page-stack" dir="ltr" {...stateDataAttr(annotationInteractionState)}>
               {Array.from({ length: pageCount }, (_, i) => {
                 const pageW = pdfDoc.pages[i]?.size.width ?? 595;
                 const pageH = pdfDoc.pages[i]?.size.height ?? 842;
@@ -1531,6 +1933,7 @@ export function ViewerApp() {
                           highlights={isCurrentPage ? activeHighlights : []}
                           clickableAnnotations={isCurrentPage ? pageAnnotationMarks : []}
                           onAnnotationClick={isCurrentPage ? handleAnnotationClick : undefined}
+                          onAnnotationRectChange={isCurrentPage ? (id, rect) => { void handleUpdateAnnotationRect(id, rect); } : undefined}
                           searchHighlights={isCurrentPage ? pageSearchHighlights : []}
                           activeSearchHighlightIdx={isCurrentPage ? activeSearchHighlightIdx : -1}
                           selectedAnnotationId={isCurrentPage ? selectedAnnotationId : null}
@@ -1550,9 +1953,6 @@ export function ViewerApp() {
                           } : undefined}
                           editingParagraphBounds={isCurrentPage && editingTextTargetId ? selectedTextTarget?.rect ?? null : null}
                           editingTargetId={isCurrentPage ? editingTextTargetId : null}
-                          ocrWords={ocrPageWords.get(i)}
-                          ocrVisible={ocrVisible}
-                          ocrConfidenceThreshold={ocrConfidenceThreshold}
                           onSelectionMarkup={isCurrentPage ? createTextMarkupFromSelection : undefined}
                           onSelectionComment={isCurrentPage ? handleAddComment : undefined}
                           isEditMode={mode === 'edit'}
@@ -1635,12 +2035,11 @@ export function ViewerApp() {
                             }}
                           />
                         )}
-                        {/* Experimental XFA fill overlay (dev-gated via
-                            XFA_INTERACTIVE_FILL): editable inputs over the rendered
-                            XFA pages. Hidden in release builds — XFA there is
-                            view + convert-to-PDF only. Mutually exclusive with the
-                            AcroForm overlay (gated on xfaDetected), so no double
-                            overlay or FormBar leakage. */}
+                        {/* XFA fill overlay (XFA_INTERACTIVE_FILL, on in release
+                            builds — J-59): editable inputs over the rendered XFA
+                            pages. Mutually exclusive with the AcroForm overlay
+                            (gated on xfaDetected), so no double overlay or
+                            FormBar leakage. */}
                         {XFA_INTERACTIVE_FILL && pdfDoc?.xfaDetected && xfaForm.hasXfaForm && !activeAnnotationTool && (mode === 'read' || mode === 'forms') && (
                           <XfaFormOverlay
                             fields={xfaForm.model}
@@ -1731,31 +2130,10 @@ export function ViewerApp() {
           stays until the next edit: a rejection that scrolls away is the same
           as "not replaced", which is what this replaces. */}
       {textMutationRejection && (
-        <div
-          data-testid="text-edit-rejection"
-          role="status"
-          className="fixed left-1/2 bottom-12 z-[72] w-[min(520px,calc(100vw-2rem))] -translate-x-1/2 rounded-lg border border-amber-500/40 bg-background/95 px-3 py-2 shadow-lg backdrop-blur"
-        >
-          <div className="flex items-start gap-2">
-            <div className="min-w-0 flex-1">
-              <p className="text-xs font-semibold">{i18n.t('textMutation.rejection.bannerTitle')}</p>
-              <p className="mt-0.5 text-xs font-medium text-foreground/90">{textMutationRejection.tooltip}</p>
-              <p className="mt-0.5 text-xs leading-snug text-foreground/70">{textMutationRejection.explanation}</p>
-              <p className="mt-1 font-mono text-[10px] text-muted-foreground" data-testid="text-edit-rejection-code">
-                {textMutationRejection.code}
-              </p>
-            </div>
-            <button
-              type="button"
-              data-testid="text-edit-rejection-dismiss"
-              onClick={dismissTextMutationRejection}
-              className="shrink-0 rounded p-0.5 text-muted-foreground hover:bg-muted hover:text-foreground"
-              aria-label={i18n.t('textMutation.rejection.bannerDismiss')}
-            >
-              <XIcon className="h-3.5 w-3.5" />
-            </button>
-          </div>
-        </div>
+        <TextEditRejectionNotice
+          rejection={textMutationRejection}
+          onDismiss={dismissTextMutationRejection}
+        />
       )}
 
       {appErrors.length > 0 && (
@@ -1764,34 +2142,11 @@ export function ViewerApp() {
           className="fixed right-4 bottom-12 z-[70] flex w-[min(360px,calc(100vw-2rem))] flex-col gap-2"
         >
           {appErrors.slice(-3).map(error => (
-            <div
+            <AppErrorToast
               key={error.id}
-              data-testid="app-error-toast"
-              data-severity={error.severity}
-              // A visible fallback is a warning: the action did something, just
-              // less than its label promised. Painting it the same red as a
-              // failed command tells the user the wrong thing about a document
-              // that did change.
-              className={`rounded-lg border bg-background/95 px-3 py-2 shadow-lg backdrop-blur ${
-                error.severity === 'error' ? 'border-destructive/20' : 'border-amber-500/40'
-              }`}
-            >
-              <div className="flex items-start gap-2">
-                <div className="min-w-0 flex-1">
-                  <p className={`text-xs font-semibold ${error.severity === 'error' ? 'text-destructive' : 'text-foreground'}`}>{error.title}</p>
-                  <p className="mt-0.5 text-xs leading-snug text-foreground/80">{error.message}</p>
-                </div>
-                <button
-                  type="button"
-                  data-testid="app-error-dismiss"
-                  onClick={() => { setAppErrors(prev => clearError(prev, error.id)); }}
-                  className="shrink-0 rounded p-0.5 text-muted-foreground hover:bg-muted hover:text-foreground"
-                  aria-label={i18n.t('common.dismissNotification')}
-                >
-                  <XIcon className="h-3.5 w-3.5" />
-                </button>
-              </div>
-            </div>
+              error={error}
+              onDismiss={() => { setAppErrors(prev => clearError(prev, error.id)); }}
+            />
           ))}
         </div>
       )}
@@ -1829,6 +2184,7 @@ export function ViewerApp() {
             onClose={() => { setSettingsOpen(false); }}
             settings={appSettings}
             onSettingsChange={handleSettingsChange}
+            ocr={isTauri ? { status: ocr.status } : undefined}
           />
         </Suspense>
       )}
@@ -1855,15 +2211,50 @@ export function ViewerApp() {
         </Suspense>
       )}
 
+      {recoveryOffer[0] && (
+        <Suspense fallback={null}>
+          <RecoveryDialog
+            isOpen
+            recoveryPath={recoveryOffer[0].originalPath ?? ''}
+            originalFileName={recoveryDocumentLabel(recoveryOffer)}
+            timestamp={new Date(recoveryOffer[0].savedAt * 1000).toLocaleString(i18n.language)}
+            onRecover={() => { void handleRecoverCopy(); }}
+            onDiscard={() => { void handleDiscardRecovery(); }}
+            onClose={() => { setRecoveryOffer([]); }}
+          />
+        </Suspense>
+      )}
+
+      {passwordRequest && (
+        <Suspense fallback={null}>
+          <PasswordPromptDialog
+            request={passwordRequest.request}
+            onSubmit={(password) => { answerPasswordRequest(password); }}
+            onCancel={() => { answerPasswordRequest(null); }}
+          />
+        </Suspense>
+      )}
+
+      {signedSaveDialogOpen && (
+        <Suspense fallback={null}>
+          <SignedSaveDialog
+            isOpen={signedSaveDialogOpen}
+            onSaveCopy={() => { void handleSaveUnsignedCopy(); }}
+            onCancel={() => { setSignedSaveDialogOpen(false); }}
+          />
+        </Suspense>
+      )}
+
       {/* ── Unsaved changes dialog ──────────────────────────────────────────── */}
       {unsavedDialogOpen && (
         <Suspense fallback={null}>
           <UnsavedChangesDialog
             isOpen={unsavedDialogOpen}
-            canSave={currentFilePath !== null}
+            canSave={isTauri}
             onSave={() => { void handleUnsavedSave(); }}
             onDiscard={handleUnsavedDiscard}
             onCancel={handleUnsavedCancel}
+            documentName={documentTabs.tabs.length > 1 ? fileName ?? undefined : undefined}
           />
         </Suspense>
       )}

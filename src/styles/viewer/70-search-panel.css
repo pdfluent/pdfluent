@@ -58,7 +58,7 @@
 }
 
 .searchpanel-result-active {
-  background: var(--accent-soft);
+  background: var(--state-active-bg);
   color: var(--text-primary);
   animation: pf-search-pulse var(--pf-dur-med) var(--pf-ease);
 }

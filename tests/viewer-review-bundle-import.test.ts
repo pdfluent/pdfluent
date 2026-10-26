@@ -74,7 +74,7 @@ describe('parseReviewBundleJson', () => {
     const fnEnd = source.indexOf('\nexport function ', fnStart + 1);
     const body = source.slice(fnStart, fnEnd);
     expect(body).toContain('catch');
-    expect(body).toContain('Ongeldige JSON in bundle');
+    expect(body).toContain('Invalid JSON in the bundle');
   });
 
   it('falls back to empty auditLog when auditLog field is absent', () => {

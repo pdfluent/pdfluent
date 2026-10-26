@@ -5,7 +5,30 @@
 // of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
-import { useState, memo } from 'react';
+import { useState, useRef, useEffect, memo, type PointerEvent as ReactPointerEvent } from 'react';
+import {
+  isMovableAnnotation,
+  moveRect,
+  resizeRect,
+  screenDeltaToPdf,
+  type PdfRect,
+  type ResizeHandle,
+} from '../interaction/annotationGeometry';
+
+/** A drag in progress on the selected annotation: the whole box or one corner. */
+interface DragState {
+  id: string;
+  grip: 'move' | ResizeHandle;
+  startX: number;
+  startY: number;
+  origin: PdfRect;
+  current: PdfRect;
+}
+
+const HANDLES: ResizeHandle[] = ['nw', 'ne', 'sw', 'se'];
+
+/** Pointer travel below this is a click, not a move. */
+const DRAG_THRESHOLD_PX = 3;
 
 // ---------------------------------------------------------------------------
 // Props
@@ -39,6 +62,9 @@ interface AnnotationOverlayProps {
   draftRect?: { x: number; y: number; width: number; height: number } | null;
   /** Draft stroke for the freehand ink tool — PDF-space points, drawn as it is made. */
   draftInk?: Array<[number, number]> | null;
+  /** Called when the user drags the selected annotation or one of its corners
+   *  (J-46). The rect is in PDF space; without it the selection cannot move. */
+  onAnnotationRectChange?: (annotationId: string, rect: PdfRect) => void;
 }
 
 // ---------------------------------------------------------------------------
@@ -57,8 +83,64 @@ export const AnnotationOverlay = memo(function AnnotationOverlay({
   selectedAnnotationId = null,
   draftRect = null,
   draftInk = null,
+  onAnnotationRectChange,
 }: AnnotationOverlayProps) {
   const [hoveredMarkId, setHoveredMarkId] = useState<string | null>(null);
+  const [drag, setDrag] = useState<DragState | null>(null);
+  const dragRef = useRef<DragState | null>(null);
+  // A drag ends in a click on the same mark; that click must not toggle the
+  // selection off again.
+  const suppressClickRef = useRef(false);
+
+  useEffect(() => {
+    if (!drag) return;
+    const onMove = (e: PointerEvent) => {
+      const d = dragRef.current;
+      if (!d) return;
+      const { dx, dy } = screenDeltaToPdf(e.clientX - d.startX, e.clientY - d.startY, zoom);
+      const current = d.grip === 'move' ? moveRect(d.origin, dx, dy) : resizeRect(d.origin, d.grip, dx, dy);
+      dragRef.current = { ...d, current };
+      setDrag(dragRef.current);
+    };
+    const onUp = (e: PointerEvent) => {
+      const d = dragRef.current;
+      dragRef.current = null;
+      setDrag(null);
+      if (!d) return;
+      const moved = Math.hypot(e.clientX - d.startX, e.clientY - d.startY) >= DRAG_THRESHOLD_PX;
+      if (moved) {
+        suppressClickRef.current = true;
+        onAnnotationRectChange?.(d.id, d.current);
+      }
+    };
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onUp);
+    return () => {
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', onUp);
+    };
+  }, [drag !== null, zoom, onAnnotationRectChange]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const startDrag = (e: ReactPointerEvent, id: string, grip: DragState['grip'], rect: PdfRect) => {
+    if (!onAnnotationRectChange || e.button !== 0) return;
+    e.stopPropagation();
+    e.preventDefault();
+    const d = { id, grip, startX: e.clientX, startY: e.clientY, origin: rect, current: rect };
+    dragRef.current = d;
+    setDrag(d);
+  };
+
+  const clickMark = (id: string) => {
+    if (suppressClickRef.current) {
+      suppressClickRef.current = false;
+      return;
+    }
+    onAnnotationClick?.(id);
+  };
+
+  const selectedMark = clickableAnnotations.find(m => m.id === selectedAnnotationId);
+  const editable = selectedMark !== undefined && isMovableAnnotation(selectedMark.type) && onAnnotationRectChange !== undefined;
+  const frame = editable ? (drag?.id === selectedMark.id ? drag.current : selectedMark.rect) : null;
 
   return (
     <svg
@@ -124,7 +206,7 @@ export const AnnotationOverlay = memo(function AnnotationOverlay({
               strokeWidth={isSelected ? 2.5 : isHovered ? 2 : 1.5}
               strokeOpacity={isHovered ? '1' : '0.9'}
               style={{ pointerEvents: 'auto', cursor: 'pointer' }}
-              onClick={() => { onAnnotationClick?.(mark.id); }}
+              onClick={() => { clickMark(mark.id); }}
               {...hoverHandlers}
             />
           );
@@ -145,7 +227,7 @@ export const AnnotationOverlay = memo(function AnnotationOverlay({
               strokeWidth={isSelected ? 2.5 : isHovered ? 2 : 1.5}
               strokeOpacity={isHovered ? '1' : '0.9'}
               style={{ pointerEvents: 'auto', cursor: 'pointer' }}
-              onClick={() => { onAnnotationClick?.(mark.id); }}
+              onClick={() => { clickMark(mark.id); }}
               {...hoverHandlers}
             />
           );
@@ -168,7 +250,7 @@ export const AnnotationOverlay = memo(function AnnotationOverlay({
               strokeWidth={isSelected ? 2 : 1.5}
               rx="1"
               style={{ pointerEvents: 'auto', cursor: 'pointer' }}
-              onClick={() => { onAnnotationClick?.(mark.id); }}
+              onClick={() => { clickMark(mark.id); }}
               {...hoverHandlers}
             />
           );
@@ -193,7 +275,7 @@ export const AnnotationOverlay = memo(function AnnotationOverlay({
               strokeDasharray={isSelected ? 'none' : '4 2'}
               rx="0"
               style={{ pointerEvents: 'auto', cursor: 'pointer' }}
-              onClick={() => { onAnnotationClick?.(mark.id); }}
+              onClick={() => { clickMark(mark.id); }}
               {...hoverHandlers}
             />
           );
@@ -216,7 +298,31 @@ export const AnnotationOverlay = memo(function AnnotationOverlay({
               strokeWidth={isSelected ? 1.5 : 0}
               rx="1"
               style={{ pointerEvents: 'auto', cursor: 'pointer' }}
-              onClick={() => { onAnnotationClick?.(mark.id); }}
+              onClick={() => { clickMark(mark.id); }}
+              {...hoverHandlers}
+            />
+          );
+        }
+
+        if (t === 'stamp' || t === 'freetext' || t === 'ink' || t === 'circle' || t === 'line' || t === 'polygon' || t === 'polyline') {
+          // The page bitmap already draws these from their appearance stream;
+          // the marker is a hit area that only shows itself on hover.
+          return (
+            <rect
+              key={mark.id}
+              data-testid="annotation-marker"
+              data-annotation-type={t}
+              x={domX}
+              y={domY}
+              width={domW}
+              height={domH}
+              fill="transparent"
+              stroke={isHovered || isSelected ? 'var(--selection-on-page-strong)' : 'none'}
+              strokeWidth={1}
+              strokeDasharray="3 2"
+              style={{ pointerEvents: 'auto', cursor: isSelected && editable ? 'move' : 'pointer' }}
+              onPointerDown={isSelected && editable ? (e) => startDrag(e, mark.id, 'move', mark.rect) : undefined}
+              onClick={() => { clickMark(mark.id); }}
               {...hoverHandlers}
             />
           );
@@ -238,11 +344,50 @@ export const AnnotationOverlay = memo(function AnnotationOverlay({
             strokeWidth={isSelected ? 2 : 1}
             rx="2"
             style={{ pointerEvents: 'auto', cursor: 'pointer' }}
-            onClick={() => { onAnnotationClick?.(mark.id); }}
+            onClick={() => { clickMark(mark.id); }}
             {...hoverHandlers}
           />
         );
       })}
+
+      {/* Selection frame with corner handles: drag the box to move it, a
+          corner to resize it (J-46). Shown only for annotations that move. */}
+      {frame && selectedMark && (
+        <g data-testid="annotation-selection-frame">
+          <rect
+            x={frame.x * zoom}
+            y={(pageHeightPt - frame.y - frame.height) * zoom}
+            width={frame.width * zoom}
+            height={frame.height * zoom}
+            fill="var(--selection-on-page-fill)"
+            stroke="var(--selection-on-page-strong)"
+            strokeWidth="1.5"
+            strokeDasharray="4 3"
+            style={{ pointerEvents: 'auto', cursor: 'move' }}
+            onPointerDown={(e) => startDrag(e, selectedMark.id, 'move', selectedMark.rect)}
+            onClick={() => { clickMark(selectedMark.id); }}
+          />
+          {HANDLES.map(h => {
+            const hx = (h === 'nw' || h === 'sw' ? frame.x : frame.x + frame.width) * zoom;
+            const hy = (pageHeightPt - (h === 'nw' || h === 'ne' ? frame.y + frame.height : frame.y)) * zoom;
+            return (
+              <rect
+                key={h}
+                data-testid={`annotation-resize-handle-${h}`}
+                x={hx - 4}
+                y={hy - 4}
+                width={8}
+                height={8}
+                fill="white"
+                stroke="var(--selection-on-page)"
+                strokeWidth="1.5"
+                style={{ pointerEvents: 'auto', cursor: h === 'nw' || h === 'se' ? 'nwse-resize' : 'nesw-resize' }}
+                onPointerDown={(e) => startDrag(e, selectedMark.id, h, selectedMark.rect)}
+              />
+            );
+          })}
+        </g>
+      )}
 
       {/* Active annotation highlight — on top of markers */}
       {highlights.map((h, idx) => {
@@ -272,8 +417,8 @@ export const AnnotationOverlay = memo(function AnnotationOverlay({
           y={(pageHeightPt - draftRect.y - draftRect.height) * zoom}
           width={draftRect.width * zoom}
           height={draftRect.height * zoom}
-          fill="rgba(59, 130, 246, 0.08)"
-          stroke="rgba(59, 130, 246, 0.8)"
+          fill="var(--selection-on-page-fill)"
+          stroke="var(--selection-on-page-strong)"
           strokeWidth="1.5"
           strokeDasharray="4 3"
           rx="2"
@@ -285,7 +430,7 @@ export const AnnotationOverlay = memo(function AnnotationOverlay({
           data-testid="annotation-draft-ink"
           points={draftInk.map(([x, y]) => `${x * zoom},${(pageHeightPt - y) * zoom}`).join(' ')}
           fill="none"
-          stroke="rgba(59, 130, 246, 0.9)"
+          stroke="var(--selection-on-page-strong)"
           strokeWidth="2"
           strokeLinecap="round"
           strokeLinejoin="round"

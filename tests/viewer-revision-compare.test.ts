@@ -133,7 +133,7 @@ describe('formatSnapshotDiffMarkdown', () => {
 
   it('renders message when no differences', () => {
     expect(compareSource).toContain('!diff.hasDifferences');
-    expect(compareSource).toContain('Geen verschillen');
+    expect(compareSource).toContain('No differences found');
   });
 
   it('renders new annotations section', () => {

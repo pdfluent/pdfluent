@@ -114,9 +114,9 @@
     "allTools": "Alle værktøjer",
     "contextualBar": "Tilstandsværktøjslinje",
     "pdfa": "PDF/A",
-    "metadata": "Document properties",
-    "invoice": "E-invoice",
-    "bookmarks": "Bookmarks"
+    "metadata": "Dokumentegenskaber",
+    "invoice": "E-faktura",
+    "bookmarks": "Bogmærker"
   },
   "topbar": {
     "openPdf": "Åbn PDF",
@@ -242,7 +242,6 @@
     "ownerPasswordPlaceholder": "Ejeradgangskode",
     "encryptBtn": "Krypter…",
     "decrypt": "Dekrypter",
-    "currentPasswordPlaceholder": "Nuværende adgangskode",
     "decryptBtn": "Dekrypter",
     "noDocument": "Intet dokument åbent.",
     "permCanPrint": "Udskriv",
@@ -258,7 +257,11 @@
     "searchRedactBtn": "Find og rediger ud",
     "redactMetadataTitle": "Metadata",
     "redactMetadataDesc": "Fjern forfatter, titel og anden identificerende metadata.",
-    "redactMetadataBtn": "Fjern metadata"
+    "redactMetadataBtn": "Fjern metadata",
+    "ownerPasswordForRemoval": "Ejeradgangskode (tilladelser)",
+    "removePasswordHelp": "Fjernelse af en adgangskode kræver ejeradgangskoden, den der beskytter tilladelser. Den adgangskode, du åbnede filen med, er ikke nok, medmindre den også er ejeradgangskoden.",
+    "removePasswordReady": "Du åbnede denne fil med ejeradgangskoden, så beskyttelsen kan fjernes uden at indtaste den igen.",
+    "removePasswordNotProtected": "Dette dokument har ingen adgangskodebeskyttelse."
   },
   "organize": {
     "thumbnails": "Miniaturer",
@@ -287,33 +290,34 @@
     "combine": "Kombiner filer",
     "splitRange": "Opdel efter område",
     "splitRangeHint": "Vælg sider først",
-    "moveLeft": "Move selected page left",
-    "moveRight": "Move selected page right",
-    "moveLeftShort": "Left",
-    "moveRightShort": "Right",
-    "rotateLeft": "Rotate left",
-    "rotateRight": "Rotate right",
-    "rotateLeftShort": "Left",
-    "rotateRightShort": "Right",
-    "addingPdf": "Adding PDF…",
-    "pdfAdded": "PDF added",
-    "combiningFiles": "Combining {{count}} file(s)…",
-    "filesCombined": "{{count}} file(s) combined",
-    "insertingPdf": "Inserting PDF before page {{page}}…",
-    "pdfInserted": "PDF inserted",
-    "exportingPages": "Exporting {{count}} page(s)…",
-    "selectionExported": "Selection exported to {{name}}",
-    "splittingPages": "Splitting into individual pages…",
-    "pagesSaved": "{{count}} pages saved",
-    "splittingRanges": "Splitting {{count}} range(s)…",
-    "filesSaved": "{{count}} file(s) saved"
+    "moveLeft": "Flyt valgt side til venstre",
+    "moveRight": "Flyt valgt side til højre",
+    "moveLeftShort": "Venstre",
+    "moveRightShort": "Højre",
+    "rotateLeft": "Roter til venstre",
+    "rotateRight": "Roter til højre",
+    "rotateLeftShort": "Venstre",
+    "rotateRightShort": "Højre",
+    "addingPdf": "Tilføjer PDF…",
+    "pdfAdded": "PDF tilføjet",
+    "combiningFiles": "Kombinerer {{count}} fil(er)…",
+    "filesCombined": "{{count}} fil(er) kombineret",
+    "insertingPdf": "Indsætter PDF foran side {{page}}…",
+    "pdfInserted": "PDF indsat",
+    "exportingPages": "Eksporterer {{count}} side(r)…",
+    "selectionExported": "Valg eksporteret til {{name}}",
+    "splittingPages": "Deler i enkeltsider…",
+    "pagesSaved": "{{count}} sider gemt",
+    "splittingRanges": "Deler {{count}} område(r)…",
+    "filesSaved": "{{count}} fil(er) gemt"
   },
   "unsavedChanges": {
     "title": "Ikke-gemte ændringer",
     "message": "Vil du gemme dine ændringer, før du fortsætter?",
     "save": "Gem",
     "discard": "Kassér ændringer",
-    "cancel": "Annuller"
+    "cancel": "Annuller",
+    "messageNamed": "Vil du gemme dine ændringer i {{name}}, før du fortsætter?"
   },
   "welcome": {
     "title": "Åbn en PDF for at komme i gang",
@@ -327,13 +331,13 @@
     "lede": "Læs, rediger, konverter, udfyld og underskriv — helt på din enhed.",
     "privacyPromise": "Lokal-først · dokumenter forlader aldrig denne enhed",
     "dropPdfHere": "Slip PDF her",
-    "v3Subtitle": "Open a PDF to read, edit, convert or sign it locally.",
-    "openFileAria": "Choose a PDF file to open",
-    "clearRecent": "Clear recent",
-    "recentShort": "Recent",
-    "removeRecentAria": "Remove {{name}}",
-    "backToDocument": "Back to document",
-    "loadingDocument": "Loading document…"
+    "v3Subtitle": "Åbn en PDF for at læse, redigere, konvertere eller underskrive den lokalt.",
+    "openFileAria": "Vælg en PDF-fil, der skal åbnes",
+    "clearRecent": "Ryd seneste",
+    "recentShort": "Seneste",
+    "removeRecentAria": "Fjern {{name}}",
+    "backToDocument": "Tilbage til dokumentet",
+    "loadingDocument": "Indlæser dokument…"
   },
   "settings": {
     "language": "Sprog",
@@ -350,15 +354,29 @@
     "reviewerNamePlaceholder": "Navn brugt i kommentarer",
     "exportPreferences": "Eksportpræferencer",
     "exportFormatLabel": "Standardeksportformat",
-    "autosave": "Automatisk gem",
-    "autosaveEnable": "Gem ændringer automatisk",
     "themeLabel": "Tema",
     "ocrDefaults": "OCR-standardindstillinger",
     "ocrLanguageLabel": "Standardsprog (ISO-639-2)",
     "ocrLanguagePlaceholder": "f.eks. eng, nld, deu",
-    "updates": "Updates",
-    "automaticUpdateCheck": "Check for a new version at startup",
-    "automaticUpdateCheckHint": "PDFluent asks pdfluent.com whether a newer version exists, a few seconds after it starts. Nothing from your documents is sent. Turn this off and the app never checks on its own — \"Check for updates\" still works whenever you ask for it."
+    "updates": "Opdateringer",
+    "automaticUpdateCheck": "Søg efter en ny version ved opstart",
+    "automaticUpdateCheckHint": "PDFluent spørger pdfluent.com, om der findes en nyere version, et par sekunder efter start. Intet fra dine dokumenter sendes. Slå dette fra, og appen tjekker aldrig af sig selv — \"Tjek for opdateringer\" virker stadig, når du beder om det.",
+    "recoveryCopy": "Gendannelseskopi",
+    "recoveryCopyEnable": "Gem en gendannelseskopi af ikke-gemte ændringer, som tilbydes efter et nedbrud",
+    "view": "Vis",
+    "defaultZoomLabel": "Standardzoom",
+    "defaultZoomFitWidth": "Tilpas til bredde (standard)",
+    "defaultZoomFitPage": "Tilpas til side",
+    "defaultZoomActualSize": "Faktisk størrelse (100%)",
+    "defaultZoomLastUsed": "Sidst brugt",
+    "defaultZoomHint": "Et dokument åbnes ved denne zoom og følger vinduet, indtil du selv zoomer. Tilpas til bredde viser i stedet hele siden, når det tydeligt passer bedre.",
+    "securityTitle": "Sikkerhed",
+    "formScriptsLabel": "Formularscripts",
+    "formScriptsAsk": "Spørg",
+    "formScriptsAlways": "Altid",
+    "formScriptsNever": "Aldrig",
+    "formScriptsHint": "Formularer kan indeholde scripts, for eksempel beregninger. Spørg er standard: en formular åbnes med sine gemte værdier, og der kører intet, før du accepterer.",
+    "formScriptsPinned": "Din organisation har fastsat dette valg. Det kan ikke ændres her."
   },
   "errors": {
     "loadFailed": "Dokumentindlæsning mislykkedes",
@@ -381,7 +399,8 @@
     "addPageFailed": "Tilføjelse af PDF mislykkedes",
     "insertFailed": "Indsætning af PDF mislykkedes",
     "splitFailed": "Deling mislykkedes",
-    "commandFailedTitle": "'{{command}}' did not complete"
+    "commandFailedTitle": "'{{command}}' blev ikke fuldført",
+    "commandRetrying": "Midlertidig fejl i {{command}} — prøver igen"
   },
   "events": {
     "formFieldUpdated": "Formularfelt opdateret",
@@ -430,9 +449,9 @@
     "pageNotFound": "Side ikke fundet",
     "requiresFontInspection": "Tekstredigering kræver skriftinspektion (planlagt til fase 6).",
     "rejection": {
-      "bannerTitle": "This text was not changed",
-      "bannerDetail": "Reason reported by the PDF engine: {{detail}}",
-      "bannerDismiss": "Dismiss",
+      "bannerTitle": "Denne tekst blev ikke ændret",
+      "bannerDetail": "Årsag rapporteret af PDF-motoren: {{detail}}",
+      "bannerDismiss": "Afvis",
       "replacement-too-long": {
         "tooltip": "Replacement is too long",
         "explanation": "The replacement is longer than the text it replaces. Keep it the same length or shorter so the surrounding layout stays intact."
@@ -491,8 +510,8 @@
       }
     },
     "fallback": {
-      "fontSubstitutedTitle": "A standard font wrote the new text",
-      "fontSubstitutedMessage": "The original font of this text has no glyph for one or more characters you typed, so Helvetica was used for the replacement. The text is correct; it may look slightly different from the rest of the line."
+      "fontSubstitutedTitle": "En standardskrifttype skrev den nye tekst",
+      "fontSubstitutedMessage": "Den oprindelige skrifttype for denne tekst har ikke et glyf for et eller flere af de tegn, du indtastede, så Helvetica blev brugt til erstatningen. Teksten er korrekt; den kan se lidt anderledes ud end resten af linjen."
     }
   },
   "validation": {
@@ -566,12 +585,16 @@
     "watermarkDone": "Vandmærke tilføjet",
     "watermarkFailed": "Vandmærke mislykkedes",
     "watermarkRunning": "Tilføjer vandmærke…",
-    "pdfaRunning": "Converting to PDF/A…",
-    "pdfaDone": "PDF/A written",
-    "pdfaFailed": "PDF/A conversion failed",
-    "metadataRunning": "Saving properties…",
-    "metadataDone": "Properties saved",
-    "metadataFailed": "Could not save properties"
+    "pdfaRunning": "Konverterer til PDF/A…",
+    "pdfaDone": "PDF/A skrevet",
+    "pdfaFailed": "PDF/A-konvertering mislykkedes",
+    "metadataRunning": "Gemmer egenskaber…",
+    "metadataDone": "Egenskaber gemt",
+    "metadataFailed": "Kunne ikke gemme egenskaber",
+    "exportMarkdownRunning": "Eksporterer som Markdown…",
+    "exportMarkdownDone": "Markdown eksporteret",
+    "exportTablesRunning": "Eksporterer tabeller til Excel…",
+    "exportTablesDone": "Tabeller eksporteret til Excel ({{count}})"
   },
   "panels": {
     "search": "Søg",
@@ -714,7 +737,10 @@
     "formatJpeg": "JPEG (billede)",
     "formatDocx": "Word-dokument (.docx)",
     "formatXlsx": "Excel-regneark (.xlsx)",
-    "formatPptx": "PowerPoint-præsentation (.pptx)"
+    "formatPptx": "PowerPoint-præsentation (.pptx)",
+    "formatMarkdown": "Markdown (.md) - Forhåndsvisning",
+    "formatTablesXlsx": "Tabeller til Excel (.xlsx) - Forhåndsvisning",
+    "noTablesFound": "Der blev ikke fundet nogen tabeller i dette dokument."
   },
   "goToPage": {
     "title": "Gå til side",
@@ -729,7 +755,9 @@
     "documentLabel": "Dokument:",
     "savedLabel": "Gemt:",
     "recoveryPath": "Gendannelsessti:",
-    "restore": "Gendan"
+    "restore": "Gendan",
+    "untitled": "Dokument uden navn",
+    "andMore": "{{name}} og {{count}} mere"
   },
   "emptyStates": {
     "noDocument": "Intet dokument åbent",
@@ -839,7 +867,26 @@
     "statusUnavailableWithReason": "OCR-runtime utilgængeligt: {{reason}}",
     "statusRetry": "Kontrollér igen",
     "runtimePath": "Kørselstid: {{path}}",
-    "missingPackages": "Mangler: {{packages}}"
+    "missingPackages": "Mangler: {{packages}}",
+    "noScannedPagesTitle": "Intet at genkende",
+    "unavailable": {
+      "platform": "OCR tilbydes ikke til denne platform.",
+      "missing": "OCR-filerne til denne version mangler eller er ufuldstændige. Geninstaller PDFluent for at gendanne dem."
+    },
+    "settings": {
+      "unknown": "OCR-komponent: kontrollerer…",
+      "installed": "OCR-komponent: Tesseract {{version}} installeret"
+    },
+    "errors": {
+      "OCR_COMPONENT_UNSUPPORTED_PLATFORM": "OCR-komponenten tilbydes ikke til denne platform.",
+      "OCR_COMPONENT_NOT_INSTALLED": "OCR-komponenten er ikke installeret.",
+      "OCR_LANGUAGE_MISSING": "En sprogpakke til OCR er ikke installeret.",
+      "OCR_SIGNED_DOCUMENT": "Dette dokument er signeret. OCR ville ændre de signerede sider, så det køres ikke.",
+      "OCR_NOT_PERMITTED": "Dokumentets tilladelser tillader ikke ændring af dets indhold.",
+      "OCR_DOCUMENT_CHANGED": "Dokumentet blev ændret, mens OCR kørte. Kør OCR igen.",
+      "OCR_ENGINE_FAILED": "OCR stoppede med en fejl.",
+      "OCR_PAGE_OUT_OF_RANGE": "En side, der skal genkendes, findes ikke i dokumentet."
+    }
   },
   "docInfo": {
     "title": "Titel",
@@ -879,7 +926,17 @@
     "italicComingSoon": "Kursiv formatering kommer snart",
     "sourceDigital": "PDF-tekstlag",
     "sourceOcr": "OCR",
-    "browserLimitedNote": "Klik på tekst på siden for at redigere understøttet PDF-tekst. Billeder og links er tilgængelige i desktop-appen."
+    "browserLimitedNote": "Klik på tekst på siden for at redigere understøttet PDF-tekst. Billeder og links er tilgængelige i desktop-appen.",
+    "typeface": {
+      "label": "Skrifttype",
+      "default": "Dokumentets skrifttype",
+      "noEmbed": "{{family}}: skrifttypens licens tillader ikke indlejring i en PDF",
+      "refusedLicence": "{{family}} kan ikke bruges: licensen tillader ikke indlejring i en PDF. Vælg en anden skrifttype.",
+      "refusedGlyphs": "{{family}} har ingen glyf for {{characters}}. Vælg en anden skrifttype.",
+      "refusedGone": "Den skrifttype er ikke længere installeret. Vælg en anden.",
+      "refusedText": "Teksten, der skal omformateres, findes ikke længere på siden.",
+      "refusedUnusable": "{{family}} kunne ikke læses som en skrifttype. Vælg en anden skrifttype."
+    }
   },
   "rightPanel": {
     "properties": "Egenskaber",
@@ -944,9 +1001,12 @@
     "flatten": "Fladtryk XFA",
     "flattenDone": "XFA fladtrykt. Eksporter PDF'en for at downloade den statiske version.",
     "flattenFailed": "Fladtrykning af XFA mislykkedes",
-    "convertToStandard": "Convert to standard PDF",
-    "convertedToStandard": "XFA converted to standard PDF",
-    "convertFailed": "Conversion failed: {{message}}"
+    "convertToStandard": "Konvertér til standard-PDF",
+    "convertedToStandard": "XFA konverteret til standard-PDF",
+    "convertFailed": "Konvertering mislykkedes: {{message}}",
+    "bannerTitle": "XFA-formular",
+    "bannerBody": "Denne XFA-formular vises, som den er. Hvis du vil udfylde, redigere eller søge i dens felter, skal du konvertere den til en almindelig PDF.",
+    "bannerBodyExperimental": "Denne XFA-formular vises, som den er. Udfyldning af felter er eksperimentel; konvertér den til en almindelig PDF for at udfylde, redigere og søge pålideligt."
   },
   "security": {
     "activeContentBadge": "Blokeret",
@@ -970,7 +1030,8 @@
     "highlight": "Fremhæv",
     "strikethrough": "Gennemstreg",
     "underline": "Understreg",
-    "copyText": "Kopiér tekst"
+    "copyText": "Kopiér tekst",
+    "copied": "Kopieret"
   },
   "update": {
     "available": "Opdatering tilgængelig",
@@ -980,10 +1041,10 @@
     "installing": "Installerer…",
     "checkFailed": "Opdateringskontrol mislykkedes",
     "upToDate": "Du bruger den nyeste version",
-    "installed": "Update installed",
-    "restartNow": "Restart now",
-    "restartUnsaved": "Save your changes before restarting.",
-    "restartManual": "If it doesn't restart automatically, quit and reopen PDFluent to finish."
+    "installed": "Opdatering installeret",
+    "restartNow": "Genstart nu",
+    "restartUnsaved": "Gem dine ændringer, før du genstarter.",
+    "restartManual": "Hvis den ikke genstarter automatisk, så luk og åbn PDFluent igen for at fuldføre."
   },
   "telemetry": {
     "addNoteLabel": "Vil du tilføje noget? (valgfrit)",
@@ -1012,6 +1073,11 @@
     "sentTitle": "Sendt. Tak.",
     "settingsAutoSend": "Send automatisk uden at spørge",
     "settingsAutoSendNote": "Automatiske rapporter er renset og fri for personlige data, præcis som dem du gennemgår manuelt.",
+    "settingsSentReports": "Nedbrudsrapporter sendt fra denne computer: {{count}}. Vi sletter dem automatisk fra vores server efter {{days}} dage.",
+    "settingsDeleteReports": "Slet mine nedbrudsrapporter",
+    "settingsDeleting": "Sletter…",
+    "settingsDeleted": "Slettede nedbrudsrapporter: {{count}}",
+    "settingsDeleteFailed": "{{count}} kunne ikke slettes. Tjek din forbindelse, og prøv igen.",
     "settingsDescription": "Rapporter indeholder aldrig personlige oplysninger eller dokumentindhold. Alt renses før afsendelse, og du ser hver rapport først. Slået fra som standard.",
     "settingsTitle": "Nedbruds- og fejlrapporter",
     "settingsToggle": "Send nedbruds- og fejlrapporter",
@@ -1019,7 +1085,11 @@
     "typeBug": "Fejl",
     "typeCrash": "Nedbrud",
     "typeFeedback": "Feedback",
-    "whatGetsSent": "Hvad der sendes"
+    "whatGetsSent": "Hvad der sendes",
+    "settingsSentFeedback": "Feedbackrapporter sendt fra denne computer: {{count}}. Vi sletter dem automatisk fra vores server efter {{days}} dage.",
+    "settingsDeleteFeedback": "Slet mine feedbackrapporter",
+    "settingsFeedbackDeleted": "Feedbackrapporter slettet: {{count}}",
+    "settingsFeedbackDeleteFailed": "Kunne ikke slette {{count}} feedbackrapporter. Tjek din forbindelse, og prøv igen."
   },
   "ai": {
     "summaryInstruction": "Giv et kortfattet resumé af følgende dokument på dansk. Angiv arbejdsgiver, stilling og periode for hver rolle. Brug punkttegn.",
@@ -1076,7 +1146,8 @@
       "scrollLeft": "Scroll-tilstande til venstre",
       "scrollRight": "Scroll-tilstande til højre",
       "workMode": "Arbejdstilstand",
-      "searchPlaceholder": "Søg i dokument"
+      "searchPlaceholder": "Søg i dokument",
+      "allTools": "Alle værktøjer"
     },
     "menu": {
       "about": "Om",
@@ -1147,22 +1218,17 @@
       "draw": "Tegn",
       "signatureName": "Underskriftsnavn",
       "typeName": "Skriv dit navn…",
-      "selectStyle": "Vælg stil",
-      "styleClassic": "Kursiv klassisk",
-      "styleElegant": "Kursiv elegant",
-      "styleBrush": "Penselunderskrift",
-      "styleModern": "Moderne håndskrift",
       "drawHere": "Tegn her med din mus, trackpad eller stylus",
       "clear": "Ryd",
       "apply": "Anvend",
-      "defaultSignature": "Underskrift",
       "clickToPlaceSignature": "Klik på siden for at placere underskriften.",
       "addInitials": "Tilføj initialer",
       "initialsIntro": "Skriv dine initialer til hurtig placering på initialbokse.",
       "initials": "Initialer",
       "initialsPlaceholder": "f.eks. AB",
-      "defaultInitials": "AB",
-      "clickToPlaceInitials": "Klik på siden for at placere initialerne."
+      "clickToPlaceInitials": "Klik på siden for at placere initialerne.",
+      "signatureFont": "Signaturskrifttype",
+      "plainItalic": "Almindelig kursiv"
     },
     "overlay": {
       "signaturePlaced": "Underskrift placeret!",
@@ -1177,13 +1243,13 @@
     "textbox": {
       "editTitle": "Rediger tekstboks",
       "newTitle": "Ny tekstboks",
-      "intro": "Denne tekst placeres som et overlay på den aktuelle side. Gemning af tomt fjerner en eksisterende tekstboks.",
       "label": "Tekst",
       "placeholder": "Skriv teksten…",
       "delete": "Slet",
       "deleted": "Tekstboks slettet.",
       "updated": "Tekstboks opdateret.",
-      "added": "Ny tekstboks tilføjet."
+      "added": "Ny tekstboks tilføjet.",
+      "introPdf": "Tekstfeltet skrives ind i PDF-filen og vises i alle PDF-læsere. Gemmes det tomt, fjernes et eksisterende tekstfelt."
     },
     "rail": {
       "tools": "PDF-værktøjer",
@@ -1197,12 +1263,14 @@
       "more": "Flere værktøjer",
       "strikeText": "Gennemstregning af tekst",
       "underlineText": "Understreg tekst",
-      "addAttachment": "Tilføj vedhæftelse"
+      "addAttachment": "Tilføj vedhæftelse",
+      "drawRectangle": "Tegn et rektangel"
     },
     "railToasts": {
-      "commentMode": "Note-tilstand aktiv. Vælg tekst og vælg Note, eller brug kommentarlisten til at tilføje en note.",
+      "commentMode": "Notetilstand. Klik på siden, hvor noten skal placeres.",
       "strikeout": "Gennemstregning aktiv — vælg tekst for at anvende.",
-      "underline": "Understreg aktiv — vælg tekst for at anvende."
+      "underline": "Understreg aktiv — vælg tekst for at anvende.",
+      "rectangle": "Rektangel aktivt — træk på siden for at tegne det."
     },
     "tools": {
       "lede": "Vælg et værktøj for at komme i gang. Alt køres lokalt på denne enhed.",
@@ -1238,17 +1306,18 @@
       "layers": "{{count}} lag",
       "manageLayers": "Administrer lag",
       "layersVisible": "{{count}} lag synlige.",
-      "archiveAndData": "Archiving and data",
-      "pdfaSub": "Check or convert for long-term archiving",
-      "invoiceSub": "Read the ZUGFeRD/Factur-X invoice inside",
-      "metadataSub": "Title and author of this document"
+      "archiveAndData": "Arkivering og data",
+      "pdfaSub": "Kontrollér eller konvertér til langtidsarkivering",
+      "invoiceSub": "Læs ZUGFeRD/Factur-X-fakturaen i filen",
+      "metadataSub": "Titel og forfatter for dette dokument",
+      "flattenForm": "Fladgør",
+      "flattenFormTitle": "Fladgør formularen: de udfyldte værdier bliver en del af siden, og felterne fjernes",
+      "flattenFormDone": "Formularen er fladgjort. Fortryd bringer felterne tilbage.",
+      "flattenFormFailed": "Kunne ikke fladgøre formularen: {{message}}"
     },
     "edit": {
       "lede": "Klik på tekst i dokumentet for at redigere inline. Formateringslinje vises direkte over markeringen.",
       "formatText": "Formater tekst",
-      "fontLabel": "Skrift",
-      "fontHint": "Eksisterende PDF-tekst bruger de indlejrede PDF-skrifttyper. Skrifttypen \"{{font}}\" bruges til nyligt tilføjede tekstbokse.",
-      "fontEmbedded": "Indlejret PDF-skrifttype",
       "color": "Farve",
       "colorLabel": "Farve {{color}}",
       "addContent": "Tilføj indhold",
@@ -1261,7 +1330,18 @@
       "clickAnywhereTextBox": "Klik hvor som helst på siden for at placere tekstboksen.",
       "clickAnywhereImage": "Klik hvor som helst på siden for at placere billedet.",
       "selection": "Markering",
-      "annotationOnPage": "{{type}} på side {{page}}"
+      "annotationOnPage": "{{type}} på side {{page}}",
+      "placeStamp": "Placér stempel",
+      "stampLabel": "Stempel",
+      "clickToPlaceStamp": "Klik på siden for at placere stemplet.",
+      "placementModeStamp": "Placeringstilstand: stempel",
+      "stampPlaced": "Stempel placeret.",
+      "deleteAnnotation": "Slet annotation",
+      "annotationColor": "Annotationsfarve",
+      "editTextBox": "Rediger tekst",
+      "replaceImage": "Erstat billede",
+      "imageReplaced": "Billede erstattet.",
+      "moveHint": "Træk for at flytte, træk i et hjørne for at ændre størrelse, eller flyt med piletasterne."
     },
     "convert": {
       "exportPdfTo": "Eksportér PDF til",
@@ -1279,10 +1359,16 @@
       "confidenceFrom": "Tillid fra {{value}}%",
       "ocrOff": "OCR fra",
       "ocrOn": "OCR på",
-      "ocrRunning": "OCR kører lokalt…"
+      "ocrRunning": "OCR kører lokalt…",
+      "ocrComponentUnknown": "OCR-komponent: kontrollerer…",
+      "ocrComponentInstalled": "OCR-komponent installeret",
+      "ocrLastRun": "Seneste kørsel: {{pages}} side(r), {{words}} ord tilføjet som søgbar tekst",
+      "ocrRunningProgress": "Genkender side {{done}} af {{total}}…",
+      "markdown": "Markdown (forhåndsvisning)",
+      "tablesToExcel": "Tabeller til Excel (forhåndsvisning)"
     },
     "esign": {
-      "lede": "Sign with a certificate of your own, and check the signatures a document already carries. Both happen on this device.",
+      "lede": "Underskriv med dit eget certifikat, og kontrollér de underskrifter, et dokument allerede har. Begge dele sker på denne enhed.",
       "fillAndSign": "Fyld dine dokumenter ud og underskriv",
       "addSignature": "Tilføj underskrift",
       "addInitials": "Tilføj initialer",
@@ -1290,25 +1376,25 @@
       "placementModeInitials": "Placeringstilstand: Initialer",
       "clickToPlaceSignature": "Klik hvor som helst på siden for at placere din underskrift.",
       "clickToPlaceInitials": "Klik hvor som helst på siden for at placere dine initialer.",
-      "verifySection": "Signatures",
-      "verify": "Check signatures",
-      "desktopOnly": "Available in the desktop app",
-      "unsigned": "This document carries no signatures.",
-      "signSection": "Sign with a certificate",
-      "padesLevel": "Produces a PAdES B-B signature: your certificate over the whole file, no timestamp server involved.",
-      "certificate": "Certificate (.p12 or .pfx)",
-      "certificateNone": "No certificate chosen",
-      "chooseCertificate": "Choose certificate",
-      "certificatePassword": "Certificate password",
-      "reason": "Reason (optional)",
-      "reasonPlaceholder": "Why you are signing",
-      "sign": "Sign and save a copy",
-      "signing": "Signing…",
-      "signNeedsCertificate": "Choose a certificate and enter its password first.",
-      "signSaved": "Signed copy saved as {{name}}",
-      "signFailed": "Signing failed: {{message}}",
-      "usageRights": "Reader enablement (usage rights)",
-      "usageRightsInvalidated": "Usage rights invalidated — this file was edited, so Adobe Reader no longer treats it as an enabled form."
+      "verifySection": "Underskrifter",
+      "verify": "Kontrollér underskrifter",
+      "desktopOnly": "Tilgængelig i desktop-appen",
+      "unsigned": "Dette dokument har ingen underskrifter.",
+      "signSection": "Underskriv med et certifikat",
+      "padesLevel": "Producerer en PAdES B-B-signatur: dit certifikat over hele filen, uden involvering af en tidsstempelserver.",
+      "certificate": "Certifikat (.p12 eller .pfx)",
+      "certificateNone": "Intet certifikat valgt",
+      "chooseCertificate": "Vælg certifikat",
+      "certificatePassword": "Certifikatets adgangskode",
+      "reason": "Årsag (valgfrit)",
+      "reasonPlaceholder": "Hvorfor du underskriver",
+      "sign": "Underskriv og gem en kopi",
+      "signing": "Underskriver…",
+      "signNeedsCertificate": "Vælg et certifikat, og indtast først dets adgangskode.",
+      "signSaved": "Underskrevet kopi gemt som {{name}}",
+      "signFailed": "Underskrivning mislykkedes: {{message}}",
+      "usageRights": "Reader-aktivering (brugsrettigheder)",
+      "usageRightsInvalidated": "Brugsrettigheder ugyldiggjort — denne fil blev redigeret, så Adobe Reader ikke længere behandler den som en aktiveret formular."
     },
     "protect": {
       "lede": "Beskyt dit PDF-dokument med stærke kryptografiske adgangskoder. Ændringer anvendes lokalt med det samme.",
@@ -1330,9 +1416,11 @@
       "localViaTauri": "Lokalt via Tauri-kommando, ingen browserruntime",
       "compressingImages": "Komprimerer billeder…",
       "percentComplete": "{{percent}}% færdig",
-      "compressPdf": "Komprimer PDF",
       "desktopOnly": "Kun tilgængelig i desktop-appen",
-      "backToTools": "Tilbage til værktøjer"
+      "backToTools": "Tilbage til værktøjer",
+      "saveCopy": "Gem komprimeret kopi som…",
+      "replaceOpen": "Komprimér og erstat det åbne dokument",
+      "replaceNote": "En kopi efterlader det åbne dokument og dets fil, som de er. Erstatning ændrer kun det åbne dokument; Fortryd bringer originalen tilbage."
     },
     "split": {
       "lede": "Opdel dit dokument i separate PDF-filer pr. side eller efter et specifikt sideomfang.",
@@ -1369,7 +1457,52 @@
       "applying": "Anvender…",
       "applyPermanently": "Anvend redigeringer permanent",
       "noActiveMarkings": "Ingen aktive redigeringsmarkeringer.",
-      "backToTools": "Tilbage til værktøjer"
+      "backToTools": "Tilbage til værktøjer",
+      "pii": {
+        "title": "Personoplysninger",
+        "lede": "Find personal data in the text of this document: IBANs, card numbers, national ID numbers, birth dates, e-mail addresses and phone numbers, and names and addresses when the model is installed. Review the list, then redact the ones you choose.",
+        "find": "Find personoplysninger",
+        "scanning": "Scanner…",
+        "none": "Nothing found.",
+        "kind": {
+          "iban": "IBAN",
+          "email": "E-mailadresse",
+          "phone": "Telefonnummer",
+          "credit_card": "Kortnummer",
+          "national_id": "Nationalt ID-nummer",
+          "date_of_birth": "Fødselsdato",
+          "bank_account": "Bankkontonummer",
+          "person": "Navn",
+          "address": "Adresse"
+        },
+        "where": "Side {{pages}} · {{count}}×",
+        "selectAll": "Vælg alle",
+        "selectNone": "Vælg ingen",
+        "redactSelected": "Maskér {{count}} valgte",
+        "redacting": "Maskerer…",
+        "done": "Slørede {{count}} elementer. Gem filen for at beholde resultatet.",
+        "failed": "Sløring mislykkedes: {{message}}",
+        "detectFailed": "Søgning mislykkedes: {{message}}",
+        "patternsOnly": "Without the model this finds only items it can check, such as IBANs, cards, ID numbers, birth dates, e-mail addresses and phone numbers. Names and addresses are not detected, so check every page yourself.",
+        "suggestionsOnly": "Dette er forslag. Detektoren kan overse ting, så tjek hver side, før du gemmer.",
+        "source": {
+          "verified": "Kontrolleret {{detail}}",
+          "model": "Modelforslag, {{score}}%"
+        },
+        "model": {
+          "use": "Find også navne og adresser med modellen",
+          "languages": "Kontrolleret for: {{languages}}",
+          "remove": "Fjern modellen",
+          "removeFailed": "Kunne ikke fjerne modellen: {{message}}",
+          "failed": "Modellen kunne ikke køre ({{code}}). Der vises kun elementer, der kan kontrolleres.",
+          "consentTitle": "Download modellen til personoplysninger?",
+          "consentBody": "At finde navne og adresser kræver en sprogmodel ({{size}}). Den hentes én gang fra {{host}}, tjekkes mod en fast kontrolsum og kører derefter på denne computer. Dine dokumenter forlader den aldrig.",
+          "download": "Download",
+          "downloading": "Downloader…",
+          "downloadFailed": "Download mislykkedes: {{message}}",
+          "notInBuild": "Download er ikke tilgængelig i denne version endnu."
+        }
+      }
     },
     "toasts": {
       "saving": "Gemmer…",
@@ -1399,7 +1532,7 @@
       "pdfsMerged": "{{count}} PDF-filer flettet",
       "mergedSaved": "Flettet PDF gemt som {{name}}.",
       "mergeFailed": "Fletning mislykkedes: {{message}}",
-      "redactMatches": "{{matches}} match fundet, {{areas}} redigeringsmarkeringer placeret.",
+      "redactSearchDone": "Redigerede match: {{count}}. Gem for at beholde ændringen.",
       "noRedactMatches": "Ingen tekstmatch fundet at redigere.",
       "redactSearchFailed": "Søg redigering mislykkedes: {{message}}",
       "applyRedactConfirm": "Anvend {{count}} redigeringsmarkering permanent? Dette fjerner indholdet fra PDF-filen for godt.",
@@ -1408,108 +1541,328 @@
       "applyRedactRunning": "Anvender redigeringer permanent…",
       "applyRedactDone": "Redigeringer permanent anvendt",
       "redactionsApplied": "Redigeringer er permanent anvendt.",
-      "redactFailed": "Redigering mislykkedes: {{message}}"
+      "redactFailed": "Redigering mislykkedes: {{message}}",
+      "compressedCopyToast": "Gemte {{name}}: {{before}} til {{after}}. Det åbne dokument er uændret.",
+      "compressedReplacedToast": "Komprimerede det åbne dokument: {{before}} til {{after}}. Fortryd bringer originalen tilbage. Gem for at beholde den komprimerede version."
     },
     "thumbnails": {
       "pages": "Sider",
       "pageAlt": "Side {{page}}",
-      "bookmarks": "Bookmarks"
+      "bookmarks": "Bogmærker"
     },
     "pdfa": {
-      "lede": "PDF/A is the archival form of PDF: fonts embedded, colours defined, nothing that depends on the outside world.",
-      "section": "Conformance",
-      "level": "Level",
-      "validate": "Check this document",
-      "convert": "Save as PDF/A…",
-      "desktopOnly": "Available in the desktop app",
-      "compliant": "Conforms to {{level}}",
-      "notCompliant": "Does not conform: {{errors}} errors, {{warnings}} warnings",
-      "moreIssues": "{{count}} more",
+      "lede": "PDF/A er PDF'ens arkivform: skrifttyper indlejret, farver defineret, intet der afhænger af omverdenen.",
+      "section": "Overholdelse",
+      "level": "Niveau",
+      "validate": "Kontrollér dette dokument",
+      "convert": "Gem som PDF/A…",
+      "desktopOnly": "Tilgængelig i desktop-appen",
+      "compliant": "Overholder {{level}}",
+      "notCompliant": "Overholder ikke: {{errors}} fejl, {{warnings}} advarsler",
+      "moreIssues": "{{count}} mere",
       "report": {
-        "title": "What the conversion did",
-        "written": "Written to {{path}}",
-        "size": "{{out}} out of {{in}} ({{ratio}}×), in {{seconds}} s",
-        "pages": "{{count}} pages",
-        "fontsEmbedded": "{{embedded}} of {{found}} unembedded fonts embedded",
-        "fontsFailed": "Could not embed: {{fonts}}",
-        "removed": "Removed: {{count}} items that PDF/A does not allow",
-        "subset": "{{count}} font programs reduced, {{bytes}} kB saved",
-        "outputIntent": "Output intent added",
-        "unchangedDocument": "The open document was not changed.",
+        "title": "Hvad konverteringen gjorde",
+        "written": "Skrevet til {{path}}",
+        "size": "{{out}} ud af {{in}} ({{ratio}}×), på {{seconds}} s",
+        "pages": "{{count}} sider",
+        "fontsEmbedded": "{{embedded}} af {{found}} ikke-indlejrede skrifttyper indlejret",
+        "fontsFailed": "Kunne ikke indlejre: {{fonts}}",
+        "removed": "Fjernet: {{count}} elementer, som PDF/A ikke tillader",
+        "subset": "{{count}} skrifttypeprogrammer reduceret, {{bytes}} kB sparet",
+        "outputIntent": "Output intent tilføjet",
+        "unchangedDocument": "Det åbne dokument blev ikke ændret.",
         "warning": "{{message}}",
-        "moreWarnings": "{{count}} more"
+        "moreWarnings": "{{count}} mere"
       }
     },
     "metadata": {
-      "lede": "The title and author stored inside the file, which is what other readers and search show.",
-      "section": "Properties",
-      "title": "Title",
-      "author": "Author",
-      "apply": "Save properties",
-      "desktopOnly": "Available in the desktop app"
+      "lede": "Titlen og forfatteren, der er gemt i filen, og som andre læsere og søgning viser.",
+      "section": "Egenskaber",
+      "title": "Titel",
+      "author": "Forfatter",
+      "apply": "Gem egenskaber",
+      "desktopOnly": "Tilgængelig i desktop-appen"
     },
     "invoice": {
-      "lede": "A ZUGFeRD or Factur-X invoice travels as XML inside the PDF. This reads it and checks it against EN 16931.",
-      "section": "Embedded invoice",
-      "read": "Read invoice",
-      "desktopOnly": "Available in the desktop app",
-      "none": "This document carries no e-invoice.",
-      "number": "Number: {{number}}",
-      "issued": "Issued: {{date}}",
-      "seller": "Seller: {{name}}",
-      "buyer": "Buyer: {{name}}",
-      "total": "Total: {{total}} {{currency}}",
-      "lines": "Line items: {{count}}",
-      "valid": "Valid against {{profile}}",
-      "invalid": "Not valid: {{errors}} errors, {{warnings}} warnings"
+      "lede": "En ZUGFeRD- eller Factur-X-faktura ligger som XML inde i PDF'en. Dette læser den og kontrollerer den mod EN 16931.",
+      "section": "Indlejret faktura",
+      "read": "Læs faktura",
+      "desktopOnly": "Tilgængelig i desktop-appen",
+      "none": "Dette dokument indeholder ingen e-faktura.",
+      "number": "Nummer: {{number}}",
+      "issued": "Udstedt: {{date}}",
+      "seller": "Sælger: {{name}}",
+      "buyer": "Køber: {{name}}",
+      "total": "I alt: {{total}} {{currency}}",
+      "lines": "Fakturalinjer: {{count}}",
+      "valid": "Gyldig i forhold til {{profile}}",
+      "invalid": "Ikke gyldig: {{errors}} fejl, {{warnings}} advarsler"
     },
     "canvas": {
-      "document": "PDF document"
+      "document": "PDF-dokument"
+    },
+    "stamps": {
+      "Approved": "Godkendt",
+      "NotApproved": "Ikke godkendt",
+      "Draft": "Kladde",
+      "Confidential": "Fortroligt",
+      "Final": "Endelig",
+      "ForComment": "Til kommentering",
+      "Expired": "Udløbet"
     }
   },
   "about": {
-    "section": "About",
+    "section": "Om",
     "app": "App",
     "version": "Version",
-    "privacy": "Privacy",
-    "privacyValue": "All processing happens locally",
-    "website": "Website"
+    "privacy": "Privatliv",
+    "privacyValue": "Al behandling foregår lokalt",
+    "website": "Websted"
   },
   "reviewSummary": {
-    "title": "Review summary",
-    "generatedAt": "Generated on",
-    "comments": "Comments",
-    "noComments": "No comments.",
-    "replies": "Replies:",
-    "empty": "empty",
-    "redactions": "Redactions",
-    "noRedactions": "No redactions.",
-    "noIssues": "No issues.",
-    "metadataChanges": "Metadata changes",
-    "noMetadataChanges": "No changes.",
-    "changedBy": "by",
-    "on": "on"
+    "title": "Gennemgangsoversigt",
+    "generatedAt": "Genereret",
+    "comments": "Kommentarer",
+    "noComments": "Ingen kommentarer.",
+    "replies": "Svar:",
+    "empty": "tom",
+    "redactions": "Redaktioner",
+    "noRedactions": "Ingen redaktioner.",
+    "noIssues": "Ingen problemer.",
+    "metadataChanges": "Metadataændringer",
+    "noMetadataChanges": "Ingen ændringer.",
+    "changedBy": "af",
+    "on": "den"
   },
   "externalLink": {
-    "askMessage": "This PDF wants to open an external link:\n\n{{label}}\n\nURL:\n{{href}}\n\nDo you want to continue?",
-    "title": "Open external link?",
-    "openLink": "Open link",
-    "dialogBody": "This PDF wants to open an external website. Check the URL before continuing."
+    "askMessage": "Denne PDF vil åbne et eksternt link:\n\n{{label}}\n\nURL:\n{{href}}\n\nVil du fortsætte?",
+    "title": "Åbn eksternt link?",
+    "openLink": "Åbn link",
+    "dialogBody": "Denne PDF vil åbne et eksternt websted. Kontrollér URL'en, før du fortsætter."
   },
   "linkChoice": {
-    "title": "Open link in your browser?",
-    "body": "This document wants to open an external website. Are you opening it from a trusted source?",
-    "alwaysAllow": "Always allow",
-    "openOnce": "Open once"
+    "title": "Åbn linket i din browser?",
+    "body": "Dette dokument vil åbne et eksternt websted. Åbner du det fra en pålidelig kilde?",
+    "alwaysAllow": "Tillad altid",
+    "openOnce": "Åbn én gang"
   },
   "fallbacks": {
-    "ocrUnavailableTitle": "OCR is not available on this computer",
-    "ocrUnavailableMessage": "PDFluent could not start the text-recognition engine. {{reason}}",
-    "ocrFailedMessage": "Text recognition stopped on page {{page}}: {{reason}}",
-    "xfaStaticTitle": "Form filled without recalculation",
-    "xfaStaticMessage": "This build writes XFA field values straight into the form. Field scripts do not run, so calculated totals and fields that appear or hide based on your answer stay as they are.",
-    "featureUnavailableTitle": "'{{feature}}' is not available in this build",
-    "usageRightsInvalidatedTitle": "This document is no longer Reader-enabled",
-    "usageRightsInvalidatedMessage": "Your change was made. It also invalidated the usage-rights signature this PDF carried, which let Adobe Reader fill in and save the form. The text edit stands; the extended rights are gone and cannot be restored by undoing it."
+    "ocrUnavailableTitle": "OCR er ikke tilgængelig på denne computer",
+    "ocrUnavailableMessage": "PDFluent kunne ikke starte tekstgenkendelsesmotoren. {{reason}}",
+    "ocrFailedMessage": "Tekstgenkendelse stoppede på side {{page}}: {{reason}}",
+    "xfaStaticTitle": "Formular udfyldt uden genberegning",
+    "xfaStaticMessage": "Denne version skriver XFA-feltværdier direkte ind i formularen. Feltscripts kører ikke, så beregnede totaler og felter, der vises eller skjules ud fra dit svar, forbliver som de er.",
+    "xfaScriptsNotRunTitle": "Nogle formularscripts køres ikke",
+    "xfaScriptsNotRunMessage": "Dit svar er gemt. Formularen indeholder FormCalc-scripts ({{count}} fundet), og PDFluent kører kun JavaScript-scripts. Summer og felter, som scriptsene ville opdatere, beholder deres gemte værdier, indtil formularen åbnes i Adobe Reader.",
+    "xfaFieldRefusedTitle": "Formularen accepterede ikke værdien",
+    "xfaFieldReadOnly": "Feltet “{{field}}” er skrivebeskyttet i denne formular og kan ikke ændres.",
+    "xfaFieldRejected": "Feltet “{{field}}” accepterer ikke den værdi: {{reason}}",
+    "xfaFieldNotFound": "Feltet “{{field}}” findes ikke længere i formularen. Formularen er indlæst igen.",
+    "featureUnavailableTitle": "'{{feature}}' er ikke tilgængelig i denne version",
+    "usageRightsInvalidatedTitle": "Dette dokument er ikke længere Reader-aktiveret",
+    "usageRightsInvalidatedMessage": "Din ændring blev udført. Den gjorde også den brugsrettighedssignatur, som denne PDF havde, ugyldig – den lod Adobe Reader udfylde og gemme formularen. Tekstændringen består; de udvidede rettigheder er væk og kan ikke gendannes ved at fortryde ændringen.",
+    "xfaScriptsFailedTitle": "Nogle formularscripts blev ikke fuldført",
+    "xfaScriptsFailedMessage": "Dit svar er gemt, men disse scripts blev ikke færdige, så værdier, de har angivet, mangler muligvis: {{details}}.",
+    "xfaScriptKind_threw": "stødte på en fejl",
+    "xfaScriptKind_timeout": "løb tør for tid",
+    "xfaScriptKind_refused": "blev afvist af sandkassen"
+  },
+  "signedSave": {
+    "title": "Dette dokument er underskrevet",
+    "message": "Redaktionen fjerner indhold, som signaturen dækker, så den kan ikke gemmes over det signerede original uden at bryde signaturen. Gem en kopi i stedet: kopien beholder redaktionen og bærer ikke signaturen.",
+    "saveCopy": "Gem kopi uden underskrift…",
+    "cancel": "Annuller"
+  },
+  "passwordPrompt": {
+    "title": "Denne PDF er beskyttet",
+    "message": "Indtast adgangskoden for at åbne {{name}}.",
+    "incorrect": "Adgangskoden åbner ikke denne PDF. Prøv igen.",
+    "label": "Adgangskode",
+    "open": "Åbn",
+    "cancel": "Annuller",
+    "readOnlyTitle": "Åbnet skrivebeskyttet",
+    "readOnlyMessage": "Denne PDF's tilladelser tillader ikke ændringer. Du kan læse den og udskrive den, hvis tilladelserne tillader det. For at gemme ændringer skal du fjerne beskyttelsen med ejeradgangskoden."
+  },
+  "a11y": {
+    "searchNextResult": "Næste resultat",
+    "searchPrevResult": "Forrige resultat"
+  },
+  "feedback": {
+    "title": "Hjælp os med at gøre PDFluent bedre",
+    "intro": "Fortæl os, hvad du prøvede at gøre. Vi læser alle indberetninger.",
+    "menuLabel": "Hjælp os med at gøre PDFluent bedre…",
+    "fromError": "Du kan fortælle os om det problem, du lige er stødt på.",
+    "areaLabel": "Hvad prøvede du at gøre?",
+    "area": {
+      "open-view": "Åbne eller læse et dokument",
+      "search-copy": "Søge i eller kopiere tekst",
+      "print": "Udskriv",
+      "edit-text": "Redigere tekst",
+      "annotate": "Fremhæve, kommentere eller tegne",
+      "forms": "Udfylde en formular",
+      "sign": "Underskrive eller kontrollere en signatur",
+      "redact": "Rediger ud",
+      "pages-organize": "Rotere, omarrangere, flette eller dele sider",
+      "convert-export": "Konvertere eller eksportere",
+      "ocr": "Genkende tekst i en scanning (OCR)",
+      "pdfa-compliance": "PDF/A",
+      "protect": "Adgangskode eller tilladelser",
+      "save": "Gem",
+      "install-update": "Installere eller opdatere PDFluent",
+      "other": "Noget andet"
+    },
+    "tryingToPlaceholder": "Med dine egne ord (valgfrit)",
+    "whatHappenedLabel": "Hvad skete der?",
+    "whatHappenedPlaceholder": "Hvad så du?",
+    "whatHappenedRequired": "Fortæl os, hvad der skete, så vi ved, hvor vi skal lede.",
+    "expectedLabel": "Hvad forventede du?",
+    "expectedPlaceholder": "Valgfrit",
+    "docTypeLabel": "Hvilken slags dokument var det?",
+    "docType": {
+      "none": "Intet dokument involveret",
+      "form": "En formular",
+      "scanned": "En scanning",
+      "signed": "Et underskrevet dokument",
+      "protected": "Beskyttet med adgangskode",
+      "large": "Stort (mere end 100 sider)",
+      "xfa": "En offentlig formular eller XFA-formular",
+      "other": "Noget andet"
+    },
+    "docTypeUnset": "Vælg…",
+    "pageCountLabel": "Antal sider",
+    "contextTitle": "Sendes med din indberetning",
+    "contextToggle": "Medsend systemoplysninger",
+    "contextHint": "Version, system, sprog og den seneste fejl hjælper os med at genskabe problemet. Ingen filnavne, stier eller dokumentindhold.",
+    "fieldVersion": "PDFluent-version",
+    "fieldSystem": "System",
+    "fieldLanguage": "Sprog",
+    "fieldLastError": "Seneste fejl",
+    "fieldSessions": "Sessioner",
+    "notIncluded": "ikke inkluderet",
+    "documentTitle": "Del dokumentet (valgfrit)",
+    "documentToggle": "Del det åbne dokument med denne indberetning",
+    "documentNone": "Der er intet dokument åbent.",
+    "documentTooLarge": "Dette dokument er større end 20 MB og kan derfor ikke deles med en indberetning.",
+    "documentShared": "Dette dokument bliver delt.",
+    "documentConfirmTitle": "Del dette dokument?",
+    "documentConfirmText": "Denne fil sendes til PDFluent (Innovation Trigger B.V.). Den bruges kun til at undersøge denne rapport, offentliggøres aldrig, bruges aldrig til træning og slettes senest 90 dage efter, at problemet er løst, og under alle omstændigheder inden for 12 måneder.",
+    "documentConfirmFile": "{{name}} ({{size}})",
+    "documentConfirmYes": "Del dette dokument",
+    "documentConfirmNo": "Del ikke",
+    "contactTitle": "Hold kontakten (valgfrit)",
+    "emailLabel": "E-mailadresse",
+    "emailInvalid": "Det ligner ikke en e-mailadresse.",
+    "consentContact": "PDFluent må sende mig e-mails med spørgsmål om denne rapport.",
+    "consentFixed": "Send mig en e-mail, når dette er rettet.",
+    "contactHint": "Din adresse gemmes adskilt fra din rapport, bruges kun til denne rapport og aldrig til nyhedsbreve eller markedsføring.",
+    "noEmailHint": "Uden en e-mailadresse hører du stadig fra os: Når en opdatering løser din indberetning, fortæller PDFluent det i appen.",
+    "privacyNotice": "Innovation Trigger B.V. modtager denne rapport for at forbedre PDFluent. Rapporter opbevares i op til 24 måneder. Du kan få din fjernet når som helst.",
+    "privacyLink": "Privatlivspolitik",
+    "send": "Send",
+    "sending": "Sender…",
+    "cancel": "Annuller",
+    "sentTitle": "Tak!",
+    "sentBody": "Din indberetning er modtaget. Det er dens nummer:",
+    "sentIdHint": "Gem dette nummer, hvis du vil spørge til din indberetning eller have den fjernet.",
+    "sentNoLocalCopy": "PDFluent kunne ikke huske dette nummer på denne computer, så skriv det ned.",
+    "sentDocumentFailed": "Din indberetning er modtaget, men dokumentet kunne ikke uploades. Hvis det er vigtigt, kan du sende indberetningen igen med dokumentet.",
+    "removeReport": "Fjern denne indberetning",
+    "removing": "Fjerner…",
+    "removed": "Din indberetning er fjernet.",
+    "removeFailed": "Din indberetning kunne ikke fjernes lige nu. Prøv igen senere, eller send os nummeret på e-mail.",
+    "failedTitle": "Det lykkedes ikke",
+    "failedNetwork": "PDFluent kunne ikke nå serveren. Der blev ikke sendt noget, og din tekst er her stadig.",
+    "failedRateLimited": "Der er sendt for mange indberetninger fra denne forbindelse i dag. Prøv igen i morgen.",
+    "failedRejected": "Indberetningen blev ikke accepteret. Tjek formularen, og prøv igen.",
+    "failedServer": "Noget gik galt hos os. Din tekst er her stadig; prøv igen om lidt.",
+    "tryAgain": "Prøv igen",
+    "fixedTitle": "Rettet!",
+    "fixedOffered": "Version {{version}} løser din indberetning {{ids}}. Tak, fordi du fortalte os det.",
+    "fixedAfterUpdate": "Din indberetning {{ids}} er løst i denne version. Tak, fordi du fortalte os det.",
+    "dismiss": "Luk"
+  },
+  "openError": {
+    "corrupt": {
+      "title": "Denne PDF er beskadiget",
+      "body": "PDFluent kunne ikke læse filen. Den kan være blevet beskadiget under download eller kopiering, eller også har det program, der lavede den, skrevet den forkert. Download eller kopiér den igen, eller åbn originalen og eksportér den som PDF igen.",
+      "action": "Åbn en anden fil"
+    },
+    "not_pdf": {
+      "title": "Dette er ikke en PDF",
+      "body": "PDFluent åbner PDF-filer. Denne fil er noget andet, eller også slutter navnet ikke på .pdf. Vælg en PDF, eller hvis filen er en PDF, så omdøb den, så navnet slutter på .pdf.",
+      "action": "Åbn en anden fil"
+    },
+    "empty": {
+      "title": "Denne fil er tom",
+      "body": "Filen har intet indhold (0 byte). Download eller kopiering er måske ikke blevet færdig. Download eller kopiér den igen, og åbn den derefter.",
+      "action": "Åbn en anden fil"
+    },
+    "encrypted_needs_password": {
+      "title": "Denne PDF kræver en adgangskode",
+      "body": "Denne PDF er beskyttet med en adgangskode. Åbn den igen, og indtast adgangskoden. Hvis du ikke kender den, så spørg den, der sendte dig filen.",
+      "action": "Angiv adgangskode"
+    },
+    "wrong_password": {
+      "title": "Den adgangskode virkede ikke",
+      "body": "Adgangskoden åbner ikke denne PDF. Tjek for tastefejl og for Caps Lock, og prøv så igen.",
+      "action": "Prøv igen"
+    },
+    "unsupported_encryption": {
+      "title": "PDFluent kan ikke åbne denne type beskyttelse",
+      "body": "Denne PDF er beskyttet med et certifikat eller en sikkerhedsmetode, som PDFluent ikke understøtter, så ingen adgangskode kan åbne den her. Bed afsenderen om en kopi uden beskyttelse eller med adgangskodebeskyttelse.",
+      "action": "Åbn en anden fil"
+    },
+    "too_large": {
+      "title": "Denne fil er for stor",
+      "body": "Denne fil er større, end PDFluent kan åbne sikkert. Del eller komprimér den i det program, der lavede den, og åbn derefter delene.",
+      "action": "Åbn en anden fil"
+    },
+    "too_many_pages": {
+      "title": "Denne PDF har for mange sider",
+      "body": "Dette dokument har flere sider, end PDFluent kan åbne på én gang. Del det op i mindre dokumenter i det program, der lavede det, og åbn derefter delene.",
+      "action": "Åbn en anden fil"
+    },
+    "io_denied": {
+      "title": "PDFluent har ikke lov til at læse denne fil",
+      "body": "Din computer har ikke givet PDFluent tilladelse til at læse denne fil. Tjek filens tilladelser, eller flyt den til en mappe som Dokumenter, og prøv igen.",
+      "action": "Prøv igen"
+    },
+    "not_found": {
+      "title": "Denne fil kunne ikke findes",
+      "body": "Filen kan være flyttet, omdøbt eller slettet, eller den ligger på et drev, der ikke længere er forbundet. Find filen, og åbn den igen.",
+      "action": "Åbn en anden fil"
+    },
+    "unknown": {
+      "title": "Denne fil kunne ikke åbnes",
+      "body": "Noget gik galt, da filen skulle åbnes. Prøv igen. Hvis det bliver ved, så giv os besked, så vi kan rette det.",
+      "action": "Prøv igen"
+    },
+    "feedback": "Hjælp os med at forbedre PDFluent"
+  },
+  "formBar": {
+    "title": "Udfyldelig formular",
+    "fields": "Felter: {{count}}",
+    "clickToFill": "Klik på et felt for at udfylde det.",
+    "noCalculations": "Automatiske beregninger fra Adobe-formularer køres ikke.",
+    "autoLinks": "Åbn links automatisk",
+    "autoLinksTitle": "Links åbnes automatisk i din browser. Klik for at slå det fra.",
+    "highlight": "Fremhæv felter",
+    "firstField": "Første felt"
+  },
+  "tabs": {
+    "label": "Åbne dokumenter",
+    "close": "Luk {{name}}",
+    "unsaved": "Ugemte ændringer",
+    "new": "Åbn et andet dokument",
+    "tooManyTitle": "For mange åbne dokumenter",
+    "tooManyMessage": "{{max}} dokumenter er åbne. Luk et for at åbne et andet."
+  },
+  "formScripts": {
+    "barLabel": "Formularscripts",
+    "barMessage": "Denne formular indeholder scripts (for eksempel beregninger). Skal de køres?",
+    "barDetail": "Scripts fundet: {{count}}.",
+    "runOnce": "Kør for dette dokument",
+    "runAlways": "Kør altid scripts",
+    "dontRun": "Kør ikke"
   }
 }

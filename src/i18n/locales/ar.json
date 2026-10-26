@@ -114,9 +114,9 @@
     "allTools": "كل الأدوات",
     "contextualBar": "شريط أدوات الوضع",
     "pdfa": "PDF/A",
-    "metadata": "Document properties",
-    "invoice": "E-invoice",
-    "bookmarks": "Bookmarks"
+    "metadata": "خصائص المستند",
+    "invoice": "الفاتورة الإلكترونية",
+    "bookmarks": "الإشارات المرجعية"
   },
   "topbar": {
     "openPdf": "فتح PDF",
@@ -242,7 +242,6 @@
     "ownerPasswordPlaceholder": "كلمة مرور المالك",
     "encryptBtn": "تشفير…",
     "decrypt": "فك التشفير",
-    "currentPasswordPlaceholder": "كلمة المرور الحالية",
     "decryptBtn": "فك التشفير",
     "noDocument": "لا يوجد مستند مفتوح.",
     "permCanPrint": "طباعة",
@@ -258,7 +257,11 @@
     "searchRedactBtn": "بحث وتنقيح",
     "redactMetadataTitle": "البيانات الوصفية",
     "redactMetadataDesc": "إزالة المؤلف والعنوان والبيانات الوصفية التعريفية الأخرى.",
-    "redactMetadataBtn": "إزالة البيانات الوصفية"
+    "redactMetadataBtn": "إزالة البيانات الوصفية",
+    "ownerPasswordForRemoval": "كلمة مرور المالك (الأذونات)",
+    "removePasswordHelp": "تتطلب إزالة كلمة المرور كلمة مرور المالك، وهي التي تحمي الأذونات. لا تكفي كلمة المرور التي فتحت بها الملف ما لم تكن هي نفسها كلمة مرور المالك.",
+    "removePasswordReady": "لقد فتحت هذا الملف بكلمة مرور المالك، لذا يمكن إزالة الحماية دون كتابتها مرة أخرى.",
+    "removePasswordNotProtected": "هذا المستند غير محمي بكلمة مرور."
   },
   "organize": {
     "thumbnails": "صور مصغرة",
@@ -287,33 +290,34 @@
     "combine": "دمج الملفات",
     "splitRange": "تقسيم حسب النطاق",
     "splitRangeHint": "اختر الصفحات أولاً",
-    "moveLeft": "Move selected page left",
-    "moveRight": "Move selected page right",
-    "moveLeftShort": "Left",
-    "moveRightShort": "Right",
-    "rotateLeft": "Rotate left",
-    "rotateRight": "Rotate right",
-    "rotateLeftShort": "Left",
-    "rotateRightShort": "Right",
-    "addingPdf": "Adding PDF…",
-    "pdfAdded": "PDF added",
-    "combiningFiles": "Combining {{count}} file(s)…",
-    "filesCombined": "{{count}} file(s) combined",
-    "insertingPdf": "Inserting PDF before page {{page}}…",
-    "pdfInserted": "PDF inserted",
-    "exportingPages": "Exporting {{count}} page(s)…",
-    "selectionExported": "Selection exported to {{name}}",
-    "splittingPages": "Splitting into individual pages…",
-    "pagesSaved": "{{count}} pages saved",
-    "splittingRanges": "Splitting {{count}} range(s)…",
-    "filesSaved": "{{count}} file(s) saved"
+    "moveLeft": "نقل الصفحة المحددة إلى اليسار",
+    "moveRight": "نقل الصفحة المحددة إلى اليمين",
+    "moveLeftShort": "يسار",
+    "moveRightShort": "يمين",
+    "rotateLeft": "تدوير لليسار",
+    "rotateRight": "تدوير لليمين",
+    "rotateLeftShort": "يسار",
+    "rotateRightShort": "يمين",
+    "addingPdf": "جارٍ إضافة PDF…",
+    "pdfAdded": "تمت إضافة PDF",
+    "combiningFiles": "جارٍ دمج {{count}} ملف(ات)…",
+    "filesCombined": "تم دمج {{count}} ملف(ات)",
+    "insertingPdf": "جارٍ إدراج PDF قبل الصفحة {{page}}…",
+    "pdfInserted": "تم إدراج PDF",
+    "exportingPages": "جارٍ تصدير {{count}} صفحة(صفحات)…",
+    "selectionExported": "تم تصدير التحديد إلى {{name}}",
+    "splittingPages": "جارٍ التقسيم إلى صفحات فردية…",
+    "pagesSaved": "تم حفظ {{count}} صفحة",
+    "splittingRanges": "جارٍ تقسيم {{count}} نطاق(ات)…",
+    "filesSaved": "تم حفظ {{count}} ملف(ات)"
   },
   "unsavedChanges": {
     "title": "تغييرات غير محفوظة",
     "message": "هل تريد حفظ تغييراتك قبل المتابعة؟",
     "save": "حفظ",
     "discard": "تجاهل التغييرات",
-    "cancel": "إلغاء"
+    "cancel": "إلغاء",
+    "messageNamed": "هل تريد حفظ تغييراتك في {{name}} قبل المتابعة؟"
   },
   "welcome": {
     "title": "افتح ملف PDF للبدء",
@@ -327,13 +331,13 @@
     "lede": "قراءة وتعديل وتحويل وملء وتوقيع — بالكامل على جهازك.",
     "privacyPromise": "أولوية محلية · المستندات لا تغادر هذا الجهاز",
     "dropPdfHere": "أفلت PDF هنا",
-    "v3Subtitle": "Open a PDF to read, edit, convert or sign it locally.",
-    "openFileAria": "Choose a PDF file to open",
-    "clearRecent": "Clear recent",
-    "recentShort": "Recent",
-    "removeRecentAria": "Remove {{name}}",
-    "backToDocument": "Back to document",
-    "loadingDocument": "Loading document…"
+    "v3Subtitle": "افتح ملف PDF لقراءته أو تحريره أو تحويله أو توقيعه محليًا.",
+    "openFileAria": "اختر ملف PDF لفتحه",
+    "clearRecent": "مسح الملفات الأخيرة",
+    "recentShort": "الأخيرة",
+    "removeRecentAria": "إزالة {{name}}",
+    "backToDocument": "العودة إلى المستند",
+    "loadingDocument": "جارٍ تحميل المستند…"
   },
   "settings": {
     "language": "اللغة",
@@ -350,15 +354,29 @@
     "reviewerNamePlaceholder": "الاسم المستخدم في التعليقات",
     "exportPreferences": "تفضيلات التصدير",
     "exportFormatLabel": "تنسيق التصدير الافتراضي",
-    "autosave": "حفظ تلقائي",
-    "autosaveEnable": "حفظ التغييرات تلقائيًا",
     "themeLabel": "المظهر",
     "ocrDefaults": "إعدادات OCR الافتراضية",
     "ocrLanguageLabel": "اللغة الافتراضية (ISO-639-2)",
     "ocrLanguagePlaceholder": "مثال: eng, nld, deu",
-    "updates": "Updates",
-    "automaticUpdateCheck": "Check for a new version at startup",
-    "automaticUpdateCheckHint": "PDFluent asks pdfluent.com whether a newer version exists, a few seconds after it starts. Nothing from your documents is sent. Turn this off and the app never checks on its own — \"Check for updates\" still works whenever you ask for it."
+    "updates": "التحديثات",
+    "automaticUpdateCheck": "التحقق من وجود إصدار جديد عند بدء التشغيل",
+    "automaticUpdateCheckHint": "يسأل PDFluent موقع pdfluent.com عمّا إذا كان هناك إصدار أحدث، بعد بضع ثوانٍ من بدء التشغيل. لا يُرسل أي شيء من مستنداتك. أوقف هذا الخيار ولن يتحقق التطبيق تلقائيًا أبدًا — يظل \"التحقق من التحديثات\" يعمل متى طلبته.",
+    "recoveryCopy": "نسخة الاسترداد",
+    "recoveryCopyEnable": "الاحتفاظ بنسخة استرداد من التغييرات غير المحفوظة لعرضها بعد تعطّل التطبيق",
+    "view": "عرض",
+    "defaultZoomLabel": "التكبير الافتراضي",
+    "defaultZoomFitWidth": "ملاءمة العرض (افتراضي)",
+    "defaultZoomFitPage": "ملاءمة الصفحة",
+    "defaultZoomActualSize": "الحجم الفعلي (100%)",
+    "defaultZoomLastUsed": "آخر استخدام",
+    "defaultZoomHint": "يفتح المستند عند هذا التكبير ويتبع النافذة حتى تقوم بالتكبير بنفسك. تعرض ملاءمة العرض الصفحة كاملة بدلاً من ذلك عندما يكون ذلك هو الخيار الأفضل بوضوح.",
+    "securityTitle": "الأمان",
+    "formScriptsLabel": "نصوص النموذج البرمجية",
+    "formScriptsAsk": "اسأل",
+    "formScriptsAlways": "دائمًا",
+    "formScriptsNever": "أبدًا",
+    "formScriptsHint": "قد تحتوي النماذج على نصوص برمجية، مثل العمليات الحسابية. الخيار الافتراضي هو \"اسأل\": يُفتح النموذج بقيمه المخزنة ولا يتم تشغيل أي شيء حتى توافق.",
+    "formScriptsPinned": "قامت مؤسستك بتعيين هذا الخيار. لا يمكن تغييره هنا."
   },
   "errors": {
     "loadFailed": "فشل تحميل المستند",
@@ -381,7 +399,8 @@
     "addPageFailed": "فشل إضافة PDF",
     "insertFailed": "فشل إدراج PDF",
     "splitFailed": "فشل التقسيم",
-    "commandFailedTitle": "'{{command}}' did not complete"
+    "commandFailedTitle": "لم يكتمل '{{command}}'",
+    "commandRetrying": "تعذّر تنفيذ {{command}} مؤقتًا — جارٍ إعادة المحاولة"
   },
   "events": {
     "formFieldUpdated": "تم تحديث حقل النموذج",
@@ -430,9 +449,9 @@
     "pageNotFound": "الصفحة غير موجودة",
     "requiresFontInspection": "تعديل النص يتطلب فحص الخط (مخطط للمرحلة السادسة).",
     "rejection": {
-      "bannerTitle": "This text was not changed",
-      "bannerDetail": "Reason reported by the PDF engine: {{detail}}",
-      "bannerDismiss": "Dismiss",
+      "bannerTitle": "لم يتغيّر هذا النص",
+      "bannerDetail": "السبب الذي أبلغ عنه محرك PDF: {{detail}}",
+      "bannerDismiss": "تجاهل",
       "replacement-too-long": {
         "tooltip": "Replacement is too long",
         "explanation": "The replacement is longer than the text it replaces. Keep it the same length or shorter so the surrounding layout stays intact."
@@ -491,8 +510,8 @@
       }
     },
     "fallback": {
-      "fontSubstitutedTitle": "A standard font wrote the new text",
-      "fontSubstitutedMessage": "The original font of this text has no glyph for one or more characters you typed, so Helvetica was used for the replacement. The text is correct; it may look slightly different from the rest of the line."
+      "fontSubstitutedTitle": "تمت كتابة النص الجديد بخط قياسي",
+      "fontSubstitutedMessage": "لا يحتوي الخط الأصلي لهذا النص على محرف لواحد أو أكثر من الأحرف التي كتبتها، لذا استُخدم Helvetica للاستبدال. النص صحيح؛ قد يبدو مختلفًا قليلًا عن بقية السطر."
     }
   },
   "validation": {
@@ -566,12 +585,16 @@
     "watermarkDone": "تمت إضافة العلامة المائية",
     "watermarkFailed": "فشل إضافة العلامة المائية",
     "watermarkRunning": "جارٍ إضافة العلامة المائية…",
-    "pdfaRunning": "Converting to PDF/A…",
-    "pdfaDone": "PDF/A written",
-    "pdfaFailed": "PDF/A conversion failed",
-    "metadataRunning": "Saving properties…",
-    "metadataDone": "Properties saved",
-    "metadataFailed": "Could not save properties"
+    "pdfaRunning": "جارٍ التحويل إلى PDF/A…",
+    "pdfaDone": "تمت كتابة PDF/A",
+    "pdfaFailed": "فشل التحويل إلى PDF/A",
+    "metadataRunning": "جارٍ حفظ الخصائص…",
+    "metadataDone": "تم حفظ الخصائص",
+    "metadataFailed": "تعذّر حفظ الخصائص",
+    "exportMarkdownRunning": "جارٍ التصدير بصيغة Markdown…",
+    "exportMarkdownDone": "تم تصدير Markdown",
+    "exportTablesRunning": "جارٍ تصدير الجداول إلى Excel…",
+    "exportTablesDone": "تم تصدير الجداول إلى Excel ({{count}})"
   },
   "panels": {
     "search": "بحث",
@@ -714,7 +737,10 @@
     "formatJpeg": "JPEG (صورة)",
     "formatDocx": "مستند Word (.docx)",
     "formatXlsx": "جدول بيانات Excel (.xlsx)",
-    "formatPptx": "عرض PowerPoint (.pptx)"
+    "formatPptx": "عرض PowerPoint (.pptx)",
+    "formatMarkdown": "Markdown (.md) - معاينة",
+    "formatTablesXlsx": "الجداول إلى Excel (.xlsx) - معاينة",
+    "noTablesFound": "لم يتم التعرف على أي جداول في هذا المستند."
   },
   "goToPage": {
     "title": "الانتقال إلى صفحة",
@@ -729,7 +755,9 @@
     "documentLabel": "المستند:",
     "savedLabel": "تم الحفظ:",
     "recoveryPath": "مسار الاسترداد:",
-    "restore": "استعادة"
+    "restore": "استعادة",
+    "untitled": "مستند بلا عنوان",
+    "andMore": "{{name}} و{{count}} أخرى"
   },
   "emptyStates": {
     "noDocument": "لا يوجد مستند مفتوح",
@@ -839,7 +867,26 @@
     "statusUnavailableWithReason": "وقت تشغيل OCR غير متاح: {{reason}}",
     "statusRetry": "تحقق مجددًا",
     "runtimePath": "وقت التشغيل: {{path}}",
-    "missingPackages": "مفقود: {{packages}}"
+    "missingPackages": "مفقود: {{packages}}",
+    "noScannedPagesTitle": "لا شيء للتعرّف عليه",
+    "unavailable": {
+      "platform": "OCR غير متاح لهذه المنصة.",
+      "missing": "ملفات OCR الخاصة بهذا الإصدار مفقودة أو غير مكتملة. أعد تثبيت PDFluent لاستعادتها."
+    },
+    "settings": {
+      "unknown": "مكوّن OCR: جارٍ التحقق…",
+      "installed": "مكوّن OCR: Tesseract {{version}} مثبّت"
+    },
+    "errors": {
+      "OCR_COMPONENT_UNSUPPORTED_PLATFORM": "مكوّن OCR غير متاح لهذه المنصة.",
+      "OCR_COMPONENT_NOT_INSTALLED": "مكوّن OCR غير مثبّت.",
+      "OCR_LANGUAGE_MISSING": "حزمة لغة OCR غير مثبّتة.",
+      "OCR_SIGNED_DOCUMENT": "هذا المستند موقّع. سيغيّر OCR الصفحات الموقّعة، لذا لا يتم تشغيله.",
+      "OCR_NOT_PERMITTED": "لا تسمح أذونات المستند بتغيير محتواه.",
+      "OCR_DOCUMENT_CHANGED": "تغيّر المستند أثناء تشغيل OCR. شغّل OCR مرة أخرى.",
+      "OCR_ENGINE_FAILED": "توقف OCR بسبب خطأ.",
+      "OCR_PAGE_OUT_OF_RANGE": "إحدى الصفحات المطلوب التعرّف عليها ليست في المستند."
+    }
   },
   "docInfo": {
     "title": "العنوان",
@@ -879,7 +926,17 @@
     "italicComingSoon": "التنسيق المائل قريبًا",
     "sourceDigital": "طبقة نص PDF",
     "sourceOcr": "OCR",
-    "browserLimitedNote": "انقر على النص في الصفحة لتعديل نص PDF المدعوم. الصور والروابط متاحة في تطبيق سطح المكتب."
+    "browserLimitedNote": "انقر على النص في الصفحة لتعديل نص PDF المدعوم. الصور والروابط متاحة في تطبيق سطح المكتب.",
+    "typeface": {
+      "label": "الخط",
+      "default": "خط المستند",
+      "noEmbed": "{{family}}: ترخيص الخط لا يسمح بتضمينه في PDF",
+      "refusedLicence": "لا يمكن استخدام {{family}}: ترخيصه لا يسمح بتضمينه في PDF. اختر خطًا آخر.",
+      "refusedGlyphs": "{{family}} ليس لديه محرف لـ {{characters}}. اختر خطًا آخر.",
+      "refusedGone": "لم يعد هذا الخط مثبتًا. اختر خطًا آخر.",
+      "refusedText": "النص المراد تغيير نمطه لم يعد موجودًا في الصفحة.",
+      "refusedUnusable": "تعذر قراءة {{family}} كخط. اختر خطًا آخر."
+    }
   },
   "rightPanel": {
     "properties": "الخصائص",
@@ -944,9 +1001,12 @@
     "flatten": "تسطيح XFA",
     "flattenDone": "تم تسطيح XFA. صدِّر PDF لتنزيل النسخة الثابتة.",
     "flattenFailed": "فشل تسطيح XFA",
-    "convertToStandard": "Convert to standard PDF",
-    "convertedToStandard": "XFA converted to standard PDF",
-    "convertFailed": "Conversion failed: {{message}}"
+    "convertToStandard": "تحويل إلى PDF قياسي",
+    "convertedToStandard": "تم تحويل XFA إلى PDF قياسي",
+    "convertFailed": "فشل التحويل: {{message}}",
+    "bannerTitle": "نموذج XFA",
+    "bannerBody": "يُعرض نموذج XFA هذا كما هو. لملء حقوله أو تعديلها أو البحث فيها، حوّله إلى ملف PDF عادي.",
+    "bannerBodyExperimental": "يُعرض نموذج XFA هذا كما هو. ملء الحقول ميزة تجريبية؛ حوّله إلى ملف PDF عادي لملئه وتعديله والبحث فيه بشكل موثوق."
   },
   "security": {
     "activeContentBadge": "محجوب",
@@ -970,7 +1030,8 @@
     "highlight": "تمييز",
     "strikethrough": "شطب",
     "underline": "تسطير",
-    "copyText": "نسخ النص"
+    "copyText": "نسخ النص",
+    "copied": "تم النسخ"
   },
   "update": {
     "available": "يتوفر تحديث",
@@ -980,10 +1041,10 @@
     "installing": "جارٍ التثبيت…",
     "checkFailed": "فشل التحقق من التحديثات",
     "upToDate": "أنت تستخدم أحدث إصدار",
-    "installed": "Update installed",
-    "restartNow": "Restart now",
-    "restartUnsaved": "Save your changes before restarting.",
-    "restartManual": "If it doesn't restart automatically, quit and reopen PDFluent to finish."
+    "installed": "تم تثبيت التحديث",
+    "restartNow": "إعادة التشغيل الآن",
+    "restartUnsaved": "احفظ تغييراتك قبل إعادة التشغيل.",
+    "restartManual": "إذا لم تتم إعادة التشغيل تلقائياً، فأغلق PDFluent وأعد فتحه لإكمال العملية."
   },
   "telemetry": {
     "addNoteLabel": "هل تريد إضافة أي شيء؟ (اختياري)",
@@ -1012,6 +1073,11 @@
     "sentTitle": "تم الإرسال. شكرًا.",
     "settingsAutoSend": "إرسال تلقائي بدون سؤال",
     "settingsAutoSendNote": "التقارير التلقائية منظفة وخالية من البيانات الشخصية، تمامًا مثل التي تراجعها يدويًا.",
+    "settingsSentReports": "تقارير الأعطال المرسلة من هذا الكمبيوتر: {{count}}. نحذفها تلقائيًا من خادمنا بعد {{days}} يومًا.",
+    "settingsDeleteReports": "حذف تقارير الأعطال الخاصة بي",
+    "settingsDeleting": "جارٍ الحذف…",
+    "settingsDeleted": "تقارير الأعطال المحذوفة: {{count}}",
+    "settingsDeleteFailed": "تعذّر حذف {{count}}. تحقق من اتصالك وحاول مرة أخرى.",
     "settingsDescription": "لا تحتوي التقارير أبدًا على معلومات شخصية أو محتويات مستندات. يتم تنظيف كل شيء قبل الإرسال وترى كل تقرير أولاً. الحالة الافتراضية: معطلة.",
     "settingsTitle": "تقارير الأعطال والأخطاء",
     "settingsToggle": "إرسال تقارير الأعطال والأخطاء",
@@ -1019,7 +1085,11 @@
     "typeBug": "خطأ برمجي",
     "typeCrash": "عطل",
     "typeFeedback": "ملاحظات",
-    "whatGetsSent": "ما يتم إرساله"
+    "whatGetsSent": "ما يتم إرساله",
+    "settingsSentFeedback": "تم إرسال تقارير الملاحظات من هذا الكمبيوتر: {{count}}. نحذفها من خادمنا تلقائيًا بعد {{days}} يومًا.",
+    "settingsDeleteFeedback": "حذف تقارير ملاحظاتي",
+    "settingsFeedbackDeleted": "تم حذف تقارير الملاحظات: {{count}}",
+    "settingsFeedbackDeleteFailed": "تعذر حذف {{count}} من تقارير الملاحظات. تحقق من اتصالك وحاول مرة أخرى."
   },
   "ai": {
     "summaryInstruction": "قدّم ملخصاً موجزاً للوثيقة التالية باللغة العربية. أذكر لكل وظيفة صاحب العمل والدور والفترة الزمنية. استخدم النقاط.",
@@ -1076,7 +1146,8 @@
       "scrollLeft": "تمرير أنماط التمرير لليسار",
       "scrollRight": "تمرير أنماط التمرير لليمين",
       "workMode": "وضع العمل",
-      "searchPlaceholder": "ابحث في الوثيقة"
+      "searchPlaceholder": "ابحث في الوثيقة",
+      "allTools": "كل الأدوات"
     },
     "menu": {
       "about": "عن",
@@ -1147,22 +1218,17 @@
       "draw": "رسم",
       "signatureName": "اسم التوقيع",
       "typeName": "اكتب اسمك…",
-      "selectStyle": "اختر النمط",
-      "styleClassic": "الخط المتصل الكلاسيكي",
-      "styleElegant": "الخط المتصل الأنيق",
-      "styleBrush": "توقيع الفرشاة",
-      "styleModern": "الكتابة اليدوية الحديثة",
       "drawHere": "ارسم هنا باستخدام الماوس أو لوحة اللمس أو القلم",
       "clear": "مسح",
       "apply": "تطبيق",
-      "defaultSignature": "التوقيع",
       "clickToPlaceSignature": "انقر على الصفحة لوضع التوقيع.",
       "addInitials": "إضافة الأحرف الأولى",
       "initialsIntro": "اكتب أحرفك الأولى للوضع السريع في حقول الأحرف الأولى.",
       "initials": "الأحرف الأولى",
       "initialsPlaceholder": "مثال: أح",
-      "defaultInitials": "أح",
-      "clickToPlaceInitials": "انقر على الصفحة لوضع الأحرف الأولى."
+      "clickToPlaceInitials": "انقر على الصفحة لوضع الأحرف الأولى.",
+      "signatureFont": "خط التوقيع",
+      "plainItalic": "مائل عادي"
     },
     "overlay": {
       "signaturePlaced": "تم وضع التوقيع!",
@@ -1177,13 +1243,13 @@
     "textbox": {
       "editTitle": "تعديل صندوق النص",
       "newTitle": "صندوق نص جديد",
-      "intro": "يتم وضع هذا النص كتراكب على الصفحة الحالية. يؤدي حفظ الملف الفارغ إلى إزالة صندوق نص موجود.",
       "label": "النص",
       "placeholder": "اكتب النص…",
       "delete": "حذف",
       "deleted": "تم حذف صندوق النص.",
       "updated": "تم تحديث صندوق النص.",
-      "added": "تمت إضافة صندوق نص جديد."
+      "added": "تمت إضافة صندوق نص جديد.",
+      "introPdf": "يُكتب مربع النص داخل ملف PDF ويظهر في كل عارض PDF. حفظه فارغًا يزيل مربع نص موجودًا."
     },
     "rail": {
       "tools": "أدوات PDF",
@@ -1197,12 +1263,14 @@
       "more": "أدوات إضافية",
       "strikeText": "شطب النص",
       "underlineText": "تسطير النص",
-      "addAttachment": "إضافة مرفق"
+      "addAttachment": "إضافة مرفق",
+      "drawRectangle": "رسم مستطيل"
     },
     "railToasts": {
-      "commentMode": "وضع الملاحظة نشط. حدد النص واختر ملاحظة، أو استخدم قائمة التعليقات لإضافة ملاحظة.",
+      "commentMode": "وضع الملاحظات. انقر على الصفحة حيث تريد وضع الملاحظة.",
       "strikeout": "الشطب نشط — حدد النص للتطبيق.",
-      "underline": "التسطير نشط — حدد النص للتطبيق."
+      "underline": "التسطير نشط — حدد النص للتطبيق.",
+      "rectangle": "المستطيل نشط — اسحب على الصفحة لرسمه."
     },
     "tools": {
       "lede": "اختر أداة للبدء. كل شيء يعمل محليًا على هذا الجهاز.",
@@ -1238,17 +1306,18 @@
       "layers": "{{count}} طبقات",
       "manageLayers": "إدارة الطبقات",
       "layersVisible": "{{count}} طبقات مرئية.",
-      "archiveAndData": "Archiving and data",
-      "pdfaSub": "Check or convert for long-term archiving",
-      "invoiceSub": "Read the ZUGFeRD/Factur-X invoice inside",
-      "metadataSub": "Title and author of this document"
+      "archiveAndData": "الأرشفة والبيانات",
+      "pdfaSub": "التحقق أو التحويل للأرشفة طويلة الأمد",
+      "invoiceSub": "قراءة فاتورة ZUGFeRD/Factur-X المضمّنة",
+      "metadataSub": "عنوان هذا المستند ومؤلفه",
+      "flattenForm": "تسطيح",
+      "flattenFormTitle": "تسطيح النموذج: تصبح القيم المعبأة جزءًا من الصفحة وتُزال الحقول",
+      "flattenFormDone": "تم تسطيح النموذج. يؤدي التراجع إلى إعادة الحقول.",
+      "flattenFormFailed": "تعذّر تسطيح النموذج: {{message}}"
     },
     "edit": {
       "lede": "انقر على النص في الوثيقة لتحريره في السطر. يظهر شريط التنسيق أعلى الاختيار مباشرة.",
       "formatText": "تنسيق النص",
-      "fontLabel": "الخط",
-      "fontHint": "يستخدم النص في PDF الموجود خطوط PDF المضمنة. سيتم استخدام الخط \"{{font}}\" للصناديق النصية المضافة حديثًا.",
-      "fontEmbedded": "خط PDF مضمن",
       "color": "اللون",
       "colorLabel": "اللون {{color}}",
       "addContent": "إضافة محتوى",
@@ -1261,7 +1330,18 @@
       "clickAnywhereTextBox": "انقر في أي مكان على الصفحة لوضع صندوق النص.",
       "clickAnywhereImage": "انقر في أي مكان على الصفحة لوضع الصورة.",
       "selection": "التحديد",
-      "annotationOnPage": "{{type}} على الصفحة {{page}}"
+      "annotationOnPage": "{{type}} على الصفحة {{page}}",
+      "placeStamp": "وضع ختم",
+      "stampLabel": "ختم",
+      "clickToPlaceStamp": "انقر على الصفحة لوضع الختم.",
+      "placementModeStamp": "وضع الإدراج: ختم",
+      "stampPlaced": "تم وضع الختم.",
+      "deleteAnnotation": "حذف التعليق التوضيحي",
+      "annotationColor": "لون التعليق التوضيحي",
+      "editTextBox": "تحرير النص",
+      "replaceImage": "استبدال الصورة",
+      "imageReplaced": "تم استبدال الصورة.",
+      "moveHint": "اسحب للنقل، أو اسحب زاوية لتغيير الحجم، أو حرّك باستخدام مفاتيح الأسهم."
     },
     "convert": {
       "exportPdfTo": "تصدير PDF إلى",
@@ -1279,10 +1359,16 @@
       "confidenceFrom": "الثقة من {{value}}%",
       "ocrOff": "OCR مطفأ",
       "ocrOn": "OCR مشغل",
-      "ocrRunning": "جاري تشغيل OCR محليًا…"
+      "ocrRunning": "جاري تشغيل OCR محليًا…",
+      "ocrComponentUnknown": "مكوّن OCR: جارٍ التحقق…",
+      "ocrComponentInstalled": "مكوّن OCR مثبت",
+      "ocrLastRun": "آخر تشغيل: {{pages}} صفحة، {{words}} كلمة أُضيفت كنص قابل للبحث",
+      "ocrRunningProgress": "جارٍ التعرف على الصفحة {{done}} من {{total}}…",
+      "markdown": "Markdown (معاينة)",
+      "tablesToExcel": "الجداول إلى Excel (معاينة)"
     },
     "esign": {
-      "lede": "Sign with a certificate of your own, and check the signatures a document already carries. Both happen on this device.",
+      "lede": "وقّع باستخدام شهادة خاصة بك، وتحقق من التوقيعات التي يحملها المستند بالفعل. يحدث كلاهما على هذا الجهاز.",
       "fillAndSign": "ملء وتوقيع وثائقك",
       "addSignature": "إضافة توقيع",
       "addInitials": "إضافة الأحرف الأولى",
@@ -1290,25 +1376,25 @@
       "placementModeInitials": "وضع الوضع: الأحرف الأولى",
       "clickToPlaceSignature": "انقر في أي مكان على الصفحة لوضع توقيعك.",
       "clickToPlaceInitials": "انقر في أي مكان على الصفحة لوضع أحرفك الأولى.",
-      "verifySection": "Signatures",
-      "verify": "Check signatures",
-      "desktopOnly": "Available in the desktop app",
-      "unsigned": "This document carries no signatures.",
-      "signSection": "Sign with a certificate",
-      "padesLevel": "Produces a PAdES B-B signature: your certificate over the whole file, no timestamp server involved.",
-      "certificate": "Certificate (.p12 or .pfx)",
-      "certificateNone": "No certificate chosen",
-      "chooseCertificate": "Choose certificate",
-      "certificatePassword": "Certificate password",
-      "reason": "Reason (optional)",
-      "reasonPlaceholder": "Why you are signing",
-      "sign": "Sign and save a copy",
-      "signing": "Signing…",
-      "signNeedsCertificate": "Choose a certificate and enter its password first.",
-      "signSaved": "Signed copy saved as {{name}}",
-      "signFailed": "Signing failed: {{message}}",
-      "usageRights": "Reader enablement (usage rights)",
-      "usageRightsInvalidated": "Usage rights invalidated — this file was edited, so Adobe Reader no longer treats it as an enabled form."
+      "verifySection": "التوقيعات",
+      "verify": "التحقق من التوقيعات",
+      "desktopOnly": "متاح في تطبيق سطح المكتب",
+      "unsigned": "لا يحتوي هذا المستند على أي توقيعات.",
+      "signSection": "التوقيع بشهادة",
+      "padesLevel": "ينتج توقيع PAdES B-B: شهادتك على الملف بأكمله، دون خادم طوابع زمنية.",
+      "certificate": "الشهادة (.p12 أو .pfx)",
+      "certificateNone": "لم يتم اختيار شهادة",
+      "chooseCertificate": "اختيار شهادة",
+      "certificatePassword": "كلمة مرور الشهادة",
+      "reason": "السبب (اختياري)",
+      "reasonPlaceholder": "سبب التوقيع",
+      "sign": "توقيع وحفظ نسخة",
+      "signing": "جارٍ التوقيع…",
+      "signNeedsCertificate": "اختر شهادة وأدخل كلمة مرورها أولاً.",
+      "signSaved": "تم حفظ النسخة الموقّعة باسم {{name}}",
+      "signFailed": "فشل التوقيع: {{message}}",
+      "usageRights": "تمكين Reader (حقوق الاستخدام)",
+      "usageRightsInvalidated": "حقوق الاستخدام أُبطلت — تم تحرير هذا الملف، لذلك لم يعد Adobe Reader يعتبره نموذجًا ممكّنًا."
     },
     "protect": {
       "lede": "احمِ وثيقة PDF الخاصة بك بكلمات مرور قوية مشفرة. يتم تطبيق التغييرات محليًا على الفور.",
@@ -1330,9 +1416,11 @@
       "localViaTauri": "محلي عبر أمر Tauri، بدون وقت تشغيل المتصفح",
       "compressingImages": "جاري ضغط الصور…",
       "percentComplete": "{{percent}}% مكتمل",
-      "compressPdf": "ضغط PDF",
       "desktopOnly": "متاح في تطبيق سطح المكتب فقط",
-      "backToTools": "العودة إلى الأدوات"
+      "backToTools": "العودة إلى الأدوات",
+      "saveCopy": "حفظ نسخة مضغوطة باسم…",
+      "replaceOpen": "ضغط واستبدال المستند المفتوح",
+      "replaceNote": "النسخة تترك المستند المفتوح وملفه كما هما. الاستبدال يغيّر المستند المفتوح فقط؛ التراجع يعيد الأصل."
     },
     "split": {
       "lede": "قسّم وثيقتك إلى ملفات PDF منفصلة لكل صفحة أو حسب نطاق صفحة معين.",
@@ -1369,7 +1457,52 @@
       "applying": "جاري التطبيق…",
       "applyPermanently": "تطبيق الحذف بشكل دائم",
       "noActiveMarkings": "لا توجد تحديدات حذف نشطة.",
-      "backToTools": "العودة إلى الأدوات"
+      "backToTools": "العودة إلى الأدوات",
+      "pii": {
+        "title": "البيانات الشخصية",
+        "lede": "Find personal data in the text of this document: IBANs, card numbers, national ID numbers, birth dates, e-mail addresses and phone numbers, and names and addresses when the model is installed. Review the list, then redact the ones you choose.",
+        "find": "البحث عن بيانات شخصية",
+        "scanning": "جارٍ الفحص…",
+        "none": "Nothing found.",
+        "kind": {
+          "iban": "IBAN",
+          "email": "البريد الإلكتروني",
+          "phone": "رقم الهاتف",
+          "credit_card": "رقم البطاقة",
+          "national_id": "رقم الهوية الوطنية",
+          "date_of_birth": "تاريخ الميلاد",
+          "bank_account": "رقم الحساب البنكي",
+          "person": "الاسم",
+          "address": "العنوان"
+        },
+        "where": "صفحة {{pages}} · {{count}}×",
+        "selectAll": "تحديد الكل",
+        "selectNone": "تحديد لا شيء",
+        "redactSelected": "حجب {{count}} عنصرًا محددًا",
+        "redacting": "جارٍ الحجب…",
+        "done": "تم حجب {{count}} عنصرًا. احفظ الملف للاحتفاظ بالنتيجة.",
+        "failed": "فشل الحجب: {{message}}",
+        "detectFailed": "فشل البحث: {{message}}",
+        "patternsOnly": "Without the model this finds only items it can check, such as IBANs, cards, ID numbers, birth dates, e-mail addresses and phone numbers. Names and addresses are not detected, so check every page yourself.",
+        "suggestionsOnly": "هذه اقتراحات. قد يفوّت الكاشف بعض الأشياء، لذا راجع كل صفحة قبل الحفظ.",
+        "source": {
+          "verified": "تم التحقق {{detail}}",
+          "model": "اقتراح النموذج، {{score}}%"
+        },
+        "model": {
+          "use": "ابحث أيضًا عن الأسماء والعناوين باستخدام النموذج",
+          "languages": "تم الفحص للغات: {{languages}}",
+          "remove": "إزالة النموذج",
+          "removeFailed": "تعذّرت إزالة النموذج: {{message}}",
+          "failed": "تعذّر تشغيل النموذج ({{code}}). تُعرض فقط العناصر التي يمكن فحصها.",
+          "consentTitle": "هل تريد تنزيل نموذج البيانات الشخصية؟",
+          "consentBody": "يتطلب العثور على الأسماء والعناوين نموذجًا لغويًا ({{size}}). يُنزَّل مرة واحدة من {{host}}، ويُتحقق منه مقابل مجموع تحقق ثابت، ثم يعمل على هذا الكمبيوتر. لا تغادر مستنداتك هذا الجهاز أبدًا.",
+          "download": "تنزيل",
+          "downloading": "جارٍ التنزيل…",
+          "downloadFailed": "فشل التنزيل: {{message}}",
+          "notInBuild": "التنزيل غير متاح في هذه النسخة بعد."
+        }
+      }
     },
     "toasts": {
       "saving": "جاري الحفظ…",
@@ -1399,7 +1532,7 @@
       "pdfsMerged": "تم دمج {{count}} ملفات PDF",
       "mergedSaved": "تم حفظ PDF المدمج باسم {{name}}.",
       "mergeFailed": "فشل الدمج: {{message}}",
-      "redactMatches": "تم العثور على {{matches}} تطابقات، {{areas}} تحديدات حذف موضوعة.",
+      "redactSearchDone": "عدد التطابقات المحجوبة: {{count}}. احفظ للاحتفاظ بالتغيير.",
       "noRedactMatches": "لم يتم العثور على تطابقات نصية للحذف.",
       "redactSearchFailed": "فشل البحث عن الحذف: {{message}}",
       "applyRedactConfirm": "تطبيق {{count}} تحديد حذف بشكل دائم؟ هذا يزيل المحتوى من PDF إلى الأبد.",
@@ -1408,108 +1541,328 @@
       "applyRedactRunning": "جاري تطبيق الحذف بشكل دائم…",
       "applyRedactDone": "تم تطبيق الحذف بشكل دائم",
       "redactionsApplied": "تم تطبيق الحذف بشكل دائم.",
-      "redactFailed": "فشل الحذف: {{message}}"
+      "redactFailed": "فشل الحذف: {{message}}",
+      "compressedCopyToast": "تم حفظ {{name}}: من {{before}} إلى {{after}}. المستند المفتوح دون تغيير.",
+      "compressedReplacedToast": "تم ضغط المستند المفتوح: من {{before}} إلى {{after}}. يؤدي التراجع إلى إعادة الأصل. احفظ للاحتفاظ بالنسخة المضغوطة."
     },
     "thumbnails": {
       "pages": "الصفحات",
       "pageAlt": "الصفحة {{page}}",
-      "bookmarks": "Bookmarks"
+      "bookmarks": "الإشارات المرجعية"
     },
     "pdfa": {
-      "lede": "PDF/A is the archival form of PDF: fonts embedded, colours defined, nothing that depends on the outside world.",
-      "section": "Conformance",
-      "level": "Level",
-      "validate": "Check this document",
-      "convert": "Save as PDF/A…",
-      "desktopOnly": "Available in the desktop app",
-      "compliant": "Conforms to {{level}}",
-      "notCompliant": "Does not conform: {{errors}} errors, {{warnings}} warnings",
-      "moreIssues": "{{count}} more",
+      "lede": "PDF/A هو الشكل الأرشيفي لـ PDF: الخطوط مضمّنة، الألوان محددة، لا شيء يعتمد على العالم الخارجي.",
+      "section": "المطابقة",
+      "level": "المستوى",
+      "validate": "التحقق من هذا المستند",
+      "convert": "حفظ بتنسيق PDF/A…",
+      "desktopOnly": "متاح في تطبيق سطح المكتب",
+      "compliant": "مطابق لـ {{level}}",
+      "notCompliant": "غير مطابق: {{errors}} أخطاء، {{warnings}} تحذيرات",
+      "moreIssues": "{{count}} أخرى",
       "report": {
-        "title": "What the conversion did",
-        "written": "Written to {{path}}",
-        "size": "{{out}} out of {{in}} ({{ratio}}×), in {{seconds}} s",
-        "pages": "{{count}} pages",
-        "fontsEmbedded": "{{embedded}} of {{found}} unembedded fonts embedded",
-        "fontsFailed": "Could not embed: {{fonts}}",
-        "removed": "Removed: {{count}} items that PDF/A does not allow",
-        "subset": "{{count}} font programs reduced, {{bytes}} kB saved",
-        "outputIntent": "Output intent added",
-        "unchangedDocument": "The open document was not changed.",
+        "title": "ما الذي فعله التحويل",
+        "written": "تمت الكتابة إلى {{path}}",
+        "size": "{{out}} من {{in}} ({{ratio}}×)، في {{seconds}} ث",
+        "pages": "{{count}} صفحة",
+        "fontsEmbedded": "تم تضمين {{embedded}} من أصل {{found}} خطوط غير مضمّنة",
+        "fontsFailed": "تعذّر التضمين: {{fonts}}",
+        "removed": "تمت الإزالة: {{count}} عناصر لا يسمح بها PDF/A",
+        "subset": "تم تقليل {{count}} برنامج خط، وتوفير {{bytes}} كيلوبايت",
+        "outputIntent": "تمت إضافة نية الإخراج (Output intent)",
+        "unchangedDocument": "لم يتم تغيير المستند المفتوح.",
         "warning": "{{message}}",
-        "moreWarnings": "{{count}} more"
+        "moreWarnings": "{{count}} أخرى"
       }
     },
     "metadata": {
-      "lede": "The title and author stored inside the file, which is what other readers and search show.",
-      "section": "Properties",
-      "title": "Title",
-      "author": "Author",
-      "apply": "Save properties",
-      "desktopOnly": "Available in the desktop app"
+      "lede": "العنوان والمؤلف المخزّنان داخل الملف، وهما ما تعرضه برامج القراءة الأخرى ومحركات البحث.",
+      "section": "الخصائص",
+      "title": "العنوان",
+      "author": "المؤلف",
+      "apply": "حفظ الخصائص",
+      "desktopOnly": "متاح في تطبيق سطح المكتب"
     },
     "invoice": {
-      "lede": "A ZUGFeRD or Factur-X invoice travels as XML inside the PDF. This reads it and checks it against EN 16931.",
-      "section": "Embedded invoice",
-      "read": "Read invoice",
-      "desktopOnly": "Available in the desktop app",
-      "none": "This document carries no e-invoice.",
-      "number": "Number: {{number}}",
-      "issued": "Issued: {{date}}",
-      "seller": "Seller: {{name}}",
-      "buyer": "Buyer: {{name}}",
-      "total": "Total: {{total}} {{currency}}",
-      "lines": "Line items: {{count}}",
-      "valid": "Valid against {{profile}}",
-      "invalid": "Not valid: {{errors}} errors, {{warnings}} warnings"
+      "lede": "فاتورة ZUGFeRD أو Factur-X تنتقل كـ XML داخل PDF. يقرأها هذا ويتحقق منها وفقًا لـ EN 16931.",
+      "section": "الفاتورة المضمّنة",
+      "read": "قراءة الفاتورة",
+      "desktopOnly": "متاح في تطبيق سطح المكتب",
+      "none": "لا يحتوي هذا المستند على فاتورة إلكترونية.",
+      "number": "الرقم: {{number}}",
+      "issued": "تاريخ الإصدار: {{date}}",
+      "seller": "البائع: {{name}}",
+      "buyer": "المشتري: {{name}}",
+      "total": "الإجمالي: {{total}} {{currency}}",
+      "lines": "البنود: {{count}}",
+      "valid": "صالحة وفق {{profile}}",
+      "invalid": "غير صالحة: {{errors}} أخطاء، {{warnings}} تحذيرات"
     },
     "canvas": {
-      "document": "PDF document"
+      "document": "مستند PDF"
+    },
+    "stamps": {
+      "Approved": "معتمد",
+      "NotApproved": "غير معتمد",
+      "Draft": "مسودة",
+      "Confidential": "سري",
+      "Final": "نهائي",
+      "ForComment": "للمراجعة",
+      "Expired": "منتهي الصلاحية"
     }
   },
   "about": {
-    "section": "About",
-    "app": "App",
-    "version": "Version",
-    "privacy": "Privacy",
-    "privacyValue": "All processing happens locally",
-    "website": "Website"
+    "section": "حول",
+    "app": "التطبيق",
+    "version": "الإصدار",
+    "privacy": "الخصوصية",
+    "privacyValue": "تتم كل المعالجة محليًا",
+    "website": "الموقع الإلكتروني"
   },
   "reviewSummary": {
-    "title": "Review summary",
-    "generatedAt": "Generated on",
-    "comments": "Comments",
-    "noComments": "No comments.",
-    "replies": "Replies:",
-    "empty": "empty",
-    "redactions": "Redactions",
-    "noRedactions": "No redactions.",
-    "noIssues": "No issues.",
-    "metadataChanges": "Metadata changes",
-    "noMetadataChanges": "No changes.",
-    "changedBy": "by",
-    "on": "on"
+    "title": "ملخص المراجعة",
+    "generatedAt": "تم الإنشاء في",
+    "comments": "التعليقات",
+    "noComments": "لا توجد تعليقات.",
+    "replies": "الردود:",
+    "empty": "فارغ",
+    "redactions": "التنقيحات",
+    "noRedactions": "لا توجد تنقيحات.",
+    "noIssues": "لا توجد مشكلات.",
+    "metadataChanges": "تغييرات البيانات الوصفية",
+    "noMetadataChanges": "لا توجد تغييرات.",
+    "changedBy": "بواسطة",
+    "on": "في"
   },
   "externalLink": {
-    "askMessage": "This PDF wants to open an external link:\n\n{{label}}\n\nURL:\n{{href}}\n\nDo you want to continue?",
-    "title": "Open external link?",
-    "openLink": "Open link",
-    "dialogBody": "This PDF wants to open an external website. Check the URL before continuing."
+    "askMessage": "يريد ملف PDF هذا فتح رابط خارجي:\n\n{{label}}\n\nعنوان URL:\n{{href}}\n\nهل تريد المتابعة؟",
+    "title": "فتح رابط خارجي؟",
+    "openLink": "فتح الرابط",
+    "dialogBody": "يريد ملف PDF هذا فتح موقع ويب خارجي. تحقق من عنوان URL قبل المتابعة."
   },
   "linkChoice": {
-    "title": "Open link in your browser?",
-    "body": "This document wants to open an external website. Are you opening it from a trusted source?",
-    "alwaysAllow": "Always allow",
-    "openOnce": "Open once"
+    "title": "فتح الرابط في المتصفح؟",
+    "body": "يريد هذا المستند فتح موقع ويب خارجي. هل تفتحه من مصدر موثوق؟",
+    "alwaysAllow": "السماح دائماً",
+    "openOnce": "فتح مرة واحدة"
   },
   "fallbacks": {
-    "ocrUnavailableTitle": "OCR is not available on this computer",
-    "ocrUnavailableMessage": "PDFluent could not start the text-recognition engine. {{reason}}",
-    "ocrFailedMessage": "Text recognition stopped on page {{page}}: {{reason}}",
-    "xfaStaticTitle": "Form filled without recalculation",
-    "xfaStaticMessage": "This build writes XFA field values straight into the form. Field scripts do not run, so calculated totals and fields that appear or hide based on your answer stay as they are.",
-    "featureUnavailableTitle": "'{{feature}}' is not available in this build",
-    "usageRightsInvalidatedTitle": "This document is no longer Reader-enabled",
-    "usageRightsInvalidatedMessage": "Your change was made. It also invalidated the usage-rights signature this PDF carried, which let Adobe Reader fill in and save the form. The text edit stands; the extended rights are gone and cannot be restored by undoing it."
+    "ocrUnavailableTitle": "OCR غير متاح على هذا الكمبيوتر",
+    "ocrUnavailableMessage": "تعذّر على PDFluent تشغيل محرّك التعرف على النص. {{reason}}",
+    "ocrFailedMessage": "توقف التعرف على النص عند الصفحة {{page}}: {{reason}}",
+    "xfaStaticTitle": "تم تعبئة النموذج دون إعادة حساب",
+    "xfaStaticMessage": "تكتب هذه النسخة قيم حقول XFA مباشرة في النموذج. لا تعمل نصوص الحقول البرمجية، لذا تبقى المجاميع المحسوبة والحقول التي تظهر أو تختفي حسب إجابتك كما هي.",
+    "xfaScriptsNotRunTitle": "لا يتم تشغيل بعض نصوص النموذج البرمجية",
+    "xfaScriptsNotRunMessage": "تم حفظ إجابتك. يحتوي هذا النموذج على نصوص FormCalc البرمجية (تم العثور على {{count}}) ولا يشغّل PDFluent سوى نصوص JavaScript. تحتفظ الإجماليات والحقول التي كانت هذه النصوص ستحدّثها بقيمها المحفوظة إلى أن يُفتح النموذج في Adobe Reader.",
+    "xfaFieldRefusedTitle": "لم يقبل النموذج القيمة",
+    "xfaFieldReadOnly": "الحقل «{{field}}» للقراءة فقط في هذا النموذج ولا يمكن تغييره.",
+    "xfaFieldRejected": "الحقل «{{field}}» لا يقبل هذه القيمة: {{reason}}",
+    "xfaFieldNotFound": "الحقل «{{field}}» لم يعد موجودًا في النموذج. أُعيد تحميل النموذج.",
+    "featureUnavailableTitle": "'{{feature}}' غير متاح في هذه النسخة",
+    "usageRightsInvalidatedTitle": "لم يعد هذا المستند ممكّنًا في Reader",
+    "usageRightsInvalidatedMessage": "تم تنفيذ تغييرك. كما أنه أبطل توقيع حقوق الاستخدام الذي كان يحمله هذا PDF، والذي كان يتيح لـ Adobe Reader تعبئة النموذج وحفظه. يبقى تعديل النص؛ زالت الحقوق الموسّعة ولا يمكن استعادتها بالتراجع.",
+    "xfaScriptsFailedTitle": "لم تكتمل بعض نصوص النموذج البرمجية",
+    "xfaScriptsFailedMessage": "تم حفظ إجابتك، لكن هذه النصوص البرمجية لم تكتمل، لذا قد تكون القيم التي عيّنتها مفقودة: {{details}}.",
+    "xfaScriptKind_threw": "واجه خطأً",
+    "xfaScriptKind_timeout": "نفد وقته",
+    "xfaScriptKind_refused": "رفضته البيئة المعزولة"
+  },
+  "signedSave": {
+    "title": "هذا المستند موقّع",
+    "message": "تزيل الحجب محتوى يغطيه التوقيع، لذا لا يمكن حفظه فوق الأصل الموقّع دون إبطال التوقيع. احفظ نسخة بدلًا من ذلك: تحتفظ النسخة بالحجب ولا تحمل التوقيع.",
+    "saveCopy": "حفظ نسخة بدون توقيع…",
+    "cancel": "إلغاء"
+  },
+  "passwordPrompt": {
+    "title": "ملف PDF هذا محمي",
+    "message": "أدخل كلمة المرور لفتح {{name}}.",
+    "incorrect": "كلمة المرور هذه لا تفتح ملف PDF هذا. حاول مرة أخرى.",
+    "label": "كلمة المرور",
+    "open": "فتح",
+    "cancel": "إلغاء",
+    "readOnlyTitle": "فُتح للقراءة فقط",
+    "readOnlyMessage": "لا تسمح أذونات ملف PDF هذا بإجراء تغييرات. يمكنك قراءته وطباعته إذا سمحت الأذونات بذلك. لحفظ التغييرات، أزل الحماية باستخدام كلمة مرور المالك."
+  },
+  "a11y": {
+    "searchNextResult": "النتيجة التالية",
+    "searchPrevResult": "النتيجة السابقة"
+  },
+  "feedback": {
+    "title": "ساعدنا في تحسين PDFluent",
+    "intro": "أخبرنا بما كنت تحاول فعله. نقرأ كل بلاغ.",
+    "menuLabel": "ساعدنا في تحسين PDFluent…",
+    "fromError": "يمكنك إخبارنا بالمشكلة التي واجهتها للتو.",
+    "areaLabel": "ماذا كنت تحاول أن تفعل؟",
+    "area": {
+      "open-view": "فتح مستند أو قراءته",
+      "search-copy": "البحث عن نص أو نسخه",
+      "print": "طباعة",
+      "edit-text": "تحرير النص",
+      "annotate": "تمييز النص أو التعليق أو الرسم",
+      "forms": "تعبئة نموذج",
+      "sign": "التوقيع أو التحقق من توقيع",
+      "redact": "تنقيح",
+      "pages-organize": "تدوير الصفحات أو إعادة ترتيبها أو دمجها أو تقسيمها",
+      "convert-export": "التحويل أو التصدير",
+      "ocr": "التعرّف على النص في مستند ممسوح ضوئيًا (OCR)",
+      "pdfa-compliance": "PDF/A",
+      "protect": "كلمة المرور أو الأذونات",
+      "save": "حفظ",
+      "install-update": "تثبيت PDFluent أو تحديثه",
+      "other": "شيء آخر"
+    },
+    "tryingToPlaceholder": "بكلماتك (اختياري)",
+    "whatHappenedLabel": "ماذا حدث؟",
+    "whatHappenedPlaceholder": "ماذا رأيت؟",
+    "whatHappenedRequired": "أخبرنا بما حدث لنعرف أين نبحث.",
+    "expectedLabel": "ماذا كنت تتوقع؟",
+    "expectedPlaceholder": "اختياري",
+    "docTypeLabel": "ما نوع المستند؟",
+    "docType": {
+      "none": "لا يوجد مستند",
+      "form": "نموذج",
+      "scanned": "مستند ممسوح ضوئيًا",
+      "signed": "مستند موقّع",
+      "protected": "محمي بكلمة مرور",
+      "large": "كبير (أكثر من 100 صفحة)",
+      "xfa": "نموذج حكومي أو نموذج XFA",
+      "other": "شيء آخر"
+    },
+    "docTypeUnset": "اختر…",
+    "pageCountLabel": "عدد الصفحات",
+    "contextTitle": "يُرسل مع بلاغك",
+    "contextToggle": "تضمين تفاصيل النظام",
+    "contextHint": "يساعدنا الإصدار والنظام واللغة وآخر خطأ على إعادة إنتاج المشكلة. لا نرسل أسماء الملفات أو المسارات أو محتوى المستندات.",
+    "fieldVersion": "إصدار PDFluent",
+    "fieldSystem": "النظام",
+    "fieldLanguage": "اللغة",
+    "fieldLastError": "آخر خطأ",
+    "fieldSessions": "الجلسات",
+    "notIncluded": "غير مضمّن",
+    "documentTitle": "مشاركة المستند (اختياري)",
+    "documentToggle": "مشاركة المستند المفتوح مع هذا البلاغ",
+    "documentNone": "لا يوجد مستند مفتوح.",
+    "documentTooLarge": "حجم هذا المستند أكبر من 20 MB، لذلك لا يمكن مشاركته مع البلاغ.",
+    "documentShared": "ستتم مشاركة هذا المستند.",
+    "documentConfirmTitle": "هل تريد مشاركة هذا المستند؟",
+    "documentConfirmText": "سيُرسل هذا الملف إلى PDFluent (Innovation Trigger B.V.). يُستخدم فقط للتحقيق في هذا التقرير، ولا يُنشر أبدًا، ولا يُستخدم للتدريب، ويُحذف في موعد لا يتجاوز 90 يومًا بعد إصلاح المشكلة، وخلال 12 شهرًا في أي حال.",
+    "documentConfirmFile": "{{name}} ({{size}})",
+    "documentConfirmYes": "مشاركة هذا المستند",
+    "documentConfirmNo": "عدم المشاركة",
+    "contactTitle": "ابقَ على تواصل (اختياري)",
+    "emailLabel": "عنوان البريد الإلكتروني",
+    "emailInvalid": "لا يبدو هذا عنوان بريد إلكتروني.",
+    "consentContact": "قد تراسلني PDFluent بأسئلة حول هذا التقرير.",
+    "consentFixed": "راسلني عندما يتم إصلاح هذا.",
+    "contactHint": "يُحفظ عنوانك منفصلًا عن تقريرك، ويُستخدم لهذا التقرير فقط، ولا يُستخدم أبدًا للنشرات الإخبارية أو التسويق.",
+    "noEmailHint": "حتى بدون بريد إلكتروني ستصلك أخبارنا: عندما يصلح تحديث بلاغك، سيخبرك PDFluent داخل التطبيق.",
+    "privacyNotice": "تتلقى Innovation Trigger B.V. هذا التقرير لتحسين PDFluent. تُحفظ التقارير لمدة تصل إلى 24 شهرًا. يمكنك طلب إزالة تقريرك في أي وقت.",
+    "privacyLink": "بيان الخصوصية",
+    "send": "إرسال",
+    "sending": "جارٍ الإرسال…",
+    "cancel": "إلغاء",
+    "sentTitle": "شكرًا لك!",
+    "sentBody": "وصلنا بلاغك. هذا هو رقمه:",
+    "sentIdHint": "احتفظ بهذا الرقم إذا أردت الاستفسار عن بلاغك أو طلب حذفه.",
+    "sentNoLocalCopy": "تعذّر على PDFluent حفظ هذا الرقم على هذا الكمبيوتر، لذا يرجى تدوينه.",
+    "sentDocumentFailed": "وصلنا بلاغك، لكن تعذّر رفع المستند. إذا كان مهمًا، يمكنك إعادة إرسال البلاغ مع المستند.",
+    "removeReport": "حذف هذا البلاغ",
+    "removing": "جارٍ الحذف…",
+    "removed": "تم حذف بلاغك.",
+    "removeFailed": "تعذّر حذف بلاغك الآن. حاول لاحقًا أو أرسل لنا الرقم بالبريد الإلكتروني.",
+    "failedTitle": "لم تكتمل العملية",
+    "failedNetwork": "تعذّر على PDFluent الوصول إلى الخادم. لم يُرسَل شيء، ونصك ما زال هنا.",
+    "failedRateLimited": "وصل عدد كبير جدًا من البلاغات من هذا الاتصال اليوم. يُرجى المحاولة غدًا.",
+    "failedRejected": "لم يُقبل البلاغ. يُرجى مراجعة النموذج والمحاولة مرة أخرى.",
+    "failedServer": "حدث خطأ من جانبنا. نصك ما زال هنا؛ يُرجى المحاولة مرة أخرى بعد قليل.",
+    "tryAgain": "حاول مرة أخرى",
+    "fixedTitle": "تم الإصلاح!",
+    "fixedOffered": "الإصدار {{version}} يصلح بلاغك {{ids}}. شكرًا لإبلاغنا.",
+    "fixedAfterUpdate": "بلاغك {{ids}} مُصلَح في هذا الإصدار. شكرًا لإبلاغنا.",
+    "dismiss": "إغلاق"
+  },
+  "openError": {
+    "corrupt": {
+      "title": "ملف PDF هذا تالف",
+      "body": "لم يتمكن PDFluent من قراءة هذا الملف. ربما تضرر أثناء التنزيل أو النسخ، أو كتبه التطبيق الذي أنشأه بشكل غير صحيح. نزّله أو انسخه مرة أخرى، أو افتح الملف الأصلي وصدّره من جديد بصيغة PDF.",
+      "action": "فتح ملف آخر"
+    },
+    "not_pdf": {
+      "title": "هذا الملف ليس بصيغة PDF",
+      "body": "يفتح PDFluent ملفات PDF. هذا الملف من نوع آخر، أو أن اسمه لا ينتهي بـ .pdf. اختر ملف PDF، أو إذا كان هذا الملف PDF فأعد تسميته ليصبح اسمه منتهيًا بـ .pdf.",
+      "action": "فتح ملف آخر"
+    },
+    "empty": {
+      "title": "هذا الملف فارغ",
+      "body": "لا يحتوي الملف على أي محتوى (0 بايت). ربما لم يكتمل التنزيل أو النسخ. نزّله أو انسخه مرة أخرى ثم افتحه.",
+      "action": "فتح ملف آخر"
+    },
+    "encrypted_needs_password": {
+      "title": "ملف PDF هذا يحتاج إلى كلمة مرور",
+      "body": "ملف PDF هذا محمي بكلمة مرور. افتحه مرة أخرى وأدخل كلمة المرور. إذا كنت لا تعرفها، فاسأل الشخص الذي أرسل لك الملف.",
+      "action": "إدخال كلمة المرور"
+    },
+    "wrong_password": {
+      "title": "كلمة المرور هذه لم تنجح",
+      "body": "كلمة المرور لا تفتح ملف PDF هذا. تحقق من أخطاء الكتابة ومن مفتاح Caps Lock ثم حاول مرة أخرى.",
+      "action": "حاول مرة أخرى"
+    },
+    "unsupported_encryption": {
+      "title": "لا يستطيع PDFluent فتح هذا النوع من الحماية",
+      "body": "ملف PDF هذا محمي بشهادة أو بطريقة أمان لا يدعمها PDFluent، لذا لا تستطيع أي كلمة مرور فتحه هنا. اطلب من المرسل نسخة بلا حماية، أو نسخة محمية بكلمة مرور.",
+      "action": "فتح ملف آخر"
+    },
+    "too_large": {
+      "title": "هذا الملف كبير جدًا",
+      "body": "حجم هذا الملف أكبر مما يستطيع PDFluent فتحه بأمان. قسّمه أو اضغطه في التطبيق الذي أنشأه، ثم افتح الأجزاء.",
+      "action": "فتح ملف آخر"
+    },
+    "too_many_pages": {
+      "title": "عدد صفحات ملف PDF هذا كبير جدًا",
+      "body": "يحتوي هذا المستند على صفحات أكثر مما يستطيع PDFluent فتحه دفعة واحدة. قسّمه إلى مستندات أصغر في التطبيق الذي أنشأه، ثم افتح الأجزاء.",
+      "action": "فتح ملف آخر"
+    },
+    "io_denied": {
+      "title": "لا يُسمح لـ PDFluent بقراءة هذا الملف",
+      "body": "لم يمنح جهازك PDFluent إذنًا بقراءة هذا الملف. تحقق من أذونات الملف، أو انقله إلى مجلد مثل المستندات، ثم حاول مرة أخرى.",
+      "action": "حاول مرة أخرى"
+    },
+    "not_found": {
+      "title": "تعذّر العثور على هذا الملف",
+      "body": "ربما نُقل الملف أو أُعيدت تسميته أو حُذف، أو أنه على قرص لم يعد متصلًا. ابحث عن الملف وافتحه مرة أخرى.",
+      "action": "فتح ملف آخر"
+    },
+    "unknown": {
+      "title": "تعذّر فتح هذا الملف",
+      "body": "حدث خطأ أثناء فتح هذا الملف. حاول مرة أخرى. إذا تكرر ذلك، فأخبرنا لنصلحه.",
+      "action": "حاول مرة أخرى"
+    },
+    "feedback": "ساعدنا في تحسين PDFluent"
+  },
+  "formBar": {
+    "title": "نموذج قابل للملء",
+    "fields": "الحقول: {{count}}",
+    "clickToFill": "انقر على حقل لملئه.",
+    "noCalculations": "لا يتم تشغيل العمليات الحسابية التلقائية في نماذج Adobe.",
+    "autoLinks": "فتح الروابط تلقائيًا",
+    "autoLinksTitle": "تُفتح الروابط تلقائيًا في متصفحك. انقر لإيقاف ذلك.",
+    "highlight": "تمييز الحقول",
+    "firstField": "الحقل الأول"
+  },
+  "tabs": {
+    "label": "المستندات المفتوحة",
+    "close": "إغلاق {{name}}",
+    "unsaved": "تغييرات غير محفوظة",
+    "new": "فتح مستند آخر",
+    "tooManyTitle": "مستندات كثيرة مفتوحة",
+    "tooManyMessage": "{{max}} مستندات مفتوحة. أغلق أحدها لفتح آخر."
+  },
+  "formScripts": {
+    "barLabel": "نصوص النموذج البرمجية",
+    "barMessage": "يحتوي هذا النموذج على نصوص برمجية (مثل العمليات الحسابية). هل تريد تشغيلها؟",
+    "barDetail": "تم العثور على نصوص برمجية: {{count}}.",
+    "runOnce": "تشغيل لهذا المستند",
+    "runAlways": "تشغيل النصوص البرمجية دائمًا",
+    "dontRun": "لا تشغّل"
   }
 }

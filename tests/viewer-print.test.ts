@@ -42,8 +42,8 @@ describe('print — keyboard handler', () => {
     expect(viewerAppSource).toContain('handlePrintKey');
   });
 
-  it('calls window.print()', () => {
-    expect(viewerAppSource).toContain('window.print()');
+  it('prints through printDocument(), not window.print()', () => {
+    expect(viewerAppSource).toContain('void printDocument()');
   });
 
   it('detects metaKey or ctrlKey with key p', () => {
@@ -85,9 +85,9 @@ describe('print — command palette entry', () => {
     expect(viewerAppSource).toContain("label: t('commands.print')");
   });
 
-  it('print command calls window.print()', () => {
+  it('print command prints the PDF through printDocument()', () => {
     const printCmdIdx = viewerAppSource.indexOf("id: 'print'");
-    const printCallIdx = viewerAppSource.indexOf('window.print()', printCmdIdx);
+    const printCallIdx = viewerAppSource.indexOf('printDocument()', printCmdIdx);
     expect(printCallIdx).toBeGreaterThan(printCmdIdx);
   });
 });

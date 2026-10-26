@@ -5,7 +5,7 @@
 // of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
-import { invokeCommand as invoke } from '../../../lib/commandBridge';
+import { invokeCommand as invoke, invokeQuietly } from '../../../lib/commandBridge';
 import type { PdfDocument, Page } from '../../../core/document';
 import type { RenderOptions, EngineResult, AsyncEngineResult } from '../../../core/engine/types';
 import type { RenderEngine } from '../../../core/engine/RenderEngine';
@@ -89,7 +89,12 @@ export class TauriRenderEngine implements RenderEngine {
     scale: number
   ): AsyncEngineResult<{ width: number; height: number; pixels: Uint8ClampedArray<ArrayBuffer> }> {
     try {
-      const body = await invoke<ArrayBuffer>('render_page_raw', { pageIndex, scale });
+      // Quiet on purpose: the command carries no document, so a render still
+      // queued for a tab that was just closed runs against the document now
+      // active and fails with "page N out of range" (J-90, run 39794825606).
+      // The caller drops a stale result by generation; for the live document a
+      // failure falls through to the PNG path, whose command does toast.
+      const body = await invokeQuietly<ArrayBuffer>('render_page_raw', { pageIndex, scale });
       if (body.byteLength < 8) {
         return { success: false, error: { code: 'internal-error', message: 'render_page_raw: short response' } };
       }

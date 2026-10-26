@@ -1,0 +1,6 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": { "types": ["node"], "noEmit": true, "allowJs": false },
+  "include": ["tests/journeys/**/*.ts", "tests/screenshots/**/*.ts", "vitest.journeys.config.ts", "vitest.screenshots.config.ts"],
+  "exclude": []
+}

@@ -163,8 +163,8 @@ describe("the GitHub pipeline carries the whole gate set", () => {
 describe("the shipping platforms are built and judged on themselves", () => {
   const quality = jobsOf("quality.yml");
   const PLATFORMS = [
-    { name: "quality:macos", runner: ["self-hosted", "macOS", "pdfluent-editor-macos"], suite: "--platform macos", bundle: "--bundles app" },
-    { name: "quality:windows", runner: ["self-hosted", "Windows", "pdfluent-editor-windows"], suite: "--platform windows", bundle: "--bundles msi" },
+    { name: "quality:macos", runner: ["self-hosted", "macOS", "pdfluent-editor-macos"], suite: "--platform macos", bundle: "--bundles app", promises: "macos-arm64" },
+    { name: "quality:windows", runner: ["self-hosted", "Windows", "pdfluent-editor-windows"], suite: "--platform windows", bundle: "--bundles msi", promises: "windows-x64" },
   ];
 
   for (const p of PLATFORMS) {
@@ -181,9 +181,33 @@ describe("the shipping platforms are built and judged on themselves", () => {
         expect(job().body).not.toMatch(/^\s+if:\s*\$\{\{\s*false/m);
       });
 
+      // Owner decision 18-10: the editor is not supported on Linux, and a Linux
+      // job (whose runner may be offline) may not hold a shipping platform back.
+      // Windows shares the desktop with the WSL runners, so it waits for the last
+      // of them (quality:axes, which needs every other Linux job) and nothing
+      // else, and runs whatever that job's result is (decision 22-10, #926).
+      it("does not wait for any other job, except Windows for the end of the WSL chain", () => {
+        const needs = job().body.match(/^\s+needs:\s*(.*)$/m);
+        if (p.name !== "quality:windows") {
+          expect(job().body, `${p.name} has a needs: — it would wait for the Linux gate`).not.toMatch(/^\s+needs:/m);
+          return;
+        }
+        expect(needs?.[1], "quality:windows waits for quality-axes").toBe("[quality-axes]");
+        expect(job().body).toMatch(/^\s+if: \$\{\{ !cancelled\(\) \}\}$/m);
+      });
+
+      // Reporter and output flags are allowed; a path or a filter is not.
       it("runs the whole frontend suite, unfiltered", () => {
-        expect(job().body).toContain("npx vitest run --minWorkers=1 --maxWorkers=2\n");
+        expect(job().body).toMatch(/npx vitest run --maxWorkers=2(?: --reporter=\S+| --outputFile\.junit=\S+)*\n/);
         expect(job().body).toContain("npm run typecheck");
+      });
+
+      // product/editor-features.json: every promise on this platform is proven by
+      // this job's own results, read from the JUnit file and the cargo log it keeps.
+      it("judges every promise on this platform from this run's results", () => {
+        expect(job().body).toContain("--reporter=junit --outputFile.junit=test-results.xml");
+        expect(job().body).toMatch(/set -o pipefail\n\s+cargo test [^\n]*\| tee [^\n]*cargo-test\.log"/);
+        expect(job().body).toMatch(new RegExp(`node scripts/quality/features\\.mjs --gate --platform ${p.promises} --junit test-results\\.xml --cargo-log [^\\n]*cargo-test\\.log"`));
       });
 
       // The bookmark crate is a path dependency: `cargo test` alone builds it and

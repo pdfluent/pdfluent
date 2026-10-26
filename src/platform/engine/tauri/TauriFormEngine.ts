@@ -9,8 +9,35 @@ import { invokeCommand as invoke } from '../../../lib/commandBridge';
 import type { PdfDocument, FormField, FormFieldType, FormFieldValue, FieldValidation, FieldFormatting } from '../../../core/document';
 import type { EngineResult, AsyncEngineResult } from '../../../core/engine/types';
 import type { FormEngine } from '../../../core/engine/FormEngine';
+import type { FormWriteRequest } from '../../../lib/tauri-api';
 
 const SUPPORTED_TYPES: FormFieldType[] = ['text', 'checkbox', 'radio', 'combo', 'list'];
+
+/** The typed write for a field of the legacy model (pdf_engine::FormWriteRequest). */
+export function formWriteRequest(field: FormField, value: FormFieldValue): FormWriteRequest {
+  const name = field.name;
+  switch (field.type) {
+    case 'checkbox':
+      return { kind: 'checkbox', name, checked: isOn(value) };
+    case 'radio':
+      return { kind: 'radio', name, export: String(value) };
+    case 'combo':
+      return { kind: 'choice', name, value: String(value) };
+    case 'list':
+      return Array.isArray(value)
+        ? { kind: 'multiChoice', name, values: value.map(String) }
+        : { kind: 'choice', name, value: String(value) };
+    default:
+      return { kind: 'text', name, value: String(value) };
+  }
+}
+
+/** A checkbox value as the legacy model carries it: boolean, or a PDF state name. */
+function isOn(value: FormFieldValue): boolean {
+  if (typeof value === 'boolean') return value;
+  const v = String(value).trim().toLowerCase();
+  return v !== '' && v !== 'off' && v !== 'false' && v !== '0';
+}
 
 function notImpl(msg: string): { success: false; error: { code: 'not-implemented'; message: string } } {
   return { success: false, error: { code: 'not-implemented', message: msg } };
@@ -19,9 +46,12 @@ function notImpl(msg: string): { success: false; error: { code: 'not-implemented
 /**
  * Tauri-backed form engine.
  *
- * Mutation operations are async. setFormFieldValue is backed by the real
- * Tauri `set_form_field_value` command. All other mutations are placeholders
- * pending backend command support.
+ * Mutation operations are async. setFormFieldValue is backed by the typed
+ * Tauri `set_form_value` command — the SDK writeback that sets `/V` and the
+ * widget's `/AS` + `/AP`, so other viewers show the value (J-56). The legacy
+ * `set_form_field_value` wrote a raw `/V` string only: a checkbox never got
+ * its on-state and no field got an appearance. All other mutations are
+ * placeholders pending backend command support.
  *
  * Read operations against the in-memory PdfDocument model are synchronous.
  */
@@ -54,7 +84,7 @@ export class TauriFormEngine implements FormEngine {
       return { success: false, error: { code: 'internal-error', message: `Form field '${fieldId}' not found` } };
     }
     try {
-      await invoke('set_form_field_value', { request: { name: field.name, value: String(value) } });
+      await invoke('set_form_value', { request: formWriteRequest(field, value) });
       return { success: true, value: { ...field, value } };
     } catch (e) {
       return { success: false, error: { code: 'internal-error', message: String(e) } };

@@ -50,11 +50,14 @@ describe('ViewerApp — close document wiring', () => {
   });
 
   it('onCloseDocument clears currentFilePath to null', () => {
-    // The callback must set currentFilePath to null
-    const topBarProp = viewerAppSource.indexOf('onCloseDocument=');
-    const callbackEnd = viewerAppSource.indexOf('/>', topBarProp);
-    const callbackBody = viewerAppSource.slice(topBarProp, callbackEnd);
-    expect(callbackBody).toContain('setCurrentFilePath(null)');
+    // onCloseDocument is the shared close handler; the callback must set
+    // currentFilePath to null (with documents in tabs, the tabs do it when the
+    // last one closes: clearViewer in ViewerApp).
+    expect(viewerAppSource).toContain('onCloseDocument={handleCloseDocumentWithGuard}');
+    const start = viewerAppSource.indexOf('handleCloseDocumentWithGuard = useCallback(');
+    const end = viewerAppSource.indexOf('}, [isDirty, closeDocument', start);
+    expect(viewerAppSource.slice(start, end)).toContain('setCurrentFilePath(null)');
+    expect(viewerAppSource).toContain('clearViewer: () => { closeDocument(); setCurrentFilePath(null); }');
   });
 });
 

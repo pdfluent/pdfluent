@@ -47,17 +47,21 @@ describe('ViewerApp — zoom persistence: localStorage key', () => {
 // Lazy useState initializer — restore on mount
 // ---------------------------------------------------------------------------
 
-// Locate the lazy initializer block
-const initStart = viewerAppSource.indexOf('const [zoom, setZoom] = useState(');
-const initEnd = viewerAppSource.indexOf('});', initStart) + 3;
-const initBlock = viewerAppSource.slice(initStart, initEnd);
+// Locate the stored-zoom reader and the lazy initializer that uses it
+const readerStart = viewerAppSource.indexOf('export function readLastUsedZoom');
+const readerEnd = viewerAppSource.indexOf('\n}\n', readerStart) + 3;
+const initBlock = viewerAppSource.slice(readerStart, readerEnd);
+const initializer = viewerAppSource.slice(
+  viewerAppSource.indexOf('const [zoom, setZoomState] = useState('),
+  viewerAppSource.indexOf('const [manualFor'),
+);
 
 describe('ViewerApp — zoom persistence: lazy initializer', () => {
   it('uses a lazy useState initializer (function form)', () => {
-    expect(initBlock).toContain('useState(() =>');
+    expect(initializer).toContain('useState(() =>');
   });
 
-  it('reads from localStorage on init', () => {
+  it('reads from localStorage', () => {
     expect(initBlock).toContain('localStorage.getItem');
     expect(initBlock).toContain("'pdfluent.viewer.zoom'");
   });
@@ -66,13 +70,13 @@ describe('ViewerApp — zoom persistence: lazy initializer', () => {
     expect(initBlock).toContain('parseFloat(');
   });
 
-  it('validates the stored value is within 0.25–4.0 before using it', () => {
-    expect(initBlock).toContain('>= 0.25');
-    expect(initBlock).toContain('<= 4');
+  it('validates the stored value is within the zoom range before using it', () => {
+    expect(initBlock).toContain('>= MIN_ZOOM');
+    expect(initBlock).toContain('<= MAX_ZOOM');
   });
 
-  it('falls back to 1.5 when value is invalid or missing (new default)', () => {
-    expect(initBlock).toContain('return 1.5');
+  it('falls back to 1 when the value is invalid or missing (a fit replaces it on open)', () => {
+    expect(initializer).toContain('?? 1');
   });
 
   it('wraps localStorage access in try/catch', () => {
@@ -82,13 +86,12 @@ describe('ViewerApp — zoom persistence: lazy initializer', () => {
 });
 
 // ---------------------------------------------------------------------------
-// Persist effect — write on change
+// Persist effect — only the zoom the reader chose becomes "Last used"
 // ---------------------------------------------------------------------------
 
-// Locate the persist effect
-const persistStart = viewerAppSource.indexOf('Persist zoom to localStorage');
-const persistEnd = viewerAppSource.indexOf('}, [zoom])');
-const persistBlock = viewerAppSource.slice(persistStart, persistEnd + '}, [zoom])'.length);
+const persistStart = viewerAppSource.indexOf('Persist the zoom the reader chose');
+const persistEnd = viewerAppSource.indexOf('}, [zoom, zoomManual])');
+const persistBlock = viewerAppSource.slice(persistStart, persistEnd + '}, [zoom, zoomManual])'.length);
 
 describe('ViewerApp — zoom persistence: write effect', () => {
   it('writes zoom to localStorage when zoom changes', () => {
@@ -100,8 +103,12 @@ describe('ViewerApp — zoom persistence: write effect', () => {
     expect(persistBlock).toContain('String(zoom)');
   });
 
-  it('useEffect depends on [zoom]', () => {
-    expect(persistBlock).toContain('}, [zoom])');
+  it('does not store an automatic fit', () => {
+    expect(persistBlock).toContain('if (!zoomManual) return;');
+  });
+
+  it('useEffect depends on [zoom, zoomManual]', () => {
+    expect(persistBlock).toContain('}, [zoom, zoomManual])');
   });
 
   it('wraps write in try/catch', () => {

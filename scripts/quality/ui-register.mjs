@@ -49,7 +49,12 @@
 
 import { readFileSync, writeFileSync, readdirSync, statSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { dirname, join, relative, resolve as resolvePath } from 'node:path';
+import nodePath, { dirname, join, resolve as resolvePath } from 'node:path';
+
+/** Repo-relative path with '/' separators on every platform: the source map is keyed by it (#731). */
+export const repoRelative = (from, to, pathModule = nodePath) =>
+  pathModule.relative(from, to).split(pathModule.sep).join('/');
+const relative = (from, to) => repoRelative(from, to);
 import { isMainModule } from '../lib/main-module.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -887,7 +892,9 @@ export function ciJobFor(testPath) {
 }
 
 export function testKind(text) {
-  if (/@playwright\/test/.test(text)) return 'e2e';
+  // Specs import `test` from the guarded wrapper (tests/e2e/helpers/guarded-test.ts),
+  // which is Playwright's with an error guard on top; still an e2e proof.
+  if (/@playwright\/test|helpers\/guarded-test/.test(text)) return 'e2e';
   if (/readFileSync\(/.test(text)) return 'source-grep';
   return 'unit';
 }

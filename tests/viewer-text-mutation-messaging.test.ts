@@ -93,12 +93,12 @@ describe('getUnsupportedMessage — reason code specificity', () => {
   it('multi-span-unsupported returns a reason-specific message', () => {
     const msg = getUnsupportedMessage(makeSupportResult('non_writable_digital_text', 'multi-span-unsupported'));
     // Reason-code message is more specific than the class-level fallback
-    expect(msg.tooltip).toContain('lettertype');
+    expect(msg.tooltip).toContain('font');
   });
 
   it('multi-line-unsupported returns a reason-specific message', () => {
     const msg = getUnsupportedMessage(makeSupportResult('non_writable_digital_text', 'multi-line-unsupported'));
-    expect(msg.tooltip).toContain('regels');
+    expect(msg.tooltip).toContain('line');
   });
 
   it('ocr-source returns a reason-specific message mentioning OCR', () => {
@@ -250,12 +250,12 @@ describe('getSupportClassTooltip', () => {
   });
 
   it('writable_digital_text tooltip indicates editability', () => {
-    expect(getSupportClassTooltip('writable_digital_text')).toContain('bewerken');
+    expect(getSupportClassTooltip('writable_digital_text')).toContain('Edit');
   });
 
   it('ocr_read_only tooltip indicates read-only', () => {
     const tooltip = getSupportClassTooltip('ocr_read_only');
-    expect(tooltip.toLowerCase()).toContain('lezen');
+    expect(tooltip.toLowerCase()).toContain('read only');
   });
 });
 

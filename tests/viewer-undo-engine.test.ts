@@ -5,418 +5,69 @@
 // of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
-import { readFileSync } from 'node:fs';
+// The webview undo stack (src/viewer/undoEngine.ts), used by the browser
+// runtime. This file used to read the source of the stack, ViewerApp and the
+// top bar and look for strings; it now runs the stack. In the desktop app the
+// history lives in the backend: src-tauri/tests/undo_redo.rs and
+// src/viewer/hooks/__tests__/useUndoRedo.backend.test.ts prove that path, and
+// useKeyboardShortcuts.typing.test.ts the keys.
+
 import { describe, it, expect } from 'vitest';
+import { UndoStack, makeCommand } from '../src/viewer/undoEngine';
 
-const undoEngineSource = readFileSync(
-  new URL('../src/viewer/undoEngine.ts', import.meta.url),
-  'utf8'
-);
+function counter() {
+  const log: string[] = [];
+  const cmd = (name: string) => makeCommand(name, async () => { log.push(`do ${name}`); }, async () => { log.push(`undo ${name}`); });
+  return { log, cmd };
+}
 
-const viewerAppSource = [
-  '../src/viewer/hooks/usePageNavigation.ts',
-  '../src/viewer/hooks/useZoomControls.ts',
-  '../src/viewer/hooks/useSidebarState.ts',
-  '../src/viewer/hooks/useUndoRedo.ts',
-  '../src/viewer/hooks/useSearch.ts',
-  '../src/viewer/hooks/useFormFields.ts',
-  '../src/viewer/hooks/useModeManager.ts',
-  '../src/viewer/hooks/useDocumentLifecycle.ts',
-  '../src/viewer/hooks/useCommands.ts',
-  '../src/viewer/hooks/useDragDrop.ts',
-  '../src/viewer/ViewerSidePanels.tsx',
-  '../src/viewer/hooks/useAnnotations.ts',
-  '../src/viewer/hooks/useTextInteraction.ts',
-  '../src/viewer/hooks/useKeyboardShortcuts.ts',
-  '../src/viewer/ViewerApp.tsx',
-  '../src/viewer/v3/EditorV3Shell.tsx',
-  '../src/viewer/WelcomeSection.tsx',
-].map(p => readFileSync(new URL(p, import.meta.url), 'utf8')).join('\n\n');
-
-const topBarSource = readFileSync(
-  new URL('../src/viewer/components/TopBar.tsx', import.meta.url),
-  'utf8'
-);
-
-// ---------------------------------------------------------------------------
-// undoEngine.ts — UndoCommand interface
-// ---------------------------------------------------------------------------
-
-describe('undoEngine — UndoCommand interface', () => {
-  it('exports UndoCommand interface', () => {
-    expect(undoEngineSource).toContain('export interface UndoCommand');
+describe('UndoStack', () => {
+  it('starts empty', () => {
+    const s = new UndoStack();
+    expect(s.canUndo).toBe(false);
+    expect(s.canRedo).toBe(false);
+    expect(s.undoLabel).toBeNull();
+    expect(s.redoLabel).toBeNull();
   });
 
-  it('UndoCommand has description field', () => {
-    const ifaceStart = undoEngineSource.indexOf('export interface UndoCommand');
-    const ifaceEnd = undoEngineSource.indexOf('\n}', ifaceStart) + 2;
-    const iface = undoEngineSource.slice(ifaceStart, ifaceEnd);
-    expect(iface).toContain('description: string');
+  it('undoes the newest command first and redoes it', async () => {
+    const { log, cmd } = counter();
+    const s = new UndoStack();
+    s.push(cmd('a'));
+    s.push(cmd('b'));
+    expect(s.undoLabel).toBe('b');
+    expect((await s.undo())?.description).toBe('b');
+    expect(log).toEqual(['undo b']);
+    expect(s.redoLabel).toBe('b');
+    expect((await s.redo())?.description).toBe('b');
+    expect(log).toEqual(['undo b', 'do b']);
+    expect(s.undoLabel).toBe('b');
   });
 
-  it('UndoCommand has execute(): Promise<void>', () => {
-    const ifaceStart = undoEngineSource.indexOf('export interface UndoCommand');
-    const ifaceEnd = undoEngineSource.indexOf('\n}', ifaceStart) + 2;
-    const iface = undoEngineSource.slice(ifaceStart, ifaceEnd);
-    expect(iface).toContain('execute(): Promise<void>');
+  it('a new command ends the redo branch', async () => {
+    const { cmd } = counter();
+    const s = new UndoStack();
+    s.push(cmd('a'));
+    await s.undo();
+    expect(s.canRedo).toBe(true);
+    s.push(cmd('c'));
+    expect(s.canRedo).toBe(false);
   });
 
-  it('UndoCommand has undo(): Promise<void>', () => {
-    const ifaceStart = undoEngineSource.indexOf('export interface UndoCommand');
-    const ifaceEnd = undoEngineSource.indexOf('\n}', ifaceStart) + 2;
-    const iface = undoEngineSource.slice(ifaceStart, ifaceEnd);
-    expect(iface).toContain('undo(): Promise<void>');
-  });
-});
-
-// ---------------------------------------------------------------------------
-// undoEngine.ts — UndoStack class
-// ---------------------------------------------------------------------------
-
-describe('undoEngine — UndoStack class', () => {
-  it('exports UndoStack class', () => {
-    expect(undoEngineSource).toContain('export class UndoStack');
+  it('undo and redo on an empty stack do nothing and say so', async () => {
+    const s = new UndoStack();
+    expect(await s.undo()).toBeNull();
+    expect(await s.redo()).toBeNull();
   });
 
-  it('has canUndo getter', () => {
-    expect(undoEngineSource).toContain('get canUndo()');
-  });
-
-  it('canUndo returns true when undoStack is non-empty', () => {
-    const getterStart = undoEngineSource.indexOf('get canUndo()');
-    const getterEnd = undoEngineSource.indexOf('\n  }', getterStart) + 4;
-    const getter = undoEngineSource.slice(getterStart, getterEnd);
-    expect(getter).toContain('undoStack.length > 0');
-  });
-
-  it('has canRedo getter', () => {
-    expect(undoEngineSource).toContain('get canRedo()');
-  });
-
-  it('canRedo returns true when redoStack is non-empty', () => {
-    const getterStart = undoEngineSource.indexOf('get canRedo()');
-    const getterEnd = undoEngineSource.indexOf('\n  }', getterStart) + 4;
-    const getter = undoEngineSource.slice(getterStart, getterEnd);
-    expect(getter).toContain('redoStack.length > 0');
-  });
-
-  it('has undoLabel getter returning null when stack is empty', () => {
-    expect(undoEngineSource).toContain('get undoLabel()');
-    const getterStart = undoEngineSource.indexOf('get undoLabel()');
-    const getterEnd = undoEngineSource.indexOf('\n  }', getterStart) + 4;
-    const getter = undoEngineSource.slice(getterStart, getterEnd);
-    expect(getter).toContain('null');
-  });
-
-  it('has redoLabel getter returning null when stack is empty', () => {
-    expect(undoEngineSource).toContain('get redoLabel()');
-  });
-
-  it('has push(command) method', () => {
-    expect(undoEngineSource).toContain('push(command: UndoCommand)');
-  });
-
-  it('push clears the redo stack', () => {
-    const pushStart = undoEngineSource.indexOf('push(command: UndoCommand)');
-    const pushEnd = undoEngineSource.indexOf('\n  }', pushStart) + 4;
-    const pushBody = undoEngineSource.slice(pushStart, pushEnd);
-    expect(pushBody).toContain('redoStack = []');
-  });
-
-  it('has async undo() method', () => {
-    expect(undoEngineSource).toContain('async undo()');
-  });
-
-  it('undo pops from undoStack and pushes to redoStack', () => {
-    const undoStart = undoEngineSource.indexOf('async undo()');
-    const undoEnd = undoEngineSource.indexOf('\n  }', undoStart) + 4;
-    const undoBody = undoEngineSource.slice(undoStart, undoEnd);
-    expect(undoBody).toContain('undoStack.pop()');
-    expect(undoBody).toContain('redoStack.push(command)');
-  });
-
-  it('undo calls command.undo()', () => {
-    const undoStart = undoEngineSource.indexOf('async undo()');
-    const undoEnd = undoEngineSource.indexOf('\n  }', undoStart) + 4;
-    const undoBody = undoEngineSource.slice(undoStart, undoEnd);
-    expect(undoBody).toContain('command.undo()');
-  });
-
-  it('undo returns null when stack is empty', () => {
-    const undoStart = undoEngineSource.indexOf('async undo()');
-    const undoEnd = undoEngineSource.indexOf('\n  }', undoStart) + 4;
-    const undoBody = undoEngineSource.slice(undoStart, undoEnd);
-    expect(undoBody).toContain('null');
-  });
-
-  it('has async redo() method', () => {
-    expect(undoEngineSource).toContain('async redo()');
-  });
-
-  it('redo pops from redoStack and pushes to undoStack', () => {
-    const redoStart = undoEngineSource.indexOf('async redo()');
-    const redoEnd = undoEngineSource.indexOf('\n  }', redoStart) + 4;
-    const redoBody = undoEngineSource.slice(redoStart, redoEnd);
-    expect(redoBody).toContain('redoStack.pop()');
-    expect(redoBody).toContain('undoStack.push(command)');
-  });
-
-  it('redo calls command.execute()', () => {
-    const redoStart = undoEngineSource.indexOf('async redo()');
-    const redoEnd = undoEngineSource.indexOf('\n  }', redoStart) + 4;
-    const redoBody = undoEngineSource.slice(redoStart, redoEnd);
-    expect(redoBody).toContain('command.execute()');
-  });
-
-  it('has clear() method that empties both stacks', () => {
-    expect(undoEngineSource).toContain('clear()');
-    const clearStart = undoEngineSource.indexOf('clear()');
-    const clearEnd = undoEngineSource.indexOf('\n  }', clearStart) + 4;
-    const clearBody = undoEngineSource.slice(clearStart, clearEnd);
-    expect(clearBody).toContain('undoStack = []');
-    expect(clearBody).toContain('redoStack = []');
-  });
-});
-
-// ---------------------------------------------------------------------------
-// undoEngine.ts — makeCommand factory
-// ---------------------------------------------------------------------------
-
-describe('undoEngine — makeCommand factory', () => {
-  it('exports makeCommand function', () => {
-    expect(undoEngineSource).toContain('export function makeCommand(');
-  });
-
-  it('accepts description, executeFn, and undoFn parameters', () => {
-    const fnStart = undoEngineSource.indexOf('export function makeCommand(');
-    const fnEnd = undoEngineSource.indexOf('\n}', fnStart) + 2;
-    const fn = undoEngineSource.slice(fnStart, fnEnd);
-    expect(fn).toContain('description');
-    expect(fn).toContain('executeFn');
-    expect(fn).toContain('undoFn');
-  });
-
-  it('returns an object implementing UndoCommand', () => {
-    const fnStart = undoEngineSource.indexOf('export function makeCommand(');
-    const fnEnd = undoEngineSource.indexOf('\n}', fnStart) + 2;
-    const fn = undoEngineSource.slice(fnStart, fnEnd);
-    expect(fn).toContain('description');
-    expect(fn).toContain('execute: executeFn');
-    expect(fn).toContain('undo: undoFn');
-  });
-});
-
-// ---------------------------------------------------------------------------
-// ViewerApp — undo stack integration
-// ---------------------------------------------------------------------------
-
-describe('ViewerApp — undo stack integration', () => {
-  it('imports UndoStack and makeCommand from undoEngine', () => {
-    expect(viewerAppSource).toContain("UndoStack");
-    expect(viewerAppSource).toContain("makeCommand");
-    expect(viewerAppSource).toContain("undoEngine");
-  });
-
-  it('creates an undoStackRef with useRef', () => {
-    expect(viewerAppSource).toContain('undoStackRef = useRef<UndoStack>(new UndoStack())');
-  });
-
-  it('tracks canUndo in state', () => {
-    expect(viewerAppSource).toContain('[canUndo, setCanUndo]');
-  });
-
-  it('tracks canRedo in state', () => {
-    expect(viewerAppSource).toContain('[canRedo, setCanRedo]');
-  });
-
-  it('defines syncUndoState callback', () => {
-    expect(viewerAppSource).toContain('const syncUndoState = useCallback(');
-    expect(viewerAppSource).toContain('undoStackRef.current.canUndo');
-    expect(viewerAppSource).toContain('undoStackRef.current.canRedo');
-  });
-
-  it('defines pushUndo callback', () => {
-    expect(viewerAppSource).toContain('const pushUndo = useCallback(');
-    expect(viewerAppSource).toContain('undoStackRef.current.push(cmd)');
-  });
-});
-
-// ---------------------------------------------------------------------------
-// ViewerApp — Cmd+Z / Cmd+Shift+Z keyboard shortcuts
-// ---------------------------------------------------------------------------
-
-describe('ViewerApp — undo/redo keyboard shortcuts', () => {
-  it('registers handleUndoKey listener on window', () => {
-    expect(viewerAppSource).toContain("window.addEventListener('keydown', handleUndoKey)");
-    expect(viewerAppSource).toContain("window.removeEventListener('keydown', handleUndoKey)");
-  });
-
-  it('triggers on Cmd/Ctrl+Z', () => {
-    const handlerStart = viewerAppSource.indexOf('handleUndoKey');
-    const handlerEnd = viewerAppSource.indexOf('window.addEventListener(\'keydown\', handleUndoKey)', handlerStart);
-    const handler = viewerAppSource.slice(handlerStart, handlerEnd);
-    expect(handler).toContain("e.key !== 'z'");
-    expect(handler).toContain('e.metaKey || e.ctrlKey');
-  });
-
-  it('Cmd+Z calls undoStackRef.current.undo()', () => {
-    const handlerStart = viewerAppSource.indexOf('handleUndoKey');
-    const handlerEnd = viewerAppSource.indexOf('window.addEventListener(\'keydown\', handleUndoKey)', handlerStart);
-    const handler = viewerAppSource.slice(handlerStart, handlerEnd);
-    expect(handler).toContain('undoStackRef.current.undo()');
-  });
-
-  it('Cmd+Shift+Z calls undoStackRef.current.redo()', () => {
-    const handlerStart = viewerAppSource.indexOf('handleUndoKey');
-    const handlerEnd = viewerAppSource.indexOf('window.addEventListener(\'keydown\', handleUndoKey)', handlerStart);
-    const handler = viewerAppSource.slice(handlerStart, handlerEnd);
-    expect(handler).toContain('e.shiftKey');
-    expect(handler).toContain('undoStackRef.current.redo()');
-  });
-
-  it('calls syncUndoState after undo and redo to update buttons', () => {
-    const handlerStart = viewerAppSource.indexOf('handleUndoKey');
-    const handlerEnd = viewerAppSource.indexOf('window.addEventListener(\'keydown\', handleUndoKey)', handlerStart);
-    const handler = viewerAppSource.slice(handlerStart, handlerEnd);
-    expect(handler).toContain('syncUndoState');
-  });
-});
-
-// ---------------------------------------------------------------------------
-// ViewerApp — EditorV3Shell undo/redo wiring
-// ---------------------------------------------------------------------------
-
-describe('ViewerApp — EditorV3Shell undo/redo wiring', () => {
-  function shellBlock(): string {
-    const topBarStart = viewerAppSource.indexOf('<EditorV3Shell');
-    const topBarEnd = viewerAppSource.indexOf('>\n          {docLoading', topBarStart);
-    return viewerAppSource.slice(topBarStart, topBarEnd);
-  }
-
-  it('passes canUndo to EditorV3Shell', () => {
-    const topBarEl = shellBlock();
-    expect(topBarEl).toContain('canUndo={canUndo}');
-  });
-
-  it('passes canRedo to EditorV3Shell', () => {
-    const topBarEl = shellBlock();
-    expect(topBarEl).toContain('canRedo={canRedo}');
-  });
-
-  it('passes onUndo callback to EditorV3Shell', () => {
-    const topBarEl = shellBlock();
-    expect(topBarEl).toContain('onUndo=');
-  });
-
-  it('passes onRedo callback to EditorV3Shell', () => {
-    const topBarEl = shellBlock();
-    expect(topBarEl).toContain('onRedo=');
-  });
-});
-
-// ---------------------------------------------------------------------------
-// TopBar — undo/redo props and button state
-// ---------------------------------------------------------------------------
-
-describe('TopBar — undo/redo button props', () => {
-  it('declares canUndo prop in TopBarProps', () => {
-    const ifaceStart = topBarSource.indexOf('interface TopBarProps');
-    const ifaceEnd = topBarSource.indexOf('\n}', ifaceStart) + 2;
-    const iface = topBarSource.slice(ifaceStart, ifaceEnd);
-    expect(iface).toContain('canUndo');
-  });
-
-  it('declares canRedo prop in TopBarProps', () => {
-    const ifaceStart = topBarSource.indexOf('interface TopBarProps');
-    const ifaceEnd = topBarSource.indexOf('\n}', ifaceStart) + 2;
-    const iface = topBarSource.slice(ifaceStart, ifaceEnd);
-    expect(iface).toContain('canRedo');
-  });
-
-  it('declares onUndo prop in TopBarProps', () => {
-    const ifaceStart = topBarSource.indexOf('interface TopBarProps');
-    const ifaceEnd = topBarSource.indexOf('\n}', ifaceStart) + 2;
-    const iface = topBarSource.slice(ifaceStart, ifaceEnd);
-    expect(iface).toContain('onUndo');
-  });
-
-  it('declares onRedo prop in TopBarProps', () => {
-    const ifaceStart = topBarSource.indexOf('interface TopBarProps');
-    const ifaceEnd = topBarSource.indexOf('\n}', ifaceStart) + 2;
-    const iface = topBarSource.slice(ifaceStart, ifaceEnd);
-    expect(iface).toContain('onRedo');
-  });
-
-  it('undo button has data-testid="undo-btn"', () => {
-    expect(topBarSource).toContain('data-testid="undo-btn"');
-  });
-
-  it('redo button has data-testid="redo-btn"', () => {
-    expect(topBarSource).toContain('data-testid="redo-btn"');
-  });
-
-  it('undo button disabled state is controlled by canUndo', () => {
-    const btnStart = topBarSource.indexOf('data-testid="undo-btn"');
-    const btnEnd = topBarSource.indexOf('</button>', btnStart) + 9;
-    // Slice the entire button element — search back from the testid
-    // to the opening <button tag so we catch all attributes regardless
-    // of their order in JSX.
-    const btnOpenTag = topBarSource.lastIndexOf('<button', btnStart);
-    const btn = topBarSource.slice(btnOpenTag, btnEnd);
-    expect(btn).toContain('disabled={!canUndo}');
-  });
-
-  it('redo button disabled state is controlled by canRedo', () => {
-    const btnStart = topBarSource.indexOf('data-testid="redo-btn"');
-    const btnEnd = topBarSource.indexOf('</button>', btnStart) + 9;
-    // Slice the entire button element — search back from the testid
-    // to the opening <button tag so we catch all attributes regardless
-    // of their order in JSX.
-    const btnOpenTag = topBarSource.lastIndexOf('<button', btnStart);
-    const btn = topBarSource.slice(btnOpenTag, btnEnd);
-    expect(btn).toContain('disabled={!canRedo}');
-  });
-
-  it('undo button calls onUndo when clicked', () => {
-    const btnStart = topBarSource.indexOf('data-testid="undo-btn"');
-    const btnEnd = topBarSource.indexOf('</button>', btnStart) + 9;
-    // Slice the entire button element — search back from the testid
-    // to the opening <button tag so we catch all attributes regardless
-    // of their order in JSX.
-    const btnOpenTag = topBarSource.lastIndexOf('<button', btnStart);
-    const btn = topBarSource.slice(btnOpenTag, btnEnd);
-    expect(btn).toContain('onClick={onUndo}');
-  });
-
-  it('redo button calls onRedo when clicked', () => {
-    const btnStart = topBarSource.indexOf('data-testid="redo-btn"');
-    const btnEnd = topBarSource.indexOf('</button>', btnStart) + 9;
-    // Slice the entire button element — search back from the testid
-    // to the opening <button tag so we catch all attributes regardless
-    // of their order in JSX.
-    const btnOpenTag = topBarSource.lastIndexOf('<button', btnStart);
-    const btn = topBarSource.slice(btnOpenTag, btnEnd);
-    expect(btn).toContain('onClick={onRedo}');
-  });
-});
-
-// ---------------------------------------------------------------------------
-// ViewerApp — form field change wired to undo stack
-// ---------------------------------------------------------------------------
-
-describe('ViewerApp — form field undo integration', () => {
-  it('handleSetFieldValue calls pushUndo', () => {
-    const fnStart = viewerAppSource.indexOf('const handleSetFieldValue = useCallback');
-    const fnEnd = viewerAppSource.indexOf('\n  }, [', fnStart) + 4;
-    const fnBody = viewerAppSource.slice(fnStart, fnEnd);
-    expect(fnBody).toContain('pushUndo(makeCommand(');
-  });
-
-  it('form field undo command includes execute and undo closures', () => {
-    const fnStart = viewerAppSource.indexOf('const handleSetFieldValue = useCallback');
-    const fnEnd = viewerAppSource.indexOf('\n  }, [', fnStart) + 4;
-    const fnBody = viewerAppSource.slice(fnStart, fnEnd);
-    expect(fnBody).toContain('previousValue');
-    expect(fnBody).toContain('setFormFieldValue(pdfDoc, fieldId, previousValue)');
+  it('clear empties both stacks', async () => {
+    const { cmd } = counter();
+    const s = new UndoStack();
+    s.push(cmd('a'));
+    s.push(cmd('b'));
+    await s.undo();
+    s.clear();
+    expect(s.canUndo).toBe(false);
+    expect(s.canRedo).toBe(false);
   });
 });

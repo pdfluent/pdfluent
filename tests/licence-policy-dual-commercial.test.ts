@@ -22,6 +22,7 @@ import { spawnSync } from "node:child_process";
 import { mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
+import { pathToFileURL } from "node:url";
 // @ts-expect-error — a plain .mjs script with no type declarations
 import { evaluateLicensePolicy } from "../scripts/generate-third-party.mjs";
 
@@ -66,7 +67,7 @@ describe("importing the generator is not running it", () => {
     try {
       writeFileSync(join(dir, "package.json"), JSON.stringify({ name: "fixture", version: "0.0.0" }));
       const script = resolve(__dirname, "..", "scripts", "generate-third-party.mjs");
-      const r = spawnSync(process.execPath, ["--input-type=module", "-e", `await import(${JSON.stringify(script)})`], {
+      const r = spawnSync(process.execPath, ["--input-type=module", "-e", `await import(${JSON.stringify(pathToFileURL(script).href)})`], {
         cwd: dir, encoding: "utf8",
       });
       expect(r.status, `${r.stdout}${r.stderr}`).toBe(0);

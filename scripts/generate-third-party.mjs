@@ -10,17 +10,23 @@ import {
   writeFileSync,
 } from "node:fs";
 import os from "node:os";
+import { isMainModule } from "./lib/main-module.mjs";
 import path from "node:path";
 
 const workspaceRoot = process.cwd();
 const reportPath = path.join(workspaceRoot, "compliance-report.json");
 const thirdPartyPath = path.join(workspaceRoot, "THIRD_PARTY.md");
 const attributionsPath = path.join(workspaceRoot, "THIRD_PARTY_ATTRIBUTIONS.md");
-const modelManifestPath = path.join(
+// The OCR component (Tesseract and its language data) ships inside every build
+// as a separate executable under resources/ocr (src-tauri/src/ocr_component.rs).
+// Its notices are listed here from the manifest compiled into the app, because
+// the licence texts travel with it.
+const ocrComponentManifestPath = path.join(
   workspaceRoot,
   "src-tauri",
-  "scripts",
-  "ocr-models.manifest.json",
+  "resources",
+  "ocr",
+  "tesseract-component.json",
 );
 const overridesPath = path.join(workspaceRoot, "compliance-overrides.json");
 
@@ -317,94 +323,6 @@ function gatherCargoEntries() {
   return entries.sort((left, right) => left.name.localeCompare(right.name));
 }
 
-function gatherPythonEntries() {
-  const pythonPath = path.join(workspaceRoot, ".venv-ocr", "bin", "python");
-  if (!existsSync(pythonPath)) return [];
-
-  const script = `
-import importlib.metadata as metadata
-import json
-
-rows = []
-for dist in metadata.distributions():
-    meta = dist.metadata
-    classifiers = meta.get_all("Classifier") or []
-    license_classifiers = [entry for entry in classifiers if entry.startswith("License ::")]
-    rows.append({
-        "name": meta.get("Name") or dist.metadata.get("Summary") or dist._path.name,
-        "version": dist.version,
-        "license_expression": (meta.get("License-Expression") or "").strip(),
-        "license": (meta.get("License") or "").strip(),
-        "license_classifiers": license_classifiers,
-        "home_page": meta.get("Home-page") or "",
-    })
-
-rows.sort(key=lambda row: row["name"].lower())
-print(json.dumps(rows))
-`;
-
-  const result = spawnSync(pythonPath, ["-c", script], {
-    cwd: workspaceRoot,
-    encoding: "utf8",
-  });
-  if (result.status !== 0) {
-    console.warn("[generate-third-party] python metadata failed:", result.stderr);
-    return [];
-  }
-
-  const rows = JSON.parse(result.stdout);
-  return rows.map((row) => {
-    const classifierLicense = Array.isArray(row.license_classifiers)
-      ? row.license_classifiers.join(" | ")
-      : "";
-    const primaryLicense =
-      typeof row.license_expression === "string" && row.license_expression.length > 0
-        ? row.license_expression
-        : typeof row.license === "string" && row.license.length > 0
-          ? row.license
-        : classifierLicense;
-    return {
-      source: "python",
-      name: String(row.name ?? ""),
-      version: String(row.version ?? ""),
-      direct: false,
-      license: primaryLicense,
-      repository: "",
-      homepage: String(row.home_page ?? ""),
-      licenseFilePath: null,
-    };
-  });
-}
-
-function gatherPythonRequirementEntries() {
-  const requirementsPath = path.join(
-    workspaceRoot,
-    "src-tauri",
-    "scripts",
-    "requirements-ocr.txt",
-  );
-  if (!existsSync(requirementsPath)) return [];
-
-  const lines = readFileSync(requirementsPath, "utf8")
-    .split(/\r?\n/)
-    .map((line) => line.trim())
-    .filter((line) => line.length > 0 && !line.startsWith("#"));
-
-  return lines.map((line) => {
-    const [name, versionSpec] = line.split(/(?=[<>=!~])/);
-    return {
-      source: "python",
-      name: name.trim(),
-      version: versionSpec?.trim() ?? "",
-      direct: true,
-      license: "manual-review-required",
-      repository: "",
-      homepage: "",
-      licenseFilePath: null,
-    };
-  });
-}
-
 function gatherBundledPdfiumEntries() {
   const licensesDirectory = path.join(workspaceRoot, "src-tauri", "lib", "licenses");
   if (!existsSync(licensesDirectory)) return [];
@@ -424,21 +342,39 @@ function gatherBundledPdfiumEntries() {
     }));
 }
 
-function gatherModelAssetEntries() {
-  if (!existsSync(modelManifestPath)) return [];
-  const manifest = readJsonFile(modelManifestPath);
-  const files = Array.isArray(manifest.files) ? manifest.files : [];
-  return files.map((fileEntry) => ({
-    source: "model-asset",
-    name: `ocr-model:${path.basename(String(fileEntry.path ?? ""))}`,
+function gatherOcrComponentEntries() {
+  if (!existsSync(ocrComponentManifestPath)) return [];
+  const manifest = readJsonFile(ocrComponentManifestPath);
+  const notices = Array.isArray(manifest.notices) ? manifest.notices : [];
+  return notices.map((notice) => ({
+    source: "ocr-component",
+    name: String(notice.name ?? ""),
+    version: String(notice.version ?? ""),
+    direct: false,
+    license: String(notice.license ?? ""),
+    repository: String(notice.source ?? ""),
+    homepage: "",
+    licenseFilePath: null,
+    componentFile: String(notice.file ?? ""),
+  }));
+}
+
+// Fonts bundled for typed signatures (#725): one row per manifest entry, the
+// licence text is the file the foundry published.
+function gatherSignatureFontEntries() {
+  const dir = path.join(workspaceRoot, "src-tauri", "resources", "fonts", "signature");
+  const manifestPath = path.join(dir, "manifest.json");
+  if (!existsSync(manifestPath)) return [];
+  const fonts = readJsonFile(manifestPath);
+  return (Array.isArray(fonts) ? fonts : []).map((font) => ({
+    source: "bundled",
+    name: `font:${font.family}`,
     version: "",
     direct: false,
-    license: "manual-review-required",
-    repository: "",
+    license: "OFL-1.1",
+    repository: String(font.source ?? ""),
     homepage: "",
-    licenseFilePath: String(fileEntry.path ?? ""),
-    sha256: String(fileEntry.sha256 ?? ""),
-    sizeBytes: Number(fileEntry.sizeBytes ?? 0),
+    licenseFilePath: path.join("src-tauri", "resources", "fonts", "signature", String(font.licence)),
   }));
 }
 
@@ -575,7 +511,7 @@ function writeAttributionsMarkdown(entries) {
     (entry) => entry.source === "bundled" && entry.licenseFilePath,
   );
 
-  const modelEntries = entries.filter((entry) => entry.source === "model-asset");
+  const ocrEntries = entries.filter((entry) => entry.source === "ocr-component");
   const bundledNotices = bundledEntries
     .map((entry) => {
       const fullPath = path.resolve(workspaceRoot, entry.licenseFilePath);
@@ -593,16 +529,24 @@ ${content}
     })
     .join("\n\n");
 
-  const modelSection =
-    modelEntries.length === 0
-      ? "## OCR model assets\n\nNo local OCR model assets were found at generation time.\n"
-      : `## OCR model assets\n\n${modelEntries
+  const ocrSection =
+    ocrEntries.length === 0
+      ? ""
+      : `## OCR component (bundled)
+
+Shipped inside the application bundle, under resources/ocr, as a separate
+executable the app starts as its own process, together with its language data.
+Nothing is downloaded. Every file is checked against SHA-256 checksums
+compiled into the app when the build is made. Each licence text below is
+shipped with the component, at the path given.
+
+${ocrEntries
           .map(
             (entry) =>
-              `- ${entry.name} (${entry.licenseFilePath}) sha256=${entry.sha256 ?? "unknown"}`,
+              `- ${entry.name} ${entry.version} — ${entry.license} — ${entry.repository} — licence text: \`${entry.componentFile}\``,
           )
           .join("\n")}`;
-  const sections = [modelSection.trimEnd(), bundledNotices.trimEnd()]
+  const sections = [ocrSection.trimEnd(), bundledNotices.trimEnd()]
     .filter(Boolean)
     .join("\n\n");
 
@@ -610,7 +554,7 @@ ${content}
 
 Generator: \`scripts/generate-third-party.mjs\`
 
-This file stores bundled notice texts and model-asset references.
+This file stores bundled notice texts and the notices of the bundled OCR component.
 
 ${sections}
 `;
@@ -628,18 +572,12 @@ function writeComplianceReport(entries, summary) {
 }
 
 function main() {
-  const pythonEntries = gatherPythonEntries();
-  const normalizedPythonEntries =
-    pythonEntries.length > 0
-      ? pythonEntries
-      : gatherPythonRequirementEntries();
-
   const entries = enrichEntries([
     ...gatherNpmEntries(),
     ...gatherCargoEntries(),
-    ...normalizedPythonEntries,
     ...gatherBundledPdfiumEntries(),
-    ...gatherModelAssetEntries(),
+    ...gatherSignatureFontEntries(),
+    ...gatherOcrComponentEntries(),
   ]).sort((left, right) => {
     if (left.source === right.source) {
       return left.name.localeCompare(right.name);
@@ -662,4 +600,4 @@ function main() {
 // three files at import time turns reading one function into rewriting the
 // working tree — which is exactly what it did on every gate run between
 // d2993f7 and here.
-if (import.meta.url === `file://${process.argv[1]}`) main();
+if (isMainModule(import.meta.url)) main();

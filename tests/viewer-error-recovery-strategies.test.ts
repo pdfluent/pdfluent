@@ -63,34 +63,29 @@ describe('isRetryableError', () => {
   });
 });
 
-describe('getDocumentLoadRecovery', () => {
-  it('exports getDocumentLoadRecovery function', () => {
-    expect(source).toContain('export function getDocumentLoadRecovery(error: string)');
+// A failed open is explained by viewer/state/openError.ts from the backend's
+// code. The string-matching getDocumentLoadRecovery that sat here carried two
+// hard-coded Dutch hints ("Versleuteld bestand — voer het wachtwoord in") and
+// was imported by nothing; it is gone, and so is every literal description.
+describe('no hard-coded user text', () => {
+  it('has no getDocumentLoadRecovery left to drift from the open path', () => {
+    expect(source).not.toContain('getDocumentLoadRecovery');
   });
 
-  it('handles not found error with fallback', () => {
-    const fn = source.indexOf('export function getDocumentLoadRecovery');
-    const body = source.slice(fn, source.indexOf('\nexport function ', fn + 1));
-    expect(body).toContain('not found');
-    expect(body).toContain("strategy: 'fallback'");
+  it('takes every description from i18n', () => {
+    const literal = source.match(/description:\s*['"`]/g) ?? [];
+    expect(literal).toEqual([]);
   });
 
-  it('handles permission error', () => {
-    const fn = source.indexOf('export function getDocumentLoadRecovery');
-    const body = source.slice(fn, source.indexOf('\nexport function ', fn + 1));
-    expect(body).toContain('permission');
-  });
-
-  it('handles encrypted error', () => {
-    const fn = source.indexOf('export function getDocumentLoadRecovery');
-    const body = source.slice(fn, source.indexOf('\nexport function ', fn + 1));
-    expect(body).toContain('encrypted');
-  });
-
-  it('defaults to reset', () => {
-    const fn = source.indexOf('export function getDocumentLoadRecovery');
-    const body = source.slice(fn, source.indexOf('\nexport function ', fn + 1));
-    expect(body).toContain("strategy: 'reset'");
+  it('answers a retryable command failure in the active language', async () => {
+    const { default: i18n } = await import('../src/i18n');
+    const { getTauriInvokeRecovery } = await import('../src/viewer/recovery/errorRecoveryStrategies');
+    await i18n.changeLanguage('en');
+    const en = getTauriInvokeRecovery('render_page', 'network timeout');
+    expect(en.strategy).toBe('retry');
+    expect(en.description).toBe(i18n.t('errors.commandRetrying', { command: 'render_page' }));
+    expect(en.description).toContain('render_page');
+    expect(en.description).not.toMatch(/Tijdelijke|opnieuw/);
   });
 });
 

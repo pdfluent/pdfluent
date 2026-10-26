@@ -5,7 +5,7 @@
 
 /* =============================================================================
    LeftNavRail thumbnail cards
-   Token-driven hover + active states. Replaces hardcoded #2563eb borders.
+   Token-driven hover + active states. Replaces hardcoded blue borders.
    ============================================================================= */
 
 .leftrail-thumb {
@@ -29,14 +29,14 @@
 }
 
 .leftrail-thumb-active {
-  background: var(--accent-soft);
-  border-color: var(--accent);
+  background: var(--selection-fill);
+  border-color: var(--selection);
 }
 
 .leftrail-thumb:focus-visible {
   outline: none;
-  border-color: var(--accent);
-  box-shadow: 0 0 0 2px var(--accent-soft);
+  border-color: var(--focus-ring);
+  box-shadow: 0 0 0 2px var(--focus-halo);
 }
 
 /* When ModeToolbar is nested in ModeSwitcher's `.mode-contextual` slot

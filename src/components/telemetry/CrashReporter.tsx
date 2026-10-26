@@ -27,7 +27,7 @@
 // ---------------------------------------------------------------------------
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { invokeCommand as invoke } from '../../lib/commandBridge';
+import { invokeQuietly as invoke } from '../../lib/commandBridge';
 import {
   buildReport,
   getEnvironment,

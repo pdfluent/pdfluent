@@ -17,6 +17,7 @@ const viewerAppSource = [
   '../src/viewer/hooks/useFormFields.ts',
   '../src/viewer/hooks/useModeManager.ts',
   '../src/viewer/hooks/useDocumentLifecycle.ts',
+  '../src/viewer/state/saveFlow.ts',
   '../src/viewer/hooks/useCommands.ts',
   '../src/viewer/hooks/useDragDrop.ts',
   '../src/viewer/ViewerSidePanels.tsx',
@@ -37,7 +38,9 @@ const topBarSource = readFileSync(
 // Locate handleSaveAs body in ViewerApp for scoped assertions
 // ---------------------------------------------------------------------------
 
-const saveAsFnStart = viewerAppSource.indexOf('handleSaveAs = useCallback');
+// The dialog call itself lives in state/saveFlow.ts (behaviour-tested in
+// src/viewer/state/__tests__/saveFlow.test.ts); the hook wraps it.
+const saveAsFnStart = viewerAppSource.indexOf('handleSaveAsWithResult = useCallback');
 const saveAsFnEnd   = viewerAppSource.indexOf('}, [pageCount, clearDirty, addRecentFile]);', saveAsFnStart) + 42;
 const saveAsFnBody  = viewerAppSource.slice(saveAsFnStart, saveAsFnEnd);
 
@@ -61,7 +64,7 @@ describe('ViewerApp — save-as: handleSaveAs', () => {
   });
 
   it('guards on isTauri and pageCount', () => {
-    expect(saveAsFnBody).toContain('if (!isTauri || pageCount === 0) return');
+    expect(saveAsFnBody).toContain("if (!isTauri || pageCount === 0) return { status: 'cancelled' }");
   });
 
   it('opens the Tauri save dialog', () => {
@@ -72,13 +75,14 @@ describe('ViewerApp — save-as: handleSaveAs', () => {
   });
 
   it('returns early when user cancels the dialog (path is null/empty)', () => {
-    expect(saveAsFnBody).toContain('if (!path) return');
+    expect(viewerAppSource).toContain("if (!path) return { status: 'cancelled' }");
   });
 
   it('invokes save_pdf with the chosen path', () => {
     // Accept either the legacy two-step ('save_pdf', { path }) or the
     // unified one-step ('save_pdf_as_dialog') Tauri command flow.
-    expect(saveAsFnBody).toMatch(/invoke[^']*['"]save_pdf(?:_as_dialog)?['"]/);
+    expect(saveAsFnBody).toContain('saveAsWithDialog(invokeCommand');
+    expect(viewerAppSource).toMatch(/invoke[^']*['"]save_pdf(?:_as_dialog)?['"]/);
   });
 
   it('updates currentFilePath to the new path after success', () => {
@@ -209,10 +213,10 @@ describe('TopBar — save-as: button', () => {
     // delegates back through onSaveAs). The button itself only checks
     // hasDocument now — runtime check happens upstream. Verify the
     // upstream check is in viewerAppSource instead.
-    expect(viewerAppSource).toMatch(/isTauri\s*\?\s*handleSaveAs\s*:\s*handleBrowserSaveAs/);
+    expect(viewerAppSource).toMatch(/isTauri\s*\?\s*handleSaveAsOrThrow\s*:\s*handleBrowserSaveAs/);
   });
 
-  it('button shows "Opslaan als…" label', () => {
+  it('button shows "Save as…" label', () => {
     expect(topBarSource).toContain("t('common.saveAs'");
   });
 
@@ -235,7 +239,7 @@ describe('ViewerApp — save-as: no regressions', () => {
     expect(topBarSource).toContain("e.key === 's'");
   });
 
-  it('Opslaan button still present in TopBar', () => {
+  it('Save button still present in TopBar', () => {
     expect(topBarSource).toContain("t('common.save'");
     expect(topBarSource).toContain('canSave');
   });

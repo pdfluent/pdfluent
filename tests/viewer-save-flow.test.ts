@@ -176,7 +176,7 @@ describe('TopBar — save button', () => {
     expect(topBarSource).toContain('disabled={!canSave}');
   });
 
-  it('shows Opslaan (⌘S) title when saveable', () => {
+  it('shows Save (⌘S) title when saveable', () => {
     expect(topBarSource).toContain("t('topbar.saveTooltip'");
   });
 });

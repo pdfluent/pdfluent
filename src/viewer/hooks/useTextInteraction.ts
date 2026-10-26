@@ -6,6 +6,7 @@
 // See https://pdfluent.com/license for terms.
 
 import { useState, useCallback, useMemo, useEffect, useRef, type Dispatch, type SetStateAction } from 'react';
+import { refusalMessage } from '../text/typeface';
 import type { TextSpan } from '../../core/document';
 import type { ViewerMode } from '../types';
 import type { AnnotationTool } from '../components/ModeToolbar';
@@ -13,7 +14,8 @@ import type { DocumentEvent } from '../state/documentEvents';
 import { makeDocumentEvent, appendEvent } from '../state/documentEvents';
 import type { AppError } from '../state/errorCenter';
 import { makeTextMutationError, appendError } from '../state/errorCenter';
-import { groupDigitalTextSpans } from '../text/textGrouping';
+import { groupDigitalTextSpans, type EngineTextBlock } from '../text/textGrouping';
+import { loadEngineTextBlocks } from '../text/engineTextBlocks';
 import type { PageTextStructure, TextParagraphTarget, TextSpanTarget } from '../text/textInteractionModel';
 import { isTextInteractionActive } from '../text/textInteractionRules';
 import { getEditability, extractText, extractRawText } from '../text/textEditability';
@@ -28,6 +30,8 @@ import { toEditorTextSpan } from '../text/editorTextSpan';
 import { extractFirstExternalLink } from '../text/linkDetection';
 import { abandonCommitIfUnarmed, beginCommit, noteMutationAck } from '../performance/perfMarks';
 import { announceUsageRightsInvalidated } from '../state/fallbackNotices';
+import { withEditGroup } from '../state/documentHistory';
+import { isTauriRuntime } from '../../lib/tauri-detection';
 
 function hexToRgb(hex: string): [number, number, number] {
   const cleanHex = hex.replace('#', '');
@@ -223,6 +227,8 @@ export function useTextInteraction(
   const [draftColor, setDraftColor] = useState<[number, number, number] | null>(null);
   const [draftBold, setDraftBold] = useState<boolean | null>(null);
   const [draftItalic, setDraftItalic] = useState<boolean | null>(null);
+  // Installed typeface chosen in the edit panel (SystemFontFace.id); null keeps the run's own font.
+  const [draftFontId, setDraftFontId] = useState<string | null>(null);
   const isCommittingRef = useRef(false);
 
   // Format state — tracks bold/italic/underline/strikethrough in the active contenteditable editor
@@ -245,11 +251,23 @@ export function useTextInteraction(
   // Ref forwarded to TextInlineEditor so the format bar can call execCommand on the element
   const editorDivRef = useRef<HTMLDivElement | null>(null);
 
+  // The extraction engine's blocks for this page (#640). Paragraphs are
+  // grouped inside them; until they arrive (or outside the desktop app) the
+  // heuristics group alone, as before.
+  const [engineBlocks, setEngineBlocks] = useState<ReadonlyArray<EngineTextBlock> | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    setEngineBlocks(null);
+    if (textSpans.length === 0 || !isTauriRuntime()) return;
+    void loadEngineTextBlocks(pageIndex).then(blocks => { if (!cancelled) setEngineBlocks(blocks); });
+    return () => { cancelled = true; };
+  }, [textSpans, pageIndex]);
+
   // Grouped text structure for the current page — drives TextInteractionOverlay.
   const pageTextStructure = useMemo((): PageTextStructure | null => {
     if (textSpans.length === 0) return null;
-    return groupDigitalTextSpans(textSpans, pageIndex);
-  }, [textSpans, pageIndex]);
+    return groupDigitalTextSpans(textSpans, pageIndex, engineBlocks ?? undefined);
+  }, [textSpans, pageIndex, engineBlocks]);
 
   // Text interaction level driven by mode + active tool (Batch 5 rules).
   const textInteractionActive = isTextInteractionActive(mode, activeAnnotationTool);
@@ -286,6 +304,7 @@ export function useTextInteraction(
     setDraftColor(null);
     setDraftBold(null);
     setDraftItalic(null);
+    setDraftFontId(null);
     draftRangeFormatEditsRef.current = [];
   }, [mode, activeAnnotationTool, onExternalLinkClick]);
 
@@ -312,6 +331,7 @@ export function useTextInteraction(
       setDraftColor(null);
       setDraftBold(null);
       setDraftItalic(null);
+      setDraftFontId(null);
       draftRangeFormatEditsRef.current = [];
       const unsupported = getUnsupportedMessage(mutationSupport);
       setAppErrors(prev => appendError(prev, makeTextMutationError(unsupported.explanation)));
@@ -327,9 +347,10 @@ export function useTextInteraction(
       setDraftColor(null);
       setDraftBold(null);
       setDraftItalic(null);
+      setDraftFontId(null);
       draftRangeFormatEditsRef.current = [];
       setAppErrors(prev => appendError(prev, makeTextMutationError(
-        'Directe tekstbewerking is alleen beschikbaar in de desktop-app met de native parser-backed PDF-writer.'
+        'Direct text editing is only available in the desktop app with the native parser-backed PDF writer.'
       )));
       return;
     }
@@ -362,7 +383,7 @@ export function useTextInteraction(
     const el = editorDivRef.current;
     if (!el) return;
     if (!isSupportedFormatCommand(command)) {
-      setAppErrors(prev => appendError(prev, makeTextMutationError('Deze opmaakoptie kan in deze versie niet betrouwbaar in de PDF worden opgeslagen.')));
+      setAppErrors(prev => appendError(prev, makeTextMutationError('This formatting option cannot be saved reliably to the PDF in this version.')));
       return;
     }
     const selectedOffsets = isRangeFormatCommand(command) ? getEditorSelectionOffsets(el) : null;
@@ -489,7 +510,9 @@ export function useTextInteraction(
     const boldChanged = !hasRangeFormatEdits && draftBold !== null && originalBold !== null && draftBold !== originalBold;
     const italicChanged = !hasRangeFormatEdits && draftItalic !== null && originalItalic !== null && draftItalic !== originalItalic;
 
-    const anyChanged = textChanged || fontSizeChanged || colorChanged || boldChanged || italicChanged || hasRangeFormatEdits;
+    const fontChanged = draftFontId !== null;
+
+    const anyChanged = textChanged || fontSizeChanged || colorChanged || boldChanged || italicChanged || fontChanged || hasRangeFormatEdits;
 
     if (!anyChanged) {
       setEditingTextTargetId(null);
@@ -506,6 +529,7 @@ export function useTextInteraction(
       !colorChanged &&
       !boldChanged &&
       !italicChanged &&
+      !fontChanged &&
       selectedTextTarget.source === 'digital';
 
     if (!mutationSupport.writable && !onlyRangeFormatChanges) {
@@ -545,6 +569,9 @@ export function useTextInteraction(
           pageIndex,
           originalText: currentTextKey,
           replacementText: committedText,
+          paragraphLines: selectedTextTarget.lines.length > 1
+            ? selectedTextTarget.lines.map(l => ({ text: l.spans.map(s => s.rawText ?? s.text).join(' '), rect: l.rect }))
+            : undefined,
           target: firstEditorSpan ? {
             rect: selectedTextTarget.rect,
             fontSize: firstEditorSpan.fontSize,
@@ -563,7 +590,7 @@ export function useTextInteraction(
           const occurrence = count > 1
             ? ` (${(result.value.occurrenceIndex ?? 0) + 1}/${count})`
             : '';
-          logMessages.push(`Tekst bewerkt: "${currentTextKey}" → "${committedText}"${occurrence}`);
+          logMessages.push(`Text edited: "${currentTextKey}" → "${committedText}"${occurrence}`);
           // A replacement written in a stand-in font is a change to how the
           // page looks. It succeeded, so it is not an error -- but it is not
           // nothing either, and silence here is what #413 removed everywhere else.
@@ -659,7 +686,7 @@ export function useTextInteraction(
               mutationSuccess = true;
               logMessages.push(`Opmaak aangepast voor selectie`);
             } else {
-              const reason = !result.success ? result.error.message : (result.value.reason ?? 'Formattering kon niet worden toegepast.');
+              const reason = !result.success ? result.error.message : (result.value.reason ?? 'Formatting could not be applied.');
               setAppErrors(prev => appendError(prev, makeTextMutationError(reason)));
             }
           }
@@ -687,7 +714,7 @@ export function useTextInteraction(
         if (result.success && result.value.formatted) {
           mutationSuccess = true;
         } else {
-          const reason = !result.success ? result.error.message : (result.value.reason ?? 'Formattering kon niet worden toegepast.');
+          const reason = !result.success ? result.error.message : (result.value.reason ?? 'Formatting could not be applied.');
           setAppErrors(prev => appendError(prev, makeTextMutationError(reason)));
         }
       }
@@ -713,8 +740,30 @@ export function useTextInteraction(
         if (result.success && result.value.styled) {
           mutationSuccess = true;
         } else {
-          const reason = !result.success ? result.error.message : (result.value.reason ?? 'Stijl kon niet worden toegepast.');
+          const reason = !result.success ? result.error.message : (result.value.reason ?? 'The style could not be applied.');
           setAppErrors(prev => appendError(prev, makeTextMutationError(reason)));
+        }
+      }
+
+      // 5. Typeface (an installed font, embedded as a subset). Last: the
+      // earlier steps find the run by its text and its own font.
+      if (fontChanged && draftFontId) {
+        const result = await mutationEngine.setTextRunFont({
+          pageIndex,
+          originalText: currentTextKey,
+          fontId: draftFontId,
+        });
+        if (result.success && result.value.applied) {
+          mutationSuccess = true;
+          logMessages.push(`Font changed: ${draftFontId}`);
+        } else {
+          const message = !result.success
+            ? result.error.message
+            : (() => {
+                const m = result.value.refusal ? refusalMessage(result.value.refusal) : null;
+                return m ? i18n.t(m.key, m.params) : i18n.t('edit.typeface.refusedUnusable', { family: '' });
+              })();
+          setAppErrors(prev => appendError(prev, makeTextMutationError(message)));
         }
       }
 
@@ -756,11 +805,19 @@ export function useTextInteraction(
     draftColor,
     draftBold,
     draftItalic,
+    draftFontId,
     onDocumentMutated,
     authorName,
     setDocumentEventLog,
     setAppErrors,
   ]);
+
+  // One commit is a replacement plus a size/colour change plus a weight
+  // change; the user did one thing, so it is one undo step (J-85).
+  const handleGroupedDraftCommit = useCallback(async (committedText: string) => {
+    if (!isTauriRuntime()) return handleDraftCommit(committedText);
+    return withEditGroup('edit-text', () => handleDraftCommit(committedText));
+  }, [handleDraftCommit]);
 
   // Track bold/italic/underline state while the editor is active
   useEffect(() => {
@@ -783,13 +840,16 @@ export function useTextInteraction(
     selectedTextTargetId,
     selectedTextTarget,
     editingTextTargetId,
+    draftFontSize,
+    draftFontId,
+    setDraftFontId,
     textDraft,
     setTextDraft,
     handleTextTargetSelect,
     handleEditEntry,
     handleTextContextAction,
     handleDraftCancel,
-    handleDraftCommit,
+    handleDraftCommit: handleGroupedDraftCommit,
     pageTextStructure,
     textInteractionActive,
     textEditMaxLength,

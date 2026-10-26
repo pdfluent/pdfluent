@@ -74,27 +74,27 @@ describe('documentEvents — page_mutated type', () => {
   });
 
   it('makeDocumentEvent constructs a page_mutated event with correct type', () => {
-    const event = makeDocumentEvent('page_mutated', 'jan', 0, 'p0:s0', 'Tekst bewerkt');
+    const event = makeDocumentEvent('page_mutated', 'jan', 0, 'p0:s0', 'Text edited');
     expect(event.type).toBe('page_mutated');
   });
 
   it('makeDocumentEvent page_mutated event has id', () => {
-    const event = makeDocumentEvent('page_mutated', 'jan', 0, 'p0:s0', 'Tekst bewerkt');
+    const event = makeDocumentEvent('page_mutated', 'jan', 0, 'p0:s0', 'Text edited');
     expect(typeof event.id).toBe('string');
     expect(event.id.length).toBeGreaterThan(0);
   });
 
   it('makeDocumentEvent page_mutated event has timestamp', () => {
-    const event = makeDocumentEvent('page_mutated', 'jan', 0, 'p0:s0', 'Tekst bewerkt');
+    const event = makeDocumentEvent('page_mutated', 'jan', 0, 'p0:s0', 'Text edited');
     expect(event.timestamp instanceof Date).toBe(true);
   });
 
   it('makeDocumentEvent page_mutated stores page, user, objectId, description', () => {
-    const event = makeDocumentEvent('page_mutated', 'jan', 2, 'p2:s0', 'Tekst bewerkt: "oud" → "nieuw"');
+    const event = makeDocumentEvent('page_mutated', 'jan', 2, 'p2:s0', 'Text edited: "old" → "new"');
     expect(event.page).toBe(2);
     expect(event.user).toBe('jan');
     expect(event.objectId).toBe('p2:s0');
-    expect(event.description).toBe('Tekst bewerkt: "oud" → "nieuw"');
+    expect(event.description).toBe('Text edited: "old" → "new"');
   });
 });
 
@@ -104,7 +104,7 @@ describe('documentEvents — page_mutated type', () => {
 
 describe('event log — page_mutated append', () => {
   it('appendEvent adds page_mutated to the log', () => {
-    const event = makeDocumentEvent('page_mutated', 'jan', 0, 'p0:s0', 'Tekst bewerkt');
+    const event = makeDocumentEvent('page_mutated', 'jan', 0, 'p0:s0', 'Text edited');
     const log = appendEvent([], event);
     expect(log).toHaveLength(1);
     expect(log[0]!.type).toBe('page_mutated');
@@ -112,14 +112,14 @@ describe('event log — page_mutated append', () => {
 
   it('appendEvent preserves previous events when adding page_mutated', () => {
     const other = makeDocumentEvent('annotation_created', 'jan', 0, 'ann0', 'Comment');
-    const edit = makeDocumentEvent('page_mutated', 'jan', 0, 'p0:s0', 'Tekst bewerkt');
+    const edit = makeDocumentEvent('page_mutated', 'jan', 0, 'p0:s0', 'Text edited');
     const log = appendEvent(appendEvent([], other), edit);
     expect(log).toHaveLength(2);
     expect(log[1]!.type).toBe('page_mutated');
   });
 
   it('appended page_mutated event is the same object', () => {
-    const event = makeDocumentEvent('page_mutated', 'jan', 0, 'p0:s0', 'Tekst bewerkt');
+    const event = makeDocumentEvent('page_mutated', 'jan', 0, 'p0:s0', 'Text edited');
     const log = appendEvent([], event);
     expect(log[0]).toBe(event);
   });
@@ -131,7 +131,7 @@ describe('event log — page_mutated append', () => {
 
 describe('buildAuditReportData — page_mutated in activity timeline', () => {
   it('includes page_mutated events in activityTimeline', () => {
-    const event = makeDocumentEvent('page_mutated', 'jan', 0, 'p0:s0', 'Tekst bewerkt');
+    const event = makeDocumentEvent('page_mutated', 'jan', 0, 'p0:s0', 'Text edited');
     const data = buildAuditReportData('Test.pdf', [], [event], []);
     expect(data.activityTimeline).toHaveLength(1);
     expect(data.activityTimeline[0]!.type).toBe('page_mutated');
@@ -148,7 +148,7 @@ describe('buildAuditReportData — page_mutated in activity timeline', () => {
   });
 
   it('page_mutated events contribute to reviewerActions', () => {
-    const event = makeDocumentEvent('page_mutated', 'jan', 0, 'p0:s0', 'Tekst bewerkt');
+    const event = makeDocumentEvent('page_mutated', 'jan', 0, 'p0:s0', 'Text edited');
     const data = buildAuditReportData('Test.pdf', [], [event], []);
     const janActions = data.reviewerActions.find(r => r.reviewer === 'jan');
     expect(janActions).toBeDefined();
@@ -178,21 +178,21 @@ describe('buildAuditReportData — page_mutated in activity timeline', () => {
 
 describe('buildAuditReportMarkdown — page_mutated in output', () => {
   it('renders page_mutated in the activity section', () => {
-    const event = makeDocumentEvent('page_mutated', 'jan', 0, 'p0:s0', 'Tekst bewerkt');
+    const event = makeDocumentEvent('page_mutated', 'jan', 0, 'p0:s0', 'Text edited');
     const data = buildAuditReportData('Test.pdf', [], [event], []);
     const md = buildAuditReportMarkdown(data);
     expect(md).toContain('page_mutated');
   });
 
   it('renders reviewer name for page_mutated event', () => {
-    const event = makeDocumentEvent('page_mutated', 'jan', 0, 'p0:s0', 'Tekst bewerkt');
+    const event = makeDocumentEvent('page_mutated', 'jan', 0, 'p0:s0', 'Text edited');
     const data = buildAuditReportData('Test.pdf', [], [event], []);
     const md = buildAuditReportMarkdown(data);
     expect(md).toContain('jan');
   });
 
   it('renders page number (1-based) for page_mutated event', () => {
-    const event = makeDocumentEvent('page_mutated', 'jan', 2, 'p2:s0', 'Tekst bewerkt');
+    const event = makeDocumentEvent('page_mutated', 'jan', 2, 'p2:s0', 'Text edited');
     const data = buildAuditReportData('Test.pdf', [], [event], []);
     const md = buildAuditReportMarkdown(data);
     expect(md).toContain('p.3'); // 0-based page 2 → 1-based p.3
@@ -241,10 +241,7 @@ describe('ViewerApp — save pipeline wiring after text mutation', () => {
     // v2: handleSaveAs uses save_pdf_as_dialog (combined dialog+save).
     // The clearDirty call may be 200+ chars after the invoke call due
     // to expanded error handling.
-    const saveAsIdx = Math.max(
-      viewerAppSrc.indexOf("'save_pdf'"),
-      viewerAppSrc.indexOf("'save_pdf_as_dialog'"),
-    );
+    const saveAsIdx = viewerAppSrc.indexOf("'save_pdf'");
     const afterSave = viewerAppSrc.slice(saveAsIdx, saveAsIdx + 800);
     expect(afterSave).toContain('clearDirty');
   });
@@ -259,16 +256,16 @@ describe('ViewerApp — save pipeline wiring after text mutation', () => {
   });
 
   it('handleSaveAs opens a dialog and invokes save_pdf', () => {
-    const idx = viewerAppSrc.indexOf('const handleSaveAs');
+    const idx = viewerAppSrc.indexOf('const handleSaveAsWithResult');
     const block = viewerAppSrc.slice(idx, idx + 1200);
-    // v2: handleSaveAs uses the unified save_pdf_as_dialog Tauri command
-    // (instead of plugin-dialog + save_pdf). Accept either pattern.
-    expect(block).toMatch(/['"]save_pdf(?:_as_dialog)?['"]/);
+    // The dialog call is state/saveFlow.ts `saveAsWithDialog`, which issues
+    // the unified save_pdf_as_dialog command and is behaviour-tested there.
+    expect(block).toContain('saveAsWithDialog(invokeCommand');
     expect(block).toContain('clearDirty');
   });
 
   it('description of text edit event includes original and replacement text', () => {
-    // ViewerApp builds: `Tekst bewerkt: "${originalText}" → "${committedText}"`
-    expect(viewerAppSrc).toContain('Tekst bewerkt');
+    // ViewerApp builds: `Text edited: "${originalText}" → "${committedText}"`
+    expect(viewerAppSrc).toContain('Text edited');
   });
 });

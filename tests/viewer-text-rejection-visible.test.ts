@@ -85,9 +85,11 @@ describe('the rejection reaches the screen', () => {
   });
 
   it('the shell renders it with the engine code beside the explanation', () => {
-    expect(viewerApp).toContain('data-testid="text-edit-rejection"');
-    expect(viewerApp).toContain('data-testid="text-edit-rejection-code"');
-    expect(viewerApp).toContain('data-testid="text-edit-rejection-dismiss"');
-    expect(viewerApp).toContain('textMutationRejection.explanation');
+    const notices = readFileSync(new URL('../src/viewer/components/Notices.tsx', import.meta.url), 'utf8');
+    expect(viewerApp).toContain('<TextEditRejectionNotice');
+    expect(notices).toContain('data-testid="text-edit-rejection"');
+    expect(notices).toContain('data-testid="text-edit-rejection-code"');
+    expect(notices).toContain('data-testid="text-edit-rejection-dismiss"');
+    expect(notices).toContain('rejection.explanation');
   });
 });

@@ -7,6 +7,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useFocusTrap } from '../hooks/useFocusTrap';
 
 // ---------------------------------------------------------------------------
 // Props
@@ -27,6 +28,9 @@ export function GoToPageDialog({ isOpen, pageCount, onNavigate, onClose }: GoToP
   const { t } = useTranslation();
   const [inputValue, setInputValue] = useState('');
   const inputRef = useRef<HTMLInputElement | null>(null);
+  // Keyboard focus stays inside the open dialog (WAI-ARIA dialog pattern).
+  const dialogRef = useRef<HTMLDivElement | null>(null);
+  useFocusTrap(dialogRef, isOpen);
 
   // Stable ref so the Escape listener always calls the latest onClose
   const onCloseRef = useRef(onClose);
@@ -70,7 +74,9 @@ export function GoToPageDialog({ isOpen, pageCount, onNavigate, onClose }: GoToP
 
       {/* Dialog */}
       <div
+        ref={dialogRef}
         role="dialog"
+        aria-modal="true"
         aria-labelledby="goto-page-title"
         data-testid="goto-page-dialog"
         className="fixed left-1/2 top-[30vh] -translate-x-1/2 w-full max-w-xs bg-background border border-border rounded-xl shadow-2xl z-50 p-4"

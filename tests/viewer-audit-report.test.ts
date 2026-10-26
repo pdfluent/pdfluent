@@ -140,7 +140,7 @@ describe('buildAuditReportMarkdown', () => {
   });
 
   it('includes metadata changes section', () => {
-    expect(auditSource).toContain('## Metadata wijzigingen');
+    expect(auditSource).toContain('## Metadata changes');
   });
 });
 

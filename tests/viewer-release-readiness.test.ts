@@ -23,6 +23,7 @@ const viewerAppSource = [
   '../src/viewer/hooks/useAnnotations.ts',
   '../src/viewer/hooks/useTextInteraction.ts',
   '../src/viewer/hooks/useKeyboardShortcuts.ts',
+  '../src/viewer/hooks/keyTargets.ts',
   '../src/viewer/ViewerApp.tsx',
   '../src/viewer/WelcomeSection.tsx',
 ].map(p => readFileSync(new URL(p, import.meta.url), 'utf8')).join('\n\n');
@@ -84,7 +85,7 @@ describe('Release Readiness — keyboard shortcut completeness', () => {
 
   it('⌘P / Ctrl+P triggers print', () => {
     expect(viewerAppSource).toContain("e.key !== 'p'");
-    expect(viewerAppSource).toContain('window.print()');
+    expect(viewerAppSource).toContain('void printDocument()');
   });
 
   it('F11 / ⌘⇧F triggers fullscreen', () => {

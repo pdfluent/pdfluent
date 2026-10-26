@@ -5,7 +5,7 @@
 // of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect, type Page } from './helpers/guarded-test';
 import { readFileSync } from 'node:fs';
 import { tid } from './helpers/selectors';
 

@@ -146,3 +146,20 @@ describe("an application that writes no log", () => {
     expect(doc.reason).toMatch(/no log|not (opened|tried)/i);
   });
 });
+
+describe("the Windows driver records every launch's quit", () => {
+  const ps1 = readFileSync(path.join(REPO_ROOT, "scripts", "quality", "suite", "drivers", "windows.ps1"), "utf8");
+
+  // The judge attributes a missing clean_quit from this record. A launch path
+  // that skips it is a launch the judge can only count, which is how
+  // "17 start lines against 16 clean_quit lines" named nothing.
+  it("writes a session_launches line on the quit path and on the no-handle path", () => {
+    expect(ps1).toContain('"session_launches.out"');
+    expect(ps1.match(/Add-Launch \$doc /g)?.length, "both exit paths of a launch must record").toBe(2);
+  });
+
+  it("bounds the wait for the quit and never waits without a limit", () => {
+    expect(ps1).toContain("$QuitBudgetMs = 15000");
+    expect(ps1).toMatch(/WaitForExit\(\[Math\]::Max\(1,/);
+  });
+});

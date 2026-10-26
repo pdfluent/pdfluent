@@ -75,8 +75,8 @@ describe('TextInlineEditor masking', () => {
     expect(inlineEditorSrc).toContain("outline: 'none'");
   });
 
-  it('uses blue caret color', () => {
-    expect(inlineEditorSrc).toContain("caretColor: 'rgb(37, 99, 235)'");
+  it('uses the selection-blue caret token (a page is white paper)', () => {
+    expect(inlineEditorSrc).toContain("caretColor: 'var(--caret-on-page)'");
   });
 
   it('accepts cursorAtPoint prop', () => {
@@ -150,8 +150,8 @@ describe('TextInteractionOverlay editingTargetId', () => {
     expect(overlaysSrc).toContain('!isEditing');
   });
 
-  it('ResizeHandles uses blue stroke color matching selected chrome', () => {
-    expect(overlaysSrc).toContain('rgb(37, 99, 235)');
+  it('ResizeHandles uses the selection token matching selected chrome', () => {
+    expect(overlaysSrc).toContain('var(--selection-on-page)');
   });
 
   it('ResizeHandles renders 8 handles', () => {

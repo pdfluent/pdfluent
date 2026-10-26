@@ -123,7 +123,7 @@ describe('Guardrail — prevent snapshot comparison without snapshots', () => {
 
   it('formatSnapshotDiffMarkdown shows no-diff message when hasDifferences is false', () => {
     expect(compareSource).toContain('!diff.hasDifferences');
-    expect(compareSource).toContain('Geen verschillen');
+    expect(compareSource).toContain('No differences found');
   });
 });
 

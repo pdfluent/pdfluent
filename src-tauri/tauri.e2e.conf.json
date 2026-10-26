@@ -1,0 +1,41 @@
+{
+  "identifier": "com.pdfluent.app.e2e",
+  "bundle": {
+    "createUpdaterArtifacts": false,
+    "macOS": {
+      "signingIdentity": "-"
+    },
+    "windows": {
+      "signCommand": null
+    }
+  },
+  "app": {
+    "security": {
+      "capabilities": [
+        "main",
+        {
+          "identifier": "updater",
+          "description": "Self-updater + relaunch. Defined INLINE (not a capabilities/ file) so the Mac App Store build can drop it via a config override (app.security.capabilities = [\"main\"]) without the build script validating the updater permission that is compiled out there.",
+          "windows": [
+            "main",
+            "main-recovery"
+          ],
+          "permissions": [
+            "updater:default",
+            "process:default"
+          ]
+        },
+        {
+          "identifier": "e2e-window",
+          "description": "The e2e build only: the small-window journey (J-96) resizes its own window through the window plugin.",
+          "windows": [
+            "main"
+          ],
+          "permissions": [
+            "core:window:allow-set-size"
+          ]
+        }
+      ]
+    }
+  }
+}

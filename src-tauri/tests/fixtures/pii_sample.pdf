@@ -1,0 +1,54 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R 5 0 R] /Count 2 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 7 0 R >> >> >>
+endobj
+4 0 obj
+<< /Length 484 >>
+stream
+BT /F1 12 Tf 72 720 Td (Customer record) Tj ET
+BT /F1 12 Tf 72 696 Td (Account holder IBAN: NL91 ABNA 0417 1643 00) Tj ET
+BT /F1 12 Tf 72 672 Td (Mail: jan.jansen@example.com) Tj ET
+BT /F1 12 Tf 72 648 Td (Mobile: +31 6 12345678) Tj ET
+BT /F1 12 Tf 72 624 Td (Office: 020 1234567) Tj ET
+BT /F1 12 Tf 72 600 Td (Checksum typo: NL92 ABNA 0417 1643 00) Tj ET
+BT /F1 12 Tf 72 576 Td (Old account number: 0417164300) Tj ET
+BT /F1 12 Tf 72 552 Td (Invoice 2024-0042 dated 18-10-2024) Tj ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 6 0 R /Resources << /Font << /F1 7 0 R >> >> >>
+endobj
+6 0 obj
+<< /Length 308 >>
+stream
+BT /F1 12 Tf 72 720 Td (Reminder) Tj ET
+BT /F1 12 Tf 72 696 Td (Reminder sent to jan.jansen@example.com) Tj ET
+BT /F1 12 Tf 72 672 Td (Support: +44 20 7946 0958) Tj ET
+BT /F1 12 Tf 72 648 Td (Reference: DE89 3704 0044 0532 0130 00) Tj ET
+BT /F1 12 Tf 72 624 Td (Version 1.2.3 ratio 3:1 total 1.234,56) Tj ET
+endstream
+endobj
+7 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>
+endobj
+xref
+0 8
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000121 00000 n 
+0000000247 00000 n 
+0000000781 00000 n 
+0000000907 00000 n 
+0000001265 00000 n 
+trailer
+<< /Size 8 /Root 1 0 R >>
+startxref
+1362
+%%EOF

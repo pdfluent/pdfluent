@@ -182,7 +182,7 @@ export function ObjectSelectionOverlay({
               pointerEvents: 'all',
               cursor: objectCursor(obj),
               outline: isSelected
-                ? '2px solid #2563eb'
+                ? '2px solid var(--selection-on-page)'
                 : isHovered
                   ? '1px dashed #94a3b8'
                   : 'none',
@@ -207,7 +207,7 @@ export function ObjectSelectionOverlay({
                     width: HANDLE_SIZE,
                     height: HANDLE_SIZE,
                     background: '#ffffff',
-                    border: '1.5px solid #2563eb',
+                    border: '1.5px solid var(--selection-on-page)',
                     borderRadius: 2,
                     cursor: HANDLE_CURSORS[handle],
                     boxSizing: 'border-box',
@@ -229,7 +229,7 @@ export function ObjectSelectionOverlay({
                   top: -20,
                   left: 0,
                   fontSize: 10,
-                  background: '#2563eb',
+                  background: 'var(--selection-on-page)',
                   color: '#fff',
                   padding: '1px 4px',
                   borderRadius: 3,

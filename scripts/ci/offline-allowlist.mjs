@@ -59,7 +59,7 @@
 // finding never changes the status: it is a line to read, not a verdict.
 
 import { readFileSync, readdirSync, statSync, existsSync } from 'node:fs';
-import { resolve, dirname, join, relative } from 'node:path';
+import nodePath, { resolve, dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { isMainModule } from '../lib/main-module.mjs';
 
@@ -80,12 +80,20 @@ export const ALLOWED = [
   {
     origin: 'https://report.pdfluent.com',
     kind: 'endpoint',
-    why: 'Crash and feedback report POST. Opt-in; both consent switches default off.',
-  },
-  {
-    origin: 'https://feedback.pdfluent.com',
-    kind: 'endpoint',
-    why: 'Feedback page, opened in the browser through the host-restricted open_external_url command.',
+    why: 'Crash and feedback reports. Both are opt-in exceptions to "no request": nothing is sent without a deliberate act of the user.',
+    // An endpoint host with `paths` may only be named with one of them. A new
+    // path on a host already allowed is a new kind of request, and it has to
+    // be declared here, with what makes it opt-in, like a new host would.
+    paths: [
+      {
+        path: '/v1/report',
+        optIn: 'Crash report. Sent only with crash reporting switched on in Settings (default off) and after the review dialog. DELETE /v1/report/<id> removes a sent report and goes out only when the user presses the delete button in Settings (src/lib/telemetry/report.ts).',
+      },
+      {
+        path: '/v1/feedback',
+        optIn: 'Help -> Help us improve PDFluent. Sent only when the user presses Send; the document only after a second confirmation (src/lib/feedback/feedback.ts).',
+      },
+    ],
   },
   {
     origin: 'http://www.w3.org',
@@ -121,6 +129,11 @@ export const ALLOWED = [
     origin: 'https://apps.microsoft.com',
     kind: 'inert',
     why: 'The Store listing, printed in the About box so a user can say which build they have. Never opened: open_external_url refuses every host but pdfluent.com.',
+  },
+  {
+    origin: 'http://asset.localhost',
+    kind: 'inert',
+    why: "Tauri's own asset protocol as WebView2 addresses it on Windows: the print window loads the local print copy from it. Served by the app itself; no request leaves the machine.",
   },
 ];
 
@@ -185,6 +198,29 @@ export function extractOrigins(text) {
   return [...found].sort();
 }
 
+// Scheme + host + path for every URL literal, so a declared host cannot carry
+// an undeclared path. Same host rule as URL_RE.
+const URL_WITH_PATH_RE = /\bhttps?:\/\/[A-Za-z0-9](?:[A-Za-z0-9.-]*[A-Za-z0-9])?(?::\d+)?(?:\/[A-Za-z0-9._~\/-]*)?/g;
+
+/**
+ * URL literals in `text` on an endpoint that declares `paths`, whose path is
+ * not one of them (or below one). A bare origin is fine: it names the host,
+ * not a request.
+ */
+export function undeclaredPaths(text) {
+  const out = new Set();
+  for (const match of String(text).matchAll(URL_WITH_PATH_RE)) {
+    const url = match[0];
+    const entry = ALLOWED.find((e) => e.kind === 'endpoint' && e.paths && (url === e.origin || url.startsWith(`${e.origin}/`)));
+    if (!entry) continue;
+    const path = url.slice(entry.origin.length);
+    if (path === '' || path === '/') continue;
+    const ok = entry.paths.some(({ path: p }) => path === p || path.startsWith(`${p}/`));
+    if (!ok) out.add(url);
+  }
+  return [...out].sort();
+}
+
 /** The origins from `list` that nothing declared. */
 export function violations(list) {
   return [...new Set(list)].filter((origin) => !ALLOWED_ORIGINS.has(origin)).sort();
@@ -236,8 +272,11 @@ export function checkConnectSrc(csp) {
   if (!directive) return ["connect-src is missing from the CSP"];
 
   const local = /^(?:'self'|ipc:|(?:https?|ws):\/\/(?:localhost|127\.0\.0\.1|ipc\.localhost|asset\.localhost)(?::\d+)?)$/;
+  // An opt-in endpoint is reached by the backend after the user said yes,
+  // never by the webview: listing it in connect-src would let any script in
+  // the frontend reach it without that yes.
   const reachable = new Set(
-    ALLOWED.filter((entry) => entry.kind === 'endpoint').map((entry) => entry.origin),
+    ALLOWED.filter((entry) => entry.kind === 'endpoint' && !entry.optIn).map((entry) => entry.origin),
   );
   return directive
     .slice('connect-src '.length)
@@ -248,27 +287,62 @@ export function checkConnectSrc(csp) {
 }
 
 /**
+ * Exceptions to "the app compiles in no HTTP client of its own": an optional
+ * dependency that only its named feature enables, with the reason. There are
+ * none. The one there was, the OCR component download, is gone: OCR is bundled
+ * in every build (owner decision 19-10). Adding a row here is a product
+ * decision, like adding an origin.
+ */
+export const HTTP_CLIENT_EXCEPTIONS = [];
+
+/**
  * HTTP client crates declared as a direct dependency of the desktop app. The
- * updater plugin brings its own transitively and that is the one exception the
- * product makes; a direct dependency here would be a new way out of the
- * machine, added without anyone having to write the word "http".
+ * updater plugin brings its own transitively; a direct dependency here would
+ * be a new way out of the machine, added without anyone having to write the
+ * word "http". The single exception is HTTP_CLIENT_EXCEPTIONS: an optional
+ * dependency that only its named feature enables.
  */
 export function checkNoHttpClient(cargoToml) {
   const found = [];
+  const optional = new Set();
+  const enabledBy = new Map();
   let inDeps = false;
+  let inFeatures = false;
   for (const raw of cargoToml.split('\n')) {
     const line = raw.trim();
     if (line.startsWith('[')) {
       inDeps = /^\[(?:build-)?dependencies(?:\.|])/.test(line) || /^\[target\..*dependencies]$/.test(line);
+      inFeatures = line === '[features]';
       const named = line.match(/^\[(?:build-)?dependencies\.([A-Za-z0-9_-]+)]$/);
       if (named && HTTP_CLIENT_CRATES.includes(named[1])) found.push(named[1]);
       continue;
     }
+    if (inFeatures) {
+      const feature = line.match(/^([A-Za-z0-9_-]+)\s*=\s*\[(.*)]/);
+      if (feature) {
+        for (const crate of HTTP_CLIENT_CRATES) {
+          if (new RegExp(`"(?:dep:)?${crate}(?:/[^"]*)?"`).test(feature[2])) {
+            enabledBy.set(crate, [...(enabledBy.get(crate) ?? []), feature[1]]);
+          }
+        }
+      }
+      continue;
+    }
     if (!inDeps) continue;
     const name = line.match(/^([A-Za-z0-9_-]+)\s*=/);
-    if (name && HTTP_CLIENT_CRATES.includes(name[1])) found.push(name[1]);
+    if (name && HTTP_CLIENT_CRATES.includes(name[1])) {
+      found.push(name[1]);
+      if (/optional\s*=\s*true/.test(line)) optional.add(name[1]);
+    }
   }
-  return [...new Set(found)].sort();
+  return [...new Set(found)]
+    .filter((crate) => {
+      const exception = HTTP_CLIENT_EXCEPTIONS.find((e) => e.crate === crate);
+      if (!exception || !optional.has(crate)) return true;
+      const features = enabledBy.get(crate) ?? [];
+      return !(features.length === 1 && features[0] === exception.feature);
+    })
+    .sort();
 }
 
 /**
@@ -336,11 +410,31 @@ export function scanTree(dir) {
     const text = file.endsWith('.rs') ? stripRustTestModules(raw) : raw;
     for (const origin of extractOrigins(text)) {
       const where = found.get(origin) ?? [];
-      where.push(relative(dir, file));
+      where.push(reportedName(file, dir));
       found.set(origin, where);
+    }
+    for (const url of undeclaredPaths(text)) {
+      // Reported under the full URL, which is in no allow-list, so the
+      // ordinary "undeclared origin" path fails the gate and names it.
+      const where = found.get(url) ?? [];
+      where.push(relative(dir, file));
+      found.set(url, where);
     }
   }
   return found;
+}
+
+/**
+ * How a file is named in a report: relative to the repository with '/', or its
+ * basename when it lies outside it. On Windows a file on another drive comes
+ * back from relative() as an absolute backslash path, and splitting on '/'
+ * left the whole machine path in the message (#731); `pathModule` is a
+ * parameter so that case is testable on any platform.
+ */
+export function reportedName(file, repoRoot, pathModule = nodePath) {
+  const rel = pathModule.relative(repoRoot, file);
+  if (rel.startsWith('..') || pathModule.isAbsolute(rel)) return pathModule.basename(file);
+  return rel.split(pathModule.sep).join('/');
 }
 
 /**
@@ -351,8 +445,7 @@ export function scanBinary(file) {
   const found = new Map();
   // Named relative to the repository, or by its basename when it is outside
   // one: a report that quotes an absolute path quotes the machine it ran on.
-  const rel = relative(root, file);
-  const where = rel.startsWith('..') ? file.split('/').pop() : rel;
+  const where = reportedName(file, root);
   for (const origin of extractOrigins(readFileSync(file, 'latin1'))) {
     found.set(origin, [where]);
   }
@@ -469,7 +562,7 @@ function main() {
     // Reported, never gated. `bad` is deliberately not touched here. The label
     // is the name, not the path: a report that quotes an absolute path quotes
     // the machine it ran on.
-    reportAdvisory(`binary ${file.split('/').pop()}`, scanBinary(file));
+    reportAdvisory(`binary ${reportedName(file, root)}`, scanBinary(file));
     checked++;
   }
 

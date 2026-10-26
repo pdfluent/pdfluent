@@ -98,10 +98,11 @@ describe('ViewerApp — floating zoom controls: fit to width', () => {
     expect(floatBlock).toContain('data-testid="zoom-fit-width-btn"');
   });
 
-  it('fit-to-width button resets zoom to 1.0', () => {
+  it('fit-to-width button fits the document to the window (not a fixed 100%)', () => {
     const btnIdx = floatBlock.indexOf('data-testid="zoom-fit-width-btn"');
     const btn = floatBlock.slice(Math.max(0, btnIdx - 100), btnIdx + 400);
-    expect(btn).toContain('onZoomChange(1.0)');
+    expect(btn).toContain('onFitToView()');
+    expect(btn).not.toContain('onZoomChange(1.0)');
   });
 
   it('fit-to-width button has accessible aria-label', () => {

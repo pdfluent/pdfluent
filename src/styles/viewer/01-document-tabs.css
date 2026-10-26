@@ -1,0 +1,146 @@
+/* Copyright (c) 2026 Innovation Trigger B.V. All rights reserved. */
+/* See https://pdfluent.com/license for terms. */
+
+/* Document tabs (J-90) -- one tab per open document, under the top bar.
+   Shown from the second document on. Neutral tokens only: the active tab is
+   the neutral active tint, the unsaved marker is a grey dot, focus is the one
+   blue job tokens.css allows. See viewer/components/DocumentTabBar.tsx. */
+
+.pfv3 .doc-tabs {
+  flex: none;
+  display: flex;
+  align-items: stretch;
+  gap: 2px;
+  height: 34px;
+  padding: 4px 10px 0;
+  background: var(--glass-bg-strong);
+  border-bottom: 1px solid var(--hairline);
+  overflow: hidden;
+  position: relative;
+  z-index: 55;
+}
+
+.pfv3 .doc-tabs-list {
+  display: flex;
+  align-items: stretch;
+  gap: 2px;
+  min-width: 0;
+  flex: 0 1 auto;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+}
+
+.pfv3 .doc-tabs-list::-webkit-scrollbar {
+  display: none;
+}
+
+.pfv3 .doc-tab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 96px;
+  max-width: 220px;
+  flex: 0 1 200px;
+  padding: 0 6px 0 10px;
+  border: 1px solid transparent;
+  border-bottom: none;
+  border-radius: 8px 8px 0 0;
+  background: transparent;
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: 12px;
+  line-height: 1;
+  cursor: pointer;
+  user-select: none;
+}
+
+.pfv3 .doc-tab:hover {
+  background: var(--state-hover-bg);
+  color: var(--text-primary);
+}
+
+.pfv3 .doc-tab[aria-selected='true'] {
+  background: var(--panel);
+  border-color: var(--hairline);
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.pfv3 .doc-tab[data-dragging='true'] {
+  opacity: 0.5;
+}
+
+.pfv3 .doc-tab[data-drop-target='true'] {
+  box-shadow: inset 2px 0 0 var(--emphasis);
+}
+
+.pfv3 .doc-tab:focus-visible,
+.pfv3 .doc-tab-close:focus-visible,
+.pfv3 .doc-tab-new:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: -2px;
+}
+
+.pfv3 .doc-tab-name {
+  min-width: 0;
+  flex: 1 1 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: start;
+}
+
+.pfv3 .doc-tab[data-hibernated='true'] .doc-tab-name {
+  opacity: 0.7;
+}
+
+.pfv3 .tab-dirty-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--text-secondary);
+  flex: none;
+}
+
+.pfv3 .doc-tab-close,
+.pfv3 .doc-tab-new {
+  display: inline-grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  flex: none;
+  padding: 0;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.pfv3 .doc-tab-close:hover,
+.pfv3 .doc-tab-new:hover {
+  background: var(--state-active-bg);
+  color: var(--text-primary);
+}
+
+.pfv3 .doc-tab-close svg,
+.pfv3 .doc-tab-new svg {
+  width: 13px;
+  height: 13px;
+}
+
+.pfv3 .doc-tab-new {
+  align-self: center;
+  margin-inline-start: 4px;
+}
+
+.pfv3 .doc-tabs[aria-busy='true'] .doc-tab {
+  cursor: progress;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .pfv3 .doc-tab {
+    transition: background-color 120ms ease, color 120ms ease;
+  }
+}

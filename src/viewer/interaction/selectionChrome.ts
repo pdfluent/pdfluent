@@ -95,20 +95,20 @@ function annotationChrome(state: InteractionState): ChromeRectAttrs {
   switch (state) {
     case 'hover':
       return {
-        strokeColor: 'rgb(37, 99, 235)',    // blue-600
+        strokeColor: 'var(--chrome-hover-on-page)',
         strokeWidth: 1.5,
         strokeOpacity: 0.6,
         strokeDasharray: '4 3',
-        fillColor: 'rgb(219, 234, 254)',    // blue-100
-        fillOpacity: 0.15,
+        fillColor: 'var(--chrome-hover-on-page)',
+        fillOpacity: 0.06,
         rx: 2,
       };
     case 'selected':
       return {
-        strokeColor: 'rgb(37, 99, 235)',    // blue-600
+        strokeColor: 'var(--selection-on-page)',
         strokeWidth: 2,
         strokeOpacity: 1,
-        fillColor: 'rgb(219, 234, 254)',
+        fillColor: 'var(--selection-on-page)',
         fillOpacity: 0.08,
         rx: 2,
       };
@@ -123,7 +123,7 @@ function annotationChrome(state: InteractionState): ChromeRectAttrs {
       };
     case 'focused':
       return {
-        strokeColor: 'rgb(99, 102, 241)',   // indigo-500
+        strokeColor: 'var(--focus-ring-on-page)',
         strokeWidth: 1.5,
         strokeOpacity: 0.8,
         strokeDasharray: '3 2',
@@ -166,31 +166,31 @@ function formFieldChrome(state: InteractionState): ChromeRectAttrs {
   switch (state) {
     case 'hover':
       return {
-        strokeColor: 'rgb(59, 130, 246)',   // blue-500
+        strokeColor: 'var(--chrome-hover-on-page)',
         strokeWidth: 1,
         strokeOpacity: 0.5,
         strokeDasharray: '3 2',
-        fillColor: 'rgb(239, 246, 255)',    // blue-50
-        fillOpacity: 0.3,
+        fillColor: 'var(--chrome-hover-on-page)',
+        fillOpacity: 0.06,
         rx: 3,
       };
     case 'focused':
     case 'editing':
       return {
-        strokeColor: 'rgb(37, 99, 235)',    // blue-600
+        strokeColor: 'var(--focus-ring-on-page)',
         strokeWidth: 2,
         strokeOpacity: 1,
-        fillColor: 'rgb(239, 246, 255)',
-        fillOpacity: 0.2,
+        fillColor: 'var(--selection-on-page)',
+        fillOpacity: 0.06,
         rx: 3,
       };
     case 'selected':
       return {
-        strokeColor: 'rgb(79, 70, 229)',    // violet-600
+        strokeColor: 'var(--selection-on-page)',
         strokeWidth: 2,
         strokeOpacity: 1,
-        fillColor: 'rgb(237, 233, 254)',    // violet-100
-        fillOpacity: 0.15,
+        fillColor: 'var(--selection-on-page)',
+        fillOpacity: 0.1,
         rx: 3,
       };
     default:
@@ -202,26 +202,26 @@ function textBlockChrome(state: InteractionState): ChromeRectAttrs {
   switch (state) {
     case 'hover':
       return {
-        strokeColor: 'rgb(99, 132, 255)',   // blue-400 ish
+        strokeColor: 'var(--chrome-hover-on-page)',
         strokeWidth: 1,
-        strokeOpacity: 0.35,
+        strokeOpacity: 0.45,
         strokeDasharray: '3 2',
-        fillColor: 'rgb(219, 234, 254)',    // blue-100
-        fillOpacity: 0.06,
+        fillColor: 'var(--chrome-hover-on-page)',
+        fillOpacity: 0.04,
         rx: 1,
       };
     case 'selected':
       return {
-        strokeColor: 'rgb(37, 99, 235)',    // blue-600
+        strokeColor: 'var(--selection-on-page)',
         strokeWidth: 2,
         strokeOpacity: 1,
-        fillColor: 'rgb(219, 234, 254)',
-        fillOpacity: 0.15,
+        fillColor: 'var(--selection-on-page)',
+        fillOpacity: 0.12,
         rx: 1,
       };
     case 'editing':
       return {
-        strokeColor: 'rgba(37, 99, 235, 0.45)',
+        strokeColor: 'var(--selection-on-page-line)',
         strokeWidth: 1,
         strokeOpacity: 0.8,
         strokeDasharray: '3 2',
@@ -247,7 +247,7 @@ function pageThumbnailChrome(state: InteractionState): ChromeRectAttrs {
       };
     case 'selected':
       return {
-        strokeColor: 'rgb(37, 99, 235)',
+        strokeColor: 'var(--selection-on-page)',
         strokeWidth: 2,
         strokeOpacity: 1,
         fillColor: 'transparent',
@@ -265,7 +265,7 @@ function shapeChrome(state: InteractionState): ChromeRectAttrs {
 
 function defaultChrome(state: InteractionState): ChromeRectAttrs {
   return {
-    strokeColor: state === 'selected' ? 'rgb(37, 99, 235)' : 'rgb(148, 163, 184)',
+    strokeColor: state === 'selected' ? 'var(--selection-on-page)' : 'rgb(148, 163, 184)',
     strokeWidth: state === 'selected' ? 2 : 1,
     strokeOpacity: state === 'selected' ? 1 : 0.5,
     fillColor: 'transparent',

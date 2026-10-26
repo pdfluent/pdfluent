@@ -1,0 +1,5 @@
+{
+  "file": "signer-test.p12",
+  "password": "pdfluent-test",
+  "note": "Self-signed test certificate. Not a secret: it signs nothing but test documents. The same password is P12_PASSWORD in src-tauri/tests/signed_documents_keep_their_signatures.rs."
+}

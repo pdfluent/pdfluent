@@ -62,9 +62,6 @@ then follow the setup steps in [CONTRIBUTING.md](../CONTRIBUTING.md).
 ## Compliance and third-party inventory
 
 ```bash
-# Generate OCR model checksum manifest
-npm run ocr:manifest
-
 # Generate THIRD_PARTY.md + THIRD_PARTY_ATTRIBUTIONS.md + compliance-report.json
 npm run compliance:generate
 

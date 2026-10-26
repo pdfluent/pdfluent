@@ -36,14 +36,23 @@ function unreachable(result, report) {
   return detail;
 }
 
+const AUDIT_TIMEOUT_MS = 80_000;
+
 export function main(argv = []) {
   const projectDir = argv[0] ?? DEFAULT_PROJECT_DIR;
   const result = spawnSync(
     "npm",
     ["audit", "--audit-level=critical", "--omit=dev", "--json"],
-    { cwd: projectDir, encoding: "utf8", shell: process.platform === "win32" },
+    { cwd: projectDir, encoding: "utf8", shell: process.platform === "win32", timeout: AUDIT_TIMEOUT_MS, killSignal: "SIGKILL" },
   );
 
+  if (result.error && result.error.code === "ETIMEDOUT") {
+    // npm's advisory endpoint can hang without answering (seen 22-10, on a Mac
+    // and a Windows runner at once). Say so, in the words of the other skip, so
+    // the caller's own timeout does not turn it into a bare null exit status.
+    process.stderr.write(`SKIPPED (not a pass): npm audit could not reach the advisory registry -- no answer within ${AUDIT_TIMEOUT_MS / 1000} s\n`);
+    return 0;
+  }
   if (result.error) {
     process.stderr.write(`SKIPPED (not a pass): npm could not be run (${result.error.message})\n`);
     return 0;

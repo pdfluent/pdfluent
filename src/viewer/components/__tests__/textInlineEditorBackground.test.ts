@@ -20,7 +20,7 @@ describe('TextInlineEditor overlay background', () => {
   );
 
   // The contenteditable overlay's style block is uniquely identified by its caret colour.
-  const caretMarker = "caretColor: 'rgb(37, 99, 235)'";
+  const caretMarker = "caretColor: 'var(--caret-on-page)'";
   const caretIdx = src.indexOf(caretMarker);
   // Look at the style declarations immediately preceding the caret colour.
   const block = src.slice(Math.max(0, caretIdx - 500), caretIdx + 60);

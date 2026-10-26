@@ -56,7 +56,7 @@
     "fillAndSign": "填寫並簽署",
     "more": "更多",
     "getDesktopApp": "桌面應用程式",
-    "getDesktopAppTitle": "在桌面應用程式中使用編輯、OCR、密文、頁面整理和匯出功能"
+    "getDesktopAppTitle": "在桌面應用程式中編輯、OCR、塗黑、整理頁面與匯出"
   },
   "toolbar": {
     "select": "選取",
@@ -94,7 +94,7 @@
     "date": "日期",
     "password": "密碼",
     "permissions": "權限",
-    "redact": "密文",
+    "redact": "塗黑",
     "hide": "隱藏",
     "compare": "比較",
     "accessibility": "協助工具",
@@ -114,9 +114,9 @@
     "allTools": "所有工具",
     "contextualBar": "模式工具列",
     "pdfa": "PDF/A",
-    "metadata": "Document properties",
-    "invoice": "E-invoice",
-    "bookmarks": "Bookmarks"
+    "metadata": "文件屬性",
+    "invoice": "電子發票",
+    "bookmarks": "書籤"
   },
   "topbar": {
     "openPdf": "開啟 PDF",
@@ -233,16 +233,15 @@
     "noFieldsBrowserHint": "未找到表單欄位。"
   },
   "protect": {
-    "applyRedactions": "永久套用密文",
-    "noRedactions": "無待處理的密文。",
-    "redactionsPending": "{{count}} 個密文待處理",
-    "redactionsPending_plural": "{{count}} 個密文待處理",
+    "applyRedactions": "永久套用塗黑",
+    "noRedactions": "沒有待處理的塗黑。",
+    "redactionsPending": "{{count}} 項塗黑待處理",
+    "redactionsPending_plural": "{{count}} 項塗黑待處理",
     "encrypt": "加密",
     "userPasswordPlaceholder": "使用者密碼",
     "ownerPasswordPlaceholder": "擁有者密碼",
     "encryptBtn": "加密…",
     "decrypt": "解密",
-    "currentPasswordPlaceholder": "目前密碼",
     "decryptBtn": "解密",
     "noDocument": "未開啟文件。",
     "permCanPrint": "列印",
@@ -253,12 +252,16 @@
     "permCanFillForms": "填寫表單",
     "permCanExtractContent": "擷取內容",
     "permCanAssemble": "組合",
-    "searchRedact": "搜尋並密文",
-    "searchRedactPlaceholder": "要尋找並密文的文字…",
-    "searchRedactBtn": "尋找並密文",
+    "searchRedact": "搜尋並塗黑",
+    "searchRedactPlaceholder": "要尋找並塗黑的文字…",
+    "searchRedactBtn": "尋找並塗黑",
     "redactMetadataTitle": "中繼資料",
     "redactMetadataDesc": "移除作者、標題及其他識別中繼資料。",
-    "redactMetadataBtn": "移除中繼資料"
+    "redactMetadataBtn": "移除中繼資料",
+    "ownerPasswordForRemoval": "擁有者（權限）密碼",
+    "removePasswordHelp": "移除密碼需要擁有者密碼，也就是管控權限的密碼。你開啟檔案時所用的密碼並不足夠，除非它同時也是擁有者密碼。",
+    "removePasswordReady": "你已使用擁有者密碼開啟此檔案，因此無需再次輸入即可移除保護。",
+    "removePasswordNotProtected": "此文件沒有密碼保護。"
   },
   "organize": {
     "thumbnails": "縮圖",
@@ -287,33 +290,34 @@
     "combine": "合併檔案",
     "splitRange": "按範圍分割",
     "splitRangeHint": "先選取頁面",
-    "moveLeft": "Move selected page left",
-    "moveRight": "Move selected page right",
-    "moveLeftShort": "Left",
-    "moveRightShort": "Right",
-    "rotateLeft": "Rotate left",
-    "rotateRight": "Rotate right",
-    "rotateLeftShort": "Left",
-    "rotateRightShort": "Right",
-    "addingPdf": "Adding PDF…",
-    "pdfAdded": "PDF added",
-    "combiningFiles": "Combining {{count}} file(s)…",
-    "filesCombined": "{{count}} file(s) combined",
-    "insertingPdf": "Inserting PDF before page {{page}}…",
-    "pdfInserted": "PDF inserted",
-    "exportingPages": "Exporting {{count}} page(s)…",
-    "selectionExported": "Selection exported to {{name}}",
-    "splittingPages": "Splitting into individual pages…",
-    "pagesSaved": "{{count}} pages saved",
-    "splittingRanges": "Splitting {{count}} range(s)…",
-    "filesSaved": "{{count}} file(s) saved"
+    "moveLeft": "將所選頁面左移",
+    "moveRight": "將所選頁面右移",
+    "moveLeftShort": "左移",
+    "moveRightShort": "右移",
+    "rotateLeft": "向左旋轉",
+    "rotateRight": "向右旋轉",
+    "rotateLeftShort": "向左",
+    "rotateRightShort": "向右",
+    "addingPdf": "正在新增 PDF…",
+    "pdfAdded": "已新增 PDF",
+    "combiningFiles": "正在合併 {{count}} 個檔案…",
+    "filesCombined": "已合併 {{count}} 個檔案",
+    "insertingPdf": "正在第 {{page}} 頁前插入 PDF…",
+    "pdfInserted": "已插入 PDF",
+    "exportingPages": "正在匯出 {{count}} 頁…",
+    "selectionExported": "選取項目已匯出至 {{name}}",
+    "splittingPages": "正在分割為個別頁面…",
+    "pagesSaved": "已儲存 {{count}} 頁",
+    "splittingRanges": "正在分割 {{count}} 個範圍…",
+    "filesSaved": "已儲存 {{count}} 個檔案"
   },
   "unsavedChanges": {
     "title": "未儲存的變更",
     "message": "繼續之前是否要儲存變更？",
     "save": "儲存",
     "discard": "捨棄變更",
-    "cancel": "取消"
+    "cancel": "取消",
+    "messageNamed": "您要在繼續前儲存對 {{name}} 的變更嗎？"
   },
   "welcome": {
     "title": "開啟 PDF 以開始使用",
@@ -327,13 +331,13 @@
     "lede": "閱讀、編輯、轉換、填寫並簽署 — 完全在您的裝置上完成。",
     "privacyPromise": "本機優先 · 文件永不離開此裝置",
     "dropPdfHere": "將 PDF 拖放到此處",
-    "v3Subtitle": "Open a PDF to read, edit, convert or sign it locally.",
-    "openFileAria": "Choose a PDF file to open",
-    "clearRecent": "Clear recent",
-    "recentShort": "Recent",
-    "removeRecentAria": "Remove {{name}}",
-    "backToDocument": "Back to document",
-    "loadingDocument": "Loading document…"
+    "v3Subtitle": "開啟 PDF 即可在本機閱讀、修改、轉換或簽署。",
+    "openFileAria": "選擇要開啟的 PDF 檔案",
+    "clearRecent": "清除最近使用",
+    "recentShort": "最近使用",
+    "removeRecentAria": "移除 {{name}}",
+    "backToDocument": "返回文件",
+    "loadingDocument": "正在載入文件…"
   },
   "settings": {
     "language": "語言",
@@ -350,15 +354,29 @@
     "reviewerNamePlaceholder": "標註中使用的姓名",
     "exportPreferences": "匯出喜好設定",
     "exportFormatLabel": "預設匯出格式",
-    "autosave": "自動儲存",
-    "autosaveEnable": "自動儲存變更",
     "themeLabel": "佈景主題",
     "ocrDefaults": "OCR 預設值",
     "ocrLanguageLabel": "預設語言 (ISO-639-2)",
     "ocrLanguagePlaceholder": "例如：eng、nld、deu",
-    "updates": "Updates",
-    "automaticUpdateCheck": "Check for a new version at startup",
-    "automaticUpdateCheckHint": "PDFluent asks pdfluent.com whether a newer version exists, a few seconds after it starts. Nothing from your documents is sent. Turn this off and the app never checks on its own — \"Check for updates\" still works whenever you ask for it."
+    "updates": "更新",
+    "automaticUpdateCheck": "啟動時檢查新版本",
+    "automaticUpdateCheckHint": "PDFluent 會在啟動幾秒後向 pdfluent.com 查詢是否有較新版本。不會傳送你文件中的任何內容。關閉此選項後，應用程式不會自行檢查——你要求時，「檢查更新」仍可運作。",
+    "recoveryCopy": "復原副本",
+    "recoveryCopyEnable": "為未儲存的變更保留復原副本，在當機後提供復原",
+    "view": "檢視",
+    "defaultZoomLabel": "預設縮放",
+    "defaultZoomFitWidth": "符合寬度 (預設)",
+    "defaultZoomFitPage": "符合頁面",
+    "defaultZoomActualSize": "實際大小 (100%)",
+    "defaultZoomLastUsed": "上次使用",
+    "defaultZoomHint": "文件會以此縮放比例開啟，並跟隨視窗調整，直到您手動縮放。若符合寬度明顯更合適，則會改為顯示整頁。",
+    "securityTitle": "安全性",
+    "formScriptsLabel": "表單指令碼",
+    "formScriptsAsk": "詢問",
+    "formScriptsAlways": "永遠",
+    "formScriptsNever": "永不",
+    "formScriptsHint": "表單可包含指令碼，例如計算。預設為詢問：表單開啟時會顯示儲存的值，直到您同意才會執行任何指令碼。",
+    "formScriptsPinned": "您的組織已設定此選項。無法在此變更。"
   },
   "errors": {
     "loadFailed": "文件載入失敗",
@@ -367,7 +385,7 @@
     "unknownError": "發生意外錯誤",
     "ocrFailed": "OCR 失敗",
     "exportFailed": "匯出失敗",
-    "redactionFailed": "密文處理失敗",
+    "redactionFailed": "塗黑失敗",
     "textEditFailed": "文字編輯失敗",
     "layoutEditFailed": "版面編輯失敗",
     "annotationFailed": "標註失敗",
@@ -381,7 +399,8 @@
     "addPageFailed": "新增 PDF 失敗",
     "insertFailed": "插入 PDF 失敗",
     "splitFailed": "分割失敗",
-    "commandFailedTitle": "'{{command}}' did not complete"
+    "commandFailedTitle": "「{{command}}」未完成",
+    "commandRetrying": "{{command}} 暫時失敗 — 正在重試"
   },
   "events": {
     "formFieldUpdated": "表單欄位已更新",
@@ -430,9 +449,9 @@
     "pageNotFound": "找不到頁面",
     "requiresFontInspection": "文字編輯需要字型檢查（計畫在第 6 階段實現）。",
     "rejection": {
-      "bannerTitle": "This text was not changed",
-      "bannerDetail": "Reason reported by the PDF engine: {{detail}}",
-      "bannerDismiss": "Dismiss",
+      "bannerTitle": "這段文字未變更",
+      "bannerDetail": "PDF 引擎回報的原因：{{detail}}",
+      "bannerDismiss": "關閉",
       "replacement-too-long": {
         "tooltip": "Replacement is too long",
         "explanation": "The replacement is longer than the text it replaces. Keep it the same length or shorter so the surrounding layout stays intact."
@@ -491,8 +510,8 @@
       }
     },
     "fallback": {
-      "fontSubstitutedTitle": "A standard font wrote the new text",
-      "fontSubstitutedMessage": "The original font of this text has no glyph for one or more characters you typed, so Helvetica was used for the replacement. The text is correct; it may look slightly different from the rest of the line."
+      "fontSubstitutedTitle": "已使用標準字型寫入新文字",
+      "fontSubstitutedMessage": "這段文字的原始字型沒有你輸入的一或多個字元字形，因此取代文字使用了 Helvetica。文字內容正確，但看起來可能與該行其餘部分略有不同。"
     }
   },
   "validation": {
@@ -502,7 +521,7 @@
     "objectInLockedLayer": "物件位於鎖定圖層中，無法修改。",
     "formsWithoutFields": "在沒有表單欄位的文件上啟動了表單填寫模式。",
     "annotationToolbarWrongMode": "標註列在模式「{{mode}}」中可見，但需要「標註」模式。",
-    "redactionToolbarWrongMode": "密文列在模式「{{mode}}」中可見，但需要「密文」模式。"
+    "redactionToolbarWrongMode": "塗黑列顯示於「{{mode}}」模式，但需要塗黑模式。"
   },
   "revisions": {
     "deletedAnnotations": "## 已刪除的標註",
@@ -549,13 +568,13 @@
     "exportExcelDone": "Excel 試算表已匯出",
     "exportPowerpointRunning": "正在轉換為 PowerPoint…",
     "exportPowerpointDone": "PowerPoint 簡報已匯出",
-    "applyRedactRunning": "正在套用密文…",
-    "applyRedactDone": "密文已套用",
-    "applyRedactFailed": "套用密文失敗",
-    "searchRedactRunning": "正在搜尋並密文…",
-    "searchRedactDone": "已密文 {{count}} 個符合項目",
-    "searchRedactDone_plural": "已密文 {{count}} 個符合項目",
-    "searchRedactFailed": "搜尋並密文失敗",
+    "applyRedactRunning": "正在套用塗黑…",
+    "applyRedactDone": "塗黑已套用",
+    "applyRedactFailed": "套用塗黑失敗",
+    "searchRedactRunning": "正在搜尋並塗黑…",
+    "searchRedactDone": "已塗黑 {{count}} 處符合項目",
+    "searchRedactDone_plural": "已塗黑 {{count}} 處符合項目",
+    "searchRedactFailed": "搜尋並塗黑失敗",
     "redactMetadataRunning": "正在移除中繼資料…",
     "redactMetadataDone": "中繼資料已移除",
     "redactMetadataFailed": "移除中繼資料失敗",
@@ -566,12 +585,16 @@
     "watermarkDone": "已新增浮水印",
     "watermarkFailed": "浮水印新增失敗",
     "watermarkRunning": "正在新增浮水印…",
-    "pdfaRunning": "Converting to PDF/A…",
-    "pdfaDone": "PDF/A written",
-    "pdfaFailed": "PDF/A conversion failed",
-    "metadataRunning": "Saving properties…",
-    "metadataDone": "Properties saved",
-    "metadataFailed": "Could not save properties"
+    "pdfaRunning": "正在轉換為 PDF/A…",
+    "pdfaDone": "PDF/A 已寫入",
+    "pdfaFailed": "PDF/A 轉換失敗",
+    "metadataRunning": "正在儲存屬性…",
+    "metadataDone": "屬性已儲存",
+    "metadataFailed": "無法儲存屬性",
+    "exportMarkdownRunning": "正在匯出為 Markdown…",
+    "exportMarkdownDone": "已匯出 Markdown",
+    "exportTablesRunning": "正在將表格匯出至 Excel…",
+    "exportTablesDone": "已將表格匯出至 Excel（{{count}}）"
   },
   "panels": {
     "search": "搜尋",
@@ -586,8 +609,8 @@
     "annotationCreated": "標註已建立",
     "annotationUpdated": "標註已更新",
     "annotationDeleted": "標註已刪除",
-    "redactionCreated": "密文已建立",
-    "redactionApplied": "密文已套用",
+    "redactionCreated": "已建立塗黑",
+    "redactionApplied": "已套用塗黑",
     "metadataChanged": "中繼資料已變更",
     "pageMutated": "頁面已修改",
     "textEditCommitted": "文字編輯已儲存",
@@ -714,7 +737,10 @@
     "formatJpeg": "JPEG（影像）",
     "formatDocx": "Word 文件 (.docx)",
     "formatXlsx": "Excel 試算表 (.xlsx)",
-    "formatPptx": "PowerPoint 簡報 (.pptx)"
+    "formatPptx": "PowerPoint 簡報 (.pptx)",
+    "formatMarkdown": "Markdown (.md) - 預覽",
+    "formatTablesXlsx": "表格轉 Excel (.xlsx) - 預覽",
+    "noTablesFound": "此文件中未辨識到任何表格。"
   },
   "goToPage": {
     "title": "前往頁面",
@@ -729,7 +755,9 @@
     "documentLabel": "文件：",
     "savedLabel": "已儲存：",
     "recoveryPath": "復原路徑：",
-    "restore": "還原"
+    "restore": "還原",
+    "untitled": "未命名文件",
+    "andMore": "{{name}} 還有 {{count}} 個"
   },
   "emptyStates": {
     "noDocument": "未開啟文件",
@@ -759,7 +787,7 @@
   "textContext": {
     "editText": "編輯文字",
     "annotate": "標註",
-    "redact": "密文",
+    "redact": "塗黑",
     "copy": "複製",
     "summarize": "摘要",
     "explain": "說明",
@@ -839,7 +867,26 @@
     "statusUnavailableWithReason": "OCR 執行階段無法使用：{{reason}}",
     "statusRetry": "重新檢查",
     "runtimePath": "執行階段：{{path}}",
-    "missingPackages": "缺少：{{packages}}"
+    "missingPackages": "缺少：{{packages}}",
+    "noScannedPagesTitle": "沒有可辨識的內容",
+    "unavailable": {
+      "platform": "此平台不提供 OCR。",
+      "missing": "此版本附帶的 OCR 檔案遺失或不完整。請重新安裝 PDFluent 以復原。"
+    },
+    "settings": {
+      "unknown": "OCR 元件：檢查中…",
+      "installed": "OCR 元件：已安裝 Tesseract {{version}}"
+    },
+    "errors": {
+      "OCR_COMPONENT_UNSUPPORTED_PLATFORM": "此平台不提供 OCR 元件。",
+      "OCR_COMPONENT_NOT_INSTALLED": "未安裝 OCR 元件。",
+      "OCR_LANGUAGE_MISSING": "未安裝 OCR 語言套件。",
+      "OCR_SIGNED_DOCUMENT": "此文件已簽署。OCR 會變更已簽署的頁面，因此不會執行。",
+      "OCR_NOT_PERMITTED": "此文件的權限不允許變更其內容。",
+      "OCR_DOCUMENT_CHANGED": "OCR 執行期間文件已變更。請重新執行 OCR。",
+      "OCR_ENGINE_FAILED": "OCR 因發生錯誤而停止。",
+      "OCR_PAGE_OUT_OF_RANGE": "要辨識的頁面不在文件中。"
+    }
   },
   "docInfo": {
     "title": "標題",
@@ -879,7 +926,17 @@
     "italicComingSoon": "斜體格式即將推出",
     "sourceDigital": "PDF 文字圖層",
     "sourceOcr": "OCR",
-    "browserLimitedNote": "按一下頁面上的文字以編輯受支援的 PDF 文字。影像和連結在桌面應用程式中可用。"
+    "browserLimitedNote": "按一下頁面上的文字以編輯受支援的 PDF 文字。影像和連結在桌面應用程式中可用。",
+    "typeface": {
+      "label": "字體",
+      "default": "文件字型",
+      "noEmbed": "{{family}}：此字型的授權不允許內嵌至 PDF",
+      "refusedLicence": "{{family}} 無法使用：其授權不允許內嵌至 PDF。請選擇其他字體。",
+      "refusedGlyphs": "{{family}} 沒有 {{characters}} 的字形。請選擇其他字體。",
+      "refusedGone": "該字體已不再安裝。請選擇其他字體。",
+      "refusedText": "要重新設定樣式的文字已不在頁面上。",
+      "refusedUnusable": "無法將 {{family}} 辨識為字型。請選擇其他字體。"
+    }
   },
   "rightPanel": {
     "properties": "屬性",
@@ -891,7 +948,7 @@
     "annotationColorValue": "標註顏色 {{color}}",
     "strokeWidth": "筆畫",
     "comments": "注解",
-    "redactions": "密文",
+    "redactions": "塗黑標記",
     "ocr": "OCR",
     "pdfa": "PDF/A",
     "formFields": "表單欄位",
@@ -900,13 +957,13 @@
     "changeColor": "變更顏色",
     "deleteMarkup": "刪除標記",
     "delete": "刪除",
-    "redactionConfirm": "永久套用 {{count}} 個密文？此操作無法復原。",
-    "redactionConfirm_plural": "永久套用 {{count}} 個密文？此操作無法復原。",
-    "noRedactions": "無待處理的密文。",
-    "redactionCount": "{{count}} 個密文待處理",
-    "redactionCount_plural": "{{count}} 個密文待處理",
-    "applyRedactions": "永久套用密文",
-    "deleteRedaction": "刪除密文",
+    "redactionConfirm": "要永久套用 {{count}} 項塗黑嗎？此操作無法復原。",
+    "redactionConfirm_plural": "要永久套用 {{count}} 項塗黑嗎？此操作無法復原。",
+    "noRedactions": "沒有待處理的塗黑。",
+    "redactionCount": "{{count}} 項塗黑待處理",
+    "redactionCount_plural": "{{count}} 項塗黑待處理",
+    "applyRedactions": "永久套用塗黑",
+    "deleteRedaction": "刪除塗黑",
     "signatures": "數位簽章",
     "watermarkApply": "套用浮水印",
     "watermarkOpacity": "不透明度",
@@ -944,9 +1001,12 @@
     "flatten": "平面化 XFA",
     "flattenDone": "XFA 已平面化。匯出 PDF 以下載靜態版本。",
     "flattenFailed": "平面化 XFA 失敗",
-    "convertToStandard": "Convert to standard PDF",
-    "convertedToStandard": "XFA converted to standard PDF",
-    "convertFailed": "Conversion failed: {{message}}"
+    "convertToStandard": "轉換為標準 PDF",
+    "convertedToStandard": "XFA 已轉換為標準 PDF",
+    "convertFailed": "轉換失敗：{{message}}",
+    "bannerTitle": "XFA 表單",
+    "bannerBody": "此 XFA 表單依原樣顯示。若要填寫、編輯或搜尋其中的欄位，請將其轉換為標準 PDF。",
+    "bannerBodyExperimental": "此 XFA 表單依原樣顯示。填寫欄位目前屬於實驗功能；若要可靠地填寫、編輯和搜尋，請將其轉換為標準 PDF。"
   },
   "security": {
     "activeContentBadge": "已封鎖",
@@ -970,7 +1030,8 @@
     "highlight": "螢光筆",
     "strikethrough": "刪除線",
     "underline": "底線",
-    "copyText": "複製文字"
+    "copyText": "複製文字",
+    "copied": "已複製"
   },
   "update": {
     "available": "有可用更新",
@@ -980,10 +1041,10 @@
     "installing": "安裝中…",
     "checkFailed": "更新檢查失敗",
     "upToDate": "您使用的是最新版本",
-    "installed": "Update installed",
-    "restartNow": "Restart now",
-    "restartUnsaved": "Save your changes before restarting.",
-    "restartManual": "If it doesn't restart automatically, quit and reopen PDFluent to finish."
+    "installed": "更新已安裝",
+    "restartNow": "立即重新啟動",
+    "restartUnsaved": "重新啟動前請儲存您的變更。",
+    "restartManual": "如果未自動重新啟動，請結束並重新開啟 PDFluent 以完成更新。"
   },
   "telemetry": {
     "addNoteLabel": "想要補充什麼嗎？（選填）",
@@ -1012,6 +1073,11 @@
     "sentTitle": "已傳送。謝謝。",
     "settingsAutoSend": "不詢問直接自動傳送",
     "settingsAutoSendNote": "自動報告會經過清理，不含個人資料，就如同您手動檢閱的報告一樣。",
+    "settingsSentReports": "從這部電腦傳送的當機報告：{{count}} 份。{{days}} 天後，我們會自動從伺服器刪除這些報告。",
+    "settingsDeleteReports": "刪除我的當機報告",
+    "settingsDeleting": "正在刪除…",
+    "settingsDeleted": "已刪除的當機報告：{{count}} 份",
+    "settingsDeleteFailed": "有 {{count}} 份無法刪除。請檢查網路連線後再試一次。",
     "settingsDescription": "報告絕不包含個人資訊或文件內容。傳送前所有內容都會被清理，而且您會先看到每一份報告。預設為關閉。",
     "settingsTitle": "當機與錯誤報告",
     "settingsToggle": "傳送當機和錯誤報告",
@@ -1019,7 +1085,11 @@
     "typeBug": "錯誤",
     "typeCrash": "當機",
     "typeFeedback": "意見回饋",
-    "whatGetsSent": "傳送的內容"
+    "whatGetsSent": "傳送的內容",
+    "settingsSentFeedback": "從這台電腦傳送的意見回饋報告：{{count}} 份。我們會在 {{days}} 天後自動從伺服器刪除這些報告。",
+    "settingsDeleteFeedback": "刪除我的意見回饋報告",
+    "settingsFeedbackDeleted": "已刪除意見回饋報告：{{count}} 份",
+    "settingsFeedbackDeleteFailed": "無法刪除 {{count}} 份意見回饋報告。請檢查連線並再試一次。"
   },
   "ai": {
     "summaryInstruction": "請用繁體中文對以下文件提供簡潔摘要。每個職位請註明雇主、職務和時間段。使用要點符號。",
@@ -1076,7 +1146,8 @@
       "scrollLeft": "向左滾動模式",
       "scrollRight": "向右滾動模式",
       "workMode": "工作模式",
-      "searchPlaceholder": "在文檔中搜索"
+      "searchPlaceholder": "在文檔中搜索",
+      "allTools": "所有工具"
     },
     "menu": {
       "about": "關於",
@@ -1147,22 +1218,17 @@
       "draw": "繪製",
       "signatureName": "簽名名稱",
       "typeName": "鍵入您的名稱...",
-      "selectStyle": "選擇風格",
-      "styleClassic": "草體經典",
-      "styleElegant": "草體優雅",
-      "styleBrush": "筆刷簽名",
-      "styleModern": "現代筆跡",
       "drawHere": "用鼠標、觸控板或手寫筆在此繪製",
       "clear": "清除",
       "apply": "應用",
-      "defaultSignature": "簽名",
       "clickToPlaceSignature": "點擊頁面放置簽名。",
       "addInitials": "添加首字母縮寫",
       "initialsIntro": "鍵入首字母縮寫以快速放置在首字母字段上。",
       "initials": "首字母縮寫",
       "initialsPlaceholder": "例如 AB",
-      "defaultInitials": "AB",
-      "clickToPlaceInitials": "點擊頁面放置首字母縮寫。"
+      "clickToPlaceInitials": "點擊頁面放置首字母縮寫。",
+      "signatureFont": "簽名字型",
+      "plainItalic": "一般斜體"
     },
     "overlay": {
       "signaturePlaced": "簽名已放置！",
@@ -1177,13 +1243,13 @@
     "textbox": {
       "editTitle": "編輯文本框",
       "newTitle": "新文本框",
-      "intro": "此文本作為當前頁面上的覆蓋層放置。保存空白會移除現有文本框。",
       "label": "文本",
       "placeholder": "鍵入文本...",
       "delete": "刪除",
       "deleted": "文本框已刪除。",
       "updated": "文本框已更新。",
-      "added": "新文本框已添加。"
+      "added": "新文本框已添加。",
+      "introPdf": "文字方塊會寫入 PDF，在任何 PDF 檢視器中都看得到。儲存為空白會刪除現有的文字方塊。"
     },
     "rail": {
       "tools": "PDF 工具",
@@ -1197,12 +1263,14 @@
       "more": "更多工具",
       "strikeText": "刪除線文本",
       "underlineText": "下劃線文本",
-      "addAttachment": "添加附件"
+      "addAttachment": "添加附件",
+      "drawRectangle": "繪製矩形"
     },
     "railToasts": {
-      "commentMode": "筆記模式已激活。選擇文本並選擇筆記，或使用評論列表添加筆記。",
+      "commentMode": "備註模式。請在頁面上要放置備註的位置按一下。",
       "strikeout": "刪除線已激活——選擇文本應用。",
-      "underline": "下劃線已激活——選擇文本應用。"
+      "underline": "下劃線已激活——選擇文本應用。",
+      "rectangle": "矩形工具已啟用 — 在頁面上拖曳即可繪製。"
     },
     "tools": {
       "lede": "選擇工具以開始。所有操作都在此設備本地運行。",
@@ -1217,7 +1285,7 @@
       "merge": "合並文件",
       "mergeSub": "合併 PDF",
       "contentSecurity": "內容和安全",
-      "redact": "編輯",
+      "redact": "塗黑",
       "redactSub": "永久黑色文本",
       "protect": "保護",
       "protectSub": "密碼和權限",
@@ -1238,17 +1306,18 @@
       "layers": "{{count}} 個圖層",
       "manageLayers": "管理圖層",
       "layersVisible": "{{count}} 個圖層可見。",
-      "archiveAndData": "Archiving and data",
-      "pdfaSub": "Check or convert for long-term archiving",
-      "invoiceSub": "Read the ZUGFeRD/Factur-X invoice inside",
-      "metadataSub": "Title and author of this document"
+      "archiveAndData": "封存與資料",
+      "pdfaSub": "檢查或轉換以便長期封存",
+      "invoiceSub": "讀取內嵌的 ZUGFeRD/Factur-X 發票",
+      "metadataSub": "此文件的標題和作者",
+      "flattenForm": "扁平化",
+      "flattenFormTitle": "扁平化表單：已填寫的值會成為頁面的一部分，欄位則會移除",
+      "flattenFormDone": "表單已扁平化。復原可恢復欄位。",
+      "flattenFormFailed": "無法扁平化表單：{{message}}"
     },
     "edit": {
       "lede": "點擊文檔中的文本進行內聯編輯。格式設置欄出現在選擇上方。",
       "formatText": "格式化文本",
-      "fontLabel": "字體",
-      "fontHint": "現有 PDF 文本使用嵌入式 PDF 字體。新添加的文本框將使用字體「{{font}}」。",
-      "fontEmbedded": "嵌入式 PDF 字體",
       "color": "顏色",
       "colorLabel": "顏色 {{color}}",
       "addContent": "添加內容",
@@ -1261,7 +1330,18 @@
       "clickAnywhereTextBox": "在頁面上任意位置點擊放置文本框。",
       "clickAnywhereImage": "在頁面上任意位置點擊放置圖像。",
       "selection": "選擇",
-      "annotationOnPage": "{{type}} 在第 {{page}} 頁"
+      "annotationOnPage": "{{type}} 在第 {{page}} 頁",
+      "placeStamp": "放置印章",
+      "stampLabel": "印章",
+      "clickToPlaceStamp": "按一下頁面以放置印章。",
+      "placementModeStamp": "放置模式：印章",
+      "stampPlaced": "已放置印章。",
+      "deleteAnnotation": "刪除註解",
+      "annotationColor": "註解顏色",
+      "editTextBox": "編輯文字",
+      "replaceImage": "取代影像",
+      "imageReplaced": "已取代影像。",
+      "moveHint": "拖曳可移動，拖曳角落可調整大小，或用方向鍵微調。"
     },
     "convert": {
       "exportPdfTo": "導出 PDF 為",
@@ -1279,10 +1359,16 @@
       "confidenceFrom": "信心度從 {{value}}%",
       "ocrOff": "OCR 關閉",
       "ocrOn": "OCR 打開",
-      "ocrRunning": "OCR 本地運行中..."
+      "ocrRunning": "OCR 本地運行中...",
+      "ocrComponentUnknown": "OCR 元件：檢查中…",
+      "ocrComponentInstalled": "OCR 元件已安裝",
+      "ocrLastRun": "上次執行：{{pages}} 頁、{{words}} 個字詞已新增為可搜尋文字",
+      "ocrRunningProgress": "正在辨識第 {{done}} 頁，共 {{total}} 頁…",
+      "markdown": "Markdown（預覽）",
+      "tablesToExcel": "表格轉 Excel（預覽）"
     },
     "esign": {
-      "lede": "Sign with a certificate of your own, and check the signatures a document already carries. Both happen on this device.",
+      "lede": "使用自己的憑證簽署，並檢查文件已有的簽章。兩者都在本機進行。",
       "fillAndSign": "填充您的文檔並簽署",
       "addSignature": "添加簽名",
       "addInitials": "添加首字母縮寫",
@@ -1290,25 +1376,25 @@
       "placementModeInitials": "放置模式：首字母縮寫",
       "clickToPlaceSignature": "在頁面上任意位置點擊放置簽名。",
       "clickToPlaceInitials": "在頁面上任意位置點擊放置首字母縮寫。",
-      "verifySection": "Signatures",
-      "verify": "Check signatures",
-      "desktopOnly": "Available in the desktop app",
-      "unsigned": "This document carries no signatures.",
-      "signSection": "Sign with a certificate",
-      "padesLevel": "Produces a PAdES B-B signature: your certificate over the whole file, no timestamp server involved.",
-      "certificate": "Certificate (.p12 or .pfx)",
-      "certificateNone": "No certificate chosen",
-      "chooseCertificate": "Choose certificate",
-      "certificatePassword": "Certificate password",
-      "reason": "Reason (optional)",
-      "reasonPlaceholder": "Why you are signing",
-      "sign": "Sign and save a copy",
-      "signing": "Signing…",
-      "signNeedsCertificate": "Choose a certificate and enter its password first.",
-      "signSaved": "Signed copy saved as {{name}}",
-      "signFailed": "Signing failed: {{message}}",
-      "usageRights": "Reader enablement (usage rights)",
-      "usageRightsInvalidated": "Usage rights invalidated — this file was edited, so Adobe Reader no longer treats it as an enabled form."
+      "verifySection": "簽名",
+      "verify": "檢查簽名",
+      "desktopOnly": "在桌面應用程式中可用",
+      "unsigned": "此文件不含簽名。",
+      "signSection": "使用憑證簽署",
+      "padesLevel": "產生 PAdES B-B 簽章：以你的憑證簽署整個檔案，不涉及時間戳伺服器。",
+      "certificate": "憑證（.p12 或 .pfx）",
+      "certificateNone": "未選取憑證",
+      "chooseCertificate": "選擇憑證",
+      "certificatePassword": "憑證密碼",
+      "reason": "原因（選擇性）",
+      "reasonPlaceholder": "簽署原因",
+      "sign": "簽署並儲存副本",
+      "signing": "簽署中…",
+      "signNeedsCertificate": "請先選擇憑證並輸入其密碼。",
+      "signSaved": "已簽署的副本已儲存為 {{name}}",
+      "signFailed": "簽署失敗：{{message}}",
+      "usageRights": "Reader 啟用（使用權限）",
+      "usageRightsInvalidated": "使用權限已失效 — 此檔案已被修改，因此 Adobe Reader 不再將其視為已啟用的表單。"
     },
     "protect": {
       "lede": "使用強密碼保護您的 PDF 文檔。更改立即在本地應用。",
@@ -1330,9 +1416,11 @@
       "localViaTauri": "通過 Tauri 命令本地，無瀏覽器運行時",
       "compressingImages": "正在壓縮圖像...",
       "percentComplete": "{{percent}}% 完成",
-      "compressPdf": "壓縮 PDF",
       "desktopOnly": "僅在桌面應用中可用",
-      "backToTools": "回到工具"
+      "backToTools": "回到工具",
+      "saveCopy": "將壓縮副本另存為…",
+      "replaceOpen": "壓縮並取代開啟的文件",
+      "replaceNote": "另存副本會保持開啟的文件及其檔案不變。取代只會變更開啟的文件；復原可還原原始內容。"
     },
     "split": {
       "lede": "將文檔拆分為每頁或特定頁面範圍的單獨 PDF 文件。",
@@ -1359,17 +1447,62 @@
       "currentDocument": "當前文檔"
     },
     "redact": {
-      "lede": "標記並永久移除 PDF 中的敏感信息。編輯會移除實際源文本和向量。",
-      "modeActive": "編輯模式已激活",
-      "dragHint": "在頁面上拖動鼠標遍歷文本或圖像以標記編輯。",
-      "searchAndRedact": "搜索和編輯文本",
+      "lede": "標記並永久移除 PDF 中的敏感資訊。塗黑會移除實際的來源文字與向量。",
+      "modeActive": "塗黑模式已啟用",
+      "dragHint": "在頁面上拖曳滑鼠選取文字或影像，將其標記為塗黑。",
+      "searchAndRedact": "搜尋並塗黑",
       "searchPlaceholder": "搜索詞（例如 SSN、電話）",
       "mark": "標記",
-      "draftRedactions": "草稿編輯（{{count}}）",
+      "draftRedactions": "塗黑草稿（{{count}}）",
       "applying": "正在應用...",
-      "applyPermanently": "永久應用編輯",
-      "noActiveMarkings": "無活動編輯標記。",
-      "backToTools": "回到工具"
+      "applyPermanently": "永久套用塗黑",
+      "noActiveMarkings": "沒有作用中的塗黑標記。",
+      "backToTools": "回到工具",
+      "pii": {
+        "title": "個人資料",
+        "lede": "Find personal data in the text of this document: IBANs, card numbers, national ID numbers, birth dates, e-mail addresses and phone numbers, and names and addresses when the model is installed. Review the list, then redact the ones you choose.",
+        "find": "尋找個人資料",
+        "scanning": "正在掃描…",
+        "none": "Nothing found.",
+        "kind": {
+          "iban": "IBAN",
+          "email": "電子郵件地址",
+          "phone": "電話號碼",
+          "credit_card": "卡號",
+          "national_id": "國民身分證號碼",
+          "date_of_birth": "出生日期",
+          "bank_account": "銀行帳號",
+          "person": "姓名",
+          "address": "地址"
+        },
+        "where": "第 {{pages}} 頁 · {{count}} 次",
+        "selectAll": "全選",
+        "selectNone": "全部取消選取",
+        "redactSelected": "塗黑選取的 {{count}} 項",
+        "redacting": "正在塗黑…",
+        "done": "已塗黑 {{count}} 個項目。請儲存檔案以保留結果。",
+        "failed": "塗黑失敗：{{message}}",
+        "detectFailed": "搜尋失敗：{{message}}",
+        "patternsOnly": "Without the model this finds only items it can check, such as IBANs, cards, ID numbers, birth dates, e-mail addresses and phone numbers. Names and addresses are not detected, so check every page yourself.",
+        "suggestionsOnly": "這些只是建議。偵測器可能會遺漏，因此儲存前請檢查每一頁。",
+        "source": {
+          "verified": "已檢查 {{detail}}",
+          "model": "模型建議，{{score}}%"
+        },
+        "model": {
+          "use": "同時使用模型尋找姓名和地址",
+          "languages": "檢查語言：{{languages}}",
+          "remove": "移除模型",
+          "removeFailed": "無法移除模型：{{message}}",
+          "failed": "模型無法執行（{{code}}）。只會顯示可檢查的項目。",
+          "consentTitle": "要下載個人資料模型嗎？",
+          "consentBody": "尋找姓名和地址需要語言模型（{{size}}）。它會從 {{host}} 下載一次，並以固定的總和檢查碼驗證，然後在這台電腦上執行。您的文件絕不會離開這台電腦。",
+          "download": "下載",
+          "downloading": "正在下載…",
+          "downloadFailed": "下載失敗：{{message}}",
+          "notInBuild": "此版本尚未提供下載。"
+        }
+      }
     },
     "toasts": {
       "saving": "正在保存...",
@@ -1399,117 +1532,337 @@
       "pdfsMerged": "{{count}} 個 PDF 文件已合併",
       "mergedSaved": "合併 PDF 已保存為 {{name}}。",
       "mergeFailed": "合併失敗：{{message}}",
-      "redactMatches": "找到 {{matches}} 個匹配項，放置 {{areas}} 個編輯標記。",
-      "noRedactMatches": "未找到要編輯的文本匹配項。",
-      "redactSearchFailed": "搜索編輯失敗：{{message}}",
-      "applyRedactConfirm": "永久應用 {{count}} 個編輯標記？這會永久移除 PDF 中的內容。",
-      "applyRedactConfirm_plural": "永久應用 {{count}} 個編輯標記？這會永久移除 PDF 中的內容。",
-      "applyRedactTitle": "應用編輯",
-      "applyRedactRunning": "正在永久應用編輯...",
-      "applyRedactDone": "編輯已永久應用",
-      "redactionsApplied": "編輯已永久應用。",
-      "redactFailed": "編輯失敗：{{message}}"
+      "redactSearchDone": "已塗黑的符合項目：{{count}}。請儲存以保留變更。",
+      "noRedactMatches": "找不到可塗黑的文字。",
+      "redactSearchFailed": "搜尋塗黑失敗：{{message}}",
+      "applyRedactConfirm": "要永久套用 {{count}} 個塗黑標記嗎？這會將內容從 PDF 中徹底移除。",
+      "applyRedactConfirm_plural": "要永久套用 {{count}} 個塗黑標記嗎？這會將內容從 PDF 中徹底移除。",
+      "applyRedactTitle": "套用塗黑",
+      "applyRedactRunning": "正在套用塗黑…",
+      "applyRedactDone": "塗黑已永久套用",
+      "redactionsApplied": "塗黑已永久套用。",
+      "redactFailed": "塗黑失敗：{{message}}",
+      "compressedCopyToast": "已儲存 {{name}}：{{before}} 到 {{after}}。目前開啟的文件維持不變。",
+      "compressedReplacedToast": "已壓縮開啟中的文件：{{before}} 到 {{after}}。復原可恢復原始文件。儲存以保留壓縮版本。"
     },
     "thumbnails": {
       "pages": "頁面",
       "pageAlt": "第 {{page}} 頁",
-      "bookmarks": "Bookmarks"
+      "bookmarks": "書籤"
     },
     "pdfa": {
-      "lede": "PDF/A is the archival form of PDF: fonts embedded, colours defined, nothing that depends on the outside world.",
-      "section": "Conformance",
-      "level": "Level",
-      "validate": "Check this document",
-      "convert": "Save as PDF/A…",
-      "desktopOnly": "Available in the desktop app",
-      "compliant": "Conforms to {{level}}",
-      "notCompliant": "Does not conform: {{errors}} errors, {{warnings}} warnings",
-      "moreIssues": "{{count}} more",
+      "lede": "PDF/A 是 PDF 的典藏格式：字型已內嵌、色彩已定義，不依賴外部環境。",
+      "section": "符合性",
+      "level": "層級",
+      "validate": "檢查此文件",
+      "convert": "另存為 PDF/A…",
+      "desktopOnly": "在桌面應用程式中可用",
+      "compliant": "符合 {{level}}",
+      "notCompliant": "不符合：{{errors}} 個錯誤，{{warnings}} 個警告",
+      "moreIssues": "還有 {{count}} 項",
       "report": {
-        "title": "What the conversion did",
-        "written": "Written to {{path}}",
-        "size": "{{out}} out of {{in}} ({{ratio}}×), in {{seconds}} s",
-        "pages": "{{count}} pages",
-        "fontsEmbedded": "{{embedded}} of {{found}} unembedded fonts embedded",
-        "fontsFailed": "Could not embed: {{fonts}}",
-        "removed": "Removed: {{count}} items that PDF/A does not allow",
-        "subset": "{{count}} font programs reduced, {{bytes}} kB saved",
-        "outputIntent": "Output intent added",
-        "unchangedDocument": "The open document was not changed.",
+        "title": "轉換所做的變更",
+        "written": "已寫入 {{path}}",
+        "size": "{{out}}／{{in}}（{{ratio}}×），耗時 {{seconds}} 秒",
+        "pages": "{{count}} 頁",
+        "fontsEmbedded": "已內嵌 {{found}} 個未內嵌字型中的 {{embedded}} 個",
+        "fontsFailed": "無法內嵌：{{fonts}}",
+        "removed": "已移除：{{count}} 個 PDF/A 不允許的項目",
+        "subset": "已縮減 {{count}} 個字型程式，節省 {{bytes}} kB",
+        "outputIntent": "已新增輸出意圖",
+        "unchangedDocument": "開啟的文件未被變更。",
         "warning": "{{message}}",
-        "moreWarnings": "{{count}} more"
+        "moreWarnings": "還有 {{count}} 項"
       }
     },
     "metadata": {
-      "lede": "The title and author stored inside the file, which is what other readers and search show.",
-      "section": "Properties",
-      "title": "Title",
-      "author": "Author",
-      "apply": "Save properties",
-      "desktopOnly": "Available in the desktop app"
+      "lede": "儲存在檔案內的標題和作者，其他閱讀器和搜尋會顯示這些資訊。",
+      "section": "屬性",
+      "title": "標題",
+      "author": "作者",
+      "apply": "儲存屬性",
+      "desktopOnly": "在桌面應用程式中可用"
     },
     "invoice": {
-      "lede": "A ZUGFeRD or Factur-X invoice travels as XML inside the PDF. This reads it and checks it against EN 16931.",
-      "section": "Embedded invoice",
-      "read": "Read invoice",
-      "desktopOnly": "Available in the desktop app",
-      "none": "This document carries no e-invoice.",
-      "number": "Number: {{number}}",
-      "issued": "Issued: {{date}}",
-      "seller": "Seller: {{name}}",
-      "buyer": "Buyer: {{name}}",
-      "total": "Total: {{total}} {{currency}}",
-      "lines": "Line items: {{count}}",
-      "valid": "Valid against {{profile}}",
-      "invalid": "Not valid: {{errors}} errors, {{warnings}} warnings"
+      "lede": "ZUGFeRD 或 Factur-X 發票會以 XML 形式夾帶在 PDF 內。此功能會讀取並依 EN 16931 檢查。",
+      "section": "內嵌的發票",
+      "read": "讀取發票",
+      "desktopOnly": "在桌面應用程式中可用",
+      "none": "此文件不含電子發票。",
+      "number": "編號：{{number}}",
+      "issued": "開立日期：{{date}}",
+      "seller": "賣方：{{name}}",
+      "buyer": "買方：{{name}}",
+      "total": "總計：{{total}} {{currency}}",
+      "lines": "明細項目：{{count}}",
+      "valid": "符合 {{profile}}",
+      "invalid": "無效：{{errors}} 個錯誤，{{warnings}} 個警告"
     },
     "canvas": {
-      "document": "PDF document"
+      "document": "PDF 文件"
+    },
+    "stamps": {
+      "Approved": "已核准",
+      "NotApproved": "未核准",
+      "Draft": "草稿",
+      "Confidential": "機密",
+      "Final": "最終版",
+      "ForComment": "待審閱",
+      "Expired": "已過期"
     }
   },
   "about": {
-    "section": "About",
-    "app": "App",
-    "version": "Version",
-    "privacy": "Privacy",
-    "privacyValue": "All processing happens locally",
-    "website": "Website"
+    "section": "關於",
+    "app": "應用程式",
+    "version": "版本",
+    "privacy": "隱私",
+    "privacyValue": "所有處理均在本機進行",
+    "website": "網站"
   },
   "reviewSummary": {
-    "title": "Review summary",
-    "generatedAt": "Generated on",
-    "comments": "Comments",
-    "noComments": "No comments.",
-    "replies": "Replies:",
-    "empty": "empty",
-    "redactions": "Redactions",
-    "noRedactions": "No redactions.",
-    "noIssues": "No issues.",
-    "metadataChanges": "Metadata changes",
-    "noMetadataChanges": "No changes.",
-    "changedBy": "by",
-    "on": "on"
+    "title": "審閱摘要",
+    "generatedAt": "產生於",
+    "comments": "注解",
+    "noComments": "無注解。",
+    "replies": "回覆：",
+    "empty": "空白",
+    "redactions": "塗黑標記",
+    "noRedactions": "沒有塗黑標記。",
+    "noIssues": "無問題。",
+    "metadataChanges": "中繼資料變更",
+    "noMetadataChanges": "無變更。",
+    "changedBy": "由",
+    "on": "於"
   },
   "externalLink": {
-    "askMessage": "This PDF wants to open an external link:\n\n{{label}}\n\nURL:\n{{href}}\n\nDo you want to continue?",
-    "title": "Open external link?",
-    "openLink": "Open link",
-    "dialogBody": "This PDF wants to open an external website. Check the URL before continuing."
+    "askMessage": "此 PDF 想要開啟外部連結：\n\n{{label}}\n\nURL：\n{{href}}\n\n是否繼續？",
+    "title": "開啟外部連結？",
+    "openLink": "開啟連結",
+    "dialogBody": "此 PDF 想要開啟外部網站。繼續前請檢查 URL。"
   },
   "linkChoice": {
-    "title": "Open link in your browser?",
-    "body": "This document wants to open an external website. Are you opening it from a trusted source?",
-    "alwaysAllow": "Always allow",
-    "openOnce": "Open once"
+    "title": "在瀏覽器中開啟連結？",
+    "body": "此文件想要開啟外部網站。這份文件是否來自可信任的來源？",
+    "alwaysAllow": "一律允許",
+    "openOnce": "僅開啟一次"
   },
   "fallbacks": {
-    "ocrUnavailableTitle": "OCR is not available on this computer",
-    "ocrUnavailableMessage": "PDFluent could not start the text-recognition engine. {{reason}}",
-    "ocrFailedMessage": "Text recognition stopped on page {{page}}: {{reason}}",
-    "xfaStaticTitle": "Form filled without recalculation",
-    "xfaStaticMessage": "This build writes XFA field values straight into the form. Field scripts do not run, so calculated totals and fields that appear or hide based on your answer stay as they are.",
-    "featureUnavailableTitle": "'{{feature}}' is not available in this build",
-    "usageRightsInvalidatedTitle": "This document is no longer Reader-enabled",
-    "usageRightsInvalidatedMessage": "Your change was made. It also invalidated the usage-rights signature this PDF carried, which let Adobe Reader fill in and save the form. The text edit stands; the extended rights are gone and cannot be restored by undoing it."
+    "ocrUnavailableTitle": "此電腦無法使用 OCR",
+    "ocrUnavailableMessage": "PDFluent 無法啟動文字辨識引擎。{{reason}}",
+    "ocrFailedMessage": "文字辨識在第 {{page}} 頁停止：{{reason}}",
+    "xfaStaticTitle": "表單已填寫，但未重新計算",
+    "xfaStaticMessage": "此版本會將 XFA 欄位值直接寫入表單。欄位指令碼不會執行，因此計算出的總計，以及會依您的回答顯示或隱藏的欄位，都會維持原狀。",
+    "xfaScriptsNotRunTitle": "表單中的部分指令碼未執行",
+    "xfaScriptsNotRunMessage": "你的回答已儲存。此表單包含 FormCalc 指令碼（共 {{count}} 個），而 PDFluent 只執行 JavaScript 指令碼。這些指令碼原本會更新的合計與欄位會保留已儲存的值，直到表單在 Adobe Reader 中開啟。",
+    "xfaFieldRefusedTitle": "表單未接受該值",
+    "xfaFieldReadOnly": "欄位「{{field}}」在此表單中為唯讀，無法變更。",
+    "xfaFieldRejected": "欄位「{{field}}」不接受該值：{{reason}}",
+    "xfaFieldNotFound": "欄位「{{field}}」已不在表單中。表單已重新載入。",
+    "featureUnavailableTitle": "「{{feature}}」在此組建中無法使用",
+    "usageRightsInvalidatedTitle": "此文件已不再啟用 Reader 功能",
+    "usageRightsInvalidatedMessage": "您的變更已完成。它也讓此 PDF 所帶的使用權限簽章失效，該簽章原本可讓 Adobe Reader 填寫並儲存表單。文字修改仍然有效；延伸權限已消失，且無法透過復原恢復。",
+    "xfaScriptsFailedTitle": "部分表單指令碼未完成",
+    "xfaScriptsFailedMessage": "您的答案已儲存，但這些指令碼未完成，因此它們設定的值可能會遺失：{{details}}。",
+    "xfaScriptKind_threw": "發生錯誤",
+    "xfaScriptKind_timeout": "逾時",
+    "xfaScriptKind_refused": "被沙箱拒絕"
+  },
+  "signedSave": {
+    "title": "此文件已簽署",
+    "message": "塗黑會移除簽章所涵蓋的內容，因此無法覆寫儲存已簽署的原始檔，否則簽章會失效。請另存副本：副本保留塗黑，但不含簽章。",
+    "saveCopy": "儲存不含簽名的副本…",
+    "cancel": "取消"
+  },
+  "passwordPrompt": {
+    "title": "此 PDF 受保護",
+    "message": "輸入密碼以開啟 {{name}}。",
+    "incorrect": "這個密碼無法開啟此 PDF。請再試一次。",
+    "label": "密碼",
+    "open": "開啟",
+    "cancel": "取消",
+    "readOnlyTitle": "已以唯讀模式開啟",
+    "readOnlyMessage": "此 PDF 的權限不允許變更。你可以閱讀，若權限允許也可列印。若要儲存變更，請使用擁有者密碼移除保護。"
+  },
+  "a11y": {
+    "searchNextResult": "下一個結果",
+    "searchPrevResult": "上一個結果"
+  },
+  "feedback": {
+    "title": "協助我們改進 PDFluent",
+    "intro": "告訴我們你想做什麼。我們會閱讀每一份回報。",
+    "menuLabel": "協助我們改進 PDFluent…",
+    "fromError": "你可以告訴我們剛才遇到的問題。",
+    "areaLabel": "你想做什麼？",
+    "area": {
+      "open-view": "開啟或閱讀文件",
+      "search-copy": "搜尋或複製文字",
+      "print": "列印",
+      "edit-text": "編輯文字",
+      "annotate": "醒目提示、註解或繪圖",
+      "forms": "填寫表單",
+      "sign": "簽署或檢查簽名",
+      "redact": "Redact",
+      "pages-organize": "旋轉、重排、合併或拆分頁面",
+      "convert-export": "轉換或匯出",
+      "ocr": "辨識掃描檔中的文字（OCR）",
+      "pdfa-compliance": "PDF/A",
+      "protect": "密碼或權限",
+      "save": "儲存",
+      "install-update": "安裝或更新 PDFluent",
+      "other": "其他"
+    },
+    "tryingToPlaceholder": "用你自己的話說明（選填）",
+    "whatHappenedLabel": "發生了什麼事？",
+    "whatHappenedPlaceholder": "你看到了什麼？",
+    "whatHappenedRequired": "請告訴我們發生了什麼事，方便我們查找原因。",
+    "expectedLabel": "你原本期望什麼？",
+    "expectedPlaceholder": "選填",
+    "docTypeLabel": "這是哪一種文件？",
+    "docType": {
+      "none": "不涉及文件",
+      "form": "表單",
+      "scanned": "掃描檔",
+      "signed": "已簽署的文件",
+      "protected": "受密碼保護",
+      "large": "大型檔案（超過 100 頁）",
+      "xfa": "政府表單或 XFA 表單",
+      "other": "其他"
+    },
+    "docTypeUnset": "請選擇…",
+    "pageCountLabel": "頁數",
+    "contextTitle": "隨回報一併傳送",
+    "contextToggle": "包含系統詳細資料",
+    "contextHint": "版本、系統、語言和最近的錯誤有助於我們重現問題。不含檔案名稱、路徑或文件內容。",
+    "fieldVersion": "PDFluent 版本",
+    "fieldSystem": "系統",
+    "fieldLanguage": "語言",
+    "fieldLastError": "最近的錯誤",
+    "fieldSessions": "工作階段",
+    "notIncluded": "未包含",
+    "documentTitle": "分享文件（選填）",
+    "documentToggle": "將開啟的文件隨此回報一起分享",
+    "documentNone": "目前沒有開啟的文件。",
+    "documentTooLarge": "此文件超過 20 MB，無法隨回報分享。",
+    "documentShared": "此文件將會被分享。",
+    "documentConfirmTitle": "要分享此文件嗎？",
+    "documentConfirmText": "此檔案會傳送給 PDFluent (Innovation Trigger B.V.)。只會用來調查這份報告，絕不會公開，絕不用於訓練，並會在問題修正後 90 天內刪除，且無論如何都會在 12 個月內刪除。",
+    "documentConfirmFile": "{{name}} ({{size}})",
+    "documentConfirmYes": "分享此文件",
+    "documentConfirmNo": "不分享",
+    "contactTitle": "保持聯絡（選填）",
+    "emailLabel": "電子郵件地址",
+    "emailInvalid": "這看起來不像電子郵件地址。",
+    "consentContact": "PDFluent 可以就這份報告寄電子郵件詢問我。",
+    "consentFixed": "問題修正後寄電子郵件通知我。",
+    "contactHint": "您的電子郵件地址會與報告分開儲存，僅用於這份報告，絕不會用於電子報或行銷。",
+    "noEmailHint": "即使不留電子郵件，你也會收到我們的消息：更新修正你回報的問題後，PDFluent 會在應用程式內通知你。",
+    "privacyNotice": "Innovation Trigger B.V. 會收到這份報告，用來改善 PDFluent。報告最多保留 24 個月。您隨時可以要求移除您的報告。",
+    "privacyLink": "隱私權聲明",
+    "send": "傳送",
+    "sending": "傳送中…",
+    "cancel": "取消",
+    "sentTitle": "謝謝！",
+    "sentBody": "你的回報已送達。編號如下：",
+    "sentIdHint": "如果想詢問或刪除這份回報，請保留此編號。",
+    "sentNoLocalCopy": "PDFluent 無法在這台電腦上記住此編號，請自行記下。",
+    "sentDocumentFailed": "你的回報已送達，但文件未能上傳。如果文件很重要，可以連同文件再傳送一次。",
+    "removeReport": "刪除此回報",
+    "removing": "刪除中…",
+    "removed": "你的回報已刪除。",
+    "removeFailed": "目前無法刪除你的回報。請稍後再試，或將編號以電子郵件寄給我們。",
+    "failedTitle": "未能傳送",
+    "failedNetwork": "PDFluent 無法連線到伺服器。沒有傳送任何內容，你輸入的文字仍然保留。",
+    "failedRateLimited": "今天此連線提交的回報過多，請明天再試。",
+    "failedRejected": "回報未被接受。請檢查表單後再試一次。",
+    "failedServer": "我們這邊出了點問題。你輸入的文字仍然保留，請稍後再試。",
+    "tryAgain": "再試一次",
+    "fixedTitle": "已修正！",
+    "fixedOffered": "版本 {{version}} 已修正你的回報 {{ids}}。感謝你告訴我們。",
+    "fixedAfterUpdate": "你的回報 {{ids}} 已在此版本中修正。感謝你告訴我們。",
+    "dismiss": "關閉"
+  },
+  "openError": {
+    "corrupt": {
+      "title": "此 PDF 已損毀",
+      "body": "PDFluent 無法讀取此檔案。它可能在下載或複製過程中損毀，或是建立它的應用程式寫入有誤。請重新下載或複製，或開啟原始檔案並重新匯出為 PDF。",
+      "action": "開啟其他檔案"
+    },
+    "not_pdf": {
+      "title": "這不是 PDF 檔案",
+      "body": "PDFluent 開啟的是 PDF 檔案。此檔案是其他類型，或檔名不是以 .pdf 結尾。請選擇 PDF 檔案。如果此檔案確實是 PDF，請將檔名改為以 .pdf 結尾。",
+      "action": "開啟其他檔案"
+    },
+    "empty": {
+      "title": "此檔案是空的",
+      "body": "檔案沒有內容（0 位元組）。下載或複製可能尚未完成。請重新下載或複製，然後再開啟。",
+      "action": "開啟其他檔案"
+    },
+    "encrypted_needs_password": {
+      "title": "此 PDF 需要密碼",
+      "body": "此 PDF 受密碼保護。請重新開啟並輸入密碼。如果你不知道密碼，請詢問傳送檔案給你的人。",
+      "action": "輸入密碼"
+    },
+    "wrong_password": {
+      "title": "密碼不正確",
+      "body": "此密碼無法開啟該 PDF。請檢查是否輸入錯誤，以及 Caps Lock 是否開啟，然後重試。",
+      "action": "重試"
+    },
+    "unsupported_encryption": {
+      "title": "PDFluent 無法開啟這種保護方式",
+      "body": "此 PDF 使用了 PDFluent 不支援的憑證或安全方式進行保護，因此無法在這裡用密碼開啟。請向傳送者索取未加保護的副本，或以密碼保護的副本。",
+      "action": "開啟其他檔案"
+    },
+    "too_large": {
+      "title": "檔案太大",
+      "body": "此檔案超出了 PDFluent 可以安全開啟的大小。請在建立它的應用程式中拆分或壓縮，然後開啟各個部分。",
+      "action": "開啟其他檔案"
+    },
+    "too_many_pages": {
+      "title": "此 PDF 頁數過多",
+      "body": "此文件的頁數超出了 PDFluent 一次可以開啟的數量。請在建立它的應用程式中拆分為較小的文件，然後開啟各個部分。",
+      "action": "開啟其他檔案"
+    },
+    "io_denied": {
+      "title": "PDFluent 無權讀取此檔案",
+      "body": "你的電腦沒有授予 PDFluent 讀取此檔案的權限。請檢查檔案權限，或將檔案移到「文件」等資料夾，然後重試。",
+      "action": "重試"
+    },
+    "not_found": {
+      "title": "找不到此檔案",
+      "body": "檔案可能已被移動、重新命名或刪除，或位於已中斷連線的磁碟機上。請找到該檔案並重新開啟。",
+      "action": "開啟其他檔案"
+    },
+    "unknown": {
+      "title": "無法開啟此檔案",
+      "body": "開啟此檔案時發生問題。請重試。如果問題持續發生，請告訴我們，我們會修正。",
+      "action": "重試"
+    },
+    "feedback": "協助我們改進 PDFluent"
+  },
+  "formBar": {
+    "title": "可填寫表單",
+    "fields": "欄位：{{count}}",
+    "clickToFill": "點擊欄位即可填寫。",
+    "noCalculations": "不會執行 Adobe 表單中的自動計算。",
+    "autoLinks": "自動開啟連結",
+    "autoLinksTitle": "連結會自動在瀏覽器中開啟。點擊可關閉此功能。",
+    "highlight": "醒目標示欄位",
+    "firstField": "第一個欄位"
+  },
+  "tabs": {
+    "label": "開啟的文件",
+    "close": "關閉 {{name}}",
+    "unsaved": "未儲存的變更",
+    "new": "開啟另一個文件",
+    "tooManyTitle": "開啟的文件過多",
+    "tooManyMessage": "已開啟 {{max}} 個文件。關閉一個才能開啟另一個。"
+  },
+  "formScripts": {
+    "barLabel": "表單指令碼",
+    "barMessage": "此表單包含指令碼（例如計算）。要執行嗎？",
+    "barDetail": "找到指令碼：{{count}}。",
+    "runOnce": "只為此文件執行",
+    "runAlways": "永遠執行指令碼",
+    "dontRun": "不要執行"
   }
 }

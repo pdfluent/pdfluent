@@ -162,8 +162,17 @@ function showable(field) {
 const MIN_COMMITS = 1;
 const MIN_FILES = 100;
 
+// Every git call goes through here. PDFLUENT_GIT_SHIM names a node script that
+// stands in for git, so a test can count the processes and see what was piped
+// in on every platform; a POSIX shell shim does not run on Windows (#731).
+function gitCall(args) {
+  const shim = process.env.PDFLUENT_GIT_SHIM;
+  return shim ? { file: process.execPath, args: [shim, ...args] } : { file: "git", args };
+}
+
 function git(args) {
-  return execFileSync("git", args, { cwd: root, encoding: "utf8", maxBuffer: 256 * 1024 * 1024 });
+  const c = gitCall(args);
+  return execFileSync(c.file, c.args, { cwd: root, encoding: "utf8", maxBuffer: 256 * 1024 * 1024 });
 }
 
 function scanRange(range, activeRules) {
@@ -192,7 +201,8 @@ function scanRange(range, activeRules) {
 function readBlobs(shas) {
   const blobs = new Map();
   if (shas.length === 0) return blobs;
-  const out = execFileSync("git", ["cat-file", "--batch", "--buffer"], {
+  const c = gitCall(["cat-file", "--batch", "--buffer"]);
+  const out = execFileSync(c.file, c.args, {
     cwd: root, input: `${shas.join("\n")}\n`, maxBuffer: 512 * 1024 * 1024,
   });
   let at = 0;

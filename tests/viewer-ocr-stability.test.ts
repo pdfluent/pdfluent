@@ -8,6 +8,13 @@
 import { readFileSync } from 'node:fs';
 import { describe, it, expect } from 'vitest';
 
+// The OCR run itself (J-60) is no longer a per-page loop in the frontend that
+// keeps words for an overlay: it writes a text layer into the document. Its
+// behaviour is tested where it happens -- src-tauri/tests/
+// ocr_makes_scans_searchable.rs (scan -> OCR -> save -> search),
+// src-tauri/src/ocr_component.rs (the bundled component, checksums) and
+// src/lib/__tests__/ocrComponent.test.ts (what "Run OCR" leads to).
+
 const viewerAppSource = [
   '../src/viewer/hooks/usePageNavigation.ts',
   '../src/viewer/hooks/useZoomControls.ts',
@@ -32,10 +39,6 @@ const ocrOverlaySource = readFileSync(
   'utf8'
 );
 
-const tauriOcrEngineSource = readFileSync(
-  new URL('../src/platform/engine/tauri/TauriOcrEngine.ts', import.meta.url),
-  'utf8'
-);
 
 const rightPanelSource = readFileSync(
   new URL('../src/viewer/components/RightContextPanel.tsx', import.meta.url),
@@ -76,57 +79,6 @@ describe('ViewerApp — scanned page detection triggered on document load', () =
 // ViewerApp — handleRunOcr stability
 // ---------------------------------------------------------------------------
 
-describe('ViewerApp — handleRunOcr: stability', () => {
-  it('handleRunOcr is a useCallback', () => {
-    expect(viewerAppSource).toContain('handleRunOcr = useCallback');
-  });
-
-  it('handleRunOcr sets ocrProgress initial values before try block', () => {
-    const fnStart = viewerAppSource.indexOf('handleRunOcr = useCallback');
-    const fnEnd = viewerAppSource.indexOf('\n  }, [', fnStart) + 4;
-    const fnBody = viewerAppSource.slice(fnStart, fnEnd);
-    expect(fnBody).toContain('setOcrProgress({ processed: 0, total: pagesToProcess.length })');
-  });
-
-  it('handleRunOcr uses try/finally for ocrRunning cleanup', () => {
-    const fnStart = viewerAppSource.indexOf('handleRunOcr = useCallback');
-    const fnEnd = viewerAppSource.indexOf('\n  }, [', fnStart) + 4;
-    const fnBody = viewerAppSource.slice(fnStart, fnEnd);
-    expect(fnBody).toContain('try {');
-    expect(fnBody).toContain('} finally {');
-  });
-
-  it('handleRunOcr sets ocrRunning(false) in finally (not in catch)', () => {
-    const fnStart = viewerAppSource.indexOf('handleRunOcr = useCallback');
-    const fnEnd = viewerAppSource.indexOf('\n  }, [', fnStart) + 4;
-    const fnBody = viewerAppSource.slice(fnStart, fnEnd);
-    const finallyIdx = fnBody.lastIndexOf('finally');
-    const finallyBlock = fnBody.slice(finallyIdx);
-    expect(finallyBlock).toContain('setOcrRunning(false)');
-  });
-
-  it('handleRunOcr uses functional update for ocrProgress increment', () => {
-    const fnStart = viewerAppSource.indexOf('handleRunOcr = useCallback');
-    const fnEnd = viewerAppSource.indexOf('\n  }, [', fnStart) + 4;
-    const fnBody = viewerAppSource.slice(fnStart, fnEnd);
-    // Must use prev => ... to avoid stale closure issues
-    expect(fnBody).toContain('setOcrProgress(prev =>');
-  });
-
-  it('handleRunOcr stores results in a new Map copied from ocrPageWords', () => {
-    const fnStart = viewerAppSource.indexOf('handleRunOcr = useCallback');
-    const fnEnd = viewerAppSource.indexOf('\n  }, [', fnStart) + 4;
-    const fnBody = viewerAppSource.slice(fnStart, fnEnd);
-    expect(fnBody).toContain('new Map(ocrPageWords)');
-  });
-
-  it('handleRunOcr calls setOcrPageWords after loop completes', () => {
-    const fnStart = viewerAppSource.indexOf('handleRunOcr = useCallback');
-    const fnEnd = viewerAppSource.indexOf('\n  }, [', fnStart) + 4;
-    const fnBody = viewerAppSource.slice(fnStart, fnEnd);
-    expect(fnBody).toContain('setOcrPageWords(results)');
-  });
-});
 
 // ---------------------------------------------------------------------------
 // OcrOverlay — stability under edge conditions
@@ -167,32 +119,6 @@ describe('OcrOverlay — stability under edge conditions', () => {
 // TauriOcrEngine — error handling
 // ---------------------------------------------------------------------------
 
-describe('TauriOcrEngine — error handling', () => {
-  it('wraps runOcr in try/catch', () => {
-    expect(tauriOcrEngineSource).toContain('try {');
-    expect(tauriOcrEngineSource).toContain('} catch (err) {');
-  });
-
-  it('returns success: false on error', () => {
-    const catchStart = tauriOcrEngineSource.indexOf('} catch (err) {');
-    const catchEnd = tauriOcrEngineSource.indexOf('}', catchStart + 15) + 1;
-    const catchBody = tauriOcrEngineSource.slice(catchStart, catchEnd);
-    expect(catchBody).toContain('success: false');
-  });
-
-  it('returns internal-error code on error', () => {
-    expect(tauriOcrEngineSource).toContain("code: 'internal-error'");
-  });
-
-  it('preserves error message from Error instances', () => {
-    expect(tauriOcrEngineSource).toContain('err instanceof Error ? err.message : String(err)');
-  });
-
-  it('isAvailable returns a boolean', () => {
-    expect(tauriOcrEngineSource).toContain('isAvailable(): boolean');
-    expect(tauriOcrEngineSource).toContain('return true');
-  });
-});
 
 // ---------------------------------------------------------------------------
 // OcrPanel — stable rendering with empty scannedPageIndices

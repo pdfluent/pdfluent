@@ -13,8 +13,8 @@ See https://pdfluent.com/license for terms.
 - **RAM:** 4 GB.
 - **Disk:** ~150 MB free for install; additional space for documents you open/export.
 - **Display:** 1280×720 or higher.
-- **Network:** Not required for core PDF features (view, edit, convert, sign run
-  fully offline). Optional network for auto-update checks only.
+- **Network:** Not required for core PDF features (view, edit, convert, sign run on
+  the device). Optional network for auto-update checks only.
 
 ## Recommended
 - **OS:** Windows 11 (current).

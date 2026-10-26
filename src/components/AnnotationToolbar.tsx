@@ -81,7 +81,7 @@ const TOOL_ICONS: Record<AnnotationToolbarTool, string> = {
 const HIGHLIGHT_SWATCHES: { color: HighlightColor; hex: string }[] = [
   { color: "yellow", hex: "#f9dd5f" },
   { color: "green", hex: "#90d676" },
-  { color: "blue", hex: "#86b6ff" },
+  { color: "blue", hex: "#86b6ff" },  // monochrome-allow: highlight colour swatch (document content)
   { color: "pink", hex: "#f3a2cb" },
 ];
 
@@ -90,8 +90,8 @@ const SHAPE_COLOR_PRESETS = [
   "#f97316",
   "#eab308",
   "#22c55e",
-  "#3b82f6",
-  "#8b5cf6",
+  "#3b82f6",  // monochrome-allow: document content colour: the user picks it
+  "#8b5cf6",  // monochrome-allow: document content colour: the user picks it
   "#1f2937",
 ];
 

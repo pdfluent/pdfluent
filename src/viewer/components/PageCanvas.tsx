@@ -16,8 +16,11 @@ import { TextInteractionOverlay } from './TextInteractionOverlay';
 import { OcrOverlay } from './OcrOverlay';
 import { TextSelectionFloatingToolbar } from './TextSelectionFloatingToolbar';
 import { PageLoadingIndicator } from './PageLoadingIndicator';
+import i18n from '../../i18n';
+import { announceInShell } from '../v3/shellToast';
 import type { TextSelectionInfo } from './TextSelectionFloatingToolbar';
 import { hitTestText } from '../text/textHoverHitTest';
+import { chooseDoubleClickTarget } from '../text/doubleClickTarget';
 import type { PageTextStructure, TextLineTarget, TextParagraphTarget, TextSpanTarget } from '../text/textInteractionModel';
 import type { TextHoverTarget } from '../text/textHoverHitTest';
 
@@ -34,6 +37,8 @@ interface PageCanvasProps {
   clickableAnnotations?: Array<{ id: string; rect: { x: number; y: number; width: number; height: number }; color: string; type?: string }>;
   /** Called when the user clicks an annotation marker on the canvas. */
   onAnnotationClick?: (annotationId: string) => void;
+  /** Move or resize the selected annotation (J-46); PDF-space rect. */
+  onAnnotationRectChange?: (annotationId: string, rect: { x: number; y: number; width: number; height: number }) => void;
   /** Search result rects for the current page — rendered as yellow highlights. */
   searchHighlights?: Array<{ x: number; y: number; width: number; height: number }>;
   /** Index within searchHighlights that is the active result. */
@@ -101,6 +106,7 @@ export const PageCanvas = memo(function PageCanvas({
   highlights = [],
   clickableAnnotations = [],
   onAnnotationClick,
+  onAnnotationRectChange,
   searchHighlights = [],
   activeSearchHighlightIdx = -1,
   selectedAnnotationId = null,
@@ -138,7 +144,16 @@ export const PageCanvas = memo(function PageCanvas({
   // Rectangle draw state — start/current positions in DOM (SVG) space
   const [dragStart, setDragStart] = useState<{ x: number; y: number } | null>(null);
   // The freehand stroke being drawn, in PDF coordinates; null when not drawing.
-  const [inkPath, setInkPath] = useState<Array<[number, number]> | null>(null);
+  const [inkPath, setInkPathState] = useState<Array<[number, number]> | null>(null);
+  // The stroke is also kept in a ref: a fast stroke delivers several moves and
+  // the release before React has re-rendered, and each handler read the path
+  // from the render it was created in. The release then saw one point, called
+  // it "a click without movement" and drew nothing (J-52).
+  const inkPathRef = useRef<Array<[number, number]> | null>(null);
+  const setInkPath = useCallback((path: Array<[number, number]> | null) => {
+    inkPathRef.current = path;
+    setInkPathState(path);
+  }, []);
   const [dragCurrent, setDragCurrent] = useState<{ x: number; y: number } | null>(null);
 
   // Backup ref for canvas-masking (prevents text ghosting in inline editor)
@@ -341,9 +356,10 @@ export const PageCanvas = memo(function PageCanvas({
       setHoveredTextTarget(hitTestText(domX, domY, textStructure, pageHeightPt, zoom));
     }
     if (activeAnnotationTool === 'ink') {
-      if (inkPath === null) return;
+      const drawn = inkPathRef.current;
+      if (drawn === null) return;
       const inkBounds = e.currentTarget.getBoundingClientRect();
-      setInkPath([...inkPath, toPdfPoint(e.clientX - inkBounds.left, e.clientY - inkBounds.top)]);
+      setInkPath([...drawn, toPdfPoint(e.clientX - inkBounds.left, e.clientY - inkBounds.top)]);
       return;
     }
     if (!dragStart || (activeAnnotationTool !== 'rectangle' && activeAnnotationTool !== 'redaction')) return;
@@ -368,7 +384,7 @@ export const PageCanvas = memo(function PageCanvas({
       return;
     }
     if (activeAnnotationTool === 'ink') {
-      const path = inkPath;
+      const path = inkPathRef.current;
       setInkPath(null);
       // A click without movement is not a stroke; two points is the minimum a
       // /Ink annotation can carry without collapsing to nothing on the page.
@@ -400,9 +416,9 @@ export const PageCanvas = memo(function PageCanvas({
     if (activeAnnotationTool) return;
     const hit = getTextTargetFromEvent(e);
     if (!hit) return;
-    const target = hit.span
-      ? spanToEditableParagraph(hit.span, hit.line)
-      : lineToEditableParagraph(hit.line);
+    const target = chooseDoubleClickTarget(hit.paragraph, () => (
+      hit.span ? spanToEditableParagraph(hit.span, hit.line) : lineToEditableParagraph(hit.line)
+    ));
     setHoveredTextTarget(hit);
     // Clear the native word-selection the double-click just made, so the
     // floating selection toolbar doesn't linger over the inline editor.
@@ -455,7 +471,11 @@ export const PageCanvas = memo(function PageCanvas({
   }, [onSelectionMarkup, handleSelectionDismiss]);
 
   const handleSelectionCopy = useCallback((text: string) => {
-    navigator.clipboard.writeText(text).catch(() => {});
+    // Say so only when the clipboard took it: "Copied" over a refused write
+    // would be the button lying.
+    navigator.clipboard.writeText(text)
+      .then(() => { announceInShell(i18n.t('selToolbar.copied')); })
+      .catch(() => {});
     handleSelectionDismiss();
   }, [handleSelectionDismiss]);
 
@@ -540,7 +560,14 @@ export const PageCanvas = memo(function PageCanvas({
             {error}
           </div>
         )}
-        {/* Stacking order: canvas → AnnotationOverlay (z=10) → OcrOverlay (z=12) → TextInteractionOverlay (z=15) → TextLayer (z=20) */}
+        {/* Stacking order: canvas → AnnotationOverlay (z=10) → OcrOverlay (z=12) → TextInteractionOverlay (z=15) → TextLayer (z=20)
+            Everything above the annotation markers is transparent to the pointer
+            except text itself: a box covering the page would take every click
+            meant for a picture or stamp underneath (J-45 on Windows, where the
+            driver hits what a mouse hits). In edit mode the text layer passes
+            clicks through its empty area too, so a picture can be selected
+            while the words on it stay selectable. In read mode a drag that
+            starts between lines keeps selecting text through the layer's box. */}
         <div style={{ position: 'absolute', inset: 0, zIndex: 10 }}>
           <AnnotationOverlay
             highlights={highlights}
@@ -549,6 +576,7 @@ export const PageCanvas = memo(function PageCanvas({
             zoom={zoom}
             clickableAnnotations={clickableAnnotations}
             onAnnotationClick={onAnnotationClick}
+            onAnnotationRectChange={onAnnotationRectChange}
             searchHighlights={searchHighlights}
             activeSearchHighlightIdx={activeSearchHighlightIdx}
             selectedAnnotationId={selectedAnnotationId}
@@ -557,7 +585,7 @@ export const PageCanvas = memo(function PageCanvas({
           />
         </div>
         {ocrWords && ocrWords.length > 0 && (
-          <div style={{ position: 'absolute', inset: 0, zIndex: 12 }}>
+          <div style={{ position: 'absolute', inset: 0, zIndex: 12, pointerEvents: 'none' }}>
             <OcrOverlay
               words={ocrWords}
               renderedWidth={ocrWords[0]?.renderedWidth ?? 1}
@@ -570,7 +598,7 @@ export const PageCanvas = memo(function PageCanvas({
             />
           </div>
         )}
-        <div style={{ position: 'absolute', inset: 0, zIndex: 15 }}>
+        <div style={{ position: 'absolute', inset: 0, zIndex: 15, pointerEvents: 'none' }}>
           <TextInteractionOverlay
             active={textInteractionActive}
             hovered={hoveredTextTarget}
@@ -582,8 +610,9 @@ export const PageCanvas = memo(function PageCanvas({
             editingTargetId={editingTargetId}
           />
         </div>
-        <div style={{ position: 'absolute', inset: 0, zIndex: 20 }}>
+        <div style={{ position: 'absolute', inset: 0, zIndex: 20, pointerEvents: isEditMode ? 'none' : undefined }}>
           <TextLayer
+            passThrough={isEditMode}
             textSpans={textSpans}
             pageWidthPt={pageWidthPt}
             pageHeightPt={pageHeightPt}

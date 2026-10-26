@@ -5,7 +5,8 @@
 // of its components (including the embedded PDF engine), requires a licence.
 // See https://pdfluent.com/license for terms.
 
-import { memo, useState, useEffect } from 'react';
+import { memo, useState, useEffect, useLayoutEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import {
   BoldIcon,
   ItalicIcon,
@@ -20,6 +21,7 @@ import {
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { pdfRectToDom, type TextRect } from '../text/textInteractionModel';
+import { placeEditPill, clampPillIntoViewport } from '../text/editPillPlacement';
 
 export interface TextEditFloatingPillProps {
   isBold: boolean;
@@ -68,12 +70,87 @@ export const TextEditFloatingPill = memo(function TextEditFloatingPill({
     }
   }, []);
 
+  const pillRef = useRef<HTMLDivElement>(null);
+  const anchorRef = useRef<HTMLSpanElement>(null);
+  // Where the pill goes inside .docarea (the portal target), or null until the
+  // first layout pass and whenever there is no shell around us (unit tests).
+  const [shellPos, setShellPos] = useState<{ top: number; left: number } | null>(null);
+  const [shell, setShell] = useState<HTMLElement | null>(null);
+
+  // The pill must not live inside .page: that box is overflow:hidden, and the
+  // pill is clamped into the visible strip of the canvas, which is wider than
+  // a small-window page. Anything past the page edge was clipped, so a click on
+  // Save hit the canvas behind it (J-40 at 1028x729; elementFromPoint said
+  // div.canvas). It is portalled into .docarea, above the canvas layer, and
+  // placed from client coordinates so it follows the page when the canvas
+  // scrolls or resizes.
+  useLayoutEffect(() => {
+    const anchor = anchorRef.current;
+    const page = anchor?.parentElement ?? null;
+    const docarea = page?.closest<HTMLElement>('.docarea') ?? null;
+    const scroller = page?.closest<HTMLElement>('.canvas') ?? null;
+    setShell(docarea);
+    if (!page || !docarea || !scroller || !editingParagraphBounds) {
+      setShellPos(null);
+      return;
+    }
+    const para = pdfRectToDom(editingParagraphBounds, pageHeightPt, zoom);
+    const update = () => {
+      const pageBox = page.getBoundingClientRect();
+      const areaBox = docarea.getBoundingClientRect();
+      const view = scroller.getBoundingClientRect();
+      const viewW = scroller.clientWidth;
+      const viewH = scroller.clientHeight;
+      // Place against the part of the canvas that is on screen, so "no room
+      // above" also means "above is scrolled out of view" and the pill flips
+      // below the paragraph instead of landing on the inline editor.
+      const placed = placeEditPill(
+        {
+          left: pageBox.left + para.left - view.left,
+          top: pageBox.top + para.top - view.top,
+          width: para.width,
+          height: para.height,
+        },
+        { width: PILL_WIDTH_PX, height: PILL_HEIGHT_PX },
+        PILL_OFFSET_PX,
+        null,
+      );
+      const left = clampPillIntoViewport(
+        placed.left + view.left, PILL_WIDTH_PX, 0, { left: view.left, right: view.left + viewW },
+      );
+      const top = clampPillIntoViewport(
+        placed.top + view.top, PILL_HEIGHT_PX, 0, { left: view.top, right: view.top + viewH },
+      );
+      const next = { top: top - areaBox.top, left: left - areaBox.left };
+      setShellPos((prev) =>
+        prev && Math.abs(prev.top - next.top) < 0.5 && Math.abs(prev.left - next.left) < 0.5 ? prev : next,
+      );
+    };
+    update();
+    scroller.addEventListener('scroll', update, { passive: true });
+    window.addEventListener('resize', update);
+    // The side panels open and close without a window resize.
+    const observer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(update);
+    observer?.observe(scroller);
+    observer?.observe(page);
+    return () => {
+      scroller.removeEventListener('scroll', update);
+      window.removeEventListener('resize', update);
+      observer?.disconnect();
+    };
+  }, [editingParagraphBounds, pageHeightPt, zoom]);
+
   if (!editingParagraphBounds) return null;
 
   const domRect = pdfRectToDom(editingParagraphBounds, pageHeightPt, zoom);
-  // Position pill above the paragraph bounding box, clamped to at least 0
-  const pillTop = Math.max(0, domRect.top - PILL_HEIGHT_PX - PILL_OFFSET_PX);
-  const pillLeft = Math.max(0, domRect.left + (domRect.width - PILL_WIDTH_PX) / 2); // centering
+  // Fallback when there is no shell to portal into: inside the page, above the
+  // paragraph, or below it when there is no room above.
+  const { top: pillTop, left: pillLeft } = placeEditPill(
+    domRect,
+    { width: PILL_WIDTH_PX, height: PILL_HEIGHT_PX },
+    PILL_OFFSET_PX,
+    null,
+  );
 
   const handleCut = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -107,16 +184,19 @@ export const TextEditFloatingPill = memo(function TextEditFloatingPill({
     document.execCommand('delete');
   };
 
-  return (
+  const pill = (
     <div
+      ref={pillRef}
       data-testid="text-edit-floating-pill"
       style={{
         position: 'absolute',
-        top: pillTop,
-        left: pillLeft,
+        top: shellPos ? shellPos.top : pillTop,
+        left: shellPos ? shellPos.left : pillLeft,
         height: PILL_HEIGHT_PX,
         width: PILL_WIDTH_PX,
-        zIndex: 50,
+        // Above the inline editor (z 60) and its help text (z 61): the pill's
+        // buttons must stay clickable wherever the two end up.
+        zIndex: 62,
         pointerEvents: 'auto',
         userSelect: 'none',
       }}
@@ -257,9 +337,9 @@ export const TextEditFloatingPill = memo(function TextEditFloatingPill({
           type="button"
           onMouseDown={(e) => e.preventDefault()}
           onClick={(e) => { e.stopPropagation(); onCancel(); }}
-          aria-label={t('common.cancel', { defaultValue: 'Annuleren' })}
+          aria-label={t('common.cancel', { defaultValue: 'Cancel' })}
           data-testid="text-edit-cancel-btn"
-          title={t('common.cancel', { defaultValue: 'Annuleren' })}
+          title={t('common.cancel', { defaultValue: 'Cancel' })}
           className="p-1.5 rounded-full text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all duration-200 cursor-pointer flex items-center justify-center hover:scale-105 active:scale-95"
         >
           <XIcon className="w-3.5 h-3.5" />
@@ -269,14 +349,21 @@ export const TextEditFloatingPill = memo(function TextEditFloatingPill({
           type="button"
           onMouseDown={(e) => e.preventDefault()}
           onClick={(e) => { e.stopPropagation(); onCommit(); }}
-          aria-label={t('common.save', { defaultValue: 'Opslaan' })}
+          aria-label={t('common.save', { defaultValue: 'Save' })}
           data-testid="text-edit-save-btn"
-          title={t('common.save', { defaultValue: 'Opslaan' })}
+          title={t('common.save', { defaultValue: 'Save' })}
           className="p-1.5 rounded-full text-primary hover:text-primary-foreground hover:bg-primary transition-all duration-200 cursor-pointer flex items-center justify-center hover:scale-105 active:scale-95"
         >
           <CheckIcon className="w-3.5 h-3.5" />
         </button>
       </div>
     </div>
+  );
+
+  return (
+    <>
+      <span ref={anchorRef} aria-hidden="true" style={{ position: 'absolute', width: 0, height: 0 }} />
+      {shell ? createPortal(pill, shell) : pill}
+    </>
   );
 });

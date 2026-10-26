@@ -1,6 +1,6 @@
 [package]
 name = "pdfluent-desktop"
-version = "1.0.0"
+version = "1.1.1"
 description = "Privacy-first desktop PDF editor powered by the XFA Rust SDK"
 authors = ["Innovation Trigger B.V."]
 license = "LicenseRef-PDFluent-Proprietary"
@@ -27,6 +27,17 @@ tokio = { version = "1", features = ["rt-multi-thread"] }
 dirs = "5"
 open = "5"
 flate2 = "1"
+# Installed-font enumeration for the typeface picker. Pure Rust, MIT. Without
+# `memmap` (no unsafe mapping of font files) and without `fontconfig` (Linux is
+# not a release platform; the OS font directories are scanned instead).
+fontdb = { version = "0.24", default-features = false, features = ["std", "fs"] }
+# "Tables to Excel" writes its workbook with the same writer, at the same
+# version, the engine's pdf-xlsx already builds; no new crate in the lock.
+rust_xlsxwriter = "0.94"
+# Personal-data detection (J-66): checksum and context rules (`pii_ids.rs`)
+# and the verification of the downloaded model component (`pii_component.rs`).
+# Both are already in the lock file through other crates.
+regex = "1"
 # macOS security-scoped bookmarks (recent-files reopen under App Sandbox).
 # Isolated crate so this main crate keeps `#![forbid(unsafe_code)]`.
 pdfluent-macos-secure = { path = "crates/macos-secure" }
@@ -36,10 +47,11 @@ pdfluent-macos-secure = { path = "crates/macos-secure" }
 # A pin, not a path: until 2026-09-07 these were 19 path dependencies into a
 # checkout next to this repository, so the editor built against whatever branch
 # that working copy happened to be on and CI cloned a third state. The revision
-# below is the released SDK 1.1.0 (engine tag `v1.1.0`, the same code as the
-# 1.1.0 crates on crates.io); it carries the removal of the free-tier PDF/A
-# stamp (`f9ae3a1d7`), and `src/pdfa_export_guard.rs` proves the export comes
-# out unmarked.
+# below is the released SDK 1.1.1 (engine tag `v1.1.1`). Over 1.1.0 it changes
+# redaction: where the engine cannot remove what is under a mark it refuses
+# with a reason instead of reporting success. It carries the removal of the
+# free-tier PDF/A stamp (`f9ae3a1d7`), and `src/pdfa_export_guard.rs` proves
+# the export comes out unmarked.
 #
 # Move them together, never one at a time — `tests/sdk-pin-guard.test.ts` fails
 # if the revisions drift apart or a path dependency comes back. Moving the pin
@@ -48,33 +60,84 @@ pdfluent-macos-secure = { path = "crates/macos-secure" }
 # `.github/actions/sdk-pin/action.yml`), so a commit that only GitHub has builds here and nowhere
 # else. Engine master is fast-forward only, so the mirror catches up on its
 # own; a tag pipeline cut before it does will fail on the fetch.
-pdf-engine = { git = "https://github.com/pdfluent/engine", rev = "38f09b5b8b2a3cd6bd1d1b9a843b1e14d7f6b2fb", features = ["xfa", "serde"] }
-pdf-forms = { package = "pdfluent-forms", git = "https://github.com/pdfluent/engine", rev = "38f09b5b8b2a3cd6bd1d1b9a843b1e14d7f6b2fb" }
-pdf-annot = { git = "https://github.com/pdfluent/engine", rev = "38f09b5b8b2a3cd6bd1d1b9a843b1e14d7f6b2fb", features = ["write"] }
-pdf-sign = { package = "pdfluent-sign", git = "https://github.com/pdfluent/engine", rev = "38f09b5b8b2a3cd6bd1d1b9a843b1e14d7f6b2fb" }
-pdf-manip = { git = "https://github.com/pdfluent/engine", rev = "38f09b5b8b2a3cd6bd1d1b9a843b1e14d7f6b2fb", features = ["image-insert", "font-subset", "pdfa-convert"] }
-pdf-text-format = { git = "https://github.com/pdfluent/engine", rev = "38f09b5b8b2a3cd6bd1d1b9a843b1e14d7f6b2fb" }
-pdf-compliance = { git = "https://github.com/pdfluent/engine", rev = "38f09b5b8b2a3cd6bd1d1b9a843b1e14d7f6b2fb" }
-pdf-extract = { package = "pdfluent-extract", git = "https://github.com/pdfluent/engine", rev = "38f09b5b8b2a3cd6bd1d1b9a843b1e14d7f6b2fb" }
-pdf-redact = { git = "https://github.com/pdfluent/engine", rev = "38f09b5b8b2a3cd6bd1d1b9a843b1e14d7f6b2fb" }
-pdf-docx = { git = "https://github.com/pdfluent/engine", rev = "38f09b5b8b2a3cd6bd1d1b9a843b1e14d7f6b2fb" }
-pdf-xlsx = { git = "https://github.com/pdfluent/engine", rev = "38f09b5b8b2a3cd6bd1d1b9a843b1e14d7f6b2fb" }
-pdf-pptx = { git = "https://github.com/pdfluent/engine", rev = "38f09b5b8b2a3cd6bd1d1b9a843b1e14d7f6b2fb" }
-pdf-invoice = { git = "https://github.com/pdfluent/engine", rev = "38f09b5b8b2a3cd6bd1d1b9a843b1e14d7f6b2fb" }
-lopdf = { package = "pdfluent-lopdf", git = "https://github.com/pdfluent/engine", rev = "38f09b5b8b2a3cd6bd1d1b9a843b1e14d7f6b2fb" }
-pdf-syntax = { git = "https://github.com/pdfluent/engine", rev = "38f09b5b8b2a3cd6bd1d1b9a843b1e14d7f6b2fb" }
+pdf-engine = { git = "https://github.com/pdfluent/engine", rev = "bd658c93d16f4a73dc77041e9dbe10902b26b4c3", features = ["xfa", "serde"] }
+# `calculate` (AcroForm calculations, journey J-57) exists from engine commit
+# a91761938 (feat/next-acroform-calc). The pin below must be at or past it before
+# this builds; Cargo.lock follows the bump.
+pdf-forms = { package = "pdfluent-forms", git = "https://github.com/pdfluent/engine", rev = "bd658c93d16f4a73dc77041e9dbe10902b26b4c3", features = ["calculate"] }
+pdf-annot = { git = "https://github.com/pdfluent/engine", rev = "bd658c93d16f4a73dc77041e9dbe10902b26b4c3", features = ["write"] }
+pdf-sign = { package = "pdfluent-sign", git = "https://github.com/pdfluent/engine", rev = "bd658c93d16f4a73dc77041e9dbe10902b26b4c3" }
+pdf-manip = { git = "https://github.com/pdfluent/engine", rev = "bd658c93d16f4a73dc77041e9dbe10902b26b4c3", features = ["image-insert", "font-subset", "pdfa-convert"] }
+pdf-text-format = { git = "https://github.com/pdfluent/engine", rev = "bd658c93d16f4a73dc77041e9dbe10902b26b4c3" }
+pdf-compliance = { git = "https://github.com/pdfluent/engine", rev = "bd658c93d16f4a73dc77041e9dbe10902b26b4c3" }
+pdf-extract = { package = "pdfluent-extract", git = "https://github.com/pdfluent/engine", rev = "bd658c93d16f4a73dc77041e9dbe10902b26b4c3" }
+pdf-redact = { git = "https://github.com/pdfluent/engine", rev = "bd658c93d16f4a73dc77041e9dbe10902b26b4c3" }
+pdf-docx = { git = "https://github.com/pdfluent/engine", rev = "bd658c93d16f4a73dc77041e9dbe10902b26b4c3" }
+pdf-xlsx = { git = "https://github.com/pdfluent/engine", rev = "bd658c93d16f4a73dc77041e9dbe10902b26b4c3" }
+pdf-pptx = { git = "https://github.com/pdfluent/engine", rev = "bd658c93d16f4a73dc77041e9dbe10902b26b4c3" }
+pdf-invoice = { git = "https://github.com/pdfluent/engine", rev = "bd658c93d16f4a73dc77041e9dbe10902b26b4c3" }
+lopdf = { package = "pdfluent-lopdf", git = "https://github.com/pdfluent/engine", rev = "bd658c93d16f4a73dc77041e9dbe10902b26b4c3" }
+pdf-syntax = { git = "https://github.com/pdfluent/engine", rev = "bd658c93d16f4a73dc77041e9dbe10902b26b4c3" }
+
+# The personal-data model (feature `pii-model`): GLiNER on ONNX Runtime, loaded
+# from the opt-in component, never linked statically. `ort` is the same exact
+# version the engine's `pdf-ocr` pins (`=2.0.0-rc.12`), so the build has one
+# `ort-sys`. `tokenizers` is built without `http` (no download code) and
+# without `onig` (a C library): `unstable_wasm` selects the pure-Rust regex
+# backend. The span encoding and decoding is ours (`src/pii_gliner.rs`).
+# Neither is in Cargo.lock yet; the first cargo command with network access
+# adds them, and the lock is committed with that run.
+ort = { version = "=2.0.0-rc.12", optional = true, default-features = false, features = ["std", "load-dynamic", "api-24"] }
+tokenizers = { version = "0.22", optional = true, default-features = false, features = ["unstable_wasm"] }
 
 # PDFluent public SDK facade (Phase 2 migration boundary)
-pdfluent = { git = "https://github.com/pdfluent/engine", rev = "38f09b5b8b2a3cd6bd1d1b9a843b1e14d7f6b2fb" }
+pdfluent = { git = "https://github.com/pdfluent/engine", rev = "bd658c93d16f4a73dc77041e9dbe10902b26b4c3" }
+# OCR text layer (`make_searchable`) and the Tesseract TSV parser. Default
+# features off and `tesseract-cli` only: plain Rust, no OCR library linked.
+# Tesseract itself is a separate signed executable that ships inside the app
+# bundle in every build (src/ocr_component.rs); nothing is downloaded.
+pdf-ocr = { git = "https://github.com/pdfluent/engine", rev = "bd658c93d16f4a73dc77041e9dbe10902b26b4c3", default-features = false, features = ["tesseract-cli"] }
+
+# Hashing the bundled OCR component against its manifest. Already in the tree
+# (the engine).
+sha2 = "0.10"
+
+# A second double-click on a PDF on Windows started a second process with its
+# own empty document state (J-11). The plugin hands that launch's arguments to
+# the running instance instead. macOS already routes a second open to the
+# running app through LaunchServices (RunEvent::Opened); Linux is outside the
+# release scope.
+[dev-dependencies]
+# Export content tests unzip the OOXML they produce. The version the engine's
+# own converters already pull in.
+zip = { version = "2", default-features = false, features = ["deflate"] }
+# tests/tls_smoke.rs makes one real https update check through the operating
+# system's TLS. A test dependency only: no release build links it, and the app
+# has no HTTP client of its own (the updater plugin brings its own). TLS stays
+# the OS's (SChannel, Secure Transport): tests/no_bundled_tls.rs fails if `ring`
+# or `aws-lc` come back.
+reqwest = { version = "0.13", default-features = false, features = ["native-tls"] }
+
+[target.'cfg(windows)'.dependencies]
+tauri-plugin-single-instance = "2"
+# Reads the HKLM form-scripts policy in-process (form_scripts_policy.rs) instead
+# of spawning reg.exe. Already in the lock (a build dependency of tauri).
+winreg = "0.55"
 
 [target."cfg(not(any(target_os = \"android\", target_os = \"ios\")))".dependencies]
 # Optional so the Mac App Store build can drop them (see the `updater` feature).
-tauri-plugin-updater = { version = "2", optional = true }
+# default-features off: the default `rustls-tls` feature hard-wires `ring`.
+tauri-plugin-updater = { version = "2", optional = true, default-features = false, features = ["native-tls", "zip"] }
 # Restart the app to finish applying an installed update (frontend relaunch()).
 tauri-plugin-process = { version = "2", optional = true }
 
 [features]
-default = ["custom-protocol", "updater"]
+default = ["custom-protocol", "updater", "xfa-interactive"]
+# The ui-walk build (#471): an in-page walker plus the plugin it reports through
+# (src/ui_walk.rs). Measured and discarded, never shipped: it must not appear in
+# `default` or in any release command line. tests/ui-walk-build.test.ts fails if
+# it does, and scripts/publish-artifact.mjs refuses a file named like one.
+ui-walk = []
 custom-protocol = ["tauri/custom-protocol"]
 # Self-updater + relaunch. On by default for direct distribution. The Mac App
 # Store build omits it with `--no-default-features --features custom-protocol`
@@ -83,15 +146,34 @@ updater = ["dep:tauri-plugin-updater", "dep:tauri-plugin-process"]
 # XFA Phase 2 interactive commit loop. Enabling this compiles the engine's
 # sandboxed QuickJS runtime (pdf-engine/xfa-js-sandboxed) and routes XFA field
 # commits through `XfaSession::commit_value` (change/click + calculate scripts →
-# re-layout → presence changes).
+# re-layout → presence changes), and opens XFA sessions through the interactive
+# lifecycle so a reopened form shows its calculated totals.
 #
-# It does NOT build against the pinned revision: `commit_value` lives only on
-# the engine branch `xfa/sdk-phase2-commit-loop` and has never been merged to
-# master. Landing it there is pdfluent/pdfluent-internal#406; until that is
-# done and the pin has moved past it, this feature cannot be turned on and the
-# editor uses the Phase 1 static value write (`set_value`), which compiles
-# against any XFA-capable revision.
+# On by default (J-59, promise `xfa-fill`): a form's JavaScript scripts run in
+# the engine's sandbox, never on the host. The Mac App Store build leaves it
+# out with the same `--no-default-features --features custom-protocol` line as
+# the updater and OCR download, and then fills with the static Phase 1 value
+# write and says so once per document (announceXfaStaticWrite).
+#
+# It needs an engine revision that has `commit_value` (pdfluent-internal#406,
+# engine branch release/next). The pin of the `pdf-engine` and `pdfluent` rows
+# above must be at or past that revision: on an older pin this feature does not
+# compile, and neither does the default build.
 xfa-interactive = ["pdf-engine/xfa-js-sandboxed"]
+# Run the personal-data model (ort + tokenizers, loaded at run time from the
+# downloaded component). Off by default until the evaluation gate in
+# docs/PII_DETECTION_GATE.md passes; without it the detector is the validator
+# layer alone.
+# Personal-data detection (J-66) is parked: no command, no UI entry, nothing in
+# a default or release build. `pii` turns the commands on; the frontend flag
+# VITE_PII_ENABLED must match (src/viewer/pii/enabled.ts).
+pii = []
+pii-model = ["pii", "dep:ort", "dep:tokenizers"]
+# Journey-suite hooks (src/e2e.rs): answers for the native dialogs opened from
+# Rust, print capture, and on macOS the file bridge the harness drives the
+# webview through. Never in a shipped build: not a default feature, and no
+# release build names it (tests/e2e-build-is-never-shipped.test.ts).
+e2e = []
 
 # Render hot loops (vello_cpu rasteriser, PDF interpreter) benefit from
 # cross-crate inlining. Thin LTO recovers most of the fat-LTO speedup at an
@@ -100,3 +182,57 @@ xfa-interactive = ["pdf-engine/xfa-js-sandboxed"]
 [profile.release]
 lto = "thin"
 codegen-units = 4
+
+# The form-script sandbox interprets a WebAssembly module (QuickJS) in wasmi.
+# Profile settings of a dependency are NOT inherited from the engine workspace,
+# so they are repeated here. In a plain dev/test build wasmi runs at opt-level 0
+# and is hundreds of times slower: a form calculate hits the script time limit,
+# the open reports `total:calculate#0` as `timeout` and the document is marked
+# modified. wasmi is therefore built for speed with debug assertions off: opt-level
+# 2 or 3 together with debug assertions overflows the native stack (the engine
+# build.rs of xfa-js-sandboxed refuses that combination, see its docs/script-sandbox.md).
+# The same four crates for the release profile are built for speed too.
+[profile.dev.package.wasmi]
+opt-level = 3
+debug = false
+debug-assertions = false
+overflow-checks = false
+codegen-units = 1
+incremental = false
+[profile.dev.package.wasmi_core]
+opt-level = 3
+debug = false
+debug-assertions = false
+overflow-checks = false
+codegen-units = 1
+incremental = false
+[profile.dev.package.wasmi_ir]
+opt-level = 3
+debug = false
+debug-assertions = false
+overflow-checks = false
+codegen-units = 1
+incremental = false
+[profile.dev.package.wasmi_collections]
+opt-level = 3
+debug = false
+debug-assertions = false
+overflow-checks = false
+codegen-units = 1
+incremental = false
+# The sandbox crate itself must match: wasmi at opt-level 3 next to
+# xfa-js-sandboxed at opt-level 0 with debug assertions crashed the Windows lib
+# tests (STATUS_ACCESS_VIOLATION on the first host call, 22-10). Release builds
+# were never affected.
+[profile.dev.package.xfa-js-sandboxed]
+opt-level = 3
+debug-assertions = false
+
+[profile.release.package.wasmi]
+opt-level = 3
+[profile.release.package.wasmi_core]
+opt-level = 3
+[profile.release.package.wasmi_ir]
+opt-level = 3
+[profile.release.package.wasmi_collections]
+opt-level = 3

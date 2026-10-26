@@ -95,6 +95,18 @@ export function scanReleaseVersion(root: string): VersionScan {
     }
   }
 
+  // The Mac App Store overlay is merged over tauri.conf.json and scripts/
+  // build-mas.sh reads its version first. Absent is fine (the base config wins);
+  // present must be the shipped version, or a MAS package ships under the wrong
+  // marketing version while every other site agrees.
+  const masConf = read(root, 'src-tauri/tauri.mas.conf.json');
+  if (masConf !== null) {
+    const version = (JSON.parse(masConf) as { version?: string }).version;
+    if (version !== undefined) {
+      sites.push({ file: 'src-tauri/tauri.mas.conf.json', line: lineOf(masConf, `"version": "${version}"`), version });
+    }
+  }
+
   for (const site of sites.slice(1)) {
     if (site.version !== pkgVersion) {
       problems.push(`${site.file}:${site.line} says ${site.version} but package.json:${sites[0].line} says ${pkgVersion}`);

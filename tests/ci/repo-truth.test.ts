@@ -56,7 +56,7 @@ function fakePublic(ref: string, message: string, alsoDrop: string[] = []): stri
   const tree = execFileSync("git", ["write-tree"], withIndex).trim();
   const written = git(["ls-tree", "-r", "--name-only", tree]).split("\n").filter(Boolean).length;
   expect(written, "the stand-in public tree is not the published half of the ref").toBe(all.length - drop.length);
-  return git(["commit-tree", tree, "-m", message]);
+  return git(["-c", "user.name=fixture", "-c", "user.email=fixture@invalid", "commit-tree", tree, "-m", message]);
 }
 
 function guard(publicRef: string) {

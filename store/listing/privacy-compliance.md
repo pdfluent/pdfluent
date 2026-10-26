@@ -15,13 +15,14 @@ is local-first; telemetry/crash reporting is **opt-in, default OFF**.
 - **Collects personal data by default:** **No.** PDFluent processes documents
   entirely on the device; no account, no sign-in, no document upload.
 - **Telemetry / diagnostics:** Optional and **off by default**. If a user
-  explicitly opts in (in app settings), anonymous crash/diagnostic data may be
-  sent; it contains no document contents and no personal identifiers.
+  explicitly opts in (in app settings), a crash or feedback report may be sent
+  when the user presses Send. A feedback report can include the open document
+  only if the user ticks a box and confirms a second dialog that names the file.
 - **Advertising / tracking:** None.
 - **Data shared with third parties:** None.
 - **Network use:** Only (a) the optional auto-update check against
   `pdfluent.com/releases/latest.json`, and (b) optional opt-in diagnostics. Core
-  PDF features work fully offline.
+  PDF features run on the device.
 
 ## Microsoft Store policy notes
 - No restricted/sensitive capabilities; no background services or drivers.
@@ -38,7 +39,7 @@ Answer the IARC questionnaire as follows (a productivity PDF tool):
 - **Expected result:** rated for **everyone / 3+** in all regions.
 
 ## Export / encryption (US EAR / Partner Center "uses cryptography")
-- The app uses cryptography for **digital signatures (PAdES/CMS)** and **PDF
+- The app uses cryptography for **digital signatures** and **PDF
   encryption/decryption** — all standard, using common algorithms. (The app has
   no licensing prompt and does not perform license verification at runtime.)
 - Partner Center "Does your app call, support, or use cryptography?" → **Yes**,

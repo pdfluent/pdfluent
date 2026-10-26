@@ -39,6 +39,11 @@ interface TextLayerProps {
   editingParagraphBounds?: { x: number; y: number; width: number; height: number } | null;
   /** Index of the span currently spoken by TTS. That span gets a highlight background. -1 = none. */
   ttsHighlightSpanIndex?: number;
+  /**
+   * Only the text itself takes the pointer; the empty area between and around
+   * the words lets clicks through to the markers (pictures, stamps) below.
+   */
+  passThrough?: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -123,6 +128,7 @@ const TextSpanItem = memo(function TextSpanItem({
         whiteSpace: 'pre',
         color: 'transparent',
         cursor: 'text',
+        pointerEvents: 'auto',
         visibility: isHidden ? 'hidden' : 'visible',
         backgroundColor: isTtsActive ? 'rgba(255, 215, 0, 0.45)' : undefined,
         borderRadius: isTtsActive ? '2px' : undefined,
@@ -149,6 +155,7 @@ export const TextLayer = memo(function TextLayer({
   onSelectionPopup,
   editingParagraphBounds,
   ttsHighlightSpanIndex = -1,
+  passThrough = false,
 }: TextLayerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -211,7 +218,7 @@ export const TextLayer = memo(function TextLayer({
       style={{
         position: 'absolute',
         inset: 0,
-        pointerEvents: 'auto',
+        pointerEvents: passThrough ? 'none' : 'auto',
         userSelect: 'text',
         overflow: 'hidden',
       }}

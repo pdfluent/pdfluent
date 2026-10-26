@@ -193,7 +193,7 @@ export const TextContextBar = memo(function TextContextBar({
               height: 22,
               border: 'none',
               borderRadius: 4,
-              background: 'var(--primary, #2563eb)',
+              background: 'var(--primary, #1a1a1a)',
               color: '#fff',
               cursor: 'pointer',
               fontWeight: 500,

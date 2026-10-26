@@ -17,8 +17,8 @@
   z-index: 160;
   display: grid;
   place-items: center;
-  background: rgba(10, 102, 255, 0.12);
-  border: 4px dashed rgba(10, 102, 255, 0.72);
+  background: var(--state-hover-bg);
+  border: 4px dashed var(--emphasis);
 }
 
 .v3-drop-card {
@@ -27,13 +27,12 @@
   gap: 12px;
   padding: 16px 22px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.84);
-  color: #0a58d8;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
   font-size: 14px;
   font-weight: 700;
-  box-shadow: 0 18px 48px rgba(22, 27, 38, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.9);
-  -webkit-backdrop-filter: blur(24px) saturate(180%);
-  backdrop-filter: blur(24px) saturate(180%);
+  box-shadow: 0 4px 16px rgba(22, 27, 38, 0.10);
 }
 
 .v3-drop-card svg {
@@ -44,21 +43,10 @@
 .pfv3 {
   --font-ui: "Geist", "SF Pro Text", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --font-mono: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
-  --text-primary: #1c1c1e;
-  --text-secondary: #57606e;
-  /* 4.83:1 on white. #8a8f9c was 3.23:1 -- below the 4.5:1 AA minimum for
-     body text, and it is the colour of every secondary label in the shell. */
-  --text-muted: #6b7280;
-  --text-disabled: #b3b7c0;
-  --on-primary: #ffffff;
   --workspace: #eef0f3;
   --workspace-top: #f4f5f7;
   --page: #ffffff;
   --panel: #ffffff;
-  --accent: #0a66ff;
-  --accent-strong: #0a58d8;
-  --accent-soft: rgba(10, 102, 255, 0.12);
-  --accent-line: rgba(10, 102, 255, 0.55);
   --success: #16a34a;
   --warning: #d97706;
   --danger: #dc2626;
@@ -66,21 +54,19 @@
   --border-strong: #cfd3db;
   --hairline: rgba(28, 28, 30, 0.08);
   --hairline-soft: rgba(28, 28, 30, 0.05);
-  --glass-bg: rgba(250, 251, 253, 0.42);
-  --glass-bg-strong: rgba(250, 251, 253, 0.55);
-  --glass-blur: blur(32px) saturate(190%);
-  --glass-border: rgba(255, 255, 255, 0.65);
-  --glass-edge: inset 0 1px 0 rgba(255, 255, 255, 0.85),
-    inset 0 0 0 0.5px rgba(255, 255, 255, 0.35);
-  --glass-shadow: 0 6px 22px rgba(22, 27, 38, 0.10), 0 1px 3px rgba(22, 27, 38, 0.06);
-  --glass-shadow-lg: 0 14px 44px rgba(22, 27, 38, 0.16), 0 2px 8px rgba(22, 27, 38, 0.08);
-  --lg-bg: rgba(255, 255, 255, 0.30);
-  --lg-blur: blur(24px) saturate(195%) brightness(1.07);
-  --lg-border: rgba(255, 255, 255, 0.62);
-  --lg-edge: inset 0 1.5px 1px rgba(255, 255, 255, 0.96),
-    inset 0 -14px 22px rgba(255, 255, 255, 0.20),
-    inset 0 0 0 0.5px rgba(255, 255, 255, 0.30);
-  --lg-shadow: 0 14px 38px rgba(22, 27, 38, 0.22), 0 2px 6px rgba(22, 27, 38, 0.10);
+  /* Flat surfaces: opaque fill, hairline border, a quiet shadow. The
+     --glass-* / --lg-* names are kept so selectors do not churn; there is no
+     blur, no translucency and no inset highlight behind them any more. */
+  --glass-bg: #f6f7f9;
+  --glass-bg-strong: #ffffff;
+  --glass-border: var(--border);
+  --glass-edge: 0 0 0 0 transparent;
+  --glass-shadow: 0 1px 2px rgba(22, 27, 38, 0.06);
+  --glass-shadow-lg: 0 4px 16px rgba(22, 27, 38, 0.10);
+  --lg-bg: #ffffff;
+  --lg-border: var(--border);
+  --lg-edge: 0 0 0 0 transparent;
+  --lg-shadow: 0 4px 16px rgba(22, 27, 38, 0.10);
   --r-xs: 6px;
   --r-sm: 9px;
   --r-md: 12px;
@@ -98,45 +84,43 @@
   overflow: hidden;
   font-family: var(--font-ui);
   color: var(--text-primary);
-  background:
-    radial-gradient(120% 80% at 50% -10%, var(--workspace-top), transparent 60%),
-    var(--workspace);
+  background: var(--workspace);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
 
 .pfv3.theme-dark {
-  --text-primary: #ececf0;
-  --text-secondary: #a3a8b4;
-  /* 4.84:1 on the dark panel; #80858f was 4.23:1. */
-  --text-muted: #8b909b;
-  --text-disabled: #5a5e68;
-  --on-primary: #0e0e12;
+  /* Disabled text is 3:1 or better on every dark surface (tests/contrast-pairs.test.ts);
+     #5a5e68 was 2.4:1. */
+  --text-disabled: #7a7f8b;
   --workspace: #17181c;
   --workspace-top: #1d1e23;
   --panel: #232429;
-  --accent: #4d94ff;
-  --accent-soft: rgba(77, 148, 255, 0.18);
-  --accent-line: rgba(77, 148, 255, 0.6);
   --border: #34353c;
   --border-strong: #42434c;
   --hairline: rgba(255, 255, 255, 0.09);
   --hairline-soft: rgba(255, 255, 255, 0.05);
-  --glass-bg: rgba(36, 38, 45, 0.48);
-  --glass-bg-strong: rgba(36, 38, 45, 0.6);
-  --glass-border: rgba(255, 255, 255, 0.10);
-  --lg-bg: rgba(42, 44, 52, 0.36);
-  --lg-border: rgba(255, 255, 255, 0.16);
-  --lg-edge: inset 0 1.5px 1px rgba(255, 255, 255, 0.18),
-    inset 0 -14px 22px rgba(0, 0, 0, 0.22),
-    inset 0 0 0 0.5px rgba(255, 255, 255, 0.07);
-  --lg-shadow: 0 14px 40px rgba(0, 0, 0, 0.55);
+  --glass-bg: #1d1e23;
+  --glass-bg-strong: #232429;
+  --glass-border: var(--border);
+  --lg-bg: #2a2c34;
+  --lg-border: var(--border);
+  --lg-edge: 0 0 0 0 transparent;
+  --lg-shadow: 0 4px 16px rgba(0, 0, 0, 0.45);
 }
 
 .pfv3 *,
 .pfv3 *::before,
 .pfv3 *::after {
   box-sizing: border-box;
+}
+
+:where(button, a[href], input, select, textarea, summary, [tabindex], [role="button"]):focus-visible {
+  /* The keyboard focus indicator is the blue job in tokens.css. Without this the
+     browser's own ring was drawn, 2.6:1 on the dark top bar. :where()
+     keeps specificity at zero so controls with their own focus style win. */
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
 }
 
 .pfv3 button {
@@ -173,8 +157,6 @@
   position: relative;
   z-index: 60;
   background: var(--glass-bg-strong);
-  -webkit-backdrop-filter: var(--glass-blur);
-  backdrop-filter: var(--glass-blur);
   border-bottom: 1px solid var(--hairline);
 }
 
@@ -225,8 +207,8 @@
   width: 24px;
   height: 24px;
   border-radius: 7px;
-  background: #141414;
-  color: #fff;
+  background: var(--emphasis);
+  color: var(--on-emphasis);
   display: grid;
   place-items: center;
   font-weight: 600;
@@ -279,7 +261,7 @@
 
 .pfv3 .tab-scroll {
   position: absolute;
-  left: 0;
+  inset-inline-start: 0;
   top: 50%;
   z-index: 2;
   width: 22px;
@@ -298,8 +280,8 @@
 }
 
 .pfv3 .tab-scroll.right {
-  left: auto;
-  right: 0;
+  inset-inline-start: auto;
+  inset-inline-end: 0;
 }
 
 .pfv3 .tab-scroll.show {
@@ -343,7 +325,7 @@
 
 .pfv3 .menu-tab.active {
   color: var(--text-primary);
-  background: rgba(10, 102, 255, 0.10);
+  background: var(--state-active-bg);
 }
 
 .pfv3 .menu-tab.active::after {
@@ -354,7 +336,7 @@
   bottom: -1px;
   height: 2px;
   border-radius: 2px;
-  background: var(--accent);
+  background: var(--emphasis);
 }
 
 .pfv3 .crumb {
@@ -374,7 +356,8 @@
 }
 
 .pfv3 .crumb .sep {
-  opacity: 0.5;
+  /* Opacity .5 left the slash at 2.1:1 (light) / 2.5:1 (dark). */
+  color: var(--text-muted);
 }
 
 .pfv3 .crumb .file {
@@ -427,8 +410,8 @@
 }
 
 .pfv3 .iconbtn.on {
-  background: var(--accent-soft);
-  color: var(--accent);
+  background: var(--state-active-bg);
+  color: var(--state-active-fg);
 }
 
 .pfv3 .iconbtn:disabled {
@@ -437,18 +420,18 @@
 }
 
 .pfv3 .iconbtn.live {
-  color: var(--accent);
+  color: var(--state-active-fg);
 }
 
 .pfv3 .iconbtn.live::after {
   content: "";
   position: absolute;
   top: 5px;
-  right: 5px;
+  inset-inline-end: 5px;
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: var(--accent);
+  background: var(--emphasis);
 }
 
 .pfv3 .share-btn {
@@ -457,7 +440,7 @@
   padding: 0 18px;
   border-radius: var(--r-pill);
   background: var(--text-primary);
-  color: var(--on-primary);
+  color: var(--on-emphasis);
   font-size: 13px;
   font-weight: 600;
   letter-spacing: 0;
@@ -490,8 +473,6 @@
   color: var(--text-secondary);
   border: 1px solid var(--border);
   background: var(--glass-bg-strong);
-  -webkit-backdrop-filter: var(--glass-blur);
-  backdrop-filter: var(--glass-blur);
 }
 
 .pfv3 .privacy-badge svg {
@@ -511,16 +492,14 @@
 .pfv3 .panel {
   width: 320px;
   flex: none;
-  background: color-mix(in oklab, var(--panel) 82%, transparent);
-  border-right: 1px solid var(--hairline);
+  background: var(--panel);
+  border-inline-end: 1px solid var(--hairline);
   display: flex;
   flex-direction: column;
   overflow: hidden;
   transition: width var(--t-slow), opacity var(--t);
   z-index: 40;
   box-shadow: 4px 0 24px rgba(22, 27, 38, 0.04);
-  -webkit-backdrop-filter: blur(22px) saturate(160%);
-  backdrop-filter: blur(22px) saturate(160%);
 }
 
 .pfv3 .panel.panel-wide {
@@ -562,7 +541,7 @@
 .pfv3 .panel-title.with-icon svg {
   width: 18px;
   height: 18px;
-  color: var(--accent);
+  color: var(--state-active-fg);
 }
 
 .pfv3 .panel-close,
@@ -623,7 +602,7 @@
   gap: 13px;
   padding: 9px 10px;
   border-radius: var(--r-md);
-  text-align: left;
+  text-align: start;
   color: var(--text-primary);
   transition: background var(--t);
 }
@@ -667,12 +646,12 @@
 }
 
 .pfv3 .tool-row .tag {
-  margin-left: auto;
+  margin-inline-start: auto;
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.05em;
-  color: var(--accent);
-  background: var(--accent-soft);
+  color: var(--state-active-fg);
+  background: var(--state-active-bg);
   padding: 2px 6px;
   border-radius: 5px;
 }
@@ -686,7 +665,7 @@
   margin-bottom: 8px;
   border: 1px solid var(--border);
   border-radius: var(--r-md);
-  text-align: left;
+  text-align: start;
 }
 
 .pfv3 .fmt:hover {
@@ -694,8 +673,8 @@
 }
 
 .pfv3 .fmt.sel {
-  border-color: var(--accent);
-  background: var(--accent-soft);
+  border-color: var(--emphasis);
+  background: var(--state-active-bg);
 }
 
 .pfv3 .fmt .radio {
@@ -709,7 +688,7 @@
 }
 
 .pfv3 .fmt.sel .radio {
-  border-color: var(--accent);
+  border-color: var(--emphasis);
 }
 
 .pfv3 .fmt.sel .radio::after {
@@ -717,7 +696,7 @@
   width: 9px;
   height: 9px;
   border-radius: 50%;
-  background: var(--accent);
+  background: var(--emphasis);
 }
 
 .pfv3 .fmt .nm {
@@ -731,6 +710,11 @@
   font-weight: 600;
   color: var(--text-muted);
   letter-spacing: 0.04em;
+}
+
+/* Muted text on the active tint was 4.0:1 in dark; the active state has its own text colour. */
+.pfv3 .fmt.sel .ext {
+  color: var(--state-active-fg);
 }
 
 .pfv3 .field-label {
@@ -773,7 +757,7 @@
 
 .pfv3 .select-wrap svg {
   position: absolute;
-  right: 12px;
+  inset-inline-end: 12px;
   top: 50%;
   width: 16px;
   height: 16px;
@@ -784,7 +768,7 @@
 
 .pfv3 .native-select {
   appearance: none;
-  padding-right: 36px;
+  padding-inline-end: 36px;
 }
 
 .pfv3 .format-grid {
@@ -837,7 +821,7 @@
   height: 42px;
   border-radius: var(--r-sm);
   background: var(--text-primary);
-  color: var(--on-primary);
+  color: var(--on-emphasis);
   font-size: 13.5px;
   font-weight: 600;
   margin-top: 18px;
@@ -848,7 +832,7 @@
 }
 
 .pfv3 .btn-primary.accent {
-  background: var(--accent);
+  background: var(--emphasis);
 }
 
 .pfv3 .btn-ghost {
@@ -867,9 +851,9 @@
 }
 
 .pfv3 .btn-ghost:hover {
-  border-color: var(--accent-line);
-  color: var(--accent);
-  background: var(--accent-soft);
+  border-color: var(--border-strong);
+  color: var(--state-active-fg);
+  background: var(--state-active-bg);
 }
 
 .pfv3 .btn-ghost span {
@@ -952,15 +936,13 @@
 .pfv3 .bottombar,
 .pfv3 .read-bar {
   background: var(--lg-bg);
-  -webkit-backdrop-filter: var(--lg-blur);
-  backdrop-filter: var(--lg-blur);
   border: 1px solid var(--lg-border);
   box-shadow: var(--lg-shadow), var(--lg-edge);
 }
 
 .pfv3 .toolrail {
   position: absolute;
-  left: 16px;
+  inset-inline-start: 16px;
   top: 50%;
   transform: translateY(-50%);
   z-index: 30;
@@ -979,9 +961,7 @@
   inset: 0;
   border-radius: inherit;
   pointer-events: none;
-  background: linear-gradient(150deg, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0) 38%);
-  mix-blend-mode: screen;
-  opacity: 0.7;
+  background: none;
 }
 
 .pfv3 .rail-btn {
@@ -1008,9 +988,9 @@
 }
 
 .pfv3 .rail-btn.active {
-  background: var(--accent);
-  color: #fff;
-  box-shadow: 0 2px 8px rgba(10, 102, 255, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  background: var(--emphasis);
+  color: var(--on-emphasis);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
 }
 
 .pfv3 .rail-btn:disabled {
@@ -1026,11 +1006,11 @@
 
 .pfv3 .rail-btn .caret {
   position: absolute;
-  right: 4px;
+  inset-inline-end: 4px;
   bottom: 4px;
   width: 0;
   height: 0;
-  border-left: 4px solid transparent;
+  border-inline-start: 4px solid transparent;
   border-bottom: 4px solid currentColor;
   opacity: 0.5;
 }
@@ -1038,13 +1018,13 @@
 .pfv3 .rail-badge {
   position: absolute;
   top: 3px;
-  right: 2px;
+  inset-inline-end: 2px;
   min-width: 16px;
   height: 16px;
   padding: 0 4px;
   border-radius: 999px;
-  background: var(--accent);
-  color: #fff;
+  background: var(--emphasis);
+  color: var(--on-emphasis);
   font-size: 9px;
   font-weight: 700;
   display: grid;
@@ -1054,14 +1034,15 @@
 .pfv3 .rail-btn[data-tip]::before {
   content: attr(data-tip);
   position: absolute;
-  left: calc(100% + 12px);
+  inset-inline-start: calc(100% + 12px);
   top: 50%;
   transform: translateY(-50%) scale(0.95);
   white-space: nowrap;
   font-size: 12px;
   font-weight: 500;
-  background: #1c1c1e;
-  color: #fff;
+  background: var(--inverse-bg);
+  color: var(--inverse-fg);
+  border: 1px solid var(--inverse-border);
   padding: 5px 9px;
   border-radius: 7px;
   opacity: 0;
@@ -1079,14 +1060,12 @@
 .pfv3 .more-pop {
   position: absolute;
   z-index: 35;
-  left: 74px;
+  inset-inline-start: 74px;
   top: calc(50% + 76px);
   min-width: 232px;
   padding: 6px;
   border-radius: var(--r-md);
   background: var(--lg-bg);
-  -webkit-backdrop-filter: var(--lg-blur);
-  backdrop-filter: var(--lg-blur);
   border: 1px solid var(--lg-border);
   box-shadow: var(--lg-shadow), var(--lg-edge);
 }
@@ -1104,7 +1083,7 @@
   border-radius: 9px;
   font-size: 13px;
   color: var(--text-primary);
-  text-align: left;
+  text-align: start;
 }
 
 .pfv3 .more-item:hover {
@@ -1125,7 +1104,7 @@
 
 .pfv3 .rightrail {
   position: absolute;
-  right: 16px;
+  inset-inline-end: 16px;
   top: 50%;
   transform: translateY(-50%);
   z-index: 30;
@@ -1236,20 +1215,18 @@
   padding: 7px;
   border-radius: var(--r-md);
   background: var(--glass-bg-strong);
-  -webkit-backdrop-filter: var(--glass-blur);
-  backdrop-filter: var(--glass-blur);
   border: 1px solid var(--glass-border);
   box-shadow: var(--glass-shadow-lg), var(--glass-edge);
 }
 
 .pfv3 .topbar-more-menu {
   top: 50px;
-  right: 86px;
+  inset-inline-end: 86px;
 }
 
 .pfv3 .share-menu {
   top: 50px;
-  right: 14px;
+  inset-inline-end: 14px;
   width: 316px;
 }
 
@@ -1262,15 +1239,16 @@
   border-radius: 9px;
   font-size: 13px;
   color: var(--text-primary);
-  text-align: left;
+  text-align: start;
 }
 
 .pfv3 .dd-item:hover:not(:disabled) {
-  background: var(--accent-soft);
+  background: var(--state-active-bg);
 }
 
 .pfv3 .dd-item:disabled {
-  opacity: 0.45;
+  /* A colour, not opacity: .45 of the text colour was 2.9:1 on light. */
+  color: var(--text-disabled);
   cursor: not-allowed;
 }
 
@@ -1283,7 +1261,7 @@
 
 .pfv3 .dd-item .sc,
 .pfv3 .dd-item .val {
-  margin-left: auto;
+  margin-inline-start: auto;
   font-size: 11px;
   color: var(--text-muted);
   font-family: var(--font-mono);
@@ -1309,14 +1287,12 @@
 .pfv3 .searchpop {
   position: absolute;
   top: 50px;
-  right: 96px;
+  inset-inline-end: 96px;
   z-index: 70;
   width: 320px;
   padding: 8px;
   border-radius: var(--r-md);
   background: var(--glass-bg-strong);
-  -webkit-backdrop-filter: var(--glass-blur);
-  backdrop-filter: var(--glass-blur);
   border: 1px solid var(--glass-border);
   box-shadow: var(--glass-shadow-lg), var(--glass-edge);
 }
@@ -1352,7 +1328,7 @@
   flex: none;
   overflow: hidden;
   background: var(--panel);
-  border-right: 1px solid var(--hairline);
+  border-inline-end: 1px solid var(--hairline);
   transition: width var(--t-slow);
   display: flex;
   flex-direction: column;
@@ -1401,7 +1377,7 @@
 
 .pfv3 .thumbs-tab.active {
   color: var(--text-primary);
-  border-bottom-color: var(--accent);
+  border-bottom-color: var(--emphasis);
 }
 
 /* The outline list reuses the thumbnail drawer, so it scrolls with the same
@@ -1417,7 +1393,7 @@
   gap: 6px;
   width: 100%;
   padding: 5px 6px;
-  text-align: left;
+  text-align: start;
   font-size: 11px;
   line-height: 1.3;
   color: var(--text-secondary);
@@ -1434,7 +1410,7 @@
 .pfv3 .outline-item.active {
   color: var(--text-primary);
   font-weight: 600;
-  background: var(--accent-soft);
+  background: var(--state-active-bg);
 }
 
 .pfv3 .outline-item svg {
@@ -1472,8 +1448,8 @@
 }
 
 .pfv3 .thumb.active .thumb-img {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 2px var(--accent-soft);
+  border-color: var(--selection);
+  box-shadow: 0 0 0 2px var(--selection-fill);
 }
 
 .pfv3 .thumb-label {
@@ -1492,17 +1468,15 @@
 .pfv3 .rpanel {
   position: absolute;
   top: 0;
-  right: 0;
+  inset-inline-end: 0;
   bottom: 0;
   width: 380px;
   z-index: 45;
-  background: color-mix(in oklab, var(--panel) 82%, transparent);
-  border-left: 1px solid var(--hairline);
+  background: var(--panel);
+  border-inline-start: 1px solid var(--hairline);
   display: flex;
   flex-direction: column;
   box-shadow: -8px 0 30px rgba(22, 27, 38, 0.10);
-  -webkit-backdrop-filter: blur(22px) saturate(160%);
-  backdrop-filter: blur(22px) saturate(160%);
 }
 
 .pfv3 .rpanel-head {
@@ -1527,7 +1501,7 @@
 .pfv3 .rpanel-head .ttl svg {
   width: 18px;
   height: 18px;
-  color: var(--accent);
+  color: var(--state-active-fg);
 }
 
 .pfv3 .rpanel-body {
@@ -1590,7 +1564,7 @@
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: var(--accent);
+  background: var(--text-muted);
   margin-top: 7px;
 }
 
@@ -1600,10 +1574,10 @@
   min-width: 17px;
   height: 17px;
   padding: 0 4px;
-  margin-left: 4px;
+  margin-inline-start: 4px;
   border-radius: 5px;
-  background: var(--accent-soft);
-  color: var(--accent);
+  background: var(--state-active-bg);
+  color: var(--state-active-fg);
   font-size: 10.5px;
   font-weight: 700;
 }
@@ -1657,7 +1631,7 @@
 
 .pfv3 .read-bar .eq i {
   width: 3px;
-  background: var(--accent);
+  background: var(--emphasis);
   border-radius: 2px;
   animation: pfv3-eq 0.9s ease-in-out infinite;
 }
@@ -1691,7 +1665,7 @@
 
 .pfv3 .read-btn.primary {
   background: var(--text-primary);
-  color: var(--on-primary);
+  color: var(--on-emphasis);
 }
 
 .pfv3 .read-btn svg {
@@ -1707,8 +1681,6 @@
   place-items: center;
   padding: 24px;
   background: rgba(22, 27, 38, 0.18);
-  -webkit-backdrop-filter: blur(8px);
-  backdrop-filter: blur(8px);
 }
 
 .pfv3 .v3-modal {
@@ -1719,8 +1691,6 @@
   background: var(--glass-bg-strong);
   border: 1px solid var(--glass-border);
   box-shadow: var(--glass-shadow-lg), var(--glass-edge);
-  -webkit-backdrop-filter: var(--glass-blur);
-  backdrop-filter: var(--glass-blur);
 }
 
 .pfv3 .modal-head {
@@ -1787,7 +1757,7 @@
   padding: 12px;
   border-radius: var(--r-md);
   border: 1px solid var(--hairline);
-  background: color-mix(in oklab, var(--panel) 70%, transparent);
+  background: var(--panel);
 }
 
 .pfv3 .cap-row {
@@ -1885,7 +1855,7 @@
 
 .pfv3 .modal-primary {
   background: var(--text-primary);
-  color: var(--on-primary);
+  color: var(--on-emphasis);
 }
 
 .pfv3 .modal-secondary {
@@ -1907,19 +1877,129 @@
   gap: 11px;
   padding: 11px 18px;
   border-radius: var(--r-pill);
-  background: rgba(28, 28, 30, 0.92);
-  color: #fff;
+  background: var(--inverse-bg);
+  color: var(--inverse-fg);
+  border: 1px solid var(--inverse-border);
   font-size: 13px;
   font-weight: 500;
-  -webkit-backdrop-filter: blur(20px);
-  backdrop-filter: blur(20px);
-  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.24);
 }
 
 .pfv3 .toast svg {
   width: 17px;
   height: 17px;
-  color: #4ade80;
+  color: var(--inverse-success);
+}
+
+/* Tailwind's disabled:opacity-30/40/50 dimmed a primary button's label to 2.6:1
+   (white on near-black at 40%). One floor for all of them: half strength keeps
+   text above 3:1 on both themes. */
+.disabled\:opacity-30:disabled,
+.disabled\:opacity-40:disabled,
+.disabled\:opacity-50:disabled {
+  opacity: 0.5;
+}
+
+.pfv3 .toast-wrap.pf-notice-static,
+.pfv3 .pf-notice-static {
+  position: static;
+  transform: none;
+}
+
+/* Rejection note and error toasts. Tokens only: see the notice block in
+   tokens.css. They used Tailwind utilities on the shadcn --background/--foreground
+   pair, which only flipped when a `.dark` class existed -- and nothing set it. */
+.pfv3 .pf-notice,
+.pf-notice {
+  width: min(520px, calc(100vw - 2rem));
+  border-radius: var(--r-sm, 9px);
+  border: 1px solid var(--border-strong);
+  background: var(--panel, var(--bg-surface-elevated));
+  color: var(--text-primary);
+  padding: 8px 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
+}
+
+.pf-notice-warn,
+.pf-notice-rejection {
+  border-color: var(--notice-warn-border);
+}
+
+.pf-notice-error {
+  border-color: var(--notice-error-border);
+}
+
+.pf-notice-floating {
+  position: fixed;
+  left: 50%;
+  bottom: 48px;
+  z-index: 72;
+  transform: translateX(-50%);
+}
+
+.pf-notice-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.pf-notice-body {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.pf-notice p {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.pf-notice p + p {
+  margin-top: 2px;
+}
+
+.pf-notice-title {
+  font-weight: 600;
+}
+
+.pf-notice-error .pf-notice-title {
+  color: var(--notice-error-fg);
+}
+
+.pf-notice-text {
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.pf-notice-sub {
+  color: var(--text-secondary);
+}
+
+.pf-notice-code {
+  margin-top: 4px;
+  font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
+.pf-notice-dismiss {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  color: var(--text-secondary);
+}
+
+.pf-notice-dismiss:hover {
+  background: var(--state-hover-bg);
+  color: var(--text-primary);
+}
+
+.pf-notice-dismiss svg {
+  width: 14px;
+  height: 14px;
 }
 
 .pfv3 .v3-canvas-state {
@@ -1935,9 +2015,43 @@
 }
 
 .pfv3 .v3-canvas-state.error {
-  color: var(--danger);
+  /* --danger is a fill colour (4.2:1 on the light workspace); text uses the notice red. */
+  color: var(--notice-error-fg);
   padding: 48px;
   text-align: center;
+}
+
+/* The open-error panel (J-17): a calm explanation, not a red stack trace. */
+.pfv3 .v3-canvas-state.open-error {
+  color: var(--text-primary);
+}
+
+.pfv3 .open-error-content {
+  max-width: 440px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.pfv3 .open-error-title {
+  font-size: 17px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.pfv3 .open-error-body {
+  margin: 0;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.pfv3 .open-error-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 4px;
 }
 
 .pfv3 .spin {
@@ -1965,8 +2079,8 @@
   border-radius: 16px;
   display: grid;
   place-items: center;
-  background: #141414;
-  color: #fff;
+  background: var(--emphasis);
+  color: var(--on-emphasis);
   font-size: 28px;
   font-weight: 700;
   box-shadow: 0 12px 34px rgba(20, 20, 20, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.12);
@@ -2011,8 +2125,6 @@
   border-radius: var(--r-lg);
   background: rgba(255, 255, 255, 0.42);
   box-shadow: var(--glass-shadow), var(--glass-edge);
-  -webkit-backdrop-filter: var(--glass-blur);
-  backdrop-filter: var(--glass-blur);
 }
 
 .pfv3 .recent-title {
@@ -2021,7 +2133,7 @@
   font-size: 10.5px;
   font-weight: 700;
   letter-spacing: 0.07em;
-  text-align: left;
+  text-align: start;
   text-transform: uppercase;
 }
 
@@ -2040,7 +2152,7 @@
   gap: 9px;
   padding: 0 10px;
   border-radius: var(--r-sm);
-  text-align: left;
+  text-align: start;
   color: var(--text-primary);
 }
 
@@ -2109,10 +2221,9 @@
   gap: 13px;
   padding: 12px 14px;
   border-radius: var(--r-md);
-  border: 1px solid rgba(217, 119, 6, 0.28);
-  background: rgba(217, 119, 6, 0.10);
-  color: #92400e;
-  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.55);
+  border: 1px solid var(--notice-warn-border);
+  background: var(--notice-warn-bg);
+  color: var(--notice-warn-fg);
 }
 
 /* ── Form Bar: calm, form-focused (replaces the active-content warning) ── */
@@ -2124,9 +2235,9 @@
   gap: 12px;
   padding: 9px 14px;
   border-radius: var(--r-md);
-  border: 1px solid rgba(37, 99, 235, 0.22);
-  background: rgba(37, 99, 235, 0.06);
-  color: #1e3a5f;
+  border: 1px solid var(--border);
+  background: var(--state-hover-bg);
+  color: var(--text-primary);
   box-shadow: 0 1px 0 rgba(255, 255, 255, 0.55);
 }
 
@@ -2150,11 +2261,11 @@
 
 .pfv3 .v3-form-bar .form-bar-sub {
   font-size: 11.5px;
-  color: rgba(30, 58, 95, 0.72);
+  color: var(--text-secondary);
 }
 
 .pfv3 .v3-form-bar .form-bar-actions {
-  margin-left: auto;
+  margin-inline-start: auto;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -2166,26 +2277,90 @@
   font-size: 12px;
   padding: 5px 11px;
   border-radius: 7px;
-  border: 1px solid rgba(37, 99, 235, 0.30);
-  background: #fff;
-  color: #1d4ed8;
+  border: 1px solid var(--border-strong);
+  background: var(--panel);
+  color: var(--text-primary);
   cursor: pointer;
   white-space: nowrap;
 }
 
 .pfv3 .v3-form-bar .form-bar-toggle.is-on {
-  background: #2563eb;
-  border-color: #2563eb;
-  color: #fff;
+  background: var(--emphasis);
+  border-color: var(--emphasis);
+  color: var(--on-emphasis);
 }
 
 .pfv3 .v3-form-bar .form-bar-action {
-  background: #2563eb;
-  border-color: #2563eb;
-  color: #fff;
+  background: var(--emphasis);
+  border-color: var(--emphasis);
+  color: var(--on-emphasis);
 }
 
 .pfv3 .v3-form-bar .form-bar-action:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* ── Script consent bar: a form's scripts wait for the user's answer ── */
+.pfv3 .v3-script-bar {
+  width: min(920px, calc(100% - 32px));
+  margin: 0 auto 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 14px;
+  border-radius: var(--r-md);
+  border: 1px solid var(--border-strong);
+  background: var(--state-hover-bg);
+  color: var(--text-primary);
+  flex-wrap: wrap;
+}
+
+.pfv3 .v3-script-bar .script-bar-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+  flex: 1 1 320px;
+}
+
+.pfv3 .v3-script-bar .script-bar-text strong {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.pfv3 .v3-script-bar .script-bar-sub {
+  font-size: 11.5px;
+  color: var(--text-secondary);
+}
+
+.pfv3 .v3-script-bar .script-bar-actions {
+  margin-inline-start: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.pfv3 .v3-script-bar .script-bar-primary,
+.pfv3 .v3-script-bar .script-bar-secondary {
+  font-size: 12px;
+  padding: 5px 11px;
+  border-radius: 7px;
+  border: 1px solid var(--border-strong);
+  background: var(--panel);
+  color: var(--text-primary);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.pfv3 .v3-script-bar .script-bar-primary {
+  background: var(--emphasis);
+  border-color: var(--emphasis);
+  color: var(--on-emphasis);
+}
+
+.pfv3 .v3-script-bar button:disabled {
   opacity: 0.5;
   cursor: default;
 }
@@ -2194,8 +2369,8 @@
   flex: none;
   padding: 3px 7px;
   border-radius: 6px;
-  border: 1px solid rgba(217, 119, 6, 0.36);
-  background: rgba(217, 119, 6, 0.12);
+  border: 1px solid var(--notice-warn-border);
+  background: var(--notice-warn-badge-bg);
   font-size: 10px;
   font-weight: 800;
   letter-spacing: 0.06em;
@@ -2210,11 +2385,11 @@
 .pfv3 .v3-warning p {
   margin: 2px 0 0;
   font-size: 12px;
-  color: rgba(146, 64, 14, 0.82);
+  color: var(--notice-warn-fg-muted);
 }
 
 .pfv3 .v3-warning p.warning-error {
-  color: #b91c1c;
+  color: var(--notice-error-fg);
   font-weight: 600;
 }
 
@@ -2231,7 +2406,7 @@
 }
 
 .pfv3 .warning-actions {
-  margin-left: auto;
+  margin-inline-start: auto;
   display: flex;
   flex-wrap: wrap;
   justify-content: flex-end;
@@ -2241,19 +2416,19 @@
 }
 
 .pfv3 .warning-action {
-  margin-left: auto;
+  margin-inline-start: auto;
   flex: none;
   height: 30px;
   padding: 0 12px;
   border-radius: var(--r-pill);
-  background: #b45309;
-  color: #fff;
+  background: var(--notice-warn-action-bg);
+  color: var(--notice-warn-action-fg);
   font-size: 12px;
   font-weight: 700;
 }
 
 .pfv3 .warning-actions .warning-action {
-  margin-left: 0;
+  margin-inline-start: 0;
 }
 
 .pfv3 .warning-secondary {
@@ -2261,19 +2436,20 @@
   height: 30px;
   padding: 0 10px;
   border-radius: var(--r-pill);
-  border: 1px solid rgba(217, 119, 6, 0.32);
-  background: rgba(255, 255, 255, 0.52);
-  color: #92400e;
+  border: 1px solid var(--notice-warn-border);
+  background: var(--notice-warn-secondary-bg);
+  color: var(--notice-warn-fg);
   font-size: 12px;
   font-weight: 700;
 }
 
 .pfv3 .warning-secondary:hover {
-  background: rgba(255, 255, 255, 0.78);
+  background: var(--notice-warn-badge-bg);
 }
 
 .pfv3 .warning-action:disabled {
-  opacity: 0.55;
+  /* No opacity: dimming the text of a button that is busy dropped it under
+     3:1. A busy button keeps its colours and says "Busy..." instead. */
   cursor: default;
 }
 
@@ -2289,32 +2465,35 @@
 
 .pfv3 [data-testid="text-edit-floating-pill"] {
   border-radius: var(--r-pill) !important;
-  border: 1px solid rgba(255, 255, 255, 0.18) !important;
-  background: rgba(21, 23, 28, 0.88) !important;
-  color: rgba(255, 255, 255, 0.88) !important;
-  box-shadow: 0 18px 46px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.16) !important;
-  -webkit-backdrop-filter: blur(24px) saturate(180%);
-  backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid var(--inverse-border) !important;
+  background: var(--inverse-bg) !important;
+  color: var(--inverse-fg) !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.30) !important;
+}
+
+.pfv3 [data-testid="text-edit-floating-pill"] {
+  /* The pill is light in dark mode; the dark-mode ring is 2.6:1 on it. */
+  --focus-ring: var(--focus-ring-on-page);
 }
 
 .pfv3 [data-testid="text-edit-floating-pill"] button,
 .pfv3 [data-testid="text-edit-floating-pill"] span {
-  color: rgba(255, 255, 255, 0.72) !important;
+  color: var(--inverse-fg-muted) !important;
 }
 
 .pfv3 [data-testid="text-edit-floating-pill"] button:hover {
-  background: rgba(255, 255, 255, 0.10) !important;
-  color: #fff !important;
+  background: var(--inverse-hover) !important;
+  color: var(--inverse-fg) !important;
 }
 
 .pfv3 [data-testid="text-edit-floating-pill"] button[aria-pressed="true"] {
-  background: rgba(10, 102, 255, 0.58) !important;
-  color: #fff !important;
+  background: var(--inverse-pressed) !important;
+  color: var(--inverse-fg) !important;
 }
 
 .pfv3 [data-testid="text-edit-floating-pill"] [data-testid="text-edit-save-btn"] {
-  background: #fff !important;
-  color: #141414 !important;
+  background: var(--inverse-cta-bg) !important;
+  color: var(--inverse-cta-fg) !important;
 }
 
 @media (max-width: 1320px) {
@@ -2334,7 +2513,7 @@
   }
 
   .pfv3 .brand {
-    padding-right: 6px;
+    padding-inline-end: 6px;
   }
 
   .pfv3 .crumb .file {
@@ -2355,7 +2534,7 @@
     position: absolute;
     top: 0;
     bottom: 0;
-    left: 0;
+    inset-inline-start: 0;
   }
 
   .pfv3 .canvas {
@@ -2415,7 +2594,7 @@
   .pfv3 .topbar-more-menu,
   .pfv3 .share-menu,
   .pfv3 .searchpop {
-    right: 8px;
+    inset-inline-end: 8px;
     width: min(320px, calc(100vw - 16px));
   }
 
@@ -2445,7 +2624,7 @@
 }
 
 .pfv3 .panel-input:focus {
-  border-color: var(--accent);
+  border-color: var(--focus-ring);
 }
 
 .pfv3 .panel-label {
@@ -2456,73 +2635,6 @@
   display: block;
 }
 
-/* ─────────────────────────────────────────────────────────────────────────────
-   Liquid Glass Overrides for Dropdowns and Sidebar Panels
-   ───────────────────────────────────────────────────────────────────────────── */
-
-.pfv3 .dropdown {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 250, 252, 0.95) 100%) !important;
-  -webkit-backdrop-filter: blur(28px) saturate(210%) brightness(1.04) !important;
-  backdrop-filter: blur(28px) saturate(210%) brightness(1.04) !important;
-  border: 1px solid rgba(255, 255, 255, 0.75) !important;
-  box-shadow: 
-    inset 0 1.5px 1px rgba(255, 255, 255, 0.95),
-    inset 0 -1px 1px rgba(0, 0, 0, 0.05),
-    0 14px 44px rgba(22, 27, 38, 0.18),
-    0 2px 8px rgba(22, 27, 38, 0.08) !important;
-}
-
-.pfv3.theme-dark .dropdown {
-  background: linear-gradient(135deg, rgba(30, 31, 36, 0.98) 0%, rgba(22, 23, 27, 0.95) 100%) !important;
-  -webkit-backdrop-filter: blur(28px) saturate(180%) brightness(0.95) !important;
-  backdrop-filter: blur(28px) saturate(180%) brightness(0.95) !important;
-  border: 1px solid rgba(255, 255, 255, 0.14) !important;
-  box-shadow: 
-    inset 0 1.5px 1px rgba(255, 255, 255, 0.18),
-    inset 0 -1px 1px rgba(0, 0, 0, 0.40),
-    0 14px 44px rgba(0, 0, 0, 0.55) !important;
-}
-
-.pfv3 .rpanel {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.88) 0%, rgba(246, 248, 250, 0.78) 100%) !important;
-  border-left: 1px solid rgba(255, 255, 255, 0.65) !important;
-  -webkit-backdrop-filter: blur(32px) saturate(210%) brightness(1.02) !important;
-  backdrop-filter: blur(32px) saturate(210%) brightness(1.02) !important;
-  box-shadow: 
-    inset 1px 0 0 rgba(255, 255, 255, 0.9),
-    -8px 0 30px rgba(22, 27, 38, 0.08) !important;
-}
-
-.pfv3.theme-dark .rpanel {
-  background: linear-gradient(135deg, rgba(30, 31, 36, 0.90) 0%, rgba(22, 23, 27, 0.82) 100%) !important;
-  border-left: 1px solid rgba(255, 255, 255, 0.12) !important;
-  -webkit-backdrop-filter: blur(32px) saturate(170%) brightness(0.95) !important;
-  backdrop-filter: blur(32px) saturate(170%) brightness(0.95) !important;
-  box-shadow: 
-    inset 1px 0 0 rgba(255, 255, 255, 0.15),
-    -8px 0 30px rgba(0, 0, 0, 0.35) !important;
-}
-
-.pfv3 .contextpanel {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.88) 0%, rgba(246, 248, 250, 0.78) 100%) !important;
-  border-left: 1px solid rgba(255, 255, 255, 0.65) !important;
-  -webkit-backdrop-filter: blur(32px) saturate(210%) brightness(1.02) !important;
-  backdrop-filter: blur(32px) saturate(210%) brightness(1.02) !important;
-  box-shadow: 
-    inset 1px 0 0 rgba(255, 255, 255, 0.9),
-    -8px 0 30px rgba(22, 27, 38, 0.08) !important;
-}
-
-.pfv3.theme-dark .contextpanel {
-  background: linear-gradient(135deg, rgba(30, 31, 36, 0.90) 0%, rgba(22, 23, 27, 0.82) 100%) !important;
-  border-left: 1px solid rgba(255, 255, 255, 0.12) !important;
-  -webkit-backdrop-filter: blur(32px) saturate(170%) brightness(0.95) !important;
-  backdrop-filter: blur(32px) saturate(170%) brightness(0.95) !important;
-  box-shadow:
-    inset 1px 0 0 rgba(255, 255, 255, 0.15),
-    -8px 0 30px rgba(0, 0, 0, 0.35) !important;
-}
-
 /* The global body rule sets user-select: none to prevent accidental selection of UI chrome.
    The PDF text layer must override this so readers can copy text from PDF documents.
    React inline styles only emit the unprefixed property; the -webkit- prefix is required
@@ -2530,4 +2642,21 @@
 .pdf-text-layer {
   -webkit-user-select: text;
   user-select: text;
+}
+
+/* ── Right-to-left ──────────────────────────────────────────────────────────
+   <html dir> follows the UI language (src/i18n/direction.ts). Flex and grid
+   order, text alignment and the logical properties above mirror on their own;
+   these are the few things that do not.
+   - Directional icons (previous/next, scroll start/end) point along the reading
+     order. Media and brand icons keep their shape: they carry no direction.
+   - The read-aloud bar is centred on the page area, which the thumbnail strip
+     pushes the other way in a right-to-left layout.
+   - The page canvas carries dir="ltr" in the markup and never mirrors. */
+[dir="rtl"] .pfv3 .rtl-mirror {
+  transform: scaleX(-1);
+}
+
+[dir="rtl"] .pfv3 .read-bar {
+  left: calc(50% - var(--thumbs-offset, 0px));
 }

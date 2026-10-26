@@ -56,6 +56,30 @@ const fail = (reason, numbers = {}) => ({ status: "FAIL", reason, numbers });
 const skip = (reason, numbers = {}) => ({ status: "SKIPPED", reason, numbers });
 const na = (reason) => ({ status: "NOT_APPLICABLE", reason, numbers: {} });
 
+/**
+ * `session_launches` (Windows driver): `budget_ms=<n>` once, then one line per
+ * launch -- `<doc> starts=<n> quits=<n> forced=<0|1> quit_ms=<n> exit_logged=<0|1> close_guard=<0|1>`.
+ * Absent on a platform that does not write it; the caller then falls back to
+ * counting the totals.
+ */
+function parseLaunches(text) {
+  const rows = [];
+  let budgetMs = null;
+  for (const raw of text.split("\n")) {
+    const line = raw.trim();
+    const b = /^budget_ms=(\d+)$/.exec(line);
+    if (b) { budgetMs = Number(b[1]); continue; }
+    const f = Object.fromEntries([...line.matchAll(/(\w+)=(-?\d+)/g)].map((m) => [m[1], Number(m[2])]));
+    const doc = line.split(/\s+/)[0];
+    if (!doc || f.starts === undefined) continue;
+    rows.push({
+      doc, starts: f.starts, quits: f.quits ?? 0, forced: f.forced === 1,
+      quitMs: f.quit_ms ?? -1, exitLogged: f.exit_logged === 1, closeGuard: f.close_guard === 1,
+    });
+  }
+  return { rows, budgetMs };
+}
+
 const firstLine = (s) => s.split("\n").map((l) => l.trim()).filter(Boolean)[0] ?? "";
 
 // A local address, in every spelling the two samplers use. IPv4 loopback, IPv6
@@ -260,12 +284,36 @@ export const JUDGES = {
       const starts = lines.filter((l) => l.startsWith("start "));
       const quits = lines.filter((l) => l.startsWith("clean_quit "));
       if (!starts.length) return fail("sessions.log gained no `start` line for this run");
+      // Per-launch record (Windows lane): one line per launch, written by the
+      // driver, so a mismatch names the launch instead of two totals.
+      const launches = parseLaunches(readProbe(p.work, "session_launches").out);
+      const budget = launches.budgetMs ?? 15000;
+      const forced = launches.rows.filter((l) => l.forced);
+      const quitMs = launches.rows.filter((l) => l.quitMs >= 0);
+      const numbers = quitMs.length
+        ? { quit_ms_max: Math.max(...quitMs.map((l) => l.quitMs)), quit_budget_ms: budget }
+        : {};
+      // A launch the suite had to kill is a quit that did not happen, and it is
+      // reported as that, with the time it was given -- not as a clean_quit line
+      // that went missing. It still fails: a window that will not close is a
+      // product fault, or a budget that is too small, and the number says which.
+      if (forced.length) {
+        const list = forced.map((l) => `${l.doc} (${l.quitMs >= 0 ? `no exit in ${l.quitMs} ms` : "no process handle"}${l.closeGuard ? ", the close guard held the close" : ""})`).join(", ");
+        const unexplained = launches.rows.filter((l) => !l.forced && l.starts !== l.quits).map((l) => l.doc);
+        return fail(
+          `${forced.length} launch(es) did not quit within ${budget} ms and were killed by the suite: ${list}` +
+            (unexplained.length ? `; also exited without a clean_quit line: ${unexplained.join(", ")}` : ""),
+          numbers,
+        );
+      }
+      const silent = launches.rows.filter((l) => l.starts !== l.quits).map((l) => `${l.doc}${l.exitLogged ? " (exit line logged, session line not)" : " (no exit line in the app log)"}`);
+      if (silent.length) return fail(`exited without writing clean_quit: ${silent.join(", ")}`, numbers);
       if (!quits.length) return fail(`sessions.log has \`${starts[starts.length - 1]}\` with no matching clean_quit`);
       if (starts.length !== quits.length) return fail(`${starts.length} start lines against ${quits.length} clean_quit lines`);
       const versions = lines.map((l) => l.split(/\s+/)[2]).filter(Boolean);
       const wrong = versions.find((v) => v !== meta.expected_version);
-      if (wrong) return fail(`sessions.log records version ${wrong}, this checkout is ${meta.expected_version}`);
-      return pass();
+      if (wrong) return fail(`sessions.log records version ${wrong}, this checkout is ${meta.expected_version}`, numbers);
+      return pass(numbers);
     },
   },
   no_crash: {
@@ -554,6 +602,7 @@ function cli() {
         for (const r of judgeWalk(walkTargets(root), probe.out, {
           missingProbe: probe.missing,
           missingReason: rest[1] ?? "",
+          commit: rest[2] ?? "",
         })) emit(r);
       } else {
         process.stderr.write(`judge: queue line neither J, S, N nor W: ${line.slice(0, 80)}\n`);

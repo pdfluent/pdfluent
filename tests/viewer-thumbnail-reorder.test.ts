@@ -8,10 +8,6 @@
 import { readFileSync } from 'node:fs';
 import { describe, it, expect } from 'vitest';
 
-const navRailSource = readFileSync(
-  new URL('../src/viewer/components/LeftNavRail.tsx', import.meta.url),
-  'utf8'
-);
 
 const viewerAppSource = [
   '../src/viewer/hooks/usePageNavigation.ts',
@@ -36,79 +32,11 @@ const viewerAppSource = [
 // LeftNavRail — onReorderPages prop
 // ---------------------------------------------------------------------------
 
-describe('LeftNavRail — onReorderPages prop', () => {
-  it('declares onReorderPages in LeftNavRailProps', () => {
-    expect(navRailSource).toContain('onReorderPages?: (newOrder: number[]) => void');
-  });
-
-  it('passes onReorderPages to ThumbnailPanel', () => {
-    expect(navRailSource).toContain('onReorderPages={onReorderPages}');
-  });
-});
 
 // ---------------------------------------------------------------------------
 // LeftNavRail — ThumbnailPanel drag-to-reorder
 // ---------------------------------------------------------------------------
 
-describe('LeftNavRail — ThumbnailPanel drag-to-reorder', () => {
-  function thumbnailPanelBody(): string {
-    const fnStart = navRailSource.indexOf('function ThumbnailPanel(');
-    const fnEnd = navRailSource.indexOf('function OutlineItem(', fnStart);
-    return navRailSource.slice(fnStart, fnEnd);
-  }
-
-  it('accepts onReorderPages prop', () => {
-    expect(thumbnailPanelBody()).toContain('onReorderPages');
-  });
-
-  it('sets draggable on thumbnail buttons when onReorderPages provided', () => {
-    expect(thumbnailPanelBody()).toContain('draggable=');
-  });
-
-  it('tracks drag source index via dragSrcIndex ref', () => {
-    expect(thumbnailPanelBody()).toContain('dragSrcIndex');
-  });
-
-  it('defines handleDragStart function', () => {
-    expect(thumbnailPanelBody()).toContain('handleDragStart');
-  });
-
-  it('defines handleDragOver function', () => {
-    expect(thumbnailPanelBody()).toContain('handleDragOver');
-  });
-
-  it('defines handleDrop function', () => {
-    expect(thumbnailPanelBody()).toContain('handleDrop');
-  });
-
-  it('calls e.preventDefault() in handleDragOver', () => {
-    expect(thumbnailPanelBody()).toContain('e.preventDefault()');
-  });
-
-  it('builds new page order array on drop', () => {
-    expect(thumbnailPanelBody()).toContain('order.splice(');
-  });
-
-  it('calls onReorderPages with computed order', () => {
-    expect(thumbnailPanelBody()).toContain('onReorderPages?.(order)');
-  });
-
-  it('wires onDragStart handler to thumbnail button', () => {
-    expect(thumbnailPanelBody()).toContain('onDragStart=');
-  });
-
-  it('wires onDragOver handler to thumbnail button', () => {
-    expect(thumbnailPanelBody()).toContain('onDragOver=');
-  });
-
-  it('wires onDrop handler to thumbnail button', () => {
-    expect(thumbnailPanelBody()).toContain('onDrop=');
-  });
-
-  it('does not reorder when src equals drop target', () => {
-    expect(thumbnailPanelBody()).toContain('src === dropIndex');
-  });
-});
 
 // ---------------------------------------------------------------------------
 // ViewerApp — handleReorderPages

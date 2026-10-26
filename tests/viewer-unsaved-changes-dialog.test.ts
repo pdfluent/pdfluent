@@ -186,7 +186,7 @@ describe('ViewerApp — unsaved-changes: handleUnsavedSave', () => {
     const end   = viewerAppSource.indexOf('}, [currentFilePath', start) + 30;
     const body  = viewerAppSource.slice(start, end);
     expect(body).toContain("'save_pdf'");
-    expect(body).toContain('path: currentFilePath');
+    expect(body).toContain('currentFilePath,');
   });
 
   it('calls clearDirty after successful save', () => {
@@ -196,17 +196,19 @@ describe('ViewerApp — unsaved-changes: handleUnsavedSave', () => {
     expect(body).toContain('clearDirty()');
   });
 
-  it('closes the dialog and fires pending action on save', () => {
+  it('closes the dialog and hands the pending action to the tested settle flow', () => {
+    // Whether the action runs is decided in state/saveFlow.ts
+    // `settleUnsavedWithSave`, behaviour-tested in
+    // src/viewer/state/__tests__/saveFlow.test.ts (a failed save must not run it).
     const start = viewerAppSource.indexOf('handleUnsavedSave');
     const end   = viewerAppSource.indexOf('}, [currentFilePath', start) + 30;
     const body  = viewerAppSource.slice(start, end);
     expect(body).toContain('setUnsavedDialogOpen(false)');
-    expect(body).toContain('pendingActionRef.current?.()');
-    expect(body).toContain('pendingActionRef.current = null');
+    expect(body).toContain('settleUnsavedWithSave(pendingActionRef');
   });
 
-  it('canSave prop is false when currentFilePath is null', () => {
-    expect(viewerAppSource).toContain('canSave={currentFilePath !== null}');
+  it('offers Save in the desktop app even for a never-saved document (Save As)', () => {
+    expect(viewerAppSource).toContain('canSave={isTauri}');
   });
 });
 
@@ -259,7 +261,7 @@ describe('ViewerApp — unsaved-changes: window.confirm removed', () => {
 describe('ViewerApp — unsaved-changes: handleLoadDocument call site', () => {
   it('handleLoadDocument opens the dialog when isDirty', () => {
     const start = viewerAppSource.indexOf('handleLoadDocument = useCallback');
-    const end   = viewerAppSource.indexOf('}, [isDirty, loadDocument])', start) + 30;
+    const end   = viewerAppSource.indexOf('}, [isDirty, loadDocument, beginAccess])', start) + 40;
     const body  = viewerAppSource.slice(start, end);
     expect(body).toContain('setUnsavedDialogOpen(true)');
     expect(body).toContain('pendingActionRef.current =');
@@ -267,7 +269,7 @@ describe('ViewerApp — unsaved-changes: handleLoadDocument call site', () => {
 
   it('handleLoadDocument stores the load as the pending action', () => {
     const start = viewerAppSource.indexOf('handleLoadDocument = useCallback');
-    const end   = viewerAppSource.indexOf('}, [isDirty, loadDocument])', start) + 30;
+    const end   = viewerAppSource.indexOf('}, [isDirty, loadDocument, beginAccess])', start) + 40;
     const body  = viewerAppSource.slice(start, end);
     expect(body).toContain('void loadDocument(source)');
   });
@@ -275,8 +277,8 @@ describe('ViewerApp — unsaved-changes: handleLoadDocument call site', () => {
 
 describe('ViewerApp — unsaved-changes: onCloseDocument call site', () => {
   it('onCloseDocument opens the dialog when isDirty', () => {
-    const start = viewerAppSource.indexOf('onCloseDocument');
-    const end   = viewerAppSource.indexOf('})', start) + 2;
+    const start = viewerAppSource.indexOf('handleCloseDocumentWithGuard = useCallback(');
+    const end   = viewerAppSource.indexOf('}, [isDirty, closeDocument', start) + 30;
     const body  = viewerAppSource.slice(start, end);
     expect(body).toContain('setUnsavedDialogOpen(true)');
     expect(body).toContain('pendingActionRef.current =');

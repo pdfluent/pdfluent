@@ -129,6 +129,6 @@ export function describeMergeResult(result: MergeResult): string {
   if (result.conflicts.length > 0) {
     parts.push(`${result.conflicts.length} conflict(en) gedetecteerd`);
   }
-  if (parts.length === 0) return 'Geen wijzigingen gevonden';
+  if (parts.length === 0) return 'No changes found';
   return parts.join(', ');
 }

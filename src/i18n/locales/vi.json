@@ -56,7 +56,7 @@
     "fillAndSign": "Điền & Ký",
     "more": "Thêm",
     "getDesktopApp": "Ứng dụng máy tính",
-    "getDesktopAppTitle": "Nhận tính năng chỉnh sửa, OCR, biên tập, tổ chức trang và xuất trong ứng dụng máy tính"
+    "getDesktopAppTitle": "Chỉnh sửa, OCR, che thông tin, sắp xếp trang và xuất trong ứng dụng máy tính"
   },
   "toolbar": {
     "select": "Chọn",
@@ -94,7 +94,7 @@
     "date": "Ngày",
     "password": "Mật khẩu",
     "permissions": "Quyền",
-    "redact": "Biên tập",
+    "redact": "Che thông tin",
     "hide": "Ẩn",
     "compare": "So sánh",
     "accessibility": "Trợ năng",
@@ -114,9 +114,9 @@
     "allTools": "Tất cả công cụ",
     "contextualBar": "Thanh công cụ chế độ",
     "pdfa": "PDF/A",
-    "metadata": "Document properties",
-    "invoice": "E-invoice",
-    "bookmarks": "Bookmarks"
+    "metadata": "Thuộc tính tài liệu",
+    "invoice": "Hóa đơn điện tử",
+    "bookmarks": "Dấu trang"
   },
   "topbar": {
     "openPdf": "Mở PDF",
@@ -233,16 +233,15 @@
     "noFieldsBrowserHint": "Không tìm thấy trường biểu mẫu."
   },
   "protect": {
-    "applyRedactions": "Áp dụng biên tập vĩnh viễn",
-    "noRedactions": "Không có biên tập đang chờ.",
-    "redactionsPending": "{{count}} biên tập đang chờ",
-    "redactionsPending_plural": "{{count}} biên tập đang chờ",
+    "applyRedactions": "Áp dụng việc che thông tin vĩnh viễn",
+    "noRedactions": "Không có mục che thông tin nào đang chờ.",
+    "redactionsPending": "{{count}} mục che thông tin đang chờ",
+    "redactionsPending_plural": "{{count}} mục che thông tin đang chờ",
     "encrypt": "Mã hóa",
     "userPasswordPlaceholder": "Mật khẩu người dùng",
     "ownerPasswordPlaceholder": "Mật khẩu chủ sở hữu",
     "encryptBtn": "Mã hóa…",
     "decrypt": "Giải mã",
-    "currentPasswordPlaceholder": "Mật khẩu hiện tại",
     "decryptBtn": "Giải mã",
     "noDocument": "Không có tài liệu đang mở.",
     "permCanPrint": "In",
@@ -253,12 +252,16 @@
     "permCanFillForms": "Điền biểu mẫu",
     "permCanExtractContent": "Trích xuất nội dung",
     "permCanAssemble": "Lắp ráp",
-    "searchRedact": "Tìm kiếm và biên tập",
-    "searchRedactPlaceholder": "Văn bản cần tìm và biên tập…",
-    "searchRedactBtn": "Tìm và biên tập",
+    "searchRedact": "Tìm và che thông tin",
+    "searchRedactPlaceholder": "Văn bản cần tìm và che…",
+    "searchRedactBtn": "Tìm và che",
     "redactMetadataTitle": "Siêu dữ liệu",
     "redactMetadataDesc": "Xóa tác giả, tiêu đề và các siêu dữ liệu nhận dạng khác.",
-    "redactMetadataBtn": "Xóa siêu dữ liệu"
+    "redactMetadataBtn": "Xóa siêu dữ liệu",
+    "ownerPasswordForRemoval": "Mật khẩu chủ sở hữu (quyền)",
+    "removePasswordHelp": "Gỡ mật khẩu cần mật khẩu chủ sở hữu, mật khẩu bảo vệ quyền. Mật khẩu bạn dùng để mở tệp là không đủ, trừ khi đó cũng là mật khẩu chủ sở hữu.",
+    "removePasswordReady": "Bạn đã mở tệp này bằng mật khẩu chủ sở hữu, nên có thể gỡ bảo vệ mà không cần nhập lại.",
+    "removePasswordNotProtected": "Tài liệu này không có bảo vệ bằng mật khẩu."
   },
   "organize": {
     "thumbnails": "Hình thu nhỏ",
@@ -287,33 +290,34 @@
     "combine": "Gộp tệp",
     "splitRange": "Tách theo phạm vi",
     "splitRangeHint": "Chọn các trang trước",
-    "moveLeft": "Move selected page left",
-    "moveRight": "Move selected page right",
-    "moveLeftShort": "Left",
-    "moveRightShort": "Right",
-    "rotateLeft": "Rotate left",
-    "rotateRight": "Rotate right",
-    "rotateLeftShort": "Left",
-    "rotateRightShort": "Right",
-    "addingPdf": "Adding PDF…",
-    "pdfAdded": "PDF added",
-    "combiningFiles": "Combining {{count}} file(s)…",
-    "filesCombined": "{{count}} file(s) combined",
-    "insertingPdf": "Inserting PDF before page {{page}}…",
-    "pdfInserted": "PDF inserted",
-    "exportingPages": "Exporting {{count}} page(s)…",
-    "selectionExported": "Selection exported to {{name}}",
-    "splittingPages": "Splitting into individual pages…",
-    "pagesSaved": "{{count}} pages saved",
-    "splittingRanges": "Splitting {{count}} range(s)…",
-    "filesSaved": "{{count}} file(s) saved"
+    "moveLeft": "Di chuyển trang đã chọn sang trái",
+    "moveRight": "Di chuyển trang đã chọn sang phải",
+    "moveLeftShort": "Trái",
+    "moveRightShort": "Phải",
+    "rotateLeft": "Xoay trái",
+    "rotateRight": "Xoay phải",
+    "rotateLeftShort": "Trái",
+    "rotateRightShort": "Phải",
+    "addingPdf": "Đang thêm PDF…",
+    "pdfAdded": "Đã thêm PDF",
+    "combiningFiles": "Đang gộp {{count}} tệp…",
+    "filesCombined": "Đã gộp {{count}} tệp",
+    "insertingPdf": "Đang chèn PDF trước trang {{page}}…",
+    "pdfInserted": "Đã chèn PDF",
+    "exportingPages": "Đang xuất {{count}} trang…",
+    "selectionExported": "Đã xuất vùng chọn sang {{name}}",
+    "splittingPages": "Đang tách thành các trang riêng lẻ…",
+    "pagesSaved": "Đã lưu {{count}} trang",
+    "splittingRanges": "Đang tách {{count}} phạm vi…",
+    "filesSaved": "Đã lưu {{count}} tệp"
   },
   "unsavedChanges": {
     "title": "Thay đổi chưa lưu",
     "message": "Bạn có muốn lưu thay đổi trước khi tiếp tục không?",
     "save": "Lưu",
     "discard": "Bỏ thay đổi",
-    "cancel": "Hủy"
+    "cancel": "Hủy",
+    "messageNamed": "Bạn có muốn lưu thay đổi vào {{name}} trước khi tiếp tục không?"
   },
   "welcome": {
     "title": "Mở PDF để bắt đầu",
@@ -327,13 +331,13 @@
     "lede": "Đọc, chỉnh sửa, chuyển đổi, điền và ký — hoàn toàn trên thiết bị của bạn.",
     "privacyPromise": "Local-first · tài liệu không bao giờ rời khỏi thiết bị này",
     "dropPdfHere": "Thả PDF vào đây",
-    "v3Subtitle": "Open a PDF to read, edit, convert or sign it locally.",
-    "openFileAria": "Choose a PDF file to open",
-    "clearRecent": "Clear recent",
-    "recentShort": "Recent",
-    "removeRecentAria": "Remove {{name}}",
-    "backToDocument": "Back to document",
-    "loadingDocument": "Loading document…"
+    "v3Subtitle": "Mở PDF để đọc, chỉnh sửa, chuyển đổi hoặc ký ngay trên máy.",
+    "openFileAria": "Chọn tệp PDF để mở",
+    "clearRecent": "Xóa danh sách gần đây",
+    "recentShort": "Gần đây",
+    "removeRecentAria": "Xóa {{name}}",
+    "backToDocument": "Quay lại tài liệu",
+    "loadingDocument": "Đang tải tài liệu…"
   },
   "settings": {
     "language": "Ngôn ngữ",
@@ -350,15 +354,29 @@
     "reviewerNamePlaceholder": "Tên dùng trong chú thích",
     "exportPreferences": "Tùy chọn xuất",
     "exportFormatLabel": "Định dạng xuất mặc định",
-    "autosave": "Tự động lưu",
-    "autosaveEnable": "Tự động lưu thay đổi",
     "themeLabel": "Giao diện",
     "ocrDefaults": "Mặc định OCR",
     "ocrLanguageLabel": "Ngôn ngữ mặc định (ISO-639-2)",
     "ocrLanguagePlaceholder": "vd. eng, nld, deu",
-    "updates": "Updates",
-    "automaticUpdateCheck": "Check for a new version at startup",
-    "automaticUpdateCheckHint": "PDFluent asks pdfluent.com whether a newer version exists, a few seconds after it starts. Nothing from your documents is sent. Turn this off and the app never checks on its own — \"Check for updates\" still works whenever you ask for it."
+    "updates": "Cập nhật",
+    "automaticUpdateCheck": "Kiểm tra phiên bản mới khi khởi động",
+    "automaticUpdateCheckHint": "PDFluent hỏi pdfluent.com xem có phiên bản mới hơn không, vài giây sau khi khởi động. Không có gì từ tài liệu của bạn được gửi đi. Tắt mục này thì ứng dụng sẽ không bao giờ tự kiểm tra — \"Kiểm tra cập nhật\" vẫn hoạt động mỗi khi bạn yêu cầu.",
+    "recoveryCopy": "Bản sao khôi phục",
+    "recoveryCopyEnable": "Giữ bản sao khôi phục của các thay đổi chưa lưu, được đề xuất sau khi ứng dụng gặp sự cố",
+    "view": "Xem",
+    "defaultZoomLabel": "Thu phóng mặc định",
+    "defaultZoomFitWidth": "Vừa chiều rộng (mặc định)",
+    "defaultZoomFitPage": "Vừa trang",
+    "defaultZoomActualSize": "Kích thước thực (100%)",
+    "defaultZoomLastUsed": "Dùng gần nhất",
+    "defaultZoomHint": "Tài liệu mở ở mức thu phóng này và bám theo cửa sổ cho đến khi bạn tự thu phóng. Vừa chiều rộng sẽ hiện toàn bộ trang khi cách đó rõ ràng phù hợp hơn.",
+    "securityTitle": "Bảo mật",
+    "formScriptsLabel": "Script biểu mẫu",
+    "formScriptsAsk": "Hỏi",
+    "formScriptsAlways": "Luôn",
+    "formScriptsNever": "Không bao giờ",
+    "formScriptsHint": "Biểu mẫu có thể chứa script, ví dụ tính toán. Hỏi là mặc định: biểu mẫu mở với giá trị đã lưu và không có gì chạy cho đến khi bạn đồng ý.",
+    "formScriptsPinned": "Tổ chức của bạn đã đặt lựa chọn này. Không thể thay đổi ở đây."
   },
   "errors": {
     "loadFailed": "Tải tài liệu thất bại",
@@ -367,7 +385,7 @@
     "unknownError": "Đã xảy ra lỗi không mong đợi",
     "ocrFailed": "OCR thất bại",
     "exportFailed": "Xuất thất bại",
-    "redactionFailed": "Biên tập thất bại",
+    "redactionFailed": "Che thông tin không thành công",
     "textEditFailed": "Chỉnh sửa văn bản thất bại",
     "layoutEditFailed": "Chỉnh sửa bố cục thất bại",
     "annotationFailed": "Chú thích thất bại",
@@ -381,7 +399,8 @@
     "addPageFailed": "Thêm PDF thất bại",
     "insertFailed": "Chèn PDF thất bại",
     "splitFailed": "Tách thất bại",
-    "commandFailedTitle": "'{{command}}' did not complete"
+    "commandFailedTitle": "'{{command}}' không hoàn thành",
+    "commandRetrying": "Lỗi tạm thời trong {{command}} — đang thử lại"
   },
   "events": {
     "formFieldUpdated": "Đã cập nhật trường biểu mẫu",
@@ -430,9 +449,9 @@
     "pageNotFound": "Không tìm thấy trang",
     "requiresFontInspection": "Chỉnh sửa văn bản yêu cầu kiểm tra phông chữ (dự kiến cho giai đoạn 6).",
     "rejection": {
-      "bannerTitle": "This text was not changed",
-      "bannerDetail": "Reason reported by the PDF engine: {{detail}}",
-      "bannerDismiss": "Dismiss",
+      "bannerTitle": "Văn bản này không được thay đổi",
+      "bannerDetail": "Lý do được công cụ PDF báo cáo: {{detail}}",
+      "bannerDismiss": "Bỏ qua",
       "replacement-too-long": {
         "tooltip": "Replacement is too long",
         "explanation": "The replacement is longer than the text it replaces. Keep it the same length or shorter so the surrounding layout stays intact."
@@ -491,8 +510,8 @@
       }
     },
     "fallback": {
-      "fontSubstitutedTitle": "A standard font wrote the new text",
-      "fontSubstitutedMessage": "The original font of this text has no glyph for one or more characters you typed, so Helvetica was used for the replacement. The text is correct; it may look slightly different from the rest of the line."
+      "fontSubstitutedTitle": "Phông chữ chuẩn đã ghi văn bản mới",
+      "fontSubstitutedMessage": "Phông chữ gốc của văn bản này không có glyph cho một hoặc nhiều ký tự bạn đã nhập, nên Helvetica đã được dùng để thay thế. Văn bản vẫn đúng; có thể trông hơi khác so với phần còn lại của dòng."
     }
   },
   "validation": {
@@ -502,7 +521,7 @@
     "objectInLockedLayer": "Đối tượng nằm trong lớp bị khóa và không thể sửa đổi.",
     "formsWithoutFields": "Chế độ điền biểu mẫu đang hoạt động trên tài liệu không có trường biểu mẫu.",
     "annotationToolbarWrongMode": "Thanh chú thích hiển thị trong chế độ '{{mode}}', nhưng yêu cầu 'annotating'.",
-    "redactionToolbarWrongMode": "Thanh biên tập hiển thị trong chế độ '{{mode}}', nhưng yêu cầu 'redacting'."
+    "redactionToolbarWrongMode": "Thanh che thông tin hiển thị ở chế độ '{{mode}}', nhưng cần chế độ che thông tin."
   },
   "revisions": {
     "deletedAnnotations": "## Chú thích đã xóa",
@@ -549,13 +568,13 @@
     "exportExcelDone": "Đã xuất bảng tính Excel",
     "exportPowerpointRunning": "Đang chuyển đổi sang PowerPoint…",
     "exportPowerpointDone": "Đã xuất bản trình chiếu PowerPoint",
-    "applyRedactRunning": "Đang áp dụng biên tập…",
-    "applyRedactDone": "Đã áp dụng biên tập",
-    "applyRedactFailed": "Áp dụng biên tập thất bại",
-    "searchRedactRunning": "Đang tìm kiếm và biên tập…",
-    "searchRedactDone": "Đã biên tập {{count}} kết quả khớp",
-    "searchRedactDone_plural": "Đã biên tập {{count}} kết quả khớp",
-    "searchRedactFailed": "Tìm kiếm và biên tập thất bại",
+    "applyRedactRunning": "Đang áp dụng việc che thông tin…",
+    "applyRedactDone": "Đã áp dụng việc che thông tin",
+    "applyRedactFailed": "Không áp dụng được việc che thông tin",
+    "searchRedactRunning": "Đang tìm và che thông tin…",
+    "searchRedactDone": "Đã che {{count}} kết quả khớp",
+    "searchRedactDone_plural": "Đã che {{count}} kết quả khớp",
+    "searchRedactFailed": "Tìm và che thông tin không thành công",
     "redactMetadataRunning": "Đang xóa siêu dữ liệu…",
     "redactMetadataDone": "Đã xóa siêu dữ liệu",
     "redactMetadataFailed": "Xóa siêu dữ liệu thất bại",
@@ -566,12 +585,16 @@
     "watermarkDone": "Đã thêm hình mờ",
     "watermarkFailed": "Thêm hình mờ thất bại",
     "watermarkRunning": "Đang thêm hình mờ…",
-    "pdfaRunning": "Converting to PDF/A…",
-    "pdfaDone": "PDF/A written",
-    "pdfaFailed": "PDF/A conversion failed",
-    "metadataRunning": "Saving properties…",
-    "metadataDone": "Properties saved",
-    "metadataFailed": "Could not save properties"
+    "pdfaRunning": "Đang chuyển đổi sang PDF/A…",
+    "pdfaDone": "Đã ghi PDF/A",
+    "pdfaFailed": "Chuyển đổi PDF/A thất bại",
+    "metadataRunning": "Đang lưu thuộc tính…",
+    "metadataDone": "Đã lưu thuộc tính",
+    "metadataFailed": "Không thể lưu thuộc tính",
+    "exportMarkdownRunning": "Đang xuất dưới dạng Markdown…",
+    "exportMarkdownDone": "Đã xuất Markdown",
+    "exportTablesRunning": "Đang xuất bảng ra Excel…",
+    "exportTablesDone": "Đã xuất bảng ra Excel ({{count}})"
   },
   "panels": {
     "search": "Tìm kiếm",
@@ -586,8 +609,8 @@
     "annotationCreated": "Đã tạo chú thích",
     "annotationUpdated": "Đã cập nhật chú thích",
     "annotationDeleted": "Đã xóa chú thích",
-    "redactionCreated": "Đã tạo biên tập",
-    "redactionApplied": "Đã áp dụng biên tập",
+    "redactionCreated": "Đã tạo mục che thông tin",
+    "redactionApplied": "Đã áp dụng mục che thông tin",
     "metadataChanged": "Siêu dữ liệu đã thay đổi",
     "pageMutated": "Trang đã được sửa đổi",
     "textEditCommitted": "Đã lưu chỉnh sửa văn bản",
@@ -714,7 +737,10 @@
     "formatJpeg": "JPEG (hình ảnh)",
     "formatDocx": "Tài liệu Word (.docx)",
     "formatXlsx": "Bảng tính Excel (.xlsx)",
-    "formatPptx": "Bản trình chiếu PowerPoint (.pptx)"
+    "formatPptx": "Bản trình chiếu PowerPoint (.pptx)",
+    "formatMarkdown": "Markdown (.md) - Xem trước",
+    "formatTablesXlsx": "Bảng sang Excel (.xlsx) - Xem trước",
+    "noTablesFound": "Không nhận diện được bảng nào trong tài liệu này."
   },
   "goToPage": {
     "title": "Đến trang",
@@ -729,7 +755,9 @@
     "documentLabel": "Tài liệu:",
     "savedLabel": "Đã lưu:",
     "recoveryPath": "Đường dẫn khôi phục:",
-    "restore": "Khôi phục"
+    "restore": "Khôi phục",
+    "untitled": "Tài liệu không có tiêu đề",
+    "andMore": "{{name}} và {{count}} mục khác"
   },
   "emptyStates": {
     "noDocument": "Không có tài liệu đang mở",
@@ -759,7 +787,7 @@
   "textContext": {
     "editText": "Chỉnh sửa văn bản",
     "annotate": "Chú thích",
-    "redact": "Biên tập",
+    "redact": "Che thông tin",
     "copy": "Sao chép",
     "summarize": "Tóm tắt",
     "explain": "Giải thích",
@@ -839,7 +867,26 @@
     "statusUnavailableWithReason": "OCR runtime không có sẵn: {{reason}}",
     "statusRetry": "Kiểm tra lại",
     "runtimePath": "Thời gian chạy: {{path}}",
-    "missingPackages": "Thiếu: {{packages}}"
+    "missingPackages": "Thiếu: {{packages}}",
+    "noScannedPagesTitle": "Không có gì để nhận dạng",
+    "unavailable": {
+      "platform": "OCR không được cung cấp cho nền tảng này.",
+      "missing": "Các tệp OCR của phiên bản này bị thiếu hoặc không đầy đủ. Hãy cài đặt lại PDFluent để khôi phục."
+    },
+    "settings": {
+      "unknown": "Thành phần OCR: đang kiểm tra…",
+      "installed": "Thành phần OCR: Tesseract {{version}} đã cài đặt"
+    },
+    "errors": {
+      "OCR_COMPONENT_UNSUPPORTED_PLATFORM": "Thành phần OCR không được cung cấp cho nền tảng này.",
+      "OCR_COMPONENT_NOT_INSTALLED": "Thành phần OCR chưa được cài đặt.",
+      "OCR_LANGUAGE_MISSING": "Gói ngôn ngữ cho OCR chưa được cài đặt.",
+      "OCR_SIGNED_DOCUMENT": "Tài liệu này đã được ký. OCR sẽ thay đổi các trang đã ký, nên không được chạy.",
+      "OCR_NOT_PERMITTED": "Quyền của tài liệu không cho phép thay đổi nội dung.",
+      "OCR_DOCUMENT_CHANGED": "Tài liệu đã thay đổi trong khi OCR đang chạy. Hãy chạy lại OCR.",
+      "OCR_ENGINE_FAILED": "OCR đã dừng do lỗi.",
+      "OCR_PAGE_OUT_OF_RANGE": "Một trang cần nhận dạng không có trong tài liệu."
+    }
   },
   "docInfo": {
     "title": "Tiêu đề",
@@ -879,7 +926,17 @@
     "italicComingSoon": "Định dạng nghiêng sắp ra mắt",
     "sourceDigital": "Lớp văn bản PDF",
     "sourceOcr": "OCR",
-    "browserLimitedNote": "Nhấp vào văn bản trên trang để chỉnh sửa văn bản PDF được hỗ trợ. Hình ảnh và liên kết có trong ứng dụng máy tính."
+    "browserLimitedNote": "Nhấp vào văn bản trên trang để chỉnh sửa văn bản PDF được hỗ trợ. Hình ảnh và liên kết có trong ứng dụng máy tính.",
+    "typeface": {
+      "label": "Kiểu chữ",
+      "default": "Phông chữ tài liệu",
+      "noEmbed": "{{family}}: giấy phép của phông chữ không cho phép nhúng vào PDF",
+      "refusedLicence": "Không thể dùng {{family}}: giấy phép của nó không cho phép nhúng vào PDF. Chọn kiểu chữ khác.",
+      "refusedGlyphs": "{{family}} không có glyph cho {{characters}}. Chọn kiểu chữ khác.",
+      "refusedGone": "Kiểu chữ đó không còn được cài đặt. Chọn kiểu chữ khác.",
+      "refusedText": "Văn bản cần đổi kiểu không còn trên trang.",
+      "refusedUnusable": "Không thể đọc {{family}} dưới dạng phông chữ. Chọn kiểu chữ khác."
+    }
   },
   "rightPanel": {
     "properties": "Thuộc tính",
@@ -891,7 +948,7 @@
     "annotationColorValue": "Màu chú thích {{color}}",
     "strokeWidth": "Nét",
     "comments": "Bình luận",
-    "redactions": "Biên tập",
+    "redactions": "Vùng che thông tin",
     "ocr": "OCR",
     "pdfa": "PDF/A",
     "formFields": "Trường biểu mẫu",
@@ -900,13 +957,13 @@
     "changeColor": "Đổi màu",
     "deleteMarkup": "Xóa đánh dấu",
     "delete": "Xóa",
-    "redactionConfirm": "Áp dụng {{count}} biên tập vĩnh viễn? Không thể hoàn tác.",
-    "redactionConfirm_plural": "Áp dụng {{count}} biên tập vĩnh viễn? Không thể hoàn tác.",
-    "noRedactions": "Không có biên tập đang chờ.",
-    "redactionCount": "{{count}} biên tập đang chờ",
-    "redactionCount_plural": "{{count}} biên tập đang chờ",
-    "applyRedactions": "Áp dụng biên tập vĩnh viễn",
-    "deleteRedaction": "Xóa biên tập",
+    "redactionConfirm": "Áp dụng vĩnh viễn {{count}} mục che thông tin? Không thể hoàn tác.",
+    "redactionConfirm_plural": "Áp dụng vĩnh viễn {{count}} mục che thông tin? Không thể hoàn tác.",
+    "noRedactions": "Không có mục che thông tin nào đang chờ.",
+    "redactionCount": "{{count}} mục che thông tin đang chờ",
+    "redactionCount_plural": "{{count}} mục che thông tin đang chờ",
+    "applyRedactions": "Áp dụng việc che thông tin vĩnh viễn",
+    "deleteRedaction": "Xóa mục che thông tin",
     "signatures": "Chữ ký số",
     "watermarkApply": "Áp dụng hình mờ",
     "watermarkOpacity": "Độ mờ",
@@ -944,9 +1001,12 @@
     "flatten": "Làm phẳng XFA",
     "flattenDone": "XFA đã được làm phẳng. Xuất PDF để tải về phiên bản tĩnh.",
     "flattenFailed": "Làm phẳng XFA thất bại",
-    "convertToStandard": "Convert to standard PDF",
-    "convertedToStandard": "XFA converted to standard PDF",
-    "convertFailed": "Conversion failed: {{message}}"
+    "convertToStandard": "Chuyển đổi sang PDF tiêu chuẩn",
+    "convertedToStandard": "Đã chuyển đổi XFA sang PDF tiêu chuẩn",
+    "convertFailed": "Chuyển đổi thất bại: {{message}}",
+    "bannerTitle": "Biểu mẫu XFA",
+    "bannerBody": "Biểu mẫu XFA này được hiển thị nguyên trạng. Để điền, chỉnh sửa hoặc tìm kiếm các trường, hãy chuyển đổi nó thành PDF tiêu chuẩn.",
+    "bannerBodyExperimental": "Biểu mẫu XFA này được hiển thị nguyên trạng. Việc điền trường còn đang thử nghiệm. Hãy chuyển đổi thành PDF tiêu chuẩn để điền, chỉnh sửa và tìm kiếm một cách đáng tin cậy."
   },
   "security": {
     "activeContentBadge": "Đã chặn",
@@ -970,7 +1030,8 @@
     "highlight": "Tô sáng",
     "strikethrough": "Gạch ngang",
     "underline": "Gạch chân",
-    "copyText": "Sao chép văn bản"
+    "copyText": "Sao chép văn bản",
+    "copied": "Đã sao chép"
   },
   "update": {
     "available": "Có bản cập nhật",
@@ -980,10 +1041,10 @@
     "installing": "Đang cài đặt…",
     "checkFailed": "Kiểm tra cập nhật thất bại",
     "upToDate": "Bạn đang dùng phiên bản mới nhất",
-    "installed": "Update installed",
-    "restartNow": "Restart now",
-    "restartUnsaved": "Save your changes before restarting.",
-    "restartManual": "If it doesn't restart automatically, quit and reopen PDFluent to finish."
+    "installed": "Đã cài đặt bản cập nhật",
+    "restartNow": "Khởi động lại ngay",
+    "restartUnsaved": "Hãy lưu các thay đổi trước khi khởi động lại.",
+    "restartManual": "Nếu ứng dụng không tự khởi động lại, hãy thoát và mở lại PDFluent để hoàn tất."
   },
   "telemetry": {
     "addNoteLabel": "Bạn muốn thêm gì không? (tùy chọn)",
@@ -1012,6 +1073,11 @@
     "sentTitle": "Đã gửi. Cảm ơn.",
     "settingsAutoSend": "Tự động gửi mà không hỏi",
     "settingsAutoSendNote": "Báo cáo tự động được làm sạch và không có dữ liệu cá nhân, giống như khi bạn xem xét thủ công.",
+    "settingsSentReports": "Báo cáo sự cố đã gửi từ máy tính này: {{count}}. Chúng tôi tự động xóa chúng khỏi máy chủ sau {{days}} ngày.",
+    "settingsDeleteReports": "Xóa các báo cáo sự cố của tôi",
+    "settingsDeleting": "Đang xóa…",
+    "settingsDeleted": "Đã xóa báo cáo sự cố: {{count}}",
+    "settingsDeleteFailed": "Không thể xóa {{count}} báo cáo. Hãy kiểm tra kết nối và thử lại.",
     "settingsDescription": "Báo cáo không bao giờ chứa thông tin cá nhân hoặc nội dung tài liệu. Mọi thứ được làm sạch trước khi gửi và bạn thấy mọi báo cáo trước. Tắt theo mặc định.",
     "settingsTitle": "Báo cáo sự cố & lỗi",
     "settingsToggle": "Gửi báo cáo sự cố và lỗi",
@@ -1019,7 +1085,11 @@
     "typeBug": "Lỗi",
     "typeCrash": "Sự cố",
     "typeFeedback": "Phản hồi",
-    "whatGetsSent": "Những gì được gửi"
+    "whatGetsSent": "Những gì được gửi",
+    "settingsSentFeedback": "Báo cáo phản hồi đã gửi từ máy tính này: {{count}}. Chúng tôi tự động xóa chúng khỏi máy chủ của chúng tôi sau {{days}} ngày.",
+    "settingsDeleteFeedback": "Xóa báo cáo phản hồi của tôi",
+    "settingsFeedbackDeleted": "Đã xóa báo cáo phản hồi: {{count}}",
+    "settingsFeedbackDeleteFailed": "Không thể xóa {{count}} báo cáo phản hồi. Kiểm tra kết nối và thử lại."
   },
   "ai": {
     "summaryInstruction": "Cung cấp tóm tắt ngắn gọn của tài liệu dưới đây bằng tiếng Việt. Đối với mỗi vai trò, đề cập đến nhà tuyển dụng, vị trí và thời gian. Sử dụng dấu đầu dòng.",
@@ -1076,7 +1146,8 @@
       "scrollLeft": "Cuộn chế độ sang trái",
       "scrollRight": "Cuộn chế độ sang phải",
       "workMode": "Chế độ làm việc",
-      "searchPlaceholder": "Tìm kiếm trong tài liệu"
+      "searchPlaceholder": "Tìm kiếm trong tài liệu",
+      "allTools": "Tất cả công cụ"
     },
     "menu": {
       "about": "Giới thiệu",
@@ -1147,22 +1218,17 @@
       "draw": "Vẽ",
       "signatureName": "Tên chữ ký",
       "typeName": "Gõ tên của bạn…",
-      "selectStyle": "Chọn kiểu dáng",
-      "styleClassic": "Cursive Cổ điển",
-      "styleElegant": "Cursive Thanh lịch",
-      "styleBrush": "Chữ ký bàn chải",
-      "styleModern": "Chữ viết tay hiện đại",
       "drawHere": "Vẽ ở đây bằng chuột, trackpad hoặc bút cảm ứng",
       "clear": "Xóa",
       "apply": "Áp dụng",
-      "defaultSignature": "Chữ ký",
       "clickToPlaceSignature": "Nhấp vào trang để đặt chữ ký.",
       "addInitials": "Thêm chữ viết tắt",
       "initialsIntro": "Gõ chữ viết tắt của bạn để đặt nhanh trên các trường chữ viết tắt.",
       "initials": "Chữ viết tắt",
       "initialsPlaceholder": "ví dụ: AB",
-      "defaultInitials": "AB",
-      "clickToPlaceInitials": "Nhấp vào trang để đặt chữ viết tắt."
+      "clickToPlaceInitials": "Nhấp vào trang để đặt chữ viết tắt.",
+      "signatureFont": "Phông chữ ký",
+      "plainItalic": "Chữ nghiêng thường"
     },
     "overlay": {
       "signaturePlaced": "Chữ ký đã đặt!",
@@ -1177,13 +1243,13 @@
     "textbox": {
       "editTitle": "Chỉnh sửa hộp văn bản",
       "newTitle": "Hộp văn bản mới",
-      "intro": "Văn bản này được đặt làm overlay trên trang hiện tại. Lưu trống sẽ xóa hộp văn bản hiện có.",
       "label": "Văn bản",
       "placeholder": "Gõ văn bản…",
       "delete": "Xóa",
       "deleted": "Hộp văn bản đã xóa.",
       "updated": "Hộp văn bản đã cập nhật.",
-      "added": "Hộp văn bản mới đã thêm."
+      "added": "Hộp văn bản mới đã thêm.",
+      "introPdf": "Hộp văn bản được ghi vào PDF và hiển thị trong mọi trình xem PDF. Lưu khi để trống sẽ xóa hộp văn bản hiện có."
     },
     "rail": {
       "tools": "Công cụ PDF",
@@ -1197,12 +1263,14 @@
       "more": "Công cụ khác",
       "strikeText": "Gạch ngang văn bản",
       "underlineText": "Gạch chân văn bản",
-      "addAttachment": "Thêm tệp đính kèm"
+      "addAttachment": "Thêm tệp đính kèm",
+      "drawRectangle": "Vẽ hình chữ nhật"
     },
     "railToasts": {
-      "commentMode": "Chế độ ghi chú hoạt động. Chọn văn bản và chọn Ghi chú, hoặc sử dụng danh sách bình luận để thêm ghi chú.",
+      "commentMode": "Chế độ ghi chú. Nhấp vào trang tại vị trí cần đặt ghi chú.",
       "strikeout": "Gạch ngang hoạt động — chọn văn bản để áp dụng.",
-      "underline": "Gạch chân hoạt động — chọn văn bản để áp dụng."
+      "underline": "Gạch chân hoạt động — chọn văn bản để áp dụng.",
+      "rectangle": "Hình chữ nhật đang bật — kéo trên trang để vẽ."
     },
     "tools": {
       "lede": "Chọn công cụ để bắt đầu. Mọi thứ chạy cục bộ trên thiết bị này.",
@@ -1217,7 +1285,7 @@
       "merge": "Hợp nhất tệp",
       "mergeSub": "Kết hợp PDF",
       "contentSecurity": "Nội dung & bảo mật",
-      "redact": "Che khuất",
+      "redact": "Che thông tin",
       "redactSub": "Che chắn vĩnh viễn văn bản",
       "protect": "Bảo vệ",
       "protectSub": "Mật khẩu & quyền",
@@ -1238,17 +1306,18 @@
       "layers": "{{count}} lớp",
       "manageLayers": "Quản lý lớp",
       "layersVisible": "{{count}} lớp hiển thị.",
-      "archiveAndData": "Archiving and data",
-      "pdfaSub": "Check or convert for long-term archiving",
-      "invoiceSub": "Read the ZUGFeRD/Factur-X invoice inside",
-      "metadataSub": "Title and author of this document"
+      "archiveAndData": "Lưu trữ và dữ liệu",
+      "pdfaSub": "Kiểm tra hoặc chuyển đổi để lưu trữ lâu dài",
+      "invoiceSub": "Đọc hóa đơn ZUGFeRD/Factur-X bên trong",
+      "metadataSub": "Tiêu đề và tác giả của tài liệu này",
+      "flattenForm": "Làm phẳng",
+      "flattenFormTitle": "Làm phẳng biểu mẫu: các giá trị đã điền trở thành một phần của trang và các trường bị xóa",
+      "flattenFormDone": "Đã làm phẳng biểu mẫu. Hoàn tác sẽ khôi phục các trường.",
+      "flattenFormFailed": "Không thể làm phẳng biểu mẫu: {{message}}"
     },
     "edit": {
       "lede": "Nhấp vào văn bản trong tài liệu để chỉnh sửa nội tuyến. Thanh định dạng xuất hiện ngay phía trên lựa chọn.",
       "formatText": "Định dạng văn bản",
-      "fontLabel": "Phông chữ",
-      "fontHint": "Văn bản PDF hiện có sử dụng phông chữ PDF nhúng. Phông chữ \"{{font}}\" sẽ được sử dụng cho hộp văn bản mới.",
-      "fontEmbedded": "Phông chữ PDF nhúng",
       "color": "Màu",
       "colorLabel": "Màu {{color}}",
       "addContent": "Thêm nội dung",
@@ -1261,7 +1330,18 @@
       "clickAnywhereTextBox": "Nhấp ở bất kỳ đâu trên trang để đặt hộp văn bản.",
       "clickAnywhereImage": "Nhấp ở bất kỳ đâu trên trang để đặt hình ảnh.",
       "selection": "Lựa chọn",
-      "annotationOnPage": "{{type}} trên trang {{page}}"
+      "annotationOnPage": "{{type}} trên trang {{page}}",
+      "placeStamp": "Đặt con dấu",
+      "stampLabel": "Con dấu",
+      "clickToPlaceStamp": "Nhấp vào trang để đặt con dấu.",
+      "placementModeStamp": "Chế độ đặt: con dấu",
+      "stampPlaced": "Đã đặt con dấu.",
+      "deleteAnnotation": "Xóa chú thích",
+      "annotationColor": "Màu chú thích",
+      "editTextBox": "Sửa văn bản",
+      "replaceImage": "Thay hình ảnh",
+      "imageReplaced": "Đã thay hình ảnh.",
+      "moveHint": "Kéo để di chuyển, kéo một góc để đổi kích thước, hoặc dịch bằng phím mũi tên."
     },
     "convert": {
       "exportPdfTo": "Xuất PDF sang",
@@ -1279,10 +1359,16 @@
       "confidenceFrom": "Độ tin cậy từ {{value}}%",
       "ocrOff": "OCR tắt",
       "ocrOn": "OCR bật",
-      "ocrRunning": "OCR chạy cục bộ…"
+      "ocrRunning": "OCR chạy cục bộ…",
+      "ocrComponentUnknown": "Thành phần OCR: đang kiểm tra…",
+      "ocrComponentInstalled": "Đã cài đặt thành phần OCR",
+      "ocrLastRun": "Lần chạy trước: {{pages}} trang, {{words}} từ được thêm dưới dạng văn bản có thể tìm kiếm",
+      "ocrRunningProgress": "Đang nhận dạng trang {{done}} / {{total}}…",
+      "markdown": "Markdown (Xem trước)",
+      "tablesToExcel": "Bảng sang Excel (Xem trước)"
     },
     "esign": {
-      "lede": "Sign with a certificate of your own, and check the signatures a document already carries. Both happen on this device.",
+      "lede": "Ký bằng chứng chỉ của riêng bạn và kiểm tra các chữ ký mà tài liệu đã có. Cả hai đều diễn ra trên thiết bị này.",
       "fillAndSign": "Điền tài liệu và ký",
       "addSignature": "Thêm chữ ký",
       "addInitials": "Thêm chữ viết tắt",
@@ -1290,25 +1376,25 @@
       "placementModeInitials": "Chế độ đặt: Chữ viết tắt",
       "clickToPlaceSignature": "Nhấp ở bất kỳ đâu trên trang để đặt chữ ký của bạn.",
       "clickToPlaceInitials": "Nhấp ở bất kỳ đâu trên trang để đặt chữ viết tắt của bạn.",
-      "verifySection": "Signatures",
-      "verify": "Check signatures",
-      "desktopOnly": "Available in the desktop app",
-      "unsigned": "This document carries no signatures.",
-      "signSection": "Sign with a certificate",
-      "padesLevel": "Produces a PAdES B-B signature: your certificate over the whole file, no timestamp server involved.",
-      "certificate": "Certificate (.p12 or .pfx)",
-      "certificateNone": "No certificate chosen",
-      "chooseCertificate": "Choose certificate",
-      "certificatePassword": "Certificate password",
-      "reason": "Reason (optional)",
-      "reasonPlaceholder": "Why you are signing",
-      "sign": "Sign and save a copy",
-      "signing": "Signing…",
-      "signNeedsCertificate": "Choose a certificate and enter its password first.",
-      "signSaved": "Signed copy saved as {{name}}",
-      "signFailed": "Signing failed: {{message}}",
-      "usageRights": "Reader enablement (usage rights)",
-      "usageRightsInvalidated": "Usage rights invalidated — this file was edited, so Adobe Reader no longer treats it as an enabled form."
+      "verifySection": "Chữ ký",
+      "verify": "Kiểm tra chữ ký",
+      "desktopOnly": "Có sẵn trong ứng dụng máy tính",
+      "unsigned": "Tài liệu này không có chữ ký.",
+      "signSection": "Ký bằng chứng chỉ",
+      "padesLevel": "Tạo chữ ký PAdES B-B: chứng chỉ của bạn áp lên toàn bộ tệp, không dùng máy chủ dấu thời gian.",
+      "certificate": "Chứng chỉ (.p12 hoặc .pfx)",
+      "certificateNone": "Chưa chọn chứng chỉ",
+      "chooseCertificate": "Chọn chứng chỉ",
+      "certificatePassword": "Mật khẩu chứng chỉ",
+      "reason": "Lý do (không bắt buộc)",
+      "reasonPlaceholder": "Lý do bạn ký",
+      "sign": "Ký và lưu bản sao",
+      "signing": "Đang ký…",
+      "signNeedsCertificate": "Hãy chọn chứng chỉ và nhập mật khẩu trước.",
+      "signSaved": "Đã lưu bản sao đã ký thành {{name}}",
+      "signFailed": "Ký thất bại: {{message}}",
+      "usageRights": "Kích hoạt Reader (quyền sử dụng)",
+      "usageRightsInvalidated": "Quyền sử dụng đã bị vô hiệu — tệp này đã được sửa, nên Adobe Reader không còn coi nó là biểu mẫu được kích hoạt."
     },
     "protect": {
       "lede": "Bảo vệ tài liệu PDF của bạn bằng mật khẩu mã hóa mạnh. Thay đổi được áp dụng cục bộ ngay lập tức.",
@@ -1330,9 +1416,11 @@
       "localViaTauri": "Cục bộ qua lệnh Tauri, không có thời gian chạy trình duyệt",
       "compressingImages": "Nén hình ảnh…",
       "percentComplete": "{{percent}}% hoàn thành",
-      "compressPdf": "Nén PDF",
       "desktopOnly": "Chỉ có sẵn trong ứng dụng máy tính để bàn",
-      "backToTools": "Quay lại công cụ"
+      "backToTools": "Quay lại công cụ",
+      "saveCopy": "Lưu bản sao đã nén thành…",
+      "replaceOpen": "Nén và thay thế tài liệu đang mở",
+      "replaceNote": "Bản sao giữ nguyên tài liệu đang mở và tệp của nó. Thay thế chỉ thay đổi tài liệu đang mở; Hoàn tác đưa bản gốc trở lại."
     },
     "split": {
       "lede": "Chia tài liệu của bạn thành các tệp PDF riêng biệt mỗi trang hoặc theo một phạm vi trang cụ thể.",
@@ -1360,16 +1448,61 @@
     },
     "redact": {
       "lede": "Đánh dấu và xóa vĩnh viễn thông tin nhạy cảm từ PDF. Che khuất xóa văn bản nguồn thực tế và vectơ.",
-      "modeActive": "Chế độ che khuất đang hoạt động",
+      "modeActive": "Chế độ che thông tin đang bật",
       "dragHint": "Kéo chuột qua văn bản hoặc hình ảnh trên trang để đánh dấu chúng để che khuất.",
-      "searchAndRedact": "Tìm kiếm và che khuất văn bản",
+      "searchAndRedact": "Tìm và che thông tin",
       "searchPlaceholder": "Từ tìm kiếm (ví dụ: SSN, điện thoại)",
       "mark": "Đánh dấu",
-      "draftRedactions": "Che khuất dự thảo ({{count}})",
+      "draftRedactions": "Mục che thông tin nháp ({{count}})",
       "applying": "Đang áp dụng…",
-      "applyPermanently": "Áp dụng che khuất vĩnh viễn",
-      "noActiveMarkings": "Không có đánh dấu che khuất hoạt động.",
-      "backToTools": "Quay lại công cụ"
+      "applyPermanently": "Áp dụng việc che thông tin vĩnh viễn",
+      "noActiveMarkings": "Không có đánh dấu che thông tin nào đang hoạt động.",
+      "backToTools": "Quay lại công cụ",
+      "pii": {
+        "title": "Dữ liệu cá nhân",
+        "lede": "Find personal data in the text of this document: IBANs, card numbers, national ID numbers, birth dates, e-mail addresses and phone numbers, and names and addresses when the model is installed. Review the list, then redact the ones you choose.",
+        "find": "Tìm dữ liệu cá nhân",
+        "scanning": "Đang quét…",
+        "none": "Nothing found.",
+        "kind": {
+          "iban": "IBAN",
+          "email": "Địa chỉ e-mail",
+          "phone": "Số điện thoại",
+          "credit_card": "Số thẻ",
+          "national_id": "Số CMND/CCCD",
+          "date_of_birth": "Ngày sinh",
+          "bank_account": "Số tài khoản ngân hàng",
+          "person": "Tên",
+          "address": "Địa chỉ"
+        },
+        "where": "Trang {{pages}} · {{count}}×",
+        "selectAll": "Chọn tất cả",
+        "selectNone": "Bỏ chọn tất cả",
+        "redactSelected": "Che thông tin {{count}} mục đã chọn",
+        "redacting": "Đang che thông tin…",
+        "done": "Đã che thông tin {{count}} mục. Lưu tệp để giữ kết quả.",
+        "failed": "Che thông tin thất bại: {{message}}",
+        "detectFailed": "Tìm kiếm thất bại: {{message}}",
+        "patternsOnly": "Without the model this finds only items it can check, such as IBANs, cards, ID numbers, birth dates, e-mail addresses and phone numbers. Names and addresses are not detected, so check every page yourself.",
+        "suggestionsOnly": "Đây là các đề xuất. Trình phát hiện có thể bỏ sót, nên hãy kiểm tra mọi trang trước khi lưu.",
+        "source": {
+          "verified": "Đã kiểm tra {{detail}}",
+          "model": "Đề xuất từ mô hình, {{score}}%"
+        },
+        "model": {
+          "use": "Cũng tìm tên và địa chỉ bằng mô hình",
+          "languages": "Đã kiểm tra cho: {{languages}}",
+          "remove": "Xóa mô hình",
+          "removeFailed": "Không thể xóa mô hình: {{message}}",
+          "failed": "Không thể chạy mô hình ({{code}}). Chỉ những mục có thể kiểm tra được hiển thị.",
+          "consentTitle": "Tải mô hình dữ liệu cá nhân?",
+          "consentBody": "Việc tìm tên và địa chỉ cần một mô hình ngôn ngữ ({{size}}). Mô hình được tải một lần từ {{host}}, kiểm tra bằng checksum cố định, rồi chạy trên máy này. Tài liệu của bạn không bao giờ rời khỏi máy tính này.",
+          "download": "Tải xuống",
+          "downloading": "Đang tải xuống…",
+          "downloadFailed": "Tải xuống thất bại: {{message}}",
+          "notInBuild": "Bản tải xuống chưa có trong phiên bản này."
+        }
+      }
     },
     "toasts": {
       "saving": "Đang lưu…",
@@ -1399,117 +1532,337 @@
       "pdfsMerged": "{{count}} tệp PDF đã hợp nhất",
       "mergedSaved": "PDF đã hợp nhất được lưu dưới dạng {{name}}.",
       "mergeFailed": "Hợp nhất không thành công: {{message}}",
-      "redactMatches": "{{matches}} kết quả trùng khớp, {{areas}} đánh dấu che khuất được đặt.",
+      "redactSearchDone": "Số kết quả đã che: {{count}}. Hãy lưu để giữ thay đổi.",
       "noRedactMatches": "Không tìm thấy kết quả trùng khớp văn bản để che khuất.",
       "redactSearchFailed": "Tìm kiếm che khuất không thành công: {{message}}",
       "applyRedactConfirm": "Áp dụng {{count}} đánh dấu che khuất vĩnh viễn? Điều này xóa nội dung khỏi PDF vĩnh viễn.",
       "applyRedactConfirm_plural": "Áp dụng {{count}} đánh dấu che khuất vĩnh viễn? Điều này xóa nội dung khỏi PDF vĩnh viễn.",
-      "applyRedactTitle": "Áp dụng che khuất",
-      "applyRedactRunning": "Đang áp dụng che khuất vĩnh viễn…",
-      "applyRedactDone": "Che khuất đã áp dụng vĩnh viễn",
+      "applyRedactTitle": "Áp dụng việc che thông tin",
+      "applyRedactRunning": "Đang áp dụng việc che thông tin…",
+      "applyRedactDone": "Đã áp dụng vĩnh viễn việc che thông tin",
       "redactionsApplied": "Che khuất đã được áp dụng vĩnh viễn.",
-      "redactFailed": "Che khuất không thành công: {{message}}"
+      "redactFailed": "Che khuất không thành công: {{message}}",
+      "compressedCopyToast": "Đã lưu {{name}}: {{before}} thành {{after}}. Tài liệu đang mở không thay đổi.",
+      "compressedReplacedToast": "Đã nén tài liệu đang mở: {{before}} thành {{after}}. Hoàn tác sẽ khôi phục bản gốc. Lưu để giữ bản nén."
     },
     "thumbnails": {
       "pages": "Trang",
       "pageAlt": "Trang {{page}}",
-      "bookmarks": "Bookmarks"
+      "bookmarks": "Dấu trang"
     },
     "pdfa": {
-      "lede": "PDF/A is the archival form of PDF: fonts embedded, colours defined, nothing that depends on the outside world.",
-      "section": "Conformance",
-      "level": "Level",
-      "validate": "Check this document",
-      "convert": "Save as PDF/A…",
-      "desktopOnly": "Available in the desktop app",
-      "compliant": "Conforms to {{level}}",
-      "notCompliant": "Does not conform: {{errors}} errors, {{warnings}} warnings",
-      "moreIssues": "{{count}} more",
+      "lede": "PDF/A là dạng lưu trữ của PDF: phông chữ được nhúng, màu sắc được xác định, không có gì phụ thuộc vào thế giới bên ngoài.",
+      "section": "Tuân thủ",
+      "level": "Mức",
+      "validate": "Kiểm tra tài liệu này",
+      "convert": "Lưu dưới dạng PDF/A…",
+      "desktopOnly": "Có sẵn trong ứng dụng máy tính",
+      "compliant": "Tuân thủ {{level}}",
+      "notCompliant": "Không tuân thủ: {{errors}} lỗi, {{warnings}} cảnh báo",
+      "moreIssues": "Thêm {{count}}",
       "report": {
-        "title": "What the conversion did",
-        "written": "Written to {{path}}",
-        "size": "{{out}} out of {{in}} ({{ratio}}×), in {{seconds}} s",
-        "pages": "{{count}} pages",
-        "fontsEmbedded": "{{embedded}} of {{found}} unembedded fonts embedded",
-        "fontsFailed": "Could not embed: {{fonts}}",
-        "removed": "Removed: {{count}} items that PDF/A does not allow",
-        "subset": "{{count}} font programs reduced, {{bytes}} kB saved",
-        "outputIntent": "Output intent added",
-        "unchangedDocument": "The open document was not changed.",
+        "title": "Những gì quá trình chuyển đổi đã làm",
+        "written": "Đã ghi vào {{path}}",
+        "size": "{{out}} trên {{in}} ({{ratio}}×), trong {{seconds}} giây",
+        "pages": "{{count}} trang",
+        "fontsEmbedded": "Đã nhúng {{embedded}} trên {{found}} phông chữ chưa nhúng",
+        "fontsFailed": "Không thể nhúng: {{fonts}}",
+        "removed": "Đã xóa: {{count}} mục mà PDF/A không cho phép",
+        "subset": "Đã giảm {{count}} chương trình phông chữ, tiết kiệm {{bytes}} kB",
+        "outputIntent": "Đã thêm output intent",
+        "unchangedDocument": "Tài liệu đang mở không bị thay đổi.",
         "warning": "{{message}}",
-        "moreWarnings": "{{count}} more"
+        "moreWarnings": "Thêm {{count}}"
       }
     },
     "metadata": {
-      "lede": "The title and author stored inside the file, which is what other readers and search show.",
-      "section": "Properties",
-      "title": "Title",
-      "author": "Author",
-      "apply": "Save properties",
-      "desktopOnly": "Available in the desktop app"
+      "lede": "Tiêu đề và tác giả được lưu trong tệp, là những gì các trình đọc khác và công cụ tìm kiếm hiển thị.",
+      "section": "Thuộc tính",
+      "title": "Tiêu đề",
+      "author": "Tác giả",
+      "apply": "Lưu thuộc tính",
+      "desktopOnly": "Có sẵn trong ứng dụng máy tính"
     },
     "invoice": {
-      "lede": "A ZUGFeRD or Factur-X invoice travels as XML inside the PDF. This reads it and checks it against EN 16931.",
-      "section": "Embedded invoice",
-      "read": "Read invoice",
-      "desktopOnly": "Available in the desktop app",
-      "none": "This document carries no e-invoice.",
-      "number": "Number: {{number}}",
-      "issued": "Issued: {{date}}",
-      "seller": "Seller: {{name}}",
-      "buyer": "Buyer: {{name}}",
-      "total": "Total: {{total}} {{currency}}",
-      "lines": "Line items: {{count}}",
-      "valid": "Valid against {{profile}}",
-      "invalid": "Not valid: {{errors}} errors, {{warnings}} warnings"
+      "lede": "Hóa đơn ZUGFeRD hoặc Factur-X đi kèm dưới dạng XML bên trong PDF. Công cụ này đọc và đối chiếu với EN 16931.",
+      "section": "Hóa đơn nhúng",
+      "read": "Đọc hóa đơn",
+      "desktopOnly": "Có sẵn trong ứng dụng máy tính",
+      "none": "Tài liệu này không có hóa đơn điện tử.",
+      "number": "Số: {{number}}",
+      "issued": "Ngày phát hành: {{date}}",
+      "seller": "Người bán: {{name}}",
+      "buyer": "Người mua: {{name}}",
+      "total": "Tổng cộng: {{total}} {{currency}}",
+      "lines": "Số dòng hàng: {{count}}",
+      "valid": "Hợp lệ theo {{profile}}",
+      "invalid": "Không hợp lệ: {{errors}} lỗi, {{warnings}} cảnh báo"
     },
     "canvas": {
-      "document": "PDF document"
+      "document": "Tài liệu PDF"
+    },
+    "stamps": {
+      "Approved": "Đã duyệt",
+      "NotApproved": "Không duyệt",
+      "Draft": "Bản nháp",
+      "Confidential": "Mật",
+      "Final": "Bản cuối",
+      "ForComment": "Để góp ý",
+      "Expired": "Hết hạn"
     }
   },
   "about": {
-    "section": "About",
-    "app": "App",
-    "version": "Version",
-    "privacy": "Privacy",
-    "privacyValue": "All processing happens locally",
-    "website": "Website"
+    "section": "Giới thiệu",
+    "app": "Ứng dụng",
+    "version": "Phiên bản",
+    "privacy": "Quyền riêng tư",
+    "privacyValue": "Mọi xử lý đều diễn ra cục bộ",
+    "website": "Trang web"
   },
   "reviewSummary": {
-    "title": "Review summary",
-    "generatedAt": "Generated on",
-    "comments": "Comments",
-    "noComments": "No comments.",
-    "replies": "Replies:",
-    "empty": "empty",
-    "redactions": "Redactions",
-    "noRedactions": "No redactions.",
-    "noIssues": "No issues.",
-    "metadataChanges": "Metadata changes",
-    "noMetadataChanges": "No changes.",
-    "changedBy": "by",
-    "on": "on"
+    "title": "Tóm tắt xem xét",
+    "generatedAt": "Tạo lúc",
+    "comments": "Bình luận",
+    "noComments": "Không có bình luận.",
+    "replies": "Trả lời:",
+    "empty": "trống",
+    "redactions": "Vùng che thông tin",
+    "noRedactions": "Không có mục che thông tin nào.",
+    "noIssues": "Không có vấn đề.",
+    "metadataChanges": "Thay đổi siêu dữ liệu",
+    "noMetadataChanges": "Không có thay đổi.",
+    "changedBy": "bởi",
+    "on": "vào"
   },
   "externalLink": {
-    "askMessage": "This PDF wants to open an external link:\n\n{{label}}\n\nURL:\n{{href}}\n\nDo you want to continue?",
-    "title": "Open external link?",
-    "openLink": "Open link",
-    "dialogBody": "This PDF wants to open an external website. Check the URL before continuing."
+    "askMessage": "PDF này muốn mở một liên kết bên ngoài:\n\n{{label}}\n\nURL:\n{{href}}\n\nBạn có muốn tiếp tục không?",
+    "title": "Mở liên kết bên ngoài?",
+    "openLink": "Mở liên kết",
+    "dialogBody": "PDF này muốn mở một trang web bên ngoài. Hãy kiểm tra URL trước khi tiếp tục."
   },
   "linkChoice": {
-    "title": "Open link in your browser?",
-    "body": "This document wants to open an external website. Are you opening it from a trusted source?",
-    "alwaysAllow": "Always allow",
-    "openOnce": "Open once"
+    "title": "Mở liên kết trong trình duyệt?",
+    "body": "Tài liệu này muốn mở một trang web bên ngoài. Bạn có đang mở nó từ một nguồn đáng tin cậy không?",
+    "alwaysAllow": "Luôn cho phép",
+    "openOnce": "Mở một lần"
   },
   "fallbacks": {
-    "ocrUnavailableTitle": "OCR is not available on this computer",
-    "ocrUnavailableMessage": "PDFluent could not start the text-recognition engine. {{reason}}",
-    "ocrFailedMessage": "Text recognition stopped on page {{page}}: {{reason}}",
-    "xfaStaticTitle": "Form filled without recalculation",
-    "xfaStaticMessage": "This build writes XFA field values straight into the form. Field scripts do not run, so calculated totals and fields that appear or hide based on your answer stay as they are.",
-    "featureUnavailableTitle": "'{{feature}}' is not available in this build",
-    "usageRightsInvalidatedTitle": "This document is no longer Reader-enabled",
-    "usageRightsInvalidatedMessage": "Your change was made. It also invalidated the usage-rights signature this PDF carried, which let Adobe Reader fill in and save the form. The text edit stands; the extended rights are gone and cannot be restored by undoing it."
+    "ocrUnavailableTitle": "OCR không khả dụng trên máy tính này",
+    "ocrUnavailableMessage": "PDFluent không thể khởi động công cụ nhận dạng văn bản. {{reason}}",
+    "ocrFailedMessage": "Nhận dạng văn bản dừng ở trang {{page}}: {{reason}}",
+    "xfaStaticTitle": "Biểu mẫu đã điền nhưng không tính lại",
+    "xfaStaticMessage": "Bản dựng này ghi thẳng giá trị trường XFA vào biểu mẫu. Script của trường không chạy, nên các tổng được tính và những trường hiện hay ẩn theo câu trả lời của bạn vẫn giữ nguyên.",
+    "xfaScriptsNotRunTitle": "Một số tập lệnh của biểu mẫu không được chạy",
+    "xfaScriptsNotRunMessage": "Câu trả lời của bạn đã được lưu. Biểu mẫu này có các tập lệnh FormCalc (tìm thấy {{count}}) và PDFluent chỉ chạy tập lệnh JavaScript. Các tổng và trường mà những tập lệnh đó sẽ cập nhật giữ nguyên giá trị đã lưu cho đến khi biểu mẫu được mở trong Adobe Reader.",
+    "xfaFieldRefusedTitle": "Biểu mẫu không chấp nhận giá trị",
+    "xfaFieldReadOnly": "Trường “{{field}}” trong biểu mẫu này chỉ đọc và không thể thay đổi.",
+    "xfaFieldRejected": "Trường “{{field}}” không chấp nhận giá trị đó: {{reason}}",
+    "xfaFieldNotFound": "Trường “{{field}}” không còn trong biểu mẫu. Biểu mẫu đã được tải lại.",
+    "featureUnavailableTitle": "'{{feature}}' không có trong bản dựng này",
+    "usageRightsInvalidatedTitle": "Tài liệu này không còn được bật quyền Reader",
+    "usageRightsInvalidatedMessage": "Thay đổi của bạn đã được thực hiện. Nó cũng làm mất hiệu lực chữ ký quyền sử dụng mà PDF này mang theo, vốn cho phép Adobe Reader điền và lưu biểu mẫu. Chỉnh sửa văn bản vẫn giữ nguyên; các quyền mở rộng đã mất và không thể khôi phục bằng cách hoàn tác.",
+    "xfaScriptsFailedTitle": "Một số script của biểu mẫu chưa hoàn tất",
+    "xfaScriptsFailedMessage": "Câu trả lời của bạn đã được lưu, nhưng các script này chưa hoàn tất, nên các giá trị chúng đặt có thể bị thiếu: {{details}}.",
+    "xfaScriptKind_threw": "gặp lỗi",
+    "xfaScriptKind_timeout": "hết thời gian",
+    "xfaScriptKind_refused": "bị sandbox từ chối"
+  },
+  "signedSave": {
+    "title": "Tài liệu này đã được ký",
+    "message": "Việc che thông tin xóa nội dung mà chữ ký bao phủ, nên không thể lưu đè lên bản gốc đã ký mà không làm hỏng chữ ký. Hãy lưu một bản sao: bản sao giữ phần đã che và không mang chữ ký.",
+    "saveCopy": "Lưu bản sao không có chữ ký…",
+    "cancel": "Hủy"
+  },
+  "passwordPrompt": {
+    "title": "PDF này được bảo vệ",
+    "message": "Nhập mật khẩu để mở {{name}}.",
+    "incorrect": "Mật khẩu đó không mở được PDF này. Hãy thử lại.",
+    "label": "Mật khẩu",
+    "open": "Mở",
+    "cancel": "Hủy",
+    "readOnlyTitle": "Đã mở ở chế độ chỉ đọc",
+    "readOnlyMessage": "Quyền của PDF này không cho phép thay đổi. Bạn có thể đọc và in nếu quyền cho phép. Để lưu thay đổi, hãy gỡ bảo vệ bằng mật khẩu chủ sở hữu."
+  },
+  "a11y": {
+    "searchNextResult": "Kết quả tiếp theo",
+    "searchPrevResult": "Kết quả trước"
+  },
+  "feedback": {
+    "title": "Giúp chúng tôi cải thiện PDFluent",
+    "intro": "Hãy cho chúng tôi biết bạn đang định làm gì. Chúng tôi đọc mọi báo cáo.",
+    "menuLabel": "Giúp chúng tôi cải thiện PDFluent…",
+    "fromError": "Bạn có thể cho chúng tôi biết về sự cố vừa gặp.",
+    "areaLabel": "Bạn đang định làm gì?",
+    "area": {
+      "open-view": "Mở hoặc đọc tài liệu",
+      "search-copy": "Tìm kiếm hoặc sao chép văn bản",
+      "print": "In",
+      "edit-text": "Chỉnh sửa văn bản",
+      "annotate": "Đánh dấu, ghi chú hoặc vẽ",
+      "forms": "Điền biểu mẫu",
+      "sign": "Ký hoặc kiểm tra chữ ký",
+      "redact": "Redact",
+      "pages-organize": "Xoay, sắp xếp lại, gộp hoặc tách trang",
+      "convert-export": "Chuyển đổi hoặc xuất",
+      "ocr": "Nhận dạng văn bản trong bản quét (OCR)",
+      "pdfa-compliance": "PDF/A",
+      "protect": "Mật khẩu hoặc quyền hạn",
+      "save": "Lưu",
+      "install-update": "Cài đặt hoặc cập nhật PDFluent",
+      "other": "Việc khác"
+    },
+    "tryingToPlaceholder": "Bằng lời của bạn (không bắt buộc)",
+    "whatHappenedLabel": "Đã xảy ra chuyện gì?",
+    "whatHappenedPlaceholder": "Bạn thấy gì?",
+    "whatHappenedRequired": "Hãy cho chúng tôi biết đã xảy ra chuyện gì để biết cần xem ở đâu.",
+    "expectedLabel": "Bạn mong đợi điều gì?",
+    "expectedPlaceholder": "Không bắt buộc",
+    "docTypeLabel": "Đó là loại tài liệu nào?",
+    "docType": {
+      "none": "Không liên quan đến tài liệu",
+      "form": "Một biểu mẫu",
+      "scanned": "Một bản quét",
+      "signed": "Một tài liệu đã ký",
+      "protected": "Được bảo vệ bằng mật khẩu",
+      "large": "Lớn (hơn 100 trang)",
+      "xfa": "Biểu mẫu của cơ quan nhà nước hoặc XFA",
+      "other": "Loại khác"
+    },
+    "docTypeUnset": "Chọn…",
+    "pageCountLabel": "Số trang",
+    "contextTitle": "Được gửi kèm báo cáo của bạn",
+    "contextToggle": "Gửi kèm thông tin hệ thống",
+    "contextHint": "Phiên bản, hệ thống, ngôn ngữ và lỗi gần nhất giúp chúng tôi tái hiện sự cố. Không có tên tệp, đường dẫn hay nội dung tài liệu.",
+    "fieldVersion": "Phiên bản PDFluent",
+    "fieldSystem": "Hệ thống",
+    "fieldLanguage": "Ngôn ngữ",
+    "fieldLastError": "Lỗi gần nhất",
+    "fieldSessions": "Phiên làm việc",
+    "notIncluded": "không gửi kèm",
+    "documentTitle": "Chia sẻ tài liệu (không bắt buộc)",
+    "documentToggle": "Chia sẻ tài liệu đang mở cùng báo cáo này",
+    "documentNone": "Không có tài liệu nào đang mở.",
+    "documentTooLarge": "Tài liệu này lớn hơn 20 MB nên không thể chia sẻ cùng báo cáo.",
+    "documentShared": "Tài liệu này sẽ được chia sẻ.",
+    "documentConfirmTitle": "Chia sẻ tài liệu này?",
+    "documentConfirmText": "Tệp này sẽ được gửi đến PDFluent (Innovation Trigger B.V.). Tệp chỉ được dùng để điều tra báo cáo này, không bao giờ được công bố, không bao giờ dùng để huấn luyện và sẽ bị xóa muộn nhất 90 ngày sau khi sự cố được khắc phục, và trong vòng 12 tháng trong mọi trường hợp.",
+    "documentConfirmFile": "{{name}} ({{size}})",
+    "documentConfirmYes": "Chia sẻ tài liệu này",
+    "documentConfirmNo": "Không chia sẻ",
+    "contactTitle": "Giữ liên lạc (không bắt buộc)",
+    "emailLabel": "Địa chỉ email",
+    "emailInvalid": "Đây có vẻ không phải địa chỉ email.",
+    "consentContact": "PDFluent có thể gửi email cho tôi để hỏi về báo cáo này.",
+    "consentFixed": "Gửi email cho tôi khi lỗi này được khắc phục.",
+    "contactHint": "Địa chỉ của bạn được lưu tách khỏi báo cáo, chỉ dùng cho báo cáo này và không bao giờ dùng cho bản tin hay tiếp thị.",
+    "noEmailHint": "Dù không có địa chỉ email, bạn vẫn nhận được tin từ chúng tôi: khi bản cập nhật khắc phục báo cáo của bạn, PDFluent sẽ báo ngay trong ứng dụng.",
+    "privacyNotice": "Innovation Trigger B.V. nhận báo cáo này để cải thiện PDFluent. Báo cáo được lưu tối đa 24 tháng. Bạn có thể yêu cầu xóa báo cáo của mình bất cứ lúc nào.",
+    "privacyLink": "Tuyên bố về quyền riêng tư",
+    "send": "Gửi",
+    "sending": "Đang gửi…",
+    "cancel": "Hủy",
+    "sentTitle": "Cảm ơn bạn!",
+    "sentBody": "Báo cáo của bạn đã được gửi đến. Đây là mã số của báo cáo:",
+    "sentIdHint": "Hãy giữ mã số này nếu bạn muốn hỏi về báo cáo hoặc yêu cầu xóa nó.",
+    "sentNoLocalCopy": "PDFluent không thể ghi nhớ mã số này trên máy tính này, vì vậy hãy ghi lại nhé.",
+    "sentDocumentFailed": "Báo cáo của bạn đã đến nơi nhưng không thể tải tài liệu lên. Nếu tài liệu quan trọng, bạn có thể gửi lại báo cáo kèm tài liệu.",
+    "removeReport": "Xóa báo cáo này",
+    "removing": "Đang xóa…",
+    "removed": "Báo cáo của bạn đã được xóa.",
+    "removeFailed": "Hiện chưa thể xóa báo cáo của bạn. Hãy thử lại sau hoặc gửi mã số cho chúng tôi qua email.",
+    "failedTitle": "Chưa gửi được",
+    "failedNetwork": "PDFluent không kết nối được với máy chủ. Chưa có gì được gửi và nội dung bạn nhập vẫn còn đây.",
+    "failedRateLimited": "Hôm nay kết nối này đã gửi quá nhiều báo cáo. Vui lòng thử lại vào ngày mai.",
+    "failedRejected": "Báo cáo không được chấp nhận. Hãy kiểm tra biểu mẫu và thử lại.",
+    "failedServer": "Đã có lỗi ở phía chúng tôi. Nội dung bạn nhập vẫn còn đây, hãy thử lại sau giây lát.",
+    "tryAgain": "Thử lại",
+    "fixedTitle": "Đã khắc phục!",
+    "fixedOffered": "Phiên bản {{version}} đã khắc phục báo cáo {{ids}} của bạn. Cảm ơn bạn đã cho chúng tôi biết.",
+    "fixedAfterUpdate": "Báo cáo {{ids}} của bạn đã được khắc phục trong phiên bản này. Cảm ơn bạn đã cho chúng tôi biết.",
+    "dismiss": "Đóng"
+  },
+  "openError": {
+    "corrupt": {
+      "title": "PDF này bị hỏng",
+      "body": "PDFluent không đọc được tệp này. Tệp có thể bị hỏng khi tải xuống hoặc sao chép, hoặc ứng dụng tạo ra nó đã ghi sai. Hãy tải xuống hoặc sao chép lại, hoặc mở bản gốc rồi xuất lại thành PDF.",
+      "action": "Mở tệp khác"
+    },
+    "not_pdf": {
+      "title": "Đây không phải là PDF",
+      "body": "PDFluent mở các tệp PDF. Tệp này thuộc loại khác, hoặc tên tệp không kết thúc bằng .pdf. Hãy chọn một tệp PDF. Nếu tệp này là PDF, hãy đổi tên để kết thúc bằng .pdf.",
+      "action": "Mở tệp khác"
+    },
+    "empty": {
+      "title": "Tệp này trống",
+      "body": "Tệp không có nội dung (0 byte). Có thể quá trình tải xuống hoặc sao chép chưa hoàn tất. Hãy tải xuống hoặc sao chép lại, rồi mở tệp.",
+      "action": "Mở tệp khác"
+    },
+    "encrypted_needs_password": {
+      "title": "PDF này cần mật khẩu",
+      "body": "PDF này được bảo vệ bằng mật khẩu. Hãy mở lại và nhập mật khẩu. Nếu bạn không biết mật khẩu, hãy hỏi người đã gửi tệp cho bạn.",
+      "action": "Nhập mật khẩu"
+    },
+    "wrong_password": {
+      "title": "Mật khẩu không đúng",
+      "body": "Mật khẩu này không mở được PDF. Hãy kiểm tra lỗi gõ và phím Caps Lock, rồi thử lại.",
+      "action": "Thử lại"
+    },
+    "unsupported_encryption": {
+      "title": "PDFluent không thể mở kiểu bảo vệ này",
+      "body": "PDF này được bảo vệ bằng chứng chỉ hoặc một phương thức bảo mật mà PDFluent không hỗ trợ, nên không có mật khẩu nào mở được ở đây. Hãy nhờ người gửi cung cấp bản không có bảo vệ, hoặc bản được bảo vệ bằng mật khẩu.",
+      "action": "Mở tệp khác"
+    },
+    "too_large": {
+      "title": "Tệp này quá lớn",
+      "body": "Tệp này lớn hơn mức PDFluent có thể mở an toàn. Hãy chia nhỏ hoặc nén tệp trong ứng dụng đã tạo ra nó, rồi mở từng phần.",
+      "action": "Mở tệp khác"
+    },
+    "too_many_pages": {
+      "title": "PDF này có quá nhiều trang",
+      "body": "Tài liệu này có nhiều trang hơn mức PDFluent có thể mở cùng lúc. Hãy chia thành các tài liệu nhỏ hơn trong ứng dụng đã tạo ra nó, rồi mở từng phần.",
+      "action": "Mở tệp khác"
+    },
+    "io_denied": {
+      "title": "PDFluent không được phép đọc tệp này",
+      "body": "Máy tính chưa cấp quyền cho PDFluent đọc tệp này. Hãy kiểm tra quyền của tệp, hoặc chuyển tệp vào một thư mục như Documents, rồi thử lại.",
+      "action": "Thử lại"
+    },
+    "not_found": {
+      "title": "Không tìm thấy tệp này",
+      "body": "Tệp có thể đã bị di chuyển, đổi tên hoặc xóa, hoặc nằm trên ổ đĩa không còn được kết nối. Hãy tìm tệp và mở lại.",
+      "action": "Mở tệp khác"
+    },
+    "unknown": {
+      "title": "Không thể mở tệp này",
+      "body": "Đã xảy ra lỗi khi mở tệp này. Hãy thử lại. Nếu lỗi vẫn tiếp diễn, hãy cho chúng tôi biết để chúng tôi khắc phục.",
+      "action": "Thử lại"
+    },
+    "feedback": "Giúp chúng tôi cải thiện PDFluent"
+  },
+  "formBar": {
+    "title": "Biểu mẫu có thể điền",
+    "fields": "Trường: {{count}}",
+    "clickToFill": "Nhấp vào một trường để điền.",
+    "noCalculations": "Các phép tính tự động trong biểu mẫu Adobe không được chạy.",
+    "autoLinks": "Tự động mở liên kết",
+    "autoLinksTitle": "Liên kết tự động mở trong trình duyệt. Nhấp để tắt.",
+    "highlight": "Tô sáng các trường",
+    "firstField": "Trường đầu tiên"
+  },
+  "tabs": {
+    "label": "Tài liệu đang mở",
+    "close": "Đóng {{name}}",
+    "unsaved": "Thay đổi chưa lưu",
+    "new": "Mở tài liệu khác",
+    "tooManyTitle": "Mở quá nhiều tài liệu",
+    "tooManyMessage": "Đang mở {{max}} tài liệu. Hãy đóng một tài liệu để mở tài liệu khác."
+  },
+  "formScripts": {
+    "barLabel": "Script biểu mẫu",
+    "barMessage": "Biểu mẫu này chứa script (ví dụ tính toán). Chạy chúng?",
+    "barDetail": "Đã tìm thấy script: {{count}}.",
+    "runOnce": "Chạy cho tài liệu này",
+    "runAlways": "Luôn chạy script",
+    "dontRun": "Không chạy"
   }
 }

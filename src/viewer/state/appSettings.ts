@@ -13,8 +13,12 @@
 // alternative can be layered on top without changing the public API.
 // ---------------------------------------------------------------------------
 
+import { DEFAULT_ZOOM, isDefaultZoom, type DefaultZoom } from '../zoom/fitZoom';
+
 export type ExportFormat = 'json' | 'markdown' | 'html';
 export type ThemePreference = 'light' | 'dark' | 'system';
+/** Whether a form's own scripts may run: ask each time, always, or never. */
+export type FormScriptsMode = 'ask' | 'always' | 'never';
 
 export interface AppSettings {
   /** Default reviewer / author name pre-filled in annotation dialogs. */
@@ -25,6 +29,12 @@ export interface AppSettings {
   autosaveEnabled: boolean;
   /** UI colour-scheme preference. */
   themePreference: ThemePreference;
+  /**
+   * The zoom a document opens at (Settings > View). "Last used" is the zoom the
+   * reader last set by hand; the other three follow the window. Applies until
+   * the reader zooms that document by hand.
+   */
+  defaultZoom: DefaultZoom;
   /** Default ISO-639-2/T language code used when starting OCR (e.g. "nld"). */
   ocrDefaultLanguage: string;
   /**
@@ -50,6 +60,14 @@ export interface AppSettings {
    * crash. Set the first time the review dialog is shown.
    */
   crashReportConsentAsked: boolean;
+  /**
+   * Form scripts (XFA JavaScript / FormCalc, AcroForm calculate / format /
+   * validate actions) run only with the user's permission. 'ask' is the
+   * default: the form opens with its stored values and a bar asks. 'always'
+   * is the stored "Always run scripts" choice; 'never' blocks them without
+   * asking. See scriptConsent.ts.
+   */
+  formScriptsMode: FormScriptsMode;
 }
 
 export const DEFAULT_APP_SETTINGS: AppSettings = {
@@ -57,11 +75,13 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
   defaultExportFormat: 'markdown',
   autosaveEnabled: true,
   themePreference: 'system',
+  defaultZoom: DEFAULT_ZOOM,
   ocrDefaultLanguage: 'nld',
   automaticUpdateCheckEnabled: true,
   crashReportingEnabled: false,
   crashReportAutoSend: false,
   crashReportConsentAsked: false,
+  formScriptsMode: 'ask',
 };
 
 /** localStorage key under which settings are persisted. */
@@ -81,7 +101,16 @@ export function loadAppSettings(): AppSettings {
     const stored = localStorage.getItem(SETTINGS_STORAGE_KEY);
     if (!stored) return { ...DEFAULT_APP_SETTINGS };
     const parsed = JSON.parse(stored) as Partial<AppSettings>;
-    return { ...DEFAULT_APP_SETTINGS, ...parsed };
+    const merged = { ...DEFAULT_APP_SETTINGS, ...parsed };
+    // A stored value this version does not know (hand-edited, or from a newer
+    // build) must not reach the zoom code.
+    if (!isDefaultZoom(merged.defaultZoom)) merged.defaultZoom = DEFAULT_ZOOM;
+
+    // A hand-edited or future value falls back to the safe default: ask.
+    if (!['ask', 'always', 'never'].includes(merged.formScriptsMode)) {
+      merged.formScriptsMode = 'ask';
+    }
+    return merged;
   } catch {
     return { ...DEFAULT_APP_SETTINGS };
   }

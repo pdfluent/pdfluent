@@ -20,7 +20,7 @@ only the account holder can do: the upload and the Submit.
 | Screenshots | `screenshots/` — six 2880×1800 PNGs from build 3, the same build as the package. One caveat, written up there: the App Store package cannot launch on a Mac no provisioning profile covers, so the capture runs a re-signed copy of the same binary |
 | Listing, EULA note, privacy and export answers | `listing.md`, `eula.md`, `privacy.md`, `export-compliance.md` |
 | App Store Connect record | **unknown to this repo** — the owner's account |
-| Package | `dist-release/PDFluent_1.0.0_mas.pkg`, version 1.0.0 **build 3**, signed and entitlement-checked, ready to upload |
+| Package | `dist-release/PDFluent_1.1.0_mas.pkg`, 1.1.0, built by `scripts/build-mas.sh` (last recorded counter: see `build-number`) |
 | Upload | **not done** — `UPLOAD-RUNBOOK.md` has the two routes |
 | TestFlight smoke | **not done** — the script is in `review-notes.md`, it needs an uploaded build |
 
@@ -45,7 +45,7 @@ is therefore build 2.
 ```sh
 MAS_DRY_RUN=1 bash scripts/build-mas.sh          # what number would this be?
 bash scripts/build-mas.sh                        # build, sign, package
-node scripts/mas-entitlements.mjs --pkg dist-release/PDFluent_1.0.0_mas.pkg
+node scripts/mas-entitlements.mjs --pkg dist-release/PDFluent_1.1.0_mas.pkg
 ```
 
 The build takes the machine-wide gate lock elsewhere in this repo's tooling

@@ -8,12 +8,17 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { CrashReporter } from "./components/telemetry/CrashReporter";
+import { FeedbackHost } from "./components/feedback/FeedbackHost";
 import { ViewerApp } from "./viewer/ViewerApp";
+import type { GalleryDialog } from "./viewer/dev/NoticeGallery";
+import { applyStoredTheme, applyThemeToRoot } from "./viewer/state/theme";
 // Stylesheet cascade order matters — load tokens/base first, then viewer
 // component modules in numeric order, then magic-patterns (shadcn tokens +
 // Tailwind layers). See src/styles/global.css ToC for module map.
+import "./styles/tokens.css";
 import "./styles/global.css";
 import "./styles/viewer/00-topbar.css";
+import "./styles/viewer/01-document-tabs.css";
 import "./styles/viewer/10-modetoolbar.css";
 import "./styles/viewer/20-bottom-taskbar.css";
 import "./styles/viewer/30-empty-states.css";
@@ -49,15 +54,38 @@ import "./viewer/performance/performanceTelemetry";
 const LegacyApp = import.meta.env.DEV
   ? React.lazy(() => import("./legacy/App").then((m) => ({ default: m.App })))
   : null;
+// Dev-only contrast gallery (see viewer/dev/NoticeGallery.tsx).
+const NoticeGallery = import.meta.env.DEV
+  ? React.lazy(() => import("./viewer/dev/NoticeGallery").then((m) => ({ default: m.NoticeGallery })))
+  : null;
+const galleryParams = new URLSearchParams(window.location.search);
+const useGallery = NoticeGallery !== null && galleryParams.has('notice-gallery');
 const useLegacy =
   LegacyApp !== null && new URLSearchParams(window.location.search).has('legacy');
+
+// Apply the stored theme before the first render so a dark restart never
+// flashes light (#721).
+applyStoredTheme();
+// The gallery states its own theme; it never depends on stored settings.
+if (useGallery) applyThemeToRoot(galleryParams.get('theme') === 'dark');
+
+// The ui-walk build only (#471): VITE_UI_WALK is replaced by its value at build
+// time, so in every other build this is \`if (false)\` and the walker is not in the
+// bundle. scripts/ci/ui-walk-fenced.mjs proves that on the shipped bundle.
+if (import.meta.env.VITE_UI_WALK === "1") {
+  void import("./viewer/uiWalk/boot").then((m) => m.bootUiWalk());
+}
 
 // Liveness ping for the Rust startup watchdog: this must be the earliest
 // possible invoke. If the WebContent process is suspended before timers run
 // (observed on macOS), this ping never arrives and the Rust side recreates
 // the window — see spawn_startup_watchdog in src-tauri/src/lib.rs.
 import("./lib/commandBridge")
-  .then(({ invokeCommand }) => invokeCommand("frontend_ready"))
+  .then(({ invokeQuietly }) => invokeQuietly("frontend_ready"))
+  .then(() => {
+    // public/startup-heartbeat.js kept the watchdog informed while loading.
+    (window as Window & { __pdfluentStopHeartbeat?: () => void }).__pdfluentStopHeartbeat?.();
+  })
   .catch(() => { /* browser/test runtime — no Tauri IPC */ });
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
@@ -66,8 +94,13 @@ ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
         children on catch, so the review dialog must live outside it. They
         communicate through the module-level crash channel. */}
     <CrashReporter />
+    <FeedbackHost />
     <ErrorBoundary>
-      {useLegacy && LegacyApp ? (
+      {useGallery && NoticeGallery ? (
+        <React.Suspense fallback={null}>
+          <NoticeGallery dark={galleryParams.get('theme') === 'dark'} dialog={(galleryParams.get('dialog') as GalleryDialog | null)} />
+        </React.Suspense>
+      ) : useLegacy && LegacyApp ? (
         <React.Suspense fallback={null}>
           <LegacyApp />
         </React.Suspense>

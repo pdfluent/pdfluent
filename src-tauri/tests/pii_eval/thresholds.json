@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "iou": 0.5,
+  "min_support": 25,
+  "required_languages": ["en", "nl", "de", "fr", "es", "it"],
+  "validator_layer": {
+    "iban":          { "precision": 0.98, "recall": 0.95 },
+    "email":         { "precision": 0.98, "recall": 0.95 },
+    "credit_card":   { "precision": 0.98, "recall": 0.95 },
+    "national_id":   { "precision": 0.98, "recall": 0.95 },
+    "phone":         { "precision": 0.95, "recall": 0.85 },
+    "date_of_birth": { "precision": 0.95, "recall": 0.85 }
+  },
+  "full": {
+    "iban":          { "precision": 0.98, "recall": 0.95 },
+    "email":         { "precision": 0.98, "recall": 0.95 },
+    "credit_card":   { "precision": 0.98, "recall": 0.95 },
+    "national_id":   { "precision": 0.98, "recall": 0.95 },
+    "phone":         { "precision": 0.95, "recall": 0.90 },
+    "date_of_birth": { "precision": 0.95, "recall": 0.90 },
+    "person":        { "precision": 0.85, "recall": 0.90 },
+    "address":       { "precision": 0.75, "recall": 0.85 }
+  }
+}

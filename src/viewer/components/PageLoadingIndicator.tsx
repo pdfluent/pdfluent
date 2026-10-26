@@ -34,8 +34,7 @@ export const PageLoadingIndicator = memo(function PageLoadingIndicator({
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              background: 'rgba(255,255,255,0.72)',
-              backdropFilter: 'blur(1.5px)',
+              background: 'rgba(255,255,255,0.82)',
             }
           : {
               top: 12,

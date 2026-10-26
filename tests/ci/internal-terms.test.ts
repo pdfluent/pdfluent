@@ -14,7 +14,7 @@
 // go red; make the missing-list path return 0 and the last case fails.
 import { copyFileSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { delimiter, join, resolve } from "node:path";
+import { join, resolve } from "node:path";
 import { execFileSync, spawnSync } from "node:child_process";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
@@ -115,6 +115,7 @@ function git(cwd: string, args: string[]): string {
 
 const repo = join(dir, "tree-fixture");
 const shimDir = join(dir, "git-shim");
+const shimPath = join(shimDir, "git-shim.mjs");
 const callLog = join(dir, "git-calls.log");
 const batchStdin = join(dir, "git-batch-stdin");
 let cleanRef = "";
@@ -139,7 +140,7 @@ function publishedAt(ref: string) {
 
 function runTree(ref: string, { shim = false } = {}) {
   const env = { ...cleanEnv(), CI: "", PDFLUENT_INTERNE_TERMEN: terms };
-  if (shim) env.PATH = `${shimDir}${delimiter}${env.PATH ?? ""}`;
+  if (shim) env.PDFLUENT_GIT_SHIM = shimPath;
   const started = Date.now();
   const r = spawnSync(process.execPath, [fixtureGuard(), "--tree", ref], {
     cwd: repo, encoding: "utf8", env, maxBuffer: 64 * 1024 * 1024,
@@ -186,21 +187,21 @@ beforeAll(() => {
   // A git that says what it was asked for, and keeps what was piped into the
   // batch. Counting processes is the only way to tell one read of a tree from
   // two thousand: both produce the same report.
-  const realGit = execFileSync("sh", ["-c", "command -v git"], { encoding: "utf8" }).trim();
   mkdirSync(shimDir, { recursive: true });
-  writeFileSync(join(shimDir, "git"), [
-    "#!/bin/sh",
-    `printf '%s\\n' "$*" >> ${JSON.stringify(callLog)}`,
-    'case " $* " in',
-    '  *" cat-file "*)',
-    `    tee -a ${JSON.stringify(batchStdin)} | ${JSON.stringify(realGit)} "$@"`,
-    "    exit $?",
-    "    ;;",
-    "esac",
-    `exec ${JSON.stringify(realGit)} "$@"`,
-    "",
-  ].join("\n"), { mode: 0o755 });
-}, 120_000);
+  writeFileSync(shimPath, [
+    'import { appendFileSync } from "node:fs";',
+    'import { spawnSync } from "node:child_process";',
+    'const args = process.argv.slice(2);',
+    `appendFileSync(${JSON.stringify(callLog)}, args.join(" ") + "\\n");`,
+    'const batch = args.includes("cat-file");',
+    'const input = batch ? (await new Promise((res) => { const c = []; process.stdin.on("data", (d) => c.push(d)); process.stdin.on("end", () => res(Buffer.concat(c))); })) : undefined;',
+    `if (batch) appendFileSync(${JSON.stringify(batchStdin)}, input);`,
+    'const r = spawnSync("git", args, { input, stdio: [batch ? "pipe" : "inherit", "pipe", "inherit"], maxBuffer: 512 * 1024 * 1024 });',
+    'process.stdout.write(r.stdout);',
+    'process.exitCode = r.status ?? 1;',
+    '',
+  ].join("\n"));
+}, 600_000); // 1200 fixture files plus two git commits: over 120 s on the Windows runner (Defender)
 
 describe("the published tree is read once, not once per blob", () => {
   it("asks git for every published blob in a single batch", () => {

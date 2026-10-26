@@ -1960,8 +1960,8 @@ export function Viewer({
                   cy={draftRect.y + draftRect.height / 2}
                   rx={draftRect.width / 2}
                   ry={draftRect.height / 2}
-                  fill="rgba(98, 165, 255, 0.15)"
-                  stroke="rgba(98, 165, 255, 0.9)"
+                  fill="var(--selection-on-page-fill)"
+                  stroke="var(--selection-on-page-strong)"
                   strokeWidth="2"
                 />
               )}
@@ -1976,7 +1976,7 @@ export function Viewer({
                     annotationTool === "highlight"
                       ? "rgba(255, 238, 112, 0.35)"
                       : annotationTool === "underline"
-                        ? "rgba(138, 187, 255, 0.24)"
+                        ? "rgba(138, 187, 255, 0.24)"  // monochrome-allow: preview of the underline annotation colour (document content)
                         : annotationTool === "strikeout"
                           ? "rgba(255, 141, 141, 0.22)"
                       : "rgba(255, 122, 69, 0.12)"
@@ -1985,7 +1985,7 @@ export function Viewer({
                     annotationTool === "highlight"
                       ? "rgba(255, 219, 44, 0.8)"
                       : annotationTool === "underline"
-                        ? "rgba(85, 144, 238, 0.92)"
+                        ? "rgba(85, 144, 238, 0.92)"  // monochrome-allow: preview of the underline annotation colour (document content)
                         : annotationTool === "strikeout"
                           ? "rgba(231, 88, 88, 0.92)"
                       : "rgba(255, 122, 69, 0.9)"

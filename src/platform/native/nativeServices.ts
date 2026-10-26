@@ -69,17 +69,17 @@ function webCapabilities(): NativeCapabilities {
   const share = typeof navigator !== 'undefined' && typeof navigator.share === 'function';
   return {
     platform: detectWebPlatform(),
-    ocr: capability('unavailable', 'Geen browser-OS OCR', 'OCR vereist de desktop runtime of de PDFluent OCR-fallback.'),
+    ocr: capability('unavailable', 'No browser OCR', 'OCR needs the desktop app or the PDFluent OCR fallback.'),
     tts: webSpeech
-      ? capability('fallback', 'Web Speech API', 'Browser gebruikt lokale systeemstemmen wanneer de browser die beschikbaar stelt.')
-      : capability('unavailable', 'Geen spraakprovider', 'Deze browser exposeert geen lokale text-to-speech provider.'),
-    scanner: capability('unavailable', 'Geen browser-scanner', 'Scannen vereist desktoptoegang tot ImageCaptureCore, WIA of SANE.'),
-    spellcheck: capability('fallback', 'Browser spellcheck', 'Formuliervelden en tekstinvoer gebruiken de spellcheck van de browser.'),
-    dictation: capability('planned', 'OS-dictatie', 'Dictatie wordt alleen getoond wanneer de desktopadapter een lokale provider meldt.'),
+      ? capability('fallback', 'Web Speech API', 'The browser uses the system voices it makes available.')
+      : capability('unavailable', 'No speech provider', 'This browser offers no local text-to-speech provider.'),
+    scanner: capability('unavailable', 'No browser scanner', 'Scanning needs desktop access to ImageCaptureCore, WIA or SANE.'),
+    spellcheck: capability('fallback', 'Browser spellcheck', 'Form fields and text input use the browser spellcheck.'),
+    dictation: capability('planned', 'OS dictation', 'Dictation appears only when the desktop adapter reports a local provider.'),
     share: share
-      ? capability('fallback', 'Web Share API', 'Delen gebruikt de browser-share sheet zonder documentupload.')
-      : capability('fallback', 'Bestandsdownload', 'Delen blijft lokaal via opslaan, exporteren of mailto.'),
-    secureStorage: capability('unavailable', 'Geen browser secret store', 'Licentiegeheimen horen in de desktop keychain/credential store.'),
+      ? capability('fallback', 'Web Share API', 'Sharing uses the browser share sheet, without uploading the document.')
+      : capability('fallback', 'File download', 'Sharing stays local: save, export or mailto.'),
+    secureStorage: capability('unavailable', 'No browser secret store', 'Secrets belong in the desktop keychain or credential store.'),
   };
 }
 
@@ -100,7 +100,7 @@ export async function detectNativeCapabilities(): Promise<NativeCapabilities> {
 export async function speakText(text: string, options: SpeakTextOptions = {}): Promise<SpeakTextResult> {
   const cleaned = text.replace(/\s+/g, ' ').trim();
   if (!cleaned) {
-    throw new Error('Geen tekst beschikbaar om voor te lezen.');
+    throw new Error('There is no text to read aloud.');
   }
   const languageGuess = options.language
     ? { bcp47: options.language }
@@ -124,7 +124,7 @@ export async function speakText(text: string, options: SpeakTextOptions = {}): P
   }
 
   if (typeof window === 'undefined' || !('speechSynthesis' in window) || !('SpeechSynthesisUtterance' in window)) {
-    throw new Error('Voorlezen is niet beschikbaar op deze runtime.');
+    throw new Error('Read aloud is not available in this runtime.');
   }
 
   window.speechSynthesis.cancel();

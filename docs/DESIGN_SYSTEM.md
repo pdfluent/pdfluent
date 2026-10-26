@@ -35,19 +35,35 @@ these rules.
 
 Two coexisting families:
 
-### `pf-*` and surface tokens — `src/styles/global.css`
+### Colour tokens — `src/styles/tokens.css`
 
-Primary for motion, interaction state, and PDFluent-specific surfaces.
+One file, light and dark. The brand is monochrome; blue is a functional
+micro-accent with exactly three jobs: the focus ring, links, selection. It is
+never a button fill, an active tab or an active tool. See
+`docs/design/MONOCHROME_MIGRATION.md`. `tests/monochrome-guard.test.ts` refuses
+a blue value anywhere else in `src/`.
 
 ```css
---bg-canvas       --bg-surface       --bg-surface-2       --bg-surface-3
---bg-surface-elevated --bg-surface-hover --bg-surface-press
---text-primary    --text-secondary   --text-muted         --text-disabled
---accent          --accent-strong    --accent-soft
---success         --warning          --danger
---border          --border-strong    --border-subtle
+--emphasis  --emphasis-hover  --on-emphasis      /* primary action */
+--state-active-bg  --state-active-fg  --state-hover-bg   /* active tab, tool, row */
+--focus-ring  --focus-halo                       /* blue job 1 */
+--link  --link-hover                             /* blue job 2 */
+--selection  --selection-fill  --selection-line  /* blue job 3 */
+--selection-on-page*  --focus-ring-on-page*  --caret-on-page   /* over a white PDF page */
+--text-primary  --text-secondary  --text-muted  --text-disabled  --icon-muted
+--border  --border-strong
+--bg-canvas  --bg-surface  --bg-surface-2  --bg-surface-3  --bg-surface-elevated
+--success  --warning  --danger
+```
+
+### `pf-*` and layout tokens — `src/styles/global.css`
+
+Primary for motion, shadows, geometry and PDFluent-specific surfaces. No
+colours that carry meaning live here; those are in `tokens.css`.
+
+```css
+--bg-surface-hover --bg-surface-press --border-subtle
 --shadow-soft     --shadow-panel     --shadow-page        --shadow-sm
---brand-mark-fill --brand-mark-on
 --pf-dur-fast     --pf-dur-med       --pf-ease
 --radius-btn      --radius-pill      --radius-sm
 ```
@@ -148,7 +164,7 @@ icon-only buttons with `aria-label` or `title`.
 | `.topbar-page-input`             | Page number input in top bar                |
 | `.topbar-search-trigger`         | Search-trigger that opens command palette   |
 
-All inputs use the `--accent` focus ring via `box-shadow: 0 0 0 2px var(--accent-soft)`.
+All inputs use the focus ring: `border-color: var(--focus-ring)` plus `box-shadow: 0 0 0 2px var(--focus-halo)`.
 
 ### Dialogs
 

@@ -9,6 +9,13 @@ import { readFileSync } from 'node:fs';
 import { describe, it, expect } from 'vitest';
 import { getWiredTools } from '../src/viewer/tools/wiredTools';
 
+// The OCR run itself (J-60) is no longer a per-page loop in the frontend that
+// keeps words for an overlay: it writes a text layer into the document. Its
+// behaviour is tested where it happens -- src-tauri/tests/
+// ocr_makes_scans_searchable.rs (scan -> OCR -> save -> search),
+// src-tauri/src/ocr_component.rs (the bundled component, checksums) and
+// src/lib/__tests__/ocrComponent.test.ts (what "Run OCR" leads to).
+
 const modeToolbarSource = readFileSync(
   new URL('../src/viewer/components/ModeToolbar.tsx', import.meta.url),
   'utf8'
@@ -157,28 +164,38 @@ describe('RightContextPanel — convert mode has OCR panel', () => {
 // ViewerApp — OCR overlay state wiring
 // ---------------------------------------------------------------------------
 
-describe('ViewerApp — OCR overlay state wiring', () => {
-  it('tracks ocrVisible state', () => {
-    expect(viewerAppSource).toContain('ocrVisible');
-    expect(viewerAppSource).toContain('setOcrVisible');
+
+describe('ViewerApp — OCR goes through useOcr', () => {
+  it('runs OCR from the Convert panel through the hook', () => {
+    expect(viewerAppSource).toContain("onRunOcr={() => { if (!isTauri) return; void ocr.requestRun('scanned'); }}");
   });
 
-  it('tracks ocrConfidenceThreshold state', () => {
-    expect(viewerAppSource).toContain('ocrConfidenceThreshold');
-    expect(viewerAppSource).toContain('setOcrConfidenceThreshold');
+  it('has no download dialog and hands Settings only the component status', () => {
+    expect(viewerAppSource).not.toContain('OcrComponentDialog');
+    expect(viewerAppSource).toContain('ocr={isTauri ? { status: ocr.status } : undefined}');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// OCR status probe — logged, never toasted
+// ---------------------------------------------------------------------------
+
+describe('useOcr — the background status probe', () => {
+  const source = readFileSync(
+    new URL('../src/viewer/hooks/useOcr.ts', import.meta.url),
+    'utf8'
+  );
+  const start = source.indexOf('const refreshStatus');
+  const probe = source.slice(start, source.indexOf('useEffect', start));
+
+  it('logs a failed probe and does not publish an error', () => {
+    expect(probe).toContain('logToApp');
+    expect(probe).not.toMatch(/reportCommandFailure|reportFallback|publishAppError|alreadyReported/);
   });
 
-  it('passes ocrPageWords for current page to PageCanvas', () => {
-    expect(viewerAppSource).toContain('ocrWords={ocrPageWords.get(i)}');
-  });
-
-  it('passes ocrVisible and ocrConfidenceThreshold to PageCanvas', () => {
-    expect(viewerAppSource).toContain('ocrVisible={ocrVisible}');
-    expect(viewerAppSource).toContain('ocrConfidenceThreshold={ocrConfidenceThreshold}');
-  });
-
-  it('passes OCR scan action to EditorV3Shell', () => {
-    expect(viewerAppSource).toContain('onRunOcr=');
-    expect(viewerAppSource).toContain('handleRunOcr({');
+  it('asks the backend through the quiet door', () => {
+    const api = readFileSync(new URL('../src/lib/tauri-api.ts', import.meta.url), 'utf8');
+    const at = api.indexOf('export async function getOcrComponentStatus');
+    expect(api.slice(at, api.indexOf('\nexport ', at + 1))).toContain('invokeQuietly');
   });
 });

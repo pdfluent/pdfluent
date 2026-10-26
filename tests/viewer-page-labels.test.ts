@@ -18,10 +18,6 @@ const libSource = readFileSync(
   'utf8'
 );
 
-const navRailSource = readFileSync(
-  new URL('../src/viewer/components/LeftNavRail.tsx', import.meta.url),
-  'utf8'
-);
 
 const viewerAppSource = [
   '../src/viewer/hooks/usePageNavigation.ts',
@@ -147,36 +143,6 @@ describe('lib.rs — get_page_labels Tauri command', () => {
 // LeftNavRail — pageLabels prop
 // ---------------------------------------------------------------------------
 
-describe('LeftNavRail — pageLabels prop', () => {
-  it('declares pageLabels in LeftNavRailProps', () => {
-    expect(navRailSource).toContain('pageLabels?: string[]');
-  });
-
-  it('ThumbnailPanel accepts pageLabels prop', () => {
-    const fnStart = navRailSource.indexOf('function ThumbnailPanel(');
-    const fnEnd = navRailSource.indexOf('function OutlineItem(', fnStart);
-    const fnBody = navRailSource.slice(fnStart, fnEnd);
-    expect(fnBody).toContain('pageLabels');
-  });
-
-  it('displays pageLabels label instead of numeric index in thumbnail', () => {
-    const fnStart = navRailSource.indexOf('function ThumbnailPanel(');
-    const fnEnd = navRailSource.indexOf('function OutlineItem(', fnStart);
-    const fnBody = navRailSource.slice(fnStart, fnEnd);
-    expect(fnBody).toContain('pageLabels?.[i]');
-  });
-
-  it('falls back to (i + 1) when label is absent', () => {
-    const fnStart = navRailSource.indexOf('function ThumbnailPanel(');
-    const fnEnd = navRailSource.indexOf('function OutlineItem(', fnStart);
-    const fnBody = navRailSource.slice(fnStart, fnEnd);
-    expect(fnBody).toContain('i + 1');
-  });
-
-  it('passes pageLabels from PanelContent to ThumbnailPanel', () => {
-    expect(navRailSource).toContain('pageLabels={pageLabels}');
-  });
-});
 
 // ---------------------------------------------------------------------------
 // ViewerApp — pageLabels state and fetch

@@ -137,7 +137,7 @@ describe('ViewerApp — search shortcut: no regressions', () => {
 
   it('Cmd+P print shortcut still present', () => {
     expect(viewerAppSource).toContain("e.key !== 'p'");
-    expect(viewerAppSource).toContain('window.print()');
+    expect(viewerAppSource).toContain('void printDocument()');
   });
 
   it('arrow key page navigation still present', () => {

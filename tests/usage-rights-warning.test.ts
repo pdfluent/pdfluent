@@ -20,11 +20,15 @@
  */
 
 import { readFileSync, readdirSync } from 'node:fs';
-import { describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vitest';
+import i18n from '../src/i18n';
 
 import { announceUsageRightsInvalidated } from '../src/viewer/state/fallbackNotices';
 import { subscribeCommandFailures } from '../src/lib/commandBridge';
 import type { AppError } from '../src/viewer/state/errorCenter';
+
+// The wording is asserted in English; a machine set to Dutch would render Dutch.
+beforeAll(async () => { await i18n.changeLanguage('en'); });
 
 const LOCALES_DIR = new URL('../src/i18n/locales/', import.meta.url);
 
@@ -168,7 +172,7 @@ describe('the Sign panel', () => {
 
   it('gets the counter from the app, bumped on every content mutation', () => {
     const app = read('../src/viewer/ViewerApp.tsx');
-    const mutated = app.slice(app.indexOf('const handleDocumentMutated'));
+    const mutated = app.slice(app.indexOf('const handleDocumentMutated = useCallback'));
     expect(mutated.slice(0, 600)).toContain('setContentRevision(n => n + 1);');
     expect(app).toContain('contentRevision={contentRevision}');
   });

@@ -371,11 +371,11 @@ function EncryptDecryptControls() {
         <span className="text-xs font-medium text-muted-foreground">{t('protect.decrypt')}</span>
         <input
           type="password"
-          placeholder={t('protect.currentPasswordPlaceholder')}
+          placeholder={t('protect.ownerPasswordForRemoval')}
           value={decryptPassword}
           onChange={e => { setDecryptPassword(e.target.value); }}
           className={inputClass}
-          aria-label={t('protect.currentPasswordPlaceholder')}
+          aria-label={t('protect.ownerPasswordForRemoval')}
         />
         <button
           onClick={() => { void handleDecrypt(); }}
@@ -1790,7 +1790,7 @@ function AnnotationToolPropertiesPanel({
   const setColor = (hex: string) => {
     onChange?.({ ...appearance, color: hexToRgbTuple(hex) });
   };
-  const swatches = ['#ffff00', '#22c55e', '#38bdf8', '#f472b6', '#f97316', '#ef4444'];
+  const swatches = ['#ffff00', '#22c55e', '#38bdf8', '#f472b6', '#f97316', '#ef4444'];  // monochrome-allow: annotation colour swatches (document content)
 
   return (
     <div className="flex flex-col gap-3" data-testid="annotation-tool-properties-panel">
@@ -1986,7 +1986,7 @@ function TextPropertiesPanel({
             { name: t('edit.colorDarkGray'), hex: '#4b5563', bg: 'bg-gray-600' },
             { name: t('edit.colorLightGray'), hex: '#9ca3af', bg: 'bg-gray-400' },
             { name: t('edit.colorRed'), hex: '#ef4444', bg: 'bg-red-500' },
-            { name: t('edit.colorBlue'), hex: '#3b82f6', bg: 'bg-blue-500' },
+            { name: t('edit.colorBlue'), hex: '#3b82f6', bg: 'bg-blue-500' },  // monochrome-allow: text colour palette entry (document content)
             { name: t('edit.colorGreen'), hex: '#10b981', bg: 'bg-emerald-500' },
             { name: t('edit.colorGoldOrange'), hex: '#f59e0b', bg: 'bg-amber-500' },
           ].map((color) => (

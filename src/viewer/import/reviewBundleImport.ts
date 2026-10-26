@@ -46,7 +46,7 @@ export function parseReviewBundleJson(json: string): ReviewBundleImportResult {
     const parsed = JSON.parse(json) as any;
 
     if (!parsed || typeof parsed !== 'object') {
-      return { success: false, error: 'Bundle is geen geldig object' };
+      return { success: false, error: 'The bundle is not a valid object' };
     }
 
     if (!parsed.metadata) {
@@ -68,7 +68,7 @@ export function parseReviewBundleJson(json: string): ReviewBundleImportResult {
       auditLog: (parsed.auditLog as BundleAuditLog) ?? { events: [] },
     };
   } catch {
-    return { success: false, error: 'Ongeldige JSON in bundle' };
+    return { success: false, error: 'Invalid JSON in the bundle' };
   }
 }
 
@@ -113,7 +113,7 @@ export function extractCommentRepliesFromBundle(
 export function makeEmptyImportResult(): ReviewBundleImportResult {
   return {
     success: false,
-    error: 'Geen bundle geselecteerd',
+    error: 'No bundle selected',
   };
 }
 

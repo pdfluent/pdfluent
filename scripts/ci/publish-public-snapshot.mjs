@@ -33,11 +33,12 @@
 // there to begin with.
 //
 // usage:
-//   node scripts/ci/publish-public-snapshot.mjs [--source <ref>] [--no-fetch]
-//   … then push the printed commit yourself. This script never pushes.
+//   node scripts/ci/publish-public-snapshot.mjs [--source <ref>] [--no-fetch] [--push]
+//   Without --push the script never pushes: it prints the command. With --push it
+//   pushes the snapshot itself, through the deploy key (see pushSnapshot below).
 import { execFileSync, spawnSync } from "node:child_process";
 import { existsSync, mkdtempSync, readdirSync, rmSync } from "node:fs";
-import { tmpdir } from "node:os";
+import { homedir, tmpdir } from "node:os";
 import { join } from "node:path";
 import { loadManifest, isPublished, isPublicOnly, root } from "./public-tree.mjs";
 import { PUBLIC_REF, PUBLIC_URL, PUBLISHED_FROM, shippedVersion } from "./repo-truth.mjs";
@@ -147,6 +148,46 @@ export function publicGuardsRefuse(commit, { guards = PUBLIC_GUARDS } = {}) {
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
+}
+
+/**
+ * The only credential that can write to `main` of the public repository.
+ *
+ * `main` there is protected by a ruleset (pdfluent-internal#753) that blocks
+ * update, force-push and deletion for everyone except the deploy key
+ * "publish-public-snapshot". Org admins are not exempt, so the owner's own
+ * account is refused too. The publish path is therefore the only way a commit
+ * reaches that branch, which is what keeps its head carrying a `Published-from:`
+ * trailer. Direct commits on 2026-09-22..10-01 are why this exists.
+ */
+export const DEPLOY_KEY_ENV = "PDFLUENT_PUBLIC_DEPLOY_KEY";
+export const DEPLOY_KEY_DEFAULT = join(homedir(), ".config", "pdfluent", "pdfluent-public-deploy-key");
+export const DEPLOY_PUSH_URL = "git@github.com:pdfluent/pdfluent.git";
+
+export function deployKeyPath(env = process.env) {
+  return env[DEPLOY_KEY_ENV] || DEPLOY_KEY_DEFAULT;
+}
+
+/** `ssh` that offers the deploy key and nothing else: IdentitiesOnly keeps the agent's keys out. */
+export function deploySshCommand(env = process.env) {
+  return `ssh -i ${deployKeyPath(env)} -o IdentitiesOnly=yes`;
+}
+
+/**
+ * Push one snapshot commit to the public `main` through the deploy key.
+ * A plain (never forced) push: if the public head moved since the snapshot was
+ * built, the push is refused rather than overwritten.
+ */
+export function pushSnapshot(commit, { env = process.env, run = spawnSync, exists = existsSync } = {}) {
+  const key = deployKeyPath(env);
+  if (!exists(key)) {
+    return { status: 1, fault: `publish: the deploy key ${key} does not exist. Set ${DEPLOY_KEY_ENV}. Nothing was pushed.` };
+  }
+  const r = run("git", ["push", DEPLOY_PUSH_URL, `${commit}:refs/heads/main`], {
+    cwd: root, stdio: "inherit",
+    env: { ...env, GIT_SSH_COMMAND: deploySshCommand(env) },
+  });
+  return { status: r.status ?? 1, fault: null };
 }
 
 export const PUBLIC_GUARDS = [
@@ -392,8 +433,14 @@ function main(argv) {
       return 1;
     }
 
-    console.log("Nothing has been pushed. To publish it:");
-    console.log(`  git push ${PUBLIC_URL} ${commit}:refs/heads/main`);
+    if (argv.includes("--push")) {
+      const pushed = pushSnapshot(commit);
+      if (pushed.fault) console.error(pushed.fault);
+      return pushed.status;
+    }
+    console.log("Nothing has been pushed. To publish it, run this again with --push, or by hand:");
+    console.log(`  GIT_SSH_COMMAND='${deploySshCommand()}' git push ${DEPLOY_PUSH_URL} ${commit}:refs/heads/main`);
+    console.log("Only the deploy key may write to that branch; your own credentials are refused.");
     console.log("Check it first with --dry-run, and read docs/REPO_TRUTH.md before you do.");
     return 0;
   } finally {
