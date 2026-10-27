@@ -1396,7 +1396,10 @@
       "group": "work",
       "journeys": [
         "J-80",
-        "J-83"
+        "J-83",
+        "J-A3",
+        "J-B1",
+        "J-B2"
       ],
       "register": [
         "buttons:save-btn",
@@ -1434,6 +1437,64 @@
           "kind": "rust",
           "platforms": [
             "macos-arm64",
+            "windows-x64"
+          ]
+        },
+        {
+          "id": "pdfluent_lib::atomic_file::tests::granted_path_only::save_as_to_a_new_file_works_with_access_to_that_file_only",
+          "kind": "rust",
+          "platforms": [
+            "macos-arm64"
+          ]
+        },
+        {
+          "id": "pdfluent_lib::atomic_file::tests::granted_path_only::save_over_an_existing_file_works_with_access_to_that_file_only",
+          "kind": "rust",
+          "platforms": [
+            "macos-arm64"
+          ]
+        },
+        {
+          "id": "pdfluent_lib::atomic_file::tests::granted_path_only::a_failed_write_leaves_no_new_file_and_keeps_an_existing_one_whole",
+          "kind": "rust",
+          "platforms": [
+            "macos-arm64"
+          ]
+        },
+        {
+          "id": "pdfluent_lib::atomic_file::tests::a_failed_write_to_a_new_granted_path_leaves_no_file",
+          "kind": "rust",
+          "platforms": [
+            "macos-arm64",
+            "windows-x64"
+          ]
+        },
+        {
+          "id": "pdfluent_lib::atomic_file::tests::a_write_that_reports_success_but_lands_other_bytes_is_a_failed_save",
+          "kind": "rust",
+          "platforms": [
+            "macos-arm64",
+            "windows-x64"
+          ]
+        },
+        {
+          "id": "pdfluent_lib::atomic_file::tests::held_by_another_program::a_file_held_without_sharing_is_not_replaced_and_the_error_says_why",
+          "kind": "rust",
+          "platforms": [
+            "windows-x64"
+          ]
+        },
+        {
+          "id": "pdfluent_lib::atomic_file::tests::held_by_another_program::a_file_held_by_a_reader_that_allows_no_delete_is_not_replaced",
+          "kind": "rust",
+          "platforms": [
+            "windows-x64"
+          ]
+        },
+        {
+          "id": "pdfluent_lib::atomic_file::tests::held_by_another_program::a_lock_that_lasts_a_few_hundred_milliseconds_is_waited_out",
+          "kind": "rust",
+          "platforms": [
             "windows-x64"
           ]
         }

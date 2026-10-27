@@ -40,6 +40,16 @@ export const EXPECTED_FAULTS: Readonly<Record<string, readonly ExpectedFault[]>>
   'J-83': [
     { kind: 'error-toast', command: 'save_pdf_as_dialog', reason: 'J-83 saves to a place that cannot be written; the refusal is said on screen, which is the behaviour under test.' },
   ],
+  // J-A3, J-B1, J-B2 are about saves that fail on purpose (an ungranted path, a read-only
+  // file, a full disk, a file another program holds). The refusal is the answer
+  // under test; the files are judged next to it.
+  'J-A3': [
+    { kind: 'error-toast', command: 'save_pdf_as_dialog', reason: 'J-A3 saves to a path the sandbox did not grant to prove the sandbox is in force; the refusal said on screen is the behaviour under test.' },
+  ],
+  'J-B2': [
+    { kind: 'error-toast', command: 'save_pdf', reason: 'J-B2 makes Save fail on purpose (read-only file, full disk, file held by another program) and judges what the person is told and what stays on disk.' },
+    { kind: 'error-toast', command: 'save_pdf_as_dialog', reason: 'J-B2 makes Save As fail on purpose with a full disk and judges that no file is left behind.' },
+  ],
   // A refusal the journey is about: its last step exports a document with no
   // table and waits for the app to say so. The toast is that message.
   'J-99': [

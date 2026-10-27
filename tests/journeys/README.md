@@ -6,7 +6,7 @@ Tauri app, not Vite with the mock engine, and it is judged on the file the app
 writes, read back by `pdfcheck` (`src-tauri/examples/pdfcheck.rs`), not on the
 DOM alone.
 
-`docs/JOURNEY_TESTS.json` lists all 94 journeys, which spec proves each one,
+`docs/JOURNEY_TESTS.json` lists all 97 journeys, which spec proves each one,
 on which platforms, and the known gaps with their owners. The feature gate
 (`editor-features.json` v2) reads it. `scripts/quality/journey-map.mjs --write`
 updates the `spec` fields after you add a spec; `tests/journey-map.test.ts`
@@ -57,6 +57,28 @@ Each launch gets a fresh working folder. On macOS that folder is also `HOME`,
 so app data, recent files and recovery copies never carry from one journey
 into the next. Windows shares the app data folder, and the launch dismisses
 what an earlier run left behind.
+
+## The store sandbox
+
+`j.start({ sandbox: true })` (macOS) runs the e2e build inside a bundle signed ad
+hoc with the Mac App Store entitlements (`src-tauri/Entitlements.appstore.plist`,
+minus the two keys only a provisioning profile can vouch for). The sandbox is the
+kernel's. The app can then touch the document it is asked to open, the bridge
+folder, and the paths a journey answers a dialog with, and nothing else: before a
+panel answer reaches the app the harness issues the grant the panel would have
+(`src-tauri/examples/sandbox_grant.rs`), the app takes it (`e2e_sandbox_grant`).
+Use `j.allow(path)` for a drop. A path nobody granted is refused as in the store
+build. This is how GOV-001 (Save As to a new file, #998) is kept from coming back:
+J-A3 saves, saves as and reopens inside it, J-B1 and J-B2 run the folder and
+failure cases in it, J-13 drops files into it. `lib/sandbox.ts` has the details and
+`tests/journeys-sandbox.test.ts` pins that the entitlements stay the store's.
+
+Windows has no equivalent: the MSI is a plain Win32 install and the Microsoft Store
+listing points at the same MSI (`store/packaging-route.md`), so there is no MSIX
+virtualisation. J-B1 and J-B2 use the profile's real folders there instead.
+
+`e2e_inject_write_failure(name, count)` makes the next writes of a file called
+`name` fail halfway with "No space left on device", through the real save path.
 
 ## Errors fail the journey
 

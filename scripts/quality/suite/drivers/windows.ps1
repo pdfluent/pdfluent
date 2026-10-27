@@ -171,6 +171,15 @@ function Delta([string]$p, [long]$off) {
   try { $fs.Seek($off, "Begin") | Out-Null; (New-Object System.IO.StreamReader($fs)).ReadToEnd() } finally { $fs.Dispose() }
 }
 
+# sessions.log is trimmed by the app when it reaches 2000 lines (session_log.rs
+# MAX_LINES), and the trim rewrites the file from the top. A byte offset taken
+# before such a rewrite points past the start of the new content, so the delta
+# lost the first line of the run: "1 start lines against 2 clean_quit lines" on
+# a build that quits cleanly every time (1.1.2, 27-10). A log near the cap is
+# set aside, not deleted, so the run starts on a file with room.
+if ((Test-Path $sessions) -and ((Get-Content -LiteralPath $sessions | Measure-Object -Line).Lines -ge 1800)) {
+  Move-Item -LiteralPath $sessions -Destination ($sessions + ".before-suite-" + (Get-Date -Format "yyyyMMddHHmmss")) -Force
+}
 $sessionsBase = Size $sessions
 
 # ── S3 sockets, sampled during S2 ─────────────────────────────────────────────

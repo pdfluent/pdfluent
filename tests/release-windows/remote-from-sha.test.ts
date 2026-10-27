@@ -41,9 +41,20 @@ const OCR_ON_BOX = "C:\\pdfluent\\ocr-component\\out";
 const LOCAL_MSI = "/tmp/PDFluent_0.0.0-stub_x64_en-US.msi";
 
 const STUB_SSH = `#!/usr/bin/env bash
-printf '%s\\n' "$*" >> "$STUB_LOG"
-all="$*"
+# The script sends PowerShell as -EncodedCommand (base64 of UTF-16LE). Decode it
+# so the cases below can read what the box would have run.
+decoded=""
+enc="$(printf '%s' "$*" | sed -n 's/.*-EncodedCommand \\([A-Za-z0-9+\/=]*\\).*/\\1/p')"
+if [ -n "$enc" ]; then
+  decoded="$(printf '%s' "$enc" | base64 -d | iconv -f UTF-16LE -t UTF-8)"
+fi
+printf '%s\\n' "$* $decoded" >> "$STUB_LOG"
+all="$* $decoded"
 case "$all" in
+  *SIGNING_CONFIGURED*)
+    echo "SIGNING_CONFIGURED=\${STUB_SIGNING:-yes}"; exit 0 ;;
+  *Get-AuthenticodeSignature*)
+    echo "MSI_SIGNATURE=\${STUB_MSI_SIG:-Valid}"; exit 0 ;;
   *credential.helper*)
     echo "file:C:/ProgramData/Git/config  credential.helper=manager"
     echo "file:C:/Users/build/.gitconfig  credential.helper=store"
@@ -305,5 +316,84 @@ describe("the host configuration", () => {
     expect(r.out).toContain("no build-host configuration");
     expect(r.out, "the error does not say which path was looked at").toContain(path.join(bare, ".env"));
     expect(r.sent).toEqual([]);
+  });
+});
+
+// An unsigned release MSI is the quietest failure this script can produce:
+// release-windows.ps1 signs only when the box's .env names a profile, and
+// sign-windows.ps1 skips signing with a warning when it finds none. Nothing
+// after that looks different from a good build. These cases fail if the guard,
+// the -Sign flag, or the read-back is removed.
+describe("Authenticode signing", () => {
+  const built = (r: Run) => r.sent.some((c) => c.includes("release-windows.ps1"));
+
+  it("stops before the build when the box has no signing profile", () => {
+    const r = run(["--sha", SHA], { ...HOST_ENV, STUB_SIGNING: "no" });
+    expect(r.status).not.toBe(0);
+    expect(r.out).toContain("no Authenticode signing configured");
+    expect(built(r), "it built an installer that could not be signed").toBe(false);
+  });
+
+  it("asks about the profile by name and never reads a secret", () => {
+    const r = run(["--sha", SHA], HOST_ENV);
+    const ask = r.sent.find((c) => c.includes("SIGNING_CONFIGURED"));
+    expect(ask).toBeDefined();
+    expect(ask).toContain("TRUSTED_SIGNING_PROFILE");
+    expect(ask).not.toMatch(/CLIENT_SECRET|PRIVATE_KEY|Get-Content/);
+  });
+
+  it("passes -Sign to the build, so a profile that goes missing later is an error, not a skip", () => {
+    const r = run(["--sha", SHA], HOST_ENV);
+    expect(r.status, r.out).toBe(0);
+    const build = r.sent.find((c) => c.includes("release-windows.ps1"));
+    expect(build).toMatch(/release-windows\.ps1' '[^']+' -Sign/);
+  });
+
+  it("reads the signature back from the finished installer and does not fetch one that is not Valid", () => {
+    const r = run(["--sha", SHA], { ...HOST_ENV, STUB_MSI_SIG: "NotSigned" });
+    expect(r.status).not.toBe(0);
+    expect(r.out).toContain("not validly Authenticode-signed");
+    expect(r.sent.some((c) => c.startsWith("-o") && c.includes("PDFluent_0.0.0-stub") && c.includes("/tmp/")),
+      "the unsigned installer was fetched").toBe(false);
+    expect(r.out).not.toContain("fetched:");
+  });
+
+  it("accepts a Valid signature and fetches the installer", () => {
+    const r = run(["--sha", SHA], HOST_ENV);
+    expect(r.status, r.out).toBe(0);
+    expect(r.out).toContain("Authenticode on the box: Valid");
+    expect(r.out).toContain("fetched:");
+  });
+
+  it("builds unsigned only on an explicit --unsigned, and says it is not a release", () => {
+    const r = run(["--sha", SHA, "--unsigned"], { ...HOST_ENV, STUB_SIGNING: "no", STUB_MSI_SIG: "NotSigned" });
+    expect(r.status, r.out).toBe(0);
+    expect(r.out).toContain("not a release");
+    const build = r.sent.find((c) => c.includes("release-windows.ps1"));
+    expect(build).not.toContain("-Sign");
+  });
+});
+
+// The box's sshd default shell is PowerShell on some hosts and cmd on others.
+// A command built from double quotes loses its `$` to an outer PowerShell, which
+// broke the checkout on the Dev Drive host (23-10). Encoded commands reach the
+// box's powershell.exe untouched under either shell.
+describe("commands to the box", () => {
+  it("are all sent as -EncodedCommand, never as a quoted -Command", () => {
+    const r = run(["--sha", SHA], HOST_ENV);
+    expect(r.status, r.out).toBe(0);
+    const ps = r.sent.filter((c) => c.includes("powershell"));
+    expect(ps.length).toBeGreaterThan(5);
+    for (const c of ps) {
+      expect(c, c.slice(0, 120)).toContain("-EncodedCommand");
+      expect(c).not.toMatch(/powershell [^"]*-Command/);
+    }
+  });
+
+  it("reach the box with their PowerShell variables intact", () => {
+    const r = run(["--sha", SHA], HOST_ENV);
+    const fetch = r.sent.find((c) => c.includes("git fetch"));
+    expect(fetch).toContain("$onOrigin");
+    expect(fetch).toContain("$LASTEXITCODE");
   });
 });

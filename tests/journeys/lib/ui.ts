@@ -90,7 +90,9 @@ export async function save(j: UiCtx): Promise<void> {
 /** Share → Save As…, answering the native save panel with `dest`. */
 export async function saveAs(j: UiCtx, dest: string | null): Promise<void> {
   await j.answerNativeDialogs(dest);
-  await j.s.click('.share-trigger');
+  // After a Save As that failed the menu is still open; a second click on the
+  // trigger would close it.
+  if (!(await j.s.call<boolean>('visible', '[data-testid="save-as-btn"]'))) await j.s.click('.share-trigger');
   await j.waitFor('[data-testid="save-as-btn"]');
   await j.s.click('[data-testid="save-as-btn"]');
 }

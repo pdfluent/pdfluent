@@ -51,6 +51,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { requireQualityReport, overrideOr } from './quality/require-report.mjs';
 import { walkBuilds } from './lib/walk-build.mjs';
+import { mergePlatform } from './lib/release-manifest.mjs';
 
 const BUCKET = process.env.CF_R2_BUCKET_NAME || 'pdfluent-releases';
 const RELEASES_BASE = (process.env.CF_RELEASES_BASE || 'https://pdfluent.com/releases').replace(/\/$/, '');
@@ -114,55 +115,6 @@ function putManifest(obj) {
   const tmp = path.join(mkdtempSync(path.join(tmpdir(), 'pdfl-')), 'manifest.json');
   writeFileSync(tmp, JSON.stringify(obj, null, 2) + '\n', 'utf8');
   r2Put(MANIFEST_KEY, tmp, 'application/json');
-}
-
-// ── version compare (handles X.Y.Z and X.Y.Z-pre.N) ────────────────────────
-function parseVer(v) {
-  const [core, pre] = String(v).split('-');
-  const nums = core.split('.').map(n => parseInt(n, 10) || 0);
-  return { nums, pre: pre || '' };
-}
-/** -1 if a<b, 0 if equal, 1 if a>b. A release (no pre) outranks a prerelease. */
-function cmpVer(a, b) {
-  const A = parseVer(a), B = parseVer(b);
-  for (let i = 0; i < 3; i++) {
-    const d = (A.nums[i] || 0) - (B.nums[i] || 0);
-    if (d) return d < 0 ? -1 : 1;
-  }
-  if (A.pre === B.pre) return 0;
-  if (!A.pre) return 1;            // 1.0.0 > 1.0.0-beta.5
-  if (!B.pre) return -1;
-  // both prereleases: compare dot-separated identifiers numerically where possible
-  const ap = A.pre.split('.'), bp = B.pre.split('.');
-  for (let i = 0; i < Math.max(ap.length, bp.length); i++) {
-    const x = ap[i], y = bp[i];
-    if (x === y) continue;
-    if (x === undefined) return -1;
-    if (y === undefined) return 1;
-    const nx = parseInt(x, 10), ny = parseInt(y, 10);
-    if (!Number.isNaN(nx) && !Number.isNaN(ny)) return nx < ny ? -1 : 1;
-    return x < y ? -1 : 1;
-  }
-  return 0;
-}
-
-// ── manifest merge ──────────────────────────────────────────────────────────
-function mergePlatform(manifest, version, platform, entry) {
-  let m = manifest;
-  if (!m || !m.version) {
-    m = { version, pub_date: new Date().toISOString(), platforms: {} };
-  } else if (cmpVer(version, m.version) > 0) {
-    // Newer release: start a fresh platform set for it.
-    m = { version, pub_date: new Date().toISOString(), platforms: {} };
-  } else if (cmpVer(version, m.version) < 0) {
-    console.warn(`! refusing to register ${platform} for older ${version} (manifest is ${m.version}); skipping`);
-    return m;
-  } else {
-    // same version → merge, refresh pub_date
-    m.pub_date = new Date().toISOString();
-  }
-  m.platforms[platform] = entry;
-  return m;
 }
 
 function entryFor(version, platform, filename, size) {

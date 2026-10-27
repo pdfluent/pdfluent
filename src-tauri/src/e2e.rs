@@ -31,6 +31,19 @@
 //!   Files, not a port: nothing listens, so the e2e build opens no socket the
 //!   offline check would have to explain.
 //!
+//! * **The App Sandbox grants.** The journeys that run the app inside the Mac
+//!   App Store sandbox (tests/journeys/lib/sandbox.ts) stand in for the open
+//!   and save panels, which hand a sandboxed app the one path the user chose
+//!   and nothing around it. The harness issues the same kind of grant for the
+//!   path it queues as a dialog answer (`examples/sandbox_grant.rs`) and the
+//!   app takes it here, through `PDFLUENT_E2E_SANDBOX_TOKENS` at launch or
+//!   `e2e_sandbox_grant` later. Outside a sandbox a grant is a harmless no-op.
+//!
+//! * **A full disk.** `e2e_inject_write_failure(name, n)` makes the next `n`
+//!   writes of a file called `name` through `atomic_file` fail halfway with "No space left on
+//!   device", so a journey can prove that a failed save leaves the document
+//!   as it was, through the real save path of the real app.
+//!
 //! None of this is in a shipped build. The feature is not a default feature
 //! and no release build names it; `tests/e2e-build-is-never-shipped.test.ts`
 //! pins both. `E2E_BUILD_MARKER` below is how `scripts/ci/build-e2e.sh`
@@ -67,6 +80,86 @@ pub fn e2e_queue_dialog_answers(answers: Vec<Option<String>>) {
         Err(poisoned) => poisoned.into_inner(),
     };
     queue.extend(answers);
+}
+
+/// Take App Sandbox extension tokens (macOS). Each is the grant the system
+/// would have issued for a path the user picked in a panel.
+fn consume_sandbox_tokens(tokens: &[String]) -> Result<usize, String> {
+    let mut taken = 0;
+    for token in tokens.iter().map(|t| t.trim()).filter(|t| !t.is_empty()) {
+        if !pdfluent_macos_secure::consume_sandbox_extension(token) {
+            // Not a failure outside a sandbox or off macOS: nothing to grant.
+            if cfg!(target_os = "macos") {
+                return Err(format!("e2e: the sandbox refused a grant ({} chars)", token.len()));
+            }
+        }
+        taken += 1;
+    }
+    Ok(taken)
+}
+
+/// Take sandbox grants the harness issued after the launch (a Save As target).
+#[tauri::command]
+pub fn e2e_sandbox_grant(tokens: Vec<String>) -> Result<usize, String> {
+    consume_sandbox_tokens(&tokens)
+}
+
+/// The grants a launch starts with: the bridge folder and the document it was
+/// asked to open. Newline-separated in `PDFLUENT_E2E_SANDBOX_TOKENS`.
+fn grant_launch_tokens() {
+    let Ok(raw) = std::env::var("PDFLUENT_E2E_SANDBOX_TOKENS") else { return };
+    let tokens: Vec<String> = raw.lines().map(str::to_owned).collect();
+    match consume_sandbox_tokens(&tokens) {
+        Ok(n) => crate::applog(&format!("e2e: took {n} sandbox grants at launch")),
+        Err(e) => crate::applog(&e),
+    }
+}
+
+/// File names whose next write fails, with how many times. By name so the
+/// recovery copy the app writes on its own never takes the failure meant for
+/// the user's save.
+static FAILING_WRITES: Mutex<Vec<(String, u32)>> = Mutex::new(Vec::new());
+
+/// Make the next `count` writes of a file called `name` fail halfway.
+#[tauri::command]
+pub fn e2e_inject_write_failure(name: String, count: u32) {
+    let mut armed = match FAILING_WRITES.lock() {
+        Ok(armed) => armed,
+        Err(poisoned) => poisoned.into_inner(),
+    };
+    armed.retain(|(n, _)| *n != name);
+    if count > 0 {
+        armed.push((name, count));
+    }
+}
+
+/// Called by `atomic_file` before it writes `target`: a journey that asked for
+/// a full disk gets one. Some bytes land first, as on a real disk.
+pub fn injected_write_failure(target: &Path, file: &mut std::fs::File, bytes: &[u8]) -> std::io::Result<()> {
+    use std::io::Write;
+    let Some(name) = target.file_name().map(|n| n.to_string_lossy().into_owned()) else {
+        return Ok(());
+    };
+    let armed = {
+        let mut armed = match FAILING_WRITES.lock() {
+            Ok(armed) => armed,
+            Err(poisoned) => poisoned.into_inner(),
+        };
+        match armed.iter_mut().find(|(n, c)| *n == name && *c > 0) {
+            Some((_, count)) => {
+                *count -= 1;
+                true
+            }
+            None => false,
+        }
+    };
+    if !armed {
+        return Ok(());
+    }
+    let half = bytes.len() / 2;
+    file.write_all(&bytes[..half])?;
+    file.flush()?;
+    Err(std::io::Error::other("No space left on device (injected by the e2e build)"))
 }
 
 /// When the suite captures printing, record the print copy and report that
@@ -118,6 +211,7 @@ pub fn plugin<R: tauri::Runtime>() -> tauri::plugin::TauriPlugin<R> {
 
 /// Start the file bridge when `PDFLUENT_E2E_BRIDGE` names a directory.
 pub fn start_bridge(app: &tauri::AppHandle) {
+    grant_launch_tokens();
     let Some(dir) = bridge_dir() else { return };
     let inbox = dir.join("in");
     let outbox = dir.join("out");

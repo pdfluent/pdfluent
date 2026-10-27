@@ -93,7 +93,7 @@
     "J-13": {
       "title": "Drag a PDF onto the window",
       "priority": "P1",
-      "spec": null,
+      "spec": "tests/journeys/J-13-drag-a-pdf-onto-the-window.e2e.ts",
       "platforms": [
         "macos-arm64",
         "windows-x64"
@@ -965,10 +965,9 @@
     "J-A3": {
       "title": "Mac App Store build: sandbox paths",
       "priority": "P1",
-      "spec": null,
+      "spec": "tests/journeys/J-A3-mac-app-store-sandbox-paths.e2e.ts",
       "platforms": [
-        "macos-arm64",
-        "windows-x64"
+        "macos-arm64"
       ],
       "gaps": [],
       "proof": "release suite: `codesign -d --entitlements` of the Mac App Store build and a cargo test of the sandbox path handling"
@@ -1032,6 +1031,26 @@
       "title": "Start the app: no error toast, no console error",
       "priority": "P1",
       "spec": "tests/journeys/J-A9-clean-start.e2e.ts",
+      "platforms": [
+        "macos-arm64",
+        "windows-x64"
+      ],
+      "gaps": []
+    },
+    "J-B1": {
+      "title": "Save, Save As and reopen in the places people keep documents",
+      "priority": "P0",
+      "spec": "tests/journeys/J-B1-save-in-the-places-people-keep-documents.e2e.ts",
+      "platforms": [
+        "macos-arm64",
+        "windows-x64"
+      ],
+      "gaps": []
+    },
+    "J-B2": {
+      "title": "A save that cannot be written keeps the document",
+      "priority": "P0",
+      "spec": "tests/journeys/J-B2-a-save-that-fails-keeps-the-document.e2e.ts",
       "platforms": [
         "macos-arm64",
         "windows-x64"

@@ -1918,6 +1918,8 @@
   color: var(--text-primary);
   padding: 8px 12px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
+  box-sizing: border-box;
+  max-width: calc(100vw - 2rem);
 }
 
 .pf-notice-warn,
@@ -1927,6 +1929,13 @@
 
 .pf-notice-error {
   border-color: var(--notice-error-border);
+}
+
+/* The stack that holds the error toasts sets their width; a toast is as wide as
+   its place, never wider. Before, .pf-notice kept its own 520px inside a 360px
+   stack and ran off the right edge of the window. */
+.pf-notice-stack .pf-notice {
+  width: 100%;
 }
 
 .pf-notice-floating {
@@ -1950,6 +1959,9 @@
 
 .pf-notice p {
   margin: 0;
+  /* Long words in German and Dutch, and file names, wrap instead of running out of the box. */
+  overflow-wrap: anywhere;
+  white-space: normal;
   font-size: 12px;
   line-height: 1.35;
 }
@@ -2262,6 +2274,16 @@
 .pfv3 .v3-form-bar .form-bar-sub {
   font-size: 11.5px;
   color: var(--text-secondary);
+}
+
+.pfv3 .v3-form-bar .form-bar-calc {
+  display: block;
+}
+
+/* A failed calculation is not a calm state: the totals may be wrong. */
+.pfv3 .v3-form-bar .form-bar-calc.is-failed {
+  color: var(--notice-error-fg);
+  font-weight: 600;
 }
 
 .pfv3 .v3-form-bar .form-bar-actions {

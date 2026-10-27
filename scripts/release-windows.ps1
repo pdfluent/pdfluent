@@ -55,6 +55,11 @@ Write-Host "   node: $(node --version)  cargo: $(cargo --version)"
 # selects Trusted Signing or a PFX). Requires the signing prerequisites - see
 # docs/WINDOWS_SIGNING_AND_STORE_RUNBOOK.md.
 $signing = $Sign.IsPresent -or [bool]$env:TRUSTED_SIGNING_PROFILE
+# -Sign with nothing to sign with must stop here: sign-windows.ps1 would only
+# warn and skip, and the result would be an unsigned installer that looks signed.
+if ($Sign.IsPresent -and -not $env:TRUSTED_SIGNING_PROFILE -and -not $env:WINDOWS_CERTIFICATE_PATH) {
+  throw "-Sign was requested but no signing method is configured (set TRUSTED_SIGNING_PROFILE in .env, or WINDOWS_CERTIFICATE_PATH). Refusing to build an installer that would be unsigned."
+}
 $windowsOverride = if ($signing) { '{}' } else { '{"signCommand":null}' }
 
 # Updater artifacts require the production updater key. Tauri v2

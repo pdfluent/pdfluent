@@ -7,6 +7,7 @@
 
 import { memo } from 'react';
 import { useTranslation } from 'react-i18next';
+import type { FormCalcState } from '../state/formCalcState';
 
 /**
  * Calm, form-focused bar shown when a document has fillable AcroForm fields.
@@ -29,6 +30,8 @@ interface FormBarProps {
    */
   autoOpenLinks: boolean | null;
   onToggleAutoOpenLinks: () => void;
+  /** What the calculations in this form are doing; the bar says no more than that. */
+  calc: FormCalcState;
 }
 
 export const FormBar = memo(function FormBar({
@@ -38,6 +41,7 @@ export const FormBar = memo(function FormBar({
   onJumpToFirst,
   autoOpenLinks,
   onToggleAutoOpenLinks,
+  calc,
 }: FormBarProps) {
   const { t } = useTranslation();
   return (
@@ -46,8 +50,21 @@ export const FormBar = memo(function FormBar({
       <div className="form-bar-text">
         <strong>{t('formBar.title')}</strong>
         <span className="form-bar-sub">
-          {t('formBar.fields', { count: fieldCount })} · {t('formBar.clickToFill')} {t('formBar.noCalculations')}
+          {t('formBar.fields', { count: fieldCount })} · {t('formBar.clickToFill')}
         </span>
+        {calc.kind !== 'none' && (
+          <span
+            className={calc.kind === 'failed' ? 'form-bar-sub form-bar-calc is-failed' : 'form-bar-sub form-bar-calc'}
+            data-testid="form-bar-calc"
+            data-calc-state={calc.kind}
+            role={calc.kind === 'failed' ? 'alert' : undefined}
+          >
+            {calc.kind === 'blocked' && t('formBar.noCalculations')}
+            {calc.kind === 'unsupported' && t('formBar.calcUnsupported')}
+            {calc.kind === 'running' && t('formBar.calcRunning')}
+            {calc.kind === 'failed' && t('formBar.calcFailed', { count: calc.failedCount })}
+          </span>
+        )}
       </div>
       <div className="form-bar-actions">
         {autoOpenLinks && (

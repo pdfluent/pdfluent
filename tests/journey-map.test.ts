@@ -29,11 +29,13 @@ describe('docs/JOURNEY_TESTS.json', () => {
 
   // The plan's 90, plus J-97 (form scripts wait for permission, added 19-10-2026),
   // J-98 and J-99 (Markdown and table export, added 20-10-2026) and J-A9 (a clean
-  // start shows no error, added 20-10-2026).
-  it('lists all 94 journeys, 26 of them P0', () => {
+  // start shows no error, added 20-10-2026), and J-B1 and J-B2 (save and open in
+  // the folders people use, and when the save fails; added 26-10-2026 after
+  // GOV-001). J-A3, the store sandbox, got its spec the same day.
+  it('lists all 96 journeys, 28 of them P0', () => {
     const all = Object.values(map.journeys) as Array<{ priority: string }>;
-    expect(all).toHaveLength(94);
-    expect(all.filter((j) => j.priority === 'P0')).toHaveLength(26);
+    expect(all).toHaveLength(96);
+    expect(all.filter((j) => j.priority === 'P0')).toHaveLength(28);
   });
 
   it('targets the two release platforms only (Linux is not a release platform)', () => {

@@ -13,7 +13,7 @@
 # publishing the artefact are separate, guarded steps (release_suite.sh, then
 # publish-release.sh).
 #
-#   bash scripts/release-windows-remote.sh --sha <40-hex> [--version <v>]
+#   bash scripts/release-windows-remote.sh --sha <40-hex> [--version <v>] [--unsigned]
 #   bash scripts/release-windows-remote.sh <40-hex> [version]
 #   npm run release:windows -- --sha <40-hex>
 #
@@ -38,6 +38,16 @@
 #   PDFLUENT_ENV     Optional: the .env to read those from. See below.
 #   WINREMOTE_LOG    Optional: where the box's build output is tee'd.
 #
+# SIGNED OR NOTHING
+# A release MSI is Authenticode-signed. release-windows.ps1 only signs when
+# TRUSTED_SIGNING_PROFILE is set on the box, and sign-windows.ps1 skips signing
+# with a warning when nothing is configured, so an unconfigured box used to
+# produce an unsigned installer that looked like any other. This script now
+# (1) refuses to start when the box's .env names no signing profile, (2) passes
+# -Sign to the build, and (3) reads the signature back from the finished MSI
+# before fetching it. `--unsigned` is the one explicit way to build without
+# signing (a throwaway test installer); it is never a release.
+#
 # One-time host prep: scripts/setup-windows-buildhost.ps1 (clone editor+XFA from
 # the mirror, toolchain, WASM). See RELEASE.md.
 set -uo pipefail
@@ -46,18 +56,32 @@ REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 SSHO=(-o LogLevel=ERROR -o ServerAliveInterval=30 -o ServerAliveCountMax=2000)
 BUILD_LOG="${WINREMOTE_LOG:-/tmp/pdfluent-winremote.log}"
 
+# Every command for the box goes over as -EncodedCommand (base64 of UTF-16LE).
+# The box's sshd default shell is PowerShell on some hosts and cmd on others;
+# a command line built from double quotes survives cmd but has its `$` expanded
+# by an outer PowerShell, which turned `$onOrigin` into nothing and broke the
+# checkout (23-10, first run of this script on the Dev Drive host). An encoded
+# command reaches the box's powershell.exe untouched in both cases.
+rps() {
+  local enc
+  enc="$(printf '%s' "$1" | iconv -f UTF-8 -t UTF-16LE | base64 | tr -d '\n')"
+  ssh "${SSHO[@]}" "$HOST" "powershell -NoProfile -ExecutionPolicy Bypass -OutputFormat Text -EncodedCommand ${enc}"
+}
+
 usage() {
-  echo "usage: bash scripts/release-windows-remote.sh --sha <40-hex commit> [--version <v>]"
+  echo "usage: bash scripts/release-windows-remote.sh --sha <40-hex commit> [--version <v>] [--unsigned]"
   echo "       the commit must already be on origin; this script pushes nothing."
 }
 
 # ── 0. Which commit ──────────────────────────────────────────────────────────
 SHA=""
 VERSION=""
+UNSIGNED=0
 while [ $# -gt 0 ]; do
   case "$1" in
     --sha)     SHA="${2:-}"; shift 2 || shift ;;
     --version) VERSION="${2:-}"; shift 2 || shift ;;
+    --unsigned) UNSIGNED=1; shift ;;
     -h|--help) usage; exit 0 ;;
     -*)        echo "✘ unknown option: $1"; usage; exit 2 ;;
     *)         if [ -z "${SHA}" ]; then SHA="$1"; else VERSION="$1"; fi; shift ;;
@@ -152,7 +176,7 @@ PS_CHECKOUT="${PS_CHECKOUT} if (\$LASTEXITCODE -ne 0) { Write-Output 'CHECKOUT_F
 PS_CHECKOUT="${PS_CHECKOUT} Write-Output ('BUILD_SHA=' + (git rev-parse HEAD));"
 PS_CHECKOUT="${PS_CHECKOUT} Write-Output ('BUILD_VERSION=' + (Get-Content 'package.json' -Raw | ConvertFrom-Json).version)"
 
-ssh "${SSHO[@]}" "$HOST" "powershell -NoProfile -ExecutionPolicy Bypass -Command \"${PS_CHECKOUT}\"" 2>&1 | tee "${CHECKOUT_LOG}"
+rps "${PS_CHECKOUT}" 2>&1 | tee "${CHECKOUT_LOG}"
 CHECKOUT_RC="${PIPESTATUS[0]}"
 
 # The box prints this twice per fetch while the fetch itself succeeds, so it is
@@ -168,7 +192,7 @@ if grep -qi 'wincredman' "${CHECKOUT_LOG}"; then
   echo "   note: 'unable to persist credentials with the wincredman credential store' is the credential-approve"
   echo "         step of a fetch that succeeded (a Credential Manager helper cannot reach the Windows credential"
   echo "         vault over ssh). Harmless. What the box has configured:"
-  ssh "${SSHO[@]}" "$HOST" "powershell -NoProfile -ExecutionPolicy Bypass -Command \"git config --show-origin --get-all credential.helper; git config --show-origin --get-all credential.credentialStore\"" 2>&1 | sed 's/^/         /'
+  rps "git config --show-origin --get-all credential.helper; git config --show-origin --get-all credential.credentialStore" 2>&1 | sed 's/^/         /'
 fi
 
 if [ "${CHECKOUT_RC}" -ne 0 ]; then
@@ -224,7 +248,7 @@ PS_ENGINE="${PS_ENGINE} git ls-remote \$m.Groups[1].Value HEAD;"
 PS_ENGINE="${PS_ENGINE} if (\$LASTEXITCODE -ne 0) { Write-Output 'ENGINE_UNREADABLE'; exit 22 }"
 
 ENGINE_LOG="$(mktemp "${TMPDIR:-/tmp}/pdfluent-winremote-engine.XXXXXX")"
-ssh "${SSHO[@]}" "$HOST" "powershell -NoProfile -ExecutionPolicy Bypass -Command \"${PS_ENGINE}\"" > "${ENGINE_LOG}" 2>&1
+rps "${PS_ENGINE}" > "${ENGINE_LOG}" 2>&1
 ENGINE_RC=$?
 ENGINE_URL="$(grep -oE 'ENGINE_URL=[^[:space:]]+' "${ENGINE_LOG}" | head -1 | cut -d= -f2- | tr -d '\r')"
 ENGINE_REV="$(grep -oE 'ENGINE_REV=[0-9a-f]{40}' "${ENGINE_LOG}" | head -1 | cut -d= -f2- | tr -d '\r')"
@@ -247,7 +271,7 @@ echo "   engine pin:      ${ENGINE_REV} (readable from the build host)"
 # The target directory alone is bigger than the free space this box has had, and
 # a build that dies half way through linking wastes an hour and leaves a worse
 # mess than a refusal does.
-FREE_GB="$(ssh "${SSHO[@]}" "$HOST" "powershell -NoProfile -Command \"[math]::Floor((Get-PSDrive C).Free/1GB)\"" | tr -d '\r')"
+FREE_GB="$(rps "[math]::Floor((Get-PSDrive C).Free/1GB)" | tr -d '\r')"
 if [ -n "${FREE_GB}" ] && [ "${FREE_GB}" -lt 12 ] 2>/dev/null; then
   echo "✘ Only ${FREE_GB} GB free on the build host's system drive; this build needs about 12."
   echo "  Reclaim first: the Rust target directory in the editor checkout, old bundles under"
@@ -255,6 +279,28 @@ if [ -n "${FREE_GB}" ] && [ "${FREE_GB}" -lt 12 ] 2>/dev/null; then
   exit 1
 fi
 echo "   free on the build host: ${FREE_GB:-unknown} GB"
+
+# ── 4a. Signing has to be configured on the box, or nothing is built ────────
+# Names only: this asks whether the box's .env (or its environment) defines a
+# signing profile, and never reads or prints a value.
+SIGN_FLAG=" -Sign"
+if [ "${UNSIGNED}" = "1" ]; then
+  SIGN_FLAG=""
+  echo "!  --unsigned: this installer will NOT be Authenticode-signed and is not a release."
+else
+  PS_SIGN="Set-Location '${EDITOR_WIN}';"
+  PS_SIGN="${PS_SIGN} \$has = [bool]\$env:TRUSTED_SIGNING_PROFILE;"
+  PS_SIGN="${PS_SIGN} if ((-not \$has) -and (Test-Path '.env')) { \$has = [bool](Select-String -Path '.env' -Pattern '^TRUSTED_SIGNING_PROFILE=.+' -Quiet) };"
+  PS_SIGN="${PS_SIGN} if (\$has) { Write-Output 'SIGNING_CONFIGURED=yes' } else { Write-Output 'SIGNING_CONFIGURED=no' }"
+  SIGNING_HERE="$(rps "${PS_SIGN}" | tr -d '\r' | grep -oE 'SIGNING_CONFIGURED=(yes|no)' | head -1)"
+  if [ "${SIGNING_HERE}" != "SIGNING_CONFIGURED=yes" ]; then
+    echo "✘ the build host has no Authenticode signing configured: TRUSTED_SIGNING_PROFILE is not in ${EDITOR_WIN}/.env or the environment."
+    echo "  An unsigned installer would be built and look like any other. Configure signing on the box"
+    echo "  (docs/WINDOWS_SIGNING_AND_STORE_RUNBOOK.md), or pass --unsigned for a throwaway installer that is not a release."
+    exit 1
+  fi
+  echo "   signing configured on the box (profile name present; value not read)"
+fi
 
 # ── 4b. The OCR component has to be on the box before the build ──────────────
 # OCR is bundled in every build (owner decision 19-10). The box holds the
@@ -268,17 +314,28 @@ if [ -z "${OCR_BUILD_WIN}" ]; then
   echo "  (build-tesseract.sh --platform windows-x86_64 --out <dir>, then --tessdata --out <dir>); every build bundles OCR. See docs/BUNDLED_OCR.md."
   exit 1
 fi
-OCR_HERE="$(ssh "${SSHO[@]}" "$HOST" "powershell -NoProfile -Command \"if ((Test-Path '${OCR_BUILD_WIN}\\windows-x86_64\\bin\\tesseract.exe') -and (Test-Path '${OCR_BUILD_WIN}\\tessdata')) { 'yes' } else { 'no' }\"" | tr -d '\r')"
+OCR_HERE="$(rps "if ((Test-Path '${OCR_BUILD_WIN}\\windows-x86_64\\bin\\tesseract.exe') -and (Test-Path '${OCR_BUILD_WIN}\\tessdata')) { 'yes' } else { 'no' }" | tr -d '\r')"
 [ "${OCR_HERE}" = "yes" ] || { echo "✘ ${OCR_BUILD_WIN} on the build host has no windows-x86_64\\bin\\tesseract.exe and tessdata\\"; exit 1; }
 echo "   OCR component on the box: ${OCR_BUILD_WIN}"
 
 # ── 5. Build the .msi on the box (build-only; prints MSI_PATH=…) ─────────────
 echo "== building ${BUILD_SHA} as v${VERSION} on the build host (MSVC + WiX — this takes a while) =="
-ssh "${SSHO[@]}" "$HOST" "powershell -NoProfile -ExecutionPolicy Bypass -Command \"\$env:PDFLUENT_OCR_COMPONENT_BUILD='${OCR_BUILD_WIN}'; & '${EDITOR_WIN}/scripts/release-windows.ps1' '${VERSION}'\"" | tee "${BUILD_LOG}"
+rps "\$env:PDFLUENT_OCR_COMPONENT_BUILD='${OCR_BUILD_WIN}'; & '${EDITOR_WIN}/scripts/release-windows.ps1' '${VERSION}'${SIGN_FLAG}" | tee "${BUILD_LOG}"
 
 MSI_WIN="$(grep -oE 'MSI_PATH=[^[:space:]]+\.msi' "${BUILD_LOG}" | head -1 | cut -d= -f2- | tr -d '\r')"
 [ -n "${MSI_WIN}" ] || { echo "✘ No .msi produced on the box (see log above)."; exit 1; }
 echo "   msi on box: ${MSI_WIN}"
+
+# ── 5b. Read the signature back from the finished installer ─────────────────
+if [ "${UNSIGNED}" != "1" ]; then
+  MSI_FWD_CHECK="${MSI_WIN//\\//}"
+  SIG_STATUS="$(rps "\$s = Get-AuthenticodeSignature -LiteralPath '${MSI_FWD_CHECK}'; Write-Output ('MSI_SIGNATURE=' + \$s.Status)" | tr -d '\r' | grep -oE 'MSI_SIGNATURE=[A-Za-z]+' | head -1)"
+  if [ "${SIG_STATUS}" != "MSI_SIGNATURE=Valid" ]; then
+    echo "✘ the built installer is not validly Authenticode-signed (${SIG_STATUS:-no status}). Not fetching it."
+    exit 1
+  fi
+  echo "   Authenticode on the box: Valid"
+fi
 
 # ── 6. Fetch the .msi to the Mac ─────────────────────────────────────────────
 # scp cannot parse the Windows backslash path, so convert to forward slashes,

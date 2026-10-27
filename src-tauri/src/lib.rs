@@ -4158,6 +4158,10 @@ pub fn run() {
             #[cfg(feature = "e2e")]
             e2e::e2e_queue_dialog_answers,
             #[cfg(feature = "e2e")]
+            e2e::e2e_sandbox_grant,
+            #[cfg(feature = "e2e")]
+            e2e::e2e_inject_write_failure,
+            #[cfg(feature = "e2e")]
             e2e::e2e_menu,
             #[cfg(feature = "e2e")]
             e2e::e2e_reply,

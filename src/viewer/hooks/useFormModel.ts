@@ -43,6 +43,8 @@ export interface FormModelState {
   hasForm: boolean;
   /** Total logical fields (for the Form Bar count). */
   fieldCount: number;
+  /** Calculations that failed in the last write; 0 when they all worked. The Form Bar says so (GOV-011). */
+  calcFailures: number;
   /** Current optimistic value per field name. */
   values: Record<string, FieldLocalValue>;
   /** Ordered field names that can receive focus (Tab order). */
@@ -112,6 +114,7 @@ export function useFormModel(
   const [model, setModel] = useState<FormFieldModelDto[]>([]);
   const [values, setValues] = useState<Record<string, FieldLocalValue>>({});
   const [reloadNonce, setReloadNonce] = useState(0);
+  const [calcFailures, setCalcFailures] = useState(0);
   // Page of each field's first widget, for focusField scroll-into-view.
   const fieldPageRef = useRef<Record<string, number>>({});
   // Last *committed* value per field — distinct from `values`, which mirrors
@@ -145,6 +148,7 @@ export function useFormModel(
     let cancelled = false;
     if (!pdfDoc || !isTauriRuntime()) {
       setModel([]);
+      setCalcFailures(0);
       updateValues(() => ({}));
       return;
     }
@@ -228,6 +232,9 @@ export function useFormModel(
           const report = await setFormValue(requestFor(name, kind, value));
           writeEpochRef.current += 1;
           markDirty();
+          // The report covers every calculation that ran after this change, so
+          // the latest one is the current state.
+          if (report) setCalcFailures(report.failed.length);
           // Calculated fields (/AA /C) changed along with this one: show them,
           // and make them the baseline the next undo entry starts from.
           if (report && report.updated.length > 0) {
@@ -332,6 +339,7 @@ export function useFormModel(
     model,
     hasForm: model.length > 0,
     fieldCount: model.length,
+    calcFailures,
     values,
     tabOrder,
     setTextLocal,

@@ -2,7 +2,7 @@
 Copyright (c) 2026 Innovation Trigger B.V. All rights reserved.
 See https://pdfluent.com/license for terms.
 
-Customer-facing copy for the Mac App Store, editor 1.1.1. The field texts below
+Customer-facing copy for the Mac App Store, editor 1.1.2. The field texts below
 are the final, claim-checked texts (every sentence rests on a registered claim
 ID; the release owner holds the register). Edit a sentence only together with
 its claim. Withdrawn wording ("pure-Rust", "runs fully offline", PAdES) must not
@@ -25,7 +25,7 @@ come back: tests/store-listing-truth.test.ts fails on it.
 | Marketing URL | `https://pdfluent.com` |
 | Support URL | `https://pdfluent.com/support` |
 | Privacy Policy URL | `https://pdfluent.com/privacy` |
-| Version | `1.1.1` |
+| Version | `1.1.2` |
 | Build | from `store/mas/build-number` |
 | Custom EULA | yes, see `eula.md` |
 

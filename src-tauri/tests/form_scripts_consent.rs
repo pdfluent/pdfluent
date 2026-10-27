@@ -107,3 +107,64 @@ fn the_same_file_has_the_same_hash_and_a_different_file_does_not() {
     assert_eq!(a, b);
     assert_ne!(a, other);
 }
+
+// ── What the run reports (GOV-011) ───────────────────────────────────────
+//
+// Granting permission used to answer `ran: true` and nothing else, whether the
+// calculations worked or every one of them failed. The failures are now in the
+// report, so the form bar can say so and a user can tell a working form from a
+// failing one.
+
+use lopdf::{Document, Object, StringFormat};
+
+/// The fixture with the total's calculate script replaced, scripts not yet allowed.
+fn with_total_script(script: &str) -> OpenDocument {
+    let mut raw = Document::load(path_str(&manifest(FIXTURE))).expect("lopdf load");
+    let id = raw
+        .objects
+        .iter()
+        .find(|(_, o)| o.as_dict().is_ok_and(|d| matches!(d.get(b"T"), Ok(Object::String(t, _)) if t == b"total")))
+        .map(|(id, _)| *id)
+        .expect("total field");
+    let Ok(Object::Dictionary(field)) = raw.get_object_mut(id) else { panic!("field dict") };
+    let Ok(Object::Dictionary(aa)) = field.get_mut(b"AA") else { panic!("AA") };
+    let Ok(Object::Dictionary(c)) = aa.get_mut(b"C") else { panic!("C") };
+    c.set("JS", Object::String(script.as_bytes().to_vec(), StringFormat::Literal));
+    let mut bytes = Vec::new();
+    raw.save_to(&mut bytes).expect("serialise");
+    OpenDocument::open_bytes(bytes).expect("open modified fixture")
+}
+
+#[test]
+fn granting_permission_on_a_form_whose_calculation_fails_says_so() {
+    let mut doc = with_total_script("AFSimple_Calculate(\"PRD\", new Array(\"qty\", \"missing\"));");
+    let report = doc.set_scripts_allowed(true).expect("grant");
+    assert!(report.ran);
+    assert_eq!(report.failed.len(), 1, "the failed calculation is in the report: {report:?}");
+    assert_eq!(report.failed[0].name, "total");
+    assert!(report.failed[0].message.contains("missing"), "{}", report.failed[0].message);
+}
+
+#[test]
+fn granting_permission_on_a_working_form_reports_no_failure() {
+    let mut doc = open();
+    let report = doc.set_scripts_allowed(true).expect("grant");
+    assert!(report.ran);
+    assert!(report.failed.is_empty(), "{report:?}");
+}
+
+#[test]
+fn a_form_with_a_failing_calculation_still_saves_and_reopens_with_what_was_typed() {
+    let mut doc = with_total_script("AFSimple_Calculate(\"PRD\", new Array(\"qty\", \"missing\"));");
+    let report = doc.set_scripts_allowed(true).expect("grant");
+    assert_eq!(report.failed.len(), 1);
+    type_into(&mut doc, "qty", "3");
+    type_into(&mut doc, "price", "4");
+    let out = std::env::temp_dir().join(format!("pdfluent-failing-calc-{}.pdf", std::process::id()));
+    doc.save_to(path_str(&out)).expect("save");
+    let reopened = OpenDocument::open(path_str(&out)).expect("reopen");
+    assert_eq!(value_of(&reopened, "qty"), "3");
+    assert_eq!(value_of(&reopened, "price"), "4");
+    assert_eq!(value_of(&reopened, "total"), "", "a failed calculation leaves no invented total");
+    let _ = std::fs::remove_file(out);
+}

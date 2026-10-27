@@ -29,6 +29,11 @@ export const ALLOWED: Record<string, { calls: number; reason: string }> = {
     reason:
       'Text-to-speech: `say` (macOS, twice: speak and list voices), PowerShell speech (Windows), `spd-say` (Linux), and `kill` to pause/resume the speech child. The speech engines have no in-process API we link, and none of this reads a setting.',
   },
+  'src-tauri/src/atomic_file.rs': {
+    calls: 1,
+    reason:
+      'A unit test only (`granted_path_only`): it runs the test binary again under `/usr/bin/sandbox-exec` with a profile that grants one path, to prove a save works with the access the Mac sandbox gives after a Save As. Nothing in the app calls it.',
+  },
   'src-tauri/src/ocr.rs': {
     calls: 1,
     reason:

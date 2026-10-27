@@ -49,4 +49,14 @@ describe('the e2e build is never shipped', () => {
       }
     });
   });
+
+  it('the e2e hooks in the save path are behind the feature too', () => {
+    const lines = readFileSync('src-tauri/src/atomic_file.rs', 'utf8').split('\n');
+    lines.forEach((line, i) => {
+      if (/\be2e::/.test(line) && !/^\s*\/\//.test(line)) {
+        const context = lines.slice(Math.max(0, i - 6), i + 1).join('\n');
+        expect(context, `atomic_file.rs:${i + 1} uses e2e:: outside #[cfg(feature = "e2e")]`).toMatch(/#\[cfg\(feature = "e2e"\)\]/);
+      }
+    });
+  });
 });

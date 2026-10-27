@@ -74,7 +74,7 @@ export function NoticeGallery({ dark, dialog = null }: { dark: boolean; dialog?:
           <ScriptConsentBar status={{ total: 3, javascript: 2, acroform: 0, formcalc: 1 }} busy alwaysAvailable={false} onRunOnce={noop} onRunAlways={noop} onDontRun={noop} />
         </Slot>
         <Slot id="form-bar">
-          <FormBar fieldCount={12} highlight onToggleHighlight={noop} onJumpToFirst={noop} autoOpenLinks onToggleAutoOpenLinks={noop} />
+          <FormBar fieldCount={12} highlight onToggleHighlight={noop} onJumpToFirst={noop} autoOpenLinks onToggleAutoOpenLinks={noop} calc={{ kind: 'running' }} />
         </Slot>
         <Slot id="xfa">
           <XfaBanner fillExperimental={false} flattenError={null} busy={false} onConvert={noop} onDismiss={noop} />

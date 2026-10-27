@@ -157,6 +157,22 @@ pub struct FormScriptsRunReport {
     pub ran: bool,
     /// Fields whose value the scripts changed.
     pub fields_changed: usize,
+    /// The calculations or scripts that failed. A run that changed nothing
+    /// because its calculations failed is not a successful run (GOV-011): the
+    /// engine reports each failure and the editor passes them on, so the form
+    /// bar can say so and a test can see it.
+    pub failed: Vec<FormScriptFailure>,
+}
+
+/// One calculation or script that did not run to the end.
+#[derive(Debug, Clone, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct FormScriptFailure {
+    /// The field whose calculation failed, or the XFA script id; empty when the
+    /// form as a whole could not be recalculated.
+    pub name: String,
+    /// What went wrong, in the engine's words (or `timeout` / `threw` / `refused` for XFA).
+    pub message: String,
 }
 
 /// The answer to "allow scripts": the new status and what running them did.

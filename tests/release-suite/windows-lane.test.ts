@@ -163,3 +163,28 @@ describe("the Windows driver records every launch's quit", () => {
     expect(ps1).toMatch(/WaitForExit\(\[Math\]::Max\(1,/);
   });
 });
+
+describe("the session log baseline on Windows", () => {
+  // The app trims sessions.log at 2000 lines (session_log.rs MAX_LINES) by
+  // rewriting it from the top. A byte offset taken before the rewrite then
+  // points past the start of the new content and the delta loses the first
+  // line of the run, which read as "1 start lines against 2 clean_quit lines"
+  // on a build that quit cleanly every time (1.1.2). The driver sets a log near
+  // the cap aside before it takes the baseline.
+  const ps1 = readFileSync(path.join(REPO_ROOT, "scripts/quality/suite/drivers/windows.ps1"), "utf8");
+  const cap = Number(/const MAX_LINES: usize = (\d+);/.exec(readFileSync(path.join(REPO_ROOT, "src-tauri/src/session_log.rs"), "utf8"))?.[1]);
+
+  it("sets a log near the app's cap aside before the baseline is taken", () => {
+    const guard = ps1.indexOf("Measure-Object -Line");
+    const base = ps1.indexOf("$sessionsBase = Size $sessions");
+    expect(guard).toBeGreaterThan(-1);
+    expect(base).toBeGreaterThan(guard);
+    const limit = Number(/\.Lines -ge (\d+)/.exec(ps1)?.[1]);
+    expect(limit).toBeLessThan(cap);
+    expect(limit).toBeGreaterThan(cap / 2);
+  });
+  it("keeps the old log instead of deleting it", () => {
+    expect(ps1).toContain("Move-Item -LiteralPath $sessions");
+    expect(ps1).not.toMatch(/Remove-Item[^\n]*\$sessions/);
+  });
+});

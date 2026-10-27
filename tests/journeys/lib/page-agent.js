@@ -173,6 +173,24 @@
       const q = (id) => { const x = document.querySelector('[data-testid="' + id + '"]'); return x ? box(x.getBoundingClientRect()) : '-'; };
       return what + ' [' + box(t) + '] over [' + box(r) + '] editor [' + q('text-inline-editor') + '] pill [' + q('text-edit-floating-pill') + ']';
     },
+    /**
+     * Whether `selector`'s first match, and every paragraph in it, lies inside the
+     * window and shows all its text: no clipped edge, no text wider than its box.
+     * Returns the offenders as strings; [] means the text is all there.
+     */
+    textOverflow(selector) {
+      const n = document.querySelector(selector);
+      if (!n) return ['no element ' + selector];
+      const out = [];
+      const r = n.getBoundingClientRect();
+      if (r.left < 0 || r.right > window.innerWidth) out.push('box [' + Math.round(r.left) + ',' + Math.round(r.right) + '] outside the window width ' + window.innerWidth);
+      for (const el of [n].concat(Array.from(n.querySelectorAll('p, span, div')))) {
+        if (el.scrollWidth > el.clientWidth + 1) out.push((el.className || el.tagName) + ' is ' + el.scrollWidth + ' wide in a box of ' + el.clientWidth);
+        const b = el.getBoundingClientRect();
+        if (b.right > r.right + 1) out.push((el.className || el.tagName) + ' ends past the toast edge');
+      }
+      return out;
+    },
     count(selector) { return document.querySelectorAll(selector).length; },
     /** Size of the first match in CSS px, or null. */
     size(selector) {

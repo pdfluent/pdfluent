@@ -2461,7 +2461,11 @@ impl OpenDocument {
                         .map_err(|e| format!("Could not write the XFA value: {e}"))?;
                     self.sync_after_mutation()?;
                 }
-                return Ok(crate::script_consent::FormScriptsRunReport { ran: true, fields_changed });
+                let failed = xfa_script_errors(&session)
+                    .into_iter()
+                    .map(|e| crate::script_consent::FormScriptFailure { name: e.script_id, message: e.kind })
+                    .collect();
+                return Ok(crate::script_consent::FormScriptsRunReport { ran: true, fields_changed, failed });
             }
         }
         // An AcroForm: its calculations run once over the form.
@@ -2476,7 +2480,12 @@ impl OpenDocument {
         if fields_changed > 0 {
             self.sync_after_mutation()?;
         }
-        Ok(crate::script_consent::FormScriptsRunReport { ran: true, fields_changed })
+        let failed = report
+            .failed
+            .iter()
+            .map(|f| crate::script_consent::FormScriptFailure { name: f.name.clone(), message: f.message.clone() })
+            .collect();
+        Ok(crate::script_consent::FormScriptsRunReport { ran: true, fields_changed, failed })
     }
 
     /// The document as a save would write it now, for the recovery copy

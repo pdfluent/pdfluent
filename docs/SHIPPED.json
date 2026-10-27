@@ -2,24 +2,26 @@
   "$comment": [
     "Which commit the binaries people are downloading were built from.",
     "",
-    "1.1.1 is tagged v1.1.1 (annotated) on this commit; scripts/ci/repo-truth.mjs checks that the commit is on the release branch and that the public repository carries it."
+    "1.1.2 is tagged v1.1.2 (annotated) on this commit; scripts/ci/repo-truth.mjs checks that the commit is on the release branch and that the public repository carries it."
   ],
-  "version": "1.1.1",
-  "commit": "1479f44bc2b9ef219ca58e1fcb74cd58fe871b6a",
+  "version": "1.1.2",
+  "commit": "d408d0944066065fad88f1a9d2e095a9f9293ab0",
   "artifacts": [
-    "PDFluent_1.1.1_universal.dmg (on pdfluent.com/releases/1.1.1/; sha256 b0785b1fa1964a1a1f2fd85fdee202c244124f12f6ac828a2eaeb34db4f28aae)",
-    "PDFluent_1.1.1_x64_en-US.msi (on pdfluent.com/releases/1.1.1/; sha256 17d8385b7b63a9a31e0960299397f17d5761d0714bb1ccf01b676abdfc9df7da)"
+    "PDFluent_1.1.2_universal.dmg (on pdfluent.com/releases/1.1.2/; sha256 54b7c1b66e33fe6aefc8a7e2152027db9945ea09ecd25a38527782527df49bf8)",
+    "PDFluent_1.1.2_x64_en-US.msi (on pdfluent.com/releases/1.1.2/; sha256 c9bcde8637fbe91e7195b98ffddd9cd3523f00388a01f995c00e3a96dfa2ea35)",
+    "PDFluent_1.1.2_mas.pkg (Mac App Store build 6; sha256 2ca3f135017b754b9925edfa54832a95b6053a4e58b322fe15ad86f3dea9a705; in review)"
   ],
   "evidence": [
-    "Tag v1.1.1 is on 1479f44b. The Windows MSI was built from 1479f44b; the macOS DMG was built from 23f8bdcc, an ancestor of 1479f44b (git diff --stat between the two: 9 files, 262 insertions, 13 deletions).",
-    "Both sha256 values above were recomputed on 2026-10-26 from the files served at pdfluent.com/releases/1.1.1/ and match the quality reports; the published updater manifest https://pdfluent.com/releases/latest.json names 1.1.1 (pub_date 2026-10-24T07:17:39Z).",
-    "Quality run dev-macbook-m1pro-2026-10-23-macos-23f8bdc: verdict PASS, exit 0 (S0-S3 PASS; S4 and S5 not applicable).",
-    "Quality run build-desktop-windows-2026-10-24-windows-1479f44: verdict PASS, exit 0 (S0-S4 PASS; S5 not applicable).",
-    "CI Quality run 40012442344 on 1479f44b ended cancelled: its repo-truth job failed on the unpublished-commit window and its journeys:windows job did not pass. The release suite reports above are the record of the binaries being judged, not that run."
+    "Tag v1.1.2 is on d408d094. The Windows MSI was built from d408d094; the macOS DMG and the Mac App Store package were built from a5280d76, an ancestor of d408d094. Between the two commits the app source is unchanged (git diff --stat a5280d76 d408d094 -- src src-tauri/src src-tauri/crates package.json is empty); the differences are the release scripts, the manifest merge and docs.",
+    "Quality run dev-macbook-m1pro-2026-10-27-macos-a5280d7: verdict PASS (S0-S3 PASS; S4 and S5 not applicable).",
+    "Quality run build-desktop-windows-2026-10-28-windows-d408d09: verdict PASS (S0-S3 PASS; S4 and S5 not applicable). It needed the suite fix in 541ce1a2: the app trims sessions.log at 2000 lines and the run's byte-offset baseline then lost the first line.",
+    "The macOS DMG is signed with Developer ID, notarized and stapled (Gatekeeper: Notarized Developer ID). A manual Save As to a new file on the signed, notarized DMG app wrote the file, qpdf --check found no errors and an independent pypdf read returned the typed value (GOV-001, #998).",
+    "CI: Quality run 40461603985 on a5280d76 passed quality:macos and journeys:macos (including the new sandboxed journeys J-A3, J-B1, J-B2 and J-13). Later runs on d408d094 were cut short: the macOS jobs were refused at runner setup by the storage guard (internal disk below 23 GB), and the Windows CI jobs had not run when the binaries were judged. The release suite reports above are the record of the binaries being judged, not those runs.",
+    "Not shipped with 1.1.2: an updater manifest (latest.json) for 1.1.2; the Microsoft Store update."
   ],
   "quality_reports": {
-    "macos": "quality/reports/1.1.1-macos.json",
-    "windows": "quality/reports/1.1.1-windows.json"
+    "macos": "quality/reports/1.1.2-macos.json",
+    "windows": "quality/reports/1.1.2-windows.json"
   },
-  "recorded": "2026-10-26"
+  "recorded": "2026-10-28"
 }

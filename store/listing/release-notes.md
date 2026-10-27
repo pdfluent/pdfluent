@@ -9,7 +9,18 @@ Customer-facing copy — reviewed against the Humanizer guidelines.
 This is the **What's new in this version** field of an Update submission. Write
 what changed for the person reading it. The version number is already on the page.
 
-## 1.1.1 (this submission)
+## 1.1.2 (this submission)
+
+Save As on Mac
+Save As to a new file could fail with "Operation not permitted". It now saves to the file you chose. If a save fails, no half-written file is left behind and your document stays unsaved in the app.
+
+Saving on Windows
+When a virus scanner, a sync client or a viewer holds the file for a moment, Save waits briefly instead of failing. If the file stays locked, the message names the cause and points you to Save As.
+
+Forms with calculations
+The form bar now says what the calculations are doing: running, not run, or how many failed. Before, it said calculations were not run even after you allowed them, and a failed run looked like a success.
+
+## 1.1.1 (previous submission)
 
 Redaction fixes
 Search and redact now marks every match, and refuses to finish if the term is still in the page text afterwards. The page redraws right after you apply a redaction, and the message says how many matches were redacted.
@@ -17,7 +28,7 @@ Search and redact now marks every match, and refuses to finish if the term is st
 Opening folders on Windows
 Opening a folder whose name ends in .pdf now says it is not a PDF instead of reporting that access was denied.
 
-## 1.1.0 (previous submission)
+## 1.1.0
 
 Several PDFs in tabs
 Open as many documents as you need, each in its own tab, fitted to the window. Dark mode is remembered between sessions, and after a crash the app offers your unsaved work back.

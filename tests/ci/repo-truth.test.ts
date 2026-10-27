@@ -18,7 +18,7 @@ import { join, resolve } from "node:path";
 import { afterAll, describe, expect, it } from "vitest";
 import { runToFile } from "./run";
 // @ts-expect-error — a plain .mjs script with no type declarations
-import { qualityReportFailures, cutInProgress, isNewer } from "../../scripts/ci/repo-truth.mjs";
+import { qualityReportFailures, cutInProgress, isNewer, resolveTrunk, TRUNK_CANDIDATES, shipped } from "../../scripts/ci/repo-truth.mjs";
 
 const root = resolve(__dirname, "../..");
 const git = (args: string[], input?: string) =>
@@ -246,5 +246,26 @@ describe("repo-truth: the state between the bump and the record", () => {
     expect(isNewer("1.0.0-beta.21", "1.0.0")).toBe(false);
     expect(isNewer("1.0.1", "1.0.0")).toBe(true);
     expect(isNewer("1.0.0", "1.0.0")).toBe(false);
+  });
+});
+
+describe("the default trunk", () => {
+  it("contains the commit docs/SHIPPED.json names", () => {
+    // A default pointing at a stale branch (release/ga-readiness) made repo-truth
+    // red whenever it ran without --trunk. Fails if the default stops being the
+    // branch that ships.
+    const trunk = resolveTrunk(undefined);
+    const sha = shipped().commit;
+    let contains = true;
+    try {
+      execFileSync("git", ["merge-base", "--is-ancestor", sha, trunk], { cwd: resolve(__dirname, "../..") });
+    } catch {
+      contains = false;
+    }
+    expect(contains, `default trunk ${trunk} does not contain ${sha}`).toBe(true);
+  });
+
+  it("no longer names the retired ga-readiness branch", () => {
+    expect(TRUNK_CANDIDATES.join(" ")).not.toContain("ga-readiness");
   });
 });

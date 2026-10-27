@@ -210,3 +210,27 @@ pub fn stop_all() -> usize {
 pub fn active_count() -> usize {
     imp::active_count()
 }
+
+/// Take an App Sandbox extension token: the grant the system issues for a path
+/// the user picked in a panel. Used by the journey suite's e2e build to stand
+/// in for the panel (src/e2e.rs); a shipped build has no caller. `false` when
+/// the system refuses the token or this is not macOS. The token is data, not a
+/// secret: it names a path and only works for the process it was issued to use.
+pub fn consume_sandbox_extension(token: &str) -> bool {
+    #[cfg(target_os = "macos")]
+    {
+        use std::ffi::CString;
+        use std::os::raw::{c_char, c_long};
+        extern "C" {
+            fn sandbox_extension_consume(token: *const c_char) -> c_long;
+        }
+        let Ok(c) = CString::new(token) else { return false };
+        // SAFETY: `c` is a valid NUL-terminated string that outlives the call.
+        unsafe { sandbox_extension_consume(c.as_ptr()) > 0 }
+    }
+    #[cfg(not(target_os = "macos"))]
+    {
+        let _ = token;
+        false
+    }
+}

@@ -116,6 +116,8 @@
     { "id": "J-A6", "title": "Send a crash report (opt-in)", "priority": "P0" },
     { "id": "J-A7", "title": "Send feedback from inside the app", "priority": "P1" },
     { "id": "J-A8", "title": "Webview freezes after start", "priority": "P2" },
-    { "id": "J-A9", "title": "Start the app: no error toast, no console error", "priority": "P1" }
+    { "id": "J-A9", "title": "Start the app: no error toast, no console error", "priority": "P1" },
+    { "id": "J-B1", "title": "Save, Save As and reopen in the places people keep documents", "priority": "P0" },
+    { "id": "J-B2", "title": "A save that cannot be written keeps the document", "priority": "P0" }
   ]
 }

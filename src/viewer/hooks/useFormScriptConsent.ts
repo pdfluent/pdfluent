@@ -7,7 +7,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { getFormScripts, setFormScriptsAllowed } from '../../lib/tauri-api';
-import type { FormScriptsStatus } from '../../lib/tauri-api';
+import type { FormScriptsRunReport, FormScriptsStatus } from '../../lib/tauri-api';
 import { isTauriRuntime } from '../../lib/tauri-detection';
 import { reportCommandFailure } from '../../lib/commandBridge';
 import type { AppSettings } from '../state/appSettings';
@@ -22,6 +22,8 @@ import {
 export interface FormScriptConsent {
   /** The document's scripts, or null when it has none / nothing is open. */
   status: FormScriptsStatus | null;
+  /** What the last run of the scripts did, failures included; null before one. */
+  lastRun: FormScriptsRunReport | null;
   /** Whether the bar is showing. */
   asking: boolean;
   busy: boolean;
@@ -48,6 +50,7 @@ export function useFormScriptConsent(
 ): FormScriptConsent {
   const [status, setStatus] = useState<FormScriptsStatus | null>(null);
   const [asking, setAsking] = useState(false);
+  const [lastRun, setLastRun] = useState<FormScriptsRunReport | null>(null);
   const [busy, setBusy] = useState(false);
   // Re-rendered once the OS policy has been read, so the bar and the Always
   // button follow it.
@@ -61,6 +64,7 @@ export function useFormScriptConsent(
       try {
         const outcome = await setFormScriptsAllowed(true);
         setStatus(outcome.status);
+        setLastRun(outcome.report);
         setAsking(false);
         onRan(outcome.report.fieldsChanged);
         return true;
@@ -79,6 +83,7 @@ export function useFormScriptConsent(
     let cancelled = false;
     setAsking(false);
     setStatus(null);
+    setLastRun(null);
     if (documentId == null || !isTauriRuntime()) return;
     // The OS policy is read first: a pin to Never must win before anything runs.
     void loadOsFormScriptsPolicy()
@@ -124,5 +129,5 @@ export function useFormScriptConsent(
     setAsking(false);
   }, [status]);
 
-  return { status, asking, busy, alwaysAvailable: pin === null, runOnce, runAlways, dontRun };
+  return { status, lastRun, asking, busy, alwaysAvailable: pin === null, runOnce, runAlways, dontRun };
 }

@@ -55,7 +55,13 @@ export const MAX_UNPUBLISHED_DAYS = 14;
 // thing; nothing silently falls back to a copy.
 export const PUBLIC_URL = process.env.PDFLUENT_PUBLIC_URL || "https://github.com/pdfluent/pdfluent.git";
 export const PUBLIC_REF = process.env.PDFLUENT_PUBLIC_REF || "refs/remotes/pdfluent-public/main";
-const TRUNK_CANDIDATES = ["refs/remotes/gitlab/release/ga-readiness", "HEAD"];
+// The branch that ships. release/ga-readiness was the trunk until 1.0.0 and is
+// stale; defaulting to it made every run without --trunk judge the wrong history.
+export const TRUNK_CANDIDATES = [
+  "refs/remotes/origin/release/editor-next",
+  "refs/remotes/gitlab/release/editor-next",
+  "HEAD",
+];
 
 function git(args, opts = {}) {
   return execFileSync("git", args, { cwd: root, encoding: "utf8", maxBuffer: 64 * 1024 * 1024, ...opts }).trim();
@@ -136,7 +142,7 @@ export function shipped() {
   return s;
 }
 
-function resolveTrunk(explicit) {
+export function resolveTrunk(explicit) {
   if (explicit) {
     if (!exists(explicit)) throw new Error(`repo-truth: --trunk ${explicit} does not resolve to a commit.`);
     return explicit;

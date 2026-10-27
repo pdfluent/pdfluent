@@ -55,7 +55,7 @@ fi
 
 TAURI_CONFIG="$(cat src-tauri/tauri.e2e.conf.json)"
 export TAURI_CONFIG
-cargo build --release --manifest-path src-tauri/Cargo.toml --features e2e --bin pdfluent-desktop --example pdfcheck
+cargo build --release --manifest-path src-tauri/Cargo.toml --features e2e --bin pdfluent-desktop --example pdfcheck --example sandbox_grant
 
 target="$CARGO_TARGET_DIR"
 exe=""

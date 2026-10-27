@@ -234,9 +234,17 @@ export interface FormScriptsStatus {
   contentHash: string;
 }
 
+/** What running a document's scripts did (mirrors script_consent::FormScriptsRunReport). */
+export interface FormScriptsRunReport {
+  ran: boolean;
+  fieldsChanged: number;
+  /** Calculations or scripts that failed. Empty when everything ran. `name` is the field, or the XFA script id. */
+  failed: { name: string; message: string }[];
+}
+
 export interface FormScriptsOutcome {
   status: FormScriptsStatus;
-  report: { ran: boolean; fieldsChanged: number };
+  report: FormScriptsRunReport;
 }
 
 /** The organisation's "Form scripts" choice from the OS-managed location, or null. */

@@ -38,6 +38,7 @@ import { launchesStopped, recordLaunch } from './launch-breaker';
 import { describeFaults, resolveFaults, validateExpectations, type ExpectedFault, type Fault, type Judgement } from '../../lib/fault-guard';
 import { EXPECTED_FAULTS } from './expected-faults';
 import * as pdfcheck from './pdfcheck';
+import { grant, sandboxedApp } from './sandbox';
 
 interface GapEntry { id: string; owner: string; reason: string; tracker?: string; platforms?: string[] }
 interface JourneyEntry { title: string; priority: string; spec: string; gaps?: GapEntry[]; platforms: string[] }
@@ -56,6 +57,12 @@ export interface StartOptions {
   noDocument?: boolean;
   /** Leave start-up dialogs (recovery offer) for the journey to judge. */
   keepStartupDialogs?: boolean;
+  /**
+   * Run the app inside the Mac App Store sandbox (macOS only; lib/sandbox.ts):
+   * it can touch the document it is asked to open, the paths the journey
+   * answers a panel with, and nothing else.
+   */
+  sandbox?: boolean;
 }
 
 export interface Journey {
@@ -78,6 +85,12 @@ export interface Journey {
   invoke<T = unknown>(cmd: string, args?: Record<string, unknown>): Promise<T>;
   /** Answer the next JS-side dialog of `kind` (open/save: a path or null; message: true = OK/Yes). */
   answerDialog(kind: 'open' | 'save' | 'message', value: string | string[] | boolean | null): Promise<void>;
+  /**
+   * Give the sandboxed app access to `paths` the way the system does when a
+   * person drops a file on the window or picks it in a panel. A no-op when
+   * the app is not sandboxed.
+   */
+  allow(...paths: string[]): Promise<void>;
   /** Answer the next native dialogs opened from Rust (Save As, attachments); null cancels. */
   answerNativeDialogs(...answers: Array<string | null>): Promise<void>;
   /** Dialogs the app opened that nobody queued an answer for. */
@@ -170,6 +183,15 @@ export function journey(id: string, body: (j: Journey) => Promise<void>, timeout
       warningsTaken = 0;
     };
 
+    // True while the running app is the sandboxed one: every path a panel is
+    // answered with must then be granted first, as the panel itself would.
+    let sandboxed = false;
+    const grantForPanel = async (paths: Array<string | null>): Promise<void> => {
+      const real = paths.filter((p): p is string => typeof p === 'string');
+      if (!sandboxed || real.length === 0) return;
+      await j.invoke('e2e_sandbox_grant', { tokens: grant(...real) });
+    };
+
     const j: Journey = {
       id,
       work,
@@ -204,7 +226,22 @@ export function journey(id: string, body: (j: Journey) => Promise<void>, timeout
         // HOME, so each launch starts with no recent files, no recovery copy
         // and no settings of an earlier journey. Windows resolves them from
         // the profile; the launch below dismisses what an earlier run left.
-        if (process.platform !== 'win32') env.HOME = appData;
+        // Not in the sandbox: there the system gives the app its container as HOME.
+        if (process.platform !== 'win32' && !o.sandbox) env.HOME = appData;
+        sandboxed = o.sandbox === true;
+        let appPath = process.env.PDFLUENT_E2E_APP as string;
+        if (o.sandbox) {
+          if (process.platform !== 'darwin') throw new Error(`${id}: sandbox: true is for macOS`);
+          appPath = sandboxedApp();
+          // The bridge folder (the harness talks to the app through it), the
+          // print capture, and the document the app is asked to open: what a
+          // person's launch would have granted. Nothing else.
+          const bridge = path.join(work, 'bridge');
+          mkdirSync(path.join(bridge, 'in'), { recursive: true });
+          mkdirSync(path.join(bridge, 'out'), { recursive: true });
+          const tokens = grant(bridge, path.join(work, 'print-capture.txt'), ...args);
+          env.PDFLUENT_E2E_SANDBOX_TOKENS = tokens.join('\n');
+        }
         // Timed into the result file, so a slow runner shows where the time goes.
         const t = Date.now();
         const stopped = launchesStopped(process.env.PDFLUENT_JOURNEY_RESULTS);
@@ -216,7 +253,7 @@ export function journey(id: string, body: (j: Journey) => Promise<void>, timeout
         const profileDir = process.platform === 'win32' ? path.join(work, 'webview2') : undefined;
         try {
           session = await launch({
-            app: process.env.PDFLUENT_E2E_APP as string, args, env, workDir: work, profileDir,
+            app: appPath, args, env, workDir: work, profileDir,
             evidenceDir: evidenceDirFor(id, 'launch'), appLog: () => appLogSince(started),
           });
         } catch (e) {
@@ -290,10 +327,15 @@ export function journey(id: string, body: (j: Journey) => Promise<void>, timeout
       async invoke<T>(cmd: string, args?: Record<string, unknown>) {
         return j.s.call<T>('invoke', cmd, args ?? {});
       },
+      async allow(...paths) {
+        await grantForPanel(paths);
+      },
       async answerDialog(kind, value) {
+        if (kind !== 'message') await grantForPanel(Array.isArray(value) ? value : [value as string | null]);
         await j.s.call('queueDialog', kind, value);
       },
       async answerNativeDialogs(...answers) {
+        await grantForPanel(answers);
         await j.invoke('e2e_queue_dialog_answers', { answers });
       },
       async unexpectedDialogs() {

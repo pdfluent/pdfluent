@@ -87,6 +87,7 @@ import { FormBar } from './components/FormBar';
 import { ScriptConsentBar } from './components/ScriptConsentBar';
 import { XfaBanner, TextEditRejectionNotice, AppErrorToast } from './components/Notices';
 import { useFormScriptConsent } from './hooks/useFormScriptConsent';
+import { formCalcState } from './state/formCalcState';
 import { loadOsFormScriptsPolicy } from './state/scriptConsent';
 import { XfaFormOverlay } from './components/XfaFormOverlay';
 import { LinkOverlay } from './components/LinkOverlay';
@@ -1885,6 +1886,7 @@ export function ViewerApp() {
               }}
               autoOpenLinks={autoOpenLinks}
               onToggleAutoOpenLinks={() => persistAutoOpenLinks(autoOpenLinks ? null : true)}
+              calc={formCalcState(scriptConsent.status, scriptConsent.lastRun, formModel.calcFailures)}
             />
           )}
 
@@ -2139,7 +2141,7 @@ export function ViewerApp() {
       {appErrors.length > 0 && (
         <div
           data-testid="app-error-stack"
-          className="fixed right-4 bottom-12 z-[70] flex w-[min(360px,calc(100vw-2rem))] flex-col gap-2"
+          className="pf-notice-stack fixed right-4 bottom-12 z-[70] flex w-[min(360px,calc(100vw-2rem))] flex-col gap-2"
         >
           {appErrors.slice(-3).map(error => (
             <AppErrorToast
