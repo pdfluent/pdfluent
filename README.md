@@ -1,30 +1,68 @@
-# PDFluent
+<p align="center">
+  <a href="https://pdfluent.com">
+    <img src="https://pdfluent.com/favicon.svg" width="72" alt="PDFluent logo"/>
+  </a>
+</p>
+
+<h1 align="center">PDFluent</h1>
+
+<p align="center"><strong>The free PDF editor. Free for everyone, including commercial use. No account, works offline.</strong></p>
+
+<p align="center">
+  <a href="https://pdfluent.com/download"><img src="https://img.shields.io/badge/download-macOS%20and%20Windows-111111" alt="Download for macOS and Windows"/></a>
+  <a href="https://apps.microsoft.com/detail/xpdbxj6xrlfqk2"><img src="https://img.shields.io/badge/Microsoft%20Store-get%20it-111111" alt="Get PDFluent from the Microsoft Store"/></a>
+  <a href="LICENSE.md"><img src="https://img.shields.io/badge/licence-source--available-111111" alt="Source-available licence"/></a>
+  <a href="https://pdfluent.com/sdk"><img src="https://img.shields.io/badge/SDK-AGPL--3.0%20%7C%20Commercial-111111" alt="SDK: AGPL-3.0 or commercial"/></a>
+</p>
+
+<p align="center">
+  <a href="https://pdfluent.com/download"><b>Download for macOS and Windows</b></a> ·
+  <a href="https://apps.microsoft.com/detail/xpdbxj6xrlfqk2">Microsoft Store</a> ·
+  <a href="LICENSE.md">Source-available license</a> ·
+  <a href="#built-on-the-pdfluent-sdk">PDFluent SDK</a>
+</p>
+
+<p align="center">
+  <img src="docs/media/store-1-edit-1440x900.png" alt="PDFluent: the free, private PDF editor. Completely free, private, built with Rust, no account." width="860"/>
+</p>
 
 PDFluent is a free, source-available PDF editor for macOS and Windows. It edits, converts, redacts, and signs PDFs entirely on your device, with no account, no upload, and no subscription.
 
-[**Download for macOS and Windows**](https://pdfluent.com/download) · [Microsoft Store](https://apps.microsoft.com/detail/xpdbxj6xrlfqk2) · [Source-available license](LICENSE.md) · [PDFluent SDK](#built-on-the-pdfluent-sdk)
+---
 
-![The PDFluent all-tools panel: compress, organize, split, merge, redact, protect, watermark and export, all running locally](docs/media/store-5-all-tools-1440x900.png)
+## What it does
+
+<table>
+<tr>
+<td width="33%" valign="top"><b>Edit text</b><br/>Edit text directly in a PDF, not just annotate over it.</td>
+<td width="33%" valign="top"><b>Convert</b><br/>Convert to and from Word, Excel, and PowerPoint.</td>
+<td width="33%" valign="top"><b>Fill forms</b><br/>Fill and flatten AcroForms (text, checkbox, radio, combo/list, comb).</td>
+</tr>
+<tr>
+<td valign="top"><b>Annotate</b><br/>Highlight, underline, strikeout, comments, shapes, freehand.</td>
+<td valign="top"><b>Manage pages</b><br/>Merge, split, reorder, rotate, compress, and watermark pages.</td>
+<td valign="top"><b>Sign</b><br/>Digital signatures (PAdES / PKCS#12).</td>
+</tr>
+<tr>
+<td valign="top"><b>OCR</b><br/>OCR for scanned documents.</td>
+<td valign="top"><b>PDF/A</b><br/>PDF/A conversion.</td>
+<td valign="top"><b>XFA forms</b><br/>View and flatten XFA forms (interactive XFA fill is experimental).</td>
+</tr>
+</table>
+
+---
+
+## Privacy
+
+Most PDF editors either cost money every month or run your documents through someone else's server. PDFluent does neither. Everything runs locally: opening, editing, and converting a PDF never leaves your machine unless you choose to send it somewhere. PDFluent doesn't upload your documents anywhere, and optional diagnostics are opt-in.
 
 ## Why PDFluent
 
-Most PDF editors either cost money every month or run your documents through someone else's server. PDFluent does neither. The app is built with [Tauri v2](https://tauri.app/) (Rust + React/TypeScript) on top of the PDFluent SDK, a pure-Rust PDF engine with no Pdfium, Poppler, MuPDF, or other C/C++ dependencies. Everything runs locally: opening, editing, and converting a PDF never leaves your machine unless you choose to send it somewhere.
+The app is built with [Tauri v2](https://tauri.app/) (Rust + React/TypeScript) on top of the PDFluent SDK, a pure-Rust PDF engine with no Pdfium, Poppler, MuPDF, or other C/C++ dependencies.
 
 ## Status
 
 Available on macOS and Windows. Complete for the non-XFA feature set: viewing, AcroForm filling (text, checkbox, radio, combo/list, comb), annotations, page management, merge/split, digital signatures, conversions, and OCR. XFA documents can be viewed and converted or flattened to a standard PDF. Dynamic XFA interactive fill is still experimental and not part of this release.
-
-## Features
-
-- Edit text directly in a PDF, not just annotate over it
-- Convert to and from Word, Excel, and PowerPoint
-- Fill and flatten AcroForms (text, checkbox, radio, combo/list, comb)
-- Annotations: highlight, underline, strikeout, comments, shapes, freehand
-- Merge, split, reorder, rotate, compress, and watermark pages
-- Digital signatures (PAdES / PKCS#12)
-- OCR for scanned documents
-- PDF/A conversion
-- View and flatten XFA forms (interactive XFA fill is experimental)
 
 ## How it compares
 
@@ -59,9 +97,16 @@ The editor itself doesn't need any of this. It ships with the engine built in an
 
 See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for how the frontend, Tauri backend, and SDK fit together, plus the Tauri command surface.
 
-## Contributing
+## Build from source and contributing
+
+<details>
+<summary>Build from source and contributing</summary>
+
+<br/>
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for how to set up a dev environment, code style, and how to submit changes. Note that this repository doesn't build standalone: the SDK it depends on is a separate, closed workspace.
+
+</details>
 
 ## FAQ
 
